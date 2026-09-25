@@ -1,0 +1,260 @@
+{
+  "id": "BD",
+  "country": "BD",
+  "name": {
+    "en": "Bangladesh",
+    "local": {
+      "bn": "বাংলাদেশ"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "bn": "প্রাথমিক"
+        }
+      }
+    },
+    {
+      "id": "junior-secondary",
+      "name": {
+        "en": "Junior Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "bn": "মাধ্যমিক"
+        }
+      }
+    },
+    {
+      "id": "higher-secondary",
+      "name": {
+        "en": "Higher Secondary",
+        "local": {
+          "bn": "উচ্চ মাধ্যমিক"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "class-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Class 1",
+        "local": {
+          "bn": "প্রথম শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class I",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "class-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Class 2",
+        "local": {
+          "bn": "দ্বিতীয় শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class II",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "class-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Class 3",
+        "local": {
+          "bn": "তৃতীয় শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class III",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "class-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Class 4",
+        "local": {
+          "bn": "চতুর্থ শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class IV",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "class-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Class 5",
+        "local": {
+          "bn": "পঞ্চম শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class V",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "class-6",
+      "stage": "junior-secondary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Class 6",
+        "local": {
+          "bn": "ষষ্ঠ শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class VI",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "class-7",
+      "stage": "junior-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Class 7",
+        "local": {
+          "bn": "সপ্তম শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class VII",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "class-8",
+      "stage": "junior-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Class 8",
+        "local": {
+          "bn": "অষ্টম শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class VIII",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "class-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Class 9",
+        "local": {
+          "bn": "নবম শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class IX",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "class-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Class 10",
+        "local": {
+          "bn": "দশম শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class X",
+        "Grade 10",
+        "SSC year"
+      ]
+    },
+    {
+      "id": "class-11",
+      "stage": "higher-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Class 11",
+        "local": {
+          "bn": "একাদশ শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class XI",
+        "Grade 11",
+        "HSC 1st year"
+      ]
+    },
+    {
+      "id": "class-12",
+      "stage": "higher-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Class 12",
+        "local": {
+          "bn": "দ্বাদশ শ্রেণি"
+        }
+      },
+      "aliases": [
+        "Class XII",
+        "Grade 12",
+        "HSC 2nd year"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "ইতিহাস | পাতা | মাধ্যমিক ও উচ্চশিক্ষা অধিদপ্তর",
+      "url": "https://dshe.gov.bd/site/page/b248fb28-7b6d-48b2-8695-fcc837e12125/"
+    },
+    {
+      "title": "Pocket Book Of Bangladesh Education Statistics 2022 | বাংলাদেশ শিক্ষাতথ্য ও পরিসংখ্যান ব্যুরো (ব্যানবেইস)",
+      "url": "https://banbeis.gov.bd/pages/files/69199761933eb65569ddc65b"
+    },
+    {
+      "title": "২০২৬ শিক্ষাবর্ষের পাঠ্যপুস্তকের তালিকা | জাতীয় শিক্ষাক্রম ও পাঠ্যপুস্তক বোর্ড (এনসিটিবি)",
+      "url": "https://nctb.gov.bd/pages/static-pages/695b97ffc4774958d7b70329"
+    }
+  ],
+  "notes": "Primary (Classes 1–5) is run by the Ministry of Primary and Mass Education; Classes 6–12 by the Ministry of Education. Class 10 ends with the SSC exam and Class 12 with the HSC. Madrasah streams (Ebtedayee, Dakhil, Alim) follow the same years under their own names."
+}

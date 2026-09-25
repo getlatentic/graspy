@@ -1,0 +1,180 @@
+{
+  "id": "TC",
+  "country": "TC",
+  "name": {
+    "en": "Turks and Caicos Islands",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-1",
+      "stage": "secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": [
+        "First Form",
+        "Form One",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": [
+        "Second Form",
+        "Form Two",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": [
+        "Third Form",
+        "Form Three",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": [
+        "Fourth Form",
+        "Form Four",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "form-5",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 5",
+        "local": {}
+      },
+      "aliases": [
+        "Fifth Form",
+        "Form Five",
+        "Grade 11"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Education Statistical Digest 2022 - 2023",
+      "url": "https://gov.tc/education/images/docs/digest/2022-23%20Education%20Digest%20.pdf"
+    },
+    {
+      "title": "Student Registration",
+      "url": "https://www.gov.tc/education/student-registration"
+    }
+  ],
+  "notes": "The Ministry labels secondary years both ways (Form 1/Grade 7 … Form 5/Grade 11). K1 (Infant 1) and K2, taught in primary schools before Grade 1, are pre-primary and are left out; primary starts at age 6 with Grade 1. Form 6/Grade 12 is sixth form, after upper secondary."
+}

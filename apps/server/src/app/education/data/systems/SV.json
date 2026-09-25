@@ -1,0 +1,248 @@
+{
+  "id": "SV",
+  "country": "SV",
+  "name": {
+    "en": "El Salvador",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primer-ciclo",
+      "name": {
+        "en": "Basic education, first cycle (Primer Ciclo)",
+        "local": {
+          "es": "Primer Ciclo de Educación Básica"
+        }
+      }
+    },
+    {
+      "id": "segundo-ciclo",
+      "name": {
+        "en": "Basic education, second cycle (Segundo Ciclo)",
+        "local": {
+          "es": "Segundo Ciclo de Educación Básica"
+        }
+      }
+    },
+    {
+      "id": "tercer-ciclo",
+      "name": {
+        "en": "Basic education, third cycle (Tercer Ciclo)",
+        "local": {
+          "es": "Tercer Ciclo de Educación Básica"
+        }
+      }
+    },
+    {
+      "id": "media",
+      "name": {
+        "en": "Upper secondary: Bachillerato (Educación Media)",
+        "local": {
+          "es": "Educación Media (Bachillerato)"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primer-ciclo",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado"
+        }
+      },
+      "aliases": [
+        "1° grado"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primer-ciclo",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado"
+        }
+      },
+      "aliases": [
+        "2° grado"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primer-ciclo",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado"
+        }
+      },
+      "aliases": [
+        "3° grado"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "segundo-ciclo",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado"
+        }
+      },
+      "aliases": [
+        "4° grado"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "segundo-ciclo",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado"
+        }
+      },
+      "aliases": [
+        "5° grado"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "segundo-ciclo",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado"
+        }
+      },
+      "aliases": [
+        "6° grado"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "tercer-ciclo",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Séptimo grado"
+        }
+      },
+      "aliases": [
+        "7° grado"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "tercer-ciclo",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Octavo grado"
+        }
+      },
+      "aliases": [
+        "8° grado"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "tercer-ciclo",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Noveno grado"
+        }
+      },
+      "aliases": [
+        "9° grado"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "media",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Primer año de bachillerato"
+        }
+      },
+      "aliases": [
+        "1° año de bachillerato",
+        "1er año de bachillerato"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "media",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Segundo año de bachillerato"
+        }
+      },
+      "aliases": [
+        "2° año de bachillerato",
+        "2do año de bachillerato"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "media",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Tercer año de bachillerato"
+        }
+      },
+      "aliases": [
+        "3° año de bachillerato",
+        "3er año de bachillerato"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Preguntas Frecuentes – Ministerio de Educación, Ciencia y Tecnología",
+      "url": "https://www.mined.gob.sv/preguntas-frecuentes/"
+    },
+    {
+      "title": "Aprendizajes de calidad y significativos en los niveles de Educación Básica, Media y sus modalidades",
+      "url": "https://www.mined.gob.sv/programas/aprendizajes-de-calidad-y-significativos-en-los-niveles-de-educacion-basica-media-y-media-tecnologica/"
+    },
+    {
+      "title": "Perfil del pais | SITEAL",
+      "url": "https://siteal.iiep.unesco.org/pais/el_salvador"
+    }
+  ],
+  "notes": "Basic education (9 grades in three cycles) starts at 7. The Bachillerato General lasts 2 years; the Bachillerato Técnico Vocacional lasts 3, so the third year of bachillerato exists only there."
+}

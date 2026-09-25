@@ -1,0 +1,206 @@
+{
+  "id": "FJ",
+  "country": "FJ",
+  "name": {
+    "en": "Fiji",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": [
+        "Form 1",
+        "Class 7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": [
+        "Form 2",
+        "Class 8"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": [
+        "Form 3"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": [
+        "Form 4"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": [
+        "Form 5"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": [
+        "Form 6"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Year 13",
+        "local": {}
+      },
+      "aliases": [
+        "Form 7"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "School Education",
+      "url": "https://nic.hec.org.fj/school-education"
+    }
+  ],
+  "notes": "Primary is Year 1 to Year 8 (ages 6 to 13); secondary is Year 9 to Year 13, compulsory to Year 12. National exams: FY6E, FY8E, FY10E, the Fiji Year 12 Certificate and the Fiji Year 13 Certificate. The older names Class 1–8 and Form 1–7 (Form 7 = Year 13) are still heard. The source is the Higher Education Commission's national information centre; the Ministry of Education site (education.gov.fj) did not load when checked."
+}

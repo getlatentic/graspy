@@ -1,0 +1,196 @@
+{
+  "id": "LS",
+  "country": "LS",
+  "name": {
+    "en": "Lesotho",
+    "local": {}
+  },
+  "main": true,
+  "status": "draft",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": [
+        "Standard 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": [
+        "Standard 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": [
+        "Standard 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": [
+        "Standard 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": [
+        "Standard 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": [
+        "Standard 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": [
+        "Standard 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": [
+        "Form A"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": [
+        "Form B"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": [
+        "Form C"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": [
+        "Form D"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": [
+        "Form E"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Education System in Lesotho",
+      "url": "https://www.education.gov.ls/education-system"
+    },
+    {
+      "title": "Examinations Council of Lesotho",
+      "url": "https://www.examscouncil.org.ls/about-us"
+    }
+  ],
+  "draftedBy": "claude-code",
+  "notes": "Unconfirmed: official sources disagree. The Ministry portal still describes Standard 1–7 and Forms A–E (JC after Form C, LGCSE after Form E). The Examinations Council, whose results are current, runs a Grade 7 end-of-level assessment and LGCSE in Grade 11 (the last JC results were 2022) plus the LASC (Advanced Subsidiary); names follow the Grade scheme. The old names are aliases by year of schooling, and the exact junior/senior split of Grades 8–12 is unconfirmed."
+}

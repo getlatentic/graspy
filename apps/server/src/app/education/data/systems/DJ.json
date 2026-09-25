@@ -1,0 +1,236 @@
+{
+  "id": "DJ",
+  "country": "DJ",
+  "name": {
+    "en": "Djibouti",
+    "local": {
+      "fr": "Djibouti",
+      "ar": "جيبوتي"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaire",
+      "name": {
+        "en": "Primary (Enseignement de base)",
+        "local": {
+          "fr": "Enseignement primaire (enseignement de base)"
+        }
+      }
+    },
+    {
+      "id": "moyen",
+      "name": {
+        "en": "Middle school (Enseignement moyen)",
+        "local": {
+          "fr": "Enseignement moyen"
+        }
+      }
+    },
+    {
+      "id": "secondaire",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Enseignement secondaire"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "annee-1",
+      "stage": "primaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "fr": "1ère année"
+        }
+      },
+      "aliases": [
+        "1ère année"
+      ]
+    },
+    {
+      "id": "annee-2",
+      "stage": "primaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "fr": "2ème année"
+        }
+      },
+      "aliases": [
+        "2ème année"
+      ]
+    },
+    {
+      "id": "annee-3",
+      "stage": "primaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "fr": "3ème année"
+        }
+      },
+      "aliases": [
+        "3ème année"
+      ]
+    },
+    {
+      "id": "annee-4",
+      "stage": "primaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "fr": "4ème année"
+        }
+      },
+      "aliases": [
+        "4ème année"
+      ]
+    },
+    {
+      "id": "annee-5",
+      "stage": "primaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "fr": "5ème année"
+        }
+      },
+      "aliases": [
+        "5ème année"
+      ]
+    },
+    {
+      "id": "annee-6",
+      "stage": "moyen",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "fr": "6ème année"
+        }
+      },
+      "aliases": [
+        "6ème année"
+      ]
+    },
+    {
+      "id": "annee-7",
+      "stage": "moyen",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "fr": "7ème année"
+        }
+      },
+      "aliases": [
+        "7ème année"
+      ]
+    },
+    {
+      "id": "annee-8",
+      "stage": "moyen",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "fr": "8ème année"
+        }
+      },
+      "aliases": [
+        "8ème année"
+      ]
+    },
+    {
+      "id": "annee-9",
+      "stage": "moyen",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "fr": "9ème année"
+        }
+      },
+      "aliases": [
+        "9ème année"
+      ]
+    },
+    {
+      "id": "seconde",
+      "stage": "secondaire",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde"
+      ]
+    },
+    {
+      "id": "premiere",
+      "stage": "secondaire",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "1ère",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "Première"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "secondaire",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Tle",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Terminale",
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Annuaire statistique MENFOP, année scolaire 2025/2026",
+      "url": "http://www.education.gov.dj/index.php/annuaire-statistique-menfop-2025-2026/item/download/124_67418b1a76099a3d53da94ba15578b44"
+    },
+    {
+      "title": "Cartographie de la CITE 2011 de Djibouti",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Djibouti.xlsx"
+    }
+  ],
+  "notes": "Enseignement fondamental covers 9 years: 5 years of primary (enseignement de base, from age 6, CEFEB) and 4 years of enseignement moyen (6ème–9ème année, Brevet d'enseignement fondamental). The lycée (Seconde, Première, Terminale) ends with the Baccalauréat."
+}

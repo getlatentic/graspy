@@ -1,0 +1,289 @@
+{
+  "id": "BA",
+  "country": "BA",
+  "name": {
+    "en": "Bosnia and Herzegovina",
+    "local": {
+      "bs": "Bosna i Hercegovina",
+      "hr": "Bosna i Hercegovina",
+      "sr": "Босна и Херцеговина"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary school (Osnovna škola)",
+        "local": {
+          "bs": "Osnovna škola",
+          "hr": "Osnovna škola",
+          "sr": "Основна школа"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary school (Srednja škola)",
+        "local": {
+          "bs": "Srednja škola",
+          "hr": "Srednja škola",
+          "sr": "Средња школа"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "bs": "1. razred osnovne škole",
+          "hr": "1. razred osnovne škole",
+          "sr": "1. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Prvi razred",
+        "I razred"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "bs": "2. razred osnovne škole",
+          "hr": "2. razred osnovne škole",
+          "sr": "2. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Drugi razred",
+        "II razred"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "bs": "3. razred osnovne škole",
+          "hr": "3. razred osnovne škole",
+          "sr": "3. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Treći razred",
+        "III razred"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "bs": "4. razred osnovne škole",
+          "hr": "4. razred osnovne škole",
+          "sr": "4. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Četvrti razred",
+        "IV razred"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "bs": "5. razred osnovne škole",
+          "hr": "5. razred osnovne škole",
+          "sr": "5. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Peti razred",
+        "V razred"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "bs": "6. razred osnovne škole",
+          "hr": "6. razred osnovne škole",
+          "sr": "6. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Šesti razred",
+        "VI razred"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "bs": "7. razred osnovne škole",
+          "hr": "7. razred osnovne škole",
+          "sr": "7. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Sedmi razred",
+        "VII razred"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "bs": "8. razred osnovne škole",
+          "hr": "8. razred osnovne škole",
+          "sr": "8. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Osmi razred",
+        "VIII razred"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "primary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "bs": "9. razred osnovne škole",
+          "hr": "9. razred osnovne škole",
+          "sr": "9. разред основне школе"
+        }
+      },
+      "aliases": [
+        "Deveti razred",
+        "IX razred"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Secondary Grade 1",
+        "local": {
+          "bs": "1. razred srednje škole",
+          "hr": "1. razred srednje škole",
+          "sr": "1. разред средње школе"
+        }
+      },
+      "aliases": [
+        "Prvi razred srednje škole",
+        "I razred gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Secondary Grade 2",
+        "local": {
+          "bs": "2. razred srednje škole",
+          "hr": "2. razred srednje škole",
+          "sr": "2. разред средње школе"
+        }
+      },
+      "aliases": [
+        "Drugi razred srednje škole",
+        "II razred gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Secondary Grade 3",
+        "local": {
+          "bs": "3. razred srednje škole",
+          "hr": "3. razred srednje škole",
+          "sr": "3. разред средње школе"
+        }
+      },
+      "aliases": [
+        "Treći razred srednje škole",
+        "III razred gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-4",
+      "stage": "secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Secondary Grade 4",
+        "local": {
+          "bs": "4. razred srednje škole",
+          "hr": "4. razred srednje škole",
+          "sr": "4. разред средње школе"
+        }
+      },
+      "aliases": [
+        "Četvrti razred srednje škole",
+        "IV razred gimnazije"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Bosna i Hercegovina: Organizacija osnovnog obrazovanja (Eurydice)",
+      "url": "https://eurydice.eacea.ec.europa.eu/bs/eurypedia/bosnia-and-herzegovina/bosna-i-hercegovinaorganizacija-osnovnog-obrazovanja"
+    },
+    {
+      "title": "Organizacija opšteg srednjeg obrazovanja (Eurydice, Bosna i Hercegovina)",
+      "url": "https://eurydice.eacea.ec.europa.eu/bs/eurypedia/bosnia-and-herzegovina/organizacija-opsteg-srednjeg-obrazovanja"
+    },
+    {
+      "title": "Bosnia and Herzegovina: Overview (Eurydice)",
+      "url": "https://eurydice.eacea.ec.europa.eu/eurypedia/bosnia-and-herzegovina/overview"
+    }
+  ],
+  "notes": "Education is run by Republika Srpska, the ten Federation cantons and Brčko District; all use a 9-year osnovna škola (triads I–III, IV–VI, VII–IX) and a 4-year gimnazija, with the same razred names in Bosnian, Croatian and Serbian. Vocational secondary may last 3 years. Entry is at about 6 (5½–6½); the exact cut-off date differs by jurisdiction."
+}

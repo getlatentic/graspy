@@ -1,0 +1,246 @@
+{
+  "id": "CV",
+  "country": "CV",
+  "name": {
+    "en": "Cabo Verde",
+    "local": {
+      "pt": "Cabo Verde"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic-1",
+      "name": {
+        "en": "Basic Education, 1st cycle",
+        "local": {
+          "pt": "1.º ciclo do Ensino Básico"
+        }
+      }
+    },
+    {
+      "id": "basic-2",
+      "name": {
+        "en": "Basic Education, 2nd cycle",
+        "local": {
+          "pt": "2.º ciclo do Ensino Básico"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary Education",
+        "local": {
+          "pt": "Ensino Secundário"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "pt": "1.º ano"
+        }
+      },
+      "aliases": [
+        "1.º ano de escolaridade",
+        "1º ano"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "pt": "2.º ano"
+        }
+      },
+      "aliases": [
+        "2.º ano de escolaridade",
+        "2º ano"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic-1",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "pt": "3.º ano"
+        }
+      },
+      "aliases": [
+        "3.º ano de escolaridade",
+        "3º ano"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic-1",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "pt": "4.º ano"
+        }
+      },
+      "aliases": [
+        "4.º ano de escolaridade",
+        "4º ano"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic-2",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "pt": "5.º ano"
+        }
+      },
+      "aliases": [
+        "5.º ano de escolaridade",
+        "5º ano"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic-2",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "pt": "6.º ano"
+        }
+      },
+      "aliases": [
+        "6.º ano de escolaridade",
+        "6º ano"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic-2",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "pt": "7.º ano"
+        }
+      },
+      "aliases": [
+        "7.º ano de escolaridade",
+        "7º ano"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic-2",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "pt": "8.º ano"
+        }
+      },
+      "aliases": [
+        "8.º ano de escolaridade",
+        "8º ano"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "pt": "9.º ano"
+        }
+      },
+      "aliases": [
+        "9.º ano de escolaridade",
+        "9º ano"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "pt": "10.º ano"
+        }
+      },
+      "aliases": [
+        "10.º ano de escolaridade",
+        "10º ano"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "pt": "11.º ano"
+        }
+      },
+      "aliases": [
+        "11.º ano de escolaridade",
+        "11º ano"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "pt": "12.º ano"
+        }
+      },
+      "aliases": [
+        "12.º ano de escolaridade",
+        "12º ano"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Principais Indicadores da Educação 2020/2021",
+      "url": "https://minedu.gov.cv/media/estatistica/2024/04/25/Principais_Indicadores_da_Educa%C3%A7%C3%A3o_2020-2021.pdf"
+    },
+    {
+      "title": "Plano Estratégico da Educação e Ensino Superior 2022-2026",
+      "url": "https://minedu.gov.cv/media/plano/2024/07/24/Plano_Estrategico_24072024.pdf"
+    }
+  ],
+  "notes": "Under the Lei de Bases (Decreto-Legislativo 13/2018), compulsory Ensino Básico (EBO) runs 8 years (1.º–8.º ano, from age 6) and Ensino Secundário 4 years (9.º–12.º ano, general or technical track)."
+}

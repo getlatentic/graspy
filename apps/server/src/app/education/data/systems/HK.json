@@ -1,0 +1,262 @@
+{
+  "id": "HK",
+  "country": "HK",
+  "name": {
+    "en": "Hong Kong",
+    "local": {
+      "zh-Hant": "香港"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "zh-Hant": "小學"
+        }
+      }
+    },
+    {
+      "id": "junior-secondary",
+      "name": {
+        "en": "Junior secondary",
+        "local": {
+          "zh-Hant": "初中"
+        }
+      }
+    },
+    {
+      "id": "senior-secondary",
+      "name": {
+        "en": "Senior secondary",
+        "local": {
+          "zh-Hant": "高中"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "p1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary 1",
+        "local": {
+          "zh-Hant": "小一"
+        }
+      },
+      "aliases": [
+        "P1",
+        "Primary One"
+      ]
+    },
+    {
+      "id": "p2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary 2",
+        "local": {
+          "zh-Hant": "小二"
+        }
+      },
+      "aliases": [
+        "P2",
+        "Primary Two"
+      ]
+    },
+    {
+      "id": "p3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary 3",
+        "local": {
+          "zh-Hant": "小三"
+        }
+      },
+      "aliases": [
+        "P3",
+        "Primary Three"
+      ]
+    },
+    {
+      "id": "p4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary 4",
+        "local": {
+          "zh-Hant": "小四"
+        }
+      },
+      "aliases": [
+        "P4",
+        "Primary Four"
+      ]
+    },
+    {
+      "id": "p5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary 5",
+        "local": {
+          "zh-Hant": "小五"
+        }
+      },
+      "aliases": [
+        "P5",
+        "Primary Five"
+      ]
+    },
+    {
+      "id": "p6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Primary 6",
+        "local": {
+          "zh-Hant": "小六"
+        }
+      },
+      "aliases": [
+        "P6",
+        "Primary Six"
+      ]
+    },
+    {
+      "id": "s1",
+      "stage": "junior-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Secondary 1",
+        "local": {
+          "zh-Hant": "中一"
+        }
+      },
+      "aliases": [
+        "S1",
+        "Secondary One",
+        "Form 1",
+        "F1"
+      ]
+    },
+    {
+      "id": "s2",
+      "stage": "junior-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Secondary 2",
+        "local": {
+          "zh-Hant": "中二"
+        }
+      },
+      "aliases": [
+        "S2",
+        "Secondary Two",
+        "Form 2",
+        "F2"
+      ]
+    },
+    {
+      "id": "s3",
+      "stage": "junior-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Secondary 3",
+        "local": {
+          "zh-Hant": "中三"
+        }
+      },
+      "aliases": [
+        "S3",
+        "Secondary Three",
+        "Form 3",
+        "F3"
+      ]
+    },
+    {
+      "id": "s4",
+      "stage": "senior-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Secondary 4",
+        "local": {
+          "zh-Hant": "中四"
+        }
+      },
+      "aliases": [
+        "S4",
+        "Secondary Four",
+        "Form 4",
+        "F4"
+      ]
+    },
+    {
+      "id": "s5",
+      "stage": "senior-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Secondary 5",
+        "local": {
+          "zh-Hant": "中五"
+        }
+      },
+      "aliases": [
+        "S5",
+        "Secondary Five",
+        "Form 5",
+        "F5"
+      ]
+    },
+    {
+      "id": "s6",
+      "stage": "senior-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Secondary 6",
+        "local": {
+          "zh-Hant": "中六"
+        }
+      },
+      "aliases": [
+        "S6",
+        "Secondary Six",
+        "Form 6",
+        "F6"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "School Places Allocation Systems - Education Bureau",
+      "url": "https://www.edb.gov.hk/en/student-parents/spa-systems/overview/index.html"
+    },
+    {
+      "title": "學位分配系統 - 教育局",
+      "url": "https://www.edb.gov.hk/tc/student-parents/spa-systems/overview/index.html"
+    },
+    {
+      "title": "Education Opportunities in Hong Kong",
+      "url": "https://www.edb.gov.hk/attachment/en/student-parents/ncs-students/overview/Edu_Opportunities_in_HK_EN.pdf"
+    }
+  ],
+  "notes": "Children aged 5 years 8 months by 1 September may enter P1. \"Form 1\" to \"Form 6\" (F1-F6) are older names for S1-S6 still heard."
+}

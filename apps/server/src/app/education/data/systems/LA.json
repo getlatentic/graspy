@@ -1,0 +1,255 @@
+{
+  "id": "LA",
+  "country": "LA",
+  "name": {
+    "en": "Lao PDR",
+    "local": {
+      "lo": "ລາວ"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "lo": "ປະຖົມສຶກສາ"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary",
+        "local": {
+          "lo": "ມັດທະຍົມສຶກສາຕອນຕົ້ນ"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary",
+        "local": {
+          "lo": "ມັດທະຍົມສຶກສາຕອນປາຍ"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "p1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary 1",
+        "local": {
+          "lo": "ປ.1"
+        }
+      },
+      "aliases": [
+        "P1",
+        "Prathom 1",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "p2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary 2",
+        "local": {
+          "lo": "ປ.2"
+        }
+      },
+      "aliases": [
+        "P2",
+        "Prathom 2",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "p3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary 3",
+        "local": {
+          "lo": "ປ.3"
+        }
+      },
+      "aliases": [
+        "P3",
+        "Prathom 3",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "p4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary 4",
+        "local": {
+          "lo": "ປ.4"
+        }
+      },
+      "aliases": [
+        "P4",
+        "Prathom 4",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "p5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary 5",
+        "local": {
+          "lo": "ປ.5"
+        }
+      },
+      "aliases": [
+        "P5",
+        "Prathom 5",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "m1",
+      "stage": "lower-secondary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Mathayom 1",
+        "local": {
+          "lo": "ມ.1"
+        }
+      },
+      "aliases": [
+        "M1",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "m2",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Mathayom 2",
+        "local": {
+          "lo": "ມ.2"
+        }
+      },
+      "aliases": [
+        "M2",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "m3",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Mathayom 3",
+        "local": {
+          "lo": "ມ.3"
+        }
+      },
+      "aliases": [
+        "M3",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "m4",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Mathayom 4",
+        "local": {
+          "lo": "ມ.4"
+        }
+      },
+      "aliases": [
+        "M4",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "m5",
+      "stage": "upper-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Mathayom 5",
+        "local": {
+          "lo": "ມ.5"
+        }
+      },
+      "aliases": [
+        "M5",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "m6",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Mathayom 6",
+        "local": {
+          "lo": "ມ.6"
+        }
+      },
+      "aliases": [
+        "M6",
+        "Grade 11"
+      ]
+    },
+    {
+      "id": "m7",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Mathayom 7",
+        "local": {
+          "lo": "ມ.7"
+        }
+      },
+      "aliases": [
+        "M7",
+        "Grade 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Education and Sports Sector Development Plan 2021-2025 (Ministry of Education and Sports)",
+      "url": "https://rtm.org.la/wp-content/uploads/2024/11/Education-and-sports-sector-development-plan-2021-2025.-Lao-PDR.pdf"
+    },
+    {
+      "title": "ກົມສາມັນສຶກສາ :: ຫຼັກສູດ, ປື້ມແບບຮຽນ ແລະ ຄູ່ມືຄູ",
+      "url": "https://dge.moes.edu.la/learning-resources.php"
+    },
+    {
+      "title": "Education Law (Amended), No. 69/NA, 11 December 2024 (unofficial translation, MoES)",
+      "url": "https://laoofficialgazette.gov.la/kcfinder/upload/files/Education%20Law%20Eng%20version%2020250715.pdf"
+    }
+  ],
+  "notes": "Structure 5+4+3 since 2009: ປ.1-ປ.5, then secondary numbered continuously ມ.1-ມ.4 (lower) and ມ.5-ມ.7 (upper). The ESSDP 2021-2025 says the 5+4+3 structure will be reviewed and new legislation may follow."
+}

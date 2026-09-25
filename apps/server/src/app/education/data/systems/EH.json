@@ -1,0 +1,251 @@
+{
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "id": "EH",
+  "country": "EH",
+  "name": {
+    "en": "Western Sahara",
+    "local": {
+      "ar": "الصحراء الغربية"
+    }
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "ar": "سلك التعليم الابتدائي"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "ar": "سلك التعليم الثانوي الإعدادي"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary (Lycée qualifiant)",
+        "local": {
+          "ar": "سلك التعليم الثانوي التأهيلي"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primary-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "1st Year Primary",
+        "local": {
+          "ar": "السنة الأولى ابتدائي"
+        }
+      },
+      "aliases": [
+        "1AP",
+        "1ère année primaire"
+      ]
+    },
+    {
+      "id": "primary-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "2nd Year Primary",
+        "local": {
+          "ar": "السنة الثانية ابتدائي"
+        }
+      },
+      "aliases": [
+        "2AP",
+        "2ème année primaire"
+      ]
+    },
+    {
+      "id": "primary-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "3rd Year Primary",
+        "local": {
+          "ar": "السنة الثالثة ابتدائي"
+        }
+      },
+      "aliases": [
+        "3AP",
+        "3ème année primaire"
+      ]
+    },
+    {
+      "id": "primary-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "4th Year Primary",
+        "local": {
+          "ar": "السنة الرابعة ابتدائي"
+        }
+      },
+      "aliases": [
+        "4AP",
+        "4ème année primaire"
+      ]
+    },
+    {
+      "id": "primary-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "5th Year Primary",
+        "local": {
+          "ar": "السنة الخامسة ابتدائي"
+        }
+      },
+      "aliases": [
+        "5AP",
+        "5ème année primaire"
+      ]
+    },
+    {
+      "id": "primary-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6th Year Primary",
+        "local": {
+          "ar": "السنة السادسة ابتدائي"
+        }
+      },
+      "aliases": [
+        "6AP",
+        "6ème année primaire"
+      ]
+    },
+    {
+      "id": "middle-1",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "1st Year Middle School",
+        "local": {
+          "ar": "السنة الأولى إعدادي"
+        }
+      },
+      "aliases": [
+        "1AC",
+        "1ère année collège"
+      ]
+    },
+    {
+      "id": "middle-2",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "2nd Year Middle School",
+        "local": {
+          "ar": "السنة الثانية إعدادي"
+        }
+      },
+      "aliases": [
+        "2AC",
+        "2ème année collège"
+      ]
+    },
+    {
+      "id": "middle-3",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3rd Year Middle School",
+        "local": {
+          "ar": "السنة الثالثة إعدادي"
+        }
+      },
+      "aliases": [
+        "3AC",
+        "3ème année collège"
+      ]
+    },
+    {
+      "id": "common-core",
+      "stage": "upper-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Common Core",
+        "local": {
+          "ar": "الجذع المشترك"
+        }
+      },
+      "aliases": [
+        "TC",
+        "Tronc commun"
+      ]
+    },
+    {
+      "id": "bac-1",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "1st Year Baccalaureate",
+        "local": {
+          "ar": "السنة الأولى بكالوريا"
+        }
+      },
+      "aliases": [
+        "1BAC",
+        "1ère année bac"
+      ]
+    },
+    {
+      "id": "bac-2",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "2nd Year Baccalaureate",
+        "local": {
+          "ar": "السنة الثانية بكالوريا"
+        }
+      },
+      "aliases": [
+        "2BAC",
+        "2ème année bac"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "بلاغ صحفي: تذكير بمواعيد الدخول المدرسي برسم الموسم الدراسي 2027/2026 - وزارة التربية الوطنية",
+      "url": "https://www.men.gov.ma/sites/default/files/2026-08/%D8%A7%D9%84%D8%A8%D9%84%D8%A7%D8%BA_0.pdf"
+    },
+    {
+      "title": "رؤساء مصالح بالأكاديمية الجهوية للتربية والتكوين لجهة العيون الساقية الحمراء - وزارة التربية الوطنية",
+      "url": "https://www.men.gov.ma/%D8%A5%D8%B9%D9%84%D8%A7%D9%86%D8%A7%D8%AA/%D8%B1%D8%A4%D8%B3%D8%A7%D8%A1-%D9%85%D8%B5%D8%A7%D9%84%D8%AD-%D8%A8%D8%A7%D9%84%D8%A3%D9%83%D8%A7%D8%AF%D9%8A%D9%85%D9%8A%D8%A9-%D8%A7%D9%84%D8%AC%D9%87%D9%88%D9%8A%D8%A9-%D9%84%D9%84%D8%AA%D8%B1%D8%A8%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D8%AA%D9%83%D9%88%D9%8A%D9%86-%D9%84%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%B9%D9%8A%D9%88%D9%86-%D8%A7%D9%84%D8%B3%D8%A7%D9%82%D9%8A%D8%A9-%D8%A7%D9%84%D8%AD%D9%85%D8%B1%D8%A7%D8%A1"
+    },
+    {
+      "title": "مدير أكاديمية العيون الساقية الحمراء يتفقد الدخول المدرسي ببوجدور - تربية ماروك",
+      "url": "https://www.tarbiyamaroc.net/2026/09/areflsh.html"
+    }
+  ],
+  "notes": "Describes the Moroccan-administered area, where most of the territory's learners live and schools run under Morocco's education ministry through its regional academies, so it mirrors Morocco's system: six years of primary, three of collège, then the common core and two baccalaureate years. Schools of the Sahrawi refugee camps near Tindouf (Algeria) and the Polisario-held area follow another system and are left out. Unconfirmed: the entry age of six and the year names come from Moroccan national pages, not from pages about the territory."
+}

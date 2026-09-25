@@ -1,0 +1,193 @@
+{
+  "id": "AU",
+  "country": "AU",
+  "name": {
+    "en": "Australia",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "foundation",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Foundation",
+        "local": {}
+      },
+      "aliases": [
+        "Kindergarten",
+        "Prep",
+        "Preparatory",
+        "Reception",
+        "Pre-primary",
+        "Transition"
+      ]
+    },
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Schools methodology, 2025 | Australian Bureau of Statistics",
+      "url": "https://www.abs.gov.au/methodologies/schools-methodology/2025"
+    },
+    {
+      "title": "F-10 Curriculum | V9 Australian Curriculum",
+      "url": "https://www.australiancurriculum.edu.au/f-10-curriculum"
+    },
+    {
+      "title": "Senior secondary curriculum | V9 Australian Curriculum",
+      "url": "https://www.australiancurriculum.edu.au/senior-secondary-curriculum"
+    }
+  ],
+  "notes": "Foundation (ABS: Pre-Year 1) is the first year of primary school in every state, so it is year 1 here and Year 12 is year 13. Its state names: Kindergarten (NSW, ACT), Prep (Qld, Vic, Tas), Reception (SA), Pre-primary (WA), Transition (NT). In WA, Kindergarten is the year before Pre-primary. Years 11-12 are commonly called senior secondary."
+}

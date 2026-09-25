@@ -1,0 +1,206 @@
+{
+  "id": "LV",
+  "country": "LV",
+  "name": {
+    "en": "Latvia",
+    "local": {
+      "lv": "Latvija"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic-1",
+      "name": {
+        "en": "Basic education, first stage",
+        "local": {
+          "lv": "Pamatizglītības pirmais posms"
+        }
+      }
+    },
+    {
+      "id": "basic-2",
+      "name": {
+        "en": "Basic education, second stage",
+        "local": {
+          "lv": "Pamatizglītības otrais posms"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "General secondary education",
+        "local": {
+          "lv": "Vispārējā vidējā izglītība"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic-1",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "lv": "1. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic-1",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "lv": "2. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic-1",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "lv": "3. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic-1",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "lv": "4. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic-1",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "lv": "5. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic-1",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "lv": "6. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic-2",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "lv": "7. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic-2",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "lv": "8. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic-2",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "lv": "9. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "lv": "10. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "lv": "11. klase"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "lv": "12. klase"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Vispārējās izglītības likums",
+      "url": "https://likumi.lv/ta/id/20243-visparejas-izglitibas-likums"
+    }
+  ],
+  "notes": "Basic education lasts nine years, in two stages: grades 1–6 and 7–9; it starts in the calendar year a child turns 7. General secondary education is grades 10–12."
+}

@@ -1,0 +1,210 @@
+{
+  "id": "QA",
+  "country": "QA",
+  "name": {
+    "en": "Qatar",
+    "local": {
+      "ar": "قطر"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "ar": "المرحلة الابتدائية"
+        }
+      }
+    },
+    {
+      "id": "preparatory",
+      "name": {
+        "en": "Preparatory",
+        "local": {
+          "ar": "المرحلة الإعدادية"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "ar": "المرحلة الثانوية"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ar": "الصف الأول"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ar": "الصف الثاني"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ar": "الصف الثالث"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ar": "الصف الرابع"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ar": "الصف الخامس"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ar": "الصف السادس"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "preparatory",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ar": "الصف السابع"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "preparatory",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ar": "الصف الثامن"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "preparatory",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ar": "الصف التاسع"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ar": "الصف العاشر"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ar": "الصف الحادي عشر"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ar": "الصف الثاني عشر"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "وزارة التربية والتعليم تُصدر تعميماً بشأن إجراءات تسجيل ونقل الطلبة للعام الأكاديمي 2026-2027",
+      "url": "https://www.edu.gov.qa/ar/News/Details/17391000"
+    },
+    {
+      "title": "Ministry of Education Announces the Dates of Registration and Transfer of Students for the Academic Year 2024/2025",
+      "url": "https://www.edu.gov.qa/en/News/Details/8506800"
+    }
+  ],
+  "notes": "Government schools are primary, preparatory (إعدادية) and secondary; the Ministry moves students to a new school after Grade 6 and Grade 9 on completing their stage. 'التمهيدي' is a pre-primary year and is not a level here. Boys' model schools (المدارس النموذجية) teach boys up to Grade 4. Many private schools follow other curricula."
+}

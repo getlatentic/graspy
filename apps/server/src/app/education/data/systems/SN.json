@@ -1,0 +1,242 @@
+{
+  "id": "SN",
+  "country": "SN",
+  "name": {
+    "en": "Senegal",
+    "local": {
+      "fr": "Sénégal"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementary",
+      "name": {
+        "en": "Elementary",
+        "local": {
+          "fr": "Enseignement élémentaire"
+        }
+      }
+    },
+    {
+      "id": "middle",
+      "name": {
+        "en": "Middle school (Moyen)",
+        "local": {
+          "fr": "Enseignement moyen"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary (Lycée)",
+        "local": {
+          "fr": "Enseignement secondaire"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "ci",
+      "stage": "elementary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CI",
+        "local": {
+          "fr": "Cours d'initiation"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cp",
+      "stage": "elementary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CP",
+        "local": {
+          "fr": "Cours préparatoire"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce1",
+      "stage": "elementary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce2",
+      "stage": "elementary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm1",
+      "stage": "elementary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm2",
+      "stage": "elementary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "6e",
+      "stage": "middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "middle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "middle",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème"
+      ]
+    },
+    {
+      "id": "2nde",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde"
+      ]
+    },
+    {
+      "id": "1re",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "1ère",
+        "Première"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Terminale",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Tle"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "PAQUET-EF 2018-2030 : Programme d'Amélioration de la Qualité, de l'Équité et de la Transparence – Éducation/Formation",
+      "url": "https://cms.education.sn/uploads/0c7d053bb8594ac9a5792e2e6e0e6404/PAQUETVF22-11-18%20(1).docx"
+    },
+    {
+      "title": "Concours d'entrée au Lycée Scientifique d'Excellence de Diourbel",
+      "url": "https://www.education.sn/posts/concours-dentree-au-lycee-scientifique-dexcellence-de-diourbel-lappel-a-la-nouvelle-generation-delites-scientifiques-est-lance"
+    },
+    {
+      "title": "Concours Général 2025 : L'excellence académique au cœur des valeurs de la République",
+      "url": "https://www.education.sn/posts/concours-general-2025-lexcellence-academique-au-cour-des-valeurs-de-la-republique"
+    }
+  ],
+  "notes": "The 10-year cycle fondamental (CI to 3e, ages 6–16) is compulsory. The ministry's elementary page targets ages 7–12 and admits 6-year-olds who attended preschool. Cinquième follows from the four-year moyen cycle (6e to 3e). Exams: CFEE after CM2, BFEM after 3e, Bac after Terminale."
+}

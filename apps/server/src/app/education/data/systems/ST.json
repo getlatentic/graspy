@@ -1,0 +1,239 @@
+{
+  "id": "ST",
+  "country": "ST",
+  "name": {
+    "en": "Sao Tome and Principe",
+    "local": {
+      "pt": "São Tomé e Príncipe"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic-1",
+      "name": {
+        "en": "Basic Education, 1st cycle",
+        "local": {
+          "pt": "1.º ciclo do Ensino Básico"
+        }
+      }
+    },
+    {
+      "id": "basic-2",
+      "name": {
+        "en": "Basic Education, 2nd cycle",
+        "local": {
+          "pt": "2.º ciclo do Ensino Básico"
+        }
+      }
+    },
+    {
+      "id": "secondary-1",
+      "name": {
+        "en": "Secondary Education, 1st cycle",
+        "local": {
+          "pt": "1.º ciclo do Ensino Secundário"
+        }
+      }
+    },
+    {
+      "id": "secondary-2",
+      "name": {
+        "en": "Secondary Education, 2nd cycle",
+        "local": {
+          "pt": "2.º ciclo do Ensino Secundário"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "pt": "1.ª classe"
+        }
+      },
+      "aliases": [
+        "1ª classe"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "pt": "2.ª classe"
+        }
+      },
+      "aliases": [
+        "2ª classe"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic-1",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "pt": "3.ª classe"
+        }
+      },
+      "aliases": [
+        "3ª classe"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic-1",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "pt": "4.ª classe"
+        }
+      },
+      "aliases": [
+        "4ª classe"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic-2",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "pt": "5.ª classe"
+        }
+      },
+      "aliases": [
+        "5ª classe"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic-2",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "pt": "6.ª classe"
+        }
+      },
+      "aliases": [
+        "6ª classe"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "secondary-1",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "pt": "7.ª classe"
+        }
+      },
+      "aliases": [
+        "7ª classe"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "secondary-1",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "pt": "8.ª classe"
+        }
+      },
+      "aliases": [
+        "8ª classe"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary-1",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "pt": "9.ª classe"
+        }
+      },
+      "aliases": [
+        "9ª classe"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary-2",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "pt": "10.ª classe"
+        }
+      },
+      "aliases": [
+        "10ª classe"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary-2",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "pt": "11.ª classe"
+        }
+      },
+      "aliases": [
+        "11ª classe"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary-2",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "pt": "12.ª classe"
+        }
+      },
+      "aliases": [
+        "12ª classe"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Boletim Estatístico 2020/2021 (Ministério da Educação e Ensino Superior)",
+      "url": "https://www.ine.st/phocadownload/userupload/Documentos/Informacoes_Estatisticas/Educacao/Boletim%20Estat%C3%ADstico%202020-2021.pdf"
+    }
+  ],
+  "notes": "Theoretical entry age is 6 for the 1.ª classe and 17 for the 12.ª classe. The ministry bulletin is published on the National Statistics Institute (INE) site."
+}

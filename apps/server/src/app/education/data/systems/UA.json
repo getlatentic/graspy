@@ -1,0 +1,193 @@
+{
+  "id": "UA",
+  "country": "UA",
+  "name": {
+    "en": "Ukraine",
+    "local": {
+      "uk": "Україна"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary education (Primary school)",
+        "local": {
+          "uk": "Початкова освіта"
+        }
+      }
+    },
+    {
+      "id": "basic-secondary",
+      "name": {
+        "en": "Basic secondary education (Gymnasium)",
+        "local": {
+          "uk": "Базова середня освіта"
+        }
+      }
+    },
+    {
+      "id": "profile-secondary",
+      "name": {
+        "en": "Profile secondary education (Lyceum)",
+        "local": {
+          "uk": "Профільна середня освіта"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "uk": "1 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "uk": "2 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "uk": "3 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "uk": "4 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic-secondary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "uk": "5 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic-secondary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "uk": "6 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "uk": "7 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "uk": "8 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "uk": "9 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "profile-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "uk": "10 клас"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "profile-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "uk": "11 клас"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Про повну загальну середню освіту | від 16.01.2020 № 463-IX",
+      "url": "https://zakon.rada.gov.ua/laws/show/463-20"
+    }
+  ],
+  "notes": "Describes the 2026–27 school year: primary grades 1–4, basic secondary 5–9 and a 2-year profile secondary (grades 10–11). Reform under way: Law No. 463-IX (art. 4) sets profile secondary at 3 years, 12 years in all; the 3-year profile school applies to all learners entering it from 1 September 2027, so the first full cohort reaches grade 12 in 2029/30 (earlier in pilot schools by Cabinet decision)."
+}

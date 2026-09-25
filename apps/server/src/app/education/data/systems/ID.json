@@ -1,0 +1,254 @@
+{
+  "id": "ID",
+  "country": "ID",
+  "name": {
+    "en": "Indonesia",
+    "local": {
+      "id": "Indonesia"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "sd",
+      "name": {
+        "en": "Primary (SD)",
+        "local": {
+          "id": "Sekolah Dasar (SD)"
+        }
+      }
+    },
+    {
+      "id": "smp",
+      "name": {
+        "en": "Junior secondary (SMP)",
+        "local": {
+          "id": "Sekolah Menengah Pertama (SMP)"
+        }
+      }
+    },
+    {
+      "id": "sma-smk",
+      "name": {
+        "en": "Senior secondary (SMA/SMK)",
+        "local": {
+          "id": "Sekolah Menengah Atas (SMA) / Sekolah Menengah Kejuruan (SMK)"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "sd",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "id": "Kelas 1"
+        }
+      },
+      "aliases": [
+        "Kelas I",
+        "Kelas 1 SD",
+        "Class 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "sd",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "id": "Kelas 2"
+        }
+      },
+      "aliases": [
+        "Kelas II",
+        "Kelas 2 SD",
+        "Class 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "sd",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "id": "Kelas 3"
+        }
+      },
+      "aliases": [
+        "Kelas III",
+        "Kelas 3 SD",
+        "Class 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "sd",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "id": "Kelas 4"
+        }
+      },
+      "aliases": [
+        "Kelas IV",
+        "Kelas 4 SD",
+        "Class 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "sd",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "id": "Kelas 5"
+        }
+      },
+      "aliases": [
+        "Kelas V",
+        "Kelas 5 SD",
+        "Class 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "sd",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "id": "Kelas 6"
+        }
+      },
+      "aliases": [
+        "Kelas VI",
+        "Kelas 6 SD",
+        "Class 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "smp",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "id": "Kelas 7"
+        }
+      },
+      "aliases": [
+        "Kelas VII",
+        "Kelas 1 SMP",
+        "Class 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "smp",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "id": "Kelas 8"
+        }
+      },
+      "aliases": [
+        "Kelas VIII",
+        "Kelas 2 SMP",
+        "Class 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "smp",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "id": "Kelas 9"
+        }
+      },
+      "aliases": [
+        "Kelas IX",
+        "Kelas 3 SMP",
+        "Class 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "sma-smk",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "id": "Kelas 10"
+        }
+      },
+      "aliases": [
+        "Kelas X",
+        "Kelas 1 SMA",
+        "Class 10"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "sma-smk",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "id": "Kelas 11"
+        }
+      },
+      "aliases": [
+        "Kelas XI",
+        "Kelas 2 SMA",
+        "Class 11"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "sma-smk",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "id": "Kelas 12"
+        }
+      },
+      "aliases": [
+        "Kelas XII",
+        "Kelas 3 SMA",
+        "Class 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Peraturan Menteri Pendidikan Dasar dan Menengah Nomor 3 Tahun 2025 tentang Sistem Penerimaan Murid Baru",
+      "url": "https://peraturan.bpk.go.id/Download/376799/Permendikdasmen-no-3-tahun-2025.pdf"
+    }
+  ],
+  "notes": "Classes are numbered Kelas 1-12 across SD, SMP and SMA/SMK; older usage restarts the count per school (Kelas 1 SMP = Kelas 7) and Roman numerals are common. Entry to Kelas 1 SD is at age 7 (age 6, or 5 years 6 months if ready, is allowed). Some SMK programmes add Kelas 13. Madrasah under the Ministry of Religious Affairs (MI, MTs, MA) use the same class numbers."
+}

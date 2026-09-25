@@ -1,0 +1,237 @@
+{
+  "id": "CU",
+  "country": "CU",
+  "name": {
+    "en": "Cuba",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaria",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "es": "Educación Primaria"
+        }
+      }
+    },
+    {
+      "id": "secundaria-basica",
+      "name": {
+        "en": "Lower secondary (Secundaria Básica)",
+        "local": {
+          "es": "Secundaria Básica"
+        }
+      }
+    },
+    {
+      "id": "preuniversitario",
+      "name": {
+        "en": "Pre-university (Preuniversitario)",
+        "local": {
+          "es": "Preuniversitario"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grado-1",
+      "stage": "primaria",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado"
+        }
+      },
+      "aliases": [
+        "1er grado"
+      ]
+    },
+    {
+      "id": "grado-2",
+      "stage": "primaria",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado"
+        }
+      },
+      "aliases": [
+        "2do grado"
+      ]
+    },
+    {
+      "id": "grado-3",
+      "stage": "primaria",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado"
+        }
+      },
+      "aliases": [
+        "3er grado"
+      ]
+    },
+    {
+      "id": "grado-4",
+      "stage": "primaria",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado"
+        }
+      },
+      "aliases": [
+        "4to grado"
+      ]
+    },
+    {
+      "id": "grado-5",
+      "stage": "primaria",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado"
+        }
+      },
+      "aliases": [
+        "5to grado"
+      ]
+    },
+    {
+      "id": "grado-6",
+      "stage": "primaria",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado"
+        }
+      },
+      "aliases": [
+        "6to grado"
+      ]
+    },
+    {
+      "id": "grado-7",
+      "stage": "secundaria-basica",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Séptimo grado"
+        }
+      },
+      "aliases": [
+        "7mo grado"
+      ]
+    },
+    {
+      "id": "grado-8",
+      "stage": "secundaria-basica",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Octavo grado"
+        }
+      },
+      "aliases": [
+        "8vo grado"
+      ]
+    },
+    {
+      "id": "grado-9",
+      "stage": "secundaria-basica",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Noveno grado"
+        }
+      },
+      "aliases": [
+        "9no grado"
+      ]
+    },
+    {
+      "id": "grado-10",
+      "stage": "preuniversitario",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Décimo grado"
+        }
+      },
+      "aliases": [
+        "10mo grado"
+      ]
+    },
+    {
+      "id": "grado-11",
+      "stage": "preuniversitario",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Undécimo grado"
+        }
+      },
+      "aliases": [
+        "11no grado",
+        "Onceno grado"
+      ]
+    },
+    {
+      "id": "grado-12",
+      "stage": "preuniversitario",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Duodécimo grado"
+        }
+      },
+      "aliases": [
+        "12mo grado"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "El Modelo de Escuela Primaria Cubana (MINED)",
+      "url": "https://www.mined.gob.cu/wp-content/uploads/2019/03/modelo_primaria.pdf"
+    },
+    {
+      "title": "Secundaria Básica | Ministerio de Educación de la República de Cuba",
+      "url": "https://www.mined.gob.cu/secundaria-basica/secundaria-basica/"
+    },
+    {
+      "title": "Preuniversitaria | Ministerio de Educación de la República de Cuba",
+      "url": "https://www.mined.gob.cu/preuniversitaria/993-2/"
+    }
+  ],
+  "notes": "Grades 10–12 are shown for the pre-university institutes (IPU, IPVCE). Learners on the technical and vocational track (Educación Técnica y Profesional) take upper secondary at polytechnic schools instead."
+}

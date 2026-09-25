@@ -1,0 +1,197 @@
+{
+  "id": "BW",
+  "country": "BW",
+  "name": {
+    "en": "Botswana",
+    "local": {}
+  },
+  "main": true,
+  "status": "draft",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "junior-secondary",
+      "name": {
+        "en": "Junior Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "senior-secondary",
+      "name": {
+        "en": "Senior Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "standard-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Standard 1",
+        "local": {}
+      },
+      "aliases": [
+        "Std 1"
+      ]
+    },
+    {
+      "id": "standard-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Standard 2",
+        "local": {}
+      },
+      "aliases": [
+        "Std 2"
+      ]
+    },
+    {
+      "id": "standard-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Standard 3",
+        "local": {}
+      },
+      "aliases": [
+        "Std 3"
+      ]
+    },
+    {
+      "id": "standard-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Standard 4",
+        "local": {}
+      },
+      "aliases": [
+        "Std 4"
+      ]
+    },
+    {
+      "id": "standard-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Standard 5",
+        "local": {}
+      },
+      "aliases": [
+        "Std 5"
+      ]
+    },
+    {
+      "id": "standard-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Standard 6",
+        "local": {}
+      },
+      "aliases": [
+        "Std 6"
+      ]
+    },
+    {
+      "id": "standard-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Standard 7",
+        "local": {}
+      },
+      "aliases": [
+        "Std 7"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "junior-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-2",
+      "stage": "junior-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-3",
+      "stage": "junior-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-4",
+      "stage": "senior-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-5",
+      "stage": "senior-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Form 5",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "PSLE Administration | Botswana Examination Council",
+      "url": "https://www.bec.co.bw/index.php/qualifications-programmes/psle-products/psle-administration"
+    },
+    {
+      "title": "JCE Administration | Botswana Examination Council",
+      "url": "https://www.bec.co.bw/index.php/qualifications-programmes/jce-products/jce-administration"
+    },
+    {
+      "title": "BGCSE Administration | Botswana Examination Council",
+      "url": "https://www.bec.co.bw/index.php/qualifications-programmes/bgcse-products/bgcse-administration"
+    }
+  ],
+  "draftedBy": "claude-code",
+  "notes": "Unconfirmed: the names Form 4 and Form 5 were not found verbatim in a reachable official source. BEC confirms the cycle lengths (PSLE after seven years of primary, JCE after three years of secondary, BGCSE after two years of senior secondary) and uses Standard 4, Standard 7 and Form 3. From 2025 BGCSE candidates are examined under two syllabus approaches, BGCSE and BSSE."
+}

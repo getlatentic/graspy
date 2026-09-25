@@ -1,0 +1,228 @@
+{
+  "id": "NP",
+  "country": "NP",
+  "name": {
+    "en": "Nepal",
+    "local": {
+      "ne": "नेपाल"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic level",
+        "local": {
+          "ne": "आधारभूत तह"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary level",
+        "local": {
+          "ne": "माध्यमिक तह"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ne": "कक्षा १"
+        }
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ne": "कक्षा २"
+        }
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ne": "कक्षा ३"
+        }
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ne": "कक्षा ४"
+        }
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ne": "कक्षा ५"
+        }
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ne": "कक्षा ६"
+        }
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ne": "कक्षा ७"
+        }
+      },
+      "aliases": [
+        "Class 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ne": "कक्षा ८"
+        }
+      },
+      "aliases": [
+        "Class 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ne": "कक्षा ९"
+        }
+      },
+      "aliases": [
+        "Class 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ne": "कक्षा १०"
+        }
+      },
+      "aliases": [
+        "Class 10",
+        "SEE year"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ne": "कक्षा ११"
+        }
+      },
+      "aliases": [
+        "Class 11",
+        "+2 first year"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ne": "कक्षा १२"
+        }
+      },
+      "aliases": [
+        "Class 12",
+        "+2 second year"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Flash 1 Report, 2081 | Centre for Education and Human Resource Development",
+      "url": "https://cehrd.gov.np/content/14179/flash-1-report--2081/"
+    },
+    {
+      "title": "राष्ट्रिय परिक्षा बोर्ड",
+      "url": "https://neb.gov.np/"
+    }
+  ],
+  "notes": "Basic level is Grades 1–8 (ages 5–12) and secondary level Grades 9–12. Grade 10 ends with the Secondary Education Examination (SEE); Grades 11–12 are examined by the National Examinations Board."
+}

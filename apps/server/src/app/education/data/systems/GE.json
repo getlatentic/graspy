@@ -1,0 +1,210 @@
+{
+  "id": "GE",
+  "country": "GE",
+  "name": {
+    "en": "Georgia",
+    "local": {
+      "ka": "საქართველო"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary level",
+        "local": {
+          "ka": "დაწყებითი საფეხური"
+        }
+      }
+    },
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic level",
+        "local": {
+          "ka": "საბაზო საფეხური"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary level",
+        "local": {
+          "ka": "საშუალო საფეხური"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ka": "I კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ka": "II კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ka": "III კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ka": "IV კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ka": "V კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ka": "VI კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ka": "VII კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ka": "VIII კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ka": "IX კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ka": "X კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ka": "XI კლასი"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ka": "XII კლასი"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "ზოგადი განათლების შესახებ",
+      "url": "https://matsne.gov.ge/ka/document/view/29248"
+    },
+    {
+      "title": "On General Education",
+      "url": "https://matsne.gov.ge/en/document/view/29248"
+    }
+  ],
+  "notes": "Reform under way: the Law on General Education now defines the secondary level as grades X–XI plus a voluntary grade XII. Grade XII stays compulsory for the school-leaving certificate until 2028–29 (except pupils starting grade X in 2026–27); from 2028–29 it is voluntary. Children enter grade I at 6."
+}

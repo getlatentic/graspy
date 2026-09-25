@@ -1,0 +1,234 @@
+{
+  "id": "VN",
+  "country": "VN",
+  "name": {
+    "en": "Viet Nam",
+    "local": {
+      "vi": "Việt Nam"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary (Tiểu học)",
+        "local": {
+          "vi": "Tiểu học"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary (THCS)",
+        "local": {
+          "vi": "Trung học cơ sở"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary (THPT)",
+        "local": {
+          "vi": "Trung học phổ thông"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "vi": "Lớp 1"
+        }
+      },
+      "aliases": [
+        "Lớp một"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "vi": "Lớp 2"
+        }
+      },
+      "aliases": [
+        "Lớp hai"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "vi": "Lớp 3"
+        }
+      },
+      "aliases": [
+        "Lớp ba"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "vi": "Lớp 4"
+        }
+      },
+      "aliases": [
+        "Lớp bốn"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "vi": "Lớp 5"
+        }
+      },
+      "aliases": [
+        "Lớp năm"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "lower-secondary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "vi": "Lớp 6"
+        }
+      },
+      "aliases": [
+        "Lớp sáu"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "vi": "Lớp 7"
+        }
+      },
+      "aliases": [
+        "Lớp bảy"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "vi": "Lớp 8"
+        }
+      },
+      "aliases": [
+        "Lớp tám"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "vi": "Lớp 9"
+        }
+      },
+      "aliases": [
+        "Lớp chín"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "upper-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "vi": "Lớp 10"
+        }
+      },
+      "aliases": [
+        "Lớp mười"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "vi": "Lớp 11"
+        }
+      },
+      "aliases": [
+        "Lớp mười một"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "vi": "Lớp 12"
+        }
+      },
+      "aliases": [
+        "Lớp mười hai"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Luật Giáo dục số 43/2019/QH14 (văn bản hợp nhất, sửa đổi bởi Luật số 123/2025/QH15)",
+      "url": "https://datafiles.chinhphu.vn/cpp/files/vbpq/2026/3/72-vbhn-vpqh.pdf"
+    },
+    {
+      "title": "Luật số 43/2019/QH14 của Quốc hội: Luật Giáo dục",
+      "url": "https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=197310"
+    }
+  ],
+  "notes": "Education Law art. 28: primary lớp một to lớp năm from age 6, lower secondary lớp sáu to lớp chín, upper secondary lớp mười to lớp mười hai."
+}

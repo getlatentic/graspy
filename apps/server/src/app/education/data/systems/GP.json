@@ -1,0 +1,236 @@
+{
+  "id": "GP",
+  "country": "GP",
+  "name": {
+    "en": "Guadeloupe",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementaire",
+      "name": {
+        "en": "Elementary school (École élémentaire)",
+        "local": {
+          "fr": "École élémentaire"
+        }
+      }
+    },
+    {
+      "id": "college",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "fr": "Collège"
+        }
+      }
+    },
+    {
+      "id": "lycee",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Lycée"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "cp",
+      "stage": "elementaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CP",
+        "local": {
+          "fr": "Cours préparatoire"
+        }
+      },
+      "aliases": [
+        "Onzième"
+      ]
+    },
+    {
+      "id": "ce1",
+      "stage": "elementaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire 1re année"
+        }
+      },
+      "aliases": [
+        "Dixième"
+      ]
+    },
+    {
+      "id": "ce2",
+      "stage": "elementaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire 2e année"
+        }
+      },
+      "aliases": [
+        "Neuvième"
+      ]
+    },
+    {
+      "id": "cm1",
+      "stage": "elementaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen 1re année"
+        }
+      },
+      "aliases": [
+        "Huitième"
+      ]
+    },
+    {
+      "id": "cm2",
+      "stage": "elementaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen 2e année"
+        }
+      },
+      "aliases": [
+        "Septième"
+      ]
+    },
+    {
+      "id": "6e",
+      "stage": "college",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "college",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "college",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "college",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème"
+      ]
+    },
+    {
+      "id": "2de",
+      "stage": "lycee",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "2de",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "2nde"
+      ]
+    },
+    {
+      "id": "1re",
+      "stage": "lycee",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "1ère"
+      ]
+    },
+    {
+      "id": "tle",
+      "stage": "lycee",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Tle",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Maternelle et élémentaire : information des parents sur la scolarité de leur enfant | Service Public",
+      "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F1391"
+    },
+    {
+      "title": "Orientation au lycée général ou technologique | Service Public",
+      "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F111"
+    },
+    {
+      "title": "Lycée général et technologique Baimbridge - Onisep",
+      "url": "https://www.onisep.fr/ressources/structures-enseignement/guadeloupe/guadeloupe/lycee-general-et-technologique-baimbridge"
+    }
+  ],
+  "notes": "Schools follow the French national system, run by Académie de Guadeloupe. Class names are the national ones; the old primary names (Onzième…Septième) survive only in a few private schools. Vocational lycée (2de, 1re, Tle professionnelle) uses the same year names."
+}

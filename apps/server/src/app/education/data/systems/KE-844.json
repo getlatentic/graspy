@@ -1,0 +1,189 @@
+{
+  "main": false,
+  "status": "sourced",
+  "id": "KE-844",
+  "country": "KE",
+  "name": {
+    "en": "Kenya (8-4-4)"
+  },
+  "until": 2027,
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary"
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "standard-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Standard 1"
+      },
+      "aliases": [
+        "Class 1",
+        "Std 1"
+      ]
+    },
+    {
+      "id": "standard-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Standard 2"
+      },
+      "aliases": [
+        "Class 2",
+        "Std 2"
+      ]
+    },
+    {
+      "id": "standard-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Standard 3"
+      },
+      "aliases": [
+        "Class 3",
+        "Std 3"
+      ]
+    },
+    {
+      "id": "standard-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Standard 4"
+      },
+      "aliases": [
+        "Class 4",
+        "Std 4"
+      ]
+    },
+    {
+      "id": "standard-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Standard 5"
+      },
+      "aliases": [
+        "Class 5",
+        "Std 5"
+      ]
+    },
+    {
+      "id": "standard-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Standard 6"
+      },
+      "aliases": [
+        "Class 6",
+        "Std 6"
+      ]
+    },
+    {
+      "id": "standard-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Standard 7"
+      },
+      "aliases": [
+        "Class 7",
+        "Std 7"
+      ]
+    },
+    {
+      "id": "standard-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Standard 8"
+      },
+      "aliases": [
+        "Class 8",
+        "Std 8"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 1"
+      },
+      "aliases": [
+        "F1"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 2"
+      },
+      "aliases": [
+        "F2"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 3"
+      },
+      "aliases": [
+        "F3"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Form 4"
+      },
+      "aliases": [
+        "F4"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Organization history – KNEC",
+      "url": "https://www.knec.ac.ke/who-we-are/history/"
+    },
+    {
+      "title": "Roll-out of competency based assessments in Senior School – KNEC circular, 8 May 2026",
+      "url": "https://www.knec.ac.ke/wp-content/uploads/2026/05/ROLL-OUT-OF-COMPETECNCY-BASED-ASSESSMENTS-IN-SENIOR-SCHOOL.pdf"
+    }
+  ],
+  "notes": "The system being replaced by Competency-Based Education. KCPE was last sat in 2023, so no primary classes remain; in 2026 only Form 3 and Form 4 are left. Form 4 sits KCSE in November 2026 and the last cohort, now in Form 3, sits it in 2027, after which KCSE ends."
+}

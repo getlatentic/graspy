@@ -1,0 +1,244 @@
+{
+  "id": "GW",
+  "country": "GW",
+  "name": {
+    "en": "Guinea-Bissau",
+    "local": {
+      "pt": "Guiné-Bissau"
+    }
+  },
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "stages": [
+    {
+      "id": "basic-1",
+      "name": {
+        "en": "Basic Education, 1st cycle",
+        "local": {
+          "pt": "1.º ciclo do Ensino Básico"
+        }
+      }
+    },
+    {
+      "id": "basic-2",
+      "name": {
+        "en": "Basic Education, 2nd cycle",
+        "local": {
+          "pt": "2.º ciclo do Ensino Básico"
+        }
+      }
+    },
+    {
+      "id": "basic-3",
+      "name": {
+        "en": "Basic Education, 3rd cycle",
+        "local": {
+          "pt": "3.º ciclo do Ensino Básico"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary Education",
+        "local": {
+          "pt": "Ensino Secundário"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "pt": "1.ª classe"
+        }
+      },
+      "aliases": [
+        "1ª classe"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "pt": "2.ª classe"
+        }
+      },
+      "aliases": [
+        "2ª classe"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic-1",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "pt": "3.ª classe"
+        }
+      },
+      "aliases": [
+        "3ª classe"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic-1",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "pt": "4.ª classe"
+        }
+      },
+      "aliases": [
+        "4ª classe"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic-2",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "pt": "5.ª classe"
+        }
+      },
+      "aliases": [
+        "5ª classe"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic-2",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "pt": "6.ª classe"
+        }
+      },
+      "aliases": [
+        "6ª classe"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic-3",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "pt": "7.ª classe"
+        }
+      },
+      "aliases": [
+        "7ª classe"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic-3",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "pt": "8.ª classe"
+        }
+      },
+      "aliases": [
+        "8ª classe"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic-3",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "pt": "9.ª classe"
+        }
+      },
+      "aliases": [
+        "9ª classe"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "pt": "10.ª classe"
+        }
+      },
+      "aliases": [
+        "10ª classe"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "pt": "11.ª classe"
+        }
+      },
+      "aliases": [
+        "11ª classe"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "pt": "12.ª classe"
+        }
+      },
+      "aliases": [
+        "12ª classe"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "ISCED 2011 Mapping: Guinea-Bissau (UNESCO Institute for Statistics)",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Guinea_Bissau.xlsx"
+    },
+    {
+      "title": "Plano Sectorial da Educação (2017-2025) – Ministério da Educação e Ensino Superior",
+      "url": "https://www.stat-guinebissau.com/Menu_principal/Pubica%C3%A7%C3%B5es/anuario/educacao/PLANO_SETORIAL_DA_EDUCA%C3%87%C3%83O.pdf"
+    }
+  ],
+  "notes": "The Ministry of Education's Plano Sectorial da Educação 2017-2025 confirms basic education in three cycles for ages 6–14: the 1st and 2nd cycles take six years (ages 6–11), the 3rd is 7º–9º ano with a national exam after 9º ano, and secondary runs to 12º ano. The 4+2 split of the first six years is from the ISCED 2011 mapping for Guinea-Bissau cited here, which dates entry at 6 from 2010-11. The plan names years 'ano'; the 'classe' names used here are not confirmed by an official source."
+}

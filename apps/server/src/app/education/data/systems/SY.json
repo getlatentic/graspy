@@ -1,0 +1,235 @@
+{
+  "id": "SY",
+  "country": "SY",
+  "name": {
+    "en": "Syria",
+    "local": {
+      "ar": "سوريا"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic education",
+        "local": {
+          "ar": "مرحلة التعليم الأساسي"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "ar": "التعليم الثانوي"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ar": "الصف الأول الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الأول"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ar": "الصف الثاني الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الثاني"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ar": "الصف الثالث الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الثالث"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ar": "الصف الرابع الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الرابع"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ar": "الصف الخامس الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الخامس"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ar": "الصف السادس الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف السادس"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ar": "الصف السابع الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف السابع"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ar": "الصف الثامن الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الثامن"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ar": "الصف التاسع الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف التاسع",
+        "شهادة التعليم الأساسي"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ar": "الصف الأول الثانوي"
+        }
+      },
+      "aliases": [
+        "1st Secondary",
+        "الصف العاشر"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ar": "الصف الثاني الثانوي"
+        }
+      },
+      "aliases": [
+        "2nd Secondary",
+        "الصف الحادي عشر"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ar": "الصف الثالث الثانوي"
+        }
+      },
+      "aliases": [
+        "3rd Secondary",
+        "الصف الثاني عشر",
+        "Baccalaureate",
+        "البكالوريا"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "تعليمات القيد والقبول في صفوف مدارس التعليم الأساسي (الرسمية والخاصة والمستولى عليها وما في حكمها) للعام الدراسي …",
+      "url": "https://web.archive.org/web/20241201040821/https://moed.gov.sy/site/%D8%A7%D9%84%D8%A3%D8%AE%D8%A8%D8%A7%D8%B1/%D8%A5%D8%B9%D9%84%D8%A7%D9%86%D8%A7%D8%AA/%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D8%A7%D8%AA-%D8%A7%D9%84%D9%82%D9%8A%D8%AF-%D9%88%D8%A7%D9%84%D9%82%D8%A8%D9%88%D9%84-%D9%81%D9%8A-%D8%B5%D9%81%D9%88%D9%81-%D9%85%D8%AF%D8%A7%D8%B1%D8%B3-%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85-%D8%A7%D9%84%D8%A3%D8%B3%D8%A7%D8%B3%D9%8A-%D8%A7%D9%84%D8%B1%D8%B3%D9%85%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D8%AE%D8%A7%D8%B5%D8%A9-%D9%88%D8%A7%D9%84%D9%85%D8%B3%D8%AA%D9%88%D9%84%D9%89-%D8%B9%D9%84%D9%8A%D9%87%D8%A7"
+    },
+    {
+      "title": "الخطة الدرسية للعام الدراسي 2017 / 2018 - وزارة التربية",
+      "url": "https://web.archive.org/web/20180219134919/http://moed.gov.sy/moefiles/docs-2017/pdf/plan-2018.pdf"
+    },
+    {
+      "title": "التربية تحدد تعليمات قبول الطلاب العرب والأجانب والسوريين في الصف الأول الثانوي العام للعام الدراسي 2011-2012",
+      "url": "https://web.archive.org/web/20241130171108/https://moed.gov.sy/site/%D8%A7%D9%84%D8%A3%D8%AE%D8%A8%D8%A7%D8%B1/%D9%82%D8%B1%D8%A7%D8%B1%D8%A7%D8%AA/%D8%A7%D9%84%D8%AA%D8%B1%D8%A8%D9%8A%D8%A9-%D8%AA%D8%AD%D8%AF%D8%AF-%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D8%A7%D8%AA-%D9%82%D8%A8%D9%88%D9%84-%D8%A7%D9%84%D8%B7%D9%84%D8%A7%D8%A8-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8-%D9%88%D8%A7%D9%84%D8%A3%D8%AC%D8%A7%D9%86%D8%A8-%D9%88%D8%A7%D9%84%D8%B3%D9%88%D8%B1%D9%8A%D9%8A%D9%86-%D9%81%D9%8A-%D8%A7%D9%84%D8%B5%D9%81-%D8%A7%D9%84%D8%A3%D9%88%D9%84-%D8%A7%D9%84%D8%AB%D8%A7%D9%86%D9%88%D9%8A-%D8%A7%D9%84%D8%B9%D8%A7%D9%85"
+    }
+  ],
+  "notes": "The current ministry site (moed.gov.sy) has no pages describing the structure, so older ministry pages are cited through Internet Archive copies. Basic education is grades 1-9 in two cycles (الحلقة الأولى and الثانية), ending with the basic education certificate. Secondary is grades 10-12, ending with the baccalaureate. The cited pages do not give the cycle boundary."
+}

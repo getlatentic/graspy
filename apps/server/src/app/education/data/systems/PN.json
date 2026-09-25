@@ -1,0 +1,182 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "PN",
+  "country": "PN",
+  "name": {
+    "en": "Pitcairn Islands",
+    "local": {}
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary (Years 1–8)",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary (Years 9–13)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-13",
+      "stage": "secondary",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "GPI Policy: Education - Government of the Pitcairn Islands",
+      "url": "https://www.government.pn/s/GPI-Policy-Education.pdf"
+    },
+    {
+      "title": "Primary and secondary education - New Zealand Ministry of Education",
+      "url": "https://www.education.govt.nz/our-work/about-us/education-new-zealand/our-education-system/primary-and-secondary-education"
+    }
+  ],
+  "notes": "Pulau School in Adamstown, the islands' only school, teaches a curriculum based on The New Zealand Curriculum with New Zealand-registered teachers, and reports on Years 1–10; schooling is compulsory from 5 to 16 (GPI education policy). Year levels and ages follow New Zealand, where children start school at five, primary is Years 1–8 and secondary Years 9–13. Older students usually continue secondary school in New Zealand or by correspondence."
+}

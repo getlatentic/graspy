@@ -1,0 +1,275 @@
+{
+  "id": "LU",
+  "country": "LU",
+  "name": {
+    "en": "Luxembourg",
+    "local": {
+      "fr": "Luxembourg",
+      "de": "Luxemburg",
+      "lb": "Lëtzebuerg"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "fondamental",
+      "name": {
+        "en": "Primary (cycles 2–4)",
+        "local": {
+          "fr": "Enseignement fondamental, cycles 2 à 4"
+        }
+      }
+    },
+    {
+      "id": "classes-inferieures",
+      "name": {
+        "en": "Lower secondary (classes inférieures)",
+        "local": {
+          "fr": "Classes inférieures"
+        }
+      }
+    },
+    {
+      "id": "classes-superieures",
+      "name": {
+        "en": "Upper secondary (classes supérieures)",
+        "local": {
+          "fr": "Classes supérieures"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "cycle-2-1",
+      "stage": "fondamental",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Cycle 2.1",
+        "local": {
+          "fr": "Cycle 2.1"
+        }
+      },
+      "aliases": [
+        "C2.1",
+        "1re année primaire"
+      ]
+    },
+    {
+      "id": "cycle-2-2",
+      "stage": "fondamental",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Cycle 2.2",
+        "local": {
+          "fr": "Cycle 2.2"
+        }
+      },
+      "aliases": [
+        "C2.2",
+        "2e année primaire"
+      ]
+    },
+    {
+      "id": "cycle-3-1",
+      "stage": "fondamental",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Cycle 3.1",
+        "local": {
+          "fr": "Cycle 3.1"
+        }
+      },
+      "aliases": [
+        "C3.1",
+        "3e année primaire"
+      ]
+    },
+    {
+      "id": "cycle-3-2",
+      "stage": "fondamental",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Cycle 3.2",
+        "local": {
+          "fr": "Cycle 3.2"
+        }
+      },
+      "aliases": [
+        "C3.2",
+        "4e année primaire"
+      ]
+    },
+    {
+      "id": "cycle-4-1",
+      "stage": "fondamental",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Cycle 4.1",
+        "local": {
+          "fr": "Cycle 4.1"
+        }
+      },
+      "aliases": [
+        "C4.1",
+        "5e année primaire"
+      ]
+    },
+    {
+      "id": "cycle-4-2",
+      "stage": "fondamental",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Cycle 4.2",
+        "local": {
+          "fr": "Cycle 4.2"
+        }
+      },
+      "aliases": [
+        "C4.2",
+        "6e année primaire"
+      ]
+    },
+    {
+      "id": "classe-7",
+      "stage": "classes-inferieures",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "7e",
+        "local": {
+          "fr": "Classe de 7e"
+        }
+      },
+      "aliases": [
+        "7C",
+        "7G",
+        "Septième"
+      ]
+    },
+    {
+      "id": "classe-6",
+      "stage": "classes-inferieures",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Classe de 6e"
+        }
+      },
+      "aliases": [
+        "6C",
+        "6G",
+        "Sixième"
+      ]
+    },
+    {
+      "id": "classe-5",
+      "stage": "classes-inferieures",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Classe de 5e"
+        }
+      },
+      "aliases": [
+        "5C",
+        "5G",
+        "Cinquième"
+      ]
+    },
+    {
+      "id": "classe-4",
+      "stage": "classes-superieures",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Classe de 4e"
+        }
+      },
+      "aliases": [
+        "4C",
+        "4G",
+        "Quatrième"
+      ]
+    },
+    {
+      "id": "classe-3",
+      "stage": "classes-superieures",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Classe de 3e"
+        }
+      },
+      "aliases": [
+        "3C",
+        "3G",
+        "Troisième"
+      ]
+    },
+    {
+      "id": "classe-2",
+      "stage": "classes-superieures",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "2e",
+        "local": {
+          "fr": "Classe de 2e"
+        }
+      },
+      "aliases": [
+        "2C",
+        "2G",
+        "Deuxième"
+      ]
+    },
+    {
+      "id": "classe-1",
+      "stage": "classes-superieures",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Classe de 1re"
+        }
+      },
+      "aliases": [
+        "1C",
+        "1G",
+        "Première"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Organisation - Système éducatif - Education nationale, Enfance et Jeunesse - Luxembourg",
+      "url": "https://men.public.lu/fr/systeme-educatif/fondamental/offre-scolaire-organisation/organisation-enseignement-fondamental.html"
+    },
+    {
+      "title": "Enseignement secondaire - Système éducatif - Education nationale, Enfance et Jeunesse - Luxembourg",
+      "url": "https://men.public.lu/fr/systeme-educatif/secondaire.html"
+    },
+    {
+      "title": "Offre scolaire - Système éducatif - Education nationale, Enfance et Jeunesse - Luxembourg",
+      "url": "https://men.public.lu/fr/systeme-educatif/secondaire/offre-scolaire-organisation/offre-scolaire.html"
+    }
+  ],
+  "notes": "Primary is cycles 2–4 of the école fondamentale (two years each); cycle 1 (précoce, préscolaire) is pre-primary and excluded. The lycée has seven years counted down from 7e to 1re, in the classique (ESC, class codes 7C…1C) and général (ESG, 7G…1G) tracks; some ESG and vocational routes differ in length. From 2026/2027 schooling is compulsory to age 18."
+}

@@ -1,0 +1,221 @@
+{
+  "id": "SH",
+  "country": "SH",
+  "name": {
+    "en": "Saint Helena",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary (Key Stages 1–2)",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary (Key Stages 3–4)",
+        "local": {}
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth form (Key Stage 5)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": [
+        "Y1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": [
+        "Y2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": [
+        "Y3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": [
+        "Y4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": [
+        "Y5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": [
+        "Y6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": [
+        "Y7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": [
+        "Y8"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": [
+        "Y9"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": [
+        "Y10"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": [
+        "Y11"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "sixth-form",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": [
+        "Y12",
+        "Lower Sixth"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13",
+        "local": {}
+      },
+      "aliases": [
+        "Y13",
+        "Upper Sixth"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Education, Skills & Employment – St Helena",
+      "url": "https://www.sainthelena.gov.sh/st-helena/government/portfolios/education-employment/"
+    },
+    {
+      "title": "Primary Schools (KS1 & KS2) – St Helena",
+      "url": "https://www.sainthelena.gov.sh/st-helena/government/portfolios/education-employment/primary-schools-ks1-ks2/"
+    },
+    {
+      "title": "St Helena Secondary School – St Helena",
+      "url": "https://www.sainthelena.gov.sh/st-helena/government/portfolios/education-employment/prince-andrew-school/"
+    }
+  ],
+  "notes": "Schooling is compulsory from 5 to 16 (Education Ordinance 2008); Nursery and Reception (Early Years Foundation Stage) come before Year 1. The only secondary school, Prince Andrew School, was renamed St Helena Secondary School in May 2025. GCSEs are taken in Year 11 and A levels in Year 13. Ascension and Tristan da Cunha are not covered."
+}

@@ -1,0 +1,242 @@
+{
+  "id": "BF",
+  "country": "BF",
+  "name": {
+    "en": "Burkina Faso",
+    "local": {
+      "fr": "Burkina Faso"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "post-primary",
+      "name": {
+        "en": "Post-primary (Collège)",
+        "local": {
+          "fr": "Enseignement post-primaire"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary (Lycée)",
+        "local": {
+          "fr": "Enseignement secondaire"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "cp1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CP1",
+        "local": {
+          "fr": "Cours préparatoire première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cp2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CP2",
+        "local": {
+          "fr": "Cours préparatoire deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce1",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce2",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm1",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm2",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "6e",
+      "stage": "post-primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "post-primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "post-primary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "post-primary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème"
+      ]
+    },
+    {
+      "id": "2nde",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde"
+      ]
+    },
+    {
+      "id": "1re",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "1ère",
+        "Première"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Terminale",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Tle"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Loi n° 013-2007/AN portant loi d'orientation de l'éducation",
+      "url": "https://natlex.ilo.org/dyn/natlex2/natlex2/files/download/77498/BFA-77498.pdf"
+    },
+    {
+      "title": "Annuaire statistique de l'enseignement primaire 2024/2025",
+      "url": "https://www.education.gov.bf/fileadmin/user_upload/storages/annuaire_statistique_du_primaire_2024-2025_vf.pdf"
+    },
+    {
+      "title": "Plan sectoriel de l'éducation et de la formation (PSEF) 2017-2030",
+      "url": "https://www.gpekix.org/sites/default/files/Media%20Document/PSEF-Burkina%20faso%202017-2030.docx.pdf"
+    }
+  ],
+  "notes": "Primary and post-primary together form compulsory basic education (ages 6 to 16). Exams: CEP after CM2, BEPC after 3e, Bac after Terminale. A revision of the 2007 orientation law has been recommended but not adopted."
+}

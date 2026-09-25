@@ -1,0 +1,245 @@
+{
+  "id": "PF",
+  "country": "PF",
+  "name": {
+    "en": "French Polynesia",
+    "local": {
+      "fr": "Polynésie française"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "ecole-elementaire",
+      "name": {
+        "en": "Primary (École élémentaire)",
+        "local": {
+          "fr": "École élémentaire"
+        }
+      }
+    },
+    {
+      "id": "college",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "fr": "Collège"
+        }
+      }
+    },
+    {
+      "id": "lycee",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Lycée"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "cp",
+      "stage": "ecole-elementaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CP",
+        "local": {
+          "fr": "Cours préparatoire"
+        }
+      },
+      "aliases": [
+        "Cours préparatoire"
+      ]
+    },
+    {
+      "id": "ce1",
+      "stage": "ecole-elementaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire première année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 1"
+      ]
+    },
+    {
+      "id": "ce2",
+      "stage": "ecole-elementaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire deuxième année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 2"
+      ]
+    },
+    {
+      "id": "cm1",
+      "stage": "ecole-elementaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen première année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 1"
+      ]
+    },
+    {
+      "id": "cm2",
+      "stage": "ecole-elementaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen deuxième année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 2"
+      ]
+    },
+    {
+      "id": "6e",
+      "stage": "college",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème",
+        "Sixième"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "college",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème",
+        "Cinquième"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "college",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème",
+        "Quatrième"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "college",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème",
+        "Troisième"
+      ]
+    },
+    {
+      "id": "2de",
+      "stage": "lycee",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "2de",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde",
+        "2nde"
+      ]
+    },
+    {
+      "id": "1re",
+      "stage": "lycee",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "Première",
+        "1ère"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "lycee",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Terminale",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Tle",
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Parcours de lecteur culturel, humaniste et artistique",
+      "url": "https://www.education.pf/parcours-de-lecteur-culturel-humaniste-et-artistique/"
+    },
+    {
+      "title": "Charte de l'éducation de la Polynésie française - 2017",
+      "url": "https://www.education.pf/wp-content/uploads/2019/06/Ebook-v6-CharteEducation2017-171122-validee.pdf"
+    },
+    {
+      "title": "2.2.8 Charte de l'éducation et convention État-Pays",
+      "url": "https://www.service-public.pf/wp-content/uploads/2024/08/2.2.8.-Charte-de-leducation-et-convention-etat-pays.pdf"
+    }
+  ],
+  "notes": "French system classes, with programmes adapted to French Polynesia. Cycles: cycle 2 (CP–CE2), cycle 3 (CM1, CM2, 6e), cycle 4 (5e–3e). Some young adolescents follow the local CJA (Centre des jeunes adolescents) or CETAD tracks instead of collège; these are alternatives, not school years."
+}

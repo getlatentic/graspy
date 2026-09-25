@@ -1,0 +1,185 @@
+{
+  "id": "PG",
+  "country": "PG",
+  "name": {
+    "en": "Papua New Guinea",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementary",
+      "name": {
+        "en": "Elementary school"
+      }
+    },
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary school"
+      }
+    },
+    {
+      "id": "high",
+      "name": {
+        "en": "High school"
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary school"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "elementary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Elementary 1"
+      },
+      "aliases": [
+        "E1",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "elementary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Elementary 2"
+      },
+      "aliases": [
+        "E2",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "high",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "high",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Government Approves Major Education Reform and Long-Term Funding Framework to 2035",
+      "url": "https://www.pmnec.gov.pg/government-approves-major-education-reform-and-long-term-funding-framework-to-2035/"
+    },
+    {
+      "title": "Papua New Guinea Partnership Compact: Complete Rollout of the 1-6-6",
+      "url": "https://www.globalpartnership.org/node/document/download?file=document/file/2025-07-papua-new-guinea-partnership-compact.pdf"
+    }
+  ],
+  "notes": "Stages follow the 3-6-4 structure most schools run in 2026: elementary school (Prep, Elementary 1–2), primary Grades 3–8, high school Grades 9–10 and secondary Grades 11–12. Prep is pre-primary and not listed. The National Education Plan 2020–2029 moves to 1-6-6 (primary Grades 1–6, secondary 7–12), trialled in six provinces with national roll-out from 2027; year names stay Grade 1–12. The Partnership Compact is the Department of Education's own document, hosted by GPE."
+}

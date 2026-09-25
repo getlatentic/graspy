@@ -1,0 +1,215 @@
+{
+  "id": "KI",
+  "country": "KI",
+  "name": {
+    "en": "Kiribati",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "junior-secondary",
+      "name": {
+        "en": "Junior Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "senior-secondary",
+      "name": {
+        "en": "Senior Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "junior-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": [
+        "Year 7"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "junior-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": [
+        "Year 8"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "junior-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": [
+        "Year 9"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "senior-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": [
+        "Year 10"
+      ]
+    },
+    {
+      "id": "form-5",
+      "stage": "senior-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 5",
+        "local": {}
+      },
+      "aliases": [
+        "Year 11"
+      ]
+    },
+    {
+      "id": "form-6",
+      "stage": "senior-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Form 6",
+        "local": {}
+      },
+      "aliases": [
+        "Year 12"
+      ]
+    },
+    {
+      "id": "form-7",
+      "stage": "senior-secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Form 7",
+        "local": {}
+      },
+      "aliases": [
+        "Year 13"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "ESSP 2016-2019.pdf (Ministry of Education, Education Sector Strategic Plan 2016–2019)",
+      "url": "https://drive.google.com/open?id=1R7bDDY5KIkvdlL2LgMVfqQA9-ocEZHeQ"
+    },
+    {
+      "title": "MOE Kiribati - Past Exams",
+      "url": "https://www.moe.gov.ki/past-exams"
+    }
+  ],
+  "notes": "Primary Years 1–6 (entry at age 6), junior secondary school (JSS) Forms 1–3 and senior secondary Forms 4–7. Basic education, free and compulsory, runs from Year 1 to the end of JSS. The ministry also counts JSS years as Year 7–9. National exams sit at Form 3, 5, 6 and 7. The strategic plan is linked from the ministry's Education Policies & Guidelines page."
+}

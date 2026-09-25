@@ -1,0 +1,210 @@
+{
+  "id": "MV",
+  "country": "MV",
+  "name": {
+    "en": "Maldives",
+    "local": {
+      "dv": "ދިވެހިރާއްޖެ"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "dv": "ފަށާ ތަޢުލީމު"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "dv": "ޘާނަވީ ތަޢުލީމު"
+        }
+      }
+    },
+    {
+      "id": "higher-secondary",
+      "name": {
+        "en": "Higher Secondary",
+        "local": {
+          "dv": "މަތީ ޘާނަވީ ތަޢުލީމު"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "dv": "ގްރޭޑް 1"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "dv": "ގްރޭޑް 2"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "dv": "ގްރޭޑް 3"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "dv": "ގްރޭޑް 4"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "dv": "ގްރޭޑް 5"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "dv": "ގްރޭޑް 6"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "dv": "ގްރޭޑް 7"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "dv": "ގްރޭޑް 8"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "dv": "ގްރޭޑް 9"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "dv": "ގްރޭޑް 10"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "higher-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "dv": "ގްރޭޑް 11"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "higher-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "dv": "ގްރޭޑް 12"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Functional Translation of the Education Act (Act No: 24/2020)",
+      "url": "https://www.moe.gov.mv/storage/files/resources/English_translation_of_Education_Act.pdf"
+    },
+    {
+      "title": "ތަޢުލީމުގެ ޤާނޫނު (ޤާނޫނު ނަންބަރު 24/2020)",
+      "url": "https://www.moe.gov.mv/doc/Education_Act.pdf"
+    }
+  ],
+  "notes": "The Education Act 2020 defines primary as Grades 1–6, secondary as 7–10 and higher secondary as 11–12; preschool covers ages 4–6."
+}

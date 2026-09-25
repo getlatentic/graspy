@@ -1,0 +1,273 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "BI",
+  "country": "BI",
+  "name": {
+    "en": "Burundi",
+    "local": {
+      "fr": "Burundi",
+      "rn": "Uburundi"
+    }
+  },
+  "stages": [
+    {
+      "id": "fondamental-cycle-1",
+      "name": {
+        "en": "Fundamental school, cycle 1",
+        "local": {
+          "fr": "Enseignement fondamental, 1er cycle"
+        }
+      }
+    },
+    {
+      "id": "fondamental-cycle-2",
+      "name": {
+        "en": "Fundamental school, cycle 2",
+        "local": {
+          "fr": "Enseignement fondamental, 2e cycle"
+        }
+      }
+    },
+    {
+      "id": "fondamental-cycle-3",
+      "name": {
+        "en": "Fundamental school, cycle 3",
+        "local": {
+          "fr": "Enseignement fondamental, 3e cycle"
+        }
+      }
+    },
+    {
+      "id": "fondamental-cycle-4",
+      "name": {
+        "en": "Fundamental school, cycle 4",
+        "local": {
+          "fr": "Enseignement fondamental, 4e cycle"
+        }
+      }
+    },
+    {
+      "id": "post-fondamental",
+      "name": {
+        "en": "Post-fundamental (upper secondary)",
+        "local": {
+          "fr": "Enseignement post-fondamental"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "fondamental-1",
+      "stage": "fondamental-cycle-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1 (Fundamental)",
+        "local": {
+          "fr": "1ère année"
+        }
+      },
+      "aliases": [
+        "1ère année fondamentale",
+        "1e année"
+      ]
+    },
+    {
+      "id": "fondamental-2",
+      "stage": "fondamental-cycle-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2 (Fundamental)",
+        "local": {
+          "fr": "2ème année"
+        }
+      },
+      "aliases": [
+        "2ème année fondamentale",
+        "2e année"
+      ]
+    },
+    {
+      "id": "fondamental-3",
+      "stage": "fondamental-cycle-2",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3 (Fundamental)",
+        "local": {
+          "fr": "3ème année"
+        }
+      },
+      "aliases": [
+        "3ème année fondamentale",
+        "3e année"
+      ]
+    },
+    {
+      "id": "fondamental-4",
+      "stage": "fondamental-cycle-2",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4 (Fundamental)",
+        "local": {
+          "fr": "4ème année"
+        }
+      },
+      "aliases": [
+        "4ème année fondamentale",
+        "4e année"
+      ]
+    },
+    {
+      "id": "fondamental-5",
+      "stage": "fondamental-cycle-3",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5 (Fundamental)",
+        "local": {
+          "fr": "5ème année"
+        }
+      },
+      "aliases": [
+        "5ème année fondamentale",
+        "5e année"
+      ]
+    },
+    {
+      "id": "fondamental-6",
+      "stage": "fondamental-cycle-3",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6 (Fundamental)",
+        "local": {
+          "fr": "6ème année"
+        }
+      },
+      "aliases": [
+        "6ème année fondamentale",
+        "6e année"
+      ]
+    },
+    {
+      "id": "fondamental-7",
+      "stage": "fondamental-cycle-4",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Year 7 (Fundamental)",
+        "local": {
+          "fr": "7ème année"
+        }
+      },
+      "aliases": [
+        "7ème année fondamentale",
+        "7e année"
+      ]
+    },
+    {
+      "id": "fondamental-8",
+      "stage": "fondamental-cycle-4",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Year 8 (Fundamental)",
+        "local": {
+          "fr": "8ème année"
+        }
+      },
+      "aliases": [
+        "8ème année fondamentale",
+        "8e année"
+      ]
+    },
+    {
+      "id": "fondamental-9",
+      "stage": "fondamental-cycle-4",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Year 9 (Fundamental)",
+        "local": {
+          "fr": "9ème année"
+        }
+      },
+      "aliases": [
+        "9ème année fondamentale",
+        "9e année"
+      ]
+    },
+    {
+      "id": "post-fondamental-1",
+      "stage": "post-fondamental",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Post-fundamental Year 1",
+        "local": {
+          "fr": "1ère année post-fondamental"
+        }
+      },
+      "aliases": [
+        "1ère année PF",
+        "1ère post-fondamental"
+      ]
+    },
+    {
+      "id": "post-fondamental-2",
+      "stage": "post-fondamental",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Post-fundamental Year 2",
+        "local": {
+          "fr": "2ème année post-fondamental"
+        }
+      },
+      "aliases": [
+        "2ème année PF",
+        "2ème post-fondamental"
+      ]
+    },
+    {
+      "id": "post-fondamental-3",
+      "stage": "post-fondamental",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Post-fundamental Year 3",
+        "local": {
+          "fr": "3ème année post-fondamental"
+        }
+      },
+      "aliases": [
+        "3ème année PF",
+        "3ème post-fondamental"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Annuaire statistique de l'éducation 2015/2016, Tome 1 - Ministère de l'Éducation (archived)",
+      "url": "https://web.archive.org/web/2025/https://mesrs.gov.bi/wp-content/uploads/2025/05/Annu_stat_Education_TOME1_2015_2016-compressed.pdf"
+    },
+    {
+      "title": "Annuaire statistique 2016/2017, Tome 2, enseignement post-fondamental (archived)",
+      "url": "https://web.archive.org/web/2025/https://mesrs.gov.bi/wp-content/uploads/2025/05/Annu_Stat_Education_TOME2_2016_2017_compressed.pdf"
+    },
+    {
+      "title": "Évaluation formative de la réforme de l'enseignement fondamental au Burundi - UNICEF",
+      "url": "https://evaluationreports.unicef.org/GetDocument?documentID=16682&fileID=42684"
+    },
+    {
+      "title": "Retour de la 10ᵉ année : une mesure saluée mais jugée insuffisante - Iwacu",
+      "url": "https://www.iwacu-burundi.org/retour-de-la-10%E1%B5%89-annee-une-mesure-saluee-mais-jugee-insuffisante/"
+    }
+  ],
+  "notes": "The école fondamentale takes children from six (Loi n°1/19 of 2013) for nine years in four cycles and ends with the national certification and orientation exam for post-fondamental. General post-fondamental lasts three years (1ère–3ème année PF) and ends with the examen d'État; the teacher-training track lasts four years and technical tracks three or four. In June 2026 the government announced a 10th fondamental year from 2027/28; how later years will change is not yet published. Kirundi year names are not confirmed."
+}

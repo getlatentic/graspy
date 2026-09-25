@@ -1,0 +1,199 @@
+{
+  "id": "FM",
+  "country": "FM",
+  "name": {
+    "en": "Micronesia (Federated States of)",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementary",
+      "name": {
+        "en": "Elementary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary (High School)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "elementary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": [
+        "1st grade"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "elementary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": [
+        "2nd grade"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "elementary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": [
+        "3rd grade"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "elementary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": [
+        "4th grade"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "elementary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": [
+        "5th grade"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "elementary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": [
+        "6th grade"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "elementary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": [
+        "7th grade"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "elementary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": [
+        "8th grade"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": [
+        "9th grade",
+        "Freshman"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": [
+        "10th grade",
+        "Sophomore"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": [
+        "11th grade",
+        "Junior"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": [
+        "12th grade",
+        "Senior"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "FSM Education History – NDOE",
+      "url": "https://www.national.doe.fm/fsm-education-history/"
+    },
+    {
+      "title": "Education Title 40 – NDOE",
+      "url": "https://www.national.doe.fm/education-title-40/"
+    }
+  ],
+  "notes": "Elementary is Grades 1–8 (ages 6–13) and secondary Grades 9–12 (ages 14–18); a child enters first grade at 6. States differ slightly: Kosrae's elementary schools teach Grades 1–9 and Kosrae High School Grades 10–12, and some Chuuk schools run to Grade 10."
+}

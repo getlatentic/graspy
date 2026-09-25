@@ -1,0 +1,239 @@
+{
+  "id": "GA",
+  "country": "GA",
+  "name": {
+    "en": "Gabon",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaire",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "premier-cycle",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "fr": "Premier cycle du secondaire"
+        }
+      }
+    },
+    {
+      "id": "second-cycle",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Second cycle du secondaire"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primaire-1",
+      "stage": "primaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary 1",
+        "local": {
+          "fr": "1ère année"
+        }
+      },
+      "aliases": [
+        "1ère année"
+      ]
+    },
+    {
+      "id": "primaire-2",
+      "stage": "primaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary 2",
+        "local": {
+          "fr": "2ème année"
+        }
+      },
+      "aliases": [
+        "2ème année"
+      ]
+    },
+    {
+      "id": "primaire-3",
+      "stage": "primaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary 3",
+        "local": {
+          "fr": "3ème année"
+        }
+      },
+      "aliases": [
+        "3ème année"
+      ]
+    },
+    {
+      "id": "primaire-4",
+      "stage": "primaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary 4",
+        "local": {
+          "fr": "4ème année"
+        }
+      },
+      "aliases": [
+        "4ème année"
+      ]
+    },
+    {
+      "id": "primaire-5",
+      "stage": "primaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary 5",
+        "local": {
+          "fr": "5ème année"
+        }
+      },
+      "aliases": [
+        "5ème année"
+      ]
+    },
+    {
+      "id": "sixieme",
+      "stage": "premier-cycle",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème",
+        "Sixième"
+      ]
+    },
+    {
+      "id": "cinquieme",
+      "stage": "premier-cycle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème",
+        "Cinquième"
+      ]
+    },
+    {
+      "id": "quatrieme",
+      "stage": "premier-cycle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème",
+        "Quatrième"
+      ]
+    },
+    {
+      "id": "troisieme",
+      "stage": "premier-cycle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème",
+        "Troisième"
+      ]
+    },
+    {
+      "id": "seconde",
+      "stage": "second-cycle",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde",
+        "2de"
+      ]
+    },
+    {
+      "id": "premiere",
+      "stage": "second-cycle",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "1ère",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "Première",
+        "1re"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "second-cycle",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Tle",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Terminale",
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "PASEC2019 – Qualité du système éducatif gabonais",
+      "url": "https://api-services.pasec.confemen.org/media/download/data-for-website/2021/Rapports%20nationaux/Evaluation%20PASEC2019%20%E2%80%93%20Performances%20du%20syst%C3%A8me%20%C3%A9ducatif%20gabonais.pdf"
+    },
+    {
+      "title": "Cartographie de la CITE 2011 de Gabon",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Gabon.xlsx"
+    }
+  ],
+  "notes": "Primary lasts 5 years (ages 6–10) under Law No. 21/2011; its classes are numbered 1ère to 5ème année and end with the CEP. Do not confuse primary 5ème année with 5e, the second year of collège. Collège (4 years, BEPC) and lycée (3 years, Baccalauréat) keep the French class names; the 4e is inferred from the sequence 6ème, 5ème, …, 3ème given in the sources."
+}

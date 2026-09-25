@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/brand/sprout.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="graspy" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+    />
+    <meta
+      name="description"
+      content="Personalized, culturally-aware education for children in crisis zones"
+    />
+    <title>graspy — AI Tutor</title>
+    <script>
+      // Sets lang and dir before first paint, so a right-to-left page does not
+      // flash left-to-right while the app loads.
+      (function () {
+        var m = document.cookie.match(/(?:^|; )graspy_locale=([^;]*)/);
+        var locale = m ? decodeURIComponent(m[1]) : (navigator.language || 'en').slice(0, 2);
+        var rtl = ['ar', 'he', 'fa', 'ur', 'ps', 'ku'];
+        document.documentElement.lang = locale;
+        document.documentElement.dir = rtl.indexOf(locale) !== -1 ? 'rtl' : 'ltr';
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,257 @@
+{
+  "id": "SI",
+  "country": "SI",
+  "name": {
+    "en": "Slovenia",
+    "local": {
+      "sl": "Slovenija"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Basic school (Osnovna šola)",
+        "local": {
+          "sl": "Osnovna šola"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Upper secondary school (Srednja šola)",
+        "local": {
+          "sl": "Srednja šola"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "sl": "1. razred"
+        }
+      },
+      "aliases": [
+        "Prvi razred",
+        "1. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "sl": "2. razred"
+        }
+      },
+      "aliases": [
+        "Drugi razred",
+        "2. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "sl": "3. razred"
+        }
+      },
+      "aliases": [
+        "Tretji razred",
+        "3. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "sl": "4. razred"
+        }
+      },
+      "aliases": [
+        "Četrti razred",
+        "4. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "sl": "5. razred"
+        }
+      },
+      "aliases": [
+        "Peti razred",
+        "5. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "sl": "6. razred"
+        }
+      },
+      "aliases": [
+        "Šesti razred",
+        "6. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "sl": "7. razred"
+        }
+      },
+      "aliases": [
+        "Sedmi razred",
+        "7. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "sl": "8. razred"
+        }
+      },
+      "aliases": [
+        "Osmi razred",
+        "8. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "primary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "sl": "9. razred"
+        }
+      },
+      "aliases": [
+        "Deveti razred",
+        "9. razred osnovne šole"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Secondary Year 1",
+        "local": {
+          "sl": "1. letnik"
+        }
+      },
+      "aliases": [
+        "Prvi letnik",
+        "1. letnik gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Secondary Year 2",
+        "local": {
+          "sl": "2. letnik"
+        }
+      },
+      "aliases": [
+        "Drugi letnik",
+        "2. letnik gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Secondary Year 3",
+        "local": {
+          "sl": "3. letnik"
+        }
+      },
+      "aliases": [
+        "Tretji letnik",
+        "3. letnik gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-4",
+      "stage": "secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Secondary Year 4",
+        "local": {
+          "sl": "4. letnik"
+        }
+      },
+      "aliases": [
+        "Četrti letnik",
+        "4. letnik gimnazije"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Organizacija osnovnošolskega izobraževanja (Eurydice, Slovenija)",
+      "url": "https://eurydice.eacea.ec.europa.eu/sl/eurypedia/slovenia/organizacija-osnovnosolskega-izobrazevanja"
+    },
+    {
+      "title": "Organizacija srednješolskega izobraževanja (Eurydice, Slovenija)",
+      "url": "https://eurydice.eacea.ec.europa.eu/sl/eurypedia/slovenia/organizacija-srednjesolskega-izobrazevanja"
+    },
+    {
+      "title": "Slovenia: Overview (Eurydice)",
+      "url": "https://eurydice.eacea.ec.europa.eu/eurypedia/slovenia/overview"
+    }
+  ],
+  "notes": "Osnovna šola is a single 9-year school in three 3-year cycles; children enrol in the calendar year they turn 6. Upper-secondary years are called 'letnik'; gimnazija lasts 4 years, vocational and technical programmes 2–4 years."
+}

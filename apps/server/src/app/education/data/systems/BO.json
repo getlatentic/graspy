@@ -1,0 +1,249 @@
+{
+  "id": "BO",
+  "country": "BO",
+  "name": {
+    "en": "Bolivia",
+    "local": {
+      "es": "Bolivia"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaria",
+      "name": {
+        "en": "Primary (Primaria Comunitaria Vocacional)",
+        "local": {
+          "es": "Educación Primaria Comunitaria Vocacional"
+        }
+      }
+    },
+    {
+      "id": "secundaria",
+      "name": {
+        "en": "Secondary (Secundaria Comunitaria Productiva)",
+        "local": {
+          "es": "Educación Secundaria Comunitaria Productiva"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primaria-1",
+      "stage": "primaria",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer año de escolaridad de Primaria"
+        }
+      },
+      "aliases": [
+        "1ro de primaria",
+        "1° de primaria",
+        "Primero de primaria"
+      ]
+    },
+    {
+      "id": "primaria-2",
+      "stage": "primaria",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo año de escolaridad de Primaria"
+        }
+      },
+      "aliases": [
+        "2do de primaria",
+        "2° de primaria",
+        "Segundo de primaria"
+      ]
+    },
+    {
+      "id": "primaria-3",
+      "stage": "primaria",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer año de escolaridad de Primaria"
+        }
+      },
+      "aliases": [
+        "3ro de primaria",
+        "3° de primaria",
+        "Tercero de primaria"
+      ]
+    },
+    {
+      "id": "primaria-4",
+      "stage": "primaria",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto año de escolaridad de Primaria"
+        }
+      },
+      "aliases": [
+        "4to de primaria",
+        "4° de primaria",
+        "Cuarto de primaria"
+      ]
+    },
+    {
+      "id": "primaria-5",
+      "stage": "primaria",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto año de escolaridad de Primaria"
+        }
+      },
+      "aliases": [
+        "5to de primaria",
+        "5° de primaria",
+        "Quinto de primaria"
+      ]
+    },
+    {
+      "id": "primaria-6",
+      "stage": "primaria",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto año de escolaridad de Primaria"
+        }
+      },
+      "aliases": [
+        "6to de primaria",
+        "6° de primaria",
+        "Sexto de primaria"
+      ]
+    },
+    {
+      "id": "secundaria-1",
+      "stage": "secundaria",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Primer año de escolaridad de Secundaria"
+        }
+      },
+      "aliases": [
+        "1ro de secundaria",
+        "1° de secundaria",
+        "Primero de secundaria"
+      ]
+    },
+    {
+      "id": "secundaria-2",
+      "stage": "secundaria",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Segundo año de escolaridad de Secundaria"
+        }
+      },
+      "aliases": [
+        "2do de secundaria",
+        "2° de secundaria",
+        "Segundo de secundaria"
+      ]
+    },
+    {
+      "id": "secundaria-3",
+      "stage": "secundaria",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Tercer año de escolaridad de Secundaria"
+        }
+      },
+      "aliases": [
+        "3ro de secundaria",
+        "3° de secundaria",
+        "Tercero de secundaria"
+      ]
+    },
+    {
+      "id": "secundaria-4",
+      "stage": "secundaria",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Cuarto año de escolaridad de Secundaria"
+        }
+      },
+      "aliases": [
+        "4to de secundaria",
+        "4° de secundaria",
+        "Cuarto de secundaria"
+      ]
+    },
+    {
+      "id": "secundaria-5",
+      "stage": "secundaria",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Quinto año de escolaridad de Secundaria"
+        }
+      },
+      "aliases": [
+        "5to de secundaria",
+        "5° de secundaria",
+        "Quinto de secundaria"
+      ]
+    },
+    {
+      "id": "secundaria-6",
+      "stage": "secundaria",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Sexto año de escolaridad de Secundaria"
+        }
+      },
+      "aliases": [
+        "6to de secundaria",
+        "6° de secundaria",
+        "Sexto de secundaria"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ley de Educación Avelino Siñani - Elizardo Pérez (Ley N° 070)",
+      "url": "https://www.minedu.gob.bo/files/documentos-normativos/leyes/LEY_070_AVELINO_SINANI_ELIZARDO_PEREZ.pdf"
+    },
+    {
+      "title": "Resolución Ministerial 0001/2026: Normas Generales para la Gestión Educativa 2026, Subsistema de Educación Regular",
+      "url": "https://www.minedu.gob.bo/files/documentos-normativos/resoluciones-ministeriales/1_RM_0001_EDUCACIN_REGULAR.pdf"
+    }
+  ],
+  "notes": "Ley 070 sets primary and secondary at six years each; RM 0001/2026 enrols the first year of primary at 6 years completed by 31 March. Official documents name years 'año de escolaridad' of each level; learners say '1ro de primaria', '6to de secundaria'."
+}

@@ -1,0 +1,249 @@
+{
+  "id": "DZ",
+  "country": "DZ",
+  "name": {
+    "en": "Algeria",
+    "local": {
+      "ar": "الجزائر"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "ar": "التعليم الابتدائي"
+        }
+      }
+    },
+    {
+      "id": "middle",
+      "name": {
+        "en": "Middle (Moyen)",
+        "local": {
+          "ar": "التعليم المتوسط"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary (general and technological)",
+        "local": {
+          "ar": "التعليم الثانوي العام والتكنولوجي"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primary-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "1st Year Primary",
+        "local": {
+          "ar": "السنة الأولى ابتدائي"
+        }
+      },
+      "aliases": [
+        "1AP",
+        "1ère année primaire"
+      ]
+    },
+    {
+      "id": "primary-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "2nd Year Primary",
+        "local": {
+          "ar": "السنة الثانية ابتدائي"
+        }
+      },
+      "aliases": [
+        "2AP",
+        "2ème année primaire"
+      ]
+    },
+    {
+      "id": "primary-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "3rd Year Primary",
+        "local": {
+          "ar": "السنة الثالثة ابتدائي"
+        }
+      },
+      "aliases": [
+        "3AP",
+        "3ème année primaire"
+      ]
+    },
+    {
+      "id": "primary-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "4th Year Primary",
+        "local": {
+          "ar": "السنة الرابعة ابتدائي"
+        }
+      },
+      "aliases": [
+        "4AP",
+        "4ème année primaire"
+      ]
+    },
+    {
+      "id": "primary-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "5th Year Primary",
+        "local": {
+          "ar": "السنة الخامسة ابتدائي"
+        }
+      },
+      "aliases": [
+        "5AP",
+        "5ème année primaire"
+      ]
+    },
+    {
+      "id": "middle-1",
+      "stage": "middle",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "1st Year Middle",
+        "local": {
+          "ar": "السنة الأولى متوسط"
+        }
+      },
+      "aliases": [
+        "1AM",
+        "1ère année moyenne"
+      ]
+    },
+    {
+      "id": "middle-2",
+      "stage": "middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "2nd Year Middle",
+        "local": {
+          "ar": "السنة الثانية متوسط"
+        }
+      },
+      "aliases": [
+        "2AM",
+        "2ème année moyenne"
+      ]
+    },
+    {
+      "id": "middle-3",
+      "stage": "middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "3rd Year Middle",
+        "local": {
+          "ar": "السنة الثالثة متوسط"
+        }
+      },
+      "aliases": [
+        "3AM",
+        "3ème année moyenne"
+      ]
+    },
+    {
+      "id": "middle-4",
+      "stage": "middle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "4th Year Middle",
+        "local": {
+          "ar": "السنة الرابعة متوسط"
+        }
+      },
+      "aliases": [
+        "4AM",
+        "4ème année moyenne",
+        "BEM year"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "1st Year Secondary",
+        "local": {
+          "ar": "السنة الأولى ثانوي"
+        }
+      },
+      "aliases": [
+        "1AS",
+        "1ère année secondaire",
+        "جذع مشترك"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nd Year Secondary",
+        "local": {
+          "ar": "السنة الثانية ثانوي"
+        }
+      },
+      "aliases": [
+        "2AS",
+        "2ème année secondaire"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "3rd Year Secondary",
+        "local": {
+          "ar": "السنة الثالثة ثانوي"
+        }
+      },
+      "aliases": [
+        "3AS",
+        "3ème année secondaire",
+        "Terminale"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "عناوين الكتب المدرسية - الموقع الرسمي لوزارة التربية الوطنية",
+      "url": "https://web.archive.org/web/20260412095609/https://www.education.gov.dz/2016/02/24/%d8%b9%d9%86%d8%a7%d9%88%d9%8a%d9%86-%d8%a7%d9%84%d9%83%d8%aa%d8%a8-%d8%a7%d9%84%d9%85%d8%af%d8%b1%d8%b3%d9%8a%d8%a9/"
+    },
+    {
+      "title": "هيكلـة النظـام التـربوي - وزارة التربية الوطنية",
+      "url": "https://web.archive.org/web/20191220114050/http://www.education.gov.dz/%D8%A7%D9%84%D9%86%D8%B8%D8%A7%D9%85-%D8%A7%D9%84%D8%AA%D8%B1%D8%A8%D9%88%D9%8A-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1%D9%8A/%D9%87%D9%8A%D9%83%D9%84%D9%80%D8%A9-%D8%A7%D9%84%D9%86%D8%B8%D9%80%D8%A7%D9%85-%D8%A7%D9%84%D8%AA%D9%80%D8%B1%D8%A8%D9%88%D9%8A/"
+    }
+  ],
+  "notes": "education.gov.dz refuses requests from outside Algeria, so the ministry pages are cited through Internet Archive copies. Year names are from the ministry's textbook lists per year; stage lengths (5+4+3) from its structure chart. French abbreviations (1AP, 1AM, 1AS) are common usage, not taken from the cited pages. The first secondary year is split into common cores (جذع مشترك آداب / علوم وتكنولوجيا)."
+}

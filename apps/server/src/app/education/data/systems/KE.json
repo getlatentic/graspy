@@ -1,0 +1,178 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "KE",
+  "country": "KE",
+  "name": {
+    "en": "Kenya (Competency-Based Education)"
+  },
+  "stages": [
+    {
+      "id": "lower-primary",
+      "name": {
+        "en": "Lower Primary"
+      }
+    },
+    {
+      "id": "upper-primary",
+      "name": {
+        "en": "Upper Primary"
+      }
+    },
+    {
+      "id": "junior-school",
+      "name": {
+        "en": "Junior School"
+      }
+    },
+    {
+      "id": "senior-school",
+      "name": {
+        "en": "Senior School"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "lower-primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "lower-primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "lower-primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "upper-primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "upper-primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "upper-primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "junior-school",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7"
+      },
+      "aliases": [
+        "Junior Secondary"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "junior-school",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8"
+      },
+      "aliases": [
+        "Junior Secondary"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "junior-school",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9"
+      },
+      "aliases": [
+        "Junior Secondary"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "senior-school",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "senior-school",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11"
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "senior-school",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12"
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Organization history – KNEC",
+      "url": "https://www.knec.ac.ke/who-we-are/history/"
+    },
+    {
+      "title": "Roll-out of competency based assessments in Senior School – KNEC circular, 8 May 2026",
+      "url": "https://www.knec.ac.ke/wp-content/uploads/2026/05/ROLL-OUT-OF-COMPETECNCY-BASED-ASSESSMENTS-IN-SENIOR-SCHOOL.pdf"
+    },
+    {
+      "title": "Basic Education Curriculum Framework 2019 – KICD",
+      "url": "https://kicd.ac.ke/wp-content/uploads/2019/08/BASIC-EDUCATION-CURRICULUM-FRAMEWORK-2019.pdf"
+    }
+  ],
+  "notes": "The 2-6-3-3-3 structure: pre-primary PP1–2 (left out), primary, Junior School and Senior School. Assessments are KPSEA in Grade 6, KJSEA in Grade 9 and KCBE in Grade 12. Grade 10 opened in 2026, so the first cohort reaches Grade 12 in 2028. Learners still in Form 3 or 4 use the 8-4-4 system."
+}

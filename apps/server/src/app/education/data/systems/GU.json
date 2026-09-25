@@ -1,0 +1,216 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "GU",
+  "country": "GU",
+  "name": {
+    "en": "Guam",
+    "local": {
+      "ch": "Guåhan"
+    }
+  },
+  "stages": [
+    {
+      "id": "elementary",
+      "name": {
+        "en": "Elementary school",
+        "local": {}
+      }
+    },
+    {
+      "id": "middle",
+      "name": {
+        "en": "Middle school",
+        "local": {}
+      }
+    },
+    {
+      "id": "high",
+      "name": {
+        "en": "High school",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "elementary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": [
+        "1st grade"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "elementary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": [
+        "2nd grade"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "elementary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": [
+        "3rd grade"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "elementary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": [
+        "4th grade"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "elementary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": [
+        "5th grade"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "middle",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": [
+        "6th grade"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": [
+        "7th grade"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": [
+        "8th grade"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "high",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": [
+        "9th grade",
+        "Freshman"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "high",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": [
+        "10th grade",
+        "Sophomore"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "high",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": [
+        "11th grade",
+        "Junior"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "high",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": [
+        "12th grade",
+        "Senior"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "17 GCA Chapter 6: Pupils – Guam Compiler of Laws",
+      "url": "https://col.guamcourts.gov/sites/default/files/17gc006.pdf"
+    },
+    {
+      "title": "Do You Qualify? (Head Start) – Guam Department of Education",
+      "url": "https://www.gdoe.net/District/Department/4-head-start-program/1344-Do-You-Qualify.html"
+    },
+    {
+      "title": "Vicente S.A. Benavente Middle School report – Guam Department of Education",
+      "url": "https://www.gdoe.net/files/user/1/file/Vicente-S_A_-Benavente-Middle-School.pdf"
+    },
+    {
+      "title": "Consolidated Grant FY2024 2nd Quarter report – GDOE Federal Programs Division",
+      "url": "https://www.gdoe.net/files/page/2061/Consolidated_FY2024_CG_2nd_Quarter.pdf"
+    }
+  ],
+  "notes": "School is compulsory from 5 to 18. A child must be 5 by July 31 to enter kindergarten, which is left out here as in the US file, so Grade 1 starts at 6. Guam's code sets the elementary grades as first through fifth; GDOE middle schools teach grades 6–8 and its high schools grades 9–12. GDOE is one island-wide K–12 district. Freshman to senior for grades 9–12 is everyday US usage, not from the cited pages."
+}

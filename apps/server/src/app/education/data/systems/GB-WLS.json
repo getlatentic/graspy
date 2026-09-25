@@ -1,0 +1,250 @@
+{
+  "main": false,
+  "status": "sourced",
+  "id": "GB-WLS",
+  "country": "GB",
+  "name": {
+    "en": "Wales",
+    "local": {
+      "cy": "Cymru"
+    }
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary"
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary"
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth form"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {
+          "cy": "Blwyddyn 1"
+        }
+      },
+      "aliases": [
+        "Y1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {
+          "cy": "Blwyddyn 2"
+        }
+      },
+      "aliases": [
+        "Y2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {
+          "cy": "Blwyddyn 3"
+        }
+      },
+      "aliases": [
+        "Y3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {
+          "cy": "Blwyddyn 4"
+        }
+      },
+      "aliases": [
+        "Y4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {
+          "cy": "Blwyddyn 5"
+        }
+      },
+      "aliases": [
+        "Y5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {
+          "cy": "Blwyddyn 6"
+        }
+      },
+      "aliases": [
+        "Y6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {
+          "cy": "Blwyddyn 7"
+        }
+      },
+      "aliases": [
+        "Y7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {
+          "cy": "Blwyddyn 8"
+        }
+      },
+      "aliases": [
+        "Y8"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {
+          "cy": "Blwyddyn 9"
+        }
+      },
+      "aliases": [
+        "Y9"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {
+          "cy": "Blwyddyn 10"
+        }
+      },
+      "aliases": [
+        "Y10"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {
+          "cy": "Blwyddyn 11"
+        }
+      },
+      "aliases": [
+        "Y11"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "sixth-form",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {
+          "cy": "Blwyddyn 12"
+        }
+      },
+      "aliases": [
+        "Y12",
+        "Lower Sixth"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13",
+        "local": {
+          "cy": "Blwyddyn 13"
+        }
+      },
+      "aliases": [
+        "Y13",
+        "Upper Sixth"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "The Curriculum and Assessment (Wales) Act 2021 (Consequential Amendments) (No. 2) Regulations 2022",
+      "url": "https://www.legislation.gov.uk/wsi/2022/679/contents"
+    },
+    {
+      "title": "The Curriculum and Assessment (Wales) Act 2021 (Transitional and Saving Provision) Regulations 2022",
+      "url": "https://www.legislation.gov.uk/wsi/2022/111/contents"
+    },
+    {
+      "title": "Introduction to Curriculum for Wales guidance – Hwb",
+      "url": "https://hwb.gov.wales/curriculum-for-wales/introduction-to-curriculum-for-wales-guidance/"
+    },
+    {
+      "title": "School admissions and appeals: frequently asked questions – GOV.WALES",
+      "url": "https://www.gov.wales/school-admissions-and-appeals-frequently-asked-questions-html"
+    }
+  ],
+  "notes": "The Curriculum for Wales replaced key stages with progression steps at about ages 5, 8, 11, 14 and 16; it reached Year 11 in September 2026. Year groups and school ages are as in England. Reception (blwyddyn derbyn) is left out."
+}

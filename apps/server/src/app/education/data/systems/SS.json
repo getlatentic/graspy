@@ -1,0 +1,207 @@
+{
+  "id": "SS",
+  "country": "SS",
+  "name": {
+    "en": "South Sudan",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "p1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "P1",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 1",
+        "Primary One"
+      ]
+    },
+    {
+      "id": "p2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "P2",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 2",
+        "Primary Two"
+      ]
+    },
+    {
+      "id": "p3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "P3",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 3",
+        "Primary Three"
+      ]
+    },
+    {
+      "id": "p4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "P4",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 4",
+        "Primary Four"
+      ]
+    },
+    {
+      "id": "p5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "P5",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 5",
+        "Primary Five"
+      ]
+    },
+    {
+      "id": "p6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "P6",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 6",
+        "Primary Six"
+      ]
+    },
+    {
+      "id": "p7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "P7",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 7",
+        "Primary Seven"
+      ]
+    },
+    {
+      "id": "p8",
+      "stage": "primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "P8",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 8",
+        "Primary Eight"
+      ]
+    },
+    {
+      "id": "s1",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "S1",
+        "local": {}
+      },
+      "aliases": [
+        "Senior 1",
+        "Senior One"
+      ]
+    },
+    {
+      "id": "s2",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "S2",
+        "local": {}
+      },
+      "aliases": [
+        "Senior 2",
+        "Senior Two"
+      ]
+    },
+    {
+      "id": "s3",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "S3",
+        "local": {}
+      },
+      "aliases": [
+        "Senior 3",
+        "Senior Three"
+      ]
+    },
+    {
+      "id": "s4",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "S4",
+        "local": {}
+      },
+      "aliases": [
+        "Senior 4",
+        "Senior Four"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "General Education Sector Plan 2023–2027 (Abridged Version), Ministry of General Education and Instruction",
+      "url": "https://mogei.gov.ss/super/assets/documents/resources/Abridged%20GESP%20Version_18.12.23.pdf"
+    },
+    {
+      "title": "South Sudan Education Sector Analysis 2023, Ministry of General Education and Instruction",
+      "url": "https://mogei.gov.ss/super/assets/documents/resources/South%20Sudan%20Consolidated%20ESA%20Report.pdf"
+    }
+  ],
+  "notes": "Under the General Education Act 2012, primary runs eight years (P1–P8, ages 6–13) ending with the Primary 8 Leaving Certificate examination, and secondary four years (S1–S4, ages 14–17) ending with the Unified South Sudan Secondary School Certificate examination."
+}

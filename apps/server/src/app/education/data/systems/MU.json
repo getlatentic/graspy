@@ -1,0 +1,224 @@
+{
+  "id": "MU",
+  "country": "MU",
+  "name": {
+    "en": "Mauritius",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-secondary-sc",
+      "name": {
+        "en": "Upper Secondary (School Certificate)",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-secondary-hsc",
+      "name": {
+        "en": "Upper Secondary (Higher School Certificate)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": [
+        "Standard I"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": [
+        "Standard II"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": [
+        "Standard III"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": [
+        "Standard IV"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": [
+        "Standard V"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": [
+        "Standard VI"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": [
+        "Form I"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": [
+        "Form II"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": [
+        "Form III"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "upper-secondary-sc",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": [
+        "Form IV"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "upper-secondary-sc",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": [
+        "Form V"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "upper-secondary-hsc",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": [
+        "Lower Six",
+        "Lower VI"
+      ]
+    },
+    {
+      "id": "grade-13",
+      "stage": "upper-secondary-hsc",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Grade 13",
+        "local": {}
+      },
+      "aliases": [
+        "Upper Six",
+        "Upper VI"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "secondary2024 (Secondary Education, Ministry of Education, Mauritius)",
+      "url": "https://education.govmu.org/Pages/Education%20Sectors/Secondary%20Education/secondary2024.aspx"
+    },
+    {
+      "title": "Nine Year Schooling (Ministry of Education, Mauritius)",
+      "url": "https://education.govmu.org/Pages/Education%20Sectors/Nine-Year-Schooling.aspx"
+    }
+  ],
+  "notes": "Nine-Year Continuous Basic Education (from 2017): Grades 1–6 primary and Grades 7–9 lower secondary, with the PSAC assessment at the end of Grade 6. Grades 10–11 lead to the Cambridge School Certificate and Grades 12–13 to the Higher School Certificate. Some learners take Grades 7–9 over four years in the Extended Programme. The former names (Standard I–VI, Form I–V, Lower and Upper Six) are aliases."
+}

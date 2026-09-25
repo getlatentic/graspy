@@ -1,0 +1,218 @@
+{
+  "id": "LT",
+  "country": "LT",
+  "name": {
+    "en": "Lithuania",
+    "local": {
+      "lt": "Lietuva"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary education (Pradinis ugdymas)",
+        "local": {
+          "lt": "Pradinis ugdymas"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary education (Pagrindinis ugdymas)",
+        "local": {
+          "lt": "Pagrindinis ugdymas"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary education (Vidurinis ugdymas)",
+        "local": {
+          "lt": "Vidurinis ugdymas"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "lt": "1 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "lt": "2 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "lt": "3 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "lt": "4 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "lower-secondary",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "lt": "5 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "lower-secondary",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "lt": "6 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "lt": "7 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "lt": "8 klasė"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "lt": "9 klasė"
+        }
+      },
+      "aliases": [
+        "Gymnasium Grade I",
+        "I gimnazijos klasė"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "lower-secondary",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "lt": "10 klasė"
+        }
+      },
+      "aliases": [
+        "Gymnasium Grade II",
+        "II gimnazijos klasė"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "lt": "11 klasė"
+        }
+      },
+      "aliases": [
+        "Gymnasium Grade III",
+        "III gimnazijos klasė"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "lt": "12 klasė"
+        }
+      },
+      "aliases": [
+        "Gymnasium Grade IV",
+        "IV gimnazijos klasė"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Organisation of the education system and of its structure",
+      "url": "https://eurydice.eacea.ec.europa.eu/eurypedia/lithuania/organisation-education-system-and-its-structure"
+    }
+  ],
+  "notes": "Primary grades 1–4 start in the year a child turns 7. Lower secondary lasts six years in two parts: grades 5–8 and grades 9–10, which gymnasia call gymnasium grades I–II. Upper secondary is grades 11–12 (gymnasium grades III–IV)."
+}

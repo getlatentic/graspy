@@ -1,0 +1,186 @@
+{
+  "id": "PH",
+  "country": "PH",
+  "name": {
+    "en": "Philippines",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementary",
+      "name": {
+        "en": "Elementary",
+        "local": {}
+      }
+    },
+    {
+      "id": "junior-high",
+      "name": {
+        "en": "Junior High School",
+        "local": {}
+      }
+    },
+    {
+      "id": "senior-high",
+      "name": {
+        "en": "Senior High School",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "elementary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "elementary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "elementary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "elementary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "elementary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "elementary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "junior-high",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": [
+        "First Year High School"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "junior-high",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": [
+        "Second Year High School"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "junior-high",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": [
+        "Third Year High School"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "junior-high",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": [
+        "Fourth Year High School"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "senior-high",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "senior-high",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "The Philippine Education and Training System",
+      "url": "https://pqf.gov.ph/Home/Details/16"
+    },
+    {
+      "title": "K to 12 | DepEd Bukidnon - Official Website",
+      "url": "https://bukidnon.deped.gov.ph/facts-and-figures/factsandfigures/k-to-12/"
+    }
+  ],
+  "notes": "K to 12 basic education: Kindergarten (excluded here), Grades 1-6 elementary, Grades 7-10 Junior High School, Grades 11-12 Senior High School. The PQF also splits elementary into primary (K-Grade 3) and intermediate (Grades 4-6). The aliases for Grades 7-10 are the pre-K to 12 high-school year names. The MATATAG curriculum is being phased in from SY 2024-2025; Senior High School has its own schedule."
+}

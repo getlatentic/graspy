@@ -1,0 +1,253 @@
+{
+  "id": "CL",
+  "country": "CL",
+  "name": {
+    "en": "Chile",
+    "local": {
+      "es": "Chile"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basica",
+      "name": {
+        "en": "Basic Education (Educación Básica)",
+        "local": {
+          "es": "Educación Básica"
+        }
+      }
+    },
+    {
+      "id": "media",
+      "name": {
+        "en": "Secondary (Educación Media)",
+        "local": {
+          "es": "Educación Media"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "basico-1",
+      "stage": "basica",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primero básico"
+        }
+      },
+      "aliases": [
+        "1° básico",
+        "1ro básico",
+        "1° año básico"
+      ]
+    },
+    {
+      "id": "basico-2",
+      "stage": "basica",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo básico"
+        }
+      },
+      "aliases": [
+        "2° básico",
+        "2do básico",
+        "2° año básico"
+      ]
+    },
+    {
+      "id": "basico-3",
+      "stage": "basica",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercero básico"
+        }
+      },
+      "aliases": [
+        "3° básico",
+        "3ro básico",
+        "3° año básico"
+      ]
+    },
+    {
+      "id": "basico-4",
+      "stage": "basica",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto básico"
+        }
+      },
+      "aliases": [
+        "4° básico",
+        "4to básico",
+        "4° año básico"
+      ]
+    },
+    {
+      "id": "basico-5",
+      "stage": "basica",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto básico"
+        }
+      },
+      "aliases": [
+        "5° básico",
+        "5to básico",
+        "5° año básico"
+      ]
+    },
+    {
+      "id": "basico-6",
+      "stage": "basica",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto básico"
+        }
+      },
+      "aliases": [
+        "6° básico",
+        "6to básico",
+        "6° año básico"
+      ]
+    },
+    {
+      "id": "basico-7",
+      "stage": "basica",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Séptimo básico"
+        }
+      },
+      "aliases": [
+        "7° básico",
+        "7mo básico",
+        "7° año básico"
+      ]
+    },
+    {
+      "id": "basico-8",
+      "stage": "basica",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Octavo básico"
+        }
+      },
+      "aliases": [
+        "8° básico",
+        "8vo básico",
+        "8° año básico"
+      ]
+    },
+    {
+      "id": "medio-1",
+      "stage": "media",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Primero medio"
+        }
+      },
+      "aliases": [
+        "1° medio",
+        "I medio",
+        "1ro medio"
+      ]
+    },
+    {
+      "id": "medio-2",
+      "stage": "media",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Segundo medio"
+        }
+      },
+      "aliases": [
+        "2° medio",
+        "II medio",
+        "2do medio"
+      ]
+    },
+    {
+      "id": "medio-3",
+      "stage": "media",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Tercero medio"
+        }
+      },
+      "aliases": [
+        "3° medio",
+        "III medio",
+        "3ro medio"
+      ]
+    },
+    {
+      "id": "medio-4",
+      "stage": "media",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Cuarto medio"
+        }
+      },
+      "aliases": [
+        "4° medio",
+        "IV medio",
+        "4to medio"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ley Chile - Biblioteca del Congreso Nacional: DFL 2 (2009), texto refundido de la Ley N° 20.370 General de Educación",
+      "url": "https://www.bcn.cl/leychile/navegar?idNorma=1014974"
+    },
+    {
+      "title": "Simce - Agencia de Calidad de la Educación",
+      "url": "https://www.agenciaeducacion.cl/simce/"
+    },
+    {
+      "title": "Nivelación de Estudios Básicos y Medios - Modalidad Flexible | Ayuda Mineduc",
+      "url": "https://www.ayudamineduc.cl/ficha/nivelacion-de-estudios-basicos-y-medios-modalidad-flexible-6"
+    }
+  ],
+  "notes": "Schools run 8 years of básica (1°–8° básico) and 4 of media (1°–4° medio), entering básica at 6 (LGE art. 27). LGE art. 25 prescribes 6 years of básica and 6 of media, but that structure is not in force: its start has been postponed repeatedly, and in January 2026 Mineduc said no school applies it (a 2030 start was proposed). If it starts, 7° and 8° básico move into media."
+}

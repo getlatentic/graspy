@@ -1,0 +1,233 @@
+{
+  "id": "JO",
+  "country": "JO",
+  "name": {
+    "en": "Jordan",
+    "local": {
+      "ar": "الأردن"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic education",
+        "local": {
+          "ar": "مرحلة التعليم الأساسي"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "ar": "المرحلة الثانوية"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ar": "الصف الأول الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الأول"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ar": "الصف الثاني الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الثاني"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ar": "الصف الثالث الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الثالث"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ar": "الصف الرابع الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الرابع"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ar": "الصف الخامس الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الخامس"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ar": "الصف السادس الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف السادس"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ar": "الصف السابع الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف السابع"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ar": "الصف الثامن الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف الثامن"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ar": "الصف التاسع الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف التاسع"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "basic",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ar": "الصف العاشر الأساسي"
+        }
+      },
+      "aliases": [
+        "الصف العاشر"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ar": "الصف الحادي عشر"
+        }
+      },
+      "aliases": [
+        "First Secondary",
+        "الصف الأول الثانوي"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ar": "الصف الثاني عشر"
+        }
+      },
+      "aliases": [
+        "Second Secondary",
+        "Tawjihi",
+        "الصف الثاني الثانوي",
+        "التوجيهي"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "تعميم رقم (773) / لسنة 2023 - تطبيق برنامج جسور التعلم للصفوف من الرابع حتى العاشر الاساسي للعام الدراسي 2023-2024م",
+      "url": "https://web.archive.org/web/20250421030908/https://www.moe.gov.jo/ar/content/%D8%AA%D8%B9%D9%85%D9%8A%D9%85-%D8%B1%D9%82%D9%85-773-%D9%84%D8%B3%D9%86%D8%A9-2023-%D8%AA%D8%B7%D8%A8%D9%8A%D9%82-%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC-%D8%AC%D8%B3%D9%88%D8%B1-%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%85-%D9%84%D9%84%D8%B5%D9%81%D9%88%D9%81-%D9%85%D9%86-%D8%A7%D9%84%D8%B1%D8%A7%D8%A8%D8%B9-%D8%AD%D8%AA%D9%89-%D8%A7%D9%84%D8%B9%D8%A7%D8%B4%D8%B1-%D8%A7%D9%84%D8%A7%D8%B3%D8%A7%D8%B3%D9%8A-%D9%84%D9%84%D8%B9%D8%A7%D9%85"
+    },
+    {
+      "title": "الاختبارات التحصيلية النهائية للفصل الدراسي الثاني لطلبة مرحلة التعليم الأساسي وطلبة المرحلة الثانوية الصف الحادي عشر …",
+      "url": "https://web.archive.org/web/20250506064331/https://moe.gov.jo/ar/content/%D8%A7%D9%84%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D8%AD%D8%B5%D9%8A%D9%84%D9%8A%D8%A9-%D8%A7%D9%84%D9%86%D9%87%D8%A7%D8%A6%D9%8A%D8%A9-%D9%84%D9%84%D9%81%D8%B5%D9%84-%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D9%8A-%D8%A7%D9%84%D8%AB%D8%A7%D9%86%D9%8A-%D9%84%D8%B7%D9%84%D8%A8%D8%A9-%D9%85%D8%B1%D8%AD%D9%84%D8%A9-%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85-%D8%A7%D9%84%D8%A3%D8%B3%D8%A7%D8%B3%D9%8A-%D9%88%D8%B7%D9%84%D8%A8%D8%A9-%D8%A7%D9%84%D9%85%D8%B1%D8%AD-1"
+    },
+    {
+      "title": "برنامج امتحانات الثانوية العامة للعام 2025 الامتحان العام - طلبة الصف الثاني عشر | وزارة التربية والتعليم",
+      "url": "https://web.archive.org/web/20251003222529/https://moe.gov.jo/ar/content/%D8%A8%D8%B1%D9%86%D8%A7%D9%85%D8%AC-%D8%A7%D9%85%D8%AA%D8%AD%D8%A7%D9%86%D8%A7%D8%AA-%D8%A7%D9%84%D8%AB%D8%A7%D9%86%D9%88%D9%8A%D8%A9-%D8%A7%D9%84%D8%B9%D8%A7%D9%85%D8%A9-%D9%84%D9%84%D8%B9%D8%A7%D9%85-2025-%D8%A7%D9%84%D8%A7%D9%85%D8%AA%D8%AD%D8%A7%D9%86-%D8%A7%D9%84%D8%B9%D8%A7%D9%85-%D8%B7%D9%84%D8%A8%D8%A9-%D8%A7%D9%84%D8%B5%D9%81-%D8%A7%D9%84%D8%AB%D8%A7%D9%86%D9%8A-%D8%B9%D8%B4%D8%B1"
+    }
+  ],
+  "notes": "moe.gov.jo refused connections during checking, so the ministry pages are cited through Internet Archive copies. Basic education is grades 1-10; secondary is grades 11-12. Under the new Tawjihi system the general secondary exam is split across grades 11 and 12. Students choose academic or vocational (BTEC) paths after grade 9. 'الأول/الثاني الثانوي' is the older name for grades 11/12."
+}

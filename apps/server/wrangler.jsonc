@@ -1,0 +1,78 @@
+{
+  "name": "graspy-web-api",
+  "main": "src/worker.py",
+  // On or after 2026-09-08 selects the Python 3.14 runtime, the first whose
+  // pydantic (2.12) the dependencies accept. Keep it at or before the newest
+  // date the local workerd knows, or `pywrangler dev` refuses to start.
+  "compatibility_date": "2026-09-21",
+  "compatibility_flags": ["python_workers"],
+  "workers_dev": false,
+  "routes": [{ "pattern": "graspy-api.tosinamuda.com", "custom_domain": true }],
+  "observability": { "enabled": true },
+
+  // The MCP Apps views, built from ./ui (npm --prefix ui run build). The Worker
+  // reads each document through ASSETS; its scripts, styles and fonts are
+  // served straight from the assets, before the Worker runs.
+  "assets": { "directory": "./assets", "binding": "ASSETS" },
+
+  // The school-system catalogue is read from files beside its module; JSON
+  // is not uploaded by default.
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["app/education/data/**/*.json"],
+      "fallthrough": true
+    }
+  ],
+
+  // What the Worker never loads (UNUSED_PACKAGES in src/worker.py), left out
+  // of the upload, which counts toward the startup snapshot's size cap.
+  "python_modules": {
+    "exclude": [
+      "**/*.pyc",
+      "**/*.pyi",
+      "gepa/**",
+      "tqdm/**",
+      "requests/**",
+      "urllib3/**",
+      "charset_normalizer/**",
+      "pydantic/v1/**",
+      "dspy/evaluate/**",
+      "dspy/datasets/**",
+      "dspy/propose/**"
+    ]
+  },
+
+  "vars": {
+    "APP_ENV": "production",
+    "LLM_MODEL_ID": "openai.gpt-oss-120b",
+    "AWS_REGION": "us-east-1",
+    "PUBLIC_BASE_URL": "https://graspy-api.tosinamuda.com",
+    "A2A_PATH_PREFIX": "/a2a",
+    "CORS_ORIGINS": "https://graspy.tosinamuda.com,https://graspy.pages.dev,https://*.graspy.pages.dev"
+  },
+  // Secrets, set with `npx wrangler secret put <NAME>`, never in this file:
+  //   AWS_BEARER_TOKEN_BEDROCK, SESSION_SECRET
+
+  "durable_objects": {
+    "bindings": [
+      { "name": "CONVERSATIONS", "class_name": "Conversation" },
+      { "name": "LESSONS", "class_name": "Lesson" },
+      { "name": "LEARNERS", "class_name": "Learner" },
+      { "name": "LESSON_MAKERS", "class_name": "LessonMaker" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Conversation"] },
+    { "tag": "v2", "new_sqlite_classes": ["Lesson"] },
+    { "tag": "v3", "new_sqlite_classes": ["Learner", "LessonMaker"] }
+  ],
+
+  // Requests per minute per client, counted per Cloudflare location.
+  "ratelimits": [
+    { "name": "SESSION_LIMITER", "namespace_id": "4101", "simple": { "limit": 20, "period": 60 } },
+    { "name": "GENERATE_LIMITER", "namespace_id": "4102", "simple": { "limit": 30, "period": 60 } },
+    { "name": "AGENT_LIMITER", "namespace_id": "4103", "simple": { "limit": 30, "period": 60 } },
+    { "name": "API_LIMITER", "namespace_id": "4104", "simple": { "limit": 120, "period": 60 } }
+  ]
+}

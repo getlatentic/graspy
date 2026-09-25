@@ -1,0 +1,213 @@
+{
+  "id": "GQ",
+  "country": "GQ",
+  "name": {
+    "en": "Equatorial Guinea",
+    "local": {
+      "es": "Guinea Ecuatorial",
+      "fr": "Guinée équatoriale",
+      "pt": "Guiné Equatorial"
+    }
+  },
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "stages": [
+    {
+      "id": "primaria",
+      "name": {
+        "en": "Primary (Primaria)",
+        "local": {
+          "es": "Educación Primaria"
+        }
+      }
+    },
+    {
+      "id": "esba",
+      "name": {
+        "en": "Lower secondary (ESBA)",
+        "local": {
+          "es": "Educación Secundaria Básica"
+        }
+      }
+    },
+    {
+      "id": "bachillerato",
+      "name": {
+        "en": "Upper secondary (Bachillerato)",
+        "local": {
+          "es": "Bachillerato"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primaria-1",
+      "stage": "primaria",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary 1",
+        "local": {
+          "es": "1.º de Primaria"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primaria-2",
+      "stage": "primaria",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary 2",
+        "local": {
+          "es": "2.º de Primaria"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primaria-3",
+      "stage": "primaria",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary 3",
+        "local": {
+          "es": "3.º de Primaria"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primaria-4",
+      "stage": "primaria",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary 4",
+        "local": {
+          "es": "4.º de Primaria"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primaria-5",
+      "stage": "primaria",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary 5",
+        "local": {
+          "es": "5.º de Primaria"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primaria-6",
+      "stage": "primaria",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Primary 6",
+        "local": {
+          "es": "6.º de Primaria"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "esba-1",
+      "stage": "esba",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "ESBA 1",
+        "local": {
+          "es": "1.º de ESBA"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "esba-2",
+      "stage": "esba",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "ESBA 2",
+        "local": {
+          "es": "2.º de ESBA"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "esba-3",
+      "stage": "esba",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "ESBA 3",
+        "local": {
+          "es": "3.º de ESBA"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "esba-4",
+      "stage": "esba",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "ESBA 4",
+        "local": {
+          "es": "4.º de ESBA"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "bachillerato-1",
+      "stage": "bachillerato",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Bachillerato 1",
+        "local": {
+          "es": "1.º de Bachillerato"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "bachillerato-2",
+      "stage": "bachillerato",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Bachillerato 2",
+        "local": {
+          "es": "2.º de Bachillerato"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Cartographie de la CITE 2011 de Guinée équatoriale",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Equatorial%20Guinea.xlsx"
+    },
+    {
+      "title": "Ley Núm. 5/2007 que modifica la Ley Nº 14/1995 de Educación General – BOE de Guinea Ecuatorial",
+      "url": "https://boe.gob.gq/files/Ley%20General%20de%20Educaci%C3%B3n.pdf"
+    }
+  ],
+  "notes": "Ley 5/2007 on general education sets Primaria at six grades, normally from age 6 to 12, in two cycles of three, ending with the Certificado de Estudios Primarios; Educación Secundaria Básica (ESBA) at four courses in two cycles, ending with the Título de Graduado de la ESBA; and Bachillerato at two courses. The year names (1.º de Primaria, 1.º de ESBA, 1.º de Bachillerato) follow Spanish usage and are not confirmed by an official Equatorial Guinean source."
+}

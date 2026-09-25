@@ -1,0 +1,241 @@
+{
+  "id": "HR",
+  "country": "HR",
+  "name": {
+    "en": "Croatia",
+    "local": {
+      "hr": "Hrvatska"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary school (Osnovna škola)",
+        "local": {
+          "hr": "Osnovna škola"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary school (Srednja škola)",
+        "local": {
+          "hr": "Srednja škola"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "hr": "1. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Prvi razred",
+        "I. razred"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "hr": "2. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Drugi razred",
+        "II. razred"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "hr": "3. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Treći razred",
+        "III. razred"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "hr": "4. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Četvrti razred",
+        "IV. razred"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "hr": "5. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Peti razred",
+        "V. razred"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "hr": "6. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Šesti razred",
+        "VI. razred"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "hr": "7. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Sedmi razred",
+        "VII. razred"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "hr": "8. razred osnovne škole"
+        }
+      },
+      "aliases": [
+        "Osmi razred",
+        "VIII. razred"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Secondary Grade 1",
+        "local": {
+          "hr": "1. razred srednje škole"
+        }
+      },
+      "aliases": [
+        "Prvi razred srednje škole",
+        "I. razred gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Secondary Grade 2",
+        "local": {
+          "hr": "2. razred srednje škole"
+        }
+      },
+      "aliases": [
+        "Drugi razred srednje škole",
+        "II. razred gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Secondary Grade 3",
+        "local": {
+          "hr": "3. razred srednje škole"
+        }
+      },
+      "aliases": [
+        "Treći razred srednje škole",
+        "III. razred gimnazije"
+      ]
+    },
+    {
+      "id": "secondary-4",
+      "stage": "secondary",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Secondary Grade 4",
+        "local": {
+          "hr": "4. razred srednje škole"
+        }
+      },
+      "aliases": [
+        "Četvrti razred srednje škole",
+        "IV. razred gimnazije"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ustroj osnovnoškolskih programa (Eurydice, Hrvatska)",
+      "url": "https://eurydice.eacea.ec.europa.eu/hr/eurypedia/croatia/ustroj-osnovnoskolskih-programa"
+    },
+    {
+      "title": "Ustroj gimnazijskog obrazovanja (Eurydice, Hrvatska)",
+      "url": "https://eurydice.eacea.ec.europa.eu/hr/eurypedia/croatia/ustroj-gimnazijskog-obrazovanja"
+    },
+    {
+      "title": "Croatia: Overview (Eurydice)",
+      "url": "https://eurydice.eacea.ec.europa.eu/eurypedia/croatia/overview"
+    }
+  ],
+  "notes": "Children who are 6 by 1 April enter 1st grade in September (aged about 6½–7½), so 1st grade is listed at 7. Osnovna škola has razredna nastava (grades 1–4) and predmetna nastava (5–8). Gimnazija lasts 4 years; vocational programmes 3–4 years."
+}

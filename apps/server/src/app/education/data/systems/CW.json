@@ -1,0 +1,251 @@
+{
+  "id": "CW",
+  "country": "CW",
+  "name": {
+    "en": "Curaçao",
+    "local": {
+      "nl": "Curaçao",
+      "pap": "Kòrsou"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "fo-cyclus-1",
+      "name": {
+        "en": "Foundation education, cycle 1",
+        "local": {
+          "nl": "Funderend onderwijs, cyclus 1"
+        }
+      }
+    },
+    {
+      "id": "fo-cyclus-2",
+      "name": {
+        "en": "Foundation education, cycle 2",
+        "local": {
+          "nl": "Funderend onderwijs, cyclus 2"
+        }
+      }
+    },
+    {
+      "id": "basisvorming",
+      "name": {
+        "en": "Secondary, basic years (basisvorming)",
+        "local": {
+          "nl": "Basisvorming"
+        }
+      }
+    },
+    {
+      "id": "bovenbouw",
+      "name": {
+        "en": "Secondary, upper years (havo/vwo, vsbo)",
+        "local": {
+          "nl": "Bovenbouw"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "groep-3",
+      "stage": "fo-cyclus-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Groep 3",
+        "local": {
+          "nl": "Groep 3"
+        }
+      },
+      "aliases": [
+        "Grupo 3"
+      ]
+    },
+    {
+      "id": "groep-4",
+      "stage": "fo-cyclus-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Groep 4",
+        "local": {
+          "nl": "Groep 4"
+        }
+      },
+      "aliases": [
+        "Grupo 4"
+      ]
+    },
+    {
+      "id": "groep-5",
+      "stage": "fo-cyclus-2",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Groep 5",
+        "local": {
+          "nl": "Groep 5"
+        }
+      },
+      "aliases": [
+        "Grupo 5"
+      ]
+    },
+    {
+      "id": "groep-6",
+      "stage": "fo-cyclus-2",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Groep 6",
+        "local": {
+          "nl": "Groep 6"
+        }
+      },
+      "aliases": [
+        "Grupo 6"
+      ]
+    },
+    {
+      "id": "groep-7",
+      "stage": "fo-cyclus-2",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Groep 7",
+        "local": {
+          "nl": "Groep 7"
+        }
+      },
+      "aliases": [
+        "Grupo 7"
+      ]
+    },
+    {
+      "id": "groep-8",
+      "stage": "fo-cyclus-2",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Groep 8",
+        "local": {
+          "nl": "Groep 8"
+        }
+      },
+      "aliases": [
+        "Grupo 8"
+      ]
+    },
+    {
+      "id": "basisvorming-1",
+      "stage": "basisvorming",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Basisvorming 1",
+        "local": {
+          "nl": "Basisvorming 1"
+        }
+      },
+      "aliases": [
+        "Leerjaar 1",
+        "Klas 1"
+      ]
+    },
+    {
+      "id": "basisvorming-2",
+      "stage": "basisvorming",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Basisvorming 2",
+        "local": {
+          "nl": "Basisvorming 2"
+        }
+      },
+      "aliases": [
+        "Leerjaar 2",
+        "Klas 2"
+      ]
+    },
+    {
+      "id": "leerjaar-3",
+      "stage": "bovenbouw",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Leerjaar 3",
+        "local": {
+          "nl": "Leerjaar 3"
+        }
+      },
+      "aliases": [
+        "Havo 3",
+        "Vwo 3",
+        "Vsbo 3"
+      ]
+    },
+    {
+      "id": "leerjaar-4",
+      "stage": "bovenbouw",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Leerjaar 4",
+        "local": {
+          "nl": "Leerjaar 4"
+        }
+      },
+      "aliases": [
+        "Havo 4",
+        "Vwo 4",
+        "Vsbo 4"
+      ]
+    },
+    {
+      "id": "leerjaar-5",
+      "stage": "bovenbouw",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Leerjaar 5",
+        "local": {
+          "nl": "Leerjaar 5"
+        }
+      },
+      "aliases": [
+        "Havo 5",
+        "Vwo 5"
+      ]
+    },
+    {
+      "id": "leerjaar-6",
+      "stage": "bovenbouw",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Leerjaar 6",
+        "local": {
+          "nl": "Leerjaar 6"
+        }
+      },
+      "aliases": [
+        "Vwo 6"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Landsverordening funderend onderwijs (geconsolideerde tekst, P.B. 2025, no. 55)",
+      "url": "https://gobiernu.cw/wp-content/uploads/2025/05/55.-GT.-Lvo.-funderend-onderwijs.pdf"
+    },
+    {
+      "title": "De Staat van het Onderwijs op Curaçao, Onderwijsverslag 2017–2018 (Inspectie Onderwijs)",
+      "url": "https://gobiernu.cw/wp-content/uploads/2019/07/De_Staat_van_het_Onderwijs_op_Cura__ao_2017-2018.pdf"
+    }
+  ],
+  "notes": "Funderend onderwijs runs 8 years from age 4 in two 4-year cycles; groep 1–2 are pre-primary and not listed. Secondary is shown along the 6-year vwo route; havo ends after leerjaar 5 and vsbo after leerjaar 4."
+}

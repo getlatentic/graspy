@@ -1,0 +1,63 @@
+{
+  "practice": {
+    "label": "Practice",
+    "showHint": "Show a hint",
+    "correct": "Correct!",
+    "incorrect": "Not quite",
+    "another": "Another question",
+    "explain": "Explain the answer",
+    "askAnotherRight": "I got that one right. Give me another, a little harder.",
+    "askAnotherWrong": "I chose {chosen} and got it wrong. Give me another question like it.",
+    "askExplain": "I chose {chosen}, but the answer is {answer}. Explain why, step by step.",
+    "busy": "Wait for graspy to finish its answer, then tap again.",
+    "questionOf": "Question {n} of {total}",
+    "score": "You got {right} of {total} right.",
+    "anotherSet": "Another set",
+    "explainWrong": "Explain my mistakes",
+    "askAnotherSet": "I got {right} of {total} right. Give me another set like it.",
+    "askExplainWrong": "Explain the ones I got wrong, step by step:",
+    "wrongLine": "{question}: I chose {chosen}, but the answer is {answer}."
+  },
+  "passage": {
+    "label": "Reading",
+    "another": "Another passage",
+    "askAnother": "I got {right} of {total} right on the passage. Give me another one to read."
+  },
+  "lesson": {
+    "label": "Lesson",
+    "loading": "Preparing your lesson",
+    "loadFailed": "The lesson could not load",
+    "tryAgain": "Try again",
+    "topicOf": "Topic {current} of {total}",
+    "slideOf": "{current} of {total}",
+    "slides": "Slides",
+    "previous": "Previous",
+    "next": "Next",
+    "checkUnderstanding": "Check your understanding",
+    "startFinalCheck": "Start the final check",
+    "checkpoint": "Checkpoint",
+    "finalCheck": "Final check",
+    "backToLesson": "Back to lesson",
+    "checkAnswer": "Check answer",
+    "correct": "Well done!",
+    "incorrect": "Not quite",
+    "correctFallback": "Tell the tutor how you worked it out.",
+    "incorrectFallback": "Ask the tutor about the part that felt tricky, then try again.",
+    "nextSlide": "Next slide",
+    "finishLesson": "Finish lesson",
+    "diagramSource": "Diagram source",
+    "slideType": {
+      "concept": "New idea",
+      "example": "Worked example",
+      "practice": "Guided practice",
+      "misconception": "Common mistake",
+      "summary": "Summary",
+      "default": "Lesson"
+    },
+    "arriving": "More slides are on their way.",
+    "failed": "Something went wrong while preparing this lesson. Try again, or go back and choose another topic.",
+    "partial": "Part of this lesson could not be prepared. Read what is here, or try again for the whole lesson.",
+    "finishing": "Saving…",
+    "objectives": "In this lesson you'll learn to"
+  }
+}

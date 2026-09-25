@@ -1,0 +1,251 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "AX",
+  "country": "AX",
+  "name": {
+    "en": "Åland Islands",
+    "local": {
+      "sv": "Åland"
+    }
+  },
+  "stages": [
+    {
+      "id": "lagstadiet",
+      "name": {
+        "en": "Primary, grades 1–6 (lågstadiet)",
+        "local": {
+          "sv": "Lågstadiet"
+        }
+      }
+    },
+    {
+      "id": "hogstadiet",
+      "name": {
+        "en": "Lower secondary, grades 7–9 (högstadiet)",
+        "local": {
+          "sv": "Högstadiet"
+        }
+      }
+    },
+    {
+      "id": "gymnasiet",
+      "name": {
+        "en": "Upper secondary (gymnasium)",
+        "local": {
+          "sv": "Gymnasiet"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "arskurs-1",
+      "stage": "lagstadiet",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "sv": "Årskurs 1"
+        }
+      },
+      "aliases": [
+        "Åk 1"
+      ]
+    },
+    {
+      "id": "arskurs-2",
+      "stage": "lagstadiet",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "sv": "Årskurs 2"
+        }
+      },
+      "aliases": [
+        "Åk 2"
+      ]
+    },
+    {
+      "id": "arskurs-3",
+      "stage": "lagstadiet",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "sv": "Årskurs 3"
+        }
+      },
+      "aliases": [
+        "Åk 3"
+      ]
+    },
+    {
+      "id": "arskurs-4",
+      "stage": "lagstadiet",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "sv": "Årskurs 4"
+        }
+      },
+      "aliases": [
+        "Åk 4"
+      ]
+    },
+    {
+      "id": "arskurs-5",
+      "stage": "lagstadiet",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "sv": "Årskurs 5"
+        }
+      },
+      "aliases": [
+        "Åk 5"
+      ]
+    },
+    {
+      "id": "arskurs-6",
+      "stage": "lagstadiet",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "sv": "Årskurs 6"
+        }
+      },
+      "aliases": [
+        "Åk 6"
+      ]
+    },
+    {
+      "id": "arskurs-7",
+      "stage": "hogstadiet",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "sv": "Årskurs 7"
+        }
+      },
+      "aliases": [
+        "Åk 7"
+      ]
+    },
+    {
+      "id": "arskurs-8",
+      "stage": "hogstadiet",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "sv": "Årskurs 8"
+        }
+      },
+      "aliases": [
+        "Åk 8"
+      ]
+    },
+    {
+      "id": "arskurs-9",
+      "stage": "hogstadiet",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "sv": "Årskurs 9"
+        }
+      },
+      "aliases": [
+        "Åk 9"
+      ]
+    },
+    {
+      "id": "gymnasiet-1",
+      "stage": "gymnasiet",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Upper secondary year 1",
+        "local": {
+          "sv": "Första året"
+        }
+      },
+      "aliases": [
+        "Ettan"
+      ]
+    },
+    {
+      "id": "gymnasiet-2",
+      "stage": "gymnasiet",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Upper secondary year 2",
+        "local": {
+          "sv": "Andra året"
+        }
+      },
+      "aliases": [
+        "Tvåan"
+      ]
+    },
+    {
+      "id": "gymnasiet-3",
+      "stage": "gymnasiet",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Upper secondary year 3",
+        "local": {
+          "sv": "Tredje året"
+        }
+      },
+      "aliases": [
+        "Trean",
+        "Abiturient"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Grundskola | Ålands landskapsregering",
+      "url": "https://www.regeringen.ax/utbildning-larande/grundskola"
+    },
+    {
+      "title": "Landskapslag (2020:32) om barnomsorg och grundskola | Ålands landskapsregering",
+      "url": "https://www.regeringen.ax/alandsk-lagstiftning/alex/202032"
+    },
+    {
+      "title": "Grundskola och utbildning | Ålands kommunförbund",
+      "url": "https://www.kommunforbundet.ax/kommunerna-pa-aland/grundskola-och-utbildning"
+    },
+    {
+      "title": "Gymnasium | Ålands landskapsregering",
+      "url": "https://www.regeringen.ax/utbildning-larande/gymnasium"
+    },
+    {
+      "title": "Allmänbildande gymnasieutbildning | Ålands gymnasium",
+      "url": "https://www.gymnasium.ax/alands-lyceum/allmanbildande-gymnasieutbildning"
+    },
+    {
+      "title": "Om Ålands lyceum | Ålands gymnasium",
+      "url": "https://www.gymnasium.ax/alands-lyceum/om-alands-lyceum"
+    }
+  ],
+  "notes": "Åland runs its own Swedish-language schools under 2020:32, apart from Finland's law. Läroplikt starts in the autumn term of the year a child turns 7; the förundervisning year before is left out. Grundskolan is nine years: municipal lågstadieskolor teach årskurs 1–6 and högstadieskolor 7–9. Ålands lyceum's general upper secondary is 150 study points over three årskurser (up to four) ending in Finland's studentexamen; Ålands yrkesgymnasium is the vocational route. Names for the gymnasium years (första året, ettan) are everyday usage, not from the cited pages."
+}

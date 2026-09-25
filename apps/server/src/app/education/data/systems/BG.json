@@ -1,0 +1,255 @@
+{
+  "id": "BG",
+  "country": "BG",
+  "name": {
+    "en": "Bulgaria",
+    "local": {
+      "bg": "България"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary stage (Nachalen etap)",
+        "local": {
+          "bg": "Начален етап"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary stage (Progimnazialen etap)",
+        "local": {
+          "bg": "Прогимназиален етап"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary-1",
+      "name": {
+        "en": "First upper secondary stage",
+        "local": {
+          "bg": "Първи гимназиален етап"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary-2",
+      "name": {
+        "en": "Second upper secondary stage",
+        "local": {
+          "bg": "Втори гимназиален етап"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "bg": "I клас"
+        }
+      },
+      "aliases": [
+        "Първи клас",
+        "1 клас"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "bg": "II клас"
+        }
+      },
+      "aliases": [
+        "Втори клас",
+        "2 клас"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "bg": "III клас"
+        }
+      },
+      "aliases": [
+        "Трети клас",
+        "3 клас"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "bg": "IV клас"
+        }
+      },
+      "aliases": [
+        "Четвърти клас",
+        "4 клас"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "lower-secondary",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "bg": "V клас"
+        }
+      },
+      "aliases": [
+        "Пети клас",
+        "5 клас"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "lower-secondary",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "bg": "VI клас"
+        }
+      },
+      "aliases": [
+        "Шести клас",
+        "6 клас"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "bg": "VII клас"
+        }
+      },
+      "aliases": [
+        "Седми клас",
+        "7 клас"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "upper-secondary-1",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "bg": "VIII клас"
+        }
+      },
+      "aliases": [
+        "Осми клас",
+        "8 клас"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "upper-secondary-1",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "bg": "IX клас"
+        }
+      },
+      "aliases": [
+        "Девети клас",
+        "9 клас"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "upper-secondary-1",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "bg": "X клас"
+        }
+      },
+      "aliases": [
+        "Десети клас",
+        "10 клас"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "upper-secondary-2",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "bg": "XI клас"
+        }
+      },
+      "aliases": [
+        "Единадесети клас",
+        "11 клас"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "upper-secondary-2",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "bg": "XII клас"
+        }
+      },
+      "aliases": [
+        "Дванадесети клас",
+        "12 клас"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Bulgaria bg:Организация и структура на образователната система (Eurydice)",
+      "url": "https://eurydice.eacea.ec.europa.eu/bg/eurypedia/bulgaria/bulgaria-bgorganizaciya-i-struktura-na-obrazovatelnata-sistema"
+    },
+    {
+      "title": "Organisation of single-structure education (Eurydice, Bulgaria)",
+      "url": "https://eurydice.eacea.ec.europa.eu/eurypedia/bulgaria/organisation-single-structure-education"
+    }
+  ],
+  "notes": "School starts in the calendar year the child turns 7 (at 6 if parents choose and readiness is certified). Basic education is grades I–VII; secondary is VIII–XII in two upper stages (VIII–X and XI–XII). Profiled and vocational schools may admit after grade VII."
+}

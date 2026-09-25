@@ -1,0 +1,90 @@
+[project]
+name = "graspy-server"
+version = "0.1.0"
+description = "graspy backend on Cloudflare Python Workers: DSPy generation pipelines and a DSPy ReAct tutor over A2A"
+readme = "README.md"
+license = "AGPL-3.0-only"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.119.0",
+    # The Workers runtime ships pydantic-core 2.41, so pydantic stops at 2.12
+    # there; pinning it here keeps the tests on the version that runs.
+    "pydantic>=2.12,<2.13",
+    "pydantic-settings>=2.0.0",
+    "sse-starlette>=3.0.2",
+    # 3.4 is the first release with a native engine that runs without LiteLLM.
+    "dspy==3.4.0b1",
+    # DSPy imports it at module level, but only LiteLLM declared it.
+    "jsonschema>=4.0",
+    # DSPy's streaming imports it, but only the openai SDK declared it, and the
+    # Worker build leaves that SDK out.
+    "jiter>=0.10",
+    "httpx>=0.27.0",
+    "a2a-sdk[http-server]>=1.1.2",
+]
+
+[project.scripts]
+# main() reads HOST / PORT / UVICORN_RELOAD from .env. Invoking uvicorn
+# directly bypasses them, which is why those settings looked inert.
+serve = "app.main:main"
+
+[dependency-groups]
+dev = [
+    "uvicorn[standard]>=0.30.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "hypothesis>=6.165.2",
+    "mutmut>=3.7.0",
+    "pip-audit>=2.10.1",
+    "pytest-cov>=7.1.0",
+    "workers-py>=1.17.4",
+    "workers-runtime-sdk>=1.9.0",
+    "httpx2>=2.13",
+    "mcp>=2.2.0",
+    "ruff>=0.16.9",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["src"]
+# The integration tests need a running server and spend real model tokens, so
+# they are opt-in: `pytest -m integration`.
+addopts = "-m 'not integration'"
+markers = [
+    "integration: requires a running server and live model calls",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/app"]
+
+[tool.uv]
+package = true
+# DSPy 3.4 still declares LiteLLM, but its native engine never loads it. It is
+# 95 MB and needs Rust packages with no WebAssembly build, so it cannot ship to
+# a Worker at all.
+#
+# a2a-sdk declares google-api-core for its gRPC transport and never imports it
+# over JSON-RPC. It brings google-auth and cryptography, about 10 MB, and a
+# Worker's upload plus its startup snapshot must fit in 64 MiB.
+#
+# DSPy imports the openai SDK only for fine-tuning, which graspy never does, yet
+# loading it takes 46 MB: two thirds of the Worker's startup snapshot, which has
+# a size limit. The Worker build (emscripten) leaves it out and worker.py
+# registers an empty module in its place; local runs keep the real SDK.
+override-dependencies = [
+  "litellm ; sys_platform == 'never'",
+  "google-api-core ; sys_platform == 'never'",
+  "openai ; sys_platform != 'emscripten'",
+]
+
+[tool.mutmut]
+# Every test runs offline, against DummyLM or fakes, so every module is in
+# scope except the server launcher, which no test starts.
+source_paths = ["src/app"]
+do_not_mutate = ["src/app/main.py"]

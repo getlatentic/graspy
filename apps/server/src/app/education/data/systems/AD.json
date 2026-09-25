@@ -1,0 +1,231 @@
+{
+  "id": "AD",
+  "country": "AD",
+  "name": {
+    "en": "Andorra",
+    "local": {
+      "ca": "Andorra"
+    }
+  },
+  "main": true,
+  "status": "draft",
+  "stages": [
+    {
+      "id": "primera-ensenyanca",
+      "name": {
+        "en": "Primary (Primera ensenyança)",
+        "local": {
+          "ca": "Primera ensenyança"
+        }
+      }
+    },
+    {
+      "id": "segona-ensenyanca",
+      "name": {
+        "en": "Lower secondary (Segona ensenyança)",
+        "local": {
+          "ca": "Segona ensenyança"
+        }
+      }
+    },
+    {
+      "id": "batxillerat",
+      "name": {
+        "en": "Batxillerat",
+        "local": {
+          "ca": "Batxillerat"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primera-1",
+      "stage": "primera-ensenyanca",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary Year 1",
+        "local": {
+          "ca": "1r de primera ensenyança"
+        }
+      },
+      "aliases": [
+        "1r de primera"
+      ]
+    },
+    {
+      "id": "primera-2",
+      "stage": "primera-ensenyanca",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary Year 2",
+        "local": {
+          "ca": "2n de primera ensenyança"
+        }
+      },
+      "aliases": [
+        "2n de primera"
+      ]
+    },
+    {
+      "id": "primera-3",
+      "stage": "primera-ensenyanca",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary Year 3",
+        "local": {
+          "ca": "3r de primera ensenyança"
+        }
+      },
+      "aliases": [
+        "3r de primera"
+      ]
+    },
+    {
+      "id": "primera-4",
+      "stage": "primera-ensenyanca",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary Year 4",
+        "local": {
+          "ca": "4t de primera ensenyança"
+        }
+      },
+      "aliases": [
+        "4t de primera"
+      ]
+    },
+    {
+      "id": "primera-5",
+      "stage": "primera-ensenyanca",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary Year 5",
+        "local": {
+          "ca": "5è de primera ensenyança"
+        }
+      },
+      "aliases": [
+        "5è de primera"
+      ]
+    },
+    {
+      "id": "primera-6",
+      "stage": "primera-ensenyanca",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Primary Year 6",
+        "local": {
+          "ca": "6è de primera ensenyança"
+        }
+      },
+      "aliases": [
+        "6è de primera"
+      ]
+    },
+    {
+      "id": "segona-1",
+      "stage": "segona-ensenyanca",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Secondary Year 1",
+        "local": {
+          "ca": "1r de segona ensenyança"
+        }
+      },
+      "aliases": [
+        "1r de segona"
+      ]
+    },
+    {
+      "id": "segona-2",
+      "stage": "segona-ensenyanca",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Secondary Year 2",
+        "local": {
+          "ca": "2n de segona ensenyança"
+        }
+      },
+      "aliases": [
+        "2n de segona"
+      ]
+    },
+    {
+      "id": "segona-3",
+      "stage": "segona-ensenyanca",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Secondary Year 3",
+        "local": {
+          "ca": "3r de segona ensenyança"
+        }
+      },
+      "aliases": [
+        "3r de segona"
+      ]
+    },
+    {
+      "id": "segona-4",
+      "stage": "segona-ensenyanca",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Secondary Year 4",
+        "local": {
+          "ca": "4t de segona ensenyança"
+        }
+      },
+      "aliases": [
+        "4t de segona"
+      ]
+    },
+    {
+      "id": "batxillerat-1",
+      "stage": "batxillerat",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Batxillerat Year 1",
+        "local": {
+          "ca": "1r de batxillerat"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "batxillerat-2",
+      "stage": "batxillerat",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Batxillerat Year 2",
+        "local": {
+          "ca": "2n de batxillerat"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Llei 17/2018, del 26 de juliol, d’ordenament del sistema educatiu andorrà",
+      "url": "https://www.portaljuridicandorra.ad/L2018017"
+    },
+    {
+      "title": "Sistema educatiu andorrà - Govern d’Andorra",
+      "url": "https://www.govern.ad/ca/tematiques/educacio-formacio-investigacio-i-divulgacio-del-coneixement/estudiar-a-andorra/sistemes-educatius-a-andorra/sistema-educatiu-andorra"
+    }
+  ],
+  "draftedBy": "claude-code",
+  "notes": "Andorran system (Escola Andorrana). The law confirms the stages and durations: primera ensenyança 6 courses in three cycles (ages 6–12), segona ensenyança 4 courses in two cycles (12–16), batxillerat 2 courses. Unconfirmed: the per-year names (1r de primera ensenyança, etc.) follow Catalan usage but no official page lists them. The French and Spanish systems also run schools in Andorra and use their own countries' class names."
+}

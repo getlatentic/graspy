@@ -1,0 +1,277 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "SJ",
+  "country": "SJ",
+  "name": {
+    "en": "Svalbard and Jan Mayen",
+    "local": {
+      "nb": "Svalbard og Jan Mayen",
+      "nn": "Svalbard og Jan Mayen"
+    }
+  },
+  "stages": [
+    {
+      "id": "barnetrinnet",
+      "name": {
+        "en": "Primary (barnetrinnet)",
+        "local": {
+          "nb": "Barnetrinnet"
+        }
+      }
+    },
+    {
+      "id": "ungdomstrinnet",
+      "name": {
+        "en": "Lower secondary (ungdomstrinnet)",
+        "local": {
+          "nb": "Ungdomstrinnet"
+        }
+      }
+    },
+    {
+      "id": "videregaende",
+      "name": {
+        "en": "Upper secondary (videregående opplæring)",
+        "local": {
+          "nb": "Videregående opplæring",
+          "nn": "Vidaregåande opplæring"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "trinn-1",
+      "stage": "barnetrinnet",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {
+          "nb": "1. trinn",
+          "nn": "1. trinn"
+        }
+      },
+      "aliases": [
+        "1. klasse",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "trinn-2",
+      "stage": "barnetrinnet",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {
+          "nb": "2. trinn",
+          "nn": "2. trinn"
+        }
+      },
+      "aliases": [
+        "2. klasse",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "trinn-3",
+      "stage": "barnetrinnet",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {
+          "nb": "3. trinn",
+          "nn": "3. trinn"
+        }
+      },
+      "aliases": [
+        "3. klasse",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "trinn-4",
+      "stage": "barnetrinnet",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {
+          "nb": "4. trinn",
+          "nn": "4. trinn"
+        }
+      },
+      "aliases": [
+        "4. klasse",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "trinn-5",
+      "stage": "barnetrinnet",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {
+          "nb": "5. trinn",
+          "nn": "5. trinn"
+        }
+      },
+      "aliases": [
+        "5. klasse",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "trinn-6",
+      "stage": "barnetrinnet",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {
+          "nb": "6. trinn",
+          "nn": "6. trinn"
+        }
+      },
+      "aliases": [
+        "6. klasse",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "trinn-7",
+      "stage": "barnetrinnet",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {
+          "nb": "7. trinn",
+          "nn": "7. trinn"
+        }
+      },
+      "aliases": [
+        "7. klasse",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "trinn-8",
+      "stage": "ungdomstrinnet",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {
+          "nb": "8. trinn",
+          "nn": "8. trinn"
+        }
+      },
+      "aliases": [
+        "8. klasse",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "trinn-9",
+      "stage": "ungdomstrinnet",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {
+          "nb": "9. trinn",
+          "nn": "9. trinn"
+        }
+      },
+      "aliases": [
+        "9. klasse",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "trinn-10",
+      "stage": "ungdomstrinnet",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {
+          "nb": "10. trinn",
+          "nn": "10. trinn"
+        }
+      },
+      "aliases": [
+        "10. klasse",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "vg1",
+      "stage": "videregaende",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Vg1",
+        "local": {
+          "nb": "Vg1",
+          "nn": "Vg1"
+        }
+      },
+      "aliases": [
+        "VG1",
+        "1. videregående"
+      ]
+    },
+    {
+      "id": "vg2",
+      "stage": "videregaende",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Vg2",
+        "local": {
+          "nb": "Vg2",
+          "nn": "Vg2"
+        }
+      },
+      "aliases": [
+        "VG2",
+        "2. videregående"
+      ]
+    },
+    {
+      "id": "vg3",
+      "stage": "videregaende",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Vg3",
+        "local": {
+          "nb": "Vg3",
+          "nn": "Vg3"
+        }
+      },
+      "aliases": [
+        "VG3",
+        "3. videregående"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Forskrift om grunnskoleopplæring og vidaregåande opplæring i Longyearbyen - Lovdata",
+      "url": "https://lovdata.no/dokument/SF/forskrift/2024-06-21-1103"
+    },
+    {
+      "title": "Videregående opplæringstilbud - Longyearbyen lokalstyre",
+      "url": "https://www.lokalstyre.no/tjenester/skole/videregaende-opplaeringstilbud"
+    }
+  ],
+  "notes": "Longyearbyen skole, a 1–13 school, follows the Norwegian Education Act under a Longyearbyen regulation: schooling starts in the year a child turns six and runs to 10. trinn, and pupils have the same right to upper secondary as on the mainland. It offers studiespesialisering Vg1–Vg3 and a two-year salg, service og reiseliv programme; other programmes are taken on the mainland. The Russian school in Barentsburg follows Russia's system and Jan Mayen has no school; both are left out."
+}

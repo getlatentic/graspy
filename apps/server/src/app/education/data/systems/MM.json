@@ -1,0 +1,214 @@
+{
+  "id": "MM",
+  "country": "MM",
+  "name": {
+    "en": "Myanmar",
+    "local": {
+      "my": "မြန်မာ"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "my": "မူလတန်းအဆင့်"
+        }
+      }
+    },
+    {
+      "id": "middle",
+      "name": {
+        "en": "Middle school",
+        "local": {
+          "my": "အလယ်တန်းအဆင့်"
+        }
+      }
+    },
+    {
+      "id": "high",
+      "name": {
+        "en": "High school",
+        "local": {
+          "my": "အထက်တန်းအဆင့်"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "my": "ပထမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "my": "ဒုတိယတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "my": "တတိယတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "my": "စတုတ္ထတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "my": "ပဉ္စမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "middle",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "my": "ဆဋ္ဌမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "my": "သတ္တမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "my": "အဋ္ဌမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "middle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "my": "နဝမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "high",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "my": "ဒသမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "high",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "my": "ဧကာဒသမတန်း"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "high",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "my": "ဒွါဒသမတန်း"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "အခြေခံပညာရေးဥပဒေ (Basic Education Law, 2019, Union Parliament Law No. 34)",
+      "url": "https://www.moe.gov.mm/sites/default/files/Basic_Education_Law.pdf"
+    },
+    {
+      "title": "အမျိုးသားပညာရေးဥပဒေ (National Education Law 2014, amended to 29-10-2022)",
+      "url": "https://www.moe.gov.mm/sites/default/files/National%20Education%20Law%20with%20Amendments%20%2811.1.23%29.pdf"
+    },
+    {
+      "title": "National Education Strategic Plan (2021-2030) Summary",
+      "url": "https://www.moe.gov.mm/sites/default/files/NESP%202021-2030Eng.pdf"
+    }
+  ],
+  "notes": "Kindergarten (from age 5) comes before Grade 1 and is left out, although the National Education Law calls it the foundational class of the primary level. The KG+12 rollout began in 2016-2017; the NESP 2021-2030 reports new curricula in place for KG, Grades 1-4, 6, 7 and 10 and plans to finish the curriculum reform in 2021-2022 to 2022-2023. The sources cited do not say whether Grades 11-12 are now taught everywhere."
+}

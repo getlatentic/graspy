@@ -1,0 +1,258 @@
+{
+  "id": "LB",
+  "country": "LB",
+  "name": {
+    "en": "Lebanon",
+    "local": {
+      "ar": "لبنان"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "cycle-1",
+      "name": {
+        "en": "Basic education, cycle 1",
+        "local": {
+          "ar": "الحلقة الأولى من التعليم الأساسي"
+        }
+      }
+    },
+    {
+      "id": "cycle-2",
+      "name": {
+        "en": "Basic education, cycle 2",
+        "local": {
+          "ar": "الحلقة الثانية من التعليم الأساسي"
+        }
+      }
+    },
+    {
+      "id": "intermediate",
+      "name": {
+        "en": "Intermediate (Brevet)",
+        "local": {
+          "ar": "المرحلة المتوسطة"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "ar": "المرحلة الثانوية"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "cycle-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ar": "الصف الأول الأساسي"
+        }
+      },
+      "aliases": [
+        "EB1",
+        "EB 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "cycle-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ar": "الصف الثاني الأساسي"
+        }
+      },
+      "aliases": [
+        "EB2",
+        "EB 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "cycle-1",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ar": "الصف الثالث الأساسي"
+        }
+      },
+      "aliases": [
+        "EB3",
+        "EB 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "cycle-2",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ar": "الصف الرابع الأساسي"
+        }
+      },
+      "aliases": [
+        "EB4",
+        "EB 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "cycle-2",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ar": "الصف الخامس الأساسي"
+        }
+      },
+      "aliases": [
+        "EB5",
+        "EB 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "cycle-2",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ar": "الصف السادس الأساسي"
+        }
+      },
+      "aliases": [
+        "EB6",
+        "EB 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "intermediate",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ar": "الصف السابع الأساسي"
+        }
+      },
+      "aliases": [
+        "EB7",
+        "EB 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "intermediate",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ar": "الصف الثامن الأساسي"
+        }
+      },
+      "aliases": [
+        "EB8",
+        "EB 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "intermediate",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ar": "الصف التاسع الأساسي"
+        }
+      },
+      "aliases": [
+        "EB9",
+        "EB 9"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ar": "الصف الثانوي الأول"
+        }
+      },
+      "aliases": [
+        "S1",
+        "First Secondary",
+        "Seconde"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ar": "الصف الثانوي الثاني"
+        }
+      },
+      "aliases": [
+        "S2",
+        "Second Secondary",
+        "Première"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ar": "الصف الثانوي الثالث"
+        }
+      },
+      "aliases": [
+        "S3",
+        "Third Secondary",
+        "Terminale"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "المنهج التعليمي للعام ٢٠٢٥- ٢٠٢٦، وزارة التربية والتعليم العالي - المركز التربوي للبحوث والانماء، استنادا إلى التعميم …",
+      "url": "https://www.crdp.org/node/23357"
+    },
+    {
+      "title": "CRDP: الأهداف والدروس المطلوبة للعام الدراسي 2025-2026 - مادة الرياضيات",
+      "url": "https://www.crdp.org/sites/default/files/inline-files/14-Math_2025-2026_.pdf"
+    }
+  ],
+  "notes": "Names follow CRDP's 2025/26 required-lessons documents (EB1-EB9, S1-S3). Grades 7-9 form the intermediate stage (الحلقة الثالثة), ending with the Brevet. S2 and S3 split into branches (sciences, humanities; S3: SG, SE, LS, LH). A new national curriculum framework is being developed."
+}

@@ -1,0 +1,257 @@
+{
+  "id": "IQ",
+  "country": "IQ",
+  "name": {
+    "en": "Iraq",
+    "local": {
+      "ar": "العراق"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "ar": "الدراسة الابتدائية"
+        }
+      }
+    },
+    {
+      "id": "intermediate",
+      "name": {
+        "en": "Intermediate",
+        "local": {
+          "ar": "الدراسة المتوسطة"
+        }
+      }
+    },
+    {
+      "id": "preparatory",
+      "name": {
+        "en": "Preparatory",
+        "local": {
+          "ar": "الدراسة الإعدادية"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primary-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "1st Primary",
+        "local": {
+          "ar": "الصف الأول الابتدائي"
+        }
+      },
+      "aliases": [
+        "Grade 1",
+        "الأول ابتدائي"
+      ]
+    },
+    {
+      "id": "primary-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "2nd Primary",
+        "local": {
+          "ar": "الصف الثاني الابتدائي"
+        }
+      },
+      "aliases": [
+        "Grade 2",
+        "الثاني ابتدائي"
+      ]
+    },
+    {
+      "id": "primary-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "3rd Primary",
+        "local": {
+          "ar": "الصف الثالث الابتدائي"
+        }
+      },
+      "aliases": [
+        "Grade 3",
+        "الثالث ابتدائي"
+      ]
+    },
+    {
+      "id": "primary-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "4th Primary",
+        "local": {
+          "ar": "الصف الرابع الابتدائي"
+        }
+      },
+      "aliases": [
+        "Grade 4",
+        "الرابع ابتدائي"
+      ]
+    },
+    {
+      "id": "primary-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "5th Primary",
+        "local": {
+          "ar": "الصف الخامس الابتدائي"
+        }
+      },
+      "aliases": [
+        "Grade 5",
+        "الخامس ابتدائي"
+      ]
+    },
+    {
+      "id": "primary-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6th Primary",
+        "local": {
+          "ar": "الصف السادس الابتدائي"
+        }
+      },
+      "aliases": [
+        "Grade 6",
+        "السادس ابتدائي"
+      ]
+    },
+    {
+      "id": "intermediate-1",
+      "stage": "intermediate",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "1st Intermediate",
+        "local": {
+          "ar": "الصف الأول المتوسط"
+        }
+      },
+      "aliases": [
+        "Grade 7",
+        "الأول متوسط"
+      ]
+    },
+    {
+      "id": "intermediate-2",
+      "stage": "intermediate",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "2nd Intermediate",
+        "local": {
+          "ar": "الصف الثاني المتوسط"
+        }
+      },
+      "aliases": [
+        "Grade 8",
+        "الثاني متوسط"
+      ]
+    },
+    {
+      "id": "intermediate-3",
+      "stage": "intermediate",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3rd Intermediate",
+        "local": {
+          "ar": "الصف الثالث المتوسط"
+        }
+      },
+      "aliases": [
+        "Grade 9",
+        "الثالث متوسط",
+        "Third Form Baccalaureate"
+      ]
+    },
+    {
+      "id": "preparatory-1",
+      "stage": "preparatory",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "4th Preparatory",
+        "local": {
+          "ar": "الصف الرابع الإعدادي"
+        }
+      },
+      "aliases": [
+        "Grade 10",
+        "الرابع اعدادي"
+      ]
+    },
+    {
+      "id": "preparatory-2",
+      "stage": "preparatory",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "5th Preparatory",
+        "local": {
+          "ar": "الصف الخامس الإعدادي"
+        }
+      },
+      "aliases": [
+        "Grade 11",
+        "الخامس اعدادي"
+      ]
+    },
+    {
+      "id": "preparatory-3",
+      "stage": "preparatory",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "6th Preparatory",
+        "local": {
+          "ar": "الصف السادس الإعدادي"
+        }
+      },
+      "aliases": [
+        "Grade 12",
+        "السادس اعدادي",
+        "Sixth Form Baccalaureate",
+        "البكالوريا"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "World Data on Education, 7th edition 2010/11: Iraq (UNESCO-IBE)",
+      "url": "https://web.archive.org/web/20151011215651/http://www.ibe.unesco.org/fileadmin/user_upload/Publications/WDE/2010/pdf-versions/Iraq.pdf"
+    },
+    {
+      "title": "وزارة التربية العراقية - قسم الأخبار",
+      "url": "https://web.archive.org/web/20191118180937/http://www.moedu.gov.iq/index.php?name=News&countpage=300&currenpage=5&new_topic=11"
+    },
+    {
+      "title": "إحصاء التعليم الابتدائي في العراق 2021/2022 – هيأة الإحصاء ونظم المعلومات الجغرافية",
+      "url": "https://cosit.gov.iq/documents/education/reports/pri/%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%20%D8%A7%D9%84%D8%A7%D8%A8%D8%AA%D8%AF%D8%A7%D8%A6%D9%8A%202021%20-%202022.pdf"
+    },
+    {
+      "title": "إحصاء التعليم الثانوي في العراق 2023/2024 – هيأة الإحصاء ونظم المعلومات الجغرافية",
+      "url": "https://cosit.gov.iq/documents/education/reports/sec/%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%20%D8%A7%D9%84%D8%AB%D8%A7%D9%86%D9%88%D9%8A%202023%20-2024.pdf"
+    }
+  ],
+  "notes": "moedu.gov.iq could not be reached. Archived ministry news confirms the stage names and الأول الابتدائي, السادس الابتدائي, الثالث المتوسط and السادس الإعدادي. The statistics authority's primary (2021/2022) and secondary (2023/2024) education reports, prepared with the ministry, count pupils in each primary grade, in the first to third intermediate grades, and in the fourth to sixth years of the preparatory stage (scientific and literary). Kurdistan Region schools use a 9-year basic stage (grades 1-9) plus grades 10-12."
+}

@@ -1,0 +1,223 @@
+{
+  "id": "IE",
+  "country": "IE",
+  "name": {
+    "en": "Ireland",
+    "local": {
+      "ga": "Éire"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "junior-cycle",
+      "name": {
+        "en": "Junior Cycle",
+        "local": {}
+      }
+    },
+    {
+      "id": "senior-cycle",
+      "name": {
+        "en": "Senior Cycle",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "junior-infants",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Junior Infants",
+        "local": {}
+      },
+      "aliases": [
+        "JI"
+      ]
+    },
+    {
+      "id": "senior-infants",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Senior Infants",
+        "local": {}
+      },
+      "aliases": [
+        "SI"
+      ]
+    },
+    {
+      "id": "first-class",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "First Class",
+        "local": {}
+      },
+      "aliases": [
+        "1st Class"
+      ]
+    },
+    {
+      "id": "second-class",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Second Class",
+        "local": {}
+      },
+      "aliases": [
+        "2nd Class"
+      ]
+    },
+    {
+      "id": "third-class",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Third Class",
+        "local": {}
+      },
+      "aliases": [
+        "3rd Class"
+      ]
+    },
+    {
+      "id": "fourth-class",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Fourth Class",
+        "local": {}
+      },
+      "aliases": [
+        "4th Class"
+      ]
+    },
+    {
+      "id": "fifth-class",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Fifth Class",
+        "local": {}
+      },
+      "aliases": [
+        "5th Class"
+      ]
+    },
+    {
+      "id": "sixth-class",
+      "stage": "primary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Sixth Class",
+        "local": {}
+      },
+      "aliases": [
+        "6th Class"
+      ]
+    },
+    {
+      "id": "first-year",
+      "stage": "junior-cycle",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "First Year",
+        "local": {}
+      },
+      "aliases": [
+        "1st Year"
+      ]
+    },
+    {
+      "id": "second-year",
+      "stage": "junior-cycle",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Second Year",
+        "local": {}
+      },
+      "aliases": [
+        "2nd Year"
+      ]
+    },
+    {
+      "id": "third-year",
+      "stage": "junior-cycle",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Third Year",
+        "local": {}
+      },
+      "aliases": [
+        "3rd Year",
+        "Junior Cert year"
+      ]
+    },
+    {
+      "id": "fifth-year",
+      "stage": "senior-cycle",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Fifth Year",
+        "local": {}
+      },
+      "aliases": [
+        "5th Year"
+      ]
+    },
+    {
+      "id": "sixth-year",
+      "stage": "senior-cycle",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Sixth Year",
+        "local": {}
+      },
+      "aliases": [
+        "6th Year",
+        "Leaving Cert year"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "A guide to the Irish education system",
+      "url": "https://assets.gov.ie/static/documents/guide-to-the-irish-education-system.pdf"
+    },
+    {
+      "title": "Senior Cycle Redevelopment – What it means for me",
+      "url": "https://www.gov.ie/en/department-of-education/publications/senior-cycle-redevelopment-what-it-means-for-me/"
+    },
+    {
+      "title": "Transition Year",
+      "url": "https://www.citizensinformation.ie/en/education/post-primary-education/going-to-post-primary-school/transition-year/"
+    }
+  ],
+  "notes": "Primary school is an eight-year cycle: Junior and Senior Infants, then First to Sixth Class. All eight are listed, from age 5, although school is compulsory only from 6. Transition Year, an optional year between Third and Fifth Year taken by most students, is not a level: students who skip it go straight to Fifth Year."
+}

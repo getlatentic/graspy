@@ -1,0 +1,259 @@
+{
+  "id": "MY",
+  "country": "MY",
+  "name": {
+    "en": "Malaysia",
+    "local": {
+      "ms": "Malaysia"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "ms": "Pendidikan Rendah"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary",
+        "local": {
+          "ms": "Menengah Rendah"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary",
+        "local": {
+          "ms": "Menengah Atas"
+        }
+      }
+    },
+    {
+      "id": "form-six",
+      "name": {
+        "en": "Post-secondary (Form 6)",
+        "local": {
+          "ms": "Lepas Menengah (Tingkatan 6)"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {
+          "ms": "Tahun 1"
+        }
+      },
+      "aliases": [
+        "Standard 1",
+        "Darjah 1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {
+          "ms": "Tahun 2"
+        }
+      },
+      "aliases": [
+        "Standard 2",
+        "Darjah 2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {
+          "ms": "Tahun 3"
+        }
+      },
+      "aliases": [
+        "Standard 3",
+        "Darjah 3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {
+          "ms": "Tahun 4"
+        }
+      },
+      "aliases": [
+        "Standard 4",
+        "Darjah 4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {
+          "ms": "Tahun 5"
+        }
+      },
+      "aliases": [
+        "Standard 5",
+        "Darjah 5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {
+          "ms": "Tahun 6"
+        }
+      },
+      "aliases": [
+        "Standard 6",
+        "Darjah 6"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Form 1",
+        "local": {
+          "ms": "Tingkatan 1"
+        }
+      },
+      "aliases": [
+        "Tingkatan Satu"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Form 2",
+        "local": {
+          "ms": "Tingkatan 2"
+        }
+      },
+      "aliases": [
+        "Tingkatan Dua"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 3",
+        "local": {
+          "ms": "Tingkatan 3"
+        }
+      },
+      "aliases": [
+        "Tingkatan Tiga"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "upper-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 4",
+        "local": {
+          "ms": "Tingkatan 4"
+        }
+      },
+      "aliases": [
+        "Tingkatan Empat"
+      ]
+    },
+    {
+      "id": "form-5",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 5",
+        "local": {
+          "ms": "Tingkatan 5"
+        }
+      },
+      "aliases": [
+        "Tingkatan Lima"
+      ]
+    },
+    {
+      "id": "form-6",
+      "stage": "form-six",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Form 6",
+        "local": {
+          "ms": "Tingkatan 6"
+        }
+      },
+      "aliases": [
+        "Form Six",
+        "Sixth Form",
+        "Lower Six",
+        "Upper Six",
+        "Tingkatan 6 Rendah",
+        "Tingkatan 6 Atas",
+        "STPM"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "KPM | Pendidikan Rendah",
+      "url": "https://www.moe.gov.my/pendidikan/pendidikan-rendah"
+    },
+    {
+      "title": "KPM | Pendidikan Menengah",
+      "url": "https://www.moe.gov.my/pengenalan-3"
+    },
+    {
+      "title": "KPM | Tingkatan 6",
+      "url": "https://www.moe.gov.my/tempoh-pengajian"
+    }
+  ],
+  "notes": "Children enter Tahun 1 in the year they are 6 on 1 January. Form 6 is post-secondary in MOE's terms and lasts 1.5 years (three semesters, leading to STPM); it is listed as one level after Form 5. Others leave after Form 5 (SPM) for matriculation or other routes. Pupils from Chinese/Tamil-medium primary schools may take a Remove (Peralihan) year before Form 1. English names are the usual renderings of the Malay ones."
+}

@@ -1,0 +1,234 @@
+{
+  "id": "MN",
+  "country": "MN",
+  "name": {
+    "en": "Mongolia",
+    "local": {
+      "mn": "Монгол Улс"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "mn": "Бага боловсрол"
+        }
+      }
+    },
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic (lower secondary)",
+        "local": {
+          "mn": "Суурь боловсрол"
+        }
+      }
+    },
+    {
+      "id": "complete-secondary",
+      "name": {
+        "en": "Complete secondary (upper secondary)",
+        "local": {
+          "mn": "Бүрэн дунд боловсрол"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "mn": "1-р анги"
+        }
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "mn": "2-р анги"
+        }
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "mn": "3-р анги"
+        }
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "mn": "4-р анги"
+        }
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "mn": "5-р анги"
+        }
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "mn": "6-р анги"
+        }
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "mn": "7-р анги"
+        }
+      },
+      "aliases": [
+        "Class 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "mn": "8-р анги"
+        }
+      },
+      "aliases": [
+        "Class 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "mn": "9-р анги"
+        }
+      },
+      "aliases": [
+        "Class 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "complete-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "mn": "10-р анги"
+        }
+      },
+      "aliases": [
+        "Class 10"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "complete-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "mn": "11-р анги"
+        }
+      },
+      "aliases": [
+        "Class 11"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "complete-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "mn": "12-р анги"
+        }
+      },
+      "aliases": [
+        "Class 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "БОЛОВСРОЛЫН ЕРӨНХИЙ ХУУЛЬ",
+      "url": "https://legalinfo.mn/mn/detail?lawId=16759958962301"
+    },
+    {
+      "title": "БАГА ДУНД БОЛОВСРОЛЫН САЛБАРЫН 2025-2026 ОНЫ ХИЧЭЭЛИЙН ЖИЛИЙН СТАТИСТИК МЭДЭЭ | Боловсролын яам.",
+      "url": "https://moe.gov.mn/post/170077"
+    }
+  ],
+  "notes": "General education lasts 12 years in three levels (General Law on Education). Schools also speak of бага анги (I–V), дунд анги (VI–IX) and ахлах анги (X–XII)."
+}

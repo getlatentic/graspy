@@ -1,0 +1,199 @@
+{
+  "id": "VI",
+  "country": "VI",
+  "name": {
+    "en": "United States Virgin Islands",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementary-middle",
+      "name": {
+        "en": "Elementary and middle school",
+        "local": {}
+      }
+    },
+    {
+      "id": "high-school",
+      "name": {
+        "en": "High school",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "elementary-middle",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "1st Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "elementary-middle",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "2nd Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "elementary-middle",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "3rd Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "elementary-middle",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "4th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "elementary-middle",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "5th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "elementary-middle",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "elementary-middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "7th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "elementary-middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "8th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "high-school",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "9th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 9",
+        "Freshman year"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "high-school",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "10th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 10",
+        "Sophomore year"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "high-school",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "11th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 11",
+        "Junior year"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "high-school",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "12th Grade",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 12",
+        "Senior year"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "School Registration - Virgin Islands Department of Education (archived copy)",
+      "url": "https://web.archive.org/web/20260903014308/https://www.vide.vi/families/school-registration"
+    },
+    {
+      "title": "Schools - Virgin Islands Department of Education (archived copy)",
+      "url": "https://web.archive.org/web/20260814162331/https://www.vide.vi/schools-9"
+    }
+  ],
+  "notes": "VIDE groups records as Kindergarten–8th Grade and 9th–12th Grade. Schools are elementary (K–6), K–8/PreK–8, middle and high schools, so the elementary/middle split varies by school. vide.vi was unreachable from our network, so its pages are cited from the Web Archive."
+}

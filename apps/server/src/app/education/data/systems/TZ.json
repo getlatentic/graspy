@@ -1,0 +1,248 @@
+{
+  "id": "TZ",
+  "country": "TZ",
+  "name": {
+    "en": "Tanzania",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "sw": "Elimu ya Msingi"
+        }
+      }
+    },
+    {
+      "id": "o-level",
+      "name": {
+        "en": "Ordinary Secondary (O Level)",
+        "local": {
+          "sw": "Elimu ya Sekondari ya Chini"
+        }
+      }
+    },
+    {
+      "id": "a-level",
+      "name": {
+        "en": "Advanced Secondary (A Level)",
+        "local": {
+          "sw": "Elimu ya Sekondari ya Juu"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "standard-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Standard 1",
+        "local": {
+          "sw": "Darasa la I"
+        }
+      },
+      "aliases": [
+        "Standard I",
+        "Std 1"
+      ]
+    },
+    {
+      "id": "standard-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Standard 2",
+        "local": {
+          "sw": "Darasa la II"
+        }
+      },
+      "aliases": [
+        "Standard II",
+        "Std 2"
+      ]
+    },
+    {
+      "id": "standard-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Standard 3",
+        "local": {
+          "sw": "Darasa la III"
+        }
+      },
+      "aliases": [
+        "Standard III",
+        "Std 3"
+      ]
+    },
+    {
+      "id": "standard-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Standard 4",
+        "local": {
+          "sw": "Darasa la IV"
+        }
+      },
+      "aliases": [
+        "Standard IV",
+        "Std 4"
+      ]
+    },
+    {
+      "id": "standard-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Standard 5",
+        "local": {
+          "sw": "Darasa la V"
+        }
+      },
+      "aliases": [
+        "Standard V",
+        "Std 5"
+      ]
+    },
+    {
+      "id": "standard-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Standard 6",
+        "local": {
+          "sw": "Darasa la VI"
+        }
+      },
+      "aliases": [
+        "Standard VI",
+        "Std 6"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "o-level",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Form 1",
+        "local": {
+          "sw": "Kidato cha I"
+        }
+      },
+      "aliases": [
+        "Form I",
+        "Form One"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "o-level",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Form 2",
+        "local": {
+          "sw": "Kidato cha II"
+        }
+      },
+      "aliases": [
+        "Form II",
+        "Form Two"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "o-level",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 3",
+        "local": {
+          "sw": "Kidato cha III"
+        }
+      },
+      "aliases": [
+        "Form III",
+        "Form Three"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "o-level",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 4",
+        "local": {
+          "sw": "Kidato cha IV"
+        }
+      },
+      "aliases": [
+        "Form IV",
+        "Form Four"
+      ]
+    },
+    {
+      "id": "form-5",
+      "stage": "a-level",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 5",
+        "local": {
+          "sw": "Kidato cha V"
+        }
+      },
+      "aliases": [
+        "Form V",
+        "Form Five"
+      ]
+    },
+    {
+      "id": "form-6",
+      "stage": "a-level",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Form 6",
+        "local": {
+          "sw": "Kidato cha VI"
+        }
+      },
+      "aliases": [
+        "Form VI",
+        "Form Six"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "TIE | Mtaala wa Elimu ya Msingi",
+      "url": "https://www.tie.go.tz/publications/mtaala-wa-elimu-ya-msingi"
+    },
+    {
+      "title": "TIE | Mtaala wa Sekondari ya Chini - Taaluma",
+      "url": "https://www.tie.go.tz/publications/curriculum-for-lower-secondary-academic"
+    },
+    {
+      "title": "TIE | Mtaala wa Sekondari ya Juu",
+      "url": "https://www.tie.go.tz/publications/curriculum-for-upper-secondary"
+    }
+  ],
+  "notes": "Mainland Tanzania. The Education and Training Policy 2014 (2023 edition) and TIE's 2023 curricula set primary at six years (Darasa la I–VI) from age 6, Form I–IV (general or vocational stream) for four years and Form V–VI for two. The new curriculum is phased in from 2024, and pupils who started under the old seven-year primary (Standard I–VII) are in system TZ-742. Zanzibar has its own education ministry and was not checked."
+}

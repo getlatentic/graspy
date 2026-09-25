@@ -1,0 +1,230 @@
+{
+  "id": "VE",
+  "country": "VE",
+  "name": {
+    "en": "Venezuela",
+    "local": {
+      "es": "Venezuela"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaria",
+      "name": {
+        "en": "Primary (Educación Primaria)",
+        "local": {
+          "es": "Educación Primaria"
+        }
+      }
+    },
+    {
+      "id": "media-general",
+      "name": {
+        "en": "Secondary (Educación Media General)",
+        "local": {
+          "es": "Educación Media General"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grado-1",
+      "stage": "primaria",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado"
+        }
+      },
+      "aliases": [
+        "1er grado",
+        "1° grado"
+      ]
+    },
+    {
+      "id": "grado-2",
+      "stage": "primaria",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado"
+        }
+      },
+      "aliases": [
+        "2do grado",
+        "2° grado"
+      ]
+    },
+    {
+      "id": "grado-3",
+      "stage": "primaria",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado"
+        }
+      },
+      "aliases": [
+        "3er grado",
+        "3° grado"
+      ]
+    },
+    {
+      "id": "grado-4",
+      "stage": "primaria",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado"
+        }
+      },
+      "aliases": [
+        "4to grado",
+        "4° grado"
+      ]
+    },
+    {
+      "id": "grado-5",
+      "stage": "primaria",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado"
+        }
+      },
+      "aliases": [
+        "5to grado",
+        "5° grado"
+      ]
+    },
+    {
+      "id": "grado-6",
+      "stage": "primaria",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado"
+        }
+      },
+      "aliases": [
+        "6to grado",
+        "6° grado"
+      ]
+    },
+    {
+      "id": "ano-1",
+      "stage": "media-general",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Primer año"
+        }
+      },
+      "aliases": [
+        "1er año",
+        "1° año",
+        "Primer año de bachillerato"
+      ]
+    },
+    {
+      "id": "ano-2",
+      "stage": "media-general",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Segundo año"
+        }
+      },
+      "aliases": [
+        "2do año",
+        "2° año",
+        "Segundo año de bachillerato"
+      ]
+    },
+    {
+      "id": "ano-3",
+      "stage": "media-general",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Tercer año"
+        }
+      },
+      "aliases": [
+        "3er año",
+        "3° año",
+        "Tercer año de bachillerato"
+      ]
+    },
+    {
+      "id": "ano-4",
+      "stage": "media-general",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Cuarto año"
+        }
+      },
+      "aliases": [
+        "4to año",
+        "4° año",
+        "Cuarto año de bachillerato"
+      ]
+    },
+    {
+      "id": "ano-5",
+      "stage": "media-general",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Quinto año"
+        }
+      },
+      "aliases": [
+        "5to año",
+        "5° año",
+        "Quinto año de bachillerato"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ley Orgánica de Educación | Asamblea Nacional",
+      "url": "https://www.asambleanacional.gob.ve/leyes/sancionadas/ley-organica-de-educacion"
+    },
+    {
+      "title": "Propuestas didácticas Feria de Ciencias 2025-2026: Inicial y Primaria (MPPE)",
+      "url": "https://www.mppe.gob.ve/media/filer_public/5c/f3/5cf3aaed-1c27-4422-b3a4-35ca3429ea74/propuestas_didacticas_feria_de_ciencias_2025-2026_inicialyprimaria.pdf"
+    },
+    {
+      "title": "Propuestas didácticas Feria de Ciencias 2025-2026: Media (MPPE)",
+      "url": "https://www.mppe.gob.ve/media/filer_public/60/ab/60ab0a88-8a7a-4f8e-a1a2-813be572a1ca/propuestas_didacticas_feria_de_ciencias_2025-2026_media.pdf"
+    }
+  ],
+  "notes": "LOE 2009 art. 25: educación inicial up to age 6, primaria six years (grados), media general five years (primero a quinto año). Media técnica lasts six years (primero a sexto año) and is not listed. Learners often call media general 'bachillerato'."
+}

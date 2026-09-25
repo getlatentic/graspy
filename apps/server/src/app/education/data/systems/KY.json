@@ -1,0 +1,191 @@
+{
+  "id": "KY",
+  "country": "KY",
+  "name": {
+    "en": "Cayman Islands",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": [
+        "Y1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": [
+        "Y2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": [
+        "Y3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": [
+        "Y4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": [
+        "Y5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": [
+        "Y6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": [
+        "Y7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": [
+        "Y8"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": [
+        "Y9"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": [
+        "Y10"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": [
+        "Y11"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": [
+        "Y12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Data Report for the Academic Year 2022-23 Department of Education Services",
+      "url": "https://eu-frankfurt-1.contentlion.com/delivery-api/content/published/api/v1.1/assets/e678f18c-f2be-49e1-ab6c-3e6eb07b1d77/native/Data%20Report%202023%20Final%20V2.pdf?channelToken=c915417e96ad49e2bcda2e4d22158c40"
+    }
+  ],
+  "notes": "Follows English key stages: Years 1–6 (KS1–2) primary, Years 7–11 (KS3–4) at high school, and a compulsory Year 12 for government students at the Cayman Islands Further Education Centre (CIFEC). Nursery and Reception are pre-compulsory and left out."
+}

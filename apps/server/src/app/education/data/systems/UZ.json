@@ -1,0 +1,234 @@
+{
+  "id": "UZ",
+  "country": "UZ",
+  "name": {
+    "en": "Uzbekistan",
+    "local": {
+      "uz": "Oʻzbekiston",
+      "ru": "Узбекистан"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "uz": "Boshlangʻich taʼlim",
+          "ru": "Начальное образование"
+        }
+      }
+    },
+    {
+      "id": "basic-secondary",
+      "name": {
+        "en": "Basic secondary",
+        "local": {
+          "uz": "Tayanch oʻrta taʼlim",
+          "ru": "Базовое среднее образование"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "uz": "Oʻrta taʼlim",
+          "ru": "Среднее образование"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "uz": "1-sinf",
+          "ru": "1 класс"
+        }
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "uz": "2-sinf",
+          "ru": "2 класс"
+        }
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "uz": "3-sinf",
+          "ru": "3 класс"
+        }
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "uz": "4-sinf",
+          "ru": "4 класс"
+        }
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic-secondary",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "uz": "5-sinf",
+          "ru": "5 класс"
+        }
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic-secondary",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "uz": "6-sinf",
+          "ru": "6 класс"
+        }
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic-secondary",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "uz": "7-sinf",
+          "ru": "7 класс"
+        }
+      },
+      "aliases": [
+        "Class 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic-secondary",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "uz": "8-sinf",
+          "ru": "8 класс"
+        }
+      },
+      "aliases": [
+        "Class 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic-secondary",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "uz": "9-sinf",
+          "ru": "9 класс"
+        }
+      },
+      "aliases": [
+        "Class 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "uz": "10-sinf",
+          "ru": "10 класс"
+        }
+      },
+      "aliases": [
+        "Class 10"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "uz": "11-sinf",
+          "ru": "11 класс"
+        }
+      },
+      "aliases": [
+        "Class 11"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "ЎРҚ-637-сон 23.09.2020. Таълим тўғрисида",
+      "url": "https://lex.uz/uz/docs/5013007"
+    },
+    {
+      "title": "ЗРУ-637-сон 23.09.2020. Об образовании",
+      "url": "https://lex.uz/ru/docs/5013009"
+    }
+  ],
+  "notes": "11-year general secondary education (Grades I–XI in the law). Children enter Grade 1 in the year they turn 7, after a compulsory one-year school preparation at ages 6–7."
+}

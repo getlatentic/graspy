@@ -1,0 +1,1 @@
+export const SUBJECT_SELECTION_LIMIT = 15;

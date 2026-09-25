@@ -1,0 +1,212 @@
+{
+  "id": "SO",
+  "country": "SO",
+  "name": {
+    "en": "Somalia",
+    "local": {
+      "so": "Soomaaliya",
+      "ar": "الصومال"
+    }
+  },
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "stages": [
+    {
+      "id": "lower-primary",
+      "name": {
+        "en": "Lower primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-primary",
+      "name": {
+        "en": "Upper primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "so": "Dugsi sare"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "lower-primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "so": "Fasalka 1aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "lower-primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "so": "Fasalka 2aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "lower-primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "so": "Fasalka 3aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "lower-primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "so": "Fasalka 4aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "upper-primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "so": "Fasalka 5aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "upper-primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "so": "Fasalka 6aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "upper-primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "so": "Fasalka 7aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "upper-primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "so": "Fasalka 8aad"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "so": "Fasalka 9aad"
+        }
+      },
+      "aliases": [
+        "Form 1"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "so": "Fasalka 10aad"
+        }
+      },
+      "aliases": [
+        "Form 2"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "so": "Fasalka 11aad"
+        }
+      },
+      "aliases": [
+        "Form 3"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "so": "Fasalka 12aad"
+        }
+      },
+      "aliases": [
+        "Form 4"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Imtixaanka Qaranka ee Fasalka 12aad ee Sanad-dugsiyeedka 2025–2026 – MEOCHE",
+      "url": "https://moe.gov.so/2023/10/20/imtixaanka-qaranka-ee-fasalka-12aad-ee-sanad-dugsiyeedka-2025-2026/"
+    }
+  ],
+  "notes": "Federal system: 8 years of primary (lower 1–4, upper 5–8) from age 6 and 4 years of secondary. The federal ministry confirms 'Fasalka 12aad' (Grade 12) for the final national exam; the stage split and the Form 1–4 aliases for grades 9–12 are not confirmed by an official source. Somaliland and Puntland run their own ministries and exams."
+}

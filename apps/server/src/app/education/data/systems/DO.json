@@ -1,0 +1,253 @@
+{
+  "id": "DO",
+  "country": "DO",
+  "name": {
+    "en": "Dominican Republic",
+    "local": {
+      "es": "República Dominicana"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primario",
+      "name": {
+        "en": "Primary (Nivel Primario)",
+        "local": {
+          "es": "Nivel Primario"
+        }
+      }
+    },
+    {
+      "id": "secundario",
+      "name": {
+        "en": "Secondary (Nivel Secundario)",
+        "local": {
+          "es": "Nivel Secundario"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primaria-1",
+      "stage": "primario",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary 1",
+        "local": {
+          "es": "1ro de Primaria"
+        }
+      },
+      "aliases": [
+        "1ro de primaria",
+        "Primer grado",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "primaria-2",
+      "stage": "primario",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary 2",
+        "local": {
+          "es": "2do de Primaria"
+        }
+      },
+      "aliases": [
+        "2do de primaria",
+        "Segundo grado",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "primaria-3",
+      "stage": "primario",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary 3",
+        "local": {
+          "es": "3ro de Primaria"
+        }
+      },
+      "aliases": [
+        "3ro de primaria",
+        "Tercer grado",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "primaria-4",
+      "stage": "primario",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary 4",
+        "local": {
+          "es": "4to de Primaria"
+        }
+      },
+      "aliases": [
+        "4to de primaria",
+        "Cuarto grado",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "primaria-5",
+      "stage": "primario",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary 5",
+        "local": {
+          "es": "5to de Primaria"
+        }
+      },
+      "aliases": [
+        "5to de primaria",
+        "Quinto grado",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "primaria-6",
+      "stage": "primario",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Primary 6",
+        "local": {
+          "es": "6to de Primaria"
+        }
+      },
+      "aliases": [
+        "6to de primaria",
+        "Sexto grado",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "secundaria-1",
+      "stage": "secundario",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Secondary 1",
+        "local": {
+          "es": "1ro de Secundaria"
+        }
+      },
+      "aliases": [
+        "1ro de secundaria",
+        "Grade 7",
+        "7mo grado"
+      ]
+    },
+    {
+      "id": "secundaria-2",
+      "stage": "secundario",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Secondary 2",
+        "local": {
+          "es": "2do de Secundaria"
+        }
+      },
+      "aliases": [
+        "2do de secundaria",
+        "Grade 8",
+        "8vo grado"
+      ]
+    },
+    {
+      "id": "secundaria-3",
+      "stage": "secundario",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Secondary 3",
+        "local": {
+          "es": "3ro de Secundaria"
+        }
+      },
+      "aliases": [
+        "3ro de secundaria",
+        "Grade 9",
+        "1ro de bachillerato"
+      ]
+    },
+    {
+      "id": "secundaria-4",
+      "stage": "secundario",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Secondary 4",
+        "local": {
+          "es": "4to de Secundaria"
+        }
+      },
+      "aliases": [
+        "4to de secundaria",
+        "Grade 10",
+        "2do de bachillerato"
+      ]
+    },
+    {
+      "id": "secundaria-5",
+      "stage": "secundario",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Secondary 5",
+        "local": {
+          "es": "5to de Secundaria"
+        }
+      },
+      "aliases": [
+        "5to de secundaria",
+        "Grade 11",
+        "3ro de bachillerato"
+      ]
+    },
+    {
+      "id": "secundaria-6",
+      "stage": "secundario",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Secondary 6",
+        "local": {
+          "es": "6to de Secundaria"
+        }
+      },
+      "aliases": [
+        "6to de secundaria",
+        "Grade 12",
+        "4to de bachillerato"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ordenanza 03/2013. Modifica la estructura académica del Sistema Educativo Dominicano | SITEAL",
+      "url": "https://siteal.iiep.unesco.org/bdnp/537/ordenanza-032013-modifica-estructura-academica-sistema-educativo-dominicano"
+    },
+    {
+      "title": "Ordenanza No. 03-2013 (texto oficial, PDF)",
+      "url": "https://siteal.iiep.unesco.org/sites/default/files/sit_accion_files/ordenanza_3_2013.pdf"
+    },
+    {
+      "title": "Distribución del tiempo para el Nivel Secundario, Jornada Escolar Extendida (MINERD)",
+      "url": "https://www.sismap.gob.do/Educacion/uploads/evidencias/603b-16322-0805-CARGAHORARIOPORGRADOYMODALIDAD-2-.pdf"
+    }
+  ],
+  "notes": "Ordenanza 03-2013 set primary and secondary at six years each, both split into two three-year cycles (1ro–3ro, 4to–6to). It replaced Básica (8 years) + Media (4 years); the old names (7mo/8vo grado, 1ro–4to de bachillerato) are kept as aliases. From 4to de secundaria learners follow the academic, technical-professional or arts track. The MINERD website was unreachable from our network."
+}

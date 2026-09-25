@@ -1,0 +1,239 @@
+{
+  "main": false,
+  "status": "sourced",
+  "id": "CA-QC",
+  "country": "CA",
+  "name": {
+    "en": "Quebec",
+    "local": {
+      "fr": "Québec"
+    }
+  },
+  "stages": [
+    {
+      "id": "primaire",
+      "name": {
+        "en": "Elementary",
+        "local": {
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "secondaire-1",
+      "name": {
+        "en": "Secondary Cycle One",
+        "local": {
+          "fr": "Premier cycle du secondaire"
+        }
+      }
+    },
+    {
+      "id": "secondaire-2",
+      "name": {
+        "en": "Secondary Cycle Two",
+        "local": {
+          "fr": "Deuxième cycle du secondaire"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primaire-1",
+      "stage": "primaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "fr": "1re année"
+        }
+      },
+      "aliases": [
+        "Elementary 1",
+        "1re année du primaire"
+      ]
+    },
+    {
+      "id": "primaire-2",
+      "stage": "primaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "fr": "2e année"
+        }
+      },
+      "aliases": [
+        "Elementary 2",
+        "2e année du primaire"
+      ]
+    },
+    {
+      "id": "primaire-3",
+      "stage": "primaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "fr": "3e année"
+        }
+      },
+      "aliases": [
+        "Elementary 3",
+        "3e année du primaire"
+      ]
+    },
+    {
+      "id": "primaire-4",
+      "stage": "primaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "fr": "4e année"
+        }
+      },
+      "aliases": [
+        "Elementary 4",
+        "4e année du primaire"
+      ]
+    },
+    {
+      "id": "primaire-5",
+      "stage": "primaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "fr": "5e année"
+        }
+      },
+      "aliases": [
+        "Elementary 5",
+        "5e année du primaire"
+      ]
+    },
+    {
+      "id": "primaire-6",
+      "stage": "primaire",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "fr": "6e année"
+        }
+      },
+      "aliases": [
+        "Elementary 6",
+        "6e année du primaire"
+      ]
+    },
+    {
+      "id": "secondaire-1",
+      "stage": "secondaire-1",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Secondary I",
+        "local": {
+          "fr": "1re secondaire"
+        }
+      },
+      "aliases": [
+        "Secondaire 1",
+        "Sec 1",
+        "Secondary 1"
+      ]
+    },
+    {
+      "id": "secondaire-2",
+      "stage": "secondaire-1",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Secondary II",
+        "local": {
+          "fr": "2e secondaire"
+        }
+      },
+      "aliases": [
+        "Secondaire 2",
+        "Sec 2",
+        "Secondary 2"
+      ]
+    },
+    {
+      "id": "secondaire-3",
+      "stage": "secondaire-2",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Secondary III",
+        "local": {
+          "fr": "3e secondaire"
+        }
+      },
+      "aliases": [
+        "Secondaire 3",
+        "Sec 3",
+        "Secondary 3"
+      ]
+    },
+    {
+      "id": "secondaire-4",
+      "stage": "secondaire-2",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Secondary IV",
+        "local": {
+          "fr": "4e secondaire"
+        }
+      },
+      "aliases": [
+        "Secondaire 4",
+        "Sec 4",
+        "Secondary 4"
+      ]
+    },
+    {
+      "id": "secondaire-5",
+      "stage": "secondaire-2",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Secondary V",
+        "local": {
+          "fr": "5e secondaire"
+        }
+      },
+      "aliases": [
+        "Secondaire 5",
+        "Sec 5",
+        "Secondary 5"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Québec Education Program – Secondary education – Québec.ca",
+      "url": "https://www.quebec.ca/en/education/preschool-elementary-and-secondary-schools/programs-training-evaluation/quebec-education-program/secondary"
+    },
+    {
+      "title": "PFEQ – Présentation du deuxième cycle du secondaire",
+      "url": "https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/secondaire/PFEQ-presentation-deuxieme-cycle-secondaire.pdf"
+    },
+    {
+      "title": "Inscription à l'école publique – Québec.ca",
+      "url": "https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/inscription-scolaire/ecole-publique"
+    }
+  ],
+  "notes": "Primary is three two-year cycles; secondary a two-year and a three-year cycle, ending at Secondary V. CEGEP follows as college and is left out. The international split of secondary (Secondary I–III lower, IV–V upper) is not in the cited pages. English-language schools usually call primary years Grade 1–6."
+}

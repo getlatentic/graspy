@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/* graspy's palette and type from apps/web/src/index.css: a card looks the
+   same in graspy's app as in any other host. */
+@theme {
+  --animate-enter: enter 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.375rem);
+    }
+  }
+
+  --animate-enter-from-end: enter-from-end 260ms cubic-bezier(0.2, 0.8, 0.2, 1)
+    both;
+  --animate-enter-from-start: enter-from-start 260ms
+    cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  @keyframes enter-from-end {
+    from {
+      opacity: 0;
+      transform: translateX(1.5rem);
+    }
+  }
+  @keyframes enter-from-start {
+    from {
+      opacity: 0;
+      transform: translateX(-1.5rem);
+    }
+  }
+
+  --color-surface: #ffffff;
+  --color-raised: #f9fbfc;
+  --color-ink: #12232e;
+  --color-muted: #5a6672;
+  --color-line: #e5e9ee;
+  --color-track: #eef1f4;
+
+  --color-accent: #2893c8;
+  --color-accent-strong: #1f7099;
+  --color-accent-ink: #1f6f9c;
+  --color-accent-soft: #eaf4fa;
+  --color-accent-line: #cfe7f3;
+  --color-on-accent: #ffffff;
+
+  --color-success: #0f7838;
+  --color-success-soft: #eaf7e4;
+
+  --color-warning: #8a6416;
+  --color-warning-soft: #fdf3d6;
+
+  --color-danger: #c0392b;
+  --color-danger-soft: #fbebe8;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 12px;
+  --radius-control: 8px;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    background: transparent;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+}
+
+/* KaTeX hides a MathML copy of each formula with position: absolute. With no
+   positioned ancestor it escapes to the page, and the view measures itself
+   taller than it is. */
+.katex {
+  position: relative;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25rem;
+}
+
+.nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

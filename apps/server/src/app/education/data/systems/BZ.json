@@ -1,0 +1,195 @@
+{
+  "id": "BZ",
+  "country": "BZ",
+  "name": {
+    "en": "Belize",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary (Infants 1–Standard 6)",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary (Forms 1–4)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "infant-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Infant 1",
+        "local": {}
+      },
+      "aliases": [
+        "Infants 1"
+      ]
+    },
+    {
+      "id": "infant-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Infant 2",
+        "local": {}
+      },
+      "aliases": [
+        "Infants 2"
+      ]
+    },
+    {
+      "id": "standard-1",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Standard 1",
+        "local": {}
+      },
+      "aliases": [
+        "Std 1"
+      ]
+    },
+    {
+      "id": "standard-2",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Standard 2",
+        "local": {}
+      },
+      "aliases": [
+        "Std 2"
+      ]
+    },
+    {
+      "id": "standard-3",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Standard 3",
+        "local": {}
+      },
+      "aliases": [
+        "Std 3"
+      ]
+    },
+    {
+      "id": "standard-4",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Standard 4",
+        "local": {}
+      },
+      "aliases": [
+        "Std 4"
+      ]
+    },
+    {
+      "id": "standard-5",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Standard 5",
+        "local": {}
+      },
+      "aliases": [
+        "Std 5"
+      ]
+    },
+    {
+      "id": "standard-6",
+      "stage": "primary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Standard 6",
+        "local": {}
+      },
+      "aliases": [
+        "Std 6"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": [
+        "First Form"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": [
+        "Second Form"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": [
+        "Third Form"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": [
+        "Fourth Form"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Primary Education - Ministry of Education, Culture, Science and Technology",
+      "url": "https://www.moecst.gov.bz/education-sectors/primary-education/"
+    },
+    {
+      "title": "Secondary Education - Ministry of Education, Culture, Science and Technology",
+      "url": "https://www.moecst.gov.bz/education-sectors/secondary-education/"
+    }
+  ],
+  "notes": "Primary lasts eight years (Infants 1–2, Standards 1–6) and secondary four (Forms 1–4, CSEC at the end of Form 4). Sixth Form (two years) is post-secondary and not listed."
+}

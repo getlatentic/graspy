@@ -1,0 +1,243 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "JE",
+  "country": "JE",
+  "name": {
+    "en": "Jersey",
+    "local": {}
+  },
+  "stages": [
+    {
+      "id": "ks1",
+      "name": {
+        "en": "Key Stage 1",
+        "local": {}
+      }
+    },
+    {
+      "id": "ks2",
+      "name": {
+        "en": "Key Stage 2",
+        "local": {}
+      }
+    },
+    {
+      "id": "ks3",
+      "name": {
+        "en": "Key Stage 3",
+        "local": {}
+      }
+    },
+    {
+      "id": "ks4",
+      "name": {
+        "en": "Key Stage 4 (GCSE)",
+        "local": {}
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth form (post-16)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "ks1",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": [
+        "Y1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "ks1",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": [
+        "Y2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "ks2",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": [
+        "Y3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "ks2",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": [
+        "Y4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "ks2",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": [
+        "Y5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "ks2",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": [
+        "Y6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "ks3",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": [
+        "Y7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "ks3",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": [
+        "Y8"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "ks3",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": [
+        "Y9"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "ks4",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": [
+        "Y10"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "ks4",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": [
+        "Y11"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "sixth-form",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": [
+        "Y12",
+        "Lower Sixth"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13",
+        "local": {}
+      },
+      "aliases": [
+        "Y13",
+        "Upper Sixth"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Moving to Jersey: Education – Government of Jersey",
+      "url": "https://www.gov.je/LifeEvents/MovingToJersey/LivingInJersey/pages/education.aspx"
+    },
+    {
+      "title": "5 to 11 year olds: key stages 1 and 2 curriculum – Government of Jersey",
+      "url": "https://www.gov.je/Education/Schools/ChildLearning/pages/keystage1and2.aspx"
+    },
+    {
+      "title": "14 to 16 year olds: key stage 4 curriculum – Government of Jersey",
+      "url": "https://www.gov.je/Education/Schools/ChildLearning/pages/keystage4.aspx"
+    },
+    {
+      "title": "Applying for a school – Government of Jersey",
+      "url": "https://www.gov.je/Education/Schools/FindingSchool/pages/admissions.aspx"
+    },
+    {
+      "title": "Schools, pupils and their characteristics – Government of Jersey",
+      "url": "https://www.gov.je/Education/Schools/Education/pages/schoolspupilscharacteristics.aspx"
+    }
+  ],
+  "notes": "Most children start Reception in the September of the school year they turn 5. Reception counts as compulsory school age in Jersey but sits in the Early Years Foundation Stage, so it is left out, as for England. The Jersey curriculum is based on England's national curriculum and key stages; most pupils take GCSEs in Years 10–11 and compulsory education ends at 16. Four non-fee-paying schools teach ages 11–16; the selective Hautlieu takes Years 10–13, with Year 12 (A level) places depending on GCSE results."
+}

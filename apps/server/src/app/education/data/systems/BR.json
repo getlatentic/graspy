@@ -1,0 +1,269 @@
+{
+  "id": "BR",
+  "country": "BR",
+  "name": {
+    "en": "Brazil",
+    "local": {
+      "pt": "Brasil"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "anos-iniciais",
+      "name": {
+        "en": "Elementary, Early Years (Ensino Fundamental – Anos Iniciais)",
+        "local": {
+          "pt": "Ensino Fundamental – Anos Iniciais"
+        }
+      }
+    },
+    {
+      "id": "anos-finais",
+      "name": {
+        "en": "Elementary, Final Years (Ensino Fundamental – Anos Finais)",
+        "local": {
+          "pt": "Ensino Fundamental – Anos Finais"
+        }
+      }
+    },
+    {
+      "id": "ensino-medio",
+      "name": {
+        "en": "High School (Ensino Médio)",
+        "local": {
+          "pt": "Ensino Médio"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "ano-1",
+      "stage": "anos-iniciais",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "pt": "1º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "1º ano",
+        "1º ano do fundamental",
+        "1º ano EF"
+      ]
+    },
+    {
+      "id": "ano-2",
+      "stage": "anos-iniciais",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "pt": "2º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "2º ano",
+        "2º ano do fundamental",
+        "2º ano EF",
+        "1ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "ano-3",
+      "stage": "anos-iniciais",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "pt": "3º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "3º ano",
+        "3º ano do fundamental",
+        "3º ano EF",
+        "2ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "ano-4",
+      "stage": "anos-iniciais",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "pt": "4º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "4º ano",
+        "4º ano do fundamental",
+        "4º ano EF",
+        "3ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "ano-5",
+      "stage": "anos-iniciais",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "pt": "5º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "5º ano",
+        "5º ano do fundamental",
+        "5º ano EF",
+        "4ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "ano-6",
+      "stage": "anos-finais",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "pt": "6º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "6º ano",
+        "6º ano do fundamental",
+        "6º ano EF",
+        "5ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "ano-7",
+      "stage": "anos-finais",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "pt": "7º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "7º ano",
+        "7º ano do fundamental",
+        "7º ano EF",
+        "6ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "ano-8",
+      "stage": "anos-finais",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "pt": "8º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "8º ano",
+        "8º ano do fundamental",
+        "8º ano EF",
+        "7ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "ano-9",
+      "stage": "anos-finais",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "pt": "9º ano do Ensino Fundamental"
+        }
+      },
+      "aliases": [
+        "9º ano",
+        "9º ano do fundamental",
+        "9º ano EF",
+        "8ª série (nomenclatura antiga)"
+      ]
+    },
+    {
+      "id": "serie-1-em",
+      "stage": "ensino-medio",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "pt": "1ª série do Ensino Médio"
+        }
+      },
+      "aliases": [
+        "1º ano do ensino médio",
+        "1º ano do EM",
+        "1ª série do EM",
+        "1º EM"
+      ]
+    },
+    {
+      "id": "serie-2-em",
+      "stage": "ensino-medio",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "pt": "2ª série do Ensino Médio"
+        }
+      },
+      "aliases": [
+        "2º ano do ensino médio",
+        "2º ano do EM",
+        "2ª série do EM",
+        "2º EM"
+      ]
+    },
+    {
+      "id": "serie-3-em",
+      "stage": "ensino-medio",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "pt": "3ª série do Ensino Médio"
+        }
+      },
+      "aliases": [
+        "3º ano do ensino médio",
+        "3º ano do EM",
+        "3ª série do EM",
+        "3º EM"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Lei nº 9.394, de 20 de dezembro de 1996 (L9394)",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l9394.htm"
+    },
+    {
+      "title": "Relatório de Resultados do Saeb 2021 – Volume 1",
+      "url": "https://download.inep.gov.br/educacao_basica/saeb/2021/resultados/relatorio_de_resultados_do_saeb_2021_volume_1.pdf"
+    }
+  ],
+  "notes": "Ensino fundamental lasts 9 years from age 6 (LDB art. 32) and ensino médio at least 3 (art. 35). Before the 9-year fundamental (Lei 11.274/2006) years were 'séries' 1ª–8ª, so older speakers may say '8ª série' for 9º ano. Ensino médio years are officially 'séries' but learners often say '1º ano do ensino médio'. Integrated technical ensino médio can last 4 years, not listed."
+}

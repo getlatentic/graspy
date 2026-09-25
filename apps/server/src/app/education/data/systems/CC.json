@@ -1,0 +1,185 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "CC",
+  "country": "CC",
+  "name": {
+    "en": "Cocos (Keeling) Islands",
+    "local": {}
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "pre-primary",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Pre-primary",
+        "local": {}
+      },
+      "aliases": [
+        "PP",
+        "Foundation"
+      ]
+    },
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "School Overview: Cocos Islands District High School | Department of Education WA",
+      "url": "https://www.det.wa.edu.au/schoolsonline/overview.do?schoolID=4157"
+    },
+    {
+      "title": "Enrol at a Western Australian school | Department of Education",
+      "url": "https://www.education.wa.edu.au/enrolling-in-school"
+    }
+  ],
+  "notes": "The one school, Cocos Islands District High School, is a Commonwealth school run by Western Australia's Department of Education and follows WA's structure: Kindergarten to Year 6 on Home Island and West Island, Years 7–10 on West Island; Years 11–12 are completed at mainland schools. In WA, Kindergarten (age 4 by 30 June) is not compulsory and is left out; Pre-primary (5 by 30 June) is the first compulsory year and Australia's Foundation year. Year 7 starts secondary. The WACE closes Year 12."
+}

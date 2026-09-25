@@ -1,0 +1,238 @@
+{
+  "id": "AO",
+  "country": "AO",
+  "name": {
+    "en": "Angola",
+    "local": {
+      "pt": "Angola"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primario",
+      "name": {
+        "en": "Primary (Ensino Primário)",
+        "local": {
+          "pt": "Ensino Primário"
+        }
+      }
+    },
+    {
+      "id": "secundario-i-ciclo",
+      "name": {
+        "en": "Lower secondary (I Ciclo)",
+        "local": {
+          "pt": "I Ciclo do Ensino Secundário"
+        }
+      }
+    },
+    {
+      "id": "secundario-ii-ciclo",
+      "name": {
+        "en": "Upper secondary (II Ciclo)",
+        "local": {
+          "pt": "II Ciclo do Ensino Secundário"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "classe-1",
+      "stage": "primario",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "pt": "1.ª classe"
+        }
+      },
+      "aliases": [
+        "1ª classe"
+      ]
+    },
+    {
+      "id": "classe-2",
+      "stage": "primario",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "pt": "2.ª classe"
+        }
+      },
+      "aliases": [
+        "2ª classe"
+      ]
+    },
+    {
+      "id": "classe-3",
+      "stage": "primario",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "pt": "3.ª classe"
+        }
+      },
+      "aliases": [
+        "3ª classe"
+      ]
+    },
+    {
+      "id": "classe-4",
+      "stage": "primario",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "pt": "4.ª classe"
+        }
+      },
+      "aliases": [
+        "4ª classe"
+      ]
+    },
+    {
+      "id": "classe-5",
+      "stage": "primario",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "pt": "5.ª classe"
+        }
+      },
+      "aliases": [
+        "5ª classe"
+      ]
+    },
+    {
+      "id": "classe-6",
+      "stage": "primario",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "pt": "6.ª classe"
+        }
+      },
+      "aliases": [
+        "6ª classe"
+      ]
+    },
+    {
+      "id": "classe-7",
+      "stage": "secundario-i-ciclo",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "pt": "7.ª classe"
+        }
+      },
+      "aliases": [
+        "7ª classe"
+      ]
+    },
+    {
+      "id": "classe-8",
+      "stage": "secundario-i-ciclo",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "pt": "8.ª classe"
+        }
+      },
+      "aliases": [
+        "8ª classe"
+      ]
+    },
+    {
+      "id": "classe-9",
+      "stage": "secundario-i-ciclo",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "pt": "9.ª classe"
+        }
+      },
+      "aliases": [
+        "9ª classe"
+      ]
+    },
+    {
+      "id": "classe-10",
+      "stage": "secundario-ii-ciclo",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "pt": "10.ª classe"
+        }
+      },
+      "aliases": [
+        "10ª classe"
+      ]
+    },
+    {
+      "id": "classe-11",
+      "stage": "secundario-ii-ciclo",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "pt": "11.ª classe"
+        }
+      },
+      "aliases": [
+        "11ª classe"
+      ]
+    },
+    {
+      "id": "classe-12",
+      "stage": "secundario-ii-ciclo",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "pt": "12.ª classe"
+        }
+      },
+      "aliases": [
+        "12ª classe"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Cartographie de la CITE 2011 de Angola",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Angola.xlsx"
+    },
+    {
+      "title": "Avaliação Nacional das Aprendizagens 2022-2023: Análise dos Resultados (MED/INADE)",
+      "url": "https://c2a.portais.gov.ao/uploads/6_relatorio_ana_2023_resultados_117211672966a0f9c35a900_fd5d18500b.pdf"
+    },
+    {
+      "title": "Informação-Prova 2025, 12.ª classe – Exame Nacional (MED)",
+      "url": "https://c2a.portais.gov.ao/uploads/IP_12_A_EN_3_FG_2025_63f36900b0.pdf"
+    }
+  ],
+  "notes": "General education: 1.ª–6.ª classe (primary, from age 6), 7.ª–9.ª classe (I Ciclo) and 10.ª–12.ª classe (II Ciclo), with national exams in the 9.ª and 12.ª classe. Technical-vocational and teacher-training II Ciclo courses last 4 years and add a 13.ª classe."
+}

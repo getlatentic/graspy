@@ -1,0 +1,242 @@
+{
+  "id": "NE",
+  "country": "NE",
+  "name": {
+    "en": "Niger",
+    "local": {
+      "fr": "Niger"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic-1",
+      "name": {
+        "en": "Basic cycle I (Primary)",
+        "local": {
+          "fr": "Cycle de base I"
+        }
+      }
+    },
+    {
+      "id": "basic-2",
+      "name": {
+        "en": "Basic cycle II (Collège)",
+        "local": {
+          "fr": "Cycle de base II"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Enseignement moyen"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "ci",
+      "stage": "basic-1",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "CI",
+        "local": {
+          "fr": "Cours d'initiation"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cp",
+      "stage": "basic-1",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "CP",
+        "local": {
+          "fr": "Cours préparatoire"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce1",
+      "stage": "basic-1",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce2",
+      "stage": "basic-1",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm1",
+      "stage": "basic-1",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm2",
+      "stage": "basic-1",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "6e",
+      "stage": "basic-2",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "basic-2",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "basic-2",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "basic-2",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème"
+      ]
+    },
+    {
+      "id": "2nde",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde"
+      ]
+    },
+    {
+      "id": "1re",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "1ère",
+        "Première"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "upper-secondary",
+      "year": 13,
+      "age": 19,
+      "name": {
+        "en": "Terminale",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Tle"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Programme Sectoriel de l'Education et de la Formation (2014-2024) : Document de stratégie",
+      "url": "https://ambniger-mali.org/images/pdf/PSEF-Niger-Final-juin2013.pdf"
+    },
+    {
+      "title": "Programmes de l'enseignement secondaire général, toutes disciplines, second cycle",
+      "url": "https://ambniger-mali.org/images/NOUVEAUX_PROGRAMMES_DENSEIGNEMENT_SECOND_CYCLE.pdf"
+    },
+    {
+      "title": "Données mondiales de l'éducation, 7e édition 2010/11 : Niger (UNESCO-BIE, archived)",
+      "url": "https://web.archive.org/web/20220119003900/http://www.ibe.unesco.org/fileadmin/user_upload/Publications/WDE/2010/pdf-versions/Niger.pdf"
+    }
+  ],
+  "notes": "Cycle de base I admits children aged 6 or 7 and cycle de base II serves ages 13–16, so CI is listed at 7; the 2023 GPE partnership compact describes compulsory schooling as ages 6–16. Exams: CFEPD after CM2, BEPC after 3e, Bac after Terminale."
+}

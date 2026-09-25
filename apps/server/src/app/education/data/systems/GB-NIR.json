@@ -1,0 +1,222 @@
+{
+  "main": false,
+  "status": "sourced",
+  "id": "GB-NIR",
+  "country": "GB",
+  "name": {
+    "en": "Northern Ireland"
+  },
+  "stages": [
+    {
+      "id": "foundation",
+      "name": {
+        "en": "Foundation Stage"
+      }
+    },
+    {
+      "id": "ks1",
+      "name": {
+        "en": "Key Stage 1"
+      }
+    },
+    {
+      "id": "ks2",
+      "name": {
+        "en": "Key Stage 2"
+      }
+    },
+    {
+      "id": "ks3",
+      "name": {
+        "en": "Key Stage 3"
+      }
+    },
+    {
+      "id": "ks4",
+      "name": {
+        "en": "Key Stage 4 (GCSE)"
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth form"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "foundation",
+      "year": 1,
+      "age": 4,
+      "name": {
+        "en": "Year 1"
+      },
+      "aliases": [
+        "P1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "foundation",
+      "year": 2,
+      "age": 5,
+      "name": {
+        "en": "Year 2"
+      },
+      "aliases": [
+        "P2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "ks1",
+      "year": 3,
+      "age": 6,
+      "name": {
+        "en": "Year 3"
+      },
+      "aliases": [
+        "P3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "ks1",
+      "year": 4,
+      "age": 7,
+      "name": {
+        "en": "Year 4"
+      },
+      "aliases": [
+        "P4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "ks2",
+      "year": 5,
+      "age": 8,
+      "name": {
+        "en": "Year 5"
+      },
+      "aliases": [
+        "P5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "ks2",
+      "year": 6,
+      "age": 9,
+      "name": {
+        "en": "Year 6"
+      },
+      "aliases": [
+        "P6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "ks2",
+      "year": 7,
+      "age": 10,
+      "name": {
+        "en": "Year 7"
+      },
+      "aliases": [
+        "P7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "ks3",
+      "year": 8,
+      "age": 11,
+      "name": {
+        "en": "Year 8"
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-9",
+      "stage": "ks3",
+      "year": 9,
+      "age": 12,
+      "name": {
+        "en": "Year 9"
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-10",
+      "stage": "ks3",
+      "year": 10,
+      "age": 13,
+      "name": {
+        "en": "Year 10"
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-11",
+      "stage": "ks4",
+      "year": 11,
+      "age": 14,
+      "name": {
+        "en": "Year 11"
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-12",
+      "stage": "ks4",
+      "year": 12,
+      "age": 15,
+      "name": {
+        "en": "Year 12"
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-13",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 16,
+      "name": {
+        "en": "Year 13"
+      },
+      "aliases": [
+        "Lower Sixth"
+      ]
+    },
+    {
+      "id": "year-14",
+      "stage": "sixth-form",
+      "year": 14,
+      "age": 17,
+      "name": {
+        "en": "Year 14"
+      },
+      "aliases": [
+        "Upper Sixth"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "School curriculum – nidirect",
+      "url": "https://www.nidirect.gov.uk/articles/school-curriculum"
+    },
+    {
+      "title": "Compulsory education – Department of Education",
+      "url": "https://www.education-ni.gov.uk/articles/compulsory-education"
+    },
+    {
+      "title": "The curriculum for 11 to 16-year-olds – nidirect",
+      "url": "https://www.nidirect.gov.uk/articles/curriculum-11-16-year-olds"
+    }
+  ],
+  "notes": "Children start Year 1 (P1) in the September after they turn four, so primary has seven years and school fourteen. Years 1–7 are primary, Years 8–14 post-primary; Years 13–14 are sixth form, after compulsory education ends. P1–P7 is everyday usage, not from the cited pages."
+}

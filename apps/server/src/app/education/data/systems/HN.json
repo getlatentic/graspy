@@ -1,0 +1,226 @@
+{
+  "id": "HN",
+  "country": "HN",
+  "name": {
+    "en": "Honduras",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "i-ciclo",
+      "name": {
+        "en": "Basic education, first cycle (I Ciclo)",
+        "local": {
+          "es": "I Ciclo de Educación Básica"
+        }
+      }
+    },
+    {
+      "id": "ii-ciclo",
+      "name": {
+        "en": "Basic education, second cycle (II Ciclo)",
+        "local": {
+          "es": "II Ciclo de Educación Básica"
+        }
+      }
+    },
+    {
+      "id": "iii-ciclo",
+      "name": {
+        "en": "Basic education, third cycle (III Ciclo)",
+        "local": {
+          "es": "III Ciclo de Educación Básica"
+        }
+      }
+    },
+    {
+      "id": "media",
+      "name": {
+        "en": "Upper secondary (Educación Media)",
+        "local": {
+          "es": "Educación Media"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "i-ciclo",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado"
+        }
+      },
+      "aliases": [
+        "1° grado"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "i-ciclo",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado"
+        }
+      },
+      "aliases": [
+        "2° grado"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "i-ciclo",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado"
+        }
+      },
+      "aliases": [
+        "3° grado"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "ii-ciclo",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado"
+        }
+      },
+      "aliases": [
+        "4° grado"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "ii-ciclo",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado"
+        }
+      },
+      "aliases": [
+        "5° grado"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "ii-ciclo",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado"
+        }
+      },
+      "aliases": [
+        "6° grado"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "iii-ciclo",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Séptimo grado"
+        }
+      },
+      "aliases": [
+        "7° grado"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "iii-ciclo",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Octavo grado"
+        }
+      },
+      "aliases": [
+        "8° grado"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "iii-ciclo",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Noveno grado"
+        }
+      },
+      "aliases": [
+        "9° grado"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "media",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Décimo grado"
+        }
+      },
+      "aliases": [
+        "10° grado"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "media",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Undécimo grado"
+        }
+      },
+      "aliases": [
+        "11° grado"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Repositorio de recursos – Plataforma de Educatrachos (Secretaría de Educación)",
+      "url": "https://www.educatrachos.hn/repositorio-de-recursos/3/"
+    },
+    {
+      "title": "Perfil del pais | SITEAL",
+      "url": "https://siteal.iiep.unesco.org/pais/honduras"
+    }
+  ],
+  "notes": "Educación Básica is nine grades in three cycles. Educación Media lasts 2 years for the Bachillerato en Ciencias y Humanidades and 2–3 years for the Bachillerato Técnico Profesional. The file follows the 2-year course; Duodécimo grado, the third year of some technical programmes, is not listed."
+}

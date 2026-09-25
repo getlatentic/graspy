@@ -1,0 +1,255 @@
+{
+  "id": "BN",
+  "country": "BN",
+  "name": {
+    "en": "Brunei Darussalam",
+    "local": {
+      "ms": "Brunei Darussalam"
+    }
+  },
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "ms": "Sekolah Rendah"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "ms": "Sekolah Menengah"
+        }
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth Form (pre-university)",
+        "local": {
+          "ms": "Tingkatan Enam"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {
+          "ms": "Tahun 1"
+        }
+      },
+      "aliases": [
+        "Primary 1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {
+          "ms": "Tahun 2"
+        }
+      },
+      "aliases": [
+        "Primary 2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {
+          "ms": "Tahun 3"
+        }
+      },
+      "aliases": [
+        "Primary 3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {
+          "ms": "Tahun 4"
+        }
+      },
+      "aliases": [
+        "Primary 4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {
+          "ms": "Tahun 5"
+        }
+      },
+      "aliases": [
+        "Primary 5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {
+          "ms": "Tahun 6"
+        }
+      },
+      "aliases": [
+        "Primary 6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {
+          "ms": "Tahun 7"
+        }
+      },
+      "aliases": [
+        "Form 1",
+        "Menengah 1"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {
+          "ms": "Tahun 8"
+        }
+      },
+      "aliases": [
+        "Form 2"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {
+          "ms": "Tahun 9"
+        }
+      },
+      "aliases": [
+        "Form 3"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {
+          "ms": "Tahun 10"
+        }
+      },
+      "aliases": [
+        "Form 4"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Year 11",
+        "local": {
+          "ms": "Tahun 11"
+        }
+      },
+      "aliases": [
+        "Form 5"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "sixth-form",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Year 12",
+        "local": {
+          "ms": "Tahun 12"
+        }
+      },
+      "aliases": [
+        "Lower Six"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Year 13",
+        "local": {
+          "ms": "Tahun 13"
+        }
+      },
+      "aliases": [
+        "Upper Six"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "National Education System for the 21st Century (SPN21)",
+      "url": "https://wpstorage786f4c975e.blob.core.windows.net/wpblob786f4c975e/wp-content/uploads/2026/06/SPN21-ENG-2013-COMPLETE.pdf"
+    },
+    {
+      "title": "Primary Education | MOE",
+      "url": "https://www.moe.gov.bn/primary-education/"
+    },
+    {
+      "title": "Post-Secondary Education | MOE",
+      "url": "https://www.moe.gov.bn/post-secondary-education/"
+    }
+  ],
+  "notes": "Confirmed by MOE: primary from age 6 (Years 1-6, formerly Primary 1-6), secondary Years 7-11 (formerly Form 1-5; a 4-year programme sits O Level in Year 10), then a 2-year Sixth Form / pre-university course to A Level. Unconfirmed: the names Year 12 and Year 13 (and Lower/Upper Six) for the sixth-form years, the Malay Tahun names, and the Malay stage names; MOE pages found do not name them."
+}

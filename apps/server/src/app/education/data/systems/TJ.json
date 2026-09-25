@@ -1,0 +1,219 @@
+{
+  "id": "TJ",
+  "country": "TJ",
+  "name": {
+    "en": "Tajikistan",
+    "local": {
+      "tg": "Тоҷикистон"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "tg": "Таҳсилоти ибтидоӣ"
+        }
+      }
+    },
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic general",
+        "local": {
+          "tg": "Таҳсилоти умумии асосӣ"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary general",
+        "local": {
+          "tg": "Таҳсилоти миёнаи умумӣ"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "tg": "синфи 1"
+        }
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "tg": "синфи 2"
+        }
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "tg": "синфи 3"
+        }
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "tg": "синфи 4"
+        }
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "tg": "синфи 5"
+        }
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "tg": "синфи 6"
+        }
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "tg": "синфи 7"
+        }
+      },
+      "aliases": [
+        "Class 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "tg": "синфи 8"
+        }
+      },
+      "aliases": [
+        "Class 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "tg": "синфи 9"
+        }
+      },
+      "aliases": [
+        "Class 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "tg": "синфи 10"
+        }
+      },
+      "aliases": [
+        "Class 10"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "tg": "синфи 11"
+        }
+      },
+      "aliases": [
+        "Class 11"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Қонуни Ҷумҳурии Тоҷикистон дар бораи маориф",
+      "url": "https://maorif.tj/storage/documents/01JK54QYHXD76J9JXZ0HVNQJ5F.pdf"
+    },
+    {
+      "title": "Стратегияи миллии рушди маорифи Ҷумҳурии Тоҷикистон барои давраи то соли 2030",
+      "url": "https://maorif.tj/storage/documents/01JA73DQA3VH3KNR8T6V5JRYQ7.pdf"
+    }
+  ],
+  "notes": "Grade 1 entry is compulsory at age 7. Basic education (Grades 1–9) is compulsory. The law refers to the final year as Grade 11 (12)."
+}

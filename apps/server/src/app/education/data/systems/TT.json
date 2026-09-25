@@ -1,0 +1,196 @@
+{
+  "id": "TT",
+  "country": "TT",
+  "name": {
+    "en": "Trinidad and Tobago",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower School (Forms 1–3)",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper School (Forms 4–5)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "infants-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Infants 1",
+        "local": {}
+      },
+      "aliases": [
+        "Infant 1",
+        "First Year",
+        "First Year Infants"
+      ]
+    },
+    {
+      "id": "infants-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Infants 2",
+        "local": {}
+      },
+      "aliases": [
+        "Infant 2",
+        "Second Year",
+        "Second Year Infants"
+      ]
+    },
+    {
+      "id": "standard-1",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Standard 1",
+        "local": {}
+      },
+      "aliases": [
+        "Std 1"
+      ]
+    },
+    {
+      "id": "standard-2",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Standard 2",
+        "local": {}
+      },
+      "aliases": [
+        "Std 2"
+      ]
+    },
+    {
+      "id": "standard-3",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Standard 3",
+        "local": {}
+      },
+      "aliases": [
+        "Std 3"
+      ]
+    },
+    {
+      "id": "standard-4",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Standard 4",
+        "local": {}
+      },
+      "aliases": [
+        "Std 4"
+      ]
+    },
+    {
+      "id": "standard-5",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Standard 5",
+        "local": {}
+      },
+      "aliases": [
+        "Std 5"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-2",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-3",
+      "stage": "lower-secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-4",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-5",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Form 5",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Primary – Ministry of Education",
+      "url": "https://www.moe.gov.tt/primary/"
+    },
+    {
+      "title": "Guidelines for Term 1 (Ministry of Education, updated 28 August 2020)",
+      "url": "https://storage.moe.gov.tt/corporate/2022/09/Guidelines-for-TERM-1-updated-28th-August-2020-final.pdf"
+    }
+  ],
+  "notes": "Primary starts at age 5 with Infants 1 and 2 and ends with the SEA in Standard 5. CSEC is taken in Form 5. Form 6 (Lower and Upper Sixth, CAPE) comes after and is not part of this list."
+}

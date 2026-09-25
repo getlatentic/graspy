@@ -1,0 +1,250 @@
+{
+  "id": "LY",
+  "country": "LY",
+  "name": {
+    "en": "Libya",
+    "local": {
+      "ar": "ليبيا"
+    }
+  },
+  "main": true,
+  "status": "draft",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Basic education: primary",
+        "local": {
+          "ar": "مرحلة التعليم الأساسي - الابتدائي"
+        }
+      }
+    },
+    {
+      "id": "preparatory",
+      "name": {
+        "en": "Basic education: preparatory",
+        "local": {
+          "ar": "مرحلة التعليم الأساسي - الإعدادي"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {
+          "ar": "مرحلة التعليم الثانوي"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ar": "الصف الأول الابتدائي"
+        }
+      },
+      "aliases": [
+        "الصف الأول"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ar": "الصف الثاني الابتدائي"
+        }
+      },
+      "aliases": [
+        "الصف الثاني"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ar": "الصف الثالث الابتدائي"
+        }
+      },
+      "aliases": [
+        "الصف الثالث"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ar": "الصف الرابع الابتدائي"
+        }
+      },
+      "aliases": [
+        "الصف الرابع"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ar": "الصف الخامس الابتدائي"
+        }
+      },
+      "aliases": [
+        "الصف الخامس"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ar": "الصف السادس الابتدائي"
+        }
+      },
+      "aliases": [
+        "الصف السادس"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "preparatory",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ar": "الصف السابع"
+        }
+      },
+      "aliases": [
+        "الصف الأول الإعدادي",
+        "1st Preparatory"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "preparatory",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ar": "الصف الثامن"
+        }
+      },
+      "aliases": [
+        "الصف الثاني الإعدادي",
+        "2nd Preparatory"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "preparatory",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ar": "الصف التاسع"
+        }
+      },
+      "aliases": [
+        "الصف الثالث الإعدادي",
+        "3rd Preparatory"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "1st Secondary",
+        "local": {
+          "ar": "الصف الأول الثانوي"
+        }
+      },
+      "aliases": [
+        "Grade 10",
+        "1st Secondary"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nd Secondary",
+        "local": {
+          "ar": "الصف الثاني الثانوي"
+        }
+      },
+      "aliases": [
+        "Grade 11",
+        "2nd Secondary"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "3rd Secondary",
+        "local": {
+          "ar": "الصف الثالث الثانوي"
+        }
+      },
+      "aliases": [
+        "Grade 12",
+        "3rd Secondary",
+        "الشهادة الثانوية"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "بَدء تسجيل التلامِيذ المستجدين بالصف الأول من مرحلة التّعليم الأساسي من مواليد 2020م - وزارة التربية والتعليم",
+      "url": "https://web.archive.org/web/20260816162637/https://moe.gov.ly/%D8%A8%D9%8E%D8%AF%D8%A1-%D8%AA%D8%B3%D8%AC%D9%8A%D9%84-%D8%A7%D9%84%D8%AA%D9%84%D8%A7%D9%85%D9%90%D9%8A%D8%B0-%D8%A7%D9%84%D9%85%D8%B3%D8%AA%D8%AC%D8%AF%D9%8A%D9%86-%D8%A8%D8%A7%D9%84%D8%B5%D9%81/"
+    },
+    {
+      "title": "اِعتماد نتائج الشهادتين الإعدادية والثانوية للطلبة الدارسين بالمدارس الليبية بالخارج – وزارة التربية والتعليم",
+      "url": "https://web.archive.org/web/20240304042133/https://moe.gov.ly/2022/08/24/%D8%A7%D9%90%D8%B9%D8%AA%D9%85%D8%A7%D8%AF-%D9%86%D8%AA%D8%A7%D8%A6%D8%AC-%D8%A7%D9%84%D8%B4%D9%87%D8%A7%D8%AF%D8%AA%D9%8A%D9%86-%D8%A7%D9%84%D8%A5%D8%B9%D8%AF%D8%A7%D8%AF%D9%8A%D8%A9-%D9%88%D8%A7/"
+    },
+    {
+      "title": "محتويات كتاب العلوم الصف السابع الفهرس | وزارة التربية والتعليم الليبية",
+      "url": "https://web.archive.org/web/20220616125122/https://moe.gov.ly/%d9%85%d8%ad%d8%aa%d9%88%d9%8a%d8%a7%d8%aa-%d9%83%d8%aa%d8%a7%d8%a8-%d8%a7%d9%84%d8%b9%d9%84%d9%88%d9%85-%d8%a7%d9%84%d8%b5%d9%81-%d8%a7%d9%84%d8%b3%d8%a7%d8%a8%d8%b9-%d8%a7%d9%84%d9%81%d9%87%d8%b1/"
+    },
+    {
+      "title": "تقسيم المقرّرات الدراسية لجميع صفوف مرحلتي التعليم الأساسي والثانوي - وزارة التربية والتعليم",
+      "url": "https://web.archive.org/web/20260309112650/https://moe.gov.ly/%D9%85%D8%B1%D9%83%D8%B2-%D8%A7%D9%84%D9%85%D9%86%D8%A7%D9%87%D8%AC-%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D8%A8%D8%AD%D9%88%D8%AB-%D8%A7%D9%84%D8%AA%D8%B1%D8%A8/"
+    }
+  ],
+  "draftedBy": "claude-code",
+  "notes": "Draft: moe.gov.ly is suspended, so archived ministry pages were used. They confirm the 9-year basic stage (grade 1 of basic education; الصف السابع; the preparatory/basic-completion certificate) and a 3-year secondary stage, whose years the ministry calls السنة الأولى–الثالثة بمرحلة التعليم الثانوي, ending with a certificate with scientific and literary sections. The الصف الأول–الثالث الثانوي names used here are not confirmed by an official source."
+}

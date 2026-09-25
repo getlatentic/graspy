@@ -1,0 +1,264 @@
+{
+  "id": "TZ-742",
+  "country": "TZ",
+  "name": {
+    "en": "Tanzania (seven-year primary, being phased out)",
+    "local": {}
+  },
+  "main": false,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "sw": "Elimu ya Msingi"
+        }
+      }
+    },
+    {
+      "id": "o-level",
+      "name": {
+        "en": "Ordinary Secondary (O Level)",
+        "local": {
+          "sw": "Elimu ya Sekondari ya Chini"
+        }
+      }
+    },
+    {
+      "id": "a-level",
+      "name": {
+        "en": "Advanced Secondary (A Level)",
+        "local": {
+          "sw": "Elimu ya Sekondari ya Juu"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "standard-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Standard 1",
+        "local": {
+          "sw": "Darasa la I"
+        }
+      },
+      "aliases": [
+        "Standard I",
+        "Std 1"
+      ]
+    },
+    {
+      "id": "standard-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Standard 2",
+        "local": {
+          "sw": "Darasa la II"
+        }
+      },
+      "aliases": [
+        "Standard II",
+        "Std 2"
+      ]
+    },
+    {
+      "id": "standard-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Standard 3",
+        "local": {
+          "sw": "Darasa la III"
+        }
+      },
+      "aliases": [
+        "Standard III",
+        "Std 3"
+      ]
+    },
+    {
+      "id": "standard-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Standard 4",
+        "local": {
+          "sw": "Darasa la IV"
+        }
+      },
+      "aliases": [
+        "Standard IV",
+        "Std 4"
+      ]
+    },
+    {
+      "id": "standard-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Standard 5",
+        "local": {
+          "sw": "Darasa la V"
+        }
+      },
+      "aliases": [
+        "Standard V",
+        "Std 5"
+      ]
+    },
+    {
+      "id": "standard-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Standard 6",
+        "local": {
+          "sw": "Darasa la VI"
+        }
+      },
+      "aliases": [
+        "Standard VI",
+        "Std 6"
+      ]
+    },
+    {
+      "id": "standard-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Standard 7",
+        "local": {
+          "sw": "Darasa la VII"
+        }
+      },
+      "aliases": [
+        "Standard VII",
+        "Std 7"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "o-level",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Form 1",
+        "local": {
+          "sw": "Kidato cha I"
+        }
+      },
+      "aliases": [
+        "Form I",
+        "Form One"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "o-level",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Form 2",
+        "local": {
+          "sw": "Kidato cha II"
+        }
+      },
+      "aliases": [
+        "Form II",
+        "Form Two"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "o-level",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Form 3",
+        "local": {
+          "sw": "Kidato cha III"
+        }
+      },
+      "aliases": [
+        "Form III",
+        "Form Three"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "o-level",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Form 4",
+        "local": {
+          "sw": "Kidato cha IV"
+        }
+      },
+      "aliases": [
+        "Form IV",
+        "Form Four"
+      ]
+    },
+    {
+      "id": "form-5",
+      "stage": "a-level",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Form 5",
+        "local": {
+          "sw": "Kidato cha V"
+        }
+      },
+      "aliases": [
+        "Form V",
+        "Form Five"
+      ]
+    },
+    {
+      "id": "form-6",
+      "stage": "a-level",
+      "year": 13,
+      "age": 19,
+      "name": {
+        "en": "Form 6",
+        "local": {
+          "sw": "Kidato cha VI"
+        }
+      },
+      "aliases": [
+        "Form VI",
+        "Form Six"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Sera ya Elimu na Mafunzo 2014, Toleo la Mwaka 2023 (Wizara ya Elimu, Sayansi na Teknolojia; TIE)",
+      "url": "https://www.tie.go.tz/uploads/documents/sw-1740558900-SERA%20YA%20ELIMU%20NA%20MAFUNZO%202014-%20Toleo%20la%20Mwaka%202023.pdf"
+    },
+    {
+      "title": "Primary School Leaving Examination (PSLE) – Pages | NECTA",
+      "url": "https://www.necta.go.tz/pages/psle"
+    },
+    {
+      "title": "TIE | Mtaala wa Sekondari ya Chini - Taaluma",
+      "url": "https://www.tie.go.tz/publications/curriculum-for-lower-secondary-academic"
+    }
+  ],
+  "notes": "The 2+7+4+2+3 structure that the 2023 edition of the Education and Training Policy replaces: seven years of compulsory primary under the Education Act Cap. 353, starting Standard I at age 7, and the PSLE for pupils who have completed Standard VII. Form I–VI are the same as in TZ. No NECTA, TIE or ministry source found gives the year the last Standard VII sits the PSLE, so no end year is set."
+}

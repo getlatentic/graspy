@@ -1,0 +1,245 @@
+{
+  "id": "UG",
+  "country": "UG",
+  "name": {
+    "en": "Uganda",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "o-level",
+      "name": {
+        "en": "Lower Secondary (O Level)",
+        "local": {}
+      }
+    },
+    {
+      "id": "a-level",
+      "name": {
+        "en": "Advanced Secondary (A Level)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "p1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "P1",
+        "local": {}
+      },
+      "aliases": [
+        "Primary One",
+        "Primary 1",
+        "P.1"
+      ]
+    },
+    {
+      "id": "p2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "P2",
+        "local": {}
+      },
+      "aliases": [
+        "Primary Two",
+        "Primary 2",
+        "P.2"
+      ]
+    },
+    {
+      "id": "p3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "P3",
+        "local": {}
+      },
+      "aliases": [
+        "Primary Three",
+        "Primary 3",
+        "P.3"
+      ]
+    },
+    {
+      "id": "p4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "P4",
+        "local": {}
+      },
+      "aliases": [
+        "Primary Four",
+        "Primary 4",
+        "P.4"
+      ]
+    },
+    {
+      "id": "p5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "P5",
+        "local": {}
+      },
+      "aliases": [
+        "Primary Five",
+        "Primary 5",
+        "P.5"
+      ]
+    },
+    {
+      "id": "p6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "P6",
+        "local": {}
+      },
+      "aliases": [
+        "Primary Six",
+        "Primary 6",
+        "P.6"
+      ]
+    },
+    {
+      "id": "p7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "P7",
+        "local": {}
+      },
+      "aliases": [
+        "Primary Seven",
+        "Primary 7",
+        "P.7"
+      ]
+    },
+    {
+      "id": "s1",
+      "stage": "o-level",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "S1",
+        "local": {}
+      },
+      "aliases": [
+        "Senior One",
+        "Senior 1",
+        "S.1"
+      ]
+    },
+    {
+      "id": "s2",
+      "stage": "o-level",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "S2",
+        "local": {}
+      },
+      "aliases": [
+        "Senior Two",
+        "Senior 2",
+        "S.2"
+      ]
+    },
+    {
+      "id": "s3",
+      "stage": "o-level",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "S3",
+        "local": {}
+      },
+      "aliases": [
+        "Senior Three",
+        "Senior 3",
+        "S.3"
+      ]
+    },
+    {
+      "id": "s4",
+      "stage": "o-level",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "S4",
+        "local": {}
+      },
+      "aliases": [
+        "Senior Four",
+        "Senior 4",
+        "S.4"
+      ]
+    },
+    {
+      "id": "s5",
+      "stage": "a-level",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "S5",
+        "local": {}
+      },
+      "aliases": [
+        "Senior Five",
+        "Senior 5",
+        "S.5"
+      ]
+    },
+    {
+      "id": "s6",
+      "stage": "a-level",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "S6",
+        "local": {}
+      },
+      "aliases": [
+        "Senior Six",
+        "Senior 6",
+        "S.6"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "The National Primary School Curriculum for Uganda: Primary 1 (NCDC)",
+      "url": "https://ncdc.go.ug/wp-content/uploads/2024/02/P1-Curriculum.pdf"
+    },
+    {
+      "title": "Lower Secondary Curriculum Embraced – National Curriculum Development Centre (NCDC)",
+      "url": "https://ncdc.go.ug/lower-secondary-curriculum-embraced/"
+    },
+    {
+      "title": "Advanced Secondary Curriculum: Biology Syllabus (NCDC, 2025)",
+      "url": "https://ncdc.go.ug/wp-content/uploads/2025/03/Biology.pdf"
+    }
+  ],
+  "notes": "Primary is taught in three cycles: P1–P3 (local language of instruction), P4 (transition year) and P5–P7; PLE is sat at the end of P7. The competency-based Lower Secondary Curriculum began with S1 in 2020 (UCE after S4); the revised Advanced Secondary Curriculum began with S5 in 2025 (UACE after S6). Class names did not change."
+}

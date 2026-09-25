@@ -1,0 +1,248 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "ZA",
+  "country": "ZA",
+  "name": {
+    "en": "South Africa",
+    "local": {
+      "af": "Suid-Afrika"
+    }
+  },
+  "stages": [
+    {
+      "id": "foundation",
+      "name": {
+        "en": "Foundation Phase",
+        "local": {
+          "af": "Grondslagfase"
+        }
+      }
+    },
+    {
+      "id": "intermediate",
+      "name": {
+        "en": "Intermediate Phase",
+        "local": {
+          "af": "Intermediêre Fase"
+        }
+      }
+    },
+    {
+      "id": "senior",
+      "name": {
+        "en": "Senior Phase",
+        "local": {
+          "af": "Senior Fase"
+        }
+      }
+    },
+    {
+      "id": "fet",
+      "name": {
+        "en": "Further Education and Training (FET) Phase"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "foundation",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "af": "Graad 1"
+        }
+      },
+      "aliases": [
+        "Gr 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "foundation",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "af": "Graad 2"
+        }
+      },
+      "aliases": [
+        "Gr 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "foundation",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "af": "Graad 3"
+        }
+      },
+      "aliases": [
+        "Gr 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "intermediate",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "af": "Graad 4"
+        }
+      },
+      "aliases": [
+        "Gr 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "intermediate",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "af": "Graad 5"
+        }
+      },
+      "aliases": [
+        "Gr 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "intermediate",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "af": "Graad 6"
+        }
+      },
+      "aliases": [
+        "Gr 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "senior",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "af": "Graad 7"
+        }
+      },
+      "aliases": [
+        "Gr 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "senior",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "af": "Graad 8"
+        }
+      },
+      "aliases": [
+        "Gr 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "senior",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "af": "Graad 9"
+        }
+      },
+      "aliases": [
+        "Gr 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "fet",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "af": "Graad 10"
+        }
+      },
+      "aliases": [
+        "Gr 10"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "fet",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "af": "Graad 11"
+        }
+      },
+      "aliases": [
+        "Gr 11"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "fet",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "af": "Graad 12"
+        }
+      },
+      "aliases": [
+        "Gr 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Curriculum and Assessment Policy Statements, FET phase – DBE (archived)",
+      "url": "http://web.archive.org/web/20251212100754/https://www.education.gov.za/Curriculum/CurriculumAssessmentPolicyStatements(CAPS)/CAPSFET.aspx"
+    },
+    {
+      "title": "National policy pertaining to the programme and promotion requirements, NCS Grades R–12 – DBE",
+      "url": "https://www.education.gov.za/Portals/0/Documents/Policies/PolicyProgPromReqNCS.pdf"
+    },
+    {
+      "title": "South African Schools Act as amended by the BELA Act 2024 – DBE",
+      "url": "https://www.education.gov.za/Portals/0/Documents/Legislation/Acts/SASA%20as%20amended%20by%20BELA2024.pdf?ver=2025-02-21-141705-657"
+    },
+    {
+      "title": "Age requirements for admission to an ordinary public school (Notice 2433 of 1998) – DBE",
+      "url": "https://www.education.gov.za/Portals/0/Documents/Legislation/Gov%20Not/Age%20requirements%20for%20admission%20to%20an%20ordinary%20public%20school.pdf?ver=2008-07-02-153110-123"
+    }
+  ],
+  "notes": "The curriculum's phases run Grade R–3, 4–6, 7–9 and 10–12; Grade R, compulsory since the 2024 BELA Act, is left out. Schools are usually primary (Grade R–7) and high (Grade 8–12). The school year runs January to December. The Schools Act makes attendance compulsory from Grade R in the year a learner turns 6, and the DBE's age-requirements notice (Notice 2433 of 1998) sets the age norm per grade at the grade number plus 6, so Grade 1 is 7."
+}

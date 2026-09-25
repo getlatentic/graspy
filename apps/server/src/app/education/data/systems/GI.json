@@ -1,0 +1,197 @@
+{
+  "id": "GI",
+  "country": "GI",
+  "name": {
+    "en": "Gibraltar",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "lower-primary",
+      "name": {
+        "en": "Lower Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-primary",
+      "name": {
+        "en": "Upper Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "lower-primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "lower-primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "upper-primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "upper-primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "upper-primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "upper-primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": [
+        "Lower Sixth"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "secondary",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13",
+        "local": {}
+      },
+      "aliases": [
+        "Upper Sixth"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Education System",
+      "url": "https://www.gibraltar.gov.gi/education/education-system"
+    },
+    {
+      "title": "A Level Results Released Today - 623/2026",
+      "url": "https://www.gibraltar.gov.gi/press-releases/a-level-results-released-today-6232026-12271"
+    },
+    {
+      "title": "Westside School",
+      "url": "https://www.westsideschoolgibraltar.com/"
+    }
+  ],
+  "notes": "Curricula follow the national curriculum for England. Lower Primary schools take Reception (children turning 5, excluded here), Year 1 and Year 2; Upper Primary starts at Year 3. Bayside and Westside secondary schools teach Years 7–13; Years 12–13 (often called sixth form) take A Levels through a consortium with the Gibraltar College."
+}

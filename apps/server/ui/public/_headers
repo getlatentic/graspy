@@ -1,0 +1,6 @@
+# The Worker serves these as static assets. A view runs in a host's sandbox
+# frame, which may be on any origin: its module scripts and fonts are fetched
+# with CORS. Their names carry a content hash, so they never change.
+/views/assets/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=31536000, immutable

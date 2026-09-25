@@ -1,0 +1,198 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "NF",
+  "country": "NF",
+  "name": {
+    "en": "Norfolk Island",
+    "local": {}
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "prep",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Prep",
+        "local": {}
+      },
+      "aliases": [
+        "Preparatory Year",
+        "Foundation",
+        "Kindergarten"
+      ]
+    },
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Norfolk Island Central School | Schools Directory, Queensland Department of Education",
+      "url": "https://schoolsdirectory.eq.edu.au/Details/B059"
+    },
+    {
+      "title": "Primary | Norfolk Island Central School",
+      "url": "https://norfolkislandcs.eq.edu.au/curriculum/primary"
+    },
+    {
+      "title": "Bell tolls on Norfolk ties with the Department | NSW Department of Education",
+      "url": "https://education.nsw.gov.au/news/latest-news/bell-tolls-on-norfolk-ties-with-the-department"
+    },
+    {
+      "title": "Enrolment age requirements | Queensland Government",
+      "url": "https://www.qld.gov.au/education/schools/find/enrolment/age"
+    },
+    {
+      "title": "Stages of schooling | Education Queensland",
+      "url": "https://education.qld.gov.au/curriculum/stages-of-schooling"
+    }
+  ],
+  "notes": "Norfolk Island Central School, the island's only school, teaches Prep to Year 12. It joined the Queensland Department of Education on 1 January 2022, ending over a century with NSW; the last NSW HSC cohort finished in 2023. It follows Queensland: Prep (age 5 by 30 June) is the first school year, primary is Prep–Year 6 and secondary Years 7–12, with Years 11–12 on QCAA senior subjects. The part-time Kindergarten year before Prep is left out. Learners schooled under NSW may call Prep 'Kindergarten'."
+}

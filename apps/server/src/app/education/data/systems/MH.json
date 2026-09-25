@@ -1,0 +1,203 @@
+{
+  "id": "MH",
+  "country": "MH",
+  "name": {
+    "en": "Marshall Islands",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "high-school",
+      "name": {
+        "en": "High School",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": [
+        "1st grade"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": [
+        "2nd grade"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": [
+        "3rd grade"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": [
+        "4th grade"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": [
+        "5th grade"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": [
+        "6th grade"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": [
+        "7th grade"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": [
+        "8th grade"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "high-school",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": [
+        "9th grade",
+        "Freshman"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "high-school",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": [
+        "10th grade",
+        "Sophomore"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "high-school",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": [
+        "11th grade",
+        "Junior"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "high-school",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": [
+        "12th grade",
+        "Senior"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Instruction & Primary Schools - PSS",
+      "url": "https://pss.edu.mh/organization/instruction-primary-schools/"
+    },
+    {
+      "title": "Secondary School & Career Education - PSS",
+      "url": "https://pss.edu.mh/organization/secondary-school-career-education/"
+    },
+    {
+      "title": "Education Overview - PSS",
+      "url": "https://pss.edu.mh/about/education-overview/"
+    }
+  ],
+  "notes": "The Public School System serves kindergarten (age 5) to Grade 12. Primary schools run to Grade 8; students who complete Grade 8 and reach age 14 enter one of six public high schools. Some schools in Ebeye are called middle schools. Marshallese names for the grades are not recorded here."
+}

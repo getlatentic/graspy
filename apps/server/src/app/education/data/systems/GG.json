@@ -1,0 +1,243 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "GG",
+  "country": "GG",
+  "name": {
+    "en": "Guernsey",
+    "local": {}
+  },
+  "stages": [
+    {
+      "id": "ks1",
+      "name": {
+        "en": "Key Stage 1",
+        "local": {}
+      }
+    },
+    {
+      "id": "ks2",
+      "name": {
+        "en": "Key Stage 2",
+        "local": {}
+      }
+    },
+    {
+      "id": "ks3",
+      "name": {
+        "en": "Key Stage 3",
+        "local": {}
+      }
+    },
+    {
+      "id": "ks4",
+      "name": {
+        "en": "Key Stage 4",
+        "local": {}
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth form (post-16)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "ks1",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": [
+        "Y1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "ks1",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": [
+        "Y2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "ks2",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": [
+        "Y3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "ks2",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": [
+        "Y4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "ks2",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": [
+        "Y5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "ks2",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": [
+        "Y6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "ks3",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": [
+        "Y7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "ks3",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": [
+        "Y8"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "ks3",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": [
+        "Y9"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "ks4",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": [
+        "Y10"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "ks4",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": [
+        "Y11"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "sixth-form",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": [
+        "Y12",
+        "Lower Sixth"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13",
+        "local": {}
+      },
+      "aliases": [
+        "Y13",
+        "Upper Sixth"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "The Bailiwick Curriculum – States of Guernsey",
+      "url": "https://www.gov.gg/curriculum"
+    },
+    {
+      "title": "Admissions: Primary policy directive (2026) – States of Guernsey",
+      "url": "https://www.gov.gg/CHttpHandler.ashx?id=115501&p=0"
+    },
+    {
+      "title": "Out of Year Group Placement policy directive (2026) – States of Guernsey",
+      "url": "https://gov.gg/CHttpHandler.ashx?id=159687&p=0"
+    },
+    {
+      "title": "Secondary schools – States of Guernsey",
+      "url": "https://www.gov.gg/guernsey-alderney-secondary-schools"
+    },
+    {
+      "title": "Admissions: Secondary policy directive (2020) – States of Guernsey",
+      "url": "https://gov.gg/CHttpHandler.ashx?id=130818&p=0"
+    }
+  ],
+  "notes": "School is compulsory from the term after a child's 5th birthday; children who are 4 by 31 August may start Reception, which is in the Early Years and left out, as for England. The Bailiwick Curriculum uses England's key stages: KS1 Years 1–2, KS2 3–6, KS3 7–9, KS4 10–11. Since 2019 three all-ability 11–16 high schools take Year 7 (selection at 11 ended). Pupils may leave in the year they turn 16; Years 12–13 are at the Sixth Form Centre (A levels) or The Guernsey Institute."
+}

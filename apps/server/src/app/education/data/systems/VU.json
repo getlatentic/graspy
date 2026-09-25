@@ -1,0 +1,185 @@
+{
+  "id": "VU",
+  "country": "VU",
+  "name": {
+    "en": "Vanuatu",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "junior-secondary",
+      "name": {
+        "en": "Junior Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "senior-secondary",
+      "name": {
+        "en": "Senior Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "junior-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-8",
+      "stage": "junior-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-9",
+      "stage": "junior-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-10",
+      "stage": "junior-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-11",
+      "stage": "senior-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-12",
+      "stage": "senior-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Year 12",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-13",
+      "stage": "senior-secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Year 13",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Vanuatu Education and Training Sector Strategic Plan 2020 - 2030",
+      "url": "https://assets.globalpartnership.org/s3fs-public/document/file/2020-08-education-training-sector-strategic-plan-2020-2030-vanuatu.pdf?VersionId=CesbnqWJa3PrzU1L7lHfRyB5DdNzTzbC"
+    }
+  ],
+  "notes": "Primary Years 1–6 (ages 6–11), junior secondary Years 7–10 (ages 12–15), senior secondary Years 11–13 (ages 16–18). Anglophone and francophone schools share the Year numbering; French names used in francophone schools are not recorded here. The source is the Ministry of Education and Training's own plan, hosted by GPE, because the ministry sites (education.gov.vu, moet.gov.vu) did not load when checked."
+}

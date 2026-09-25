@@ -1,0 +1,216 @@
+{
+  "id": "BY",
+  "country": "BY",
+  "name": {
+    "en": "Belarus",
+    "local": {
+      "be": "Беларусь",
+      "ru": "Беларусь"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary education (Stage I)",
+        "local": {
+          "ru": "Начальное образование (I ступень)"
+        }
+      }
+    },
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic education (Stage II)",
+        "local": {
+          "ru": "Базовое образование (II ступень)"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary education (Stage III)",
+        "local": {
+          "ru": "Среднее образование (III ступень)"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ru": "1 класс"
+        }
+      },
+      "aliases": [
+        "I класс"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ru": "2 класс"
+        }
+      },
+      "aliases": [
+        "II класс"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ru": "3 класс"
+        }
+      },
+      "aliases": [
+        "III класс"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ru": "4 класс"
+        }
+      },
+      "aliases": [
+        "IV класс"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ru": "5 класс"
+        }
+      },
+      "aliases": [
+        "V класс"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ru": "6 класс"
+        }
+      },
+      "aliases": [
+        "VI класс"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ru": "7 класс"
+        }
+      },
+      "aliases": [
+        "VII класс"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ru": "8 класс"
+        }
+      },
+      "aliases": [
+        "VIII класс"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ru": "9 класс"
+        }
+      },
+      "aliases": [
+        "IX класс"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ru": "10 класс"
+        }
+      },
+      "aliases": [
+        "X класс"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ru": "11 класс"
+        }
+      },
+      "aliases": [
+        "XI класс"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "«Кодекс Республики Беларусь об образовании» – тематические подборки НПА на Pravo.by",
+      "url": "https://pravo.by/document/?guid=3871&p0=hk1100243"
+    }
+  ],
+  "notes": "The Education Code sets general secondary education in three stages: I (grades I–IV), II (V–IX) and III (X–XI); evening classes run X–XII. Children enter grade I at 6 (age at the start of the school year)."
+}

@@ -1,0 +1,224 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "FO",
+  "country": "FO",
+  "name": {
+    "en": "Faroe Islands",
+    "local": {
+      "fo": "Føroyar",
+      "da": "Færøerne"
+    }
+  },
+  "stages": [
+    {
+      "id": "folkaskuli",
+      "name": {
+        "en": "Fólkaskúli (primary and lower secondary)",
+        "local": {
+          "fo": "Fólkaskúlin"
+        }
+      }
+    },
+    {
+      "id": "midnam",
+      "name": {
+        "en": "Upper secondary (gymnasial miðnám)",
+        "local": {
+          "fo": "Gymnasial miðnámsútbúgving"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "flokkur-1",
+      "stage": "folkaskuli",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "fo": "1. flokkur"
+        }
+      },
+      "aliases": [
+        "1. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-2",
+      "stage": "folkaskuli",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "fo": "2. flokkur"
+        }
+      },
+      "aliases": [
+        "2. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-3",
+      "stage": "folkaskuli",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "fo": "3. flokkur"
+        }
+      },
+      "aliases": [
+        "3. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-4",
+      "stage": "folkaskuli",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "fo": "4. flokkur"
+        }
+      },
+      "aliases": [
+        "4. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-5",
+      "stage": "folkaskuli",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "fo": "5. flokkur"
+        }
+      },
+      "aliases": [
+        "5. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-6",
+      "stage": "folkaskuli",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "fo": "6. flokkur"
+        }
+      },
+      "aliases": [
+        "6. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-7",
+      "stage": "folkaskuli",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "fo": "7. flokkur"
+        }
+      },
+      "aliases": [
+        "7. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-8",
+      "stage": "folkaskuli",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "fo": "8. flokkur"
+        }
+      },
+      "aliases": [
+        "8. floksstig"
+      ]
+    },
+    {
+      "id": "flokkur-9",
+      "stage": "folkaskuli",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "fo": "9. flokkur"
+        }
+      },
+      "aliases": [
+        "9. floksstig"
+      ]
+    },
+    {
+      "id": "midnam-1",
+      "stage": "midnam",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Upper secondary year 1",
+        "local": {
+          "fo": "1. ár"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "midnam-2",
+      "stage": "midnam",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Upper secondary year 2",
+        "local": {
+          "fo": "2. ár"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "midnam-3",
+      "stage": "midnam",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Upper secondary year 3",
+        "local": {
+          "fo": "3. ár"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Løgtingslóg nr. 125 frá 20. juni 1997 um fólkaskúlan | logir.fo",
+      "url": "https://logir.fo/Logtingslog/125-fra-20-06-1997-um-folkaskulan-sum-seinast-broytt-vid-logtingslog-nr-34-fra-28"
+    },
+    {
+      "title": "Løgtingslóg nr. 62 frá 15. mai 2012 um gymnasialar miðnámsútbúgvingar | logir.fo",
+      "url": "https://www.logir.fo/Logtingslog/62-fra-15-05-2012-fra-gymnasialar-midnamsutbugvingar"
+    },
+    {
+      "title": "Upptøka á breytunum | Miðnám á Kambsdali",
+      "url": "https://kambsdalur.fo/upptoka-a-breytunum/"
+    }
+  ],
+  "notes": "Undirvísingarskylda starts on 1 August of the calendar year a child turns 7 and lasts nine years; the optional forskúli year is not counted. The fólkaskúli is a nine-year grundskúli (1.–9. flokkur) plus an optional one-year 10. flokkur, which is left out, as Denmark's 10. klasse is. The three-year gymnasial lines (búskapar-, hug-, náttúru-, tøknibreyt) admit pupils who completed 9. flokk; the two-year fyrireikingarbreyt needs age 18. Upper-secondary years follow the law's 1.–3. ár; everyday names such as 1.g are not confirmed."
+}

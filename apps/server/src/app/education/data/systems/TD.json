@@ -1,0 +1,254 @@
+{
+  "id": "TD",
+  "country": "TD",
+  "name": {
+    "en": "Chad",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "fondamental-1",
+      "name": {
+        "en": "Primary (Fondamental I)",
+        "local": {
+          "fr": "Fondamental I (Enseignement primaire)"
+        }
+      }
+    },
+    {
+      "id": "fondamental-2",
+      "name": {
+        "en": "Lower secondary (Fondamental II, Collège)",
+        "local": {
+          "fr": "Fondamental II (Enseignement moyen)"
+        }
+      }
+    },
+    {
+      "id": "secondaire",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Enseignement secondaire"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "cp1",
+      "stage": "fondamental-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CP1",
+        "local": {
+          "fr": "Cours préparatoire 1re année"
+        }
+      },
+      "aliases": [
+        "Cours préparatoire 1"
+      ]
+    },
+    {
+      "id": "cp2",
+      "stage": "fondamental-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CP2",
+        "local": {
+          "fr": "Cours préparatoire 2e année"
+        }
+      },
+      "aliases": [
+        "Cours préparatoire 2"
+      ]
+    },
+    {
+      "id": "ce1",
+      "stage": "fondamental-1",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire 1re année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 1"
+      ]
+    },
+    {
+      "id": "ce2",
+      "stage": "fondamental-1",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire 2e année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 2"
+      ]
+    },
+    {
+      "id": "cm1",
+      "stage": "fondamental-1",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen 1re année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 1"
+      ]
+    },
+    {
+      "id": "cm2",
+      "stage": "fondamental-1",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen 2e année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 2"
+      ]
+    },
+    {
+      "id": "sixieme",
+      "stage": "fondamental-2",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème",
+        "Sixième"
+      ]
+    },
+    {
+      "id": "cinquieme",
+      "stage": "fondamental-2",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème",
+        "Cinquième"
+      ]
+    },
+    {
+      "id": "quatrieme",
+      "stage": "fondamental-2",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème",
+        "Quatrième"
+      ]
+    },
+    {
+      "id": "troisieme",
+      "stage": "fondamental-2",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème",
+        "Troisième"
+      ]
+    },
+    {
+      "id": "seconde",
+      "stage": "secondaire",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde",
+        "2de"
+      ]
+    },
+    {
+      "id": "premiere",
+      "stage": "secondaire",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "1ère",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "Première",
+        "1re"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "secondaire",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Tle",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Terminale",
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Annuaire statistique de l’éducation 2024-2025 (MENPC, Tchad)",
+      "url": "https://www.education.gouv.td/wp-content/uploads/2026/07/Annuaire_Statistique_Education-2024_2025.-1.pdf"
+    },
+    {
+      "title": "Cartographie de la CITE 2011 de Tchad",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Chad.xlsx"
+    }
+  ],
+  "notes": "Enseignement fondamental (10 years: Fondamental I, ages 6–11, and Fondamental II, ages 12–15) ends with the Brevet d'Enseignement Fondamental (BEF); secondary (ages 16–18) with the Baccalauréat. Schools teach in French, Arabic or both; the Arabic names of the classes are not included here."
+}

@@ -1,0 +1,232 @@
+{
+  "id": "YE",
+  "country": "YE",
+  "name": {
+    "en": "Yemen",
+    "local": {
+      "ar": "اليمن"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic education",
+        "local": {
+          "ar": "التعليم الأساسي"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary education",
+        "local": {
+          "ar": "التعليم الثانوي"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "basic",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ar": "الصف الأول"
+        }
+      },
+      "aliases": [
+        "الصف الأول الأساسي"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "basic",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ar": "الصف الثاني"
+        }
+      },
+      "aliases": [
+        "الصف الثاني الأساسي"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "basic",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ar": "الصف الثالث"
+        }
+      },
+      "aliases": [
+        "الصف الثالث الأساسي"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "basic",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ar": "الصف الرابع"
+        }
+      },
+      "aliases": [
+        "الصف الرابع الأساسي"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "basic",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ar": "الصف الخامس"
+        }
+      },
+      "aliases": [
+        "الصف الخامس الأساسي"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "basic",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ar": "الصف السادس"
+        }
+      },
+      "aliases": [
+        "الصف السادس الأساسي"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ar": "الصف السابع"
+        }
+      },
+      "aliases": [
+        "الصف السابع الأساسي"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ar": "الصف الثامن"
+        }
+      },
+      "aliases": [
+        "الصف الثامن الأساسي"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ar": "الصف التاسع"
+        }
+      },
+      "aliases": [
+        "الصف التاسع الأساسي"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ar": "الصف الأول الثانوي"
+        }
+      },
+      "aliases": [
+        "1st Secondary",
+        "أول ثانوي"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ar": "الصف الثاني الثانوي"
+        }
+      },
+      "aliases": [
+        "2nd Secondary",
+        "ثاني ثانوي"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ar": "الصف الثالث الثانوي"
+        }
+      },
+      "aliases": [
+        "3rd Secondary",
+        "ثالث ثانوي"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Yemen Education Sector Plan 2024-2030 (Ministry of Education)",
+      "url": "https://educationoutloud.org/wp-content/uploads/2025/12/Yemen-ESP-2024-2030-ENG.pdf"
+    },
+    {
+      "title": "مكتب التربية والتعليم بمحافظة شبوة يعلن النتيجة العامة لامتحانات إنهاء مرحلة التعليم الأساسي (الصف التاسع) 2025–2026م",
+      "url": "https://moe-ye.net/36877"
+    },
+    {
+      "title": "اختتام الملتقى التعليمي الخامس لطلبة الصف الثالث الثانوي بتعز | وزارة التربية والتعليم اليمنية",
+      "url": "https://moe-ye.net/37219"
+    }
+  ],
+  "notes": "Ministry of Education Sector Plan 2024-2030: basic education is Grades 1-9 from age six (free and compulsory under the 1992 General Law on Education), secondary is Grades 10-12. Grade 9 ends basic education with a national exam; secondary years are named first to third secondary (الصف الأول/الثاني/الثالث الثانوي). The ESP is published by the Ministry and hosted by Education Out Loud (GPE)."
+}

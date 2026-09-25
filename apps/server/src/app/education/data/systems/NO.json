@@ -1,0 +1,291 @@
+{
+  "id": "NO",
+  "country": "NO",
+  "name": {
+    "en": "Norway",
+    "local": {
+      "nb": "Norge",
+      "nn": "Noreg"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "barnetrinnet",
+      "name": {
+        "en": "Primary (barnetrinnet)",
+        "local": {
+          "nb": "Barnetrinnet"
+        }
+      }
+    },
+    {
+      "id": "ungdomstrinnet",
+      "name": {
+        "en": "Lower secondary (ungdomstrinnet)",
+        "local": {
+          "nb": "Ungdomstrinnet"
+        }
+      }
+    },
+    {
+      "id": "videregaende",
+      "name": {
+        "en": "Upper secondary (videregående opplæring)",
+        "local": {
+          "nb": "Videregående opplæring",
+          "nn": "Vidaregåande opplæring"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "trinn-1",
+      "stage": "barnetrinnet",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Year 1",
+        "local": {
+          "nb": "1. trinn",
+          "nn": "1. trinn"
+        }
+      },
+      "aliases": [
+        "1. klasse",
+        "1. årstrinn",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "trinn-2",
+      "stage": "barnetrinnet",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Year 2",
+        "local": {
+          "nb": "2. trinn",
+          "nn": "2. trinn"
+        }
+      },
+      "aliases": [
+        "2. klasse",
+        "2. årstrinn",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "trinn-3",
+      "stage": "barnetrinnet",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Year 3",
+        "local": {
+          "nb": "3. trinn",
+          "nn": "3. trinn"
+        }
+      },
+      "aliases": [
+        "3. klasse",
+        "3. årstrinn",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "trinn-4",
+      "stage": "barnetrinnet",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Year 4",
+        "local": {
+          "nb": "4. trinn",
+          "nn": "4. trinn"
+        }
+      },
+      "aliases": [
+        "4. klasse",
+        "4. årstrinn",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "trinn-5",
+      "stage": "barnetrinnet",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Year 5",
+        "local": {
+          "nb": "5. trinn",
+          "nn": "5. trinn"
+        }
+      },
+      "aliases": [
+        "5. klasse",
+        "5. årstrinn",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "trinn-6",
+      "stage": "barnetrinnet",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Year 6",
+        "local": {
+          "nb": "6. trinn",
+          "nn": "6. trinn"
+        }
+      },
+      "aliases": [
+        "6. klasse",
+        "6. årstrinn",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "trinn-7",
+      "stage": "barnetrinnet",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Year 7",
+        "local": {
+          "nb": "7. trinn",
+          "nn": "7. trinn"
+        }
+      },
+      "aliases": [
+        "7. klasse",
+        "7. årstrinn",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "trinn-8",
+      "stage": "ungdomstrinnet",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Year 8",
+        "local": {
+          "nb": "8. trinn",
+          "nn": "8. trinn"
+        }
+      },
+      "aliases": [
+        "8. klasse",
+        "8. årstrinn",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "trinn-9",
+      "stage": "ungdomstrinnet",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Year 9",
+        "local": {
+          "nb": "9. trinn",
+          "nn": "9. trinn"
+        }
+      },
+      "aliases": [
+        "9. klasse",
+        "9. årstrinn",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "trinn-10",
+      "stage": "ungdomstrinnet",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Year 10",
+        "local": {
+          "nb": "10. trinn",
+          "nn": "10. trinn"
+        }
+      },
+      "aliases": [
+        "10. klasse",
+        "10. årstrinn",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "vg1",
+      "stage": "videregaende",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Vg1",
+        "local": {
+          "nb": "Vg1",
+          "nn": "Vg1"
+        }
+      },
+      "aliases": [
+        "VG1",
+        "1. videregående"
+      ]
+    },
+    {
+      "id": "vg2",
+      "stage": "videregaende",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Vg2",
+        "local": {
+          "nb": "Vg2",
+          "nn": "Vg2"
+        }
+      },
+      "aliases": [
+        "VG2",
+        "2. videregående"
+      ]
+    },
+    {
+      "id": "vg3",
+      "stage": "videregaende",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Vg3",
+        "local": {
+          "nb": "Vg3",
+          "nn": "Vg3"
+        }
+      },
+      "aliases": [
+        "VG3",
+        "3. videregående"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Lov om grunnskoleopplæringa og den vidaregåande opplæringa (opplæringslova) - Lovdata",
+      "url": "https://lovdata.no/dokument/NL/lov/2023-06-09-30"
+    },
+    {
+      "title": "2. Grunnskolen | udir.no",
+      "url": "https://www.udir.no/regelverkstolkninger/opplaring/Innhold-i-opplaringen/tidligere-rundskriv/udir-1-2019/vedlegg-1/2.-grunnskolen"
+    },
+    {
+      "title": "Curriculum for Norwegian (NOR01‑06) | udir.no",
+      "url": "https://www.udir.no/lk20/nor01-06?lang=eng"
+    }
+  ],
+  "notes": "Children start school in the calendar year they turn six. Vg1–Vg3 are the three years of the general studies programmes; vocational programmes usually have two years in school (Vg1–Vg2) followed by two years of apprenticeship."
+}

@@ -1,0 +1,235 @@
+{
+  "id": "PR",
+  "country": "PR",
+  "name": {
+    "en": "Puerto Rico",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primario",
+      "name": {
+        "en": "Primary (elementary and intermediate)",
+        "local": {
+          "es": "Nivel primario"
+        }
+      }
+    },
+    {
+      "id": "secundario",
+      "name": {
+        "en": "Secondary (high school)",
+        "local": {
+          "es": "Nivel secundario (escuela superior)"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grado-1",
+      "stage": "primario",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "1st Grade",
+        "local": {
+          "es": "Primer grado"
+        }
+      },
+      "aliases": [
+        "1.º grado",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "grado-2",
+      "stage": "primario",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "2nd Grade",
+        "local": {
+          "es": "Segundo grado"
+        }
+      },
+      "aliases": [
+        "2.º grado",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "grado-3",
+      "stage": "primario",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "3rd Grade",
+        "local": {
+          "es": "Tercer grado"
+        }
+      },
+      "aliases": [
+        "3.º grado",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "grado-4",
+      "stage": "primario",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "4th Grade",
+        "local": {
+          "es": "Cuarto grado"
+        }
+      },
+      "aliases": [
+        "4.º grado",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "grado-5",
+      "stage": "primario",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "5th Grade",
+        "local": {
+          "es": "Quinto grado"
+        }
+      },
+      "aliases": [
+        "5.º grado",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "grado-6",
+      "stage": "primario",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6th Grade",
+        "local": {
+          "es": "Sexto grado"
+        }
+      },
+      "aliases": [
+        "6.º grado",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "grado-7",
+      "stage": "primario",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "7th Grade",
+        "local": {
+          "es": "Séptimo grado"
+        }
+      },
+      "aliases": [
+        "7.º grado",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "grado-8",
+      "stage": "primario",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "8th Grade",
+        "local": {
+          "es": "Octavo grado"
+        }
+      },
+      "aliases": [
+        "8.º grado",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "grado-9",
+      "stage": "secundario",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "9th Grade",
+        "local": {
+          "es": "Noveno grado"
+        }
+      },
+      "aliases": [
+        "9.º grado",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "grado-10",
+      "stage": "secundario",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "10th Grade",
+        "local": {
+          "es": "Décimo grado"
+        }
+      },
+      "aliases": [
+        "10.º grado",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "grado-11",
+      "stage": "secundario",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "11th Grade",
+        "local": {
+          "es": "Undécimo grado"
+        }
+      },
+      "aliases": [
+        "11.º grado",
+        "Grade 11"
+      ]
+    },
+    {
+      "id": "grado-12",
+      "stage": "secundario",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "12th Grade",
+        "local": {
+          "es": "Duodécimo grado"
+        }
+      },
+      "aliases": [
+        "12.º grado",
+        "Grade 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Reglamento de las Escuelas Primarias y Secundarias del Departamento de Educación de Puerto Rico (archived copy)",
+      "url": "https://web.archive.org/web/20260211041032/https://de.pr.gov/wp-content/uploads/2020/01/17-reglamento-de-las-escuelas-primarias-y-secundarias.pdf"
+    },
+    {
+      "title": "Ley de Reforma Educativa de Puerto Rico [85-2018]",
+      "url": "https://bvirtualogp.pr.gov/ogp/Bvirtual/LeyesOrganicas/pdf/85-2018.pdf"
+    }
+  ],
+  "notes": "DEPR's regulation defines primary schools as grades 1–6 or 1–8 and secondary schools (escuela superior) as grades 9–12. In everyday use grades are also grouped as elemental, intermedia and superior, and some schools still run 7–9 / 10–12. de.pr.gov was unreachable from our network, so its regulation is cited from the Web Archive."
+}

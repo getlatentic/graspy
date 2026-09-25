@@ -1,0 +1,254 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "KG",
+  "country": "KG",
+  "name": {
+    "en": "Kyrgyzstan",
+    "local": {
+      "ky": "Кыргызстан",
+      "ru": "Кыргызстан"
+    }
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary general education",
+        "local": {
+          "ky": "Башталгыч жалпы билим берүү",
+          "ru": "Начальное общее образование"
+        }
+      }
+    },
+    {
+      "id": "basic",
+      "name": {
+        "en": "Basic general education",
+        "local": {
+          "ky": "Негизги жалпы билим берүү",
+          "ru": "Основное общее образование"
+        }
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary general education",
+        "local": {
+          "ky": "Орто жалпы билим берүү",
+          "ru": "Среднее общее образование"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ky": "1-класс",
+          "ru": "1 класс"
+        }
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ky": "2-класс",
+          "ru": "2 класс"
+        }
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ky": "3-класс",
+          "ru": "3 класс"
+        }
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ky": "4-класс",
+          "ru": "4 класс"
+        }
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ky": "5-класс",
+          "ru": "5 класс"
+        }
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ky": "6-класс",
+          "ru": "6 класс"
+        }
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "basic",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ky": "7-класс",
+          "ru": "7 класс"
+        }
+      },
+      "aliases": [
+        "Class 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "basic",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ky": "8-класс",
+          "ru": "8 класс"
+        }
+      },
+      "aliases": [
+        "Class 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "basic",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ky": "9-класс",
+          "ru": "9 класс"
+        }
+      },
+      "aliases": [
+        "Class 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ky": "10-класс",
+          "ru": "10 класс"
+        }
+      },
+      "aliases": [
+        "Class 10"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ky": "11-класс",
+          "ru": "11 класс"
+        }
+      },
+      "aliases": [
+        "Class 11"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ky": "12-класс",
+          "ru": "12 класс"
+        }
+      },
+      "aliases": [
+        "Class 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Концепция перехода на двенадцатилетнее школьное образование в Кыргызской Республике (ПКМ № 654, ред. 30.05.2025)",
+      "url": "https://cbd.minjust.gov.kg/29-2/edition/33231/ru"
+    },
+    {
+      "title": "Кыргыз Республикасында он эки жылдык мектептик билим берүүгө өтүү концепциясы",
+      "url": "https://cbd.minjust.gov.kg/29-2/edition/33231/kg"
+    },
+    {
+      "title": "Агартуу министрлигинин буйругу № 969/1, 09.07.2026: 2026-2027-окуу жылына базистик окуу пландары",
+      "url": "https://edu.gov.kg/media/uploads/2026/07/27/969-1-09072026-12.pdf"
+    }
+  ],
+  "notes": "The 12-year school (6+3+3) replaces the 4+5+2 eleven-year school from 2025/26: six-year-olds enter 1-класс, and pupils already in school skip one grade once while moving to the new standards (Ministry order 969/1, 2026). The first 12-year school certificates are due in 2028/29 and the first full 12-year cohort graduates in 2036/37; until then some pupils still finish after 11-класс under the old standard. Primary is taught as 4+2 years."
+}

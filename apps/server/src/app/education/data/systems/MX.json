@@ -1,0 +1,254 @@
+{
+  "id": "MX",
+  "country": "MX",
+  "name": {
+    "en": "Mexico",
+    "local": {
+      "es": "México"
+    }
+  },
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "stages": [
+    {
+      "id": "primaria",
+      "name": {
+        "en": "Primary (Primaria)",
+        "local": {
+          "es": "Educación primaria"
+        }
+      }
+    },
+    {
+      "id": "secundaria",
+      "name": {
+        "en": "Lower secondary (Secundaria)",
+        "local": {
+          "es": "Educación secundaria"
+        }
+      }
+    },
+    {
+      "id": "media-superior",
+      "name": {
+        "en": "Upper secondary (Bachillerato / Preparatoria)",
+        "local": {
+          "es": "Educación media superior"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primaria",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado de primaria"
+        }
+      },
+      "aliases": [
+        "1° de primaria",
+        "Primero de primaria"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primaria",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado de primaria"
+        }
+      },
+      "aliases": [
+        "2° de primaria",
+        "Segundo de primaria"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primaria",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado de primaria"
+        }
+      },
+      "aliases": [
+        "3° de primaria",
+        "Tercero de primaria"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primaria",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado de primaria"
+        }
+      },
+      "aliases": [
+        "4° de primaria",
+        "Cuarto de primaria"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primaria",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado de primaria"
+        }
+      },
+      "aliases": [
+        "5° de primaria",
+        "Quinto de primaria"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primaria",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado de primaria"
+        }
+      },
+      "aliases": [
+        "6° de primaria",
+        "Sexto de primaria"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "secundaria",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Primer grado de secundaria"
+        }
+      },
+      "aliases": [
+        "1° de secundaria",
+        "Primero de secundaria"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "secundaria",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Segundo grado de secundaria"
+        }
+      },
+      "aliases": [
+        "2° de secundaria",
+        "Segundo de secundaria"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "secundaria",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Tercer grado de secundaria"
+        }
+      },
+      "aliases": [
+        "3° de secundaria",
+        "Tercero de secundaria"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "media-superior",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Primer año de bachillerato"
+        }
+      },
+      "aliases": [
+        "1° de prepa",
+        "Primer año de preparatoria",
+        "1er y 2° semestre"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "media-superior",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Segundo año de bachillerato"
+        }
+      },
+      "aliases": [
+        "2° de prepa",
+        "Segundo año de preparatoria",
+        "3er y 4° semestre"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "media-superior",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Tercer año de bachillerato"
+        }
+      },
+      "aliases": [
+        "3° de prepa",
+        "Tercer año de preparatoria",
+        "5° y 6° semestre"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Catálogo de libros de texto gratuitos de nivel primaria. Ciclo Escolar 2026 - 2027.",
+      "url": "https://libros.conaliteg.gob.mx/primaria.html"
+    },
+    {
+      "title": "Catálogo de libros de texto gratuitos de nivel educación secundaria. Ciclo Escolar 2026 - 2027.",
+      "url": "https://libros.conaliteg.gob.mx/secundaria.html"
+    },
+    {
+      "title": "Perfil del pais | SITEAL",
+      "url": "https://siteal.iiep.unesco.org/pais/mexico"
+    }
+  ],
+  "notes": "Primaria (6 grados) and secundaria (3 grados) names are confirmed by SEP's CONALITEG catalogues. Unconfirmed: the year names of media superior (ages 15–17). It is organised by semesters or other periods that differ by subsystem (bachillerato general, tecnológico, preparatorias of universities); most last 3 years (6 semesters), some 2."
+}

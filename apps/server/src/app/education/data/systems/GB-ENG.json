@@ -1,0 +1,220 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "GB-ENG",
+  "country": "GB",
+  "name": {
+    "en": "England"
+  },
+  "stages": [
+    {
+      "id": "ks1",
+      "name": {
+        "en": "Key Stage 1"
+      }
+    },
+    {
+      "id": "ks2",
+      "name": {
+        "en": "Key Stage 2"
+      }
+    },
+    {
+      "id": "ks3",
+      "name": {
+        "en": "Key Stage 3"
+      }
+    },
+    {
+      "id": "ks4",
+      "name": {
+        "en": "Key Stage 4 (GCSE)"
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth form (16 to 18)"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "ks1",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1"
+      },
+      "aliases": [
+        "Y1"
+      ]
+    },
+    {
+      "id": "year-2",
+      "stage": "ks1",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2"
+      },
+      "aliases": [
+        "Y2"
+      ]
+    },
+    {
+      "id": "year-3",
+      "stage": "ks2",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3"
+      },
+      "aliases": [
+        "Y3"
+      ]
+    },
+    {
+      "id": "year-4",
+      "stage": "ks2",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4"
+      },
+      "aliases": [
+        "Y4"
+      ]
+    },
+    {
+      "id": "year-5",
+      "stage": "ks2",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5"
+      },
+      "aliases": [
+        "Y5"
+      ]
+    },
+    {
+      "id": "year-6",
+      "stage": "ks2",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6"
+      },
+      "aliases": [
+        "Y6"
+      ]
+    },
+    {
+      "id": "year-7",
+      "stage": "ks3",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7"
+      },
+      "aliases": [
+        "Y7"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "ks3",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8"
+      },
+      "aliases": [
+        "Y8"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "ks3",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9"
+      },
+      "aliases": [
+        "Y9"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "ks4",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10"
+      },
+      "aliases": [
+        "Y10"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "ks4",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11"
+      },
+      "aliases": [
+        "Y11"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "sixth-form",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12"
+      },
+      "aliases": [
+        "Y12",
+        "Lower Sixth"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13"
+      },
+      "aliases": [
+        "Y13",
+        "Upper Sixth"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "The national curriculum – GOV.UK",
+      "url": "https://www.gov.uk/national-curriculum"
+    },
+    {
+      "title": "School admissions: school starting age – GOV.UK",
+      "url": "https://www.gov.uk/schools-admissions/school-starting-age"
+    },
+    {
+      "title": "Glossary – Explore education statistics (DfE)",
+      "url": "https://explore-education-statistics.service.gov.uk/glossary"
+    },
+    {
+      "title": "School leaving age – GOV.UK",
+      "url": "https://www.gov.uk/know-when-you-can-leave-school"
+    }
+  ],
+  "notes": "England is the UK's main system: most UK pupils are in England's schools. Reception, in the Early Years Foundation Stage, is left out. Pupils may leave school after Year 11 but must stay in education or training until 18; Years 12–13 are sixth form or college. Wales, Scotland and Northern Ireland have their own systems."
+}

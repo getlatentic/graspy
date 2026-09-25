@@ -1,0 +1,222 @@
+{
+  "id": "CK",
+  "country": "CK",
+  "name": {
+    "en": "Cook Islands",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {
+          "rar": "Pupu 1"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {
+          "rar": "Pupu 2"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {
+          "rar": "Pupu 3"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {
+          "rar": "Pupu 4"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {
+          "rar": "Pupu 5"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {
+          "rar": "Pupu 6"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "secondary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {
+          "rar": "Pupu 7"
+        }
+      },
+      "aliases": [
+        "Form 1"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {
+          "rar": "Pupu 8"
+        }
+      },
+      "aliases": [
+        "Form 2"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {
+          "rar": "Pupu 9"
+        }
+      },
+      "aliases": [
+        "Form 3"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {
+          "rar": "Pupu 10"
+        }
+      },
+      "aliases": [
+        "Form 4"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {
+          "rar": "Pupu 11"
+        }
+      },
+      "aliases": [
+        "Form 5"
+      ]
+    },
+    {
+      "id": "year-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Year 12",
+        "local": {
+          "rar": "Pupu 12"
+        }
+      },
+      "aliases": [
+        "Form 6"
+      ]
+    },
+    {
+      "id": "year-13",
+      "stage": "secondary",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Year 13",
+        "local": {
+          "rar": "Pupu 13"
+        }
+      },
+      "aliases": [
+        "Form 7"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "2023 Education Statistics Report",
+      "url": "https://education.gov.ck/wp-content/uploads/2025/03/2023-Education-Statistics-Report-.pdf"
+    },
+    {
+      "title": "Mātemātika e te Tātitiki – Mathematics and Statistics, Pupu 1 - 10 (The Cook Islands Curriculum)",
+      "url": "https://education.gov.ck/wp-content/uploads/2026/04/17.03.26-Maths-FINAL.pdf"
+    }
+  ],
+  "notes": "The ministry's statistics count Years 1–6 as primary and Years 7–13 as secondary, though schools vary (some run ECE–Year 8, and Tereora College takes Years 9–13). Children start at 5; like New Zealand, curriculum documents also use Year 0 for new entrants. The bilingual curriculum calls a year 'Pupu' in Cook Islands Māori. NCEA is taken in Years 11–13."
+}

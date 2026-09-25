@@ -1,0 +1,238 @@
+{
+  "id": "TG",
+  "country": "TG",
+  "name": {
+    "en": "Togo",
+    "local": {
+      "fr": "Togo"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "fr": "Premier cycle de l'enseignement secondaire général"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Second cycle de l'enseignement secondaire général"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "cp1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CP1",
+        "local": {
+          "fr": "Cours préparatoire première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cp2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CP2",
+        "local": {
+          "fr": "Cours préparatoire deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce1",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "ce2",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm1",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen première année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "cm2",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen deuxième année"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "6e",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "lower-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème"
+      ]
+    },
+    {
+      "id": "2nde",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde"
+      ]
+    },
+    {
+      "id": "1re",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "1ère",
+        "Première"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "upper-secondary",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Terminale",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Tle"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Tableau de bord de l'éducation au Togo 2019-2020",
+      "url": "https://education.gouv.tg/wp-content/uploads/2020/12/Tableau-de-bord-de-leducation-au_Togo_2019_2020.pdf"
+    },
+    {
+      "title": "Aide-mémoire de la dixième revue sectorielle conjointe de l'éducation (2025)",
+      "url": "https://education.gouv.tg/wp-content/uploads/2025/10/Aide-me%CC%81moire-RSCE_Togo_2025.pdf"
+    }
+  ],
+  "notes": "Official entry age to CP1 is 6. Exams: CEPD after CM2, BEPC after 3e, BAC I after 1re and BAC II after Terminale."
+}

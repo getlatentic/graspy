@@ -1,0 +1,19 @@
+{
+  "name": "@graspy/server",
+  "version": "1.0.0",
+  "description": "graspy backend on Cloudflare Python Workers: DSPy generation pipelines and a DSPy ReAct tutor over A2A.",
+  "scripts": {
+    "preinstall": "if command -v uv >/dev/null 2>&1; then uv sync; else echo 'uv not installed - skipping Python sync'; fi",
+    "start": "uv run serve",
+    "dev": "UVICORN_RELOAD=true uv run serve",
+    "worker:dev": "npm --prefix ui run build && uv run pywrangler dev",
+    "deploy": "npm --prefix ui run build && uv run pywrangler deploy",
+    "test": "uv run pytest",
+    "lint": "uv run ruff check src tests scripts && uv run ruff format --check src tests scripts"
+  },
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "devDependencies": {
+    "wrangler": "^4.136.1"
+  }
+}

@@ -1,0 +1,255 @@
+{
+  "id": "CF",
+  "country": "CF",
+  "name": {
+    "en": "Central African Republic",
+    "local": {}
+  },
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "stages": [
+    {
+      "id": "fondamental-1",
+      "name": {
+        "en": "Primary (Fondamental 1)",
+        "local": {
+          "fr": "Enseignement fondamental 1"
+        }
+      }
+    },
+    {
+      "id": "fondamental-2",
+      "name": {
+        "en": "Lower secondary (Fondamental 2, Collège)",
+        "local": {
+          "fr": "Enseignement fondamental 2"
+        }
+      }
+    },
+    {
+      "id": "secondaire",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Enseignement secondaire général"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "ci",
+      "stage": "fondamental-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CI",
+        "local": {
+          "fr": "Cours d'initiation"
+        }
+      },
+      "aliases": [
+        "Cours d'initiation"
+      ]
+    },
+    {
+      "id": "cp",
+      "stage": "fondamental-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CP",
+        "local": {
+          "fr": "Cours préparatoire"
+        }
+      },
+      "aliases": [
+        "Cours préparatoire"
+      ]
+    },
+    {
+      "id": "ce1",
+      "stage": "fondamental-1",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire 1re année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 1"
+      ]
+    },
+    {
+      "id": "ce2",
+      "stage": "fondamental-1",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire 2e année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 2"
+      ]
+    },
+    {
+      "id": "cm1",
+      "stage": "fondamental-1",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen 1re année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 1"
+      ]
+    },
+    {
+      "id": "cm2",
+      "stage": "fondamental-1",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen 2e année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 2"
+      ]
+    },
+    {
+      "id": "sixieme",
+      "stage": "fondamental-2",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème",
+        "Sixième"
+      ]
+    },
+    {
+      "id": "cinquieme",
+      "stage": "fondamental-2",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème",
+        "Cinquième"
+      ]
+    },
+    {
+      "id": "quatrieme",
+      "stage": "fondamental-2",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème",
+        "Quatrième"
+      ]
+    },
+    {
+      "id": "troisieme",
+      "stage": "fondamental-2",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème",
+        "Troisième"
+      ]
+    },
+    {
+      "id": "seconde",
+      "stage": "secondaire",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde",
+        "2de"
+      ]
+    },
+    {
+      "id": "premiere",
+      "stage": "secondaire",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "1ère",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "Première",
+        "1re"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "secondaire",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Tle",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Terminale",
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Cartographie de la CITE 2011 de République centrafricaine",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Central%20African%20Republic.xlsx"
+    },
+    {
+      "title": "Annuaire Statistique 2016/2017 – MEPSTA, République Centrafricaine",
+      "url": "https://reliefweb.int/attachments/16b52ab4-a5d6-3a15-aeb5-697207d60431/annuaire_statistique_2017-2018-vf.pdf"
+    }
+  ],
+  "notes": "The MEPSTA Annuaire Statistique 2016/2017 confirms the structure: Fondamental 1 of six years (CI, CP, CE1, CE2, CM1, CM2) ending with the CEF 1, Fondamental 2 of four years (6ème–3ème) ending with the Brevet des Collèges, and secondary of three years (2nde, 1ère, Tle, series A–D) ending with the Baccalauréat. Entry at 6 and the concours d'entrée en 6ème are from the ISCED 2011 mapping for the Central African Republic cited here, which names the exams CEPE and BEPC; no official source confirms them."
+}

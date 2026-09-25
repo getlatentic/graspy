@@ -1,0 +1,248 @@
+{
+  "id": "NL",
+  "country": "NL",
+  "name": {
+    "en": "Netherlands",
+    "local": {
+      "nl": "Nederland"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "basisschool",
+      "name": {
+        "en": "Primary (basisschool, groep 3–8)",
+        "local": {
+          "nl": "Basisschool"
+        }
+      }
+    },
+    {
+      "id": "onderbouw",
+      "name": {
+        "en": "Lower secondary (onderbouw)",
+        "local": {
+          "nl": "Onderbouw"
+        }
+      }
+    },
+    {
+      "id": "bovenbouw",
+      "name": {
+        "en": "Upper secondary (bovenbouw)",
+        "local": {
+          "nl": "Bovenbouw"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "groep-3",
+      "stage": "basisschool",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Group 3",
+        "local": {
+          "nl": "Groep 3"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "groep-4",
+      "stage": "basisschool",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Group 4",
+        "local": {
+          "nl": "Groep 4"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "groep-5",
+      "stage": "basisschool",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Group 5",
+        "local": {
+          "nl": "Groep 5"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "groep-6",
+      "stage": "basisschool",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Group 6",
+        "local": {
+          "nl": "Groep 6"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "groep-7",
+      "stage": "basisschool",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Group 7",
+        "local": {
+          "nl": "Groep 7"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "groep-8",
+      "stage": "basisschool",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Group 8",
+        "local": {
+          "nl": "Groep 8"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "klas-1",
+      "stage": "onderbouw",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Klas 1 (brugklas)",
+        "local": {
+          "nl": "Klas 1"
+        }
+      },
+      "aliases": [
+        "Brugklas",
+        "Leerjaar 1",
+        "vwo 1",
+        "V1",
+        "havo 1",
+        "vmbo 1"
+      ]
+    },
+    {
+      "id": "klas-2",
+      "stage": "onderbouw",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Klas 2",
+        "local": {
+          "nl": "Klas 2"
+        }
+      },
+      "aliases": [
+        "Leerjaar 2",
+        "vwo 2",
+        "V2",
+        "havo 2",
+        "vmbo 2"
+      ]
+    },
+    {
+      "id": "klas-3",
+      "stage": "onderbouw",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Klas 3",
+        "local": {
+          "nl": "Klas 3"
+        }
+      },
+      "aliases": [
+        "Leerjaar 3",
+        "vwo 3",
+        "V3",
+        "havo 3",
+        "vmbo 3"
+      ]
+    },
+    {
+      "id": "klas-4",
+      "stage": "bovenbouw",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Klas 4",
+        "local": {
+          "nl": "Klas 4"
+        }
+      },
+      "aliases": [
+        "Leerjaar 4",
+        "vwo 4",
+        "V4",
+        "havo 4",
+        "vmbo 4"
+      ]
+    },
+    {
+      "id": "klas-5",
+      "stage": "bovenbouw",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Klas 5",
+        "local": {
+          "nl": "Klas 5"
+        }
+      },
+      "aliases": [
+        "Leerjaar 5",
+        "vwo 5",
+        "V5",
+        "havo 5"
+      ]
+    },
+    {
+      "id": "klas-6",
+      "stage": "bovenbouw",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Klas 6",
+        "local": {
+          "nl": "Klas 6"
+        }
+      },
+      "aliases": [
+        "Leerjaar 6",
+        "vwo 6",
+        "V6"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Toetsen basisschool: verplicht ontwikkeling leerling volgen | Rijksoverheid.nl",
+      "url": "https://www.rijksoverheid.nl/themas/onderwijs/basisonderwijs/verplichte-toetsen-basisschool"
+    },
+    {
+      "title": "Hoe zit de havo in elkaar? | Rijksoverheid.nl",
+      "url": "https://www.rijksoverheid.nl/vraag-en-antwoord/voortgezet-onderwijs/hoe-zit-de-havo-in-elkaar"
+    },
+    {
+      "title": "Hoe zit het vwo in elkaar? | Rijksoverheid.nl",
+      "url": "https://www.rijksoverheid.nl/vraag-en-antwoord/voortgezet-onderwijs/hoe-zit-het-vwo-in-elkaar"
+    }
+  ],
+  "notes": "Basisschool has groep 1–8; groep 1–2 are kleuters (pre-primary, from age 4) and are excluded, so year 1 is groep 3. Secondary depends on track: vmbo 4 years, havo 5, vwo 6. The file follows vwo, the longest track; havo and vmbo learners use the same klas numbers for their shorter courses."
+}

@@ -1,0 +1,63 @@
+{
+  "practice": {
+    "label": "Ìdánrawò",
+    "showHint": "Fi àmọ̀ràn hàn",
+    "correct": "Ó tọ̀nà!",
+    "incorrect": "Kò tíì tọ̀nà",
+    "another": "Ìbéèrè mìíràn",
+    "explain": "Ṣàlàyé ìdáhùn náà",
+    "askAnotherRight": "Mo gba èyí tọ̀nà. Fún mi ní òmíràn, tí ó le díẹ̀ sí i.",
+    "askAnotherWrong": "Mo yan {chosen}, kò sì tọ̀nà. Fún mi ní ìbéèrè mìíràn bí i rẹ̀.",
+    "askExplain": "Mo yan {chosen}, ṣùgbọ́n ìdáhùn ni {answer}. Ṣàlàyé ìdí rẹ̀ ní ìgbésẹ̀-ìgbésẹ̀.",
+    "busy": "Dúró kí graspy parí ìdáhùn rẹ̀, lẹ́yìn náà tẹ̀ ẹ́ lẹ́ẹ̀kan sí i.",
+    "questionOf": "Ìbéèrè {n} nínú {total}",
+    "score": "O gba {right} nínú {total} tọ̀nà.",
+    "anotherSet": "Àwọn ìbéèrè mìíràn",
+    "explainWrong": "Ṣàlàyé àwọn àṣìṣe mi",
+    "askAnotherSet": "Mo gba {right} nínú {total} tọ̀nà. Fún mi ní àwọn ìbéèrè mìíràn bí irú wọ̀nyí.",
+    "askExplainWrong": "Ṣàlàyé àwọn tí mo ṣì, ní ìgbésẹ̀-ìgbésẹ̀:",
+    "wrongLine": "{question}: Mo yan {chosen}, ṣùgbọ́n ìdáhùn ni {answer}."
+  },
+  "passage": {
+    "label": "Kíkà",
+    "another": "Àyọkà mìíràn",
+    "askAnother": "Mo gba {right} nínú {total} tọ̀nà lórí àyọkà náà. Fún mi ní òmíràn láti kà."
+  },
+  "lesson": {
+    "label": "Ẹ̀kọ́",
+    "loading": "À ń múra ẹ̀kọ́ rẹ sílẹ̀",
+    "loadFailed": "Ẹ̀kọ́ náà kò ṣí",
+    "tryAgain": "Gbìyànjú lẹ́ẹ̀kan sí i",
+    "topicOf": "Àkòrí {current} nínú {total}",
+    "slideOf": "{current} nínú {total}",
+    "slides": "Àwọn ojú-ìwé",
+    "previous": "Ti tẹ́lẹ̀",
+    "next": "Tó kàn",
+    "checkUnderstanding": "Yẹ òye rẹ wò",
+    "startFinalCheck": "Bẹ̀rẹ̀ ìdánwò ìkẹyìn",
+    "checkpoint": "Ìdánwò kékeré",
+    "finalCheck": "Ìdánwò ìkẹyìn",
+    "backToLesson": "Padà sí ẹ̀kọ́",
+    "checkAnswer": "Yẹ ìdáhùn wò",
+    "correct": "O ṣe dáadáa!",
+    "incorrect": "Kò tíì péye",
+    "correctFallback": "Sọ fún olùkọ́ bí o ṣe ṣiṣẹ́ rẹ̀.",
+    "incorrectFallback": "Béèrè lọ́wọ́ olùkọ́ nípa apá tó le, lẹ́yìn náà gbìyànjú lẹ́ẹ̀kan sí i.",
+    "nextSlide": "Ojú-ìwé tó kàn",
+    "finishLesson": "Parí ẹ̀kọ́",
+    "diagramSource": "Orísun àwòrán",
+    "slideType": {
+      "concept": "Èrò tuntun",
+      "example": "Àpẹẹrẹ tí a ṣiṣẹ́",
+      "practice": "Ìdánrawò pẹ̀lú ìtọ́sọ́nà",
+      "misconception": "Àṣìṣe tó wọ́pọ̀",
+      "summary": "Àkópọ̀",
+      "default": "Ẹ̀kọ́"
+    },
+    "arriving": "Àwọn ojú-ìwé mìíràn ń bọ̀.",
+    "failed": "Nǹkan kan ṣàṣìṣe nígbà tí a ń múra ẹ̀kọ́ yìí. Gbìyànjú lẹ́ẹ̀kan sí i, tàbí padà sẹ́yìn kí o yan àkòrí mìíràn.",
+    "partial": "A kò lè múra apá kan ẹ̀kọ́ yìí sílẹ̀. Ka èyí tó wà níbí, tàbí gbìyànjú lẹ́ẹ̀kan sí i fún gbogbo ẹ̀kọ́ náà.",
+    "finishing": "À ń fi pamọ́…",
+    "objectives": "Nínú ẹ̀kọ́ yìí, wàá kọ́ láti"
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "id": "CM",
+  "country": "CM",
+  "name": {
+    "en": "Cameroon",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaire",
+      "name": {
+        "en": "Primary (Francophone subsystem)",
+        "local": {
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "premier-cycle",
+      "name": {
+        "en": "Lower secondary (Premier cycle)",
+        "local": {
+          "fr": "Premier cycle de l'enseignement secondaire"
+        }
+      }
+    },
+    {
+      "id": "second-cycle",
+      "name": {
+        "en": "Upper secondary (Second cycle)",
+        "local": {
+          "fr": "Second cycle de l'enseignement secondaire"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "sil",
+      "stage": "primaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "SIL",
+        "local": {
+          "fr": "Section d'initiation au langage"
+        }
+      },
+      "aliases": [
+        "Section d'initiation au langage"
+      ]
+    },
+    {
+      "id": "cp",
+      "stage": "primaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CP",
+        "local": {
+          "fr": "Cours préparatoire"
+        }
+      },
+      "aliases": [
+        "Cours préparatoire"
+      ]
+    },
+    {
+      "id": "ce1",
+      "stage": "primaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire 1re année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 1"
+      ]
+    },
+    {
+      "id": "ce2",
+      "stage": "primaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire 2e année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 2"
+      ]
+    },
+    {
+      "id": "cm1",
+      "stage": "primaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen 1re année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 1"
+      ]
+    },
+    {
+      "id": "cm2",
+      "stage": "primaire",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen 2e année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 2"
+      ]
+    },
+    {
+      "id": "sixieme",
+      "stage": "premier-cycle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème",
+        "Sixième"
+      ]
+    },
+    {
+      "id": "cinquieme",
+      "stage": "premier-cycle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème",
+        "Cinquième"
+      ]
+    },
+    {
+      "id": "quatrieme",
+      "stage": "premier-cycle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème",
+        "Quatrième"
+      ]
+    },
+    {
+      "id": "troisieme",
+      "stage": "premier-cycle",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème",
+        "Troisième"
+      ]
+    },
+    {
+      "id": "seconde",
+      "stage": "second-cycle",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "2nde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde",
+        "2de"
+      ]
+    },
+    {
+      "id": "premiere",
+      "stage": "second-cycle",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "1ère",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "Première",
+        "1re"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "second-cycle",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Tle",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Terminale",
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "PASEC2019 – Qualité du système éducatif francophone camerounais",
+      "url": "https://www.minedub.cm/wp-content/uploads/2023/06/Cameroun_Rapport_PASEC2019_Fr.pdf"
+    },
+    {
+      "title": "Sous système francophone",
+      "url": "https://www.minesec.gov.cm/web/index.php/fr/systeme-educatif/offre-de-formation/sous-systeme-francophone"
+    },
+    {
+      "title": "Liste officielle des manuels scolaires, année 2023/2024 – Enseignement secondaire général (premier et second cycles)",
+      "url": "https://www.minesec.gov.cm/web/attachments/article/120/liste_officielle_manuels_scolaires_ESGF_2023_2024.pdf"
+    }
+  ],
+  "notes": "Francophone subsystem (about 85% of primary pupils). Cameroon's anglophone subsystem, dominant in the North-West and South-West, names its classes Class 1–6, Form 1–5, Lower and Upper Sixth and is a separate file, CM-ANG. Primary is in three levels: Niveau I (SIL, CP), II (CE1, CE2), III (CM1, CM2). The BEPC ends 3e, the Probatoire is taken in 1ère and the Baccalauréat in Terminale. Technical secondary also runs 4 + 3 years."
+}

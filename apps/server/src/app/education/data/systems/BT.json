@@ -1,0 +1,217 @@
+{
+  "id": "BT",
+  "country": "BT",
+  "name": {
+    "en": "Bhutan",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "middle-secondary",
+      "name": {
+        "en": "Middle Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "higher-secondary",
+      "name": {
+        "en": "Higher Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "class-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Class I",
+        "local": {}
+      },
+      "aliases": [
+        "Class 1",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "class-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Class II",
+        "local": {}
+      },
+      "aliases": [
+        "Class 2",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "class-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Class III",
+        "local": {}
+      },
+      "aliases": [
+        "Class 3",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "class-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Class IV",
+        "local": {}
+      },
+      "aliases": [
+        "Class 4",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "class-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Class V",
+        "local": {}
+      },
+      "aliases": [
+        "Class 5",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "class-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Class VI",
+        "local": {}
+      },
+      "aliases": [
+        "Class 6",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "class-7",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Class VII",
+        "local": {}
+      },
+      "aliases": [
+        "Class 7",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "class-8",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Class VIII",
+        "local": {}
+      },
+      "aliases": [
+        "Class 8",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "class-9",
+      "stage": "middle-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Class IX",
+        "local": {}
+      },
+      "aliases": [
+        "Class 9",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "class-10",
+      "stage": "middle-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Class X",
+        "local": {}
+      },
+      "aliases": [
+        "Class 10",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "class-11",
+      "stage": "higher-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Class XI",
+        "local": {}
+      },
+      "aliases": [
+        "Class 11",
+        "Grade 11"
+      ]
+    },
+    {
+      "id": "class-12",
+      "stage": "higher-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Class XII",
+        "local": {}
+      },
+      "aliases": [
+        "Class 12",
+        "Grade 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Statistical Yearbook of Bhutan 2025, National Statistics Bureau",
+      "url": "https://nsb.gov.bt/wp-content/uploads/2026/09/Statistical-Yearbook-2025.pdf"
+    }
+  ],
+  "notes": "Bhutan counts Class PP (pre-primary) as the first of seven primary years (PP–VI); like other pre-primary years it is left out here, so Class I is year 1. The Statistical Yearbook of Bhutan 2025 cited here gives primary PP–VI, lower secondary VII–VIII, middle IX–X and higher secondary XI–XII, with 5 as the official age for PP, so Class I starts at 6. News reports say the National Education Policy 2025 set PP entry at 6 from 2026 and the Cabinet then kept it at 5; neither official text could be fetched."
+}

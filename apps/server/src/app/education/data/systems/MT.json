@@ -1,0 +1,219 @@
+{
+  "id": "MT",
+  "country": "MT",
+  "name": {
+    "en": "Malta",
+    "local": {
+      "mt": "Malta"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "early-years",
+      "name": {
+        "en": "Early Years",
+        "local": {}
+      }
+    },
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "middle",
+      "name": {
+        "en": "Middle School",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "sixth-form",
+      "name": {
+        "en": "Sixth Form (Post-Secondary)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "year-1",
+      "stage": "early-years",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Year 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-2",
+      "stage": "early-years",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Year 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Year 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Year 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Year 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Year 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "year-7",
+      "stage": "middle",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Year 7",
+        "local": {}
+      },
+      "aliases": [
+        "Form 1"
+      ]
+    },
+    {
+      "id": "year-8",
+      "stage": "middle",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Year 8",
+        "local": {}
+      },
+      "aliases": [
+        "Form 2"
+      ]
+    },
+    {
+      "id": "year-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Year 9",
+        "local": {}
+      },
+      "aliases": [
+        "Form 3"
+      ]
+    },
+    {
+      "id": "year-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Year 10",
+        "local": {}
+      },
+      "aliases": [
+        "Form 4"
+      ]
+    },
+    {
+      "id": "year-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Year 11",
+        "local": {}
+      },
+      "aliases": [
+        "Form 5"
+      ]
+    },
+    {
+      "id": "sixth-form-1",
+      "stage": "sixth-form",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Sixth Form 1st Year",
+        "local": {}
+      },
+      "aliases": [
+        "First Year Junior College"
+      ]
+    },
+    {
+      "id": "sixth-form-2",
+      "stage": "sixth-form",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Sixth Form 2nd Year",
+        "local": {}
+      },
+      "aliases": [
+        "Second Year Junior College"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Education – International Learners Directorate",
+      "url": "https://ildmalta.gov.mt/education/"
+    },
+    {
+      "title": "Junior College Prospectus",
+      "url": "https://euroguidance.gov.mt/wp-content/uploads/2024/10/JCProspectus.pdf"
+    }
+  ],
+  "notes": "Primary school runs six years from age 5, but Years 1–2 belong to the Early Years cycle with Kindergarten 1–2 and Years 3–6 to the Primary cycle. Years 7–8 are middle school and Years 9–11 secondary (formerly Forms 1–5). Sixth form is two post-compulsory years at Junior College, Higher Secondary School or MCAST, where the two years are called first and second year."
+}

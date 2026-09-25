@@ -1,0 +1,210 @@
+{
+  "id": "AE",
+  "country": "AE",
+  "name": {
+    "en": "United Arab Emirates",
+    "local": {
+      "ar": "الإمارات العربية المتحدة"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "cycle-1",
+      "name": {
+        "en": "Cycle 1 (Primary)",
+        "local": {
+          "ar": "الحلقة الأولى"
+        }
+      }
+    },
+    {
+      "id": "cycle-2",
+      "name": {
+        "en": "Cycle 2 (Intermediate)",
+        "local": {
+          "ar": "الحلقة الثانية"
+        }
+      }
+    },
+    {
+      "id": "cycle-3",
+      "name": {
+        "en": "Cycle 3 (Secondary)",
+        "local": {
+          "ar": "الحلقة الثالثة"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "cycle-1",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "ar": "الصف الأول"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "cycle-1",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "ar": "الصف الثاني"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "cycle-1",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "ar": "الصف الثالث"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "cycle-1",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "ar": "الصف الرابع"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "cycle-2",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "ar": "الصف الخامس"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "cycle-2",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "ar": "الصف السادس"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "cycle-2",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "ar": "الصف السابع"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "cycle-2",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "ar": "الصف الثامن"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "cycle-3",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "ar": "الصف التاسع"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "cycle-3",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "ar": "الصف العاشر"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "cycle-3",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "ar": "الصف الحادي عشر"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "cycle-3",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "ar": "الصف الثاني عشر"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Stages and streams of school education | The Official Platform of the UAE Government",
+      "url": "https://u.ae/en/information-and-services/education/school-education-k-12/stages-and-streams-of-school-education"
+    },
+    {
+      "title": "مراحل ومسارات التعليم المدرسي | المنصة الرسمية لحكومة الإمارات العربية المتحدة",
+      "url": "https://u.ae/ar/information-and-services/education/school-education-k-12/stages-and-streams-of-school-education"
+    }
+  ],
+  "notes": "Ministry of Education public schools; cycles of four grades each since 2018-19 (six before). The English u.ae page says Cycle 2 is Grades 6 to 8, an evident typo: the same page says each cycle has four grades and the Arabic page gives الخامس حتى الثامن (5 to 8). From Grade 9 students follow General, Advanced, Elite or Applied streams. Many private schools follow British, American, Indian or other curricula with their own year names; this file covers the national system."
+}

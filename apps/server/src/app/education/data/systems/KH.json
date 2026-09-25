@@ -1,0 +1,210 @@
+{
+  "id": "KH",
+  "country": "KH",
+  "name": {
+    "en": "Cambodia",
+    "local": {
+      "km": "កម្ពុជា"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "km": "បឋមសិក្សា"
+        }
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary",
+        "local": {
+          "km": "មធ្យមសិក្សាបឋមភូមិ"
+        }
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary",
+        "local": {
+          "km": "មធ្យមសិក្សាទុតិយភូមិ"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "km": "ថ្នាក់ទី១"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "km": "ថ្នាក់ទី២"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "km": "ថ្នាក់ទី៣"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "km": "ថ្នាក់ទី៤"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "km": "ថ្នាក់ទី៥"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "km": "ថ្នាក់ទី៦"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "km": "ថ្នាក់ទី៧"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "km": "ថ្នាក់ទី៨"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "km": "ថ្នាក់ទី៩"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "upper-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "km": "ថ្នាក់ទី១០"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "km": "ថ្នាក់ទី១១"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "km": "ថ្នាក់ទី១២"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Curriculum Framework of General Education and Technical Education (MoEYS, 2015)",
+      "url": "https://moeys.gov.kh/storage/uploads/documents/65bcc1a4d6ae8.pdf"
+    },
+    {
+      "title": "វគ្គសិក្សាដោយ នាយកដ្ឋានបឋមសិក្សា | ថ្នាលអភិវឌ្ឍសមត្ថភាព",
+      "url": "https://cdp.moeys.gov.kh/enrol/cpdlist/index.php?pagetype=provider&pd=PED"
+    }
+  ],
+  "notes": "Structure 6+3+3 (grades 1-6, 7-9, 10-12). Grade 12 ends with the national upper secondary examination."
+}

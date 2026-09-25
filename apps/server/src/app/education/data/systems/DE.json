@@ -1,0 +1,273 @@
+{
+  "id": "DE",
+  "country": "DE",
+  "name": {
+    "en": "Germany",
+    "local": {
+      "de": "Deutschland"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "grundschule",
+      "name": {
+        "en": "Primary (Grundschule)",
+        "local": {
+          "de": "Grundschule"
+        }
+      }
+    },
+    {
+      "id": "sekundarstufe-1",
+      "name": {
+        "en": "Lower secondary (Sekundarstufe I)",
+        "local": {
+          "de": "Sekundarstufe I"
+        }
+      }
+    },
+    {
+      "id": "sekundarstufe-2",
+      "name": {
+        "en": "Upper secondary (gymnasiale Oberstufe)",
+        "local": {
+          "de": "Gymnasiale Oberstufe"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "klasse-1",
+      "stage": "grundschule",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "de": "1. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 1",
+        "Jahrgangsstufe 1"
+      ]
+    },
+    {
+      "id": "klasse-2",
+      "stage": "grundschule",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "de": "2. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 2",
+        "Jahrgangsstufe 2"
+      ]
+    },
+    {
+      "id": "klasse-3",
+      "stage": "grundschule",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "de": "3. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 3",
+        "Jahrgangsstufe 3"
+      ]
+    },
+    {
+      "id": "klasse-4",
+      "stage": "grundschule",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "de": "4. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 4",
+        "Jahrgangsstufe 4"
+      ]
+    },
+    {
+      "id": "klasse-5",
+      "stage": "sekundarstufe-1",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "de": "5. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 5",
+        "Jahrgangsstufe 5"
+      ]
+    },
+    {
+      "id": "klasse-6",
+      "stage": "sekundarstufe-1",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "de": "6. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 6",
+        "Jahrgangsstufe 6"
+      ]
+    },
+    {
+      "id": "klasse-7",
+      "stage": "sekundarstufe-1",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "de": "7. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 7",
+        "Jahrgangsstufe 7"
+      ]
+    },
+    {
+      "id": "klasse-8",
+      "stage": "sekundarstufe-1",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "de": "8. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 8",
+        "Jahrgangsstufe 8"
+      ]
+    },
+    {
+      "id": "klasse-9",
+      "stage": "sekundarstufe-1",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "de": "9. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 9",
+        "Jahrgangsstufe 9"
+      ]
+    },
+    {
+      "id": "klasse-10",
+      "stage": "sekundarstufe-1",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "de": "10. Klasse"
+        }
+      },
+      "aliases": [
+        "Klasse 10",
+        "Jahrgangsstufe 10"
+      ]
+    },
+    {
+      "id": "klasse-11",
+      "stage": "sekundarstufe-2",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "de": "11. Klasse (Einführungsphase)"
+        }
+      },
+      "aliases": [
+        "E-Phase",
+        "EF",
+        "Klasse 11",
+        "Jahrgangsstufe 11"
+      ]
+    },
+    {
+      "id": "klasse-12",
+      "stage": "sekundarstufe-2",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "de": "12. Klasse (Qualifikationsphase 1)"
+        }
+      },
+      "aliases": [
+        "Q1",
+        "Q12",
+        "Klasse 12",
+        "Jahrgangsstufe 12"
+      ]
+    },
+    {
+      "id": "klasse-13",
+      "stage": "sekundarstufe-2",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Grade 13",
+        "local": {
+          "de": "13. Klasse (Qualifikationsphase 2)"
+        }
+      },
+      "aliases": [
+        "Q2",
+        "Q13",
+        "Abiturjahrgang",
+        "Klasse 13",
+        "Jahrgangsstufe 13"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Grundstruktur des Bildungswesens in der Bundesrepublik Deutschland",
+      "url": "https://www.kmk.org/fileadmin/Dateien/pdf/Dokumentation/de_2023.pdf"
+    },
+    {
+      "title": "Sekundarstufe I - Kultusministerkonferenz",
+      "url": "https://www.kmk.org/bildungsministerkonferenz/vertiefende-bildungsinhalte/bildungswege-und-schulabschluesse/sekundarstufe-i.html"
+    },
+    {
+      "title": "Gymnasiale Oberstufe und Abitur - Kultusministerkonferenz",
+      "url": "https://www.kmk.org/bildungsministerkonferenz/vertiefende-bildungsinhalte/bildungswege-und-schulabschluesse/gymnasiale-oberstufe-und-abitur.html"
+    }
+  ],
+  "notes": "Follows the 13-year route to the Abitur (G9): Grundschule 1–4, Sekundarstufe I 5–10, gymnasiale Oberstufe 11–13 (one-year Einführungsphase, two-year Qualifikationsphase). The Länder differ: some keep a 12-year Gymnasium (G8), where the Einführungsphase is Klasse 10 and the Abitur comes after Klasse 12; Berlin and Brandenburg have a six-year Grundschule. Oberstufe year names also vary by Land (e.g. E1/E2, Q11/Q12 in G8)."
+}

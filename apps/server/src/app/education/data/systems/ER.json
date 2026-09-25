@@ -1,0 +1,178 @@
+{
+  "id": "ER",
+  "country": "ER",
+  "name": {
+    "en": "Eritrea",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementary",
+      "name": {
+        "en": "Elementary",
+        "local": {}
+      }
+    },
+    {
+      "id": "middle",
+      "name": {
+        "en": "Middle",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "elementary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "elementary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "elementary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "elementary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "elementary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "middle",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Eritrea: Overview of its National Curriculum – Eritrea Ministry of Information",
+      "url": "https://shabait.com/2020/10/14/eritrea-overview-of-its-national-curriculum/"
+    },
+    {
+      "title": "Eritrea ISCED 2011 Mapping",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Eritrea.xlsx"
+    }
+  ],
+  "notes": "Elementary (grades 1–5, from age 6) and middle (grades 6–8) form compulsory basic education, ending with the Grade 8 national examination. Secondary lasts 4 years; streams (natural or social science) start in grade 11 and grade 12 ends with the ESECE."
+}

@@ -1,0 +1,21 @@
+{
+  "name": "graspy",
+  "version": "1.0.0",
+  "license": "AGPL-3.0-only",
+  "packageManager": "npm@10.9.2",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
+  },
+  "workspaces": [
+    "apps/*",
+    "apps/server/ui"
+  ],
+  "devDependencies": {
+    "turbo": "^2.5.8"
+  },
+  "description": "graspy: an AI tutor that writes a school curriculum and teaches it in the learner's own language"
+}

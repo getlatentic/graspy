@@ -1,0 +1,214 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "NG",
+  "country": "NG",
+  "name": {
+    "en": "Nigeria"
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary"
+      }
+    },
+    {
+      "id": "jss",
+      "name": {
+        "en": "Junior Secondary School"
+      }
+    },
+    {
+      "id": "sss",
+      "name": {
+        "en": "Senior Secondary School"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primary-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary 1"
+      },
+      "aliases": [
+        "Primary One",
+        "Pry 1",
+        "Basic 1"
+      ]
+    },
+    {
+      "id": "primary-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary 2"
+      },
+      "aliases": [
+        "Primary Two",
+        "Pry 2",
+        "Basic 2"
+      ]
+    },
+    {
+      "id": "primary-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary 3"
+      },
+      "aliases": [
+        "Primary Three",
+        "Pry 3",
+        "Basic 3"
+      ]
+    },
+    {
+      "id": "primary-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary 4"
+      },
+      "aliases": [
+        "Primary Four",
+        "Pry 4",
+        "Basic 4"
+      ]
+    },
+    {
+      "id": "primary-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary 5"
+      },
+      "aliases": [
+        "Primary Five",
+        "Pry 5",
+        "Basic 5"
+      ]
+    },
+    {
+      "id": "primary-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Primary 6"
+      },
+      "aliases": [
+        "Primary Six",
+        "Pry 6",
+        "Basic 6"
+      ]
+    },
+    {
+      "id": "jss-1",
+      "stage": "jss",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "JSS 1"
+      },
+      "aliases": [
+        "JS 1",
+        "JSS1",
+        "Basic 7"
+      ]
+    },
+    {
+      "id": "jss-2",
+      "stage": "jss",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "JSS 2"
+      },
+      "aliases": [
+        "JS 2",
+        "JSS2",
+        "Basic 8"
+      ]
+    },
+    {
+      "id": "jss-3",
+      "stage": "jss",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "JSS 3"
+      },
+      "aliases": [
+        "JS 3",
+        "JSS3",
+        "Basic 9"
+      ]
+    },
+    {
+      "id": "sss-1",
+      "stage": "sss",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "SS 1"
+      },
+      "aliases": [
+        "SSS 1",
+        "SS1",
+        "Senior Secondary 1"
+      ]
+    },
+    {
+      "id": "sss-2",
+      "stage": "sss",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "SS 2"
+      },
+      "aliases": [
+        "SSS 2",
+        "SS2",
+        "Senior Secondary 2"
+      ]
+    },
+    {
+      "id": "sss-3",
+      "stage": "sss",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "SS 3"
+      },
+      "aliases": [
+        "SSS 3",
+        "SS3",
+        "Senior Secondary 3"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "FAQs – Universal Basic Education Commission",
+      "url": "https://ubec.gov.ng/faqs/"
+    },
+    {
+      "title": "NERDC press release on the new federal curriculum (2025)",
+      "url": "https://nerdc.gov.ng/content_manager/Press%20Release%20On%20New%20FG%20Curriculum.pdf"
+    },
+    {
+      "title": "NERDC Basic and Senior Secondary Education Curriculum Offerings",
+      "url": "https://nerdc.gov.ng/content_manager/Basic%20and%20Senior%20Secondary%20Education%20Curriculum%20Offerings.pdf"
+    }
+  ],
+  "notes": "Primary and JSS make up the nine years of Universal Basic Education. A 2025 proposal for twelve uninterrupted years of basic education, without the JSS/SSS split, had not been put in place: the curricula NERDC released in September 2025 still start at Primary 1, Primary 4, JSS 1 and SS 1. The Basic 7–9 names for JSS are common but not in the cited pages."
+}

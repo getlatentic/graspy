@@ -1,0 +1,196 @@
+{
+  "id": "BB",
+  "country": "BB",
+  "name": {
+    "en": "Barbados",
+    "local": {}
+  },
+  "main": true,
+  "status": "draft",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "infants-a",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Infants A",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "infants-b",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Infants B",
+        "local": {}
+      },
+      "aliases": [
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "class-1",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Class 1",
+        "local": {}
+      },
+      "aliases": [
+        "Class One",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "class-2",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Class 2",
+        "local": {}
+      },
+      "aliases": [
+        "Class Two",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "class-3",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Class 3",
+        "local": {}
+      },
+      "aliases": [
+        "Class Three",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "class-4",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Class 4",
+        "local": {}
+      },
+      "aliases": [
+        "Class Four",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "secondary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": [
+        "First Form",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "secondary",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": [
+        "Second Form",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "secondary",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": [
+        "Third Form",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "secondary",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": [
+        "Fourth Form",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "form-5",
+      "stage": "secondary",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Form 5",
+        "local": {}
+      },
+      "aliases": [
+        "Fifth Form",
+        "Grade 11"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Primary School Syllabus – Ministry of Education Technological and Vocational Training",
+      "url": "https://education.gov.bb/resources/primary-school-syllabus/"
+    },
+    {
+      "title": "Examinations – Ministry of Education Technological and Vocational Training",
+      "url": "https://education.gov.bb/about/departments/examinations/"
+    },
+    {
+      "title": "Government Secondary Schools of Barbados 2022 Guide",
+      "url": "https://education.gov.bb/wp-content/uploads/2022/08/2022_Common_Entrance_Booklet.pdf"
+    }
+  ],
+  "draftedBy": "claude-code",
+  "notes": "Reception (age 4) is pre-primary and left out. In Aug 2025 the Minister announced grades from Sept 2026 (Infants A/B = Grades 1–2, Classes 1–4 = Grades 3–6, Forms 1–5 = Grades 7–11; press reports only), but Ministry notices of Aug–Sep 2026 still use Classes and Forms, so the grades are aliases. Unconfirmed from an official page: the name Infants A (Infants B, Classes 1–4 and Forms are confirmed)."
+}

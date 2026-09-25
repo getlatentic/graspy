@@ -1,0 +1,233 @@
+{
+  "id": "PY",
+  "country": "PY",
+  "name": {
+    "en": "Paraguay",
+    "local": {
+      "es": "Paraguay"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "escolar-basica",
+      "name": {
+        "en": "Basic School Education (Educación Escolar Básica)",
+        "local": {
+          "es": "Educación Escolar Básica"
+        }
+      }
+    },
+    {
+      "id": "media",
+      "name": {
+        "en": "Upper Secondary (Educación Media)",
+        "local": {
+          "es": "Educación Media"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grado-1",
+      "stage": "escolar-basica",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado"
+        }
+      },
+      "aliases": [
+        "1.° grado",
+        "1er grado"
+      ]
+    },
+    {
+      "id": "grado-2",
+      "stage": "escolar-basica",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado"
+        }
+      },
+      "aliases": [
+        "2.° grado",
+        "2do grado"
+      ]
+    },
+    {
+      "id": "grado-3",
+      "stage": "escolar-basica",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado"
+        }
+      },
+      "aliases": [
+        "3.° grado",
+        "3er grado"
+      ]
+    },
+    {
+      "id": "grado-4",
+      "stage": "escolar-basica",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado"
+        }
+      },
+      "aliases": [
+        "4.° grado",
+        "4to grado"
+      ]
+    },
+    {
+      "id": "grado-5",
+      "stage": "escolar-basica",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado"
+        }
+      },
+      "aliases": [
+        "5.° grado",
+        "5to grado"
+      ]
+    },
+    {
+      "id": "grado-6",
+      "stage": "escolar-basica",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado"
+        }
+      },
+      "aliases": [
+        "6.° grado",
+        "6to grado"
+      ]
+    },
+    {
+      "id": "grado-7",
+      "stage": "escolar-basica",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Séptimo grado"
+        }
+      },
+      "aliases": [
+        "7.° grado",
+        "7mo grado"
+      ]
+    },
+    {
+      "id": "grado-8",
+      "stage": "escolar-basica",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Octavo grado"
+        }
+      },
+      "aliases": [
+        "8.° grado",
+        "8vo grado"
+      ]
+    },
+    {
+      "id": "grado-9",
+      "stage": "escolar-basica",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Noveno grado"
+        }
+      },
+      "aliases": [
+        "9.° grado",
+        "9no grado"
+      ]
+    },
+    {
+      "id": "curso-1",
+      "stage": "media",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Primer curso de la Educación Media"
+        }
+      },
+      "aliases": [
+        "1.° curso",
+        "1er curso"
+      ]
+    },
+    {
+      "id": "curso-2",
+      "stage": "media",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Segundo curso de la Educación Media"
+        }
+      },
+      "aliases": [
+        "2.° curso",
+        "2do curso"
+      ]
+    },
+    {
+      "id": "curso-3",
+      "stage": "media",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Tercer curso de la Educación Media"
+        }
+      },
+      "aliases": [
+        "3.° curso",
+        "3er curso"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ley N° 1264 / GENERAL DE EDUCACIÓN",
+      "url": "https://www.bacn.gov.py/leyes-paraguayas/3766/ley-n-1264-general-de-educaci-n"
+    }
+  ],
+  "notes": "Ley 1264: Educación Escolar Básica has nine grades in three ciclos (art. 32, 34), after preescolar at age 5 (art. 29); Educación Media has three cursos (art. 37), as bachillerato or technical training. The law does not set which grades form each ciclo. Spanish and Guaraní are both official; no Guaraní grade names were found in official sources. The MEC site (mec.gov.py) could not be reached."
+}

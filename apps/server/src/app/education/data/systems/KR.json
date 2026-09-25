@@ -1,0 +1,242 @@
+{
+  "id": "KR",
+  "country": "KR",
+  "name": {
+    "en": "Republic of Korea",
+    "local": {
+      "ko": "대한민국"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "elementary",
+      "name": {
+        "en": "Elementary school",
+        "local": {
+          "ko": "초등학교"
+        }
+      }
+    },
+    {
+      "id": "middle",
+      "name": {
+        "en": "Middle school",
+        "local": {
+          "ko": "중학교"
+        }
+      }
+    },
+    {
+      "id": "high",
+      "name": {
+        "en": "High school",
+        "local": {
+          "ko": "고등학교"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "elementary-1",
+      "stage": "elementary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Elementary Grade 1",
+        "local": {
+          "ko": "초등학교 1학년"
+        }
+      },
+      "aliases": [
+        "초1",
+        "Grade 1"
+      ]
+    },
+    {
+      "id": "elementary-2",
+      "stage": "elementary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Elementary Grade 2",
+        "local": {
+          "ko": "초등학교 2학년"
+        }
+      },
+      "aliases": [
+        "초2",
+        "Grade 2"
+      ]
+    },
+    {
+      "id": "elementary-3",
+      "stage": "elementary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Elementary Grade 3",
+        "local": {
+          "ko": "초등학교 3학년"
+        }
+      },
+      "aliases": [
+        "초3",
+        "Grade 3"
+      ]
+    },
+    {
+      "id": "elementary-4",
+      "stage": "elementary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Elementary Grade 4",
+        "local": {
+          "ko": "초등학교 4학년"
+        }
+      },
+      "aliases": [
+        "초4",
+        "Grade 4"
+      ]
+    },
+    {
+      "id": "elementary-5",
+      "stage": "elementary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Elementary Grade 5",
+        "local": {
+          "ko": "초등학교 5학년"
+        }
+      },
+      "aliases": [
+        "초5",
+        "Grade 5"
+      ]
+    },
+    {
+      "id": "elementary-6",
+      "stage": "elementary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Elementary Grade 6",
+        "local": {
+          "ko": "초등학교 6학년"
+        }
+      },
+      "aliases": [
+        "초6",
+        "Grade 6"
+      ]
+    },
+    {
+      "id": "middle-1",
+      "stage": "middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Middle School Grade 1",
+        "local": {
+          "ko": "중학교 1학년"
+        }
+      },
+      "aliases": [
+        "중1",
+        "Grade 7"
+      ]
+    },
+    {
+      "id": "middle-2",
+      "stage": "middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Middle School Grade 2",
+        "local": {
+          "ko": "중학교 2학년"
+        }
+      },
+      "aliases": [
+        "중2",
+        "Grade 8"
+      ]
+    },
+    {
+      "id": "middle-3",
+      "stage": "middle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Middle School Grade 3",
+        "local": {
+          "ko": "중학교 3학년"
+        }
+      },
+      "aliases": [
+        "중3",
+        "Grade 9"
+      ]
+    },
+    {
+      "id": "high-1",
+      "stage": "high",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "High School Grade 1",
+        "local": {
+          "ko": "고등학교 1학년"
+        }
+      },
+      "aliases": [
+        "고1",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "high-2",
+      "stage": "high",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "High School Grade 2",
+        "local": {
+          "ko": "고등학교 2학년"
+        }
+      },
+      "aliases": [
+        "고2",
+        "Grade 11"
+      ]
+    },
+    {
+      "id": "high-3",
+      "stage": "high",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "High School Grade 3",
+        "local": {
+          "ko": "고등학교 3학년"
+        }
+      },
+      "aliases": [
+        "고3",
+        "Grade 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "초ㆍ중등교육법 [시행 2025. 10. 2.] [법률 제20862호] | 학교생활기록부 종합지원포털",
+      "url": "https://star.moe.go.kr/web/contents/m20101.do?schM=view&id=96197"
+    }
+  ],
+  "notes": "The school year starts on 1 March. Children enter elementary school on 1 March of the year after they turn six."
+}

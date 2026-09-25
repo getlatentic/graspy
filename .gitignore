@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.turbo/
+.cache/
+tmp/
+.wrangler/
+
+# Logs and runtime
+*.log
+*.pid
+
+# Local settings: secrets live here, never in the repo. The web app's
+# .env.development, .env.staging and .env.production hold only public
+# URLs and are committed.
+.env
+.env.local
+.env.*.local
+.dev.vars
+
+# Editors and OS
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.swp
+._*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Design references, kept locally.
+design/
+
+# Tools' own working files
+.claude/
+.agent/
+internal-docs/
+.eslintcache
+
+# Server (apps/server)
+# The Worker build's vendored packages and its local state.
+apps/server/python_modules/
+apps/server/.venv-workers/
+# The MCP Apps views, built by apps/server/ui (npm --prefix ui run build).
+apps/server/assets/
+# Model output written by scripts/generate_lesson_dataset.py.
+apps/server/data/
+# Mutation testing.
+apps/server/mutants/
+.mutmut-cache
+
+# Web app end-to-end runs (apps/web)
+apps/web/cypress/screenshots/
+apps/web/cypress/videos/

@@ -1,0 +1,268 @@
+{
+  "id": "UY",
+  "country": "UY",
+  "name": {
+    "en": "Uruguay",
+    "local": {
+      "es": "Uruguay"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaria",
+      "name": {
+        "en": "Primary (Educación Primaria)",
+        "local": {
+          "es": "Educación Primaria"
+        }
+      }
+    },
+    {
+      "id": "media-basica",
+      "name": {
+        "en": "Lower Secondary (Educación Media Básica, EBI 3.er ciclo)",
+        "local": {
+          "es": "Educación Básica Integrada – 3.er ciclo"
+        }
+      }
+    },
+    {
+      "id": "media-superior",
+      "name": {
+        "en": "Upper Secondary (Educación Media Superior)",
+        "local": {
+          "es": "Educación Media Superior"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grado-1",
+      "stage": "primaria",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado de Primaria"
+        }
+      },
+      "aliases": [
+        "1.° grado",
+        "1.° año de Primaria",
+        "1.° de escuela"
+      ]
+    },
+    {
+      "id": "grado-2",
+      "stage": "primaria",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado de Primaria"
+        }
+      },
+      "aliases": [
+        "2.° grado",
+        "2.° año de Primaria",
+        "2.° de escuela"
+      ]
+    },
+    {
+      "id": "grado-3",
+      "stage": "primaria",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado de Primaria"
+        }
+      },
+      "aliases": [
+        "3.° grado",
+        "3.° año de Primaria",
+        "3.° de escuela"
+      ]
+    },
+    {
+      "id": "grado-4",
+      "stage": "primaria",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado de Primaria"
+        }
+      },
+      "aliases": [
+        "4.° grado",
+        "4.° año de Primaria",
+        "4.° de escuela"
+      ]
+    },
+    {
+      "id": "grado-5",
+      "stage": "primaria",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado de Primaria"
+        }
+      },
+      "aliases": [
+        "5.° grado",
+        "5.° año de Primaria",
+        "5.° de escuela"
+      ]
+    },
+    {
+      "id": "grado-6",
+      "stage": "primaria",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado de Primaria"
+        }
+      },
+      "aliases": [
+        "6.° grado",
+        "6.° año de Primaria",
+        "6.° de escuela"
+      ]
+    },
+    {
+      "id": "grado-7",
+      "stage": "media-basica",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Séptimo grado de Educación Básica Integrada"
+        }
+      },
+      "aliases": [
+        "7.° grado",
+        "7.° de EBI",
+        "1.° de liceo",
+        "1.° de Educación Media Básica",
+        "1.° de Ciclo Básico"
+      ]
+    },
+    {
+      "id": "grado-8",
+      "stage": "media-basica",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Octavo grado de Educación Básica Integrada"
+        }
+      },
+      "aliases": [
+        "8.° grado",
+        "8.° de EBI",
+        "2.° de liceo",
+        "2.° de Educación Media Básica",
+        "2.° de Ciclo Básico"
+      ]
+    },
+    {
+      "id": "grado-9",
+      "stage": "media-basica",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Noveno grado de Educación Básica Integrada"
+        }
+      },
+      "aliases": [
+        "9.° grado",
+        "9.° de EBI",
+        "3.° de liceo",
+        "3.° de Educación Media Básica",
+        "3.° de Ciclo Básico"
+      ]
+    },
+    {
+      "id": "ems-1",
+      "stage": "media-superior",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Primer año de Educación Media Superior"
+        }
+      },
+      "aliases": [
+        "1.° de EMS",
+        "4.° de liceo",
+        "1.° de Bachillerato"
+      ]
+    },
+    {
+      "id": "ems-2",
+      "stage": "media-superior",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Segundo año de Educación Media Superior"
+        }
+      },
+      "aliases": [
+        "2.° de EMS",
+        "5.° de liceo",
+        "2.° de Bachillerato"
+      ]
+    },
+    {
+      "id": "ems-3",
+      "stage": "media-superior",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Tercer año de Educación Media Superior"
+        }
+      },
+      "aliases": [
+        "3.° de EMS",
+        "6.° de liceo",
+        "3.° de Bachillerato"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Educación Básica Integrada (EBI) Plan de estudios",
+      "url": "https://www.anep.edu.uy/sites/default/files/images/Archivos/doc-curriculares/generales/2025/ebi/Educacio%CC%81n%20Ba%CC%81sica%20Integrada%20Plan%20de%20estudios%202022%20v8.pdf"
+    },
+    {
+      "title": "Plan para la Educación Media Superior 2023",
+      "url": "https://anep.edu.uy/sites/default/files/images/Archivos/doc-curriculares/generales/2025/ems/Plan%20EMS%202023%20v3.pdf"
+    },
+    {
+      "title": "Preinscripciones digitales 2026 para Educación Inicial y 1° grado de Primaria | ANEP",
+      "url": "https://www.anep.edu.uy/preinscripciones-digitales-2026-para-educacion-inicial-1deg-grado-primaria"
+    }
+  ],
+  "notes": "Since the 2023 curriculum reform, Educación Básica Integrada numbers grades 1.° to 9.°: 7.°–9.° are the former 1.°–3.° of Educación Media Básica (liceo or UTU ciclo básico). Media Superior years are 1.°–3.° de EMS, traditionally 4.°–6.° de liceo. Primary pages say both '1.° grado' and '1.° año'."
+}

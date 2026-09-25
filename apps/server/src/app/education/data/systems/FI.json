@@ -1,0 +1,258 @@
+{
+  "id": "FI",
+  "country": "FI",
+  "name": {
+    "en": "Finland",
+    "local": {
+      "fi": "Suomi",
+      "sv": "Finland"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "grades-1-6",
+      "name": {
+        "en": "Basic education, grades 1–6",
+        "local": {
+          "fi": "Perusopetus, vuosiluokat 1–6",
+          "sv": "Grundläggande utbildning, årskurserna 1–6"
+        }
+      }
+    },
+    {
+      "id": "grades-7-9",
+      "name": {
+        "en": "Basic education, grades 7–9",
+        "local": {
+          "fi": "Perusopetus, vuosiluokat 7–9",
+          "sv": "Grundläggande utbildning, årskurserna 7–9"
+        }
+      }
+    },
+    {
+      "id": "lukio",
+      "name": {
+        "en": "General upper secondary (lukio)",
+        "local": {
+          "fi": "Lukio"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "luokka-1",
+      "stage": "grades-1-6",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "fi": "1. luokka",
+          "sv": "Årskurs 1"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 1",
+        "Åk 1",
+        "Ekaluokka"
+      ]
+    },
+    {
+      "id": "luokka-2",
+      "stage": "grades-1-6",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "fi": "2. luokka",
+          "sv": "Årskurs 2"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 2",
+        "Åk 2"
+      ]
+    },
+    {
+      "id": "luokka-3",
+      "stage": "grades-1-6",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "fi": "3. luokka",
+          "sv": "Årskurs 3"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 3",
+        "Åk 3"
+      ]
+    },
+    {
+      "id": "luokka-4",
+      "stage": "grades-1-6",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "fi": "4. luokka",
+          "sv": "Årskurs 4"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 4",
+        "Åk 4"
+      ]
+    },
+    {
+      "id": "luokka-5",
+      "stage": "grades-1-6",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "fi": "5. luokka",
+          "sv": "Årskurs 5"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 5",
+        "Åk 5"
+      ]
+    },
+    {
+      "id": "luokka-6",
+      "stage": "grades-1-6",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "fi": "6. luokka",
+          "sv": "Årskurs 6"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 6",
+        "Åk 6"
+      ]
+    },
+    {
+      "id": "luokka-7",
+      "stage": "grades-7-9",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "fi": "7. luokka",
+          "sv": "Årskurs 7"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 7",
+        "Åk 7"
+      ]
+    },
+    {
+      "id": "luokka-8",
+      "stage": "grades-7-9",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "fi": "8. luokka",
+          "sv": "Årskurs 8"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 8",
+        "Åk 8"
+      ]
+    },
+    {
+      "id": "luokka-9",
+      "stage": "grades-7-9",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "fi": "9. luokka",
+          "sv": "Årskurs 9"
+        }
+      },
+      "aliases": [
+        "Vuosiluokka 9",
+        "Åk 9"
+      ]
+    },
+    {
+      "id": "lukio-1",
+      "stage": "lukio",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Lukio year 1",
+        "local": {
+          "fi": "Lukion 1. vuosi"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "lukio-2",
+      "stage": "lukio",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Lukio year 2",
+        "local": {
+          "fi": "Lukion 2. vuosi"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "lukio-3",
+      "stage": "lukio",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Lukio year 3",
+        "local": {
+          "fi": "Lukion 3. vuosi"
+        }
+      },
+      "aliases": [
+        "Abi",
+        "Abiturientti",
+        "Abivuosi"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Perusopetus | Opetushallitus",
+      "url": "https://www.oph.fi/fi/koulutus-ja-tutkinnot/perusopetus"
+    },
+    {
+      "title": "Grundläggande utbildning | Utbildningsstyrelsen",
+      "url": "https://www.oph.fi/sv/utbildning-och-examina/grundlaggande-utbildning"
+    },
+    {
+      "title": "Lukiokoulutus | Opetushallitus",
+      "url": "https://www.oph.fi/fi/koulutus-ja-tutkinnot/lukiokoulutus"
+    }
+  ],
+  "notes": "School starts in the year a child turns 7; the year of pre-primary education (esiopetus) before it is compulsory but excluded. Grades 1–6 are commonly called alakoulu and 7–9 yläkoulu. Lukio is course-based (150 credits) and usually takes three years; vocational upper secondary is a separate route. Swedish-language schools use årskurs 1–9."
+}

@@ -1,0 +1,314 @@
+[
+  {
+    "input": "",
+    "expected": "subject"
+  },
+  {
+    "input": "   ",
+    "expected": "subject"
+  },
+  {
+    "input": "  Mathematics  ",
+    "expected": "mathematics"
+  },
+  {
+    "input": "___Math___",
+    "expected": "math"
+  },
+  {
+    "input": "---",
+    "expected": "subject"
+  },
+  {
+    "input": "--Mathematics--",
+    "expected": "mathematics"
+  },
+  {
+    "input": "!!!",
+    "expected": "subject"
+  },
+  {
+    "input": "...",
+    "expected": "subject"
+  },
+  {
+    "input": "🎓",
+    "expected": "subject"
+  },
+  {
+    "input": "🎓 Maths 🎓",
+    "expected": "maths"
+  },
+  {
+    "input": "1 2 3",
+    "expected": "1-2-3"
+  },
+  {
+    "input": "123",
+    "expected": "123"
+  },
+  {
+    "input": "①②③",
+    "expected": "123"
+  },
+  {
+    "input": "a - b",
+    "expected": "a-b"
+  },
+  {
+    "input": "A B C",
+    "expected": "a-b-c"
+  },
+  {
+    "input": "a--b",
+    "expected": "a-b"
+  },
+  {
+    "input": "a-b",
+    "expected": "a-b"
+  },
+  {
+    "input": "aBcDeF",
+    "expected": "abcdef"
+  },
+  {
+    "input": "Ærøskøbing",
+    "expected": "aeroskobing"
+  },
+  {
+    "input": "Agric. Science",
+    "expected": "agric-science"
+  },
+  {
+    "input": "Aƙalla",
+    "expected": "akalla"
+  },
+  {
+    "input": "Ångström",
+    "expected": "angstrom"
+  },
+  {
+    "input": "Ångström Fysik",
+    "expected": "angstrom-fysik"
+  },
+  {
+    "input": "Asụsụ Igbo",
+    "expected": "asusu-igbo"
+  },
+  {
+    "input": "Aƴari",
+    "expected": "ayari"
+  },
+  {
+    "input": "Baƙi",
+    "expected": "baki"
+  },
+  {
+    "input": "Chemistry",
+    "expected": "chemistry"
+  },
+  {
+    "input": "CRE (Christian Religious Education)",
+    "expected": "cre-christian-religious-education"
+  },
+  {
+    "input": "Ɗabi'a",
+    "expected": "dabi-a"
+  },
+  {
+    "input": "Ẹ̀kọ́ Èdè Yorùbá",
+    "expected": "eko-ede-yoruba"
+  },
+  {
+    "input": "English Language",
+    "expected": "english-language"
+  },
+  {
+    "input": "Español",
+    "expected": "espanol"
+  },
+  {
+    "input": "ﬁle",
+    "expected": "file"
+  },
+  {
+    "input": "Física",
+    "expected": "fisica"
+  },
+  {
+    "input": "Físíks",
+    "expected": "fisiks"
+  },
+  {
+    "input": "Further Mathematics",
+    "expected": "further-mathematics"
+  },
+  {
+    "input": "Gaɗa",
+    "expected": "gada"
+  },
+  {
+    "input": "Haɗin Gwiwa",
+    "expected": "hadin-gwiwa"
+  },
+  {
+    "input": "Harshen Hausa",
+    "expected": "harshen-hausa"
+  },
+  {
+    "input": "Ilèkọ̀ Ìmọ̀ Ẹ̀rọ",
+    "expected": "ileko-imo-ero"
+  },
+  {
+    "input": "Ilimin Ƙasa",
+    "expected": "ilimin-kasa"
+  },
+  {
+    "input": "Ìmọ̀ Ìṣirò",
+    "expected": "imo-isiro"
+  },
+  {
+    "input": "İstanbul",
+    "expected": "istanbul"
+  },
+  {
+    "input": "Iyaƙa",
+    "expected": "iyaka"
+  },
+  {
+    "input": "ı",
+    "expected": "ı"
+  },
+  {
+    "input": "Kémistì",
+    "expected": "kemisti"
+  },
+  {
+    "input": "Kimiyyar Halittu da Aƙalla",
+    "expected": "kimiyyar-halittu-da-akalla"
+  },
+  {
+    "input": "Ƙidaya",
+    "expected": "kidaya"
+  },
+  {
+    "input": "Laƙabi",
+    "expected": "lakabi"
+  },
+  {
+    "input": "Malmö Skola",
+    "expected": "malmo-skola"
+  },
+  {
+    "input": "Math & Science",
+    "expected": "math-science"
+  },
+  {
+    "input": "Math:Science",
+    "expected": "math-science"
+  },
+  {
+    "input": "Math.Science",
+    "expected": "math-science"
+  },
+  {
+    "input": "Math/Science",
+    "expected": "math-science"
+  },
+  {
+    "input": "Mathematics",
+    "expected": "mathematics"
+  },
+  {
+    "input": "Mathematics!!!",
+    "expected": "mathematics"
+  },
+  {
+    "input": "Mathématiques",
+    "expected": "mathematiques"
+  },
+  {
+    "input": "Ｍａｔｈｓ",
+    "expected": "maths"
+  },
+  {
+    "input": "Mgbakọ na Mwepụ",
+    "expected": "mgbako-na-mwepu"
+  },
+  {
+    "input": "Nørrebro",
+    "expected": "norrebro"
+  },
+  {
+    "input": "Ọmụmụ Ihe",
+    "expected": "omumu-ihe"
+  },
+  {
+    "input": "Sallaɗi",
+    "expected": "salladi"
+  },
+  {
+    "input": "ß",
+    "expected": "ss"
+  },
+  {
+    "input": "Straße",
+    "expected": "strasse"
+  },
+  {
+    "input": "Taɓawa",
+    "expected": "tabawa"
+  },
+  {
+    "input": "Türkçe",
+    "expected": "turkce"
+  },
+  {
+    "input": "x1y2z3",
+    "expected": "x1y2z3"
+  },
+  {
+    "input": "Ⅻ",
+    "expected": "xii"
+  },
+  {
+    "input": "Ƴancin",
+    "expected": "yancin"
+  },
+  {
+    "input": "Математика",
+    "expected": "математика"
+  },
+  {
+    "input": "اللغة العربية",
+    "expected": "اللغة-العربية"
+  },
+  {
+    "input": "हिन्दी",
+    "expected": "हनद"
+  },
+  {
+    "input": "化学",
+    "expected": "化学"
+  },
+  {
+    "input": "数学",
+    "expected": "数学"
+  },
+  {
+    "input": "الرياضيات",
+    "expected": "الرياضيات"
+  },
+  {
+    "input": "الرِّيَاضِيَّات",
+    "expected": "الرياضيات"
+  },
+  {
+    "input": "التربية الدينية",
+    "expected": "التربية-الدينية"
+  },
+  {
+    "input": "Physics_and Chemistry",
+    "expected": "physics-and-chemistry"
+  }
+]

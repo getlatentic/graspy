@@ -1,0 +1,253 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "MF",
+  "country": "MF",
+  "name": {
+    "en": "Saint Martin (French part)",
+    "local": {
+      "fr": "Saint-Martin"
+    }
+  },
+  "stages": [
+    {
+      "id": "ecole-elementaire",
+      "name": {
+        "en": "Primary (École élémentaire)",
+        "local": {
+          "fr": "École élémentaire"
+        }
+      }
+    },
+    {
+      "id": "college",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "fr": "Collège"
+        }
+      }
+    },
+    {
+      "id": "lycee",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Lycée"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "cp",
+      "stage": "ecole-elementaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "CP",
+        "local": {
+          "fr": "Cours préparatoire"
+        }
+      },
+      "aliases": [
+        "Cours préparatoire"
+      ]
+    },
+    {
+      "id": "ce1",
+      "stage": "ecole-elementaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "CE1",
+        "local": {
+          "fr": "Cours élémentaire première année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 1"
+      ]
+    },
+    {
+      "id": "ce2",
+      "stage": "ecole-elementaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "CE2",
+        "local": {
+          "fr": "Cours élémentaire deuxième année"
+        }
+      },
+      "aliases": [
+        "Cours élémentaire 2"
+      ]
+    },
+    {
+      "id": "cm1",
+      "stage": "ecole-elementaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "CM1",
+        "local": {
+          "fr": "Cours moyen première année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 1"
+      ]
+    },
+    {
+      "id": "cm2",
+      "stage": "ecole-elementaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "CM2",
+        "local": {
+          "fr": "Cours moyen deuxième année"
+        }
+      },
+      "aliases": [
+        "Cours moyen 2"
+      ]
+    },
+    {
+      "id": "6e",
+      "stage": "college",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème",
+        "Sixième"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "college",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème",
+        "Cinquième"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "college",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème",
+        "Quatrième"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "college",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème",
+        "Troisième"
+      ]
+    },
+    {
+      "id": "2de",
+      "stage": "lycee",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "2de",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "Seconde",
+        "2nde"
+      ]
+    },
+    {
+      "id": "1re",
+      "stage": "lycee",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "1re",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "Première",
+        "1ère"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "lycee",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Terminale",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Tle",
+        "Term"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "La carte des formations, c'est quoi ? (Service de l'éducation nationale de Saint-Barthélemy et de Saint-Martin)",
+      "url": "https://senidn.site.ac-guadeloupe.fr/wp-content/uploads/sites/95/2026/03/files/seidn_la_carte_des_formations_c_est_quoi.pdf"
+    },
+    {
+      "title": "La présentation des établissements scolaires publics et privés sous contrat | SENIDN",
+      "url": "https://senidn.site.ac-guadeloupe.fr/seidn-la_presentation_des_etablissements_scolaires_publics_et_prives_sous_contrat/"
+    },
+    {
+      "title": "Le SENIDN, c'est quoi ? (Service de l'éducation nationale de Saint-Barthélemy et de Saint-Martin)",
+      "url": "https://senidn.site.ac-guadeloupe.fr/wp-content/uploads/sites/95/2026/03/files/seidn_le_senidn_c_est_quoi.pdf"
+    },
+    {
+      "title": "Maternelle et élémentaire : information des parents sur la scolarité de leur enfant | Service Public",
+      "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F1391"
+    },
+    {
+      "title": "Orientation au lycée général ou technologique | Service Public",
+      "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F111"
+    }
+  ],
+  "notes": "Schools follow the French national programmes and class names, overseen by the Service de l'éducation nationale de Saint-Barthélemy et de Saint-Martin (SENIDN) of the Académie de la Guadeloupe: écoles, three collèges, the Lycée Robert Weinum (general and technological) and the Lycée professionnel Daniella Jeffry. Some classes from maternelle to collège are bilingual French/English on the national programmes. Maternelle is left out, so CP (age 6) is year 1. The brevet closes 3e and the baccalauréat closes Terminale."
+}

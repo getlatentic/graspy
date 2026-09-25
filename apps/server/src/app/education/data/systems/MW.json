@@ -1,0 +1,187 @@
+{
+  "id": "MW",
+  "country": "MW",
+  "name": {
+    "en": "Malawi",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "standard-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Standard 1",
+        "local": {}
+      },
+      "aliases": [
+        "Std 1"
+      ]
+    },
+    {
+      "id": "standard-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Standard 2",
+        "local": {}
+      },
+      "aliases": [
+        "Std 2"
+      ]
+    },
+    {
+      "id": "standard-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Standard 3",
+        "local": {}
+      },
+      "aliases": [
+        "Std 3"
+      ]
+    },
+    {
+      "id": "standard-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Standard 4",
+        "local": {}
+      },
+      "aliases": [
+        "Std 4"
+      ]
+    },
+    {
+      "id": "standard-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Standard 5",
+        "local": {}
+      },
+      "aliases": [
+        "Std 5"
+      ]
+    },
+    {
+      "id": "standard-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Standard 6",
+        "local": {}
+      },
+      "aliases": [
+        "Std 6"
+      ]
+    },
+    {
+      "id": "standard-7",
+      "stage": "primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Standard 7",
+        "local": {}
+      },
+      "aliases": [
+        "Std 7"
+      ]
+    },
+    {
+      "id": "standard-8",
+      "stage": "primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Standard 8",
+        "local": {}
+      },
+      "aliases": [
+        "Std 8"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-2",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-3",
+      "stage": "secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "form-4",
+      "stage": "secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "National Education Sector Investment Plan 2020–2030, Ministry of Education (Malawi)",
+      "url": "https://www.unicef.org/malawi/media/4561/file/National%20education%20sector%20investment%20plan%20.pdf"
+    },
+    {
+      "title": "Clarification on the Current School Curriculum and Approved Learning Materials – Malawi Institute of Education",
+      "url": "https://mie.edu.mw/public-notice_clarification-on-the-current-school-curriculum-and-approved-learning-materials/"
+    }
+  ],
+  "notes": "8-4 system: Standard 1–8 (entry at 6, PSLCE at the end of Standard 8), then Form 1–4 (JCE in Form 2, MSCE in Form 4). A 1-6-6-3 structure (six years primary, Forms 1–6) has been proposed, but in July 2026 MIE stated that no new curriculum will be introduced in September 2026 and the current one remains official."
+}

@@ -1,0 +1,174 @@
+{
+  "id": "GM",
+  "country": "GM",
+  "name": {
+    "en": "The Gambia",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "lower-basic",
+      "name": {
+        "en": "Lower Basic",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-basic",
+      "name": {
+        "en": "Upper Basic",
+        "local": {}
+      }
+    },
+    {
+      "id": "senior-secondary",
+      "name": {
+        "en": "Senior Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "lower-basic",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-2",
+      "stage": "lower-basic",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-3",
+      "stage": "lower-basic",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-4",
+      "stage": "lower-basic",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-5",
+      "stage": "lower-basic",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-6",
+      "stage": "lower-basic",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-7",
+      "stage": "upper-basic",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-8",
+      "stage": "upper-basic",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-9",
+      "stage": "upper-basic",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-10",
+      "stage": "senior-secondary",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-11",
+      "stage": "senior-secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {}
+      },
+      "aliases": []
+    },
+    {
+      "id": "grade-12",
+      "stage": "senior-secondary",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {}
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "Education Sector Policy 2016–2030",
+      "url": "http://www.edugambia.gm/data-area/publications/policy-documents/256-education-policy-2016-2030-web-version/download.html"
+    }
+  ],
+  "notes": "Lower Basic Schools (LBS) teach Grades 1–6 for ages 7–12, Upper Basic Schools (UBS) Grades 7–9, and Senior Secondary Schools (SSS) Grades 10–12. Grades 1–9 together are Basic Education. GABECE is taken at the end of Grade 9 and WASSCE at the end of Grade 12."
+}

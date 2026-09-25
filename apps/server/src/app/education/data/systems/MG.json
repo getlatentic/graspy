@@ -1,0 +1,249 @@
+{
+  "id": "MG",
+  "country": "MG",
+  "name": {
+    "en": "Madagascar",
+    "local": {
+      "fr": "Madagascar",
+      "mg": "Madagasikara"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "college",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "fr": "Collège"
+        }
+      }
+    },
+    {
+      "id": "lycee",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Lycée"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "11e",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "11e (CP1)",
+        "local": {
+          "fr": "Onzième (CP I)"
+        }
+      },
+      "aliases": [
+        "CP1",
+        "CP I",
+        "11ème"
+      ]
+    },
+    {
+      "id": "10e",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "10e (CP2)",
+        "local": {
+          "fr": "Dixième (CP II)"
+        }
+      },
+      "aliases": [
+        "CP2",
+        "CP II",
+        "10ème"
+      ]
+    },
+    {
+      "id": "9e",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "9e (CE)",
+        "local": {
+          "fr": "Neuvième (CE)"
+        }
+      },
+      "aliases": [
+        "CE",
+        "9ème"
+      ]
+    },
+    {
+      "id": "8e",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "8e (CM1)",
+        "local": {
+          "fr": "Huitième (CM I)"
+        }
+      },
+      "aliases": [
+        "CM1",
+        "CM I",
+        "8ème"
+      ]
+    },
+    {
+      "id": "7e",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "7e (CM2)",
+        "local": {
+          "fr": "Septième (CM II)"
+        }
+      },
+      "aliases": [
+        "CM2",
+        "CM II",
+        "7ème"
+      ]
+    },
+    {
+      "id": "6e",
+      "stage": "college",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6e",
+        "local": {
+          "fr": "Sixième"
+        }
+      },
+      "aliases": [
+        "6ème"
+      ]
+    },
+    {
+      "id": "5e",
+      "stage": "college",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "5e",
+        "local": {
+          "fr": "Cinquième"
+        }
+      },
+      "aliases": [
+        "5ème"
+      ]
+    },
+    {
+      "id": "4e",
+      "stage": "college",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "4e",
+        "local": {
+          "fr": "Quatrième"
+        }
+      },
+      "aliases": [
+        "4ème"
+      ]
+    },
+    {
+      "id": "3e",
+      "stage": "college",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3e",
+        "local": {
+          "fr": "Troisième"
+        }
+      },
+      "aliases": [
+        "3ème"
+      ]
+    },
+    {
+      "id": "seconde",
+      "stage": "lycee",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Seconde",
+        "local": {
+          "fr": "Seconde"
+        }
+      },
+      "aliases": [
+        "2nde"
+      ]
+    },
+    {
+      "id": "premiere",
+      "stage": "lycee",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Première",
+        "local": {
+          "fr": "Première"
+        }
+      },
+      "aliases": [
+        "1re",
+        "1ère"
+      ]
+    },
+    {
+      "id": "terminale",
+      "stage": "lycee",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Terminale",
+        "local": {
+          "fr": "Terminale"
+        }
+      },
+      "aliases": [
+        "Tle"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ministère de l'Education Nationale – Primaire",
+      "url": "https://www.education.gov.mg/systeme-educatif/primaire/"
+    },
+    {
+      "title": "Ministère de l'Education Nationale – Collège",
+      "url": "https://www.education.gov.mg/systeme-educatif/college/"
+    },
+    {
+      "title": "Ministère de l'Education Nationale – Lycée",
+      "url": "https://www.education.gov.mg/systeme-educatif/lycee/"
+    }
+  ],
+  "notes": "Primary has five levels (CP I, CP II, CE, CM I, CM II), numbered 11e to 7e as in the ministry's curricula, and ends with the CEPE. Collège runs 6e–3e and ends with the BEPC; lycée runs Seconde–Terminale (series A, C, D) and ends with the baccalauréat. Malagasy-language materials use the same numbered names."
+}

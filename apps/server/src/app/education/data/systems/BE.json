@@ -1,0 +1,290 @@
+{
+  "id": "BE",
+  "country": "BE",
+  "name": {
+    "en": "Belgium",
+    "local": {
+      "nl": "België",
+      "fr": "Belgique",
+      "de": "Belgien"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "nl": "Lager onderwijs",
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "first-stage",
+      "name": {
+        "en": "Secondary, 1st stage",
+        "local": {
+          "nl": "1ste graad",
+          "fr": "1er degré"
+        }
+      }
+    },
+    {
+      "id": "second-stage",
+      "name": {
+        "en": "Secondary, 2nd stage",
+        "local": {
+          "nl": "2de graad",
+          "fr": "2e degré"
+        }
+      }
+    },
+    {
+      "id": "third-stage",
+      "name": {
+        "en": "Secondary, 3rd stage",
+        "local": {
+          "nl": "3de graad",
+          "fr": "3e degré"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primary-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "1st Primary",
+        "local": {
+          "nl": "1ste leerjaar",
+          "fr": "1re primaire"
+        }
+      },
+      "aliases": [
+        "P1",
+        "Eerste leerjaar"
+      ]
+    },
+    {
+      "id": "primary-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "2nd Primary",
+        "local": {
+          "nl": "2de leerjaar",
+          "fr": "2e primaire"
+        }
+      },
+      "aliases": [
+        "P2",
+        "Tweede leerjaar"
+      ]
+    },
+    {
+      "id": "primary-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "3rd Primary",
+        "local": {
+          "nl": "3de leerjaar",
+          "fr": "3e primaire"
+        }
+      },
+      "aliases": [
+        "P3",
+        "Derde leerjaar"
+      ]
+    },
+    {
+      "id": "primary-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "4th Primary",
+        "local": {
+          "nl": "4de leerjaar",
+          "fr": "4e primaire"
+        }
+      },
+      "aliases": [
+        "P4",
+        "Vierde leerjaar"
+      ]
+    },
+    {
+      "id": "primary-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "5th Primary",
+        "local": {
+          "nl": "5de leerjaar",
+          "fr": "5e primaire"
+        }
+      },
+      "aliases": [
+        "P5",
+        "Vijfde leerjaar"
+      ]
+    },
+    {
+      "id": "primary-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "6th Primary",
+        "local": {
+          "nl": "6de leerjaar",
+          "fr": "6e primaire"
+        }
+      },
+      "aliases": [
+        "P6",
+        "Zesde leerjaar"
+      ]
+    },
+    {
+      "id": "secondary-1",
+      "stage": "first-stage",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "1st Secondary",
+        "local": {
+          "nl": "1ste leerjaar van de 1ste graad",
+          "fr": "1re secondaire"
+        }
+      },
+      "aliases": [
+        "S1",
+        "1ste middelbaar",
+        "1ste jaar secundair",
+        "1ste leerjaar A"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "first-stage",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "2nd Secondary",
+        "local": {
+          "nl": "2de leerjaar van de 1ste graad",
+          "fr": "2e secondaire"
+        }
+      },
+      "aliases": [
+        "S2",
+        "2de middelbaar",
+        "2de jaar secundair"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "second-stage",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "3rd Secondary",
+        "local": {
+          "nl": "1ste leerjaar van de 2de graad",
+          "fr": "3e secondaire"
+        }
+      },
+      "aliases": [
+        "S3",
+        "3de middelbaar",
+        "3de jaar secundair"
+      ]
+    },
+    {
+      "id": "secondary-4",
+      "stage": "second-stage",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "4th Secondary",
+        "local": {
+          "nl": "2de leerjaar van de 2de graad",
+          "fr": "4e secondaire"
+        }
+      },
+      "aliases": [
+        "S4",
+        "4de middelbaar",
+        "4de jaar secundair"
+      ]
+    },
+    {
+      "id": "secondary-5",
+      "stage": "third-stage",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "5th Secondary",
+        "local": {
+          "nl": "1ste leerjaar van de 3de graad",
+          "fr": "5e secondaire"
+        }
+      },
+      "aliases": [
+        "S5",
+        "5de middelbaar",
+        "5de jaar secundair"
+      ]
+    },
+    {
+      "id": "secondary-6",
+      "stage": "third-stage",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "6th Secondary",
+        "local": {
+          "nl": "2de leerjaar van de 3de graad",
+          "fr": "6e secondaire"
+        }
+      },
+      "aliases": [
+        "S6",
+        "6de middelbaar",
+        "6de jaar secundair",
+        "Rhéto",
+        "Rhétorique"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Wegwijs in het gewoon lager onderwijs | Vlaanderen.be",
+      "url": "https://www.vlaanderen.be/onderwijs-en-vorming/wegwijs-in-de-onderwijsniveaus/wegwijs-in-het-gewoon-lager-onderwijs"
+    },
+    {
+      "title": "Structuur van het voltijds gewoon secundair onderwijs | Vlaanderen.be",
+      "url": "https://www.vlaanderen.be/onderwijs-en-vorming/wegwijs-in-de-onderwijsniveaus/wegwijs-in-het-gewoon-secundair-onderwijs/structuur-van-het-voltijds-gewoon-secundair-onderwijs"
+    },
+    {
+      "title": "L'enseignement maternel et primaire ordinaire - Enseignement",
+      "url": "https://www.enseignement.be/parcours-dapprentissage/maternel-et-primaire-ordinaire"
+    },
+    {
+      "title": "Le parcours de votre enfant dans l’enseignement secondaire ordinaire - Enseignement",
+      "url": "https://www.enseignement.be/parcours-dapprentissage/secondaire-ordinaire"
+    }
+  ],
+  "notes": "Covers the Flemish (nl) and French (fr) Communities, which share 6 primary years and 6 secondary years in three 2-year stages (graden/degrés). A 7th secondary year exists in some tracks (7de leerjaar; 7e année) and is not listed. In the French Community the common core (tronc commun) runs to 3e secondaire from 2028-2029. German-speaking Community names (Primarschule, Sekundarschule) are not included: its official site could not be checked."
+}

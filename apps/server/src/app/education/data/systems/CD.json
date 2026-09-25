@@ -1,0 +1,239 @@
+{
+  "id": "CD",
+  "country": "CD",
+  "name": {
+    "en": "Democratic Republic of the Congo",
+    "local": {}
+  },
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "stages": [
+    {
+      "id": "primaire",
+      "name": {
+        "en": "Primary",
+        "local": {
+          "fr": "Enseignement primaire"
+        }
+      }
+    },
+    {
+      "id": "education-de-base",
+      "name": {
+        "en": "Basic education, final cycle (7th–8th years)",
+        "local": {
+          "fr": "Cycle terminal de l'éducation de base"
+        }
+      }
+    },
+    {
+      "id": "humanites",
+      "name": {
+        "en": "Upper secondary (Humanités)",
+        "local": {
+          "fr": "Humanités"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primaire-1",
+      "stage": "primaire",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "fr": "1ère année primaire"
+        }
+      },
+      "aliases": [
+        "1ère primaire"
+      ]
+    },
+    {
+      "id": "primaire-2",
+      "stage": "primaire",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "fr": "2ème année primaire"
+        }
+      },
+      "aliases": [
+        "2ème primaire"
+      ]
+    },
+    {
+      "id": "primaire-3",
+      "stage": "primaire",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "fr": "3ème année primaire"
+        }
+      },
+      "aliases": [
+        "3ème primaire"
+      ]
+    },
+    {
+      "id": "primaire-4",
+      "stage": "primaire",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "fr": "4ème année primaire"
+        }
+      },
+      "aliases": [
+        "4ème primaire"
+      ]
+    },
+    {
+      "id": "primaire-5",
+      "stage": "primaire",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "fr": "5ème année primaire"
+        }
+      },
+      "aliases": [
+        "5ème primaire"
+      ]
+    },
+    {
+      "id": "primaire-6",
+      "stage": "primaire",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "fr": "6ème année primaire"
+        }
+      },
+      "aliases": [
+        "6ème primaire"
+      ]
+    },
+    {
+      "id": "eb-7",
+      "stage": "education-de-base",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "fr": "7ème année de l'éducation de base"
+        }
+      },
+      "aliases": [
+        "7ème EB",
+        "1ère secondaire"
+      ]
+    },
+    {
+      "id": "eb-8",
+      "stage": "education-de-base",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "fr": "8ème année de l'éducation de base"
+        }
+      },
+      "aliases": [
+        "8ème EB",
+        "2ème secondaire"
+      ]
+    },
+    {
+      "id": "humanites-1",
+      "stage": "humanites",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Humanités 1",
+        "local": {
+          "fr": "1ère année des humanités"
+        }
+      },
+      "aliases": [
+        "1ère humanités",
+        "3ème secondaire"
+      ]
+    },
+    {
+      "id": "humanites-2",
+      "stage": "humanites",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Humanités 2",
+        "local": {
+          "fr": "2ème année des humanités"
+        }
+      },
+      "aliases": [
+        "2ème humanités",
+        "4ème secondaire"
+      ]
+    },
+    {
+      "id": "humanites-3",
+      "stage": "humanites",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Humanités 3",
+        "local": {
+          "fr": "3ème année des humanités"
+        }
+      },
+      "aliases": [
+        "3ème humanités",
+        "5ème secondaire"
+      ]
+    },
+    {
+      "id": "humanites-4",
+      "stage": "humanites",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Humanités 4",
+        "local": {
+          "fr": "4ème année des humanités"
+        }
+      },
+      "aliases": [
+        "4ème humanités",
+        "6ème secondaire"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "PASEC2019 – Qualité du système éducatif en République démocratique du Congo",
+      "url": "https://api-services.pasec.confemen.org/media/download/data-for-website/2021/Rapports%20nationaux/Evaluation%20PASEC2019%20%E2%80%93%20Performances%20du%20syst%C3%A8me%20%C3%A9ducatif%20en%20RD%20Congo.pdf"
+    },
+    {
+      "title": "Cartographie de la CITE 2011 de République démocratique du Congo",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Template%20Fr%20Republique%20Democratique%20Du%20Congo.xlsx"
+    }
+  ],
+  "notes": "Framework law No. 14/004 of 11 February 2014: 6-year primary from age 6 (degrés élémentaire, moyen, terminal; CEP), then the 7th and 8th years of basic education (formerly 1st and 2nd secondary), then a 4-year upper secondary (general, normal or technical) ending with the Examen d'État. Confirmed: 1ère–6ème année primaire, 7e and 8e années. Not confirmed by an official source: the names of the four upper-secondary years (here 1ère–4ème des humanités)."
+}

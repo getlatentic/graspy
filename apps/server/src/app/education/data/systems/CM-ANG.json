@@ -1,0 +1,221 @@
+{
+  "id": "CM-ANG",
+  "country": "CM",
+  "name": {
+    "en": "Cameroon (Anglophone subsystem)",
+    "local": {}
+  },
+  "main": false,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary-first-cycle",
+      "name": {
+        "en": "Secondary first cycle (Forms 1–5)",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary-second-cycle",
+      "name": {
+        "en": "Secondary second cycle (Lower and Upper Sixth)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "class-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Class 1",
+        "local": {}
+      },
+      "aliases": [
+        "Class I"
+      ]
+    },
+    {
+      "id": "class-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Class 2",
+        "local": {}
+      },
+      "aliases": [
+        "Class II"
+      ]
+    },
+    {
+      "id": "class-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Class 3",
+        "local": {}
+      },
+      "aliases": [
+        "Class III"
+      ]
+    },
+    {
+      "id": "class-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Class 4",
+        "local": {}
+      },
+      "aliases": [
+        "Class IV"
+      ]
+    },
+    {
+      "id": "class-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Class 5",
+        "local": {}
+      },
+      "aliases": [
+        "Class V"
+      ]
+    },
+    {
+      "id": "class-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Class 6",
+        "local": {}
+      },
+      "aliases": [
+        "Class VI"
+      ]
+    },
+    {
+      "id": "form-1",
+      "stage": "secondary-first-cycle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Form 1",
+        "local": {}
+      },
+      "aliases": [
+        "Form I"
+      ]
+    },
+    {
+      "id": "form-2",
+      "stage": "secondary-first-cycle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Form 2",
+        "local": {}
+      },
+      "aliases": [
+        "Form II"
+      ]
+    },
+    {
+      "id": "form-3",
+      "stage": "secondary-first-cycle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Form 3",
+        "local": {}
+      },
+      "aliases": [
+        "Form III"
+      ]
+    },
+    {
+      "id": "form-4",
+      "stage": "secondary-first-cycle",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Form 4",
+        "local": {}
+      },
+      "aliases": [
+        "Form IV"
+      ]
+    },
+    {
+      "id": "form-5",
+      "stage": "secondary-first-cycle",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Form 5",
+        "local": {}
+      },
+      "aliases": [
+        "Form V"
+      ]
+    },
+    {
+      "id": "lower-sixth",
+      "stage": "secondary-second-cycle",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Lower Sixth",
+        "local": {}
+      },
+      "aliases": [
+        "L6",
+        "Lower 6"
+      ]
+    },
+    {
+      "id": "upper-sixth",
+      "stage": "secondary-second-cycle",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Upper Sixth",
+        "local": {}
+      },
+      "aliases": [
+        "U6",
+        "Upper 6"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Cartographie de la CITE 2011 de Cameroun",
+      "url": "https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Cameroon.xlsx"
+    },
+    {
+      "title": "Official Textbook List 2022/2023 Academic Year – General Secondary Education: First and Second Cycles",
+      "url": "https://www.minesec.gov.cm/web/attachments/article/272/Textbooks%20General%20Secondary%20Education%202022_2023.pdf"
+    },
+    {
+      "title": "Listes des manuels scolaires 2025-2026 (MINEDUB)",
+      "url": "https://www.minedub.cm/wp-content/uploads/2025/04/MANUELS-SCOLAIRE-2025-2026.pdf"
+    }
+  ],
+  "notes": "Anglophone subsystem (Law No. 98/004 of 14 April 1998, art. 15): majority in the North-West and South-West regions, with schools nationwide. Primary ends with the First School Leaving Certificate; Form 5 with the GCE Ordinary Level and Upper Sixth with the GCE Advanced Level (MINESEC: 5-year first cycle, 2-year second cycle). Anglophone technical secondary runs 4 + 3 years."
+}

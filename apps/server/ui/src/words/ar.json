@@ -1,0 +1,63 @@
+{
+  "practice": {
+    "label": "تدريب",
+    "showHint": "اعرض تلميحًا",
+    "correct": "صحيح!",
+    "incorrect": "ليس تمامًا",
+    "another": "سؤال آخر",
+    "explain": "اشرح الإجابة",
+    "askAnotherRight": "أجبت عن هذا بشكل صحيح. أعطني سؤالًا آخر أصعب قليلًا.",
+    "askAnotherWrong": "اخترت {chosen} وكانت الإجابة خاطئة. أعطني سؤالًا آخر مشابهًا.",
+    "askExplain": "اخترت {chosen}، لكن الإجابة هي {answer}. اشرح السبب خطوة بخطوة.",
+    "busy": "انتظر حتى ينهي graspy إجابته، ثم اضغط مرة أخرى.",
+    "questionOf": "السؤال {n} من {total}",
+    "score": "أجبت عن {right} من {total} بشكل صحيح.",
+    "anotherSet": "مجموعة أخرى",
+    "explainWrong": "اشرح أخطائي",
+    "askAnotherSet": "أجبت عن {right} من {total} بشكل صحيح. أعطني مجموعة أخرى مثلها.",
+    "askExplainWrong": "اشرح الأسئلة التي أخطأت فيها خطوة بخطوة:",
+    "wrongLine": "{question}: اخترت {chosen}، لكن الإجابة هي {answer}."
+  },
+  "passage": {
+    "label": "قراءة",
+    "another": "نص آخر",
+    "askAnother": "أجبت عن {right} من {total} بشكل صحيح في النص. أعطني نصًا آخر لأقرأه."
+  },
+  "lesson": {
+    "label": "درس",
+    "loading": "نحضّر درسك",
+    "loadFailed": "تعذّر تحميل الدرس",
+    "tryAgain": "حاول مرة أخرى",
+    "topicOf": "الموضوع {current} من {total}",
+    "slideOf": "{current} من {total}",
+    "slides": "الشرائح",
+    "previous": "السابق",
+    "next": "التالي",
+    "checkUnderstanding": "تحقّق من فهمك",
+    "startFinalCheck": "ابدأ الاختبار الأخير",
+    "checkpoint": "نقطة تحقّق",
+    "finalCheck": "الاختبار الأخير",
+    "backToLesson": "العودة إلى الدرس",
+    "checkAnswer": "تحقّق من الإجابة",
+    "correct": "أحسنت!",
+    "incorrect": "ليس تمامًا",
+    "correctFallback": "أخبر المعلم كيف توصّلت إلى الحل.",
+    "incorrectFallback": "اسأل المعلم عن الجزء الصعب، ثم حاول مرة أخرى.",
+    "nextSlide": "الشريحة التالية",
+    "finishLesson": "إنهاء الدرس",
+    "diagramSource": "مصدر الرسم",
+    "slideType": {
+      "concept": "فكرة جديدة",
+      "example": "مثال محلول",
+      "practice": "تدريب موجّه",
+      "misconception": "خطأ شائع",
+      "summary": "ملخّص",
+      "default": "درس"
+    },
+    "arriving": "المزيد من الشرائح في الطريق.",
+    "failed": "حدث خطأ أثناء تحضير هذا الدرس. حاول مرة أخرى، أو ارجع واختر موضوعًا آخر.",
+    "partial": "تعذّر تحضير جزء من هذا الدرس. اقرأ ما هنا، أو حاول مرة أخرى للحصول على الدرس كاملًا.",
+    "finishing": "جارٍ الحفظ…",
+    "objectives": "في هذا الدرس ستتعلّم أن"
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "id": "MR",
+  "country": "MR",
+  "name": {
+    "en": "Mauritania",
+    "local": {
+      "ar": "موريتانيا",
+      "fr": "Mauritanie"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "fundamental",
+      "name": {
+        "en": "Primary (Fundamental)",
+        "local": {
+          "fr": "Enseignement fondamental",
+          "ar": "التعليم الأساسي"
+        }
+      }
+    },
+    {
+      "id": "college",
+      "name": {
+        "en": "Lower secondary (Collège)",
+        "local": {
+          "fr": "Premier cycle du secondaire (Collège)",
+          "ar": "التعليم الإعدادي"
+        }
+      }
+    },
+    {
+      "id": "lycee",
+      "name": {
+        "en": "Upper secondary (Lycée)",
+        "local": {
+          "fr": "Second cycle du secondaire (Lycée)",
+          "ar": "التعليم الثانوي"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primary-1",
+      "stage": "fundamental",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary 1",
+        "local": {
+          "fr": "1re année du fondamental",
+          "ar": "السنة الأولى ابتدائية"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-2",
+      "stage": "fundamental",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary 2",
+        "local": {
+          "fr": "2e année du fondamental",
+          "ar": "السنة الثانية ابتدائية"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-3",
+      "stage": "fundamental",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary 3",
+        "local": {
+          "fr": "3e année du fondamental",
+          "ar": "السنة الثالثة ابتدائية"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-4",
+      "stage": "fundamental",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary 4",
+        "local": {
+          "fr": "4e année du fondamental",
+          "ar": "السنة الرابعة ابتدائية"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-5",
+      "stage": "fundamental",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary 5",
+        "local": {
+          "fr": "5e année du fondamental",
+          "ar": "السنة الخامسة ابتدائية"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-6",
+      "stage": "fundamental",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Primary 6",
+        "local": {
+          "fr": "6e année du fondamental",
+          "ar": "السنة السادسة ابتدائية"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "secondary-1",
+      "stage": "college",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Secondary 1",
+        "local": {
+          "fr": "1re année secondaire",
+          "ar": "السنة الأولى إعدادية"
+        }
+      },
+      "aliases": [
+        "1AS"
+      ]
+    },
+    {
+      "id": "secondary-2",
+      "stage": "college",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Secondary 2",
+        "local": {
+          "fr": "2e année secondaire",
+          "ar": "السنة الثانية إعدادية"
+        }
+      },
+      "aliases": [
+        "2AS"
+      ]
+    },
+    {
+      "id": "secondary-3",
+      "stage": "college",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Secondary 3",
+        "local": {
+          "fr": "3e année secondaire",
+          "ar": "السنة الثالثة إعدادية"
+        }
+      },
+      "aliases": [
+        "3AS"
+      ]
+    },
+    {
+      "id": "secondary-4",
+      "stage": "college",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Secondary 4",
+        "local": {
+          "fr": "4e année secondaire",
+          "ar": "السنة الرابعة إعدادية"
+        }
+      },
+      "aliases": [
+        "4AS"
+      ]
+    },
+    {
+      "id": "secondary-5",
+      "stage": "lycee",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Secondary 5",
+        "local": {
+          "fr": "5e année secondaire",
+          "ar": "السنة الخامسة ثانوية"
+        }
+      },
+      "aliases": [
+        "5AS"
+      ]
+    },
+    {
+      "id": "secondary-6",
+      "stage": "lycee",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Secondary 6",
+        "local": {
+          "fr": "6e année secondaire",
+          "ar": "السنة السادسة ثانوية"
+        }
+      },
+      "aliases": [
+        "6AS"
+      ]
+    },
+    {
+      "id": "secondary-7",
+      "stage": "lycee",
+      "year": 13,
+      "age": 18,
+      "name": {
+        "en": "Secondary 7",
+        "local": {
+          "fr": "7e année secondaire",
+          "ar": "السنة السابعة ثانوية"
+        }
+      },
+      "aliases": [
+        "7AS",
+        "7C",
+        "7D"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Pacte de Partenariat (Mauritanie, 05/04/2024)",
+      "url": "https://www.globalpartnership.org/fr/node/document/download?file=document/file/2024-05-pacte-de-partenariat-mauritanie.pdf"
+    },
+    {
+      "title": "اشرف وزير التهذيب رفقة بعض اعضاء الحكومة في مدينة النعمة على اطلاق المرحلة الثانية من مشروع دعم تمدرس البنات",
+      "url": "https://www.education.gov.mr/ar/node/534"
+    },
+    {
+      "title": "انطلاق قافلة محملة ب 174 ألف كتاب مدرسي مخصصة للفتيات في الأقسام النهائية",
+      "url": "https://www.education.gov.mr/ar/node/85"
+    }
+  ],
+  "notes": "Secondary years are numbered 1–7 (1AS–7AS): collège 1–4 ends with the BEPC, lycée 5–7 ends with the Bac, 7th year by stream (7C, 7D...). National certificates fall in Primary 6, Secondary 4 and Secondary 7. The 2022 orientation law and PNDSE III target nine years of compulsory basic education (primary and collège)."
+}

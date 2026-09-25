@@ -1,0 +1,243 @@
+{
+  "id": "IN",
+  "country": "IN",
+  "name": {
+    "en": "India",
+    "local": {
+      "hi": "भारत"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-primary",
+      "name": {
+        "en": "Upper Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "secondary",
+      "name": {
+        "en": "Secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "higher-secondary",
+      "name": {
+        "en": "Higher Secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "class-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Class 1",
+        "local": {}
+      },
+      "aliases": [
+        "Class I",
+        "Grade 1",
+        "Std 1"
+      ]
+    },
+    {
+      "id": "class-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Class 2",
+        "local": {}
+      },
+      "aliases": [
+        "Class II",
+        "Grade 2",
+        "Std 2"
+      ]
+    },
+    {
+      "id": "class-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Class 3",
+        "local": {}
+      },
+      "aliases": [
+        "Class III",
+        "Grade 3",
+        "Std 3"
+      ]
+    },
+    {
+      "id": "class-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Class 4",
+        "local": {}
+      },
+      "aliases": [
+        "Class IV",
+        "Grade 4",
+        "Std 4"
+      ]
+    },
+    {
+      "id": "class-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Class 5",
+        "local": {}
+      },
+      "aliases": [
+        "Class V",
+        "Grade 5",
+        "Std 5"
+      ]
+    },
+    {
+      "id": "class-6",
+      "stage": "upper-primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Class 6",
+        "local": {}
+      },
+      "aliases": [
+        "Class VI",
+        "Grade 6",
+        "Std 6"
+      ]
+    },
+    {
+      "id": "class-7",
+      "stage": "upper-primary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Class 7",
+        "local": {}
+      },
+      "aliases": [
+        "Class VII",
+        "Grade 7",
+        "Std 7"
+      ]
+    },
+    {
+      "id": "class-8",
+      "stage": "upper-primary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Class 8",
+        "local": {}
+      },
+      "aliases": [
+        "Class VIII",
+        "Grade 8",
+        "Std 8"
+      ]
+    },
+    {
+      "id": "class-9",
+      "stage": "secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Class 9",
+        "local": {}
+      },
+      "aliases": [
+        "Class IX",
+        "Grade 9",
+        "Std 9"
+      ]
+    },
+    {
+      "id": "class-10",
+      "stage": "secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Class 10",
+        "local": {}
+      },
+      "aliases": [
+        "Class X",
+        "Grade 10",
+        "Std 10",
+        "SSC",
+        "Matric"
+      ]
+    },
+    {
+      "id": "class-11",
+      "stage": "higher-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Class 11",
+        "local": {}
+      },
+      "aliases": [
+        "Class XI",
+        "Grade 11",
+        "Std 11",
+        "1st PUC",
+        "Plus One",
+        "FYJC"
+      ]
+    },
+    {
+      "id": "class-12",
+      "stage": "higher-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Class 12",
+        "local": {}
+      },
+      "aliases": [
+        "Class XII",
+        "Grade 12",
+        "Std 12",
+        "HSC",
+        "2nd PUC",
+        "Plus Two"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "UDISE+ Report 2025-26 (Existing Structure), Ministry of Education",
+      "url": "https://dashboard.udiseplus.gov.in/report2026/static/media/UDISE+2025_26_Booklet_existing.edd7cd16d934a10377ba.pdf"
+    },
+    {
+      "title": "National Curriculum Framework for School Education 2023",
+      "url": "https://ncert.nic.in/pdf/NCFSE-2023-August_2023.pdf"
+    }
+  ],
+  "notes": "Stages follow UDISE+ (Primary 1–5, Upper Primary 6–8, Secondary 9–10, Higher Secondary 11–12; primary age 6–10). NEP 2020 regroups schooling as 5+3+3+4: Foundational (3 pre-school years + Classes 1–2), Preparatory (3–5), Middle (6–8), Secondary (9–12). CBSE, CISCE and state boards all number Classes 1–12; some states say Standard (Std), Karnataka calls 11–12 PUC, Kerala Plus One/Two, Andhra Pradesh and Telangana Intermediate."
+}

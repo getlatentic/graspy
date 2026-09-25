@@ -1,0 +1,205 @@
+{
+  "main": false,
+  "status": "sourced",
+  "id": "GB-SCT",
+  "country": "GB",
+  "name": {
+    "en": "Scotland",
+    "local": {
+      "gd": "Alba"
+    }
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary"
+      }
+    },
+    {
+      "id": "broad-general",
+      "name": {
+        "en": "Secondary: broad general education"
+      }
+    },
+    {
+      "id": "senior-phase",
+      "name": {
+        "en": "Secondary: senior phase"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "p1",
+      "stage": "primary",
+      "year": 1,
+      "age": 5,
+      "name": {
+        "en": "Primary 1"
+      },
+      "aliases": [
+        "P1"
+      ]
+    },
+    {
+      "id": "p2",
+      "stage": "primary",
+      "year": 2,
+      "age": 6,
+      "name": {
+        "en": "Primary 2"
+      },
+      "aliases": [
+        "P2"
+      ]
+    },
+    {
+      "id": "p3",
+      "stage": "primary",
+      "year": 3,
+      "age": 7,
+      "name": {
+        "en": "Primary 3"
+      },
+      "aliases": [
+        "P3"
+      ]
+    },
+    {
+      "id": "p4",
+      "stage": "primary",
+      "year": 4,
+      "age": 8,
+      "name": {
+        "en": "Primary 4"
+      },
+      "aliases": [
+        "P4"
+      ]
+    },
+    {
+      "id": "p5",
+      "stage": "primary",
+      "year": 5,
+      "age": 9,
+      "name": {
+        "en": "Primary 5"
+      },
+      "aliases": [
+        "P5"
+      ]
+    },
+    {
+      "id": "p6",
+      "stage": "primary",
+      "year": 6,
+      "age": 10,
+      "name": {
+        "en": "Primary 6"
+      },
+      "aliases": [
+        "P6"
+      ]
+    },
+    {
+      "id": "p7",
+      "stage": "primary",
+      "year": 7,
+      "age": 11,
+      "name": {
+        "en": "Primary 7"
+      },
+      "aliases": [
+        "P7"
+      ]
+    },
+    {
+      "id": "s1",
+      "stage": "broad-general",
+      "year": 8,
+      "age": 12,
+      "name": {
+        "en": "Secondary 1"
+      },
+      "aliases": [
+        "S1"
+      ]
+    },
+    {
+      "id": "s2",
+      "stage": "broad-general",
+      "year": 9,
+      "age": 13,
+      "name": {
+        "en": "Secondary 2"
+      },
+      "aliases": [
+        "S2"
+      ]
+    },
+    {
+      "id": "s3",
+      "stage": "broad-general",
+      "year": 10,
+      "age": 14,
+      "name": {
+        "en": "Secondary 3"
+      },
+      "aliases": [
+        "S3"
+      ]
+    },
+    {
+      "id": "s4",
+      "stage": "senior-phase",
+      "year": 11,
+      "age": 15,
+      "name": {
+        "en": "Secondary 4"
+      },
+      "aliases": [
+        "S4"
+      ]
+    },
+    {
+      "id": "s5",
+      "stage": "senior-phase",
+      "year": 12,
+      "age": 16,
+      "name": {
+        "en": "Secondary 5"
+      },
+      "aliases": [
+        "S5"
+      ]
+    },
+    {
+      "id": "s6",
+      "stage": "senior-phase",
+      "year": 13,
+      "age": 17,
+      "name": {
+        "en": "Secondary 6"
+      },
+      "aliases": [
+        "S6"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "School admissions, curriculum and qualifications – gov.scot",
+      "url": "https://www.gov.scot/policies/schools/school-curriculum/"
+    },
+    {
+      "title": "Achievement of Curriculum for Excellence levels 2024-25, chapter 1 – gov.scot",
+      "url": "https://www.gov.scot/publications/achievement-of-curriculum-for-excellence-cfe-levels-2024-25/pages/chapter-1-achievement-of-cfe-levels-at-scotland-level/"
+    },
+    {
+      "title": "Can my child defer starting school? – Parent Club (Scottish Government)",
+      "url": "https://www.parentclub.scot/articles/can-my-child-defer-starting-school"
+    }
+  ],
+  "notes": "Children start P1 in August aged between about 4½ and 5½, so the entrance age is given as 5. Pupils may leave after S4; S5 and S6 are the rest of the senior phase. Gaelic-medium schools exist, but Gaelic year names are not in the cited pages."
+}

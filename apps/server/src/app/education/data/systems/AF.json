@@ -1,0 +1,245 @@
+{
+  "id": "AF",
+  "country": "AF",
+  "name": {
+    "en": "Afghanistan",
+    "local": {
+      "fa-AF": "افغانستان",
+      "ps": "افغانستان"
+    }
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "lower-secondary",
+      "name": {
+        "en": "Lower secondary",
+        "local": {}
+      }
+    },
+    {
+      "id": "upper-secondary",
+      "name": {
+        "en": "Upper secondary",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grade-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 7,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "fa-AF": "صنف اول",
+          "ps": "لومړۍ ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 1"
+      ]
+    },
+    {
+      "id": "grade-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 8,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "fa-AF": "صنف دوم",
+          "ps": "دویم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 2"
+      ]
+    },
+    {
+      "id": "grade-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 9,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "fa-AF": "صنف سوم",
+          "ps": "دریم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 3"
+      ]
+    },
+    {
+      "id": "grade-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 10,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "fa-AF": "صنف چهارم",
+          "ps": "څلورم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 4"
+      ]
+    },
+    {
+      "id": "grade-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 11,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "fa-AF": "صنف پنجم",
+          "ps": "پنځم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 5"
+      ]
+    },
+    {
+      "id": "grade-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 12,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "fa-AF": "صنف ششم",
+          "ps": "شپږم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 6"
+      ]
+    },
+    {
+      "id": "grade-7",
+      "stage": "lower-secondary",
+      "year": 7,
+      "age": 13,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "fa-AF": "صنف هفتم",
+          "ps": "اووم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 7"
+      ]
+    },
+    {
+      "id": "grade-8",
+      "stage": "lower-secondary",
+      "year": 8,
+      "age": 14,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "fa-AF": "صنف هشتم",
+          "ps": "اتم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 8"
+      ]
+    },
+    {
+      "id": "grade-9",
+      "stage": "lower-secondary",
+      "year": 9,
+      "age": 15,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "fa-AF": "صنف نهم",
+          "ps": "نهم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 9"
+      ]
+    },
+    {
+      "id": "grade-10",
+      "stage": "upper-secondary",
+      "year": 10,
+      "age": 16,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "fa-AF": "صنف دهم",
+          "ps": "لسم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 10"
+      ]
+    },
+    {
+      "id": "grade-11",
+      "stage": "upper-secondary",
+      "year": 11,
+      "age": 17,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "fa-AF": "صنف یازدهم",
+          "ps": "یوولسم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 11"
+      ]
+    },
+    {
+      "id": "grade-12",
+      "stage": "upper-secondary",
+      "year": 12,
+      "age": 18,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "fa-AF": "صنف دوازدهم",
+          "ps": "دوولسم ټولګی"
+        }
+      },
+      "aliases": [
+        "Class 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "National Education Strategic Plan (2017 – 2021), Ministry of Education",
+      "url": "https://moe.gov.af/sites/default/files/2019-12/NESP%20III%20English.pdf"
+    },
+    {
+      "title": "كتب نصاب تعليمى | وزارت معارف",
+      "url": "https://moe.gov.af/dr/%D9%83%D8%AA%D8%A8-%D9%86%D8%B5%D8%A7%D8%A8-%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D9%89"
+    },
+    {
+      "title": "د نصاب کتابونه | AfGOV",
+      "url": "https://moe.gov.af/en/node/450"
+    }
+  ],
+  "notes": "Grades 1–6 primary, 7–9 lower secondary, 10–12 upper secondary (NESP III); primary is ages 7–12. Since 2021 the de facto authorities do not let girls attend school beyond Grade 6. Dari texts use the stage words متوسطه and ثانوی inconsistently, so stage names are given in English only."
+}

@@ -1,0 +1,213 @@
+{
+  "main": true,
+  "status": "sourced",
+  "id": "GH",
+  "country": "GH",
+  "name": {
+    "en": "Ghana"
+  },
+  "stages": [
+    {
+      "id": "lower-primary",
+      "name": {
+        "en": "Lower Primary"
+      }
+    },
+    {
+      "id": "upper-primary",
+      "name": {
+        "en": "Upper Primary"
+      }
+    },
+    {
+      "id": "jhs",
+      "name": {
+        "en": "Junior High School"
+      }
+    },
+    {
+      "id": "shs",
+      "name": {
+        "en": "Senior High School"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "basic-1",
+      "stage": "lower-primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Basic 1"
+      },
+      "aliases": [
+        "B1",
+        "Primary 1",
+        "P1"
+      ]
+    },
+    {
+      "id": "basic-2",
+      "stage": "lower-primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Basic 2"
+      },
+      "aliases": [
+        "B2",
+        "Primary 2",
+        "P2"
+      ]
+    },
+    {
+      "id": "basic-3",
+      "stage": "lower-primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Basic 3"
+      },
+      "aliases": [
+        "B3",
+        "Primary 3",
+        "P3"
+      ]
+    },
+    {
+      "id": "basic-4",
+      "stage": "upper-primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Basic 4"
+      },
+      "aliases": [
+        "B4",
+        "Primary 4",
+        "P4"
+      ]
+    },
+    {
+      "id": "basic-5",
+      "stage": "upper-primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Basic 5"
+      },
+      "aliases": [
+        "B5",
+        "Primary 5",
+        "P5"
+      ]
+    },
+    {
+      "id": "basic-6",
+      "stage": "upper-primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Basic 6"
+      },
+      "aliases": [
+        "B6",
+        "Primary 6",
+        "P6"
+      ]
+    },
+    {
+      "id": "jhs-1",
+      "stage": "jhs",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "JHS 1"
+      },
+      "aliases": [
+        "Basic 7",
+        "B7",
+        "JHS1"
+      ]
+    },
+    {
+      "id": "jhs-2",
+      "stage": "jhs",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "JHS 2"
+      },
+      "aliases": [
+        "Basic 8",
+        "B8",
+        "JHS2"
+      ]
+    },
+    {
+      "id": "jhs-3",
+      "stage": "jhs",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "JHS 3"
+      },
+      "aliases": [
+        "Basic 9",
+        "B9",
+        "JHS3"
+      ]
+    },
+    {
+      "id": "shs-1",
+      "stage": "shs",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "SHS 1"
+      },
+      "aliases": [
+        "SHS1",
+        "Grade 10"
+      ]
+    },
+    {
+      "id": "shs-2",
+      "stage": "shs",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "SHS 2"
+      },
+      "aliases": [
+        "SHS2",
+        "Grade 11"
+      ]
+    },
+    {
+      "id": "shs-3",
+      "stage": "shs",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "SHS 3"
+      },
+      "aliases": [
+        "SHS3",
+        "Grade 12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "National Pre-tertiary Education Curriculum Framework – NaCCA",
+      "url": "https://nacca.gov.gh/wp-content/uploads/2019/04/National-Pre-tertiary-Education-Curriculum-Framework-final.pdf"
+    },
+    {
+      "title": "Duration of JHS, SHS has not been reviewed – NaCCA",
+      "url": "https://nacca.gov.gh/duration-of-jhs-shs-has-not-been-reviewed-nacca-boss-clarifies/"
+    }
+  ],
+  "notes": "Basic education is kindergarten (KG1–2, left out), primary and JHS. The curriculum framework groups the years into key phases: lower primary B1–3, upper primary B4–6, JHS B7–9 and SHS 1–3. A drafted Common Core Programme (B7–B10) did not change the length of JHS or SHS: both stay three years."
+}

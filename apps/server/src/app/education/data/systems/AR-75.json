@@ -1,0 +1,255 @@
+{
+  "id": "AR-75",
+  "country": "AR",
+  "name": {
+    "en": "Argentina (7+5 jurisdictions)",
+    "local": {
+      "es": "Argentina (estructura 7+5)"
+    }
+  },
+  "main": false,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primaria",
+      "name": {
+        "en": "Primary (Primaria)",
+        "local": {
+          "es": "Educación Primaria"
+        }
+      }
+    },
+    {
+      "id": "ciclo-basico",
+      "name": {
+        "en": "Secondary, Basic Cycle (Ciclo Básico)",
+        "local": {
+          "es": "Educación Secundaria – Ciclo Básico"
+        }
+      }
+    },
+    {
+      "id": "ciclo-orientado",
+      "name": {
+        "en": "Secondary, Oriented Cycle (Ciclo Orientado)",
+        "local": {
+          "es": "Educación Secundaria – Ciclo Orientado"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "grado-1",
+      "stage": "primaria",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Grade 1",
+        "local": {
+          "es": "Primer grado"
+        }
+      },
+      "aliases": [
+        "1° grado",
+        "1er grado"
+      ]
+    },
+    {
+      "id": "grado-2",
+      "stage": "primaria",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Grade 2",
+        "local": {
+          "es": "Segundo grado"
+        }
+      },
+      "aliases": [
+        "2° grado",
+        "2do grado"
+      ]
+    },
+    {
+      "id": "grado-3",
+      "stage": "primaria",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Grade 3",
+        "local": {
+          "es": "Tercer grado"
+        }
+      },
+      "aliases": [
+        "3° grado",
+        "3er grado"
+      ]
+    },
+    {
+      "id": "grado-4",
+      "stage": "primaria",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Grade 4",
+        "local": {
+          "es": "Cuarto grado"
+        }
+      },
+      "aliases": [
+        "4° grado",
+        "4to grado"
+      ]
+    },
+    {
+      "id": "grado-5",
+      "stage": "primaria",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Grade 5",
+        "local": {
+          "es": "Quinto grado"
+        }
+      },
+      "aliases": [
+        "5° grado",
+        "5to grado"
+      ]
+    },
+    {
+      "id": "grado-6",
+      "stage": "primaria",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Grade 6",
+        "local": {
+          "es": "Sexto grado"
+        }
+      },
+      "aliases": [
+        "6° grado",
+        "6to grado"
+      ]
+    },
+    {
+      "id": "grado-7",
+      "stage": "primaria",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Grade 7",
+        "local": {
+          "es": "Séptimo grado"
+        }
+      },
+      "aliases": [
+        "7° grado",
+        "7mo grado"
+      ]
+    },
+    {
+      "id": "ano-1",
+      "stage": "ciclo-basico",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Grade 8",
+        "local": {
+          "es": "Primer año"
+        }
+      },
+      "aliases": [
+        "1° año",
+        "1er año",
+        "1° año de secundaria"
+      ]
+    },
+    {
+      "id": "ano-2",
+      "stage": "ciclo-basico",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Grade 9",
+        "local": {
+          "es": "Segundo año"
+        }
+      },
+      "aliases": [
+        "2° año",
+        "2do año",
+        "2° año de secundaria"
+      ]
+    },
+    {
+      "id": "ano-3",
+      "stage": "ciclo-orientado",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Grade 10",
+        "local": {
+          "es": "Tercer año"
+        }
+      },
+      "aliases": [
+        "3° año",
+        "3er año",
+        "3° año de secundaria"
+      ]
+    },
+    {
+      "id": "ano-4",
+      "stage": "ciclo-orientado",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Grade 11",
+        "local": {
+          "es": "Cuarto año"
+        }
+      },
+      "aliases": [
+        "4° año",
+        "4to año",
+        "4° año de secundaria"
+      ]
+    },
+    {
+      "id": "ano-5",
+      "stage": "ciclo-orientado",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "Grade 12",
+        "local": {
+          "es": "Quinto año"
+        }
+      },
+      "aliases": [
+        "5° año",
+        "5to año",
+        "5° año de secundaria"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Ley simple: Niveles educativos | Argentina.gob.ar",
+      "url": "https://www.argentina.gob.ar/justicia/derechofacil/leysimple/niveles-educativos"
+    },
+    {
+      "title": "Educación Primaria · Mapa Educativo Nacional",
+      "url": "https://mapa.educacion.gob.ar/tag/primaria"
+    },
+    {
+      "title": "Manual del Aplicador 5°/6° año de la Educación Secundaria (Aprender 2024)",
+      "url": "https://www.argentina.gob.ar/sites/default/files/manual_aplicador_aprender_2024.pdf"
+    }
+  ],
+  "notes": "Jurisdictions with 7 years of primary and 5 of secondary: Chaco, Jujuy, La Rioja, Mendoza, Misiones, Neuquén, Río Negro, Salta, Santa Cruz, Santa Fe, Santiago del Estero and the Ciudad Autónoma de Buenos Aires (Mapa Educativo Nacional). The Ciclo Básico is the first 2 years of secondary (1° and 2° año). Technical secondary adds one year (6° año), not listed. The id is not ISO 3166-2: the group spans 12 jurisdictions."
+}

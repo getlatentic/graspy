@@ -1,0 +1,202 @@
+{
+  "main": true,
+  "status": "draft",
+  "draftedBy": "claude-code",
+  "id": "KP",
+  "country": "KP",
+  "name": {
+    "en": "North Korea",
+    "local": {
+      "ko": "조선민주주의인민공화국"
+    }
+  },
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary school (소학교)",
+        "local": {
+          "ko": "소학교"
+        }
+      }
+    },
+    {
+      "id": "junior-middle",
+      "name": {
+        "en": "Junior middle school (초급중학교)",
+        "local": {
+          "ko": "초급중학교"
+        }
+      }
+    },
+    {
+      "id": "senior-middle",
+      "name": {
+        "en": "Senior middle school (고급중학교)",
+        "local": {
+          "ko": "고급중학교"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "primary-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Primary School Grade 1",
+        "local": {
+          "ko": "소학교 1학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Primary School Grade 2",
+        "local": {
+          "ko": "소학교 2학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Primary School Grade 3",
+        "local": {
+          "ko": "소학교 3학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Primary School Grade 4",
+        "local": {
+          "ko": "소학교 4학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "primary-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Primary School Grade 5",
+        "local": {
+          "ko": "소학교 5학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "junior-middle-1",
+      "stage": "junior-middle",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Junior Middle School Grade 1",
+        "local": {
+          "ko": "초급중학교 1학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "junior-middle-2",
+      "stage": "junior-middle",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "Junior Middle School Grade 2",
+        "local": {
+          "ko": "초급중학교 2학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "junior-middle-3",
+      "stage": "junior-middle",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "Junior Middle School Grade 3",
+        "local": {
+          "ko": "초급중학교 3학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "senior-middle-1",
+      "stage": "senior-middle",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "Senior Middle School Grade 1",
+        "local": {
+          "ko": "고급중학교 1학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "senior-middle-2",
+      "stage": "senior-middle",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "Senior Middle School Grade 2",
+        "local": {
+          "ko": "고급중학교 2학년"
+        }
+      },
+      "aliases": []
+    },
+    {
+      "id": "senior-middle-3",
+      "stage": "senior-middle",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "Senior Middle School Grade 3",
+        "local": {
+          "ko": "고급중학교 3학년"
+        }
+      },
+      "aliases": []
+    }
+  ],
+  "sources": [
+    {
+      "title": "교육 제도 | 북한정보포털 (통일부)",
+      "url": "https://nkinfo.unikorea.go.kr/nkp/pge/view.do?menuId=CL400"
+    },
+    {
+      "title": "교육 과정 | 북한정보포털 (통일부)",
+      "url": "https://nkinfo.unikorea.go.kr/nkp/pge/view.do?menuId=CL403"
+    },
+    {
+      "title": "북한 지식사전: 12년제 의무교육 | 통일교육원",
+      "url": "https://www.uniedu.go.kr/uniedu/home/brd/bbsatcl/nknow/view.do?id=46292"
+    }
+  ],
+  "notes": "Unconfirmed: no North Korean government source could be reached; this comes from South Korean Ministry of Unification pages. Twelve-year compulsory education (2012) covers ages 5 to 17: one kindergarten year (left out here), five years of 소학교, three of 초급중학교 and three of 고급중학교, so 소학교 starts at six. Grades are numbered within each school (소학교 1–5학년, 초급·고급중학교 1–3학년)."
+}

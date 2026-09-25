@@ -1,0 +1,20 @@
+# Cloudflare Pages reads this from the build output and applies it at the edge.
+#
+# This app renders model output, and the model repeats what a learner types, so
+# the policy assumes that content is hostile. connect-src names the API and the
+# agent explicitly: an injected fetch to anywhere else is refused by the browser
+# even if it reaches the DOM. Cloudflare Web Analytics loads its beacon script
+# and posts to cloudflareinsights.com. frame-src names the API because the
+# tutor's cards are MCP Apps views, framed in a sandbox the API serves.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-attcroNCc1g/8N4J1Kx3LpQLlXyI5Iu/09PGeUuArr8=' https://static.cloudflareinsights.com; connect-src 'self' https://graspy-api.tosinamuda.com https://cloudflareinsights.com; frame-src https://graspy-api.tosinamuda.com
+
+# The service worker is always checked for a new version: a stale one would
+# serve a stale app.
+/sw.js
+  Cache-Control: no-cache

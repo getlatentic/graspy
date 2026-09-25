@@ -1,0 +1,224 @@
+{
+  "id": "SL",
+  "country": "SL",
+  "name": {
+    "en": "Sierra Leone",
+    "local": {}
+  },
+  "main": true,
+  "status": "sourced",
+  "stages": [
+    {
+      "id": "primary",
+      "name": {
+        "en": "Primary",
+        "local": {}
+      }
+    },
+    {
+      "id": "junior-secondary",
+      "name": {
+        "en": "Junior Secondary (JSS)",
+        "local": {}
+      }
+    },
+    {
+      "id": "senior-secondary",
+      "name": {
+        "en": "Senior Secondary (SSS)",
+        "local": {}
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": "class-1",
+      "stage": "primary",
+      "year": 1,
+      "age": 6,
+      "name": {
+        "en": "Class 1",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 1",
+        "P1"
+      ]
+    },
+    {
+      "id": "class-2",
+      "stage": "primary",
+      "year": 2,
+      "age": 7,
+      "name": {
+        "en": "Class 2",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 2",
+        "P2"
+      ]
+    },
+    {
+      "id": "class-3",
+      "stage": "primary",
+      "year": 3,
+      "age": 8,
+      "name": {
+        "en": "Class 3",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 3",
+        "P3"
+      ]
+    },
+    {
+      "id": "class-4",
+      "stage": "primary",
+      "year": 4,
+      "age": 9,
+      "name": {
+        "en": "Class 4",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 4",
+        "P4"
+      ]
+    },
+    {
+      "id": "class-5",
+      "stage": "primary",
+      "year": 5,
+      "age": 10,
+      "name": {
+        "en": "Class 5",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 5",
+        "P5"
+      ]
+    },
+    {
+      "id": "class-6",
+      "stage": "primary",
+      "year": 6,
+      "age": 11,
+      "name": {
+        "en": "Class 6",
+        "local": {}
+      },
+      "aliases": [
+        "Primary 6",
+        "P6"
+      ]
+    },
+    {
+      "id": "jss-1",
+      "stage": "junior-secondary",
+      "year": 7,
+      "age": 12,
+      "name": {
+        "en": "JSS 1",
+        "local": {}
+      },
+      "aliases": [
+        "JSS1",
+        "JS 1",
+        "JS1"
+      ]
+    },
+    {
+      "id": "jss-2",
+      "stage": "junior-secondary",
+      "year": 8,
+      "age": 13,
+      "name": {
+        "en": "JSS 2",
+        "local": {}
+      },
+      "aliases": [
+        "JSS2",
+        "JS 2",
+        "JS2"
+      ]
+    },
+    {
+      "id": "jss-3",
+      "stage": "junior-secondary",
+      "year": 9,
+      "age": 14,
+      "name": {
+        "en": "JSS 3",
+        "local": {}
+      },
+      "aliases": [
+        "JSS3",
+        "JS 3",
+        "JS3"
+      ]
+    },
+    {
+      "id": "sss-1",
+      "stage": "senior-secondary",
+      "year": 10,
+      "age": 15,
+      "name": {
+        "en": "SSS 1",
+        "local": {}
+      },
+      "aliases": [
+        "SSS1",
+        "SS 1",
+        "SS1"
+      ]
+    },
+    {
+      "id": "sss-2",
+      "stage": "senior-secondary",
+      "year": 11,
+      "age": 16,
+      "name": {
+        "en": "SSS 2",
+        "local": {}
+      },
+      "aliases": [
+        "SSS2",
+        "SS 2",
+        "SS2"
+      ]
+    },
+    {
+      "id": "sss-3",
+      "stage": "senior-secondary",
+      "year": 12,
+      "age": 17,
+      "name": {
+        "en": "SSS 3",
+        "local": {}
+      },
+      "aliases": [
+        "SSS3",
+        "SS 3",
+        "SS3"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": "The Basic and Senior Secondary Education Act, 2023",
+      "url": "https://mbsse.gov.sl/wp-content/uploads/2023/06/Basic-and-Senior-Secondary-Education-Act-2023-.pdf"
+    },
+    {
+      "title": "2022 Annual Schools Census Report",
+      "url": "https://mbsse.gov.sl/wp-content/uploads/2023/07/Annual-School-Census-Report_2022.pdf"
+    },
+    {
+      "title": "Sierra Leone Education Sector Plan 2022-2026",
+      "url": "https://mbsse.gov.sl/wp-content/uploads/2022/09/Sierra-Leone-Education-Sector-Plan-2022-2026_FINAL-v3rev1.pdf"
+    }
+  ],
+  "notes": "Section 18 of the 2023 Act: 6 years of primary, 3 of junior secondary and 3 of senior secondary. The former SSS 4 year is gone. Official entry ages are 6 (Class 1), 12 (JSS 1) and 15 (SSS 1). Exams: NPSE after Class 6, BECE after JSS 3, WASSCE after SSS 3."
+}
