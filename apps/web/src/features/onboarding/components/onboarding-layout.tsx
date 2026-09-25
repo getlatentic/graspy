@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useI18n } from "@/lib/i18n-context";
+import { SignInLink } from "@/features/account/components/sign-in-link";
 import OnboardingFrame from "./onboarding-frame";
 
 export default function OnboardingLayout({
@@ -8,7 +9,7 @@ export default function OnboardingLayout({
   children: ReactNode;
 }) {
   return (
-    <OnboardingFrame>
+    <OnboardingFrame action={<SignInLink />}>
       <div className="mt-12 flex flex-1 items-center">
         <div className="grid w-full grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)] lg:items-stretch lg:gap-10">
           <Welcome />

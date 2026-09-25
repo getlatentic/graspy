@@ -201,8 +201,7 @@
       "topics": "Topics",
       "continue": "See your learning plan"
     },
-    "moreSubjects": "+{count} more",
-    "returning": "Learned with graspy before? Sign in to carry on with your plan."
+    "moreSubjects": "+{count} more"
   },
   "plan": {
     "back": "Back",
@@ -328,11 +327,10 @@
   },
   "learners": {
     "title": "Who's learning?",
-    "body": "Each learner has their own plan and progress. Choose who is learning on this device.",
+    "body": "Choose who is learning on this device. Each learner has their own plan and progress.",
     "signedInAs": "Signed in as {email}",
     "back": "Back",
     "inUse": "Learning on this device",
-    "add": "Add a learner",
     "nameLabel": "Learner's name",
     "guardian": "I'm this learner, or their parent or guardian",
     "addButton": "Add",
@@ -354,6 +352,21 @@
     "deleteBody": "This deletes every learner on this account from graspy, and signs you out. Your Google account itself stays with Google.",
     "deleteButton": "Delete my account",
     "deleteConfirm": "Delete this account? Every learner's plan, progress, lessons and conversations are deleted from graspy. This can't be undone.",
-    "deleteYes": "Yes, delete my account"
+    "deleteYes": "Yes, delete my account",
+    "bodyFirst": "Add the first learner on this account: yourself, or your child.",
+    "addTile": "Add learner",
+    "addTitle": "Add a learner",
+    "addBody": "They get their own plan and progress. You can rename or remove them later.",
+    "devicePlan": "The plan already on this device goes to the learner you choose, or to one you add.",
+    "otherAccount": "Use another Google account"
+  },
+  "signIn": {
+    "link": "Sign in",
+    "returning": "Already learning with graspy?",
+    "title": "Sign in to graspy",
+    "body": "Pick up your plan and progress on any device. A parent signs in once, then adds each child as a learner.",
+    "noPassword": "graspy keeps no password: Google confirms it's you.",
+    "newHere": "New to graspy?",
+    "start": "Start learning"
   }
 }

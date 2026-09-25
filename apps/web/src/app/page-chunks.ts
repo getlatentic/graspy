@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 const pages = {
   onboarding: () => import("@/features/onboarding/pages/onboarding"),
   learners: () => import("@/features/account/pages/learner-picker-page"),
+  signIn: () => import("@/features/account/pages/sign-in-page"),
   manageLearners: () => import("@/features/account/pages/learners-page"),
   learnLayout: () => import("@/app/learn/layout"),
   home: () => import("@/app/learn/page"),

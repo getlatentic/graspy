@@ -1,23 +1,26 @@
 import { LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Size, Variant } from "@/components/ui/button-styles";
 import { useI18n } from "@/lib/i18n-context";
 import { useGoogleSignIn } from "../hooks/use-google-sign-in";
 
 export function GoogleSignInButton({
+  variant = "secondary",
   size,
-  onSignedIn,
+  className = "self-start",
 }: {
-  size?: "sm";
-  onSignedIn?: () => void;
+  variant?: Variant;
+  size?: Size;
+  className?: string;
 }) {
   const { t } = useI18n();
-  const google = useGoogleSignIn(onSignedIn);
+  const google = useGoogleSignIn();
   return (
     <>
       <Button
-        variant="secondary"
+        variant={variant}
         size={size}
-        className="self-start"
+        className={className}
         onClick={google.signIn}
         disabled={google.busy}
       >

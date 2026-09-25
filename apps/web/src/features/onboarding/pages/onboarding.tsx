@@ -6,7 +6,6 @@ import { detectLocale } from "@/lib/locale-detector";
 import { hasCompletedOnboarding } from "@/lib/user-storage";
 import OnboardingLayout from "../components/onboarding-layout";
 import PlanSetupView from "../components/plan-setup-view";
-import { ReturningLearner } from "../components/returning-learner";
 import { StepFooter, StepHeading } from "../components/step-frame";
 import ProfileStep from "../components/steps/profile-step";
 import SubjectsStep from "../components/steps/subjects-step";
@@ -50,7 +49,6 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
   return (
     <OnboardingLayout>
       <StepHeading step={steps.step} index={steps.index} count={STEPS.length} />
-      {steps.step === "profile" && <ReturningLearner />}
       <div
         key={steps.step}
         className={`mt-8 flex-1 min-h-0 motion-safe:animate-enter lg:pe-1 ${

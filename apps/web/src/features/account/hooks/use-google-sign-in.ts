@@ -7,7 +7,7 @@ import {
 } from "@/lib/account/sign-in";
 
 /** For a signed-out device; signing in then asks who is learning. */
-export function useGoogleSignIn(onSignedIn?: () => void) {
+export function useGoogleSignIn() {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<SignInProblem | null>(null);
 
@@ -18,14 +18,13 @@ export function useGoogleSignIn(onSignedIn?: () => void) {
     setBusy(true);
     setProblem(null);
     signIn()
-      .then(onSignedIn)
       .catch((error: unknown) => {
         const found = signInProblem(error);
         if (found) console.warn("Signing in failed:", error);
         setProblem(found);
       })
       .finally(() => setBusy(false));
-  }, [onSignedIn]);
+  }, []);
 
   return { busy, problem, signIn: start };
 }

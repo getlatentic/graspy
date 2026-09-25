@@ -4,7 +4,13 @@ import { Logo } from "@/components/brand/logo";
 import { useI18n } from "@/lib/i18n-context";
 import { contactHref } from "@/features/landing/constants";
 
-export default function OnboardingFrame({ children }: { children: ReactNode }) {
+export default function OnboardingFrame({
+  action,
+  children,
+}: {
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   const { t } = useI18n();
   return (
     // clip, not hidden: an overflow-hidden box can still scroll sideways.
@@ -23,12 +29,15 @@ export default function OnboardingFrame({ children }: { children: ReactNode }) {
           <Link to="/" aria-label={t("onboarding.home")}>
             <Logo />
           </Link>
-          <a
-            href={contactHref()}
-            className="text-sm font-medium text-muted transition hover:text-ink"
-          >
-            {t("onboarding.contact")}
-          </a>
+          <nav className="flex items-center gap-5">
+            <a
+              href={contactHref()}
+              className="text-sm font-medium text-muted transition hover:text-ink"
+            >
+              {t("onboarding.contact")}
+            </a>
+            {action}
+          </nav>
         </header>
         {children}
       </div>

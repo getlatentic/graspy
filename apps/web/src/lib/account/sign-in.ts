@@ -53,6 +53,13 @@ export async function signOut(): Promise<void> {
   await google.signOutOfGoogle();
 }
 
+/** Before a learner is chosen, the device holds only its own learning, which stays. */
+export async function leaveForAnotherAccount(): Promise<void> {
+  endAccountSession();
+  const google = prepared ?? (await import("./google-auth"));
+  await google.signOutOfGoogle();
+}
+
 /** Every learner and all graspy kept for them; the Google account stays Google's. */
 export async function deleteAccountAndSignOut(): Promise<void> {
   await deleteAccount();

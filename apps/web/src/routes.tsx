@@ -17,6 +17,7 @@ export const router = createBrowserRouter([
           { index: true, Component: AppEntry },
           { path: "onboarding", lazy: lazyPage("onboarding") },
           { path: "learners", lazy: lazyPage("learners") },
+          { path: "sign-in", lazy: lazyPage("signIn") },
           {
             path: "learn",
             lazy: lazyPage("learnLayout"),

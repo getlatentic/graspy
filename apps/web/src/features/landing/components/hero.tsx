@@ -1,3 +1,4 @@
+import { SignInPrompt } from "@/features/account/components/sign-in-link";
 import { cn } from "@/lib/cn";
 import { PAGE } from "../constants";
 import { LessonPreview } from "./lesson-preview";
@@ -31,6 +32,7 @@ export function Hero() {
           </p>
         </div>
         <StartLearning className="relative mt-8 w-full rounded-full py-4 text-lg shadow-lg shadow-accent/25 sm:w-auto sm:px-10" />
+        <SignInPrompt className="relative mt-4 text-center sm:text-start" />
       </div>
       <LessonPreview className="hidden lg:block" />
     </section>

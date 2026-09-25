@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Logo } from "@/components/brand/logo";
+import { SignInLink } from "@/features/account/components/sign-in-link";
 import { cn } from "@/lib/cn";
 import { CONTACT_EMAIL, PAGE, contactHref } from "../constants";
 import { StartLearning } from "./start-learning";
@@ -24,6 +25,7 @@ export function SiteHeader() {
           >
             Contact
           </a>
+          <SignInLink />
           <StartLearning size="sm" className="hidden sm:inline-flex" />
         </nav>
       </div>

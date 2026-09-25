@@ -223,7 +223,7 @@ it("deletes the account with every learner, wiping and signing out the device", 
   });
   cy.visit("/app");
   cy.contains("h1", "Who's learning?");
-  cy.contains("button", "Add a learner");
+  cy.contains("button", "Add learner");
   cy.contains("button", "Ada").should("not.exist");
 });
 

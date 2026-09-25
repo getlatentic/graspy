@@ -79,23 +79,47 @@ it("opens the emulator's sign-in window, and asks nothing of an account signed o
   cy.get("@send.all").should("have.length", 0);
 });
 
-it("offers sign-in before onboarding makes a plan that would replace the learner's", () => {
+it("offers sign-in from the landing page and onboarding, before any plan is made", () => {
   onDevice("tablet");
-  cy.visit("/app/onboarding", {
-    onBeforeLoad: (win) => cy.stub(win, "open").as("popup").returns(null),
-  });
+  cy.visit("/");
+  cy.contains("header a", "Sign in");
+  cy.contains("p", "Already learning with graspy?").find("a").click();
+  cy.location("pathname").should("eq", "/app/sign-in");
+  cy.contains("a", "Start learning").click();
+  cy.contains("header a", "Sign in").click();
 
-  cy.contains(
-    "Learned with graspy before? Sign in to carry on with your plan.",
-  );
+  cy.location("pathname").should("eq", "/app/sign-in");
+  cy.window().then((win) => cy.stub(win, "open").as("popup").returns(null));
+  cy.contains("h1", "Sign in to graspy");
   cy.contains("button", "Sign in with Google").click();
 
   cy.get("@popup")
     .its("firstCall.args.0")
     .should("match", /^http:\/\/127\.0\.0\.1:9099\/emulator\/auth\/handler\?/);
-  cy.location("pathname").should("eq", "/app/onboarding");
   cy.get("@join.all").should("have.length", 0);
   cy.get("@send.all").should("have.length", 0);
+});
+
+it("tells a device with a plan of its own that it goes to the learner chosen", () => {
+  onDevice("phone");
+  usedDevice(phonePlan(Date.now() - HOUR), learnerIn(1));
+  signInToGoogle(googleAccount("Ada Lovelace")).then((signIn) =>
+    signInOnThisDevice(signIn),
+  );
+  cy.visit("/app");
+  cy.contains("h1", "Who's learning?");
+  cy.contains("Add the first learner on this account");
+  cy.contains(
+    "The plan already on this device goes to the learner you choose, or to one you add.",
+  );
+
+  onDevice("tablet");
+  signInToGoogle(googleAccount("Grace Hopper")).then((signIn) =>
+    signInOnThisDevice(signIn),
+  );
+  cy.visit("/app");
+  cy.contains("h1", "Who's learning?");
+  cy.contains("The plan already on this device").should("not.exist");
 });
 
 it("adds a learner only once named and vouched for by them or their guardian", () => {
@@ -106,7 +130,7 @@ it("adds a learner only once named and vouched for by them or their guardian", (
 
   cy.location("pathname").should("eq", "/app/learners");
   cy.contains("h1", "Who's learning?");
-  cy.contains("button", "Add a learner").click();
+  cy.contains("button", "Add learner").click();
   const add = () => cy.contains("button", /^Add$/);
   add().should("be.disabled");
   cy.get("#learner-name").type("Ada");
@@ -127,7 +151,7 @@ it("says when the account holds as many learners as it can", () => {
 
   cy.contains("button", "Child 8");
   cy.contains("This account has 8 learners, the most it can hold.");
-  cy.contains("button", "Add a learner").should("not.exist");
+  cy.contains("button", "Add learner").should("not.exist");
 });
 
 describe("a device's first sign-in, choosing who is learning", () => {

@@ -31,7 +31,7 @@ export type Choice = { add: string } | { choose: string };
 
 /** On "Who's learning?": the learner is added, as the form asks, and chosen. */
 export function addLearnerNamed(name: string): void {
-  cy.contains("button", "Add a learner").click();
+  cy.contains("button", "Add learner").click();
   cy.get("#learner-name").type(name);
   cy.contains("label", "I'm this learner").find("input").check();
   cy.contains("button", /^Add$/).click();

@@ -201,8 +201,7 @@
       "topics": "Àkòrí",
       "continue": "Wo ètò ẹ̀kọ́ rẹ"
     },
-    "moreSubjects": "+{count} míràn",
-    "returning": "Ṣé o ti kẹ́kọ̀ọ́ pẹ̀lú graspy tẹ́lẹ̀? Wọlé láti máa bá ètò rẹ lọ."
+    "moreSubjects": "+{count} míràn"
   },
   "plan": {
     "back": "Padà",
@@ -328,11 +327,10 @@
   },
   "learners": {
     "title": "Ta ló ń kẹ́kọ̀ọ́?",
-    "body": "Akẹ́kọ̀ọ́ kọ̀ọ̀kan ní ètò àti ìtẹ̀síwájú tirẹ̀. Yan ẹni tó ń kẹ́kọ̀ọ́ lórí ẹ̀rọ yìí.",
+    "body": "Yan ẹni tó ń kẹ́kọ̀ọ́ lórí ẹ̀rọ yìí. Akẹ́kọ̀ọ́ kọ̀ọ̀kan ní ètò àti ìtẹ̀síwájú tirẹ̀.",
     "signedInAs": "O wọlé gẹ́gẹ́ bí {email}",
     "back": "Padà",
     "inUse": "Ó ń kẹ́kọ̀ọ́ lórí ẹ̀rọ yìí",
-    "add": "Fi akẹ́kọ̀ọ́ kún un",
     "nameLabel": "Orúkọ akẹ́kọ̀ọ́",
     "guardian": "Èmi ni akẹ́kọ̀ọ́ yìí, tàbí òbí tàbí alágbàtọ́ rẹ̀",
     "addButton": "Fi kún un",
@@ -354,6 +352,21 @@
     "deleteBody": "Èyí máa pa gbogbo akẹ́kọ̀ọ́ tó wà lórí àkọọ́lẹ̀ yìí rẹ́ kúrò nínú graspy, yóò sì mú ọ jáde. Àkọọ́lẹ̀ Google rẹ fúnra rẹ̀ ṣì wà lọ́dọ̀ Google.",
     "deleteButton": "Pa àkọọ́lẹ̀ mi rẹ́",
     "deleteConfirm": "Ṣé kí o pa àkọọ́lẹ̀ yìí rẹ́? A máa pa ètò, ìtẹ̀síwájú, ẹ̀kọ́ àti ìjíròrò gbogbo akẹ́kọ̀ọ́ rẹ́ kúrò nínú graspy. A kò lè dá a padà.",
-    "deleteYes": "Bẹ́ẹ̀ ni, pa àkọọ́lẹ̀ mi rẹ́"
+    "deleteYes": "Bẹ́ẹ̀ ni, pa àkọọ́lẹ̀ mi rẹ́",
+    "bodyFirst": "Fi akẹ́kọ̀ọ́ àkọ́kọ́ kún àkántì yìí: ìwọ fúnra rẹ, tàbí ọmọ rẹ.",
+    "addTile": "Fi akẹ́kọ̀ọ́ kún un",
+    "addTitle": "Fi akẹ́kọ̀ọ́ kún un",
+    "addBody": "Wọn yóò ní ètò àti ìtẹ̀síwájú tiwọn. O lè yí orúkọ wọn padà tàbí yọ wọ́n kúrò nígbà míì.",
+    "devicePlan": "Ètò tó ti wà lórí ẹ̀rọ yìí yóò lọ sọ́dọ̀ akẹ́kọ̀ọ́ tí o bá yàn, tàbí èyí tí o bá fi kún un.",
+    "otherAccount": "Lo àkántì Google mìíràn"
+  },
+  "signIn": {
+    "link": "Wọlé",
+    "returning": "Ṣé o ti ń kẹ́kọ̀ọ́ pẹ̀lú graspy?",
+    "title": "Wọlé sí graspy",
+    "body": "Máa bá ètò àti ìtẹ̀síwájú rẹ lọ lórí ẹ̀rọ èyíkéyìí. Òbí á wọlé lẹ́ẹ̀kan, lẹ́yìn náà á fi ọmọ kọ̀ọ̀kan kún un gẹ́gẹ́ bí akẹ́kọ̀ọ́.",
+    "noPassword": "graspy kò tọ́jú ọ̀rọ̀ aṣínà kankan: Google ló ń jẹ́rìí pé ìwọ ni.",
+    "newHere": "Ṣé o jẹ́ tuntun sí graspy?",
+    "start": "Bẹ̀rẹ̀ ẹ̀kọ́"
   }
 }
