@@ -29,6 +29,13 @@ class Plan(Wire):
     topics: dict[str, list[str]] = Field(default_factory=dict)
     levels: dict[str, dict[str, str]] = Field(default_factory=dict)
     goals: dict[str, str] = Field(default_factory=dict)
+    country: str | None = None
+    language: str | None = None
+    grade_level: str | None = None
+
+    def written_for(self) -> tuple[str | None, str | None, str | None]:
+        """What the plan was made for: its topics suit this and nothing else."""
+        return (self.country, self.language, self.grade_level)
 
     def json(self) -> str:
         return self.model_dump_json(by_alias=True)
@@ -42,9 +49,14 @@ class Joined:
 
 
 def joined(account: Plan | None, device: Plan, now: int) -> Joined:
-    """A device's first sign-in: one plan for the account, keeping the
-    account's subjects and adding the device's others."""
-    if account is None or account.plan_id == device.plan_id:
+    """A device's first sign-in: one plan for the account. Plans for the same
+    class merge, keeping the account's subjects and adding the device's
+    others; plans for different classes do not mix, and the newer wins."""
+    if (
+        account is None
+        or account.plan_id == device.plan_id
+        or account.written_for() != device.written_for()
+    ):
         return Joined(newer(account, device), None)
     own = {subject.slug for subject in account.subjects}
     added = [subject for subject in device.subjects if subject.slug not in own]

@@ -66,7 +66,8 @@ export function streamCurriculum(
   const url = new URL(`${API_BASE_URL}/curriculum/generate-stream`);
   url.searchParams.set("country", request.country);
   url.searchParams.set("language", request.language);
-  if (request.gradeLevel) url.searchParams.set("gradeLevel", request.gradeLevel);
+  if (request.gradeLevel)
+    url.searchParams.set("gradeLevel", request.gradeLevel);
   for (const subject of request.subjects ?? []) {
     url.searchParams.append("subject", subject);
   }

@@ -6,38 +6,43 @@ import {
   type LearningSession,
 } from "@/lib/curriculum-record";
 import type { CurriculumResultEvent } from "@/lib/curriculum-api";
+import type { PlanDetails } from "@/lib/plan-details";
 
 const DEFAULT_GRADE_LEVEL = "middle school learners";
 
-interface CurriculumShape {
-  country: string;
-  language: string;
-  gradeLevel?: string;
-  subjects: CurriculumSubject[];
-  topics: Record<string, string[]>;
-  nextSubjectSlug?: string | null;
-  activeSession?: LearningSession;
-  createdAt?: number;
-  planId?: string;
-}
+type CurriculumShape = Partial<PlanDetails> &
+  Pick<PlanDetails, "country" | "language"> & {
+    subjects: CurriculumSubject[];
+    topics: Record<string, string[]>;
+    nextSubjectSlug?: string | null;
+    activeSession?: LearningSession;
+    createdAt?: number;
+    planId?: string;
+  };
 
-export function buildCurriculum(shape: CurriculumShape): CurriculumData {
-  const createdAt = shape.createdAt ?? Date.now();
+export function buildCurriculum({
+  subjects,
+  topics,
+  nextSubjectSlug,
+  activeSession,
+  createdAt = Date.now(),
+  planId,
+  ...details
+}: CurriculumShape): CurriculumData {
   return {
     id: "current",
-    country: shape.country,
-    language: shape.language,
-    gradeLevel: shape.gradeLevel ?? DEFAULT_GRADE_LEVEL,
-    subjects: shape.subjects,
+    ...details,
+    gradeLevel: details.gradeLevel ?? DEFAULT_GRADE_LEVEL,
+    subjects,
     // Copied so the persisted record shares no arrays with a live accumulator.
     topics: Object.fromEntries(
-      Object.entries(shape.topics).map(([slug, list]) => [slug, [...list]]),
+      Object.entries(topics).map(([slug, list]) => [slug, [...list]]),
     ),
-    activeSession: shape.activeSession,
-    assessment: { nextSubject: shape.nextSubjectSlug ?? null },
+    activeSession,
+    assessment: { nextSubject: nextSubjectSlug ?? null },
     createdAt,
     updatedAt: Date.now(),
-    planId: shape.planId ?? planIdFor(createdAt),
+    planId: planId ?? planIdFor(createdAt),
   };
 }
 

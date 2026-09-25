@@ -1,7 +1,14 @@
 import { CurriculumAccumulator } from "@/features/learn/lib/curriculum-accumulator";
 import { streamCurriculum, type CurriculumRequest } from "@/lib/curriculum-api";
 import { deleteCurriculum, saveCurriculum } from "@/lib/curriculum-db";
-import { getCountryName, getLanguageName } from "@/lib/locale";
+import { planDetails } from "@/lib/plan-details";
+import type { LearnerDetails } from "@/lib/user-storage";
+
+/** The plan asked for, and the learner it is for. */
+export interface PlanOrder {
+  request: CurriculumRequest;
+  learner: LearnerDetails;
+}
 
 export interface GenerationStats {
   subjectCount: number;
@@ -22,11 +29,12 @@ async function followStream(
 }
 
 /** Replaces any plan the learner had. The server is sent English names. */
-export async function generatePlan(
-  request: CurriculumRequest,
-): Promise<GenerationStats> {
-  const country = getCountryName(request.country);
-  const language = getLanguageName(request.language);
+export async function generatePlan({
+  request,
+  learner,
+}: PlanOrder): Promise<GenerationStats> {
+  const details = planDetails(learner);
+  const { country, language } = details;
   try {
     await deleteCurriculum();
   } catch (e) {
@@ -42,11 +50,8 @@ export async function generatePlan(
 
   const { subjects, topics } = accumulator;
   await saveCurriculum({
-    country,
-    countryName: country,
-    language,
-    languageName: language,
-    gradeLevel: request.gradeLevel || "middle school",
+    ...details,
+    gradeLevel: details.gradeLevel || "middle school",
     subjects,
     topics,
     assessment: { nextSubject: accumulator.firstSubject?.slug || null },

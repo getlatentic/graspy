@@ -15,6 +15,18 @@ export interface UserProfile extends LearnerLevel {
   onboardingCompleted: boolean;
 }
 
+/** What the learner said about themselves: their plan is written for these. */
+export type LearnerDetails = Pick<
+  UserProfile,
+  | "country"
+  | "language"
+  | "system"
+  | "level"
+  | "levelNames"
+  | "course"
+  | "gradeLevel"
+>;
+
 const USER_PROFILE_KEY = "graspy_user_profile";
 
 const listeners = new Set<() => void>();

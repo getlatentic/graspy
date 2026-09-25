@@ -3,19 +3,8 @@ import {
   isAfterSchool,
   levelComplete,
 } from "@/lib/learner-level";
-import type { UserProfile } from "@/lib/user-storage";
+import type { LearnerDetails, UserProfile } from "@/lib/user-storage";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
-
-export type LearnerDetails = Pick<
-  UserProfile,
-  | "country"
-  | "language"
-  | "system"
-  | "level"
-  | "levelNames"
-  | "course"
-  | "gradeLevel"
->;
 
 export function learnerDetails(details: DetailsSchema): LearnerDetails {
   const { country, language, level } = details;

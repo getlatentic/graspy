@@ -17,6 +17,16 @@ vi.mock("@/lib/curriculum-db", () => ({
   holdCurriculum,
 }));
 
+vi.mock("@/lib/plan-level", () => ({
+  withRecoveredLevel: async (plan: CurriculumData) => plan,
+}));
+
+const saveUserProfile = vi.fn();
+vi.mock("@/lib/user-storage", () => ({
+  getUserProfile: () => ({ gradeLevel: "JSS 1" }),
+  saveUserProfile,
+}));
+
 let signedIn: { uid: string } | null = { uid: "uid-1" };
 vi.mock("@/lib/account/account-store", () => ({
   currentAccount: () => signedIn,
@@ -36,6 +46,32 @@ function plan(planId: string, updatedAt: number): CurriculumData {
     updatedAt,
   };
 }
+
+const JSS_3 = "JSS 3 (Junior Secondary School), Nigeria, age 14";
+
+/** A plan for another class, with the details it was written for. */
+function forJss3(planId: string, updatedAt: number): CurriculumData {
+  return {
+    ...plan(planId, updatedAt),
+    countryCode: "NG",
+    languageCode: "en",
+    gradeLevel: JSS_3,
+    system: "NG",
+    level: "jss-3",
+    levelNames: { en: "JSS 3" },
+    course: "",
+  };
+}
+
+const JSS_3_LEARNER = {
+  country: "NG",
+  language: "en",
+  gradeLevel: JSS_3,
+  system: "NG",
+  level: "jss-3",
+  levelNames: { en: "JSS 3" },
+  course: "",
+};
 
 const unreachable = () => Promise.reject(new TypeError("Failed to fetch"));
 
@@ -245,5 +281,45 @@ describe("syncPlan on starting the app", () => {
     await expect(syncPlan()).resolves.toBeNull();
 
     expect(server.sendPlan).toHaveBeenCalledWith(plan("plan-1", 10));
+  });
+});
+
+describe("syncPlan adopting a plan", () => {
+  it("takes the details of the account's plan on joining", async () => {
+    device = plan("plan-device", 10);
+    server.joinPlan.mockResolvedValue(forJss3("plan-account", 20));
+
+    await syncPlan();
+
+    expect(saveUserProfile).toHaveBeenCalledWith(JSS_3_LEARNER);
+  });
+
+  it("takes the details of a newer plan the server answers a save with", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockResolvedValue(forJss3("plan-2", 15));
+
+    await syncPlan();
+
+    expect(saveUserProfile).toHaveBeenCalledWith(JSS_3_LEARNER);
+  });
+
+  it("takes the details of the account's newer plan on starting", async () => {
+    await joinedWith(plan("plan-1", 10));
+    server.accountPlan.mockResolvedValue(forJss3("plan-1", 20));
+
+    await syncPlan();
+
+    expect(saveUserProfile).toHaveBeenCalledWith(JSS_3_LEARNER);
+  });
+
+  it("keeps the device's details when it keeps its plan", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockResolvedValue(plan("plan-1", 11));
+
+    await syncPlan();
+
+    expect(saveUserProfile).not.toHaveBeenCalled();
   });
 });

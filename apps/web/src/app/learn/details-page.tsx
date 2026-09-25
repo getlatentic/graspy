@@ -17,7 +17,7 @@ import {
   type DetailsSchema,
 } from "@/features/onboarding/schemas/onboarding-schema";
 import { useI18n } from "@/lib/i18n-context";
-import { getCountryName, getLanguageName } from "@/lib/locale";
+import { planDetails } from "@/lib/plan-details";
 import {
   getUserProfile,
   saveUserProfile,
@@ -65,7 +65,7 @@ export default function DetailsPage() {
 }
 
 function SaveDetails({ profile }: { profile: UserProfile }) {
-  const { t, setLocale } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { curriculum, applyCurriculum } = usePlan();
   const values = useFormContext<DetailsSchema>().watch();
@@ -74,18 +74,8 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
   const keepPlan = async () => {
     const details = learnerDetails(values);
     saveUserProfile(details);
-    setLocale(details.language);
     if (curriculum) {
-      const country = getCountryName(details.country);
-      const language = getLanguageName(details.language);
-      await applyCurriculum({
-        ...curriculum,
-        country,
-        countryName: country,
-        language,
-        languageName: language,
-        gradeLevel: details.gradeLevel,
-      });
+      await applyCurriculum({ ...curriculum, ...planDetails(details) });
     }
     navigate(YOU);
   };

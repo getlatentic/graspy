@@ -1,8 +1,11 @@
 import { currentAccount } from "@/lib/account/account-store";
-import { getCurriculum } from "@/lib/curriculum-db";
+import { getCurriculum, holdCurriculum } from "@/lib/curriculum-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
+import { followPlan } from "@/lib/follow-plan";
 import { changePlanRecord } from "@/lib/learner-record";
+import { completedPlan } from "@/lib/plan-details";
 import { syncPlan } from "@/lib/plan-sync";
+import { getUserProfile } from "@/lib/user-storage";
 import { pathsOf, withPathsFrom } from "./curriculum-edit";
 
 // A signed-in device without a plan takes the account's, rather than making a new one
@@ -14,8 +17,22 @@ function accountPlan(): Promise<CurriculumData | null> {
   });
 }
 
+// Kept with its date, so it never passes for a newer plan than another device's.
+async function completed(plan: CurriculumData): Promise<CurriculumData> {
+  const whole = completedPlan(plan, getUserProfile());
+  if (JSON.stringify(whole) !== JSON.stringify(plan))
+    await holdCurriculum(whole);
+  return whole;
+}
+
 export async function loadSavedPlan(): Promise<CurriculumData | null> {
-  const saved = await getCurriculum();
+  const stored = await getCurriculum();
+  const saved = stored && (await completed(stored));
+  if (saved) {
+    followPlan(saved).catch((err: unknown) =>
+      console.warn("Taking the plan's details failed:", err),
+    );
+  }
   // An account's record is shared: another device may have moved it to a newer plan
   // than this one, whose record plan_kept would drop.
   if (currentAccount()) return saved ?? accountPlan();

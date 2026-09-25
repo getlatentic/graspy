@@ -3,6 +3,7 @@ import type {
   CurriculumRequest,
   CurriculumStreamEvent,
 } from "@/lib/curriculum-api";
+import type { LearnerDetails } from "@/lib/user-storage";
 import { generatePlan } from "./generate-plan";
 
 const { streamCurriculum, saveCurriculum, deleteCurriculum } = vi.hoisted(
@@ -28,6 +29,16 @@ const request: CurriculumRequest = {
   subjects: ["Mathematics"],
 };
 
+const learner: LearnerDetails = {
+  country: "NG",
+  language: "en",
+  system: "NG",
+  level: "jss-1",
+  levelNames: { en: "JSS 1" },
+  course: "",
+  gradeLevel: "JSS 1",
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   saveCurriculum.mockResolvedValue(undefined);
@@ -35,7 +46,7 @@ beforeEach(() => {
 });
 
 describe("generatePlan", () => {
-  it("asks for the plan in English names and keeps what the stream made", async () => {
+  it("asks for the plan in English names and keeps what the stream made for the learner", async () => {
     streams(
       { type: "status", message: "Thinking" },
       { type: "result", subjects: ["Mathematics", "English Language"] },
@@ -48,7 +59,7 @@ describe("generatePlan", () => {
       },
     );
 
-    await expect(generatePlan(request)).resolves.toEqual({
+    await expect(generatePlan({ request, learner })).resolves.toEqual({
       subjectCount: 2,
       topicCount: 3,
     });
@@ -61,8 +72,14 @@ describe("generatePlan", () => {
     expect(saveCurriculum).toHaveBeenCalledWith(
       expect.objectContaining({
         country: "Nigeria",
+        countryCode: "NG",
         languageName: "English",
+        languageCode: "en",
         gradeLevel: "JSS 1",
+        system: "NG",
+        level: "jss-1",
+        levelNames: { en: "JSS 1" },
+        course: "",
         assessment: { nextSubject: "mathematics" },
       }),
     );
@@ -74,7 +91,7 @@ describe("generatePlan", () => {
       { type: "error", message: "busy" },
     );
 
-    await expect(generatePlan(request)).rejects.toThrow("busy");
+    await expect(generatePlan({ request, learner })).rejects.toThrow("busy");
     expect(saveCurriculum).not.toHaveBeenCalled();
   });
 });

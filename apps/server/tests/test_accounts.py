@@ -54,12 +54,14 @@ def after(*changes) -> LearnerRecord:
     return parsed(stored)
 
 
-def plan(plan_id, updated_at, subjects: dict[str, list[str]]) -> Plan:
+def plan(plan_id, updated_at, subjects: dict[str, list[str]], grade="JSS 1") -> Plan:
     return Plan.model_validate(
         {
             "planId": plan_id,
             "updatedAt": updated_at,
-            "gradeLevel": "JSS 1",
+            "country": "Nigeria",
+            "language": "English",
+            "gradeLevel": grade,
             "subjects": [{"name": slug.title(), "slug": slug} for slug in subjects],
             "topics": subjects,
         }
@@ -114,6 +116,23 @@ def test_joining_keeps_the_accounts_subjects_and_adds_the_devices_others():
         "mathematics": {"Fractions": 1},
         "biology": {"Cells": 0},
     }
+
+
+@pytest.mark.parametrize(
+    ("account_updated", "expected"),
+    [(10, "device"), (50, "account")],
+    ids=["device-newer", "account-newer"],
+)
+def test_plans_for_different_classes_do_not_mix_and_the_newer_wins(
+    account_updated, expected
+):
+    account = plan("plan-account", account_updated, {"maths": ["Algebra"]}, "SS 1")
+    device = plan("plan-device", 20, {"maths": ["Counting"], "art": ["Colour"]})
+
+    result = joined(account, device, now=99)
+
+    assert result.carried is None
+    assert result.plan == (device if expected == "device" else account)
 
 
 @pytest.mark.parametrize(

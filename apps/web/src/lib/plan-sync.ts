@@ -1,6 +1,7 @@
 import { currentAccount } from "@/lib/account/account-store";
 import { getCurriculum, holdCurriculum } from "@/lib/curriculum-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
+import { followPlan } from "@/lib/follow-plan";
 import { accountPlan, joinPlan, sendPlan } from "@/lib/shared-plan-api";
 
 // A signed-in learner's devices hold one plan; the server keeps the newer by updatedAt.
@@ -66,6 +67,11 @@ function exchanged(
   return pulled(local);
 }
 
+async function adopt(plan: CurriculumData): Promise<void> {
+  await holdCurriculum(plan);
+  await followPlan(plan);
+}
+
 async function syncOnce(uid: string): Promise<CurriculumData | null> {
   const local = await getCurriculum();
   const held = await exchanged(uid, local);
@@ -74,7 +80,7 @@ async function syncOnce(uid: string): Promise<CurriculumData | null> {
   if (stamp(held) === stamp(local)) return null;
   // A save made while the server answered is newer than the answer: the next sync sends it.
   if (stamp(await getCurriculum()) !== stamp(local)) return null;
-  await holdCurriculum(held);
+  await adopt(held);
   return held;
 }
 

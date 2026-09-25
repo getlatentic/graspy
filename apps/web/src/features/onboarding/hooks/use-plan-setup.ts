@@ -1,10 +1,13 @@
 import { useReducer, useRef, useState, type Dispatch } from "react";
 import { useMutation } from "@tanstack/react-query";
-import type { CurriculumRequest } from "@/lib/curriculum-api";
 import { useI18n } from "@/lib/i18n-context";
 import { saveUserProfile } from "@/lib/user-storage";
 import { learnerDetails } from "../lib/details";
-import { generatePlan, type GenerationStats } from "../lib/generate-plan";
+import {
+  generatePlan,
+  type GenerationStats,
+  type PlanOrder,
+} from "../lib/generate-plan";
 import {
   FORM_SHOWN,
   GENERATION_STEP_SEQUENCE,
@@ -81,12 +84,12 @@ export function usePlanSetup() {
   const [subjectNames, setSubjectNames] = useState<string[]>([]);
   // A run reads these after its awaits, where state would be stale.
   const runRef = useRef<number | null>(null);
-  const requestRef = useRef<CurriculumRequest | null>(null);
+  const orderRef = useRef<PlanOrder | null>(null);
 
-  const begin = (request: CurriculumRequest) => {
+  const begin = (order: PlanOrder) => {
     const id = Date.now();
     runRef.current = id;
-    requestRef.current = request;
+    orderRef.current = order;
     dispatch({ type: "started" });
     return () => runRef.current === id;
   };
@@ -96,16 +99,17 @@ export function usePlanSetup() {
     available: GeneratedSubject[],
   ) => {
     const request = planRequest(data, available);
+    const order = { request, learner: learnerDetails(data) };
     setSubjectNames(request.subjects);
-    const current = begin(request);
+    const current = begin(order);
     await keepLearner(data, request.subjects, setLocale);
-    await makePlan(() => generate(request), current, dispatch);
+    await makePlan(() => generate(order), current, dispatch);
   };
 
   const retry = () => {
-    const request = requestRef.current;
-    if (!request) return;
-    void makePlan(() => generate(request), begin(request), dispatch);
+    const order = orderRef.current;
+    if (!order) return;
+    void makePlan(() => generate(order), begin(order), dispatch);
   };
 
   const reset = () => {

@@ -1,3 +1,5 @@
+import type { Names } from "./education-api";
+
 export interface CurriculumData {
   id: string;
   // Changes only when the plan is made again.
@@ -7,6 +9,13 @@ export interface CurriculumData {
   language: string;
   languageName?: string;
   gradeLevel: string;
+  // The learner's details as their profile keeps them; plans from earlier versions lack them.
+  countryCode?: string;
+  languageCode?: string;
+  system?: string;
+  level?: string;
+  levelNames?: Names | null;
+  course?: string;
   subjects: CurriculumSubject[];
   topics?: Record<string, string[]>;
   // Path topics' levels by subject slug, then topic; others are at gradeLevel.

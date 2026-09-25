@@ -8,7 +8,9 @@ import {
   type CurriculumSubject,
   type LearningSession,
 } from "@/lib/curriculum-record";
+import { planDetails } from "@/lib/plan-details";
 import { normalizeSubjectList } from "@/lib/slug";
+import { getUserProfile } from "@/lib/user-storage";
 import {
   buildCurriculum,
   CurriculumAccumulator,
@@ -41,6 +43,14 @@ function failureMessage(error: unknown, t: Translate): string {
     : t("chat.errorMessage", { error: "Curriculum generation failed" });
 }
 
+/** Every plan request is made from the learner's details as the device keeps them. */
+function learnerPlanDetails(currentGrade: string | undefined) {
+  const learner = getUserProfile();
+  if (!learner) throw new Error("No learner profile to plan for");
+  const details = planDetails(learner);
+  return { ...details, gradeLevel: details.gradeLevel || currentGrade };
+}
+
 /** Returns the stream's own error message; throws on any other failure. */
 async function makePlan(
   request: CurriculumRequest,
@@ -48,17 +58,16 @@ async function makePlan(
   onPriming: (priming: boolean) => void,
 ): Promise<string | null> {
   const createdAt = Date.now();
+  const details = learnerPlanDetails(deps.gradeLevel);
   const { subjects } = normalizeSubjectList(
     (request.subjects ?? []).map((s) => s.trim()).filter(Boolean),
   );
   const accumulator = new CurriculumAccumulator(subjects);
   const planNow = (activeSession?: LearningSession) =>
     buildCurriculum({
+      ...details,
       planId: planIdFor(createdAt),
       createdAt,
-      country: request.country,
-      language: request.language,
-      gradeLevel: request.gradeLevel || deps.gradeLevel,
       subjects: accumulator.subjects,
       topics: accumulator.topics,
       nextSubjectSlug: deps.next()?.slug ?? null,

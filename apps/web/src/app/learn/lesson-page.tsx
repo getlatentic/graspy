@@ -62,7 +62,9 @@ function LessonBody({
     online: navigator.onLine,
   });
   if (problem) {
-    return <LessonProblemCard problem={problem} onRetry={retry} onBack={onBack} />;
+    return (
+      <LessonProblemCard problem={problem} onRetry={retry} onBack={onBack} />
+    );
   }
   if (!card || !target) return <LessonLoading topic={target?.topic} />;
   if (finished === key) {
@@ -70,7 +72,9 @@ function LessonBody({
       <LessonFinished
         topic={target.topic}
         subject={subjectName}
-        objectives={objectives.length > 0 ? objectives : objectivesOf(card.toolResult)}
+        objectives={
+          objectives.length > 0 ? objectives : objectivesOf(card.toolResult)
+        }
         next={next?.topic ?? null}
         onNext={() => next && navigate(lessonPath(slug, next.index))}
         onBack={onBack}

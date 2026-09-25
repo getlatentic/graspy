@@ -8,7 +8,20 @@ const accountsPlan = {
 } as unknown as CurriculumData;
 
 let onDevice: CurriculumData | null = saved;
-vi.mock("@/lib/curriculum-db", () => ({ getCurriculum: async () => onDevice }));
+const holdCurriculum = vi.fn(async (plan: CurriculumData) => {
+  onDevice = plan;
+});
+vi.mock("@/lib/curriculum-db", () => ({
+  getCurriculum: async () => onDevice,
+  holdCurriculum,
+}));
+vi.mock("@/lib/user-storage", () => ({
+  getUserProfile: () => ({
+    country: "NG",
+    language: "en",
+    gradeLevel: "JSS 1",
+  }),
+}));
 const changePlanRecord = vi.fn(() => new Promise(() => {}));
 vi.mock("@/lib/learner-record", () => ({ changePlanRecord }));
 let signedIn: { uid: string } | null = null;
@@ -17,6 +30,8 @@ vi.mock("@/lib/account/account-store", () => ({
 }));
 const syncPlan = vi.fn(async () => accountsPlan);
 vi.mock("@/lib/plan-sync", () => ({ syncPlan }));
+const followPlan = vi.fn(async () => {});
+vi.mock("@/lib/follow-plan", () => ({ followPlan }));
 
 const { loadSavedPlan } = await import("./saved-plan");
 
@@ -27,8 +42,29 @@ beforeEach(() => {
 });
 
 describe("loadSavedPlan", () => {
+  it("keeps an earlier plan completed, with its date", async () => {
+    onDevice = {
+      ...saved,
+      country: "NG",
+      language: "en",
+      gradeLevel: "JSS 1",
+      updatedAt: 5,
+    };
+
+    const loaded = await loadSavedPlan();
+
+    expect(loaded).toMatchObject({
+      country: "Nigeria",
+      countryCode: "NG",
+      updatedAt: 5,
+    });
+    expect(holdCurriculum).toHaveBeenCalledWith(loaded);
+    expect(followPlan).toHaveBeenCalledWith(loaded);
+  });
+
   it("opens the saved plan without waiting for the server", async () => {
-    await expect(loadSavedPlan()).resolves.toBe(saved);
+    await expect(loadSavedPlan()).resolves.toEqual(saved);
+    expect(followPlan).toHaveBeenCalledWith(saved);
     expect(changePlanRecord).toHaveBeenCalledWith({
       kind: "plan_kept",
       planId: "plan-1",
@@ -38,7 +74,7 @@ describe("loadSavedPlan", () => {
   it("keeps a signed-in learner's shared record, which a newer plan may own", async () => {
     signedIn = { uid: "uid-1" };
 
-    await expect(loadSavedPlan()).resolves.toBe(saved);
+    await expect(loadSavedPlan()).resolves.toEqual(saved);
 
     expect(changePlanRecord).not.toHaveBeenCalled();
     expect(syncPlan).not.toHaveBeenCalled();

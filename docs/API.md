@@ -24,7 +24,7 @@ TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/j
 | `/api/learner/plan` | POST | ✓ | Keeps the record in step as the plan changes |
 | `/api/learner/import` | POST | ✓ | Brings what an earlier app version kept on the device to the record, once |
 | `/api/learner/curriculum` | GET, PUT | ✓ | The plan the learner's devices share. PUT keeps the newer by `updatedAt` and returns the plan to hold |
-| `/api/learner/curriculum/join` | POST | ✓ | A device's first sign-in: merges its plan into the account's and moves its progress, returning the one plan |
+| `/api/learner/curriculum/join` | POST | ✓ | A device's first sign-in, returning the account's one plan. A plan for the same country, language and class merges into the account's and brings its progress; for another class, the newer plan wins whole |
 | `/api/education/systems` | GET | | Every school system in the catalogue |
 | `/api/education/countries/{country}` | GET | | A country's systems and classes, main system first |
 | `/api/education/systems/{id}` | GET | | One system, such as `NG` or `GB-SCT` |

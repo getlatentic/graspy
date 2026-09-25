@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { I18nContext } from "./i18n-context";
-import { getUserProfile, saveUserProfile } from "./user-storage";
+import {
+  getUserProfile,
+  onProfileSaved,
+  saveUserProfile,
+} from "./user-storage";
 
 type Messages = Record<string, unknown>;
 type Loaded = { locale: string; messages: Messages };
@@ -84,8 +88,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     void load(initialLocale());
   }, [load]);
 
+  const followed = useRef(getUserProfile()?.language);
+
   const setLocale = useCallback(
     async (locale: string) => {
+      followed.current = locale;
       const shown = await load(locale);
       // The cookie keeps the interface language shown; the profile keeps the
       // language learned in, which may have no translation.
@@ -93,6 +100,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       saveUserProfile({ language: locale });
     },
     [load],
+  );
+
+  // The interface follows the learner's language wherever it changes: on the
+  // details page, or with a plan from their account.
+  useEffect(
+    () =>
+      onProfileSaved(() => {
+        const language = getUserProfile()?.language;
+        if (language && language !== followed.current) void setLocale(language);
+      }),
+    [setLocale],
   );
 
   const value = useMemo(
