@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { firebaseConfigOf } from "./env";
+import { authEmulatorOf, firebaseConfigOf } from "./env";
 
 const FULL = {
   VITE_FIREBASE_API_KEY: "key",
@@ -21,5 +21,18 @@ describe("firebaseConfigOf", () => {
   it.each(Object.keys(FULL))("hides sign-in without %s", (missing) => {
     expect(firebaseConfigOf({ ...FULL, [missing]: " " })).toBeNull();
     expect(firebaseConfigOf({ ...FULL, [missing]: undefined })).toBeNull();
+  });
+});
+
+describe("authEmulatorOf", () => {
+  it("signs in with the emulator in development", () => {
+    expect(authEmulatorOf(" http://127.0.0.1:9099 ", false)).toBe(
+      "http://127.0.0.1:9099",
+    );
+    expect(authEmulatorOf(undefined, false)).toBeNull();
+  });
+
+  it("never signs in with it in a production build", () => {
+    expect(authEmulatorOf("http://127.0.0.1:9099", true)).toBeNull();
   });
 });

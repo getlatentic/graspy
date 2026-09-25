@@ -8,6 +8,7 @@ interface Env {
   readonly VITE_FIREBASE_AUTH_DOMAIN?: string;
   readonly VITE_FIREBASE_PROJECT_ID?: string;
   readonly VITE_FIREBASE_APP_ID?: string;
+  readonly VITE_FIREBASE_AUTH_EMULATOR?: string;
 }
 
 export interface FirebaseConfig {
@@ -35,3 +36,17 @@ export function firebaseConfigOf(values: Partial<Env>): FirebaseConfig | null {
 }
 
 export const FIREBASE_CONFIG = firebaseConfigOf(env);
+
+/** Firebase's Auth emulator, which development and the end-to-end tests sign in with.
+ * A production build never uses it: the emulator vouches for any sign-in. */
+export function authEmulatorOf(
+  address: string | undefined,
+  production: boolean,
+): string | null {
+  return production ? null : address?.trim() || null;
+}
+
+export const FIREBASE_AUTH_EMULATOR = authEmulatorOf(
+  env.VITE_FIREBASE_AUTH_EMULATOR,
+  import.meta.env.PROD,
+);

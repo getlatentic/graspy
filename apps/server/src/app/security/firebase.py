@@ -19,13 +19,26 @@ class InvalidSignIn(Exception):
     """The message is sent to the client."""
 
 
+def lookup_url(emulator_host: str | None) -> str:
+    """The Auth emulator serves Identity Toolkit at its own address."""
+    if emulator_host:
+        return (
+            f"http://{emulator_host}/identitytoolkit.googleapis.com/v1/accounts:lookup"
+        )
+    return LOOKUP_URL
+
+
 def account_learner(uid: str) -> str:
     """Device ids have no colon, so an account can never be taken for one."""
     return f"account:{uid}"
 
 
 async def verified_uid(
-    id_token: str, api_key: str, client: httpx.AsyncClient | None = None
+    id_token: str,
+    api_key: str,
+    client: httpx.AsyncClient | None = None,
+    *,
+    url: str = LOOKUP_URL,
 ) -> str:
     """The project's key scopes the lookup: a token from another project is
     refused."""
@@ -33,7 +46,7 @@ async def verified_uid(
     client = client or httpx.AsyncClient(timeout=15.0)
     try:
         response = await client.post(
-            LOOKUP_URL, params={"key": api_key}, json={"idToken": id_token}
+            url, params={"key": api_key}, json={"idToken": id_token}
         )
     except httpx.HTTPError as error:
         logger.error("Identity Toolkit unreachable: %s", error)

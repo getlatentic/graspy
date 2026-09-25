@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # A Worker receives these as bindings on `env`, not in the process
@@ -66,6 +66,10 @@ class Settings(BaseSettings):
     # The Firebase project's web API key: public, but it names the project
     # whose sign-ins are accepted. Unset turns sign-in off.
     firebase_api_key: str | None = Field(default=None, alias="FIREBASE_API_KEY")
+    # host:port of Firebase's Auth emulator, which vouches for any sign-in.
+    firebase_auth_emulator_host: str | None = Field(
+        default=None, alias="FIREBASE_AUTH_EMULATOR_HOST"
+    )
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -87,6 +91,15 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() in {"production", "prod"}
+
+    @model_validator(mode="after")
+    def no_emulator_in_production(self) -> Settings:
+        if self.is_production and self.firebase_auth_emulator_host:
+            raise ValueError(
+                "FIREBASE_AUTH_EMULATOR_HOST is set in production, where it would "
+                "accept a sign-in nobody made."
+            )
+        return self
 
 
 def get_settings() -> Settings:

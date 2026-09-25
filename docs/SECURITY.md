@@ -1,12 +1,12 @@
 # Security
 
-Nobody signs in, so there is no account to take over. The assets are the model budget and the service itself. Everything a learner types reaches a model, and the model can repeat it, so all model output is untrusted.
+Signing in is optional and goes through Google by Firebase, so graspy keeps no passwords. The assets are the model budget, the service itself and the learner's record. Everything a learner types reaches a model, and the model can repeat it, so all model output is untrusted.
 
 ## Controls (OWASP Top 10, 2021)
 
 | # | Risk | Control | Test |
 |---|---|---|---|
-| A01, A07 | Access control, authentication | Signed session token on generation, the learner's record, `/a2a` and `/mcp`; expiry; signature bound to the payload | `test_session.py` |
+| A01, A07 | Access control, authentication | Signed session token on generation, the learner's record, `/a2a` and `/mcp`; expiry; signature bound to the payload. A sign-in checked with Identity Toolkit | `test_session.py`, `test_accounts.py` |
 | A02 | Cryptography | HMAC-SHA256 with a fixed algorithm; TLS at Cloudflare | `test_session.py` |
 | A03 | Injection | The calculator evaluates an AST allowlist with size and depth bounds; no `eval` | `test_sandbox.py` |
 | A05 | Misconfiguration | CORS allowlist, docs off in production, security headers, CSP by hash | `test_cors.py`, `test_security_headers.py`, `csp.test.ts` |
@@ -22,6 +22,11 @@ A token is a handle, not an identity. It makes abuse cost a handshake, and it gi
 - `/api` checks it with a FastAPI dependency. `/a2a` and `/mcp` check it with a middleware. Both call one function, so they refuse the same requests with the same body. The tests run every case against both.
 - A test moves a real signature onto a forged payload and requires a refusal. Each refusal test also checks which check refused.
 - Property tests require that verifying any text fails only with `InvalidSessionToken`. That covers non-ASCII bytes, which would make `hmac.compare_digest` raise, a `NaN` expiry, and a signed array.
+
+## Sign-in
+
+- The app sends a Firebase ID token once, for a session. The server asks Identity Toolkit who it belongs to, with the project's key, so a token from another project is refused. The account's learner id comes from that answer, never from the client.
+- Development and the e2e tests use Firebase's Auth emulator, which vouches for any sign-in. The server refuses to start in production with `FIREBASE_AUTH_EMULATOR_HOST` set, and a production build of the web app ignores `VITE_FIREBASE_AUTH_EMULATOR`.
 
 ## The calculator
 

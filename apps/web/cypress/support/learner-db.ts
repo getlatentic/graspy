@@ -1,3 +1,5 @@
+import { wipeDatabases } from "./devices";
+
 const DB_NAME = "graspy-db";
 export const SERVER = "http://localhost:8081";
 const API = `${SERVER}/api`;
@@ -136,45 +138,42 @@ function schemaOf(version: 1 | 3, db: IDBDatabase): void {
   }
 }
 
-// Set up from the landing page, which opens no database.
+function withPlan(win: Window, plan: object, version: 1 | 3): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const open = win.indexedDB.open(DB_NAME, version);
+    open.onupgradeneeded = () => {
+      schemaOf(version, open.result);
+      open.transaction!.objectStore("curriculum").put(plan);
+    };
+    open.onsuccess = () => {
+      open.result.close();
+      resolve();
+    };
+    open.onerror = () => reject(open.error);
+  });
+}
+
+// Set up from the landing page, which opens no database. Nothing is left of an
+// earlier test's device, a sign-in to Google included.
 export function oldDevice(
   plan: object,
   local: Record<string, string>,
   version: 1 | 3 = 1,
 ): void {
   cy.visit("/");
-  cy.window().then(
-    (win) =>
-      new Cypress.Promise<void>((resolve, reject) => {
-        win.localStorage.clear();
-        win.localStorage.setItem(
-          DEVICE_KEY,
-          `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-        );
-        win.localStorage.setItem(
-          "graspy_user_profile",
-          JSON.stringify(PROFILE),
-        );
-        for (const [key, value] of Object.entries(local)) {
-          win.localStorage.setItem(key, value);
-        }
-        const wiped = win.indexedDB.deleteDatabase(DB_NAME);
-        wiped.onblocked = () => reject(new Error("The database is open"));
-        wiped.onerror = () => reject(wiped.error);
-        wiped.onsuccess = () => {
-          const open = win.indexedDB.open(DB_NAME, version);
-          open.onupgradeneeded = () => {
-            schemaOf(version, open.result);
-            open.transaction!.objectStore("curriculum").put(plan);
-          };
-          open.onsuccess = () => {
-            open.result.close();
-            resolve();
-          };
-          open.onerror = () => reject(open.error);
-        };
-      }),
-  );
+  cy.window().then(async (win) => {
+    win.localStorage.clear();
+    win.localStorage.setItem(
+      DEVICE_KEY,
+      `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    );
+    win.localStorage.setItem("graspy_user_profile", JSON.stringify(PROFILE));
+    for (const [key, value] of Object.entries(local)) {
+      win.localStorage.setItem(key, value);
+    }
+    await wipeDatabases(win);
+    await withPlan(win, plan, version);
+  });
 }
 
 type TopicKey = [string, string, number, string];
@@ -273,19 +272,21 @@ export function stored(): Cypress.Chainable<Stored> {
     });
 }
 
-// Storage settles after the page, and the model finishes lessons late.
-export function eventually(
-  check: (device: Stored) => void,
+/** Reads until the check passes: storage settles after the page, the server
+ * after the device, and the model finishes lessons late. */
+export function retried<T>(
+  read: () => Cypress.Chainable<T>,
+  check: (value: T) => void,
   { timeout } = { timeout: 10_000 },
 ): void {
   // The deadline starts when the reading does, not when the test queued it:
   // commands before it may have waited on the model for minutes.
   let until = 0;
   const attempt = (): void => {
-    stored().then((device) => {
+    read().then((value) => {
       until ||= Date.now() + timeout;
       try {
-        check(device);
+        check(value);
       } catch (error) {
         if (Date.now() > until) throw error;
         cy.wait(500);
@@ -296,31 +297,71 @@ export function eventually(
   attempt();
 }
 
+export function eventually(
+  check: (device: Stored) => void,
+  options = { timeout: 10_000 },
+): void {
+  retried(stored, check, options);
+}
+
+export function devicePlan(): Cypress.Chainable<Stored["plan"]> {
+  return cy
+    .window()
+    .then(readDevice)
+    .then((device) => device.plan);
+}
+
+const AGREED_KEY = "graspy.plan.agreed";
+
+/** Waits for the device to hold the plan it last agreed on with the account. */
+export function agreesWithAccount(): void {
+  retried(
+    () =>
+      cy.window().then(async (win) => ({
+        plan: (await readDevice(win)).plan,
+        agreed: win.localStorage.getItem(AGREED_KEY),
+      })),
+    ({ plan, agreed }) =>
+      expect(agreed, "the plan the account agreed on").to.equal(
+        `${plan.planId}@${plan.updatedAt}`,
+      ),
+  );
+}
+
+function devtools(command: string, params?: object): void {
+  cy.then(() =>
+    Cypress.automation("remote:debugger:protocol", { command, params }),
+  );
+}
+
+/** Network.clearBrowserCache leaves the catalogue's hour-long answer in place. */
+export function browserCache(enabled: boolean): void {
+  devtools("Network.enable");
+  devtools("Network.setCacheDisabled", { cacheDisabled: !enabled });
+}
+
 let connected = true;
 
 // The browser's emulation does not reach a service worker's requests, so
 // serverFollowsTheConnection() also cuts the server off at Cypress's proxy.
-export function online(connection: boolean): void {
-  connected = connection;
-  cy.then(() =>
-    Cypress.automation("remote:debugger:protocol", {
-      command: "Network.enable",
-    }),
-  ).then(() =>
-    Cypress.automation("remote:debugger:protocol", {
-      command: "Network.emulateNetworkConditions",
-      params: {
-        offline: !connection,
-        latency: 0,
-        downloadThroughput: -1,
-        uploadThroughput: -1,
-      },
-    }),
-  );
+// Left cut off there, a page back online still cannot reach the server.
+export function online(connection: boolean, server = connection): void {
+  cy.then(() => {
+    connected = server;
+  });
+  devtools("Network.enable");
+  devtools("Network.emulateNetworkConditions", {
+    offline: !connection,
+    latency: 0,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
 }
 
 export function serverFollowsTheConnection(): void {
-  connected = true;
+  cy.then(() => {
+    connected = true;
+  });
   cy.intercept(`${SERVER}/**`, (request) => {
     if (!connected) request.destroy();
   });

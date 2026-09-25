@@ -179,9 +179,36 @@ async def test_a_token_google_does_not_vouch_for_is_refused(status, body):
         await firebase.verified_uid("token", "key", google(status, body))
 
 
+async def test_the_auth_emulator_is_asked_in_place_of_google():
+    asked = []
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        asked.append(str(request.url.copy_with(query=None)))
+        return httpx.Response(200, json={"users": [{"localId": UID}]})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(answer))
+    await firebase.verified_uid(
+        "token", "key", client, url=firebase.lookup_url("127.0.0.1:9099")
+    )
+
+    assert asked == [
+        "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:lookup"
+    ]
+    assert firebase.lookup_url(None) == firebase.LOOKUP_URL
+
+
+def test_production_refuses_the_auth_emulator():
+    with pytest.raises(ValueError, match="FIREBASE_AUTH_EMULATOR_HOST"):
+        Settings(
+            app_env="production",
+            firebase_auth_emulator_host="127.0.0.1:9099",
+            _env_file=None,
+        )
+
+
 @pytest.fixture
 def app(monkeypatch):
-    async def verified(id_token, _api_key):
+    async def verified(id_token, _api_key, **_):
         if id_token != "good":
             raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
         return UID

@@ -41,3 +41,28 @@ export function finishLesson(): void {
 export function tab(name: string): void {
   cy.get('nav[aria-label="Main"]:visible').contains(name).click();
 }
+
+/** From the You page, once the catalogue has named the learner's class. */
+export function openDetails(): void {
+  cy.contains("a", "Change").click();
+  cy.location("pathname").should("eq", "/app/learn/you/details");
+  cy.get("#grade").invoke("val").should("not.be.empty");
+}
+
+/** On the details page: the learner's details changed, keeping their plan. */
+export function keepPlanWith(change: () => void): void {
+  change();
+  cy.contains("button", "Save changes").click();
+  cy.contains("button", "Keep my plan").click();
+  cy.location("pathname").should("eq", "/app/learn/you");
+}
+
+export const inClass = (name: string) => () => {
+  cy.get("#grade").click().type(name);
+  cy.contains("button", name).click();
+};
+
+export const learningIn = (name: string) => () => {
+  cy.get("#language").click().type(name);
+  cy.contains("button", name).click();
+};

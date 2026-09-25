@@ -14,6 +14,14 @@ npm run dev
 
 Check it: <http://localhost:8081/api/health> answers, <http://localhost:8081/api/docs> lists the routes, and onboarding in the app makes a plan.
 
+Signing in locally goes to Firebase's Auth emulator, under the demo project `demo-graspy`, so no real Google account is involved. Start it beside `npm run dev`:
+
+```bash
+npx firebase-tools@15.31.0 emulators:start --only auth --project demo-graspy
+```
+
+Its sign-in window lets you make up a Google account.
+
 ## Configure
 
 The server's environment holds only what changes between deployments or is secret. Generation settings (temperature, token budgets) are in `apps/server/src/app/config/generation.py`, next to the prompts they tune.
@@ -25,6 +33,7 @@ The server's environment holds only what changes between deployments or is secre
 | `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` | The account and a token with Workers AI access. Required for `workers-ai` |
 | `LLM_MODEL_ID` | Overrides the host's model id. Unset uses the host's gpt-oss-120b |
 | `FIREBASE_API_KEY` | The Firebase project's web API key: the project whose sign-ins are accepted. A Worker secret in production. Unset turns sign-in off |
+| `FIREBASE_AUTH_EMULATOR_HOST` | The Auth emulator's `host:port`, which then checks sign-ins in place of Google. Development only: the server refuses to start with it in production |
 | `SESSION_SECRET` | Signs session tokens. Required in production; in development a temporary key is made |
 | `CORS_ORIGINS` | Allowed origins, comma-separated or JSON. One wildcard label is allowed; `*` is refused |
 | `PUBLIC_BASE_URL` / `A2A_PATH_PREFIX` | The origin the agent card advertises, and the tutor's path (default `/a2a`) |
@@ -33,19 +42,19 @@ The server's environment holds only what changes between deployments or is secre
 
 The web app reads `VITE_API_URL` and `VITE_A2A_BASE` from the committed `apps/web/.env.<mode>` files. Vite writes them into the bundle at build time, and there are no defaults, so a build without them fails instead of pointing at the wrong host.
 
-Google sign-in needs the Firebase web app's config in `apps/web/.env.<mode>.local`, which git ignores: `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` and `VITE_FIREBASE_APP_ID`, from the Firebase console under Project settings, Your apps. Without them the app builds and sign-in is hidden.
+In development, `apps/web/.env.development` points sign-in at the emulator (`VITE_FIREBASE_AUTH_EMULATOR`, which a production build ignores). A production build needs the Firebase web app's config in `apps/web/.env.production.local`, which git ignores: `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` and `VITE_FIREBASE_APP_ID`, from the Firebase console under Project settings, Your apps. Without them the app builds and sign-in is hidden.
 
 ## Test
 
 ```bash
 npm test && npm run lint                       # every package
-cd apps/web && npm run test:e2e                # Cypress, with npm run dev running
+cd apps/web && npm run test:e2e                # Cypress, with npm run dev and the Auth emulator running
 cd apps/server && uv run pytest -m integration # real model calls, spends tokens
 cd apps/server && uv run mutmut run            # finds tests that check nothing
 ```
 
 - The server's unit tests never call a model. A stand-in model (`tests/stand_in.py`) answers through the real DSPy adapter, and each test reads back what every stage asked.
-- The e2e specs stub nothing: a real browser, server and model. A full run takes about five minutes.
+- The e2e specs stub nothing: a real browser, server and model, and Google's sign-in is the Auth emulator. A full run takes about five minutes.
 - `tests/fixtures/slug-corpus.json` is read by both the server and the web app's tests. Both must spell a subject's slug the same way.
 - `apps/web/src/lib/csp.test.ts` fails with the new hash when the inline script in `index.html` changes. Put that hash in `public/_headers`.
 - A surviving mutant in `src/app/security/` or the calculator is a missing test.

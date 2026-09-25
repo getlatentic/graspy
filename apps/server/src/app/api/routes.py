@@ -9,7 +9,12 @@ from sse_starlette.sse import EventSourceResponse
 from ..caller import Caller
 from ..config.generation import DEFAULT_GRADE_LEVEL
 from ..learner.record import DeviceJoined, Seen
-from ..security.firebase import InvalidSignIn, account_learner, verified_uid
+from ..security.firebase import (
+    InvalidSignIn,
+    account_learner,
+    lookup_url,
+    verified_uid,
+)
 from ..security.guard import require_session
 from ..security.session import issue
 from .sse import sse_response
@@ -120,14 +125,19 @@ async def create_session(
 
 
 async def _signed_in(request: Request, body: SessionRequest) -> str:
-    api_key = request.app.state.settings.firebase_api_key
+    settings = request.app.state.settings
+    api_key = settings.firebase_api_key
     if not api_key:
         raise HTTPException(
             status_code=503,
             detail={"error": "Sign-in is not available.", "code": "sign_in_off"},
         )
     try:
-        uid = await verified_uid(body.firebase_id_token, api_key)
+        uid = await verified_uid(
+            body.firebase_id_token,
+            api_key,
+            url=lookup_url(settings.firebase_auth_emulator_host),
+        )
     except InvalidSignIn as refused:
         raise HTTPException(
             status_code=401, detail={"error": str(refused), "code": "sign_in_invalid"}

@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import {
   browserLocalPersistence,
   browserPopupRedirectResolver,
+  connectAuthEmulator,
   GoogleAuthProvider,
   indexedDBLocalPersistence,
   initializeAuth,
@@ -9,7 +10,7 @@ import {
   signOut,
   type Auth,
 } from "firebase/auth";
-import { FIREBASE_CONFIG } from "@/lib/env";
+import { FIREBASE_AUTH_EMULATOR, FIREBASE_CONFIG } from "@/lib/env";
 import type { Account } from "./account-store";
 
 // The only module that imports Firebase. It is imported on demand, so the app's
@@ -17,12 +18,22 @@ import type { Account } from "./account-store";
 
 let auth: Auth | null = null;
 
-function googleAuth(): Auth | null {
+function started(): Auth | null {
   if (!FIREBASE_CONFIG) return null;
-  auth ??= initializeAuth(initializeApp(FIREBASE_CONFIG), {
+  const created = initializeAuth(initializeApp(FIREBASE_CONFIG), {
     persistence: [indexedDBLocalPersistence, browserLocalPersistence],
     popupRedirectResolver: browserPopupRedirectResolver,
   });
+  if (FIREBASE_AUTH_EMULATOR) {
+    connectAuthEmulator(created, FIREBASE_AUTH_EMULATOR, {
+      disableWarnings: true,
+    });
+  }
+  return created;
+}
+
+function googleAuth(): Auth | null {
+  auth ??= started();
   return auth;
 }
 
