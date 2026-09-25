@@ -201,7 +201,8 @@
       "topics": "Àkòrí",
       "continue": "Wo ètò ẹ̀kọ́ rẹ"
     },
-    "moreSubjects": "+{count} míràn"
+    "moreSubjects": "+{count} míràn",
+    "returning": "Ṣé o ti kẹ́kọ̀ọ́ pẹ̀lú graspy tẹ́lẹ̀? Wọlé láti máa bá ètò rẹ lọ."
   },
   "plan": {
     "back": "Padà",
@@ -282,7 +283,14 @@
     "signedIn": "Ẹ̀kọ́ rẹ wà lórí gbogbo ẹ̀rọ tí o bá wọlé sí.",
     "signOut": "Jáde",
     "signInBlocked": "Aṣàwákiri rẹ dí fèrèsé ìwọlé. Gba àwọn fèrèsé agbéjáde láàyè fún graspy, kí o sì tún gbìyànjú.",
-    "signInFailed": "Ìwọlé kò ṣiṣẹ́. Ṣàyẹ̀wò ìsopọ̀ rẹ, kí o sì tún gbìyànjú."
+    "signInFailed": "Ìwọlé kò ṣiṣẹ́. Ṣàyẹ̀wò ìsopọ̀ rẹ, kí o sì tún gbìyànjú.",
+    "learningAs": "{name} ló ń kẹ́kọ̀ọ́",
+    "switchLearner": "Yí akẹ́kọ̀ọ́ padà",
+    "manageLearners": "Àwọn akẹ́kọ̀ọ́",
+    "signOutUnsent": "Àwọn àyípadà kan kò tíì dé ọ̀dọ̀ graspy. Tí o bá jáde báyìí, wọ́n máa sọnù.",
+    "signOutAnyway": "Jáde bẹ́ẹ̀ náà",
+    "cancel": "Fagilé",
+    "signingOut": "Ó ń jáde…"
   },
   "ask": {
     "currentTopic": "Àkòrí rẹ báyìí",
@@ -317,5 +325,35 @@
     "askBody": "Ètò tuntun ní àwọn ẹ̀kọ́ àti kókó fún àlàyé tuntun rẹ, ó sì rọ́pò èyí tí o ní. Tí o bá pa ètò rẹ mọ́, àwọn ẹ̀kọ́ tuntun yóò tẹ̀lé àlàyé tuntun rẹ.",
     "newPlan": "Ṣe ètò tuntun",
     "keepPlan": "Pa ètò mi mọ́"
+  },
+  "learners": {
+    "title": "Ta ló ń kẹ́kọ̀ọ́?",
+    "body": "Akẹ́kọ̀ọ́ kọ̀ọ̀kan ní ètò àti ìtẹ̀síwájú tirẹ̀. Yan ẹni tó ń kẹ́kọ̀ọ́ lórí ẹ̀rọ yìí.",
+    "signedInAs": "O wọlé gẹ́gẹ́ bí {email}",
+    "back": "Padà",
+    "inUse": "Ó ń kẹ́kọ̀ọ́ lórí ẹ̀rọ yìí",
+    "add": "Fi akẹ́kọ̀ọ́ kún un",
+    "nameLabel": "Orúkọ akẹ́kọ̀ọ́",
+    "guardian": "Èmi ni akẹ́kọ̀ọ́ yìí, tàbí òbí tàbí alágbàtọ́ rẹ̀",
+    "addButton": "Fi kún un",
+    "cancel": "Fagilé",
+    "full": "Àkọọ́lẹ̀ yìí ní akẹ́kọ̀ọ́ 8, èyí tó pọ̀ jù tó lè gbà. Yọ ọ̀kan kúrò ní ojú-ìwé Àwọn akẹ́kọ̀ọ́ kí o tó fi òmíràn kún un.",
+    "loadFailed": "A kò rí àwọn akẹ́kọ̀ọ́ gbà. Ṣàyẹ̀wò ìsopọ̀ rẹ, kí o sì tún gbìyànjú.",
+    "tryAgain": "Tún gbìyànjú",
+    "failed": "Kò ṣiṣẹ́. Ṣàyẹ̀wò ìsopọ̀ rẹ, kí o sì tún gbìyànjú.",
+    "unsent": "Àwọn àyípadà kan kò tíì dé ọ̀dọ̀ graspy. Sopọ̀ mọ́ íńtánẹ́ẹ̀tì, kí o tó yí akẹ́kọ̀ọ́ padà, kí nǹkan kan má bàa sọnù.",
+    "opening": "Ó ń ṣí…",
+    "manageTitle": "Àwọn akẹ́kọ̀ọ́",
+    "manageBody": "Yí orúkọ padà tàbí yọ àwọn akẹ́kọ̀ọ́ kúrò lórí àkọọ́lẹ̀ yìí.",
+    "rename": "Yí orúkọ padà",
+    "save": "Fi pamọ́",
+    "remove": "Yọ kúrò",
+    "removeConfirm": "Ṣé kí o yọ {name} kúrò? A máa pa ètò, ìtẹ̀síwájú, ẹ̀kọ́ àti ìjíròrò rẹ̀ rẹ́ kúrò nínú graspy. A kò lè dá a padà.",
+    "removeYes": "Yọ {name} kúrò",
+    "deleteTitle": "Pa àkọọ́lẹ̀ rẹ rẹ́",
+    "deleteBody": "Èyí máa pa gbogbo akẹ́kọ̀ọ́ tó wà lórí àkọọ́lẹ̀ yìí rẹ́ kúrò nínú graspy, yóò sì mú ọ jáde. Àkọọ́lẹ̀ Google rẹ fúnra rẹ̀ ṣì wà lọ́dọ̀ Google.",
+    "deleteButton": "Pa àkọọ́lẹ̀ mi rẹ́",
+    "deleteConfirm": "Ṣé kí o pa àkọọ́lẹ̀ yìí rẹ́? A máa pa ètò, ìtẹ̀síwájú, ẹ̀kọ́ àti ìjíròrò gbogbo akẹ́kọ̀ọ́ rẹ́ kúrò nínú graspy. A kò lè dá a padà.",
+    "deleteYes": "Bẹ́ẹ̀ ni, pa àkọọ́lẹ̀ mi rẹ́"
   }
 }

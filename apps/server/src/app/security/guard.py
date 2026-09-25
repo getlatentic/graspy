@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 from fastapi import HTTPException, Request
 
-from .session import InvalidSessionToken, learner_of, verify
+from .session import InvalidSessionToken, account_of, learner_of, verify
 
 BEARER_PREFIX = "Bearer "
 
@@ -22,6 +22,8 @@ INVALID_CODE = "session_invalid"
 @dataclass(frozen=True)
 class Session:
     learner: str | None
+    # The signed-in account's uid; its learners are managed only with it.
+    account: str | None = None
 
 
 def checked(authorization: str | None, secret: str) -> Session | dict:
@@ -32,7 +34,7 @@ def checked(authorization: str | None, secret: str) -> Session | dict:
         claims = verify(authorization[len(BEARER_PREFIX) :], secret)
     except InvalidSessionToken as exc:
         return {"error": str(exc), "code": INVALID_CODE}
-    return Session(learner=learner_of(claims))
+    return Session(learner=learner_of(claims), account=account_of(claims))
 
 
 async def require_session(request: Request) -> Session:

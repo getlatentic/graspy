@@ -304,11 +304,51 @@ export function eventually(
   retried(stored, check, options);
 }
 
-export function devicePlan(): Cypress.Chainable<Stored["plan"]> {
+/** Null once the device holds none. */
+export function devicePlan(): Cypress.Chainable<Stored["plan"] | null> {
   return cy
     .window()
     .then(readDevice)
-    .then((device) => device.plan);
+    .then((device) =>
+      cy.wrap<Stored["plan"] | null>(device.plan ?? null, { log: false }),
+    );
+}
+
+function counted(win: Window): Promise<Record<string, number>> {
+  return new Promise((resolve, reject) => {
+    const open = win.indexedDB.open(DB_NAME);
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result;
+      const names = [...db.objectStoreNames];
+      const tx = db.transaction(names, "readonly");
+      const counts = names.map((name) => tx.objectStore(name).count());
+      tx.oncomplete = () => {
+        db.close();
+        resolve(
+          Object.fromEntries(
+            names.map((name, at) => [name, counts[at].result]),
+          ),
+        );
+      };
+    };
+  });
+}
+
+/** How many records each store of the device's database holds. */
+export function storeCounts(): Cypress.Chainable<Record<string, number>> {
+  return cy.window().then(counted);
+}
+
+export function localKeys(): Cypress.Chainable<string[]> {
+  return cy.window().then((win) => Object.keys(win.localStorage).sort());
+}
+
+/** Waits for the device's storage to hold only these keys. */
+export function onlyLocalKeys(expected: string[]): void {
+  cy.window().should((win) =>
+    expect(Object.keys(win.localStorage).sort()).to.deep.equal(expected),
+  );
 }
 
 const AGREED_KEY = "graspy.plan.agreed";

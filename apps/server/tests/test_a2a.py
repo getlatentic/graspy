@@ -22,6 +22,7 @@ from app.agent.cards import (
     TextContent,
 )
 from app.agent.context import LearnerContext
+from app.agent.memory import InMemoryConversationStore
 from app.agent.reply import OpenTopic
 from app.agent.streaming import AnswerDelta, AnswerRestart, ToolActivity
 from app.agent.tutor import TutorReply
@@ -59,6 +60,7 @@ KEEPING = Keeping(
     learners=InMemoryLearnerStore(),
     lessons=InMemoryLessonStore(),
     making=TaskLessonMaking(never_run),
+    conversations=InMemoryConversationStore(),
 )
 
 
@@ -590,6 +592,18 @@ async def test_the_tutor_reads_what_the_learner_got_wrong_in_the_subject():
     await turn(agent_app(tutor), "Help", metadata=IN_FRACTIONS, device=device)
 
     assert "What is 3/8 as a decimal? (Fractions): chose '0.38'" in tutor.records[0]
+
+
+async def test_the_learners_record_holds_each_conversation_once():
+    """So forgetting the learner forgets what they said to the tutor."""
+    device = "a2a0device0000000000000000000003"
+    app = agent_app(FakeTutor())
+
+    first = await turn(app, "Hi", device=device)
+    await turn(app, "Again", context_id=first["context"], device=device)
+
+    record = await KEEPING.learners.load(device)
+    assert record.conversations == [first["context"]]
 
 
 async def test_a_session_without_a_device_is_answered_without_a_record():

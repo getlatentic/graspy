@@ -48,6 +48,17 @@ describe("the device id", () => {
     expect(store.get("graspy_device_id")).toBe(made);
   });
 
+  it("is replaced by a new one, kept, after signing out", async () => {
+    const store = stubStorage({ graspy_device_id: "kept-device-id" });
+    const { deviceId, newDeviceId } = await fresh();
+
+    const made = newDeviceId();
+
+    expect(made).not.toBe("kept-device-id");
+    expect(deviceId()).toBe(made);
+    expect(store.get("graspy_device_id")).toBe(made);
+  });
+
   it("is made again over a kept value the server would refuse", async () => {
     stubStorage({ graspy_device_id: "no spaces allowed" });
     const { deviceId } = await fresh();

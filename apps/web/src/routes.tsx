@@ -16,6 +16,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, Component: AppEntry },
           { path: "onboarding", lazy: lazyPage("onboarding") },
+          { path: "learners", lazy: lazyPage("learners") },
           {
             path: "learn",
             lazy: lazyPage("learnLayout"),
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
               { path: "subjects", lazy: lazyPage("subjects") },
               { path: "you", lazy: lazyPage("you") },
               { path: "you/details", lazy: lazyPage("details") },
+              { path: "you/learners", lazy: lazyPage("manageLearners") },
               { path: "ask", lazy: lazyPage("ask") },
               { path: "ask/:subject", lazy: lazyPage("chat") },
               { path: "ask/subject/:subjectSlug", lazy: lazyPage("chat") },

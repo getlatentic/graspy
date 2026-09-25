@@ -201,7 +201,8 @@
       "topics": "Topics",
       "continue": "See your learning plan"
     },
-    "moreSubjects": "+{count} more"
+    "moreSubjects": "+{count} more",
+    "returning": "Learned with graspy before? Sign in to carry on with your plan."
   },
   "plan": {
     "back": "Back",
@@ -282,7 +283,14 @@
     "signedIn": "Your learning is kept on every device you sign in on.",
     "signOut": "Sign out",
     "signInBlocked": "Your browser blocked the sign-in window. Allow pop-ups for graspy, then try again.",
-    "signInFailed": "Sign-in did not work. Check your connection, then try again."
+    "signInFailed": "Sign-in did not work. Check your connection, then try again.",
+    "learningAs": "Learning as {name}",
+    "switchLearner": "Switch learner",
+    "manageLearners": "Learners",
+    "signOutUnsent": "Some changes have not reached graspy yet. If you sign out now, they are lost.",
+    "signOutAnyway": "Sign out anyway",
+    "cancel": "Cancel",
+    "signingOut": "Signing out…"
   },
   "ask": {
     "currentTopic": "Your current topic",
@@ -317,5 +325,35 @@
     "askBody": "A new plan has subjects and topics for your new details, and replaces the one you have. If you keep your plan, new lessons follow your new details.",
     "newPlan": "Make a new plan",
     "keepPlan": "Keep my plan"
+  },
+  "learners": {
+    "title": "Who's learning?",
+    "body": "Each learner has their own plan and progress. Choose who is learning on this device.",
+    "signedInAs": "Signed in as {email}",
+    "back": "Back",
+    "inUse": "Learning on this device",
+    "add": "Add a learner",
+    "nameLabel": "Learner's name",
+    "guardian": "I'm this learner, or their parent or guardian",
+    "addButton": "Add",
+    "cancel": "Cancel",
+    "full": "This account has 8 learners, the most it can hold. Remove one on the Learners page to add another.",
+    "loadFailed": "The learners could not be loaded. Check your connection, then try again.",
+    "tryAgain": "Try again",
+    "failed": "That did not work. Check your connection, then try again.",
+    "unsent": "Some changes have not reached graspy yet. Connect to the internet, then switch, so nothing is lost.",
+    "opening": "Opening…",
+    "manageTitle": "Learners",
+    "manageBody": "Rename or remove the learners on this account.",
+    "rename": "Rename",
+    "save": "Save",
+    "remove": "Remove",
+    "removeConfirm": "Remove {name}? Their plan, progress, lessons and conversations are deleted from graspy. This can't be undone.",
+    "removeYes": "Remove {name}",
+    "deleteTitle": "Delete your account",
+    "deleteBody": "This deletes every learner on this account from graspy, and signs you out. Your Google account itself stays with Google.",
+    "deleteButton": "Delete my account",
+    "deleteConfirm": "Delete this account? Every learner's plan, progress, lessons and conversations are deleted from graspy. This can't be undone.",
+    "deleteYes": "Yes, delete my account"
   }
 }

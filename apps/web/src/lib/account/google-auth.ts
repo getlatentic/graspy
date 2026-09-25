@@ -11,7 +11,7 @@ import {
   type Auth,
 } from "firebase/auth";
 import { FIREBASE_AUTH_EMULATOR, FIREBASE_CONFIG } from "@/lib/env";
-import type { Account } from "./account-store";
+import type { Identity } from "./account-store";
 
 // The only module that imports Firebase. It is imported on demand, so the app's
 // first download does not carry the SDK.
@@ -50,7 +50,7 @@ export async function prepareGoogle(): Promise<void> {
 }
 
 export interface GoogleSignIn {
-  account: Account;
+  account: Identity;
   idToken: string;
 }
 

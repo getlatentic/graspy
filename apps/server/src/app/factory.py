@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from .agent.memory import ConversationStore, InMemoryConversationStore
 from .agent.tutor import Tutor
+from .api.account_routes import account_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
 from .api.routes import api_router
@@ -70,17 +71,18 @@ def create_app(
     origins = _origins(settings)
     _add_middleware(app, settings, origins, session_secret, budgets, lm)
     _add_exception_handlers(app)
-    keeping = _keeping(lessons, learners, making, lm)
+    keeping = _keeping(lessons, learners, making, conversations, lm)
     _add_state(app, settings, session_secret, origins, keeping, views)
 
     app.include_router(api_router, prefix="/api")
     app.include_router(learner_router, prefix="/api")
+    app.include_router(account_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
     # Imported on the Worker's first request, not at startup: the A2A SDK and
     # its protobuf types would take the startup snapshot over its size cap.
     from .agent.a2a import a2a_routes
 
-    tutor = Tutor(conversations or InMemoryConversationStore())
+    tutor = Tutor(keeping.conversations)
     app.routes.extend(a2a_routes(settings, tutor, keeping))
     app.routes.extend(mcp_routes())
     return app
@@ -102,6 +104,7 @@ def _keeping(
     lessons: LessonStore | None,
     learners: LearnerStore | None,
     making: LessonMaking | None,
+    conversations: ConversationStore | None,
     lm: dspy.LM,
 ) -> Keeping:
     lessons = lessons or InMemoryLessonStore()
@@ -109,7 +112,12 @@ def _keeping(
     making = making or TaskLessonMaking(
         LessonRunner(LessonService(), lessons, learners, lm)
     )
-    return Keeping(learners=learners, lessons=lessons, making=making)
+    return Keeping(
+        learners=learners,
+        lessons=lessons,
+        making=making,
+        conversations=conversations or InMemoryConversationStore(),
+    )
 
 
 def _add_state(

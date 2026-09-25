@@ -50,8 +50,14 @@ def _signature(payload: bytes, secret: str) -> str:
 
 
 def issue(
-    secret: str, *, learner: str | None = None, now: float | None = None
+    secret: str,
+    *,
+    learner: str | None = None,
+    account: str | None = None,
+    now: float | None = None,
 ) -> IssuedToken:
+    """``learner`` is whose record the session reads and writes; ``account``
+    is the signed-in account whose learners it may manage."""
     issued_at = int(time.time() if now is None else now)
     claims: dict = {
         "jti": secrets.token_urlsafe(9),
@@ -59,6 +65,8 @@ def issue(
     }
     if learner:
         claims["sub"] = learner
+    if account:
+        claims["acct"] = account
     payload = json.dumps(claims, separators=(",", ":")).encode()
 
     return IssuedToken(
@@ -99,9 +107,17 @@ def verify(token: str, secret: str, *, now: float | None = None) -> dict:
     return claims
 
 
+def _text_claim(claims: dict, name: str) -> str | None:
+    value = claims.get(name)
+    return value if isinstance(value, str) and value else None
+
+
 def learner_of(claims: dict) -> str | None:
-    learner = claims.get("sub")
-    return learner if isinstance(learner, str) and learner else None
+    return _text_claim(claims, "sub")
+
+
+def account_of(claims: dict) -> str | None:
+    return _text_claim(claims, "acct")
 
 
 def resolve_secret(settings) -> str:

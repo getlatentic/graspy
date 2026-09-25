@@ -30,11 +30,12 @@ export const SECTIONS: ReadonlyArray<{
 const LEARN = "/app/learn";
 
 export const DETAILS_PAGE = `${LEARN}/you/details`;
+export const LEARNERS_PAGE = `${LEARN}/you/learners`;
 
 export function sectionOf(pathname: string): AppSection {
   const path = pathname.replace(/\/+$/, "");
   if (path === LEARN) return "home";
-  if (path === `${LEARN}/you` || path === DETAILS_PAGE) return "you";
+  if (path === `${LEARN}/you` || path.startsWith(`${LEARN}/you/`)) return "you";
   if (path === ASK_HUB || path.startsWith(`${ASK_HUB}/`)) return "ask";
   return "subjects";
 }

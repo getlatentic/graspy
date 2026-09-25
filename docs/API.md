@@ -4,7 +4,7 @@ Local base: `http://localhost:8081`. Interactive docs are at `/api/docs`, except
 
 ## Session
 
-Generation, the learner's record, `/a2a` and `/mcp` need a session token. It names the device, or, when the learner signs in, their account. Send `firebaseIdToken` with `deviceId` to sign in: Google verifies it, and the account takes in that device's record once. Tokens are signed with HMAC-SHA256 and expire after 12 hours. The app gets a new one when a request returns `401`.
+Generation, the learner's record, `/a2a` and `/mcp` need a session token. It names the device, or, when someone signs in, their account and the learner the device learns as. Send `firebaseIdToken` with `deviceId`, and `learnerId` once the device has chosen a learner: Google verifies the token. Without a learner, or with one the account no longer holds, the token manages the account's learners only, and the learner's endpoints answer `409 learner_required`. Tokens are signed with HMAC-SHA256 and expire after 12 hours. The app gets a new one when a request returns `401`.
 
 ```bash
 TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/json' \
@@ -20,11 +20,15 @@ TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/j
 | `/api/subjects/generate-stream` | GET | ✓ | Subjects for a country, language and level (SSE) |
 | `/api/curriculum/generate-stream` | GET | ✓ | Subjects and their topics (SSE) |
 | `/api/curriculum/path` | GET | ✓ | Topics in order, from the learner's level to a `goal` |
-| `/api/learner` | GET | ✓ | The device's record for `planId`: topics with a lesson or finished, and answers |
+| `/api/learner` | GET | ✓ | The record of the learner the session names, for `planId`: topics with a lesson or finished, and answers |
 | `/api/learner/plan` | POST | ✓ | Keeps the record in step as the plan changes |
 | `/api/learner/import` | POST | ✓ | Brings what an earlier app version kept on the device to the record, once |
 | `/api/learner/curriculum` | GET, PUT | ✓ | The plan the learner's devices share. PUT keeps the newer by `updatedAt` and returns the plan to hold |
-| `/api/learner/curriculum/join` | POST | ✓ | A device's first sign-in, returning the account's one plan. A plan for the same country, language and class merges into the account's and brings its progress; for another class, the newer plan wins whole |
+| `/api/learner/curriculum/join` | POST | ✓ | A device's first choice of a learner, returning the learner's one plan. A plan for the same country, language and class merges into the learner's and brings its progress; for another class, the newer plan wins whole |
+| `/api/account/learners` | GET, POST | ✓ signed in | The account's learners; POST adds one, with `guardian: true` from their parent, guardian or themselves. At most 8 |
+| `/api/account/learners/{id}` | PATCH, DELETE | ✓ signed in | Renames a learner, or forgets them with their record, plan, lessons and tutor conversations |
+| `/api/account/learners/{id}/session` | POST | ✓ signed in | A session as that learner. With `deviceId`, the device's own record joins them once |
+| `/api/account` | DELETE | ✓ signed in | Forgets every learner and everything kept for them. The Google account is Google's |
 | `/api/education/systems` | GET | | Every school system in the catalogue |
 | `/api/education/countries/{country}` | GET | | A country's systems and classes, main system first |
 | `/api/education/systems/{id}` | GET | | One system, such as `NG` or `GB-SCT` |
@@ -73,6 +77,8 @@ A reply is the answer as text plus a data part:
 | Status | Meaning |
 |---|---|
 | 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A refused sign-in is `sign_in_invalid` |
+| 403 | A device's session asked for the account's learners (`account_required`) |
+| 409 | An account session asked for a learner's record (`learner_required`), or the account holds 8 learners (`too_many_learners`) |
 | 422 | Invalid request. `detail` names the field, never the value |
 | 429 | Rate limited. Wait `Retry-After` seconds |
 | 5xx | Server failure. The details are logged, not returned |

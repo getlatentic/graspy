@@ -1,13 +1,19 @@
 import {
   currentAccount,
   setAccount,
+  setLearner,
   type Account,
+  type Identity,
+  type Learner,
 } from "@/lib/account/account-store";
 import { deviceId, fingerprint } from "@/lib/device-id";
+import { wipeDevice } from "@/lib/device-wipe";
+import { wipeOnNextStart } from "@/lib/wipe-pending";
 import { API_BASE_URL } from "@/lib/env";
 import { ApiError, toApiError, toNetworkError } from "./errors";
 
-// A token naming this device, or the learner's account once they sign in with Google.
+// A token naming this device, or once the learner signs in with Google their account, and
+// the account's learner the device learns as.
 
 interface Session {
   token: string;
@@ -16,11 +22,14 @@ interface Session {
   device?: string;
   // The Firebase uid when the token names the learner's account.
   account?: string;
+  // The account's learner it reads and writes for; without one it manages learners only.
+  learner?: string;
 }
 
-interface Issued {
+export interface Issued {
   token: string;
   expiresIn: number;
+  learner?: Learner | null;
 }
 
 const STORAGE_KEY = "graspy.session";
@@ -57,11 +66,15 @@ function keep(session: Session | null): void {
   writeStored(session);
 }
 
-// A token minted for whoever was signed in before is not this learner's.
+// A token minted for whoever was signed in, or learning, before is not this learner's; nor
+// one naming the device before it took a new id on signing out.
 function usable(session: Session | null): session is Session {
+  const account = currentAccount();
   return (
     !!session?.device &&
-    session.account === currentAccount()?.uid &&
+    session.device === deviceId() &&
+    session.account === account?.uid &&
+    session.learner === account?.learner?.id &&
     session.expiresAt - RENEW_MARGIN_MS > Date.now()
   );
 }
@@ -80,9 +93,9 @@ async function post(body: Record<string, string>): Promise<Response> {
 
 async function issued(response: Response): Promise<Issued> {
   if (!response.ok) throw await toApiError(response);
-  const { token, expiresIn } = (await response.json()) as Issued;
+  const { token, expiresIn, learner } = (await response.json()) as Issued;
   if (!token) throw new ApiError("The server issued an empty session", 0);
-  return { token, expiresIn };
+  return { token, expiresIn, learner };
 }
 
 async function deviceSession(device: string): Promise<Response> {
@@ -99,23 +112,51 @@ async function idToken(fresh: boolean): Promise<string | null> {
   }
 }
 
+function accountPost(device: string, account: Account, token: string) {
+  const body: Record<string, string> = {
+    deviceId: device,
+    firebaseIdToken: token,
+  };
+  if (account.learner) body.learnerId = account.learner.id;
+  return post(body);
+}
+
 // Refused once, the ID token is made again: the server's clock may count it expired.
-async function accountSession(device: string): Promise<Response | null> {
+async function accountSession(
+  device: string,
+  account: Account,
+): Promise<Response | null> {
   const token = await idToken(false);
   if (!token) return null;
-  const response = await post({ deviceId: device, firebaseIdToken: token });
+  const response = await accountPost(device, account, token);
   if (response.status !== 401) return response;
   const fresh = await idToken(true);
-  return fresh ? post({ deviceId: device, firebaseIdToken: fresh }) : null;
+  return fresh ? accountPost(device, account, fresh) : null;
+}
+
+// Firebase no longer holds the sign-in (revoked, or the Google account deleted): signed
+// out as from the account card, nothing of the learner stays, and the app starts again.
+async function signedOutElsewhere(): Promise<never> {
+  setAccount(null);
+  keep(null);
+  await wipeDevice();
+  wipeOnNextStart("device");
+  window.location.assign("/");
+  throw new ApiError("Signed out", 401);
 }
 
 async function signedInSession(device: string, account: Account) {
-  const response = await accountSession(device);
-  if (response) return { response, account: account.uid };
-  // Firebase no longer holds the sign-in (revoked, or the account removed): the learner
-  // is signed out, which the account card then shows.
-  setAccount(null);
-  return { response: await deviceSession(device), account: undefined };
+  const response = await accountSession(device, account);
+  if (!response) return signedOutElsewhere();
+  return { response, account: account.uid };
+}
+
+// A learner removed on another device comes back as none: the device then asks who is
+// learning. A rename elsewhere comes back as the new name.
+function followLearner(sent: Learner | null, { learner }: Issued): void {
+  if (!sent || learner === undefined) return;
+  if (learner?.id === sent.id && learner.name === sent.name) return;
+  setLearner(learner ? { id: learner.id, name: learner.name } : null);
 }
 
 async function mint(): Promise<string> {
@@ -124,11 +165,14 @@ async function mint(): Promise<string> {
   const { response, account } = signedIn
     ? await signedInSession(device, signedIn)
     : { response: await deviceSession(device), account: undefined };
-  const { token, expiresIn } = await issued(response);
+  const answered = await issued(response);
+  followLearner(signedIn?.learner ?? null, answered);
   if (currentAccount()?.uid === account) {
-    keep({ token, expiresAt: Date.now() + expiresIn * 1000, device, account });
+    const learner = answered.learner?.id;
+    const expiresAt = Date.now() + answered.expiresIn * 1000;
+    keep({ token: answered.token, expiresAt, device, account, learner });
   }
-  return token;
+  return answered.token;
 }
 
 // A cold load fires several requests at once; they share one handshake.
@@ -149,23 +193,50 @@ export async function refreshSessionToken(): Promise<string> {
   return getSessionToken();
 }
 
-/** Exchanges a Google sign-in for a session naming the learner's account. */
+/** Exchanges a Google sign-in for a session naming the account, before any learner is
+ * chosen: the device's plan and progress join the first one chosen. */
 export async function startAccountSession(
   firebaseIdToken: string,
-  account: Account,
+  identity: Identity,
 ): Promise<void> {
   const device = deviceId();
   const { token, expiresIn } = await issued(
     await post({ deviceId: device, firebaseIdToken }),
   );
   pending = null;
-  setAccount(account);
+  setAccount({ ...identity, learner: null, deviceJoins: true });
   keep({
     token,
     expiresAt: Date.now() + expiresIn * 1000,
     device,
-    account: account.uid,
+    account: identity.uid,
   });
+}
+
+/** Takes a session the server issued for one of the account's learners. */
+export function keepLearnerSession({
+  token,
+  expiresIn,
+  learner,
+}: Issued): void {
+  const account = currentAccount();
+  if (!account || !learner) throw new ApiError("No learner was chosen", 0);
+  pending = null;
+  setLearner({ id: learner.id, name: learner.name });
+  keep({
+    token,
+    expiresAt: Date.now() + expiresIn * 1000,
+    device: deviceId(),
+    account: account.uid,
+    learner: learner.id,
+  });
+}
+
+/** Still signed in, with no learner chosen. */
+export function leaveLearnerSession(): void {
+  pending = null;
+  setLearner(null);
+  keep(null);
 }
 
 /** Back to the device's own session. */

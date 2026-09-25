@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 
 import httpx
 
@@ -19,6 +20,13 @@ class InvalidSignIn(Exception):
     """The message is sent to the client."""
 
 
+@dataclass(frozen=True)
+class SignedIn:
+    uid: str
+    # Google's name for the account, or empty.
+    name: str
+
+
 def lookup_url(emulator_host: str | None) -> str:
     """The Auth emulator serves Identity Toolkit at its own address."""
     if emulator_host:
@@ -28,18 +36,13 @@ def lookup_url(emulator_host: str | None) -> str:
     return LOOKUP_URL
 
 
-def account_learner(uid: str) -> str:
-    """Device ids have no colon, so an account can never be taken for one."""
-    return f"account:{uid}"
-
-
-async def verified_uid(
+async def verified(
     id_token: str,
     api_key: str,
     client: httpx.AsyncClient | None = None,
     *,
     url: str = LOOKUP_URL,
-) -> str:
+) -> SignedIn:
     """The project's key scopes the lookup: a token from another project is
     refused."""
     own = client is None
@@ -59,7 +62,9 @@ async def verified_uid(
         logger.info("Identity Toolkit refused a token: %s", response.text[:200])
         raise InvalidSignIn("The sign-in is not valid. Sign in again.")
     users = response.json().get("users") or []
-    uid = users[0].get("localId") if users else None
+    user = users[0] if users else {}
+    uid = user.get("localId")
     if not isinstance(uid, str) or not _UID.match(uid):
         raise InvalidSignIn("The sign-in is not valid. Sign in again.")
-    return uid
+    name = user.get("displayName")
+    return SignedIn(uid=uid, name=name if isinstance(name, str) else "")

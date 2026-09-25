@@ -2,21 +2,43 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const DEVICE = "0a1b2c3d4e5f60718293a4b5c6d7e8f9";
 const FINGERPRINT = "ffeeddccbbaa99887766554433221100";
+let device = DEVICE;
 vi.mock("@/lib/device-id", () => ({
-  deviceId: () => DEVICE,
+  deviceId: () => device,
   fingerprint: async () => FINGERPRINT,
 }));
 
-const ACCOUNT = { uid: "uid-1", name: "Ada", email: "ada@example.com" };
-let signedIn: typeof ACCOUNT | null = null;
-const setAccount = vi.fn((account: typeof ACCOUNT | null) => {
+interface Signed {
+  uid: string;
+  name: string;
+  email: string;
+  learner: { id: string; name: string } | null;
+  deviceJoins: boolean;
+}
+const IDENTITY = {
+  uid: "uid-1",
+  name: "Ada Lovelace",
+  email: "ada@example.com",
+};
+const ACCOUNT: Signed = { ...IDENTITY, learner: null, deviceJoins: true };
+const ADA = { id: "a1b2c3d4e5f6", name: "Ada" };
+const LEARNING: Signed = { ...ACCOUNT, learner: ADA, deviceJoins: false };
+let signedIn: Signed | null = null;
+const setAccount = vi.fn((account: Signed | null) => {
   signedIn = account;
+});
+const setLearner = vi.fn((learner: Signed["learner"]) => {
+  if (signedIn) signedIn = { ...signedIn, learner };
 });
 vi.mock("@/lib/account/account-store", () => ({
   currentAccount: () => signedIn,
   setAccount,
+  setLearner,
 }));
 const googleIdToken = vi.fn<(fresh: boolean) => Promise<string | null>>();
+const wipeDevice = vi.fn(async () => undefined);
+vi.mock("@/lib/device-wipe", () => ({ wipeDevice }));
+const assign = vi.fn();
 vi.mock("@/lib/account/google-auth", () => ({ googleIdToken }));
 
 // Fresh per test: the module holds the tab's token, and ApiError must come from
@@ -38,15 +60,16 @@ function stubStorage() {
       setItem: (k: string, v: string) => void store.set(k, v),
       removeItem: (k: string) => void store.delete(k),
     },
+    location: { assign },
   });
   return store;
 }
 
-function minted(token: string, expiresIn = 3600) {
+function minted(token: string, expiresIn = 3600, extra: object = {}) {
   return {
     ok: true,
     status: 200,
-    json: async () => ({ token, expiresIn }),
+    json: async () => ({ token, expiresIn, ...extra }),
   };
 }
 
@@ -55,7 +78,9 @@ let fetchMock: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   vi.unstubAllGlobals();
   signedIn = null;
+  device = DEVICE;
   setAccount.mockClear();
+  setLearner.mockClear();
   googleIdToken.mockReset();
   stubStorage();
   fetchMock = vi.fn();
@@ -260,16 +285,17 @@ describe("a signed-in learner's session", () => {
     });
   });
 
-  it("signs out and names the device once Firebase no longer holds the sign-in", async () => {
-    signedIn = ACCOUNT;
+  it("signs out, wipes the device and starts again once Firebase no longer holds the sign-in", async () => {
+    signedIn = LEARNING;
     googleIdToken.mockResolvedValue(null);
-    fetchMock.mockResolvedValue(minted("device-token"));
-    const { getSessionToken } = await loadSession();
+    const { getSessionToken, ApiError } = await loadSession();
 
-    await expect(getSessionToken()).resolves.toBe("device-token");
+    await expect(getSessionToken()).rejects.toBeInstanceOf(ApiError);
 
     expect(setAccount).toHaveBeenCalledWith(null);
-    expect(sentBody(0)).toEqual({ deviceId: DEVICE, fingerprint: FINGERPRINT });
+    expect(wipeDevice).toHaveBeenCalled();
+    expect(assign).toHaveBeenCalledWith("/");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("fails rather than naming the device when Firebase cannot be reached", async () => {
@@ -292,7 +318,7 @@ describe("signing in and out", () => {
     const { getSessionToken, startAccountSession } = await loadSession();
     await getSessionToken();
 
-    await startAccountSession("id-token", ACCOUNT);
+    await startAccountSession("id-token", IDENTITY);
 
     expect(setAccount).toHaveBeenCalledWith(ACCOUNT);
     expect(sentBody(1)).toEqual({
@@ -312,7 +338,7 @@ describe("signing in and out", () => {
     const { startAccountSession, ApiError } = await loadSession();
 
     await expect(
-      startAccountSession("id-token", ACCOUNT),
+      startAccountSession("id-token", IDENTITY),
     ).rejects.toBeInstanceOf(ApiError);
 
     expect(setAccount).not.toHaveBeenCalled();
@@ -325,13 +351,24 @@ describe("signing in and out", () => {
       .mockResolvedValueOnce(minted("device-token"));
     const { endAccountSession, getSessionToken, startAccountSession } =
       await loadSession();
-    await startAccountSession("id-token", ACCOUNT);
+    await startAccountSession("id-token", IDENTITY);
 
     endAccountSession();
 
     expect(signedIn).toBeNull();
     await expect(getSessionToken()).resolves.toBe("device-token");
     expect(sentBody(1)).toEqual({ deviceId: DEVICE, fingerprint: FINGERPRINT });
+  });
+
+  it("does not serve a token naming the device before it took a new id", async () => {
+    fetchMock.mockResolvedValue(minted("old-device-token"));
+    const { getSessionToken } = await loadSession();
+    await getSessionToken();
+    device = "fffffffffffffffffffffffffffffff0";
+    fetchMock.mockResolvedValue(minted("new-device-token"));
+
+    await expect(getSessionToken()).resolves.toBe("new-device-token");
+    expect(sentBody(1)).toMatchObject({ deviceId: device });
   });
 
   it("does not serve a token kept for someone signed in before", async () => {
@@ -349,5 +386,88 @@ describe("signing in and out", () => {
     const { getSessionToken } = await loadSession();
 
     await expect(getSessionToken()).resolves.toBe("device-token");
+  });
+});
+
+describe("the learner a signed-in device learns as", () => {
+  it("is named in every exchange of the ID token", async () => {
+    signedIn = LEARNING;
+    googleIdToken.mockResolvedValue("id-token");
+    fetchMock.mockResolvedValue(
+      minted("learner-token", 3600, { signedIn: true, learner: ADA }),
+    );
+    const { getSessionToken } = await loadSession();
+
+    await expect(getSessionToken()).resolves.toBe("learner-token");
+
+    expect(sentBody(0)).toEqual({
+      deviceId: DEVICE,
+      firebaseIdToken: "id-token",
+      learnerId: ADA.id,
+    });
+    expect(setLearner).not.toHaveBeenCalled();
+  });
+
+  it("is let go when the account no longer holds them", async () => {
+    signedIn = LEARNING;
+    googleIdToken.mockResolvedValue("id-token");
+    fetchMock.mockResolvedValue(
+      minted("account-token", 3600, { signedIn: true, learner: null }),
+    );
+    const { getSessionToken } = await loadSession();
+
+    await getSessionToken();
+
+    expect(setLearner).toHaveBeenCalledWith(null);
+    expect(signedIn?.learner).toBeNull();
+  });
+
+  it("takes a new name given on another device", async () => {
+    signedIn = LEARNING;
+    googleIdToken.mockResolvedValue("id-token");
+    const renamed = { ...ADA, name: "Ada L.", createdAt: 1 };
+    fetchMock.mockResolvedValue(
+      minted("learner-token", 3600, { signedIn: true, learner: renamed }),
+    );
+    const { getSessionToken } = await loadSession();
+
+    await getSessionToken();
+
+    expect(setLearner).toHaveBeenCalledWith({ id: ADA.id, name: "Ada L." });
+  });
+
+  it("is kept with the session the server issued for them", async () => {
+    signedIn = ACCOUNT;
+    const { getSessionToken, keepLearnerSession } = await loadSession();
+
+    keepLearnerSession({ token: "ada-token", expiresIn: 3600, learner: ADA });
+
+    expect(signedIn?.learner).toEqual(ADA);
+    await expect(getSessionToken()).resolves.toBe("ada-token");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not share a token with another learner of the account", async () => {
+    signedIn = ACCOUNT;
+    googleIdToken.mockResolvedValue("id-token");
+    fetchMock.mockResolvedValue(
+      minted("grace-token", 3600, { learner: { id: "grace", name: "Grace" } }),
+    );
+    const { getSessionToken, keepLearnerSession } = await loadSession();
+    keepLearnerSession({ token: "ada-token", expiresIn: 3600, learner: ADA });
+
+    signedIn = { ...LEARNING, learner: { id: "grace", name: "Grace" } };
+
+    await expect(getSessionToken()).resolves.toBe("grace-token");
+  });
+
+  it("is none once the device leaves them, with the account kept", async () => {
+    signedIn = LEARNING;
+    const { leaveLearnerSession } = await loadSession();
+
+    leaveLearnerSession();
+
+    expect(setLearner).toHaveBeenCalledWith(null);
+    expect(signedIn?.uid).toBe(IDENTITY.uid);
   });
 });

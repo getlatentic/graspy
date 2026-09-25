@@ -1,6 +1,8 @@
 import { endAccountSession, startAccountSession } from "@/lib/api/session";
-import { forgetPlanSync } from "@/lib/plan-sync";
+import { wipeDevice } from "@/lib/device-wipe";
+import { wipeOnNextStart } from "@/lib/wipe-pending";
 import type * as GoogleAuth from "./google-auth";
+import { deleteAccount } from "./learners-api";
 
 type Google = typeof GoogleAuth;
 
@@ -30,7 +32,7 @@ export function prepareSignIn(): void {
   );
 }
 
-/** Call from the tap itself. */
+/** Call from the tap itself. The account then asks who is learning. */
 export async function signIn(): Promise<void> {
   const google = prepared ?? (await loadGoogle());
   const { account, idToken } = await google.signInWithGoogle();
@@ -42,12 +44,19 @@ export async function signIn(): Promise<void> {
   }
 }
 
-/** The plan stays on the device; the next sign-in joins it to the account again. */
+/** Nothing of the account or its learner stays on the device. */
 export async function signOut(): Promise<void> {
   endAccountSession();
-  forgetPlanSync();
+  await wipeDevice();
+  wipeOnNextStart("device");
   const google = prepared ?? (await import("./google-auth"));
   await google.signOutOfGoogle();
+}
+
+/** Every learner and all graspy kept for them; the Google account stays Google's. */
+export async function deleteAccountAndSignOut(): Promise<void> {
+  await deleteAccount();
+  await signOut();
 }
 
 /** Null when the learner cancelled, which needs no message. */

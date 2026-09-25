@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .agent.memory import ConversationStore
 from .learner.record import Change, LearnerRecord
 from .learner.store import LearnerStore
 from .lessons.makers import LessonMaking
@@ -13,6 +14,7 @@ class Keeping:
     learners: LearnerStore
     lessons: LessonStore
     making: LessonMaking
+    conversations: ConversationStore
 
 
 @dataclass(frozen=True)

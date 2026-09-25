@@ -8,6 +8,7 @@ work; each is handled below.
 """
 
 import importlib.util
+import json
 import logging
 import os
 import sys
@@ -18,6 +19,7 @@ from js import Object
 from pyodide.ffi import to_js
 from workers import DurableObject, WorkerEntrypoint, asgi
 
+from app.account.directory import directory_changed
 from app.agent.memory import appended, folded
 from app.learner.record import changed
 from app.learner.time import now_ms
@@ -148,6 +150,7 @@ CONVERSATION_KEY = "exchanges"
 LESSON_KEY = "lesson"
 LEARNER_KEY = "record"
 PLAN_KEY = "plan"
+DIRECTORY_KEY = "directory"
 MAKING_KEY = "making"
 JOB_KEY = "job"
 KEEP_MS = KEEP_DAYS * 24 * 60 * 60 * 1000
@@ -194,6 +197,9 @@ class Lesson(DurableObject):
     async def alarm(self) -> None:
         await self.ctx.storage.deleteAll()
 
+    async def forget(self) -> None:
+        await self.ctx.storage.deleteAll()
+
 
 class Conversation(DurableObject):
     """One tutor conversation. Input gates keep each read-modify-write safe
@@ -210,9 +216,13 @@ class Conversation(DurableObject):
         stored = await self.ctx.storage.get(CONVERSATION_KEY)
         await self.ctx.storage.put(CONVERSATION_KEY, folded(stored, summary, dropped))
 
+    async def forget(self) -> None:
+        await self.ctx.storage.deleteAll()
+
 
 class Learner(DurableObject):
-    """One learner's record and plan, changed under the same input gates."""
+    """One learner's record and plan, or one account's list of learners,
+    changed under the same input gates."""
 
     async def load(self) -> str:
         return await self.ctx.storage.get(LEARNER_KEY) or ""
@@ -226,6 +236,30 @@ class Learner(DurableObject):
 
     async def keep_plan(self, plan_json: str) -> None:
         await self.ctx.storage.put(PLAN_KEY, plan_json)
+
+    async def forget(self) -> None:
+        await self.ctx.storage.delete(LEARNER_KEY)
+        await self.ctx.storage.delete(PLAN_KEY)
+
+    async def export(self) -> str:
+        record = await self.ctx.storage.get(LEARNER_KEY)
+        plan = await self.ctx.storage.get(PLAN_KEY)
+        return json.dumps({"record": record or "", "plan": plan or ""})
+
+    async def restore(self, record_json: str, plan_json: str) -> None:
+        if record_json:
+            await self.ctx.storage.put(LEARNER_KEY, record_json)
+        if plan_json:
+            await self.ctx.storage.put(PLAN_KEY, plan_json)
+
+    async def directory(self) -> str:
+        return await self.ctx.storage.get(DIRECTORY_KEY) or ""
+
+    async def change_directory(self, change_json: str) -> None:
+        stored = await self.ctx.storage.get(DIRECTORY_KEY)
+        await self.ctx.storage.put(
+            DIRECTORY_KEY, directory_changed(stored, change_json)
+        )
 
 
 class LessonMaker(DurableObject):

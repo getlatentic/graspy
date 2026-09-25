@@ -1,16 +1,18 @@
-import { currentAccount } from "@/lib/account/account-store";
+import { currentAccount, learnerKeyOf } from "@/lib/account/account-store";
 import { getCurriculum, holdCurriculum } from "@/lib/curriculum-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { followPlan } from "@/lib/follow-plan";
+import { completedPlan } from "@/lib/plan-details";
 import { accountPlan, joinPlan, sendPlan } from "@/lib/shared-plan-api";
+import { getUserProfile } from "@/lib/user-storage";
 
-// A signed-in learner's devices hold one plan; the server keeps the newer by updatedAt.
+// A learner's devices hold one plan; the server keeps the newer by updatedAt.
 // What this device has not sent is its plan differing from the last one the account
 // acknowledged, so a save made offline goes with the next sync and needs no queue.
 
-// The account whose plan this device's plan has joined.
+// The account's learner whose plan this device's plan has joined.
 const JOINED_KEY = "graspy.plan.joined";
-// The plan, by id and date, that this device and the account last agreed on.
+// The plan, by id and date, that this device and the learner last agreed on.
 const AGREED_KEY = "graspy.plan.agreed";
 
 function remembered(key: string): string | null {
@@ -41,11 +43,14 @@ const stamp = (plan: CurriculumData | null) =>
   plan ? `${plan.planId}@${plan.updatedAt}` : "";
 
 async function joined(
-  uid: string,
+  learner: string,
   local: CurriculumData | null,
 ): Promise<CurriculumData | null> {
-  const held = local ? await joinPlan(local) : await accountPlan();
-  remember(JOINED_KEY, uid);
+  // Named as the server compares classes, even when no page has completed it yet.
+  const held = local
+    ? await joinPlan(completedPlan(local, getUserProfile()))
+    : await accountPlan();
+  remember(JOINED_KEY, learner);
   return held;
 }
 
@@ -59,10 +64,10 @@ async function pulled(
 }
 
 function exchanged(
-  uid: string,
+  learner: string,
   local: CurriculumData | null,
 ): Promise<CurriculumData | null> {
-  if (remembered(JOINED_KEY) !== uid) return joined(uid, local);
+  if (remembered(JOINED_KEY) !== learner) return joined(learner, local);
   if (local && remembered(AGREED_KEY) !== stamp(local)) return sendPlan(local);
   return pulled(local);
 }
@@ -72,9 +77,9 @@ async function adopt(plan: CurriculumData): Promise<void> {
   await followPlan(plan);
 }
 
-async function syncOnce(uid: string): Promise<CurriculumData | null> {
+async function syncOnce(learner: string): Promise<CurriculumData | null> {
   const local = await getCurriculum();
-  const held = await exchanged(uid, local);
+  const held = await exchanged(learner, local);
   if (!held) return null;
   remember(AGREED_KEY, stamp(held));
   if (stamp(held) === stamp(local)) return null;
@@ -86,12 +91,13 @@ async function syncOnce(uid: string): Promise<CurriculumData | null> {
 
 let queue: Promise<unknown> = Promise.resolve();
 
-/** The account's plan when the device now holds it in place of its own; otherwise null,
- * as when nobody is signed in. One sync runs at a time. */
+/** The learner's plan when the device now holds it in place of its own; otherwise null,
+ * as when nobody is signed in or no learner is chosen. One sync runs at a time. */
 export function syncPlan(): Promise<CurriculumData | null> {
   const run = queue.then(() => {
     const account = currentAccount();
-    return account ? syncOnce(account.uid) : null;
+    const learner = account && learnerKeyOf(account);
+    return learner ? syncOnce(learner) : null;
   });
   queue = run.catch(() => undefined);
   return run;

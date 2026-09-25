@@ -12,10 +12,13 @@ const session = {
   endAccountSession: vi.fn(),
 };
 vi.mock("@/lib/api/session", () => session);
-const forgetPlanSync = vi.fn();
-vi.mock("@/lib/plan-sync", () => ({ forgetPlanSync }));
+const wipeDevice = vi.fn(async () => undefined);
+vi.mock("@/lib/device-wipe", () => ({ wipeDevice }));
+const deleteAccount = vi.fn(async () => undefined);
+vi.mock("./learners-api", () => ({ deleteAccount }));
 
-const { signIn, signInProblem, signOut } = await import("./sign-in");
+const { deleteAccountAndSignOut, signIn, signInProblem, signOut } =
+  await import("./sign-in");
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -36,12 +39,29 @@ describe("signIn", () => {
 });
 
 describe("signOut", () => {
-  it("ends the account's session and forgets what was synced", async () => {
+  it("ends the account's session, wipes the device, and signs out of Google", async () => {
     await signOut();
 
     expect(session.endAccountSession).toHaveBeenCalled();
-    expect(forgetPlanSync).toHaveBeenCalled();
+    expect(wipeDevice).toHaveBeenCalled();
     expect(google.signOutOfGoogle).toHaveBeenCalled();
+  });
+});
+
+describe("deleteAccountAndSignOut", () => {
+  it("deletes the account, then signs out", async () => {
+    await deleteAccountAndSignOut();
+
+    expect(deleteAccount).toHaveBeenCalled();
+    expect(wipeDevice).toHaveBeenCalled();
+  });
+
+  it("stays signed in when the account could not be deleted", async () => {
+    deleteAccount.mockRejectedValueOnce(new Error("offline"));
+
+    await expect(deleteAccountAndSignOut()).rejects.toThrow("offline");
+
+    expect(wipeDevice).not.toHaveBeenCalled();
   });
 });
 

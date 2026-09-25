@@ -1,11 +1,10 @@
-"""Signing in: an account takes in each device's record once, and the
-learner's devices share one plan."""
+"""Signing in: Google vouches for the account, a learner takes in each
+device's record once, and the learner's devices share one plan."""
 
 import httpx
-import httpx2
 import pytest
+from signed_in import DEVICE, UID, as_learner, client, signed_in, signed_in_app
 
-from app.factory import create_app
 from app.learner.plan import Plan, joined
 from app.learner.record import (
     Answer,
@@ -20,12 +19,8 @@ from app.learner.record import (
     parsed,
     serialised,
 )
-from app.learner.store import InMemoryLearnerStore
 from app.security import firebase
 from app.settings import Settings
-
-DEVICE = "device-0001"
-UID = "uid123"
 
 
 def fractions(plan="plan-device", index=1) -> TopicRef:
@@ -162,11 +157,13 @@ def google(status: int, body: dict) -> httpx.AsyncClient:
 
 
 async def test_google_names_the_account_of_a_valid_token():
-    uid = await firebase.verified_uid(
-        "token", "key", google(200, {"users": [{"localId": UID}]})
+    signed = await firebase.verified(
+        "token",
+        "key",
+        google(200, {"users": [{"localId": UID, "displayName": "Ada Lovelace"}]}),
     )
 
-    assert uid == UID
+    assert signed == firebase.SignedIn(uid=UID, name="Ada Lovelace")
 
 
 @pytest.mark.parametrize(
@@ -176,7 +173,7 @@ async def test_google_names_the_account_of_a_valid_token():
 )
 async def test_a_token_google_does_not_vouch_for_is_refused(status, body):
     with pytest.raises(firebase.InvalidSignIn):
-        await firebase.verified_uid("token", "key", google(status, body))
+        await firebase.verified("token", "key", google(status, body))
 
 
 async def test_the_auth_emulator_is_asked_in_place_of_google():
@@ -187,7 +184,7 @@ async def test_the_auth_emulator_is_asked_in_place_of_google():
         return httpx.Response(200, json={"users": [{"localId": UID}]})
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(answer))
-    await firebase.verified_uid(
+    await firebase.verified(
         "token", "key", client, url=firebase.lookup_url("127.0.0.1:9099")
     )
 
@@ -208,47 +205,32 @@ def test_production_refuses_the_auth_emulator():
 
 @pytest.fixture
 def app(monkeypatch):
-    async def verified(id_token, _api_key, **_):
-        if id_token != "good":
-            raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
-        return UID
-
-    monkeypatch.setattr("app.api.routes.verified_uid", verified)
-    return create_app(
-        Settings(
-            aws_bearer_token_bedrock="bedrock-test",
-            session_secret="s",
-            firebase_api_key="key",
-            _env_file=None,
-        ),
-        learners=InMemoryLearnerStore(),
-    )
+    return signed_in_app(monkeypatch)
 
 
-async def signed_in(http, **sent) -> dict:
-    response = await http.post("/api/session", json=sent)
-    http.headers["Authorization"] = f"Bearer {response.json().get('token')}"
-    return response.json()
-
-
-def client(app):
-    return httpx2.AsyncClient(
-        transport=httpx2.ASGITransport(app=app), base_url="http://test"
-    )
-
-
-async def test_signing_in_brings_the_devices_record_to_the_account(app):
+async def test_the_first_choice_of_a_learner_brings_the_devices_record(app):
     async with client(app) as http:
         app.state.keeping.learners._stored[DEVICE] = changed(
             None, serialised(Learnt(topic=fractions(plan="p"), at=7))
         )
 
-        session = await signed_in(http, deviceId=DEVICE, firebaseIdToken="good")
+        await as_learner(http)
         record = (await http.get("/api/learner", params={"planId": "p"})).json()
 
-    assert session["signedIn"] is True
     assert [t["learntAt"] for t in record["topics"]] == [7]
     assert "joined" not in record
+    assert "conversations" not in record
+
+
+async def test_an_account_session_reads_no_learners_record(app):
+    async with client(app) as http:
+        session = await signed_in(http, deviceId=DEVICE, firebaseIdToken="good")
+        record = await http.get("/api/learner", params={"planId": "p"})
+        plan_read = await http.get("/api/learner/curriculum")
+
+    assert (session["signedIn"], session["learner"]) == (True, None)
+    assert (record.status_code, plan_read.status_code) == (409, 409)
+    assert record.json()["detail"]["code"] == "learner_required"
 
 
 @pytest.mark.parametrize(
@@ -270,7 +252,7 @@ async def test_a_sign_in_that_cannot_be_trusted_is_refused(app, key, status, cod
 async def test_devices_share_the_newer_plan_and_a_stale_one_gets_it_back(app):
     newer, older = plan("p", 20, {"maths": ["A"]}), plan("p", 10, {"maths": ["B"]})
     async with client(app) as http:
-        await signed_in(http, deviceId=DEVICE, firebaseIdToken="good")
+        await as_learner(http)
         await http.put("/api/learner/curriculum", content=newer.json())
         answered = await http.put("/api/learner/curriculum", content=older.json())
         shared = (await http.get("/api/learner/curriculum")).json()
@@ -283,12 +265,12 @@ async def test_joining_merges_the_plans_and_moves_the_devices_progress(app):
     account = plan("plan-account", 10, {"mathematics": ["Decimals", "Fractions"]})
     device = plan("plan-device", 20, {"mathematics": ["Fractions"]})
     async with client(app) as http:
-        await signed_in(http, deviceId=DEVICE, firebaseIdToken="good")
+        learner = await as_learner(http)
         await http.put("/api/learner/curriculum", content=account.json())
         await http.post(
             "/api/learner/plan", json={"kind": "plan_kept", "planId": "plan-device"}
         )
-        app.state.keeping.learners._stored[f"account:{UID}"] = changed(
+        app.state.keeping.learners._stored[f"account:{UID}/{learner}"] = changed(
             None, serialised(Learnt(topic=fractions(index=0), at=7))
         )
 

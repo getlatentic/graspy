@@ -1,14 +1,20 @@
 import {
-  accountLearnt,
-  accountPlan,
+  addLearnerTo,
+  learnerLearnt,
+  learnerPlan,
+  learnersOf,
+  saveLearnerPlan,
+} from "../support/account-api";
+import {
   emulatorIsUp,
   googleAccount,
-  saveAccountPlan,
+  signInOnThisDevice,
   signInToGoogle,
 } from "../support/accounts";
 import { onDevice } from "../support/devices";
 import {
   SERVER,
+  agreesWithAccount,
   browserCache,
   devicePlan,
   oldDevice,
@@ -26,7 +32,12 @@ import {
   phonePlan,
   plan,
 } from "../support/plans";
-import { profile, signedIn, usedDevice } from "../support/signed-in";
+import {
+  pickLearner,
+  profile,
+  signedIn,
+  usedDevice,
+} from "../support/signed-in";
 
 const API = `${SERVER}/api`;
 const UNION = [
@@ -34,6 +45,7 @@ const UNION = [
   { name: "Basic Science", slug: "basic-science" },
   { name: "English Studies", slug: "english-studies" },
 ];
+const PHONES = UNION.slice(0, 2);
 
 function subjectsShown(names: string[]): void {
   cy.visit("/app/learn/subjects");
@@ -67,8 +79,59 @@ it("opens the emulator's sign-in window, and asks nothing of an account signed o
   cy.get("@send.all").should("have.length", 0);
 });
 
-describe("joining an account on a device's first sign-in", () => {
-  it("makes the first device's plan the account's, with its progress", () => {
+it("offers sign-in before onboarding makes a plan that would replace the learner's", () => {
+  onDevice("tablet");
+  cy.visit("/app/onboarding", {
+    onBeforeLoad: (win) => cy.stub(win, "open").as("popup").returns(null),
+  });
+
+  cy.contains(
+    "Learned with graspy before? Sign in to carry on with your plan.",
+  );
+  cy.contains("button", "Sign in with Google").click();
+
+  cy.get("@popup")
+    .its("firstCall.args.0")
+    .should("match", /^http:\/\/127\.0\.0\.1:9099\/emulator\/auth\/handler\?/);
+  cy.location("pathname").should("eq", "/app/onboarding");
+  cy.get("@join.all").should("have.length", 0);
+  cy.get("@send.all").should("have.length", 0);
+});
+
+it("adds a learner only once named and vouched for by them or their guardian", () => {
+  onDevice("phone");
+  oldDevice(phonePlan(Date.now()), { graspy_user_profile: learnerIn(1) });
+  signInToGoogle(googleAccount("Ada Lovelace")).then(signInOnThisDevice);
+  cy.visit("/app/learn/you");
+
+  cy.location("pathname").should("eq", "/app/learners");
+  cy.contains("h1", "Who's learning?");
+  cy.contains("button", "Add a learner").click();
+  const add = () => cy.contains("button", /^Add$/);
+  add().should("be.disabled");
+  cy.get("#learner-name").type("Ada");
+  add().should("be.disabled");
+  cy.contains("label", "I'm this learner").find("input").check();
+  add().should("be.enabled");
+  cy.get("#learner-name").clear();
+  add().should("be.disabled");
+});
+
+it("says when the account holds as many learners as it can", () => {
+  signInToGoogle(googleAccount("Pat Okafor")).then((signIn) => {
+    for (let n = 1; n <= 8; n += 1) addLearnerTo(signIn, `Child ${n}`);
+    onDevice("tablet");
+    signInOnThisDevice(signIn);
+  });
+  cy.visit("/app");
+
+  cy.contains("button", "Child 8");
+  cy.contains("This account has 8 learners, the most it can hold.");
+  cy.contains("button", "Add a learner").should("not.exist");
+});
+
+describe("a device's first sign-in, choosing who is learning", () => {
+  it("gives a learner added then the device's plan and progress", () => {
     const ada = googleAccount("Ada Lovelace");
     onDevice("phone");
     usedDevice(
@@ -78,32 +141,30 @@ describe("joining an account on a device's first sign-in", () => {
     );
     cy.contains("1 of 5 topics completed");
 
-    signedIn(ada).then((signIn) => {
+    signedIn(ada, { add: "Ada" }).then(({ signIn, learner }) => {
       cy.contains("Ada Lovelace");
       cy.contains(ada.email);
+      cy.contains("Learning as Ada");
       cy.contains("1 of 5 topics completed");
-      accountPlan(signIn).should("deep.include", {
+      learnerPlan(signIn, learner).should("deep.include", {
         planId: "plan-phone",
-        subjects: [
-          { name: "Mathematics", slug: "mathematics" },
-          { name: "Basic Science", slug: "basic-science" },
-        ],
+        subjects: PHONES,
       });
-      accountLearnt(signIn, "plan-phone").should("deep.equal", [
+      learnerLearnt(signIn, learner, "plan-phone").should("deep.equal", [
         ["plan-phone", "mathematics", 0, "Whole Numbers"],
       ]);
     });
   });
 
-  it("merges a second device's plan for the same class, and moves its progress", () => {
-    const ada = googleAccount("Ada Lovelace");
+  it("merges the device's plan into a learner's for the same class, with its progress", () => {
+    const account = googleAccount("Ada Lovelace");
     onDevice("phone");
     usedDevice(
       phonePlan(Date.now() - HOUR),
       learnerIn(1),
       firstTopicLearnt("Mathematics"),
     );
-    signedIn(ada);
+    signedIn(account, { add: "Ada" });
 
     onDevice("laptop");
     usedDevice(
@@ -113,11 +174,11 @@ describe("joining an account on a device's first sign-in", () => {
     );
     cy.contains("1 of 5 topics completed");
     cy.intercept("POST", `${API}/learner/curriculum/join`).as("laptopJoins");
-    signedIn(ada).then((signIn) => {
+    signedIn(account, { choose: "Ada" }).then(({ signIn, learner }) => {
       cy.wait("@laptopJoins")
         .its("request.body.planId")
         .should("equal", "plan-laptop");
-      accountLearnt(signIn, "plan-phone").should("have.deep.members", [
+      learnerLearnt(signIn, learner, "plan-phone").should("have.deep.members", [
         ["plan-phone", "mathematics", 0, "Whole Numbers"],
         ["plan-phone", "english-studies", 0, "Reading Comprehension"],
       ]);
@@ -140,30 +201,27 @@ describe("joining an account on a device's first sign-in", () => {
     });
   });
 
-  it("takes the account's newer plan for another class whole", () => {
-    const ada = googleAccount("Ada Lovelace");
+  it("takes a learner's newer plan for another class whole", () => {
+    const account = googleAccount("Ada Lovelace");
     onDevice("phone");
     oldDevice(phonePlan(Date.now() - HOUR, 3), {
       graspy_user_profile: learnerIn(3),
     });
-    signedIn(ada);
+    signedIn(account, { add: "Ada" });
 
     onDevice("laptop");
     oldDevice(laptopPlan(Date.now() - 2 * HOUR), {
       graspy_user_profile: learnerIn(1),
     });
-    signedIn(ada).then((signIn) => {
+    signedIn(account, { choose: "Ada" }).then(({ signIn, learner }) => {
       cy.contains("dd", /^JSS 3$/);
       cy.contains("dd", "JSS 1").should("not.exist");
       devicePlan().should("deep.include", {
         planId: "plan-phone",
         gradeLevel: inJss(3),
-        subjects: [
-          { name: "Mathematics", slug: "mathematics" },
-          { name: "Basic Science", slug: "basic-science" },
-        ],
+        subjects: PHONES,
       });
-      accountPlan(signIn).its("planId").should("equal", "plan-phone");
+      learnerPlan(signIn, learner).its("planId").should("equal", "plan-phone");
     });
     profile().should("include", { gradeLevel: inJss(3), level: "jss-3" });
     cy.contains("a", "Change").click();
@@ -171,22 +229,22 @@ describe("joining an account on a device's first sign-in", () => {
     cy.contains("button", "Save changes").should("be.disabled");
   });
 
-  it("gives the account a second device's newer plan for another class, which the first follows", () => {
-    const ada = googleAccount("Ada Lovelace");
+  it("gives a learner the device's newer plan for another class, which their other device follows", () => {
+    const account = googleAccount("Ada Lovelace");
     onDevice("phone");
     oldDevice(phonePlan(Date.now() - 2 * HOUR), {
       graspy_user_profile: learnerIn(1),
     });
-    signedIn(ada);
+    signedIn(account, { add: "Ada" });
 
     onDevice("laptop");
     oldDevice(laptopPlan(Date.now() - HOUR, 3), {
       graspy_user_profile: learnerIn(3),
     });
-    signedIn(ada).then((signIn) => {
+    signedIn(account, { choose: "Ada" }).then(({ signIn, learner }) => {
       cy.contains("dd", /^JSS 3$/);
       devicePlan().its("planId").should("equal", "plan-laptop");
-      accountPlan(signIn).should("deep.include", {
+      learnerPlan(signIn, learner).should("deep.include", {
         planId: "plan-laptop",
         gradeLevel: inJss(3),
       });
@@ -205,17 +263,20 @@ describe("joining an account on a device's first sign-in", () => {
     cy.get("#grade").should("have.value", "JSS 3");
   });
 
-  it("shows the interface in the language of the account's newer plan", () => {
-    const ada = googleAccount("Ada Lovelace");
-    signInToGoogle(ada).then((another) =>
-      saveAccountPlan(
-        another,
-        plan({
-          planId: "plan-yoruba",
-          subjects: PHONE_SUBJECTS,
-          updatedAt: Date.now() - HOUR,
-          details: classDetails(3, "yo"),
-        }),
+  it("shows the interface in the language of the learner's newer plan", () => {
+    const account = googleAccount("Ada Lovelace");
+    signInToGoogle(account).then((another) =>
+      addLearnerTo(another, "Ada").then((ada) =>
+        saveLearnerPlan(
+          another,
+          ada,
+          plan({
+            planId: "plan-yoruba",
+            subjects: PHONE_SUBJECTS,
+            updatedAt: Date.now() - HOUR,
+            details: classDetails(3, "yo"),
+          }),
+        ),
       ),
     );
     onDevice("laptop");
@@ -225,7 +286,7 @@ describe("joining an account on a device's first sign-in", () => {
     cy.visit("/app/learn/you");
     cy.contains("h1", "You");
 
-    signedIn(ada);
+    signedIn(account, { choose: "Ada" });
     cy.contains("h1", "Ìwọ");
     cy.get("html").should("have.attr", "lang", "yo");
     cy.contains("button", "Jáde");
@@ -234,7 +295,7 @@ describe("joining an account on a device's first sign-in", () => {
   });
 
   it("finds the class of an earlier version's plan, on a later start when the catalogue was unreachable", () => {
-    const ada = googleAccount("Ada Lovelace");
+    const account = googleAccount("Ada Lovelace");
     const earlier = plan({
       planId: "plan-earlier",
       subjects: PHONE_SUBJECTS,
@@ -245,13 +306,17 @@ describe("joining an account on a device's first sign-in", () => {
         gradeLevel: inJss(3),
       },
     });
-    signInToGoogle(ada).then((another) => saveAccountPlan(another, earlier));
+    signInToGoogle(account).then((another) =>
+      addLearnerTo(another, "Ada").then((ada) =>
+        saveLearnerPlan(another, ada, earlier),
+      ),
+    );
 
     onDevice("tablet");
     oldDevice(laptopPlan(Date.now() - 2 * HOUR), {
       graspy_user_profile: learnerIn(1),
     });
-    signedIn(ada);
+    signedIn(account, { choose: "Ada" });
     cy.contains("dd", /^JSS 3$/);
     profile().should("include", { level: "jss-3", system: "NG" });
     cy.contains("a", "Change").click();
@@ -270,7 +335,7 @@ describe("joining an account on a device's first sign-in", () => {
     cy.intercept("GET", `${API}/education/countries/*`, {
       forceNetworkError: true,
     }).as("unreachable");
-    signedIn(ada);
+    signedIn(account, { choose: "Ada" });
     cy.wait("@unreachable");
     cy.contains("dd", inJss(3));
     profile().should("include", { gradeLevel: inJss(3), level: "" });
@@ -284,10 +349,12 @@ describe("joining an account on a device's first sign-in", () => {
     browserCache(true);
   });
 
-  it("merges a rebuilt plan that kept codes for its place with the account's for the same class", () => {
-    const ada = googleAccount("Ada Lovelace");
-    signInToGoogle(ada).then((another) =>
-      saveAccountPlan(another, phonePlan(Date.now() - HOUR)),
+  it("merges a rebuilt plan that kept codes for its place with a learner's for the same class", () => {
+    const account = googleAccount("Ada Lovelace");
+    signInToGoogle(account).then((another) =>
+      addLearnerTo(another, "Ada").then((ada) =>
+        saveLearnerPlan(another, ada, phonePlan(Date.now() - HOUR)),
+      ),
     );
     const rebuilt = plan({
       planId: "plan-rebuilt",
@@ -298,21 +365,53 @@ describe("joining an account on a device's first sign-in", () => {
     onDevice("laptop");
     oldDevice(rebuilt, { graspy_user_profile: learnerIn(1) });
 
-    signedIn(ada, "/app/learn/subjects").then((signIn) => {
-      cy.wait("@join").its("request.body").should("include", {
-        planId: "plan-rebuilt",
-        country: "Nigeria",
-        language: "English",
-      });
-      accountPlan(signIn).should("deep.include", {
-        planId: "plan-phone",
-        subjects: UNION,
-      });
-    });
+    signedIn(account, { choose: "Ada" }, "/app/learn/subjects").then(
+      ({ signIn, learner }) => {
+        cy.wait("@join").its("request.body").should("include", {
+          planId: "plan-rebuilt",
+          country: "Nigeria",
+          language: "English",
+        });
+        learnerPlan(signIn, learner).should("deep.include", {
+          planId: "plan-phone",
+          subjects: UNION,
+        });
+      },
+    );
     devicePlan().should("deep.include", {
       planId: "plan-phone",
       subjects: UNION,
     });
     subjectsShown(["Mathematics", "Basic Science", "English Studies"]);
+  });
+
+  // An account from before learners becomes its first learner on the server
+  // (tests/test_learners.py); the running server keeps no such account to sign in to.
+  it("asks a device signed in before accounts held learners who is learning, and joins its plan", () => {
+    const account = googleAccount("Ada Lovelace");
+    onDevice("phone");
+    oldDevice(phonePlan(Date.now() - HOUR), {
+      graspy_user_profile: learnerIn(1),
+    });
+    signInToGoogle(account).then((signIn) => {
+      signInOnThisDevice(signIn);
+      cy.window().then((win) =>
+        win.localStorage.setItem(
+          "graspy.account",
+          JSON.stringify({
+            uid: signIn.uid,
+            name: account.name,
+            email: account.email,
+          }),
+        ),
+      );
+      cy.visit("/app/learn/you");
+      pickLearner({ add: "Ada" });
+      cy.location("pathname").should("eq", "/app/learn");
+      agreesWithAccount();
+      learnersOf(signIn).then(([ada]) =>
+        learnerPlan(signIn, ada).its("planId").should("equal", "plan-phone"),
+      );
+    });
   });
 });

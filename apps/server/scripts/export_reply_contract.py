@@ -25,6 +25,7 @@ from typing import get_args
 
 from app.agent.app_tools import PART_KEY, TOOLS_CALL
 from app.agent.cards import Card, ResultMeta
+from app.agent.memory import InMemoryConversationStore
 from app.agent.passage import PassageQuestion, give_passage
 from app.agent.practice import PracticeQuestion, give_practice
 from app.agent.reply import (
@@ -233,6 +234,7 @@ async def _learner() -> tuple[dict, dict]:
         learners=InMemoryLearnerStore(),
         lessons=InMemoryLessonStore(),
         making=TaskLessonMaking(_never_made),
+        conversations=InMemoryConversationStore(),
     )
     caller = Caller(DEVICE, keeping)
     await keeping.lessons.keep("lesson-1", LESSON)

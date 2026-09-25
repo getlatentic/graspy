@@ -20,6 +20,8 @@ class LessonStore(Protocol):
 
     async def find(self, lesson_id: str) -> Lesson | None: ...
 
+    async def forget(self, lesson_id: str) -> None: ...
+
 
 class InMemoryLessonStore:
     def __init__(self) -> None:
@@ -32,6 +34,9 @@ class InMemoryLessonStore:
 
     async def find(self, lesson_id: str) -> Lesson | None:
         return self._lessons.get(lesson_id)
+
+    async def forget(self, lesson_id: str) -> None:
+        self._lessons.pop(lesson_id, None)
 
 
 class DurableObjectLessonStore:
@@ -46,6 +51,9 @@ class DurableObjectLessonStore:
     async def find(self, lesson_id: str) -> Lesson | None:
         found = await self._namespace.getByName(lesson_id).find()
         return _read(lesson_id, found) if found else None
+
+    async def forget(self, lesson_id: str) -> None:
+        await self._namespace.getByName(lesson_id).forget()
 
 
 def _read(lesson_id: str, found: str) -> Lesson | None:

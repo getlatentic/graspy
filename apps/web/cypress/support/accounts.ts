@@ -1,14 +1,11 @@
 import { withAppClosed } from "./devices";
-import { SERVER } from "./learner-db";
 
-// Google accounts in Firebase's Auth emulator, and the signed-in session the server
-// issues for one. The server checks every sign-in with the emulator.
+// Google accounts in Firebase's Auth emulator, and a device signed in to one.
 
 export const EMULATOR = "http://127.0.0.1:9099";
 // As .env.development sets it: Firebase keeps a sign-in under the app's key.
 const API_KEY = "demo-graspy-key";
 const IDENTITY = `${EMULATOR}/identitytoolkit.googleapis.com/v1`;
-const API = `${SERVER}/api`;
 
 export interface GoogleAccount {
   sub: string;
@@ -145,122 +142,35 @@ function deleted(win: Window, name: string): Promise<void> {
   });
 }
 
+export interface Learner {
+  id: string;
+  name: string;
+}
+
 /** The device as Google's popup leaves it: Firebase holding the sign-in, and the app
- * knowing who it is. Firebase moves the user into its IndexedDB on the next start. */
+ * knowing who it is, with no learner chosen yet; or, given one, as a device that chose
+ * that learner before. Firebase moves the user into its IndexedDB on the next start. */
 export function signInOnThisDevice(
   signIn: GoogleSignIn,
-  { expirationTime = Date.now() + signIn.expiresIn * 1000 } = {},
+  {
+    expirationTime = Date.now() + signIn.expiresIn * 1000,
+    learner = null as Learner | null,
+  } = {},
 ): void {
   const { name, email } = signIn.account;
+  const account = {
+    uid: signIn.uid,
+    name,
+    email,
+    learner,
+    deviceJoins: !learner,
+  };
   withAppClosed(async (win) => {
     await deleted(win, "firebaseLocalStorageDb");
     win.localStorage.setItem(
       FIREBASE_USER_KEY,
       JSON.stringify(firebaseUser(signIn, expirationTime)),
     );
-    win.localStorage.setItem(
-      "graspy.account",
-      JSON.stringify({ uid: signIn.uid, name, email }),
-    );
+    win.localStorage.setItem("graspy.account", JSON.stringify(account));
   });
-}
-
-/** A session naming the account, as the server issues one for a sign-in. Its own device
- * id, which has no record, so reading takes nothing into the account. */
-function accountSession(signIn: GoogleSignIn): Cypress.Chainable<string> {
-  const reader = `e2e-reader-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  return cy
-    .request("POST", `${API}/session`, {
-      deviceId: reader,
-      firebaseIdToken: signIn.idToken,
-    })
-    .then(({ body }) => {
-      expect(body.signedIn, "the server took the sign-in").to.equal(true);
-      return body.token as string;
-    });
-}
-
-export type Plan = Record<string, unknown> & {
-  planId: string;
-  updatedAt: number;
-};
-
-export function accountPlan(
-  signIn: GoogleSignIn,
-): Cypress.Chainable<Plan | null> {
-  return accountSession(signIn).then((token) =>
-    cy
-      .request({
-        url: `${API}/learner/curriculum`,
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .its("body.plan"),
-  );
-}
-
-/** The account's plan as another device of it saved it. */
-export function saveAccountPlan(signIn: GoogleSignIn, plan: object): void {
-  accountSession(signIn).then((token) =>
-    cy.request({
-      method: "PUT",
-      url: `${API}/learner/curriculum`,
-      headers: { Authorization: `Bearer ${token}` },
-      body: plan,
-    }),
-  );
-}
-
-export type TopicKey = [string, string, number, string];
-
-/** A topic learnt in the account, as its record keeps one learnt on another device. */
-export function learntInAccount(
-  signIn: GoogleSignIn,
-  [planId, subjectSlug, topicIndex, topic]: TopicKey,
-): void {
-  accountSession(signIn).then((token) =>
-    cy.request({
-      method: "POST",
-      url: `${API}/learner/import`,
-      headers: { Authorization: `Bearer ${token}` },
-      body: {
-        topics: [
-          { planId, subjectSlug, topicIndex, topic, learntAt: Date.now() },
-        ],
-      },
-    }),
-  );
-}
-
-interface Mark {
-  planId: string;
-  subjectSlug: string;
-  topicIndex: number;
-  topic: string;
-  learntAt?: number | null;
-}
-
-/** The topics the account has learnt in a plan. */
-export function accountLearnt(
-  signIn: GoogleSignIn,
-  planId: string,
-): Cypress.Chainable<TopicKey[]> {
-  return accountSession(signIn).then((token) =>
-    cy
-      .request({
-        url: `${API}/learner`,
-        qs: { planId },
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .its("body.topics")
-      .then((topics: Mark[]) =>
-        topics
-          .filter((mark) => mark.learntAt)
-          .map((mark): TopicKey => [
-            mark.planId,
-            mark.subjectSlug,
-            mark.topicIndex,
-            mark.topic,
-          ]),
-      ),
-  );
 }

@@ -43,6 +43,8 @@ class ConversationStore(Protocol):
         any added since the load are kept."""
         ...
 
+    async def forget(self, conversation_id: str) -> None: ...
+
 
 class InMemoryConversationStore:
     def __init__(self) -> None:
@@ -61,6 +63,9 @@ class InMemoryConversationStore:
             self._stored.get(conversation_id), summary, dropped
         )
 
+    async def forget(self, conversation_id: str) -> None:
+        self._stored.pop(conversation_id, None)
+
 
 class DurableObjectConversationStore:
     """Values cross into the Durable Object as JSON text, which needs no
@@ -77,6 +82,9 @@ class DurableObjectConversationStore:
 
     async def fold(self, conversation_id: str, summary: str, dropped: int) -> None:
         await self._namespace.getByName(conversation_id).fold(summary, dropped)
+
+    async def forget(self, conversation_id: str) -> None:
+        await self._namespace.getByName(conversation_id).forget()
 
 
 def _stored(stored: str | None) -> dict:

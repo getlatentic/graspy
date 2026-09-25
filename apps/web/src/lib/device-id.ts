@@ -2,7 +2,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 // Nobody signs in, so the device stands for the learner. The id is random, not the
 // fingerprint: two phones of one model share a fingerprint, and would share a record.
-const STORAGE_KEY = "graspy_device_id";
+export const DEVICE_ID_KEY = "graspy_device_id";
 // What the server accepts (schemas.DEVICE_ID_PATTERN and FINGERPRINT_PATTERN).
 const DEVICE_ID = /^[A-Za-z0-9_-]{8,64}$/;
 const FINGERPRINT = /^[a-f0-9]{8,64}$/;
@@ -13,7 +13,7 @@ let hint: Promise<string | null> | null = null;
 
 function stored(): string | null {
   try {
-    const id = window.localStorage.getItem(STORAGE_KEY);
+    const id = window.localStorage.getItem(DEVICE_ID_KEY);
     return id && DEVICE_ID.test(id) ? id : null;
   } catch {
     return null;
@@ -22,15 +22,18 @@ function stored(): string | null {
 
 function keep(id: string): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, id);
+    window.localStorage.setItem(DEVICE_ID_KEY, id);
   } catch {
     // Storage refused: this visit is a device of its own.
   }
 }
 
 export function deviceId(): string {
-  const kept = stored();
-  if (kept) return kept;
+  return stored() ?? newDeviceId();
+}
+
+/** After signing out: the next learner's sign-in cannot take this device's record. */
+export function newDeviceId(): string {
   const made = crypto.randomUUID();
   keep(made);
   return made;

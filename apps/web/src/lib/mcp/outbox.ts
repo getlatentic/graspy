@@ -87,3 +87,9 @@ export function sendKept(): Promise<number> {
   });
   return sending;
 }
+
+/** Sends what was kept; false while some of it cannot reach the server. */
+export async function sentEverything(): Promise<boolean> {
+  await sendKept();
+  return (await keptCalls()).length === 0;
+}

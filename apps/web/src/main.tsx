@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { installAppWorker } from "@/lib/app-worker";
 import { listenForStaleChunks } from "@/app/page-chunks";
+import { finishPendingWipe } from "@/lib/wipe-pending";
 import { router } from "./routes";
 
 const queryClient = new QueryClient({
@@ -24,14 +25,20 @@ const queryClient = new QueryClient({
 listenForStaleChunks();
 installAppWorker();
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <I18nProvider>
-          <RouterProvider router={router} />
-        </I18nProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </StrictMode>,
-);
+function render(): void {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <I18nProvider>
+            <RouterProvider router={router} />
+          </I18nProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+}
+
+finishPendingWipe()
+  .catch((error: unknown) => console.error("Wiping the device failed:", error))
+  .finally(render);

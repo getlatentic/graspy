@@ -9,6 +9,7 @@ import { ChatContextBar } from "@/features/learn/components/chat-context-bar";
 import { TutorAskBar } from "@/features/learn/components/tutor-ask-bar";
 import { AppTabBar } from "@/features/learn/components/app-tab-bar";
 import { useOpenChat } from "@/features/learn/hooks/use-open-chat";
+import { useLearnerChosen } from "@/features/learn/hooks/use-learner-chosen";
 import { useLearnerStart } from "@/features/learn/hooks/use-learner-start";
 import {
   isChatPath,
@@ -134,6 +135,7 @@ function ShellFooter({
 }
 
 export default function DashboardLayout() {
+  if (!useLearnerChosen()) return null;
   return (
     <LearnerProviders>
       <DashboardLayoutContent />

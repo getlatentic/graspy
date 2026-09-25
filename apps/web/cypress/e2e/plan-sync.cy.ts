@@ -1,9 +1,5 @@
-import {
-  accountPlan,
-  emulatorIsUp,
-  googleAccount,
-  type GoogleSignIn,
-} from "../support/accounts";
+import { learnerPlan } from "../support/account-api";
+import { emulatorIsUp, googleAccount } from "../support/accounts";
 import { onDevice } from "../support/devices";
 import {
   SERVER,
@@ -20,13 +16,15 @@ import {
   openDetails,
 } from "../support/learner-pages";
 import { inJss } from "../support/plans";
-import { phoneAndLaptop, profile } from "../support/signed-in";
+import { phoneAndLaptop, profile, type SignedIn } from "../support/signed-in";
 
 const API = `${SERVER}/api`;
 
-function accountIn(signIn: GoogleSignIn, gradeLevel: string): void {
+const plansOf = ({ signIn, learner }: SignedIn) => learnerPlan(signIn, learner);
+
+function planIn(ada: SignedIn, gradeLevel: string): void {
   retried(
-    () => accountPlan(signIn),
+    () => plansOf(ada),
     (plan) => expect(plan?.gradeLevel).to.equal(gradeLevel),
   );
 }
@@ -46,13 +44,13 @@ beforeEach(() => {
 afterEach(() => online(true));
 
 it("takes a class changed on the phone to the laptop, on the same plan", () => {
-  phoneAndLaptop(googleAccount("Ada Lovelace")).then((signIn) => {
+  phoneAndLaptop(googleAccount("Ada Lovelace")).then((ada) => {
     onDevice("phone");
     cy.visit("/app/learn/you");
     openDetails();
     keepPlanWith(inClass("JSS 2"));
     cy.wait("@send").its("request.body.gradeLevel").should("equal", inJss(2));
-    accountIn(signIn, inJss(2));
+    planIn(ada, inJss(2));
   });
 
   onDevice("laptop");
@@ -66,7 +64,7 @@ it("takes a class changed on the phone to the laptop, on the same plan", () => {
 });
 
 it("takes a learning language changed on the phone to the laptop's details and interface", () => {
-  phoneAndLaptop(googleAccount("Ada Lovelace")).then((signIn) => {
+  phoneAndLaptop(googleAccount("Ada Lovelace")).then((ada) => {
     cy.contains("h1", "You");
     onDevice("phone");
     cy.visit("/app/learn/you");
@@ -74,7 +72,7 @@ it("takes a learning language changed on the phone to the laptop's details and i
     keepPlanWith(learningIn("Yor"));
     cy.contains("h1", "Ìwọ");
     retried(
-      () => accountPlan(signIn),
+      () => plansOf(ada),
       (plan) => expect(plan).to.include({ languageCode: "yo" }),
     );
   });
@@ -93,7 +91,7 @@ it("takes a learning language changed on the phone to the laptop's details and i
 });
 
 it("sends a change the phone made offline once it is back, and the laptop gets it", () => {
-  phoneAndLaptop(googleAccount("Ada Lovelace")).then((signIn) => {
+  phoneAndLaptop(googleAccount("Ada Lovelace")).then((ada) => {
     onDevice("phone");
     serverFollowsTheConnection();
     cy.visit("/app/learn/you");
@@ -101,10 +99,10 @@ it("sends a change the phone made offline once it is back, and the laptop gets i
     online(false);
     keepPlanWith(inClass("JSS 2"));
     cy.contains("dd", /^JSS 2$/);
-    accountPlan(signIn).its("gradeLevel").should("equal", inJss(1));
+    plansOf(ada).its("gradeLevel").should("equal", inJss(1));
 
     online(true);
-    accountIn(signIn, inJss(2));
+    planIn(ada, inJss(2));
   });
 
   onDevice("laptop");
@@ -113,7 +111,7 @@ it("sends a change the phone made offline once it is back, and the laptop gets i
 });
 
 it("keeps the later of two changes made apart, on both devices", () => {
-  phoneAndLaptop(googleAccount("Ada Lovelace")).then((signIn) => {
+  phoneAndLaptop(googleAccount("Ada Lovelace")).then((ada) => {
     onDevice("phone");
     serverFollowsTheConnection();
     cy.visit("/app/learn/you");
@@ -128,7 +126,7 @@ it("keeps the later of two changes made apart, on both devices", () => {
     cy.visit("/app/learn/you");
     openDetails();
     keepPlanWith(inClass("JSS 3"));
-    accountIn(signIn, inJss(3));
+    planIn(ada, inJss(3));
 
     onDevice("phone");
     cy.intercept("PUT", `${API}/learner/curriculum`).as("phoneSends");
@@ -139,7 +137,7 @@ it("keeps the later of two changes made apart, on both devices", () => {
         inJss(3),
       );
     });
-    accountPlan(signIn).its("gradeLevel").should("equal", inJss(3));
+    plansOf(ada).its("gradeLevel").should("equal", inJss(3));
   });
 
   onDevice("laptop");

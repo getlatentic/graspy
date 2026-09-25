@@ -14,6 +14,7 @@ from ..wire import Wire
 # The newest are kept.
 MAX_ANSWERS = 500
 MAX_TOPICS = 2000
+MAX_CONVERSATIONS = 500
 MAX_TEXT = 600
 MAX_NAME = 300
 
@@ -81,6 +82,8 @@ class LearnerRecord(Wire):
     joined: list[str] = Field(default_factory=list)
     # A hint only: two phones of one model share one.
     fingerprint: str | None = None
+    # The tutor conversations held, so forgetting the learner forgets them.
+    conversations: list[str] = Field(default_factory=list)
 
     def mark(self, ref: TopicRef) -> TopicMark | None:
         return next((mark for mark in self.topics if mark.same_topic(ref)), None)
@@ -101,7 +104,7 @@ class LearnerRecord(Wire):
 
     def for_app(self, plan_id: str) -> dict:
         return self.in_plan(plan_id).model_dump(
-            by_alias=True, exclude={"fingerprint", "joined"}
+            by_alias=True, exclude={"fingerprint", "joined", "conversations"}
         )
 
     def in_plan(self, plan_id: str) -> LearnerRecord:
@@ -133,6 +136,12 @@ class Learnt(Wire):
 class Seen(Wire):
     kind: Literal["seen"] = "seen"
     fingerprint: Annotated[str, Field(pattern=r"^[a-f0-9]{8,64}$")]
+
+
+class Conversed(Wire):
+    kind: Literal["conversed"] = "conversed"
+    # The A2A context id, which the client chooses.
+    conversation_id: Annotated[str, Field(min_length=1, max_length=200)]
 
 
 class Imported(Wire):
@@ -198,7 +207,8 @@ Change = Annotated[
     | SubjectsCarried
     | PlanKept
     | DeviceJoined
-    | PlanMerged,
+    | PlanMerged
+    | Conversed,
     Field(discriminator="kind"),
 ]
 _CHANGE = TypeAdapter(Change)
@@ -318,6 +328,13 @@ def _planned(record: LearnerRecord, change: PlanChange) -> LearnerRecord:
             return _kept_where(record, lambda plan, _slug: plan == plan_id)
 
 
+def _conversed(record: LearnerRecord, change: Conversed) -> LearnerRecord:
+    if change.conversation_id in record.conversations:
+        return record
+    held = [*record.conversations, change.conversation_id][-MAX_CONVERSATIONS:]
+    return record.model_copy(update={"conversations": held})
+
+
 def applied(record: LearnerRecord, change: Change) -> LearnerRecord:
     match change:
         case Answered(answer=answer):
@@ -340,6 +357,8 @@ def applied(record: LearnerRecord, change: Change) -> LearnerRecord:
             return _device_joined(record, change)
         case PlanMerged():
             return _plan_merged(record, change)
+        case Conversed():
+            return _conversed(record, change)
 
 
 def changed(stored: str | None, change_json: str) -> str:

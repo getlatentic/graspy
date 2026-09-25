@@ -1,12 +1,15 @@
-import { LogIn, UserRound } from "lucide-react";
+import { Link } from "react-router";
+import { UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { buttonStyles } from "@/components/ui/button-styles";
 import { Card } from "@/components/ui/card";
+import { GoogleSignInButton } from "@/features/account/components/google-sign-in-button";
 import type { Account } from "@/lib/account/account-store";
-import type { SignInProblem } from "@/lib/account/sign-in";
 import { useAccount } from "@/lib/account/use-account";
 import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
-import { useGoogleSignIn } from "../hooks/use-google-sign-in";
+import { LEARNERS_PAGE } from "../lib/app-sections";
+import { useSignOut } from "../hooks/use-sign-out";
 
 export function AccountCard() {
   if (!FIREBASE_CONFIG) return null;
@@ -16,7 +19,6 @@ export function AccountCard() {
 function GoogleAccountCard() {
   const { t } = useI18n();
   const account = useAccount();
-  const google = useGoogleSignIn(account !== null);
 
   return (
     <Card className="flex flex-col gap-3">
@@ -24,78 +26,85 @@ function GoogleAccountCard() {
         <UserRound className="size-4 text-accent-ink" aria-hidden="true" />
         {t("you.account")}
       </h2>
-      {account ? (
-        <SignedIn account={account} onSignOut={google.signOut} />
-      ) : (
-        <SignedOut
-          busy={google.busy}
-          problem={google.problem}
-          onSignIn={google.signIn}
-        />
-      )}
+      {account ? <SignedIn account={account} /> : <SignedOut />}
     </Card>
   );
 }
 
-function SignedIn({
-  account,
-  onSignOut,
-}: {
-  account: Account;
-  onSignOut: () => void;
-}) {
+const LINK = buttonStyles("secondary", "sm");
+
+function SignedIn({ account }: { account: Account }) {
   const { t } = useI18n();
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          {account.name && (
-            <p className="truncate font-medium text-ink">{account.name}</p>
-          )}
-          {account.email && (
-            <p className="truncate text-sm text-muted" dir="ltr">
-              {account.email}
-            </p>
-          )}
-        </div>
-        <Button variant="secondary" size="sm" onClick={onSignOut}>
-          {t("you.signOut")}
-        </Button>
+      <div className="min-w-0">
+        {account.name && (
+          <p className="truncate font-medium text-ink">{account.name}</p>
+        )}
+        {account.email && (
+          <p className="truncate text-sm text-muted" dir="ltr">
+            {account.email}
+          </p>
+        )}
+      </div>
+      {account.learner && (
+        <p className="text-ink">
+          {t("you.learningAs", { name: account.learner.name })}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Link to="/app/learners" className={LINK}>
+          {t("you.switchLearner")}
+        </Link>
+        <Link to={LEARNERS_PAGE} className={LINK}>
+          {t("you.manageLearners")}
+        </Link>
       </div>
       <p className="text-xs text-muted">{t("you.signedIn")}</p>
+      <SignOut />
     </>
   );
 }
 
-function SignedOut({
-  busy,
-  problem,
-  onSignIn,
-}: {
-  busy: boolean;
-  problem: SignInProblem | null;
-  onSignIn: () => void;
-}) {
+function SignOut() {
+  const { t } = useI18n();
+  const signOut = useSignOut();
+  if (!signOut.unsent) {
+    return (
+      <Button
+        variant="secondary"
+        size="sm"
+        className="self-start"
+        onClick={() => void signOut.start()}
+        disabled={signOut.busy}
+      >
+        {signOut.busy ? t("you.signingOut") : t("you.signOut")}
+      </Button>
+    );
+  }
+  return (
+    <div role="alertdialog" className="flex flex-col gap-2">
+      <p className="text-sm font-medium text-danger">
+        {t("you.signOutUnsent")}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={signOut.anyway} disabled={signOut.busy}>
+          {t("you.signOutAnyway")}
+        </Button>
+        <Button variant="secondary" size="sm" onClick={signOut.cancel}>
+          {t("you.cancel")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SignedOut() {
   const { t } = useI18n();
   return (
     <>
       <p className="text-ink">{t("you.signInPrompt")}</p>
-      <Button
-        variant="secondary"
-        className="self-start"
-        onClick={onSignIn}
-        disabled={busy}
-      >
-        <LogIn className="size-4 rtl:-scale-x-100" aria-hidden="true" />
-        {busy ? t("you.signingIn") : t("you.signIn")}
-      </Button>
-      {problem && (
-        <p role="alert" className="text-sm font-medium text-danger">
-          {problem === "popupBlocked"
-            ? t("you.signInBlocked")
-            : t("you.signInFailed")}
-        </p>
-      )}
+      <GoogleSignInButton />
     </>
   );
 }

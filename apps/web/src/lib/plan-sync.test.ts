@@ -27,9 +27,13 @@ vi.mock("@/lib/user-storage", () => ({
   saveUserProfile,
 }));
 
-let signedIn: { uid: string } | null = { uid: "uid-1" };
+type Signed = { uid: string; learner: { id: string } | null };
+const ADA: Signed = { uid: "uid-1", learner: { id: "ada" } };
+let signedIn: Signed | null = ADA;
 vi.mock("@/lib/account/account-store", () => ({
   currentAccount: () => signedIn,
+  learnerKeyOf: (account: Signed) =>
+    account.learner ? `${account.uid}/${account.learner.id}` : null,
 }));
 
 const { forgetPlanSync, syncPlan } = await import("./plan-sync");
@@ -94,12 +98,15 @@ beforeEach(() => {
   });
   vi.resetAllMocks();
   device = null;
-  signedIn = { uid: "uid-1" };
+  signedIn = ADA;
 });
 
-describe("syncPlan while signed out", () => {
-  it("does nothing", async () => {
-    signedIn = null;
+describe("syncPlan without a learner", () => {
+  it.each([
+    ["signed out", null],
+    ["signed in with no learner chosen", { uid: "uid-1", learner: null }],
+  ])("does nothing %s", async (_, account) => {
+    signedIn = account;
     device = plan("plan-1", 10);
 
     await expect(syncPlan()).resolves.toBeNull();
@@ -107,6 +114,18 @@ describe("syncPlan while signed out", () => {
     expect(server.accountPlan).not.toHaveBeenCalled();
     expect(server.sendPlan).not.toHaveBeenCalled();
     expect(server.joinPlan).not.toHaveBeenCalled();
+  });
+});
+
+describe("syncPlan for another learner of the account", () => {
+  it("joins again, as the first sync for that learner", async () => {
+    await joinedWith(plan("plan-ada", 10));
+    signedIn = { uid: "uid-1", learner: { id: "grace" } };
+    server.joinPlan.mockResolvedValue(plan("plan-ada", 10));
+
+    await syncPlan();
+
+    expect(server.joinPlan).toHaveBeenCalled();
   });
 });
 
@@ -118,9 +137,22 @@ describe("syncPlan on signing in", () => {
 
     await expect(syncPlan()).resolves.toEqual(merged);
 
-    expect(server.joinPlan).toHaveBeenCalledWith(plan("plan-device", 10));
+    expect(server.joinPlan).toHaveBeenCalledWith(
+      expect.objectContaining(plan("plan-device", 10)),
+    );
     expect(holdCurriculum).toHaveBeenCalledWith(merged);
     expect(device).toEqual(merged);
+  });
+
+  it("names the place of a plan that kept only codes for it, as the server compares", async () => {
+    device = { ...plan("plan-device", 10), country: "NG", language: "en" };
+    server.joinPlan.mockResolvedValue(plan("plan-account", 20));
+
+    await syncPlan();
+
+    expect(server.joinPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ country: "Nigeria", language: "English" }),
+    );
   });
 
   it("keeps the device's plan when the account took it as it was", async () => {

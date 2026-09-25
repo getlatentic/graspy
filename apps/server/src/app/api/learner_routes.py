@@ -79,6 +79,11 @@ class DeviceRecords(Wire):
 async def learner_caller(
     request: Request, session: Annotated[Session, Depends(require_session)]
 ) -> Caller:
+    if session.account and not session.learner:
+        raise HTTPException(
+            status_code=409,
+            detail={"error": "Choose a learner first", "code": "learner_required"},
+        )
     if not session.learner:
         raise HTTPException(
             status_code=400,

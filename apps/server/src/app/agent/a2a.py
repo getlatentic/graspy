@@ -28,6 +28,7 @@ from google.protobuf.json_format import MessageToDict
 
 from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
+from ..learner.record import Conversed
 from ..settings import Settings
 from .app_tools import app_calls
 from .context import LearnerContext, with_kept_lesson
@@ -85,7 +86,10 @@ class TutorExecutor(AgentExecutor):
     async def _turn(
         self, context: RequestContext, conversation_id: str, message: str
     ) -> AsyncIterator:
-        record = await Caller(learner_of(context), self._keeping).record()
+        caller = Caller(learner_of(context), self._keeping)
+        record = await caller.record()
+        if caller.learner and conversation_id not in record.conversations:
+            await caller.change(Conversed(conversation_id=conversation_id))
         learner = await with_kept_lesson(
             LearnerContext.from_metadata(learner_metadata(context)),
             record,

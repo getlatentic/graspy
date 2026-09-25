@@ -3,6 +3,8 @@ import type { ComponentType } from "react";
 // Kept off the landing page; prefetched in the app so they open offline.
 const pages = {
   onboarding: () => import("@/features/onboarding/pages/onboarding"),
+  learners: () => import("@/features/account/pages/learner-picker-page"),
+  manageLearners: () => import("@/features/account/pages/learners-page"),
   learnLayout: () => import("@/app/learn/layout"),
   home: () => import("@/app/learn/page"),
   subject: () => import("@/app/learn/subject-page"),

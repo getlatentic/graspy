@@ -87,3 +87,17 @@ describe("a view's call", () => {
     expect(await sendKept()).toBe(0);
   });
 });
+
+describe("sentEverything", () => {
+  it("is false while a kept call cannot reach the server, and true once sent", async () => {
+    online = false;
+    callAppTool.mockRejectedValue(new TypeError("Failed to fetch"));
+    const { callOrKeep, sentEverything } = await fresh();
+    await callOrKeep("answer_check", ANSWER);
+
+    expect(await sentEverything()).toBe(false);
+    online = true;
+    callAppTool.mockReset().mockResolvedValue(DONE);
+    expect(await sentEverything()).toBe(true);
+  });
+});
