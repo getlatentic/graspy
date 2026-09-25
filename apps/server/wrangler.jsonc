@@ -7,7 +7,10 @@
   "compatibility_date": "2026-09-21",
   "compatibility_flags": ["python_workers"],
   "workers_dev": false,
-  "routes": [{ "pattern": "graspy-api.tosinamuda.com", "custom_domain": true }],
+  "routes": [
+    { "pattern": "graspy-api.getlatentic.com", "custom_domain": true },
+    { "pattern": "graspy-api.tosinamuda.com", "custom_domain": true }
+  ],
   "observability": { "enabled": true },
 
   // The MCP Apps views, built from ./ui (npm --prefix ui run build). The Worker
@@ -47,9 +50,9 @@
     "APP_ENV": "production",
     "LLM_MODEL_ID": "openai.gpt-oss-120b",
     "AWS_REGION": "us-east-1",
-    "PUBLIC_BASE_URL": "https://graspy-api.tosinamuda.com",
+    "PUBLIC_BASE_URL": "https://graspy-api.getlatentic.com",
     "A2A_PATH_PREFIX": "/a2a",
-    "CORS_ORIGINS": "https://graspy.tosinamuda.com,https://graspy.pages.dev,https://*.graspy.pages.dev"
+    "CORS_ORIGINS": "https://graspy.getlatentic.com,https://graspy.tosinamuda.com,https://graspy.pages.dev,https://*.graspy.pages.dev"
   },
   // Secrets, set with `npx wrangler secret put <NAME>`, never in this file:
   //   AWS_BEARER_TOKEN_BEDROCK, SESSION_SECRET

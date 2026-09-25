@@ -11,9 +11,9 @@ from app.mcp.sandbox import policy, requested_csp
 from app.mcp.views import LocalViews
 from app.settings import Settings
 
-APP = "https://graspy.tosinamuda.com"
+APP = "https://graspy.getlatentic.com"
 PREVIEW = "https://a1b2c3d4.graspy.pages.dev"
-API = "https://graspy-api.tosinamuda.com"
+API = "https://graspy-api.getlatentic.com"
 
 
 @pytest.fixture

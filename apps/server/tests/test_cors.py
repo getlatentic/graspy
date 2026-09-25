@@ -7,7 +7,7 @@ import pytest
 from app.config.cors import build_origin_rules
 
 CONFIGURED = [
-    "https://graspy.tosinamuda.com",
+    "https://graspy.getlatentic.com",
     "https://graspy.pages.dev",
     "https://*.graspy.pages.dev",
 ]
@@ -22,7 +22,7 @@ def _allows(origin: str) -> bool:
 @pytest.mark.parametrize(
     "origin",
     [
-        "https://graspy.tosinamuda.com",
+        "https://graspy.getlatentic.com",
         "https://graspy.pages.dev",
         "https://a1b2c3d4.graspy.pages.dev",  # Pages preview hash
         "https://fix-login.graspy.pages.dev",  # Pages branch preview

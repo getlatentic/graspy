@@ -12,7 +12,7 @@ from stand_in import stand_in
 from app.factory import create_app
 from app.settings import Settings
 
-ORIGIN = "https://graspy.tosinamuda.com"
+ORIGIN = "https://graspy.getlatentic.com"
 PREVIEW = "https://a1b2c3d4.graspy.pages.dev"
 
 

@@ -3,7 +3,7 @@ tokens and so are excluded from the default run. Start a server, then:
 
     uv run pytest -m integration                          # uvicorn, port 8081
     GRASPY_BASE_URL=http://127.0.0.1:8799 uv run pytest -m integration   # pywrangler dev
-    GRASPY_BASE_URL=https://graspy-api.tosinamuda.com uv run pytest -m integration
+    GRASPY_BASE_URL=https://graspy-api.getlatentic.com uv run pytest -m integration
 
 Model output varies, so these check the shape of each answer, not its words.
 """
