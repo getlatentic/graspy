@@ -7,6 +7,18 @@ vi.mock("@/lib/device-id", () => ({
   fingerprint: async () => FINGERPRINT,
 }));
 
+const ACCOUNT = { uid: "uid-1", name: "Ada", email: "ada@example.com" };
+let signedIn: typeof ACCOUNT | null = null;
+const setAccount = vi.fn((account: typeof ACCOUNT | null) => {
+  signedIn = account;
+});
+vi.mock("@/lib/account/account-store", () => ({
+  currentAccount: () => signedIn,
+  setAccount,
+}));
+const googleIdToken = vi.fn<(fresh: boolean) => Promise<string | null>>();
+vi.mock("@/lib/account/google-auth", () => ({ googleIdToken }));
+
 // Fresh per test: the module holds the tab's token, and ApiError must come from
 // the same reloaded graph for `instanceof` to hold.
 async function loadSession() {
@@ -42,6 +54,9 @@ let fetchMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.unstubAllGlobals();
+  signedIn = null;
+  setAccount.mockClear();
+  googleIdToken.mockReset();
   stubStorage();
   fetchMock = vi.fn();
   vi.stubGlobal("fetch", fetchMock);
@@ -190,5 +205,149 @@ describe("fetchWithSession", () => {
 
     expect(response.status).toBe(500);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+const sentBody = (call: number) =>
+  JSON.parse(fetchMock.mock.calls[call][1].body);
+
+describe("a signed-in learner's session", () => {
+  it("names the account with a Firebase ID token", async () => {
+    signedIn = ACCOUNT;
+    googleIdToken.mockResolvedValue("id-token");
+    fetchMock.mockResolvedValue(minted("account-token"));
+    const { getSessionToken } = await loadSession();
+
+    await expect(getSessionToken()).resolves.toBe("account-token");
+
+    expect(sentBody(0)).toEqual({
+      deviceId: DEVICE,
+      firebaseIdToken: "id-token",
+    });
+    expect(googleIdToken).toHaveBeenCalledWith(false);
+  });
+
+  it("re-mints with a fresh ID token when the server refuses one", async () => {
+    signedIn = ACCOUNT;
+    googleIdToken.mockImplementation(async (fresh) =>
+      fresh ? "fresh" : "stale",
+    );
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 401, json: async () => ({}) })
+      .mockResolvedValueOnce(minted("account-token"));
+    const { getSessionToken } = await loadSession();
+
+    await expect(getSessionToken()).resolves.toBe("account-token");
+
+    expect(sentBody(1)).toEqual({ deviceId: DEVICE, firebaseIdToken: "fresh" });
+  });
+
+  it("re-mints for the account, not the device, when a request is refused", async () => {
+    signedIn = ACCOUNT;
+    googleIdToken.mockResolvedValue("id-token");
+    fetchMock
+      .mockResolvedValueOnce(minted("first"))
+      .mockResolvedValueOnce({ ok: false, status: 401 })
+      .mockResolvedValueOnce(minted("second"))
+      .mockResolvedValueOnce({ ok: true, status: 200 });
+    const { fetchWithSession } = await loadSession();
+
+    await fetchWithSession("/api/thing");
+
+    expect(sentBody(2)).toEqual({
+      deviceId: DEVICE,
+      firebaseIdToken: "id-token",
+    });
+  });
+
+  it("signs out and names the device once Firebase no longer holds the sign-in", async () => {
+    signedIn = ACCOUNT;
+    googleIdToken.mockResolvedValue(null);
+    fetchMock.mockResolvedValue(minted("device-token"));
+    const { getSessionToken } = await loadSession();
+
+    await expect(getSessionToken()).resolves.toBe("device-token");
+
+    expect(setAccount).toHaveBeenCalledWith(null);
+    expect(sentBody(0)).toEqual({ deviceId: DEVICE, fingerprint: FINGERPRINT });
+  });
+
+  it("fails rather than naming the device when Firebase cannot be reached", async () => {
+    signedIn = ACCOUNT;
+    googleIdToken.mockRejectedValue(new Error("auth/network-request-failed"));
+    const { getSessionToken, ApiError } = await loadSession();
+
+    await expect(getSessionToken()).rejects.toBeInstanceOf(ApiError);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(setAccount).not.toHaveBeenCalled();
+  });
+});
+
+describe("signing in and out", () => {
+  it("replaces the device's token with the account's", async () => {
+    fetchMock
+      .mockResolvedValueOnce(minted("device-token"))
+      .mockResolvedValueOnce(minted("account-token"));
+    const { getSessionToken, startAccountSession } = await loadSession();
+    await getSessionToken();
+
+    await startAccountSession("id-token", ACCOUNT);
+
+    expect(setAccount).toHaveBeenCalledWith(ACCOUNT);
+    expect(sentBody(1)).toEqual({
+      deviceId: DEVICE,
+      firebaseIdToken: "id-token",
+    });
+    await expect(getSessionToken()).resolves.toBe("account-token");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("stays signed out when the server refuses the sign-in", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ detail: { code: "sign_in_invalid" } }),
+    });
+    const { startAccountSession, ApiError } = await loadSession();
+
+    await expect(
+      startAccountSession("id-token", ACCOUNT),
+    ).rejects.toBeInstanceOf(ApiError);
+
+    expect(setAccount).not.toHaveBeenCalled();
+  });
+
+  it("goes back to the device's session on signing out", async () => {
+    googleIdToken.mockResolvedValue("id-token");
+    fetchMock
+      .mockResolvedValueOnce(minted("account-token"))
+      .mockResolvedValueOnce(minted("device-token"));
+    const { endAccountSession, getSessionToken, startAccountSession } =
+      await loadSession();
+    await startAccountSession("id-token", ACCOUNT);
+
+    endAccountSession();
+
+    expect(signedIn).toBeNull();
+    await expect(getSessionToken()).resolves.toBe("device-token");
+    expect(sentBody(1)).toEqual({ deviceId: DEVICE, fingerprint: FINGERPRINT });
+  });
+
+  it("does not serve a token kept for someone signed in before", async () => {
+    const store = stubStorage();
+    store.set(
+      "graspy.session",
+      JSON.stringify({
+        token: "account-token",
+        device: DEVICE,
+        account: "uid-1",
+        expiresAt: Date.now() + 3_600_000,
+      }),
+    );
+    fetchMock.mockResolvedValue(minted("device-token"));
+    const { getSessionToken } = await loadSession();
+
+    await expect(getSessionToken()).resolves.toBe("device-token");
   });
 });

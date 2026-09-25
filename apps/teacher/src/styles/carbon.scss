@@ -1,0 +1,34 @@
+// Carbon inside @layer carbon — see docs/architecture/css-cascade-layers.md.
+// Config happens at top level (@use must precede any CSS); meta.load-css emits
+// each module's CSS inside the layer. theme.theme() emits the COMPLETE white
+// theme token set so no component state falls back to an IBM default; brand
+// overrides live in theme.css (layer components) and win by layer order.
+@use "sass:meta";
+@use "@carbon/react/scss/config" with (
+  $css--font-face: false,
+  $css--reset: false,
+  $css--default-type: false,
+  $css--body: false
+);
+@use "@carbon/react/scss/themes";
+@use "@carbon/react/scss/theme" with (
+  $theme: themes.$white
+);
+
+@layer carbon {
+  :root {
+    @include theme.theme();
+  }
+
+  @include meta.load-css("@carbon/react/scss/layout");
+  @include meta.load-css("@carbon/react/scss/components/button");
+  @include meta.load-css("@carbon/react/scss/components/dropdown");
+  @include meta.load-css("@carbon/react/scss/components/form");
+  @include meta.load-css("@carbon/react/scss/components/inline-loading");
+  @include meta.load-css("@carbon/react/scss/components/notification");
+  @include meta.load-css("@carbon/react/scss/components/number-input");
+  @include meta.load-css("@carbon/react/scss/components/radio-button");
+  @include meta.load-css("@carbon/react/scss/components/select");
+  @include meta.load-css("@carbon/react/scss/components/text-input");
+  @include meta.load-css("@carbon/react/scss/components/text-area");
+}

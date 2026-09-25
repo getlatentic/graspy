@@ -1,0 +1,802 @@
+{
+  "schemaVersion": 1,
+  "baselineDatasetSha256": "1c5075c0567c78529ba4518a19b598a360f3569a5fee57a0eb983518584a5019",
+  "source": {
+    "url": "https://lmis.nerdcportals.com.ng/jss_1/necurrdc/2.pdf",
+    "sha256": "278b771e2e41fa2101b6b11627eb3df8466cb5994bec457221de128eac7a26e6",
+    "edition": "September 2025"
+  },
+  "sourceTopics": [
+    {
+      "sourceTopicCode": "nerdc-2025-topic-01",
+      "title": "Whole Numbers",
+      "theme": "Number and Numeration",
+      "sourcePageLabels": [
+        "1"
+      ],
+      "physicalPageNumbers": [
+        14
+      ],
+      "targetTopicCodes": [
+        "jss1-math-whole-numbers"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Apply numeracy skills to count, read, write and order number s",
+      "focalCompetency": "Counting and writing of numbers in millions and trillions.",
+      "performanceObjectives": [
+        "Students should be able to: 1. count, read and write numbers in millions and billions; 2. counts and write numbers in trillions; 3. apply the counting, reading and writing large numbers in everyday life; 4. solve problems on quantitative aptitude tasks involving large numbers."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1 . Counting numbers in millions, billions and trillions . 2. Reading numbers in millions, billions and trillions. 3. Writing numbers in millions, billions and trillions. 4. Quantitative Aptitude. Skills 1. Counting, reading and writing of large numbers 2. Computational",
+      "keyCompetenciesAndValues": "Critical thinking as student s use s counting blocks/cubes to count and read numbers in million/billions. ICT/Digital competences as students use digital technology applications to enhance their learning while using counting games like million/billion bingos to Count in trillions.",
+      "learningActivities": "Students are guide d t o: 1 .Use counting bloc ks or cubes to represent million/billions to Count, read and write up million/billions. 2.Use counting games like million/billion bingos to Count in trillions. 3.Count, read and write in large numbers up to trillions by using 0 to 9 digits to build big numbers. 4.Apply the use of big numbers in reading billions number of shares sold by some banks. 5.Team up in small groups to solve problems on quantitative aptitude involving large numbers.",
+      "teachingAndLearningResources": "• Place value Number Char ts. • Flash card s. • Number cards 0 to 9 for building numbers. • Counting blocks • Counting games Million/Billion bingos. • Videos on counting and reading of large numbers.",
+      "evaluationGuide": "Stude nts to: 1. count, read and write large numbers (millions and billions); 2. c ount, read and write in trillions; 3. apply the reading and writing large numbers in real life situations; 4. s olve problems on quantitative aptitude involving large numbers."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-02",
+      "title": "Lowest Common Multiples (LCM)",
+      "theme": "Number and Numeration",
+      "sourcePageLabels": [
+        "2"
+      ],
+      "physicalPageNumbers": [
+        15
+      ],
+      "targetTopicCodes": [
+        "jss1-math-lcm"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Apply numeracy skills to count, read, write and order numbers.",
+      "focalCompetency": "Calculate the LCM of two or more whole numbers.",
+      "performanceObjectives": [
+        "Students should be able to: 1. identify multiples and common multiples of two or more whole numbers; 2. find the LCM of two or more whole numbers. 3. Determines common multiples of whole numbers."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Multiple of whole numbers. 2. LCM of whole numbers Skill Determining of common multiples of two or more whole numbers.",
+      "keyCompetenciesAndValues": "Critical thinking as students effectively analyse and evaluate the use of Venn diagram to identify multiples of two or more whole numbers by showing the over lapping multiples Collaboration as students are open and responsive to diverse perspective while working in groups to solve LCM problems.",
+      "learningActivities": "Students are guide to: 1. Use blocks or venn diagram to identify multiples of two or more whole numbers by showing the over lapping multiples. 2. Form multiples of numbers. 3. Watch short videos on simple ways to determine multiples of whole numbers 4. In group, solve LCM problems by using: • factor method; • multiple method; • index method and compare their answers.",
+      "teachingAndLearningResources": "• Place value Number Charts • Flash cards • Number cards • Venn diagram on multiples of two or more numbers",
+      "evaluationGuide": "Students to use: 1. factor method to find LCM; 2. multiple method to find LCM; 3. index method to find LCM."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-03",
+      "title": "Highest Common Factor (HCF)",
+      "theme": "Number and Numeration",
+      "sourcePageLabels": [
+        "3"
+      ],
+      "physicalPageNumbers": [
+        16
+      ],
+      "targetTopicCodes": [
+        "jss1-math-hcf"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Apply numeracy skills to count, read, write and order numbers",
+      "focalCompetency": "Calculating the HCF of two or more whole numbers.",
+      "performanceObjectives": [
+        "Students should be able to: 1. Identify factors and com mon facto rs of whole number; 2. find the HCF of whole nu mbers; 3. identify the differences between LCM and HCF; 4. apply the concept of HCF to real life; 5. solve problems on quantita tive aptitude tasks involving LCM and HCF of whole numbers."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Factors and 2. HCF of whole numbers. 3. Difference s between LCM and HCF. 4. Quantitat ive Aptitude involving HCF. Skill Calculating of LCH and HCF.",
+      "keyCompetenciesAndValues": "Collaboration as students demonstrate the ability to work with diverse team while identifying identify common factors of two or more whole numbers ICT and Digital competencies as students use technological tools to enhance their knowledge on how to calculate LCM and HCF",
+      "learningActivities": "Students are guided to: 1. Brainstorm in group to identify common factors of two or more whole numbers using: • com mon factor method • prime factor method. Example using prime factor method: 28 = 2 x 14 = 2 x 2 x 7. Hence the factor pairs are: • 1 x 28 • 2 x 14 • 4 x 7. hence, 1,2,4,7,14,28 are common factors of 28. 2. Find HCF of whole numbers e.g . HCF of 15 and 80. 3. Watch short videos on t he diffe rence between LCM and H CF and how to calculate them. 4.Apply HCF in real life situation. Example, measuring and conversion of measuring units or simplifying fractions. 5. Solve problems on quantitative aptitude involving HCF.",
+      "teachingAndLearningResources": "• Mathematics Open references • Interactive HCF calculator • Maths Is F un • Coolmath- HC F lesson and practices • LCM and HCF byCK-12 • card board • HCF Flash card • Videos on difference between LCM and HCF and how to calculate them.",
+      "evaluationGuide": "Students to: 1. find HCF of given whole numbers; 2. express given w hole numbers as products of their prime factors; 3. apply the concept of HCF to simplify fractions; 4. solve problems on quantitative aptitude involving LCM and HCF."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-04",
+      "title": "Counting in twos",
+      "theme": "Number and Numeration",
+      "sourcePageLabels": [
+        "4"
+      ],
+      "physicalPageNumbers": [
+        17
+      ],
+      "targetTopicCodes": [
+        "jss1-math-counting-in-base-2"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The existing planning topic contains the matching Counting in groups of twos subtopic."
+      },
+      "learningOutcome": "Apply numeracy skills to count, read, write and order numbers",
+      "focalCompetency": "Counting in group of twos",
+      "performanceObjectives": [
+        "Student should be able to count in group of twos."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge Counting in group of twos",
+      "keyCompetenciesAndValues": "Collaboration as students assumed shared responsibilities to count in twos using bottle tops, pebbles and sticks ICT/Digital competences as students use digital technology tools to enhance leaning on how to count in twos.",
+      "learningActivities": "Students are guided to: 1. In group, use counting sticks, pebbles, bottle tops to count in twos. 2. Watch short videos on how to count ingroup of twos 3. Prepare bundles of twos and multiples of two using bottle tops or counters.",
+      "teachingAndLearningResources": "• Card board • Flash card • Charts • Counters • Bottle tops • videos on how to count in twos, etc.",
+      "evaluationGuide": "Students are to: 1. count a bottle-tops of 20 pieces in group of twos; 2. form bundles of two-two objects from a total object of 30 pieces."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-05",
+      "title": "Conversion of Base-ten numerals to Binary numbers",
+      "theme": "Number and Numeration",
+      "sourcePageLabels": [
+        "5"
+      ],
+      "physicalPageNumbers": [
+        18
+      ],
+      "targetTopicCodes": [
+        "jss1-math-conversion-of-base-10-numerals-to-binary-numbers"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Apply numeracy skills to count, read, write and order numbers",
+      "focalCompetency": "Observing patterns in binary representation and understanding binary significance in computers.",
+      "performanceObjectives": [
+        "Students should be able to: 1. convert base ten numerals to binary numbers. 2. Identify patterns in binary representation. 3. Identify computing binary digits (bits)."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Converting numbers from Base-ten to Binary. 2. logic gates (0 and 1). 4. Place value in binary numbers. Skill 1. Identifying patterns in binary representation 2. Familiarizing with how computing/basic programming works by first converting everything to binary for",
+      "keyCompetenciesAndValues": "ICT/Digital competences as students use technology tools to enhance their learning while watching videos on how to Convert numbers from base ten to binary using continuous division method. Tolerance and Perseverance as students are determined and diligently takes to details and procedures to overcome obstacles while converting from base ten to binary.",
+      "learningActivities": "Students are guided to: 1. Brainstorm in group the need for converting numbers from base 10 to base 2/ binary numbers. 2. Watch short videos on how to convert numbers from base ten to binary through continuous division method. 3. Use the observed pattern for converting base ten numerals to binary numbers as seen in the video to solve conversion of base 10 numerals e.g 4 , 6 etc. to base 2. 10 10 4. Search the internet for information on binary digits/bits and their function in basic programming",
+      "teachingAndLearningResources": "• Flash cards with worked examples. • videos on how to Convert numbers from base ten to binary by using continuous division method",
+      "evaluationGuide": "Students to: 1. convert 8 to 10 base 2; 2. convert numbers in base 10 to binary. 3. describe computer binary bits. and how they work."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-06",
+      "title": "Fractions",
+      "theme": "Number and Numeration",
+      "sourcePageLabels": [
+        "6"
+      ],
+      "physicalPageNumbers": [
+        19
+      ],
+      "targetTopicCodes": [
+        "jss1-math-fractions"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The existing planning topic is a granular decomposition of the revised Fractions topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning to solve a problem.",
+      "focalCompetency": "Applying equivalent fractions while sharing items or money.",
+      "performanceObjectives": [
+        "Students should be able to: 1. find equivalent fractions of any given fractions; 2. arrange given fractions either in ascending or descending order of magnitude; 3. Convert: • fractions to decimals • decimals to fractions • fractions to percentages • percentages to fractions; 4. apply equivalent fractions in sharing of items e.g. money; 5. solve problems on quantitative aptitude involving fractions."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Equivalent fractions. 2. Ordering of fractions. 3. Conversion of fractions to decimals and vise-versa. 4. Conversion of fractions to percentages and vise-versa. 5. Quantitative aptitude involving fractions.",
+      "keyCompetenciesAndValues": "ICT/Digital competences as students use technology tools to enhance their learning while watching videos on Conversion of fractions to decimals and percentages or vice versa. Collaboration: as students demonstrate the ability to work effectively while Working with peers to solve fraction and quantitative aptitude problems Perseverance as students follow step-by-step procedures for tackling related fractions problems in real life situations. .",
+      "learningActivities": "Students are guided to: 1. Watch videos on how to Convert: • fractions to decimals • decimals to fractions • fractions to percentages 2. Use flash cards to express equivalent fractions. 3. Solve quantitative aptitude on fraction related problems with peers so as to enhance teamwork and sharing of ideas.",
+      "teachingAndLearningResources": "• Flash cards with worked examples on fractions. • Watch videos on how to Convert fractions to decimals and percentages or vice versa.",
+      "evaluationGuide": "Students to: 1. form equivalents fractions from given fractions; 2. order fractions in either ascending or descending order; 3. convert fractions to decimals and vice versa; 4. convert fractions to percentages and vice versa; 5. Solve quantitative aptitude problems involving fractions."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-07",
+      "title": "Addition and Subtraction",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "7"
+      ],
+      "physicalPageNumbers": [
+        20
+      ],
+      "targetTopicCodes": [
+        "jss1-math-addition-and-subtraction"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Apply addition and subtraction technics to solve multi-step problems.",
+      "focalCompetency": "Adding and subtracting numbers.",
+      "performanceObjectives": [
+        "Students should be able to: 1. add and subtract given numbers correctly; 2. state the place- value of each number in the sum or difference; 3. draw and use number line to illustrate directed numbers; 4. add and subtract positive and negative integers correctly on the number line; 5. interpret and relate positive and negative numbers to everyday activities."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Addition and subtraction of numbers. 2. Place value. 3. Use of number line. 4. Addition and subtraction of positive and. negative integers. 5. Everyday application of positive and negative integers. Skills Subtraction and addition o f numbers.",
+      "keyCompetenciesAndValues": "ICT/Digital competences as students enhancing knowledge is enhanced by using digital technological tools to add and subtract numbers. Persistent and Tolerance when handling numeracy problems thus overcoming any obstacles.",
+      "learningActivities": "Guide students to: 1. Use counting tools to add and subtract numbers. 2. Use flash cards to describe the values of the digits according to the values they hold. 3. Use number line to illustrate directed numbers. 4. Perform operations of addition and subtraction with positive and negative integers on number line. 5. Demonstrate the applications of positive and negative number by: • working forward and backward; • working up and down stairs; • reading temperatures above and below zero; • depositing and withdrawing money from banks or POS.",
+      "teachingAndLearningResources": "• Calculators • Samples of number line with positive and negative integers etc.",
+      "evaluationGuide": "Students to: 1. add and subtract numbers; 2. read the place values of digits; 3. use number line to find the sum of integers; 4. solve problems related the applications of positive and negative integers e.g. temperature."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-08",
+      "title": "Addition and Subtraction of Fractions",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "8"
+      ],
+      "physicalPageNumbers": [
+        21
+      ],
+      "targetTopicCodes": [
+        "jss1-math-addition-and-subtraction-of-fractions"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Apply addition and subtraction technics to solve multi-step problems.",
+      "focalCompetency": "Adding and subtracting fractions.",
+      "performanceObjectives": [
+        "Students should be able to: 1. solve given problems on addition and subtraction of fractions; 2. solve word- problems involving addition and subtraction of fractions."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Adding and Subtracting fractions. 2. Word-problems on addition and subtraction of fractions. Skill Solving Addition and Subtraction of fraction’s problems. .",
+      "keyCompetenciesAndValues": "ICT/Digital competences as students use digital technology tools to enhance their learning while watching short videos on how to solve world problems involving fractions. Perseverance as students follow step-by-step procedures for solving addition and subtraction of fractions related problems in real life situations.",
+      "learningActivities": "Students are guided to: 1. Use fraction charts to add and subtract fractions. 2. Watch short videos on how to solve word- problems involving fractions.",
+      "teachingAndLearningResources": "• Calculators • Fraction charts • videos on how to solve word- problems involving fractions.",
+      "evaluationGuide": "Students to: 1. add and subtract fractions; 2. solve word- problems involving fractions."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-09",
+      "title": "Multiplication and Division of Fractions",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "9"
+      ],
+      "physicalPageNumbers": [
+        22
+      ],
+      "targetTopicCodes": [
+        "jss1-math-multiplications-and-divisions-of-fractions"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Apply multiplication and division technics to solve multi-step problems.",
+      "focalCompetency": "Multiplying and dividing with fractions.",
+      "performanceObjectives": [
+        "Students should be able to: 1. solve problems on multiplication of fractions; 2. solve problems on division of fractions; 3. solve word- problems involving multiplication and division of fractions."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Multiplication of fractions. 2. Division of fractions. 3. Word-problems involving multiplication and division of fractions. Skill Solving multiplication and division of fraction’s problems.",
+      "keyCompetenciesAndValues": "Critical thinking as students effectively analyse and evaluate quantitative diagrams to figure out the pattern of multiplication and division in world problem questions",
+      "learningActivities": "Students are guided to: 1. Watch short videos on multiplication and division of fractions. 2. Brainstorm in groups to solve word-problems involving multiplication and division of fractions.",
+      "teachingAndLearningResources": "• Videos on multiplication and division of fractions. • Counters • Sums cards • Flash cards • Multiplication charts. • Calculators • Fraction charts.",
+      "evaluationGuide": "Students to: 1. solve problems on multiplication and division of fractions; 2. solve word problems involving multiplication and division of fractions."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-10",
+      "title": "Estimation",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "10"
+      ],
+      "physicalPageNumbers": [
+        23
+      ],
+      "targetTopicCodes": [
+        "jss1-math-estimation"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and solve problems.",
+      "focalCompetency": "Estimating dimension, capacity, distance, length etc..",
+      "performanceObjectives": [
+        "Students should be able to: 1. estimate the dimensions of objects and distances within the school environment; 2. estimate capacity and mass of some familiar objects; 3. estimate time for some day-to-day activities; 4. solve quantitative aptitude problems involving estimation."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Estimating dimensions of objects and distances. 2. Estimating capacity and mass of objects. 3. Estimating age and time. 4. Quantitative aptitude problems involving estimation. Skills Estimating dimension and distance, capacity and mass of objects.",
+      "keyCompetenciesAndValues": "ICT and Digital competences as students use digital technology tools to enhance their learning while watching short videos on how to estimate dimension of objects and distance, capacity and mass, etc. Perseverance and patient as students engaged in estimating dimensions of objects within the environment such as length, distance, time, capacity, weight.",
+      "learningActivities": "Students are guided to: 1. Watch short videos on estimation of: • dimensions of objects and distances; • capacity and mass of objects; • ages of their peers; • time of the day or night; 2. In group, solve quantitative aptitude problems involving estimation.",
+      "teachingAndLearningResources": "• Calculators • Parts of body such as elbow, foot etc. • Class tables, desk, chairs and blackboard. • Tape and ruler • Weighing balance. • Litre containers.",
+      "evaluationGuide": "Students to: 1. estimate dimensions of objects in the environment; 2. estimate length; 3. estimate distances; 4. estimate capacity of common objects; 5. estimate time of day and night; 6. solve quantitative aptitude problems involving estimation."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-11",
+      "title": "Approximation",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "11"
+      ],
+      "physicalPageNumbers": [
+        24
+      ],
+      "targetTopicCodes": [
+        "jss1-math-approximation"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and solve problems on number bases",
+      "focalCompetency": "Approximating numbers to the nearest 10, 100 etc.",
+      "performanceObjectives": [
+        "Students should be able to: 1. approximate answers to addition and subtraction problems to a given degree of accuracy. 2. approxima te answers to multiplication and division problems to a given degree of accuracy; 3. rounding numbers to the nearest 10, 100 and 1,000; 4. apply approximation involving basic operations in everyday life activities. 5. solve problems on quantitative aptitude involving approximation."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Approximating values of addition and subtraction. 2. Approximating the results of multiplication and divis ion of numbers. 3. Rounding up of numbers to the nearest 10, 100 and 1,000. 4. Applying approximation in everyday life. 5. Quantitative Aptitude involving approximation. Skills Approximating numbers to the nearest 10,100 and 1,000.",
+      "keyCompetenciesAndValues": "Critical thinking as students effectively analyse and evaluate scenarios on approximation of numbers then applying it them to everyday life. Perseverance and 1100 patience as students engaged i n approximation dimensions of objects within the environment such as length, distance, time, capacity, weight, and ages.",
+      "learningActivities": "Students are guided to: 1.Watch short video on approximation of: • values of addition and subtraction of numbers • values of multiplication and subtraction of numbers • numbers to nearest 10,100 and 1,000 2.Measure their heigh ts and record the answers and add the heights of males and those of the females. Then approximate the tota l heights of the male students and those of the female students to the nearest centimeter.",
+      "teachingAndLearningResources": "• Calculators. • Flash cards containing different approximation situations. • Approximation charts",
+      "evaluationGuide": "Students to: 1. approximate numbers from a given operation to the nearest • 10 • 100 • 1000 2. apply approximation to everyday life. 3. solve quantitative aptitude problems involving approxim ation."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-12",
+      "title": "Addition of numbers in base 2",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "12"
+      ],
+      "physicalPageNumbers": [
+        25
+      ],
+      "targetTopicCodes": [
+        "jss1-math-addition-of-numbers-in-base-2-numerals"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and solve problems on number bases.",
+      "focalCompetency": "Adding numbers in base 2.",
+      "performanceObjectives": [
+        "Students should be able to add two- or three-digits binary numbers."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge Adding two- or three-digits binary numbers. Skill Using number blocks or binary charts to add two- or three-digit numbers.",
+      "keyCompetenciesAndValues": "ICT/Digital competences as students use technology tools to enhance their learning while watching videos on addition of numbers in base 2",
+      "learningActivities": "Students are guided to: 1. Use a base 2 blocks or binary number charts to add two- or three-digits binary numbers. 2. Watch short videos on addition of numbers in base 2.",
+      "teachingAndLearningResources": "• Binary Number Chart. • Base 2 blocks",
+      "evaluationGuide": "Students to: 1. add two digits binary numbers e.g 10 +11 =?; 2 2 2. add two or three-digits binary numbers."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-13",
+      "title": "Subtraction of numbers in base 2",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "13"
+      ],
+      "physicalPageNumbers": [
+        26
+      ],
+      "targetTopicCodes": [
+        "jss1-math-subtraction-of-numbers-in-base-2-numerals"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and solve problems on number bases.",
+      "focalCompetency": "Subtracting numbers in base 2.",
+      "performanceObjectives": [
+        "Students should be able to subtract two- or three-digits binary numbers."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge subtracting two- or three-digits binary numbers. Skill Using number blocks or binary charts to subtract two- or three-digit numbers.",
+      "keyCompetenciesAndValues": "Collaboration as students assumed shared use a base 2 blocks or binary number charts to subtract two- or three-digits binary numbers. responsibilities ICT/Digital competences as students use technology tools to enhance their learning while watching videos on subtraction of numbers in base 2",
+      "learningActivities": "Students are guided to: 1. In groups, use a base 2 blocks or binary number charts to subtract two- or three-digits binary numbers. 2. Watch short videos on subtraction of numbers in base 2",
+      "teachingAndLearningResources": "• Binary Number Chart. • Base 2 blocks",
+      "evaluationGuide": "Students to: 1. subtract two digits binary numbers e.g 11 -01 =?; 2 2 2. subtract two or three-digits binary numbers."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-14",
+      "title": "Multiplication of numbers in base 2",
+      "theme": "Basic Operations",
+      "sourcePageLabels": [
+        "14"
+      ],
+      "physicalPageNumbers": [
+        27
+      ],
+      "targetTopicCodes": [
+        "jss1-math-multiplication-of-numbers-in-base-2-numerals"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and solve problems on number bases .",
+      "focalCompetency": "Multiplication numbers in base 2.",
+      "performanceObjectives": [
+        "Students should be able to multiply two- or three-digits binary numbers."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge multiply two- or three-dig its binary numbers. Skill Using number blocks or binary charts to multiply two- or three-digit numbers.",
+      "keyCompetenciesAndValues": "ICT/Digital competences as students use technology tools to enhance their learning while watching videos on multiplication of numbers in base 2",
+      "learningActivities": "Students are guided to: 1. Use a base 2 blocks or binary number charts to multiply two- or three - digits binary numbers. 2.Watch short videos on multiplic ation of numbers in base 2",
+      "teachingAndLearningResources": "• Binary Number Chart. • Base 2 blocks",
+      "evaluationGuide": "Students to: 1.multiply two digits b inary numbers eg. 10 x 11 =?; 2 2 2.multiply two or three-digits binary numbers."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-15",
+      "title": "Use of Symbols",
+      "theme": "Algebraic Processes",
+      "sourcePageLabels": [
+        "15",
+        "16"
+      ],
+      "physicalPageNumbers": [
+        28,
+        29
+      ],
+      "targetTopicCodes": [
+        "jss1-math-use-of-symbols"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The source continues one topic across two pages; both pages map to the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and find solve a proble m.\n\nAnalyze mathematical problems, develop logical reasoning, and solve a proble m.",
+      "focalCompetency": "Using symbols to represent numbers and solving open sentences problem s.\n\nUsing symbols to represent numbers and solving open sentences problems.",
+      "performanceObjectives": [
+        "Students should be able to: 1. state the meaning the of open sentences; 2. solve problems expressed in open sentences; 3. identify relationship between addition and subtraction in open sentences; 4. identify relationship between multiplication and division in open sentences; 5. use letters to represent symbols in o pen sentences.",
+        "Students should be able to : 6. solve open sentences problems involving two arithmetic operations; 7. solve word- problems involving use of symbols; 8. solve quantitative aptitude problems on the use of symbols."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Meaning of Open sentences. 2. Finding solutions to open sentences. 3. Use of letters to represent symbols or shapes in open sentences.\n\nKnowledg e 1. Solving open sentences with two arithmetic operations. 2. Word-problems involving use of symbols. 3. Quantitative aptitude problems. Skill Recognizing symbols and numbers.",
+      "keyCompetenciesAndValues": "Critical thinking as students critically analyse the sequence in open statement to figure out the missing number for the statement to be completed. Collaboration as students are responsive to diverse opinions while brainstorming on the concept of open sentences.\n\nCritical thinking as students enhances their ability to effectively analyse and evaluate arguments on open sentences multiplication. Communication and Collaboration as students communicate and convey information confidently while working as a team to discover the strategies of handling unknown variable in a statement. Tolerance and perseverance as students tackle statements to discover the unknown terms.",
+      "learningActivities": "Students are guided to: 1. Discuss in groups what constitute and open sentences in mathematics 2. F ind the missing numbers in ope n sentences using flash cards. E.g.: + 5 = 12 - 5 = 19 8 + = 11 x 2 = 22 ÷ 4 = 7 1 6 ÷ 2 = 3 x = 15 2.Iden t i f y relati onship between addition and subtraction in open sentences. 3.Identify relationship between multiplication and division in open sentences. 4.Use letters to represent symbols in open sentences. E.g.: + 5 = 12 Ξ n + 5 = 12.\n\nStudents are guided to: 1. Solve open sentences of the fo rm: 2 x - 5 = 12 4 + - 3 = 10 2. Solve word problem by translating word problems into mathematical expressions letters by using Polya’s Problem Solving Model.",
+      "teachingAndLearningResources": "• Flash Cards with open sentences\n\nCardboard containing stages of Polya’s Problem Solving Model.",
+      "evaluationGuide": "Students to: 1. find the missing numbers in open sentences; 2. identif y the relationship between: • addition and subtraction in open sentences; • multiplication and division in open sentences. 3. represent symbol s with letters in open sentences.\n\nStuden ts to: 1. solve open sentences problems involving two arithmetic operations; 2. solve word- problems involving use of symbols; 3. solve quantitative aptitude problems involving the use of symbols."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-16",
+      "title": "Simplification of Algebraic Expressions",
+      "theme": "Algebraic Processes",
+      "sourcePageLabels": [
+        "17"
+      ],
+      "physicalPageNumbers": [
+        30
+      ],
+      "targetTopicCodes": [
+        "jss1-math-simplification-of-algebraic-expressions"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and solve a problem",
+      "focalCompetency": "Simplifying algebraic expressions.",
+      "performanceObjectives": [
+        "Students should be able to: 1. identify and collect like and unlike terms of given algebraic expressions; 2. identify coefficients of given algebraic terms; 3. identify the positive and negative coefficients of given algebraic terms; 4. perform basic arithmetic operations on algebraic expressions of similar terms; 5. solve word problems involving algebraic expressions; 6. inserting and removing of brackets in simplifying algebraic expressions; 7. solve quantitative aptitude problems involving algebraic expressions."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Identifying and collecting like and unlike terms of given algebraic expressions. 2. Identifying the coefficients of algebraic terms. 3. Performing arithmetic operations with algebraic expressions. 4. Simplifying algebraic expressions. 5. Use of brackets to simplify algebraic expressions. 6. Quantitative aptitude involving algebraic expressions. Skill Solving for like terms and the positive and negative coefficients in al gebraic expression",
+      "keyCompetenciesAndValues": "Communicatio n as students correctly communicate their ideas, finding, and arguments with others to simplify an algebraic expression. Tolerance and perseverance as students persevere in tackling statements with unknown terms to simplify e xpressions.",
+      "learningActivities": "Students are guided to: 1. Identify the like and the unlike terms of algebraic expressions. Example: In 2x + 3x +5y+ 5x +2y, it could be seen that like terms in x are 2x, 3x and 5x and like terms in y are 5y, and 2y. 2. Collect like terms to simplify algebraic expressions. Example: Simplify: 2x + 3x +5y+ 5x +2y Here 2x + 3x +5x+ 5y +2y= 2x + 3x +5x + 5y + 2y = 10x + 7y. 3. Perform simplifications with brackets. Example: Simplify: (5d + 7) + ( 3d – 5) = 5d+3d + 7- 5= 8d + 2. 4. Watch short videos on simplification of algebraic expressions 5. Solve quantitative aptitude problems.",
+      "teachingAndLearningResources": "• Flash Cards containing like and unlike terms of algebraic expressions",
+      "evaluationGuide": "Students to: 1. identify like and unlike terms of algebraic expressions; 2. identify coefficients of algebraic expressions; 3. simplify algebraic expressions; 4. open brackets to simplify algebraic expressions; 5. solve quantitative aptitude problems."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-17",
+      "title": "Simple Equations",
+      "theme": "Algebraic Processes",
+      "sourcePageLabels": [
+        "18"
+      ],
+      "physicalPageNumbers": [
+        31
+      ],
+      "targetTopicCodes": [
+        "jss1-math-simple-equations"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Analyze mathematical problems, develop logical reasoning, and solve a problem.",
+      "focalCompetency": "Solving simple equations.",
+      "performanceObjectives": [
+        "Students should be able to: 1. translate word expressions or statements in to mathematical equations; 2. use mathematical equations to represent worded sentences or statements; 3. solve simple equations and verify the solutions."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Translate word sentences/ expressions/ statements in to mathematical equations and vise-versa. 2. Simple equations. Skill Selecting and usin g relevant symbols and notations in solving algebraic equations.",
+      "keyCompetenciesAndValues": "Critical thinking as students enhances their ability to effectively analyse and evaluate statements and translate word expressions into solvable equations to find the unknown. Communication and Collaboration as students work as a team to discover the strategies of handling unknown variable in a statement.",
+      "learningActivities": "Students are guided to: 1. Translate word expressions into mathematical expressions Example: A number plus eight equals to eleven, what is the number? Let the number be x, x + 8 = 11. Hence x = 3. The number is 3. 2. Form groups and give each group a simple equation to s olve. 3. Watch short video on simple ways of solving simple equations",
+      "teachingAndLearningResources": "• Flash Cards containing simple equations. • video on simple ways of solving simple equations",
+      "evaluationGuide": "Students to: 1. translate word expressions in mathematical expressions; 2.translate from mathematical expressions to worded expressions; 3. solve simple equation problems."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-18",
+      "title": "Plane Shapes",
+      "theme": "Mensuration and Geometry",
+      "sourcePageLabels": [
+        "20"
+      ],
+      "physicalPageNumbers": [
+        32
+      ],
+      "targetTopicCodes": [
+        "jss1-math-plane-shapes"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Develop understanding of geometric shapes, properties, and theorems.",
+      "focalCompetency": "Calculating the surface area and perimeter of plane shapes.",
+      "performanceObjectives": [
+        "Students should be able to: 1.state the similarities and differences between shapes; 2. find the perimeter of regular polygons; 3.find the area of regular polygons; 4.find the area of real plane objects by physical measurement."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Similarities and differences between the following shapes: • square • rectangle • triangle • trapezium • parallelogram • circle. 2. Perimeter of regular polygons: square, rectangle, triangle, trapezium parallelogram and circle. 3. Area of regular polygons: square, rectangle, circle parallelogram. Skills 1. Manipulation of measuring instruments in finding perimeters and areas of regular plane shapes. 2. Accuracy in computat ion involving plane shapes.",
+      "keyCompetenciesAndValues": "Creativity and Innovation as students solve environmental problems involving measurement and decorations of homes, buildings, and scale drawing of plots of lands. Collaboration as students work in team and value individual contributions towards handling problems involving shapes in physical environment.",
+      "learningActivities": "Students are guided to: 1. Find the perimeter of common regular plane shapes by actual measurement and by formula such as football field etc. 2. Find the area of common regular plane shapes by actual measurement and by formula such as white board, football field etc. 3. Compare the perimeter of regular plane objects found using formula and by actual measurement. 4. Compare the area of regular plane objects found using formulas and by actual measurement. 5. Wach short videos on plain shapes and how to calculate the perimeter and area of a regular polygon",
+      "teachingAndLearningResources": "• Measuring tapes. • Models of square, rectangle, triangle, trapezium, parallelogram, circle. • Graph paper. • Tiles. • videos on plain shapes and how to calculate the perimeter and area of a regular polygon",
+      "evaluationGuide": "Students to: 1. state the similarities and differences between the following shapes: • square • rectangle • triangle • trapezium • parallelogra m • circle 2. find the perimeter of common regular plane shapes; 3. find the area of common regular plane shapes."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-19",
+      "title": "Three dimensional Figures",
+      "theme": "Mensuration and Geometry",
+      "sourcePageLabels": [
+        "21"
+      ],
+      "physicalPageNumbers": [
+        33
+      ],
+      "targetTopicCodes": [
+        "jss1-math-three-dimensional-figures"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Develop understanding of geometric shapes, properties, and theorem s.",
+      "focalCompetency": "Identifying the properties of three-dimensional shapes and calculating their volum es.",
+      "performanceObjectives": [
+        "Students should be able to: 1. identify the properties of cubes and cuboids; 2. identify the properties of pyramids and cones; 3. identify the properties of cylinders and spheres; 4. find the volumes of cubes and cuboids."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Properties of cubes and cuboids. 2. Properties of pyramids and cones. 3. Properties of cylinders and spheres. 4. Volumes of cubes and cuboids. Skills 1. Manipulation of measuring instruments in finding volumes of 3- D shapes. 2. Accuracy in computation. 3. Spatial ability.",
+      "keyCompetenciesAndValues": "Creativity and Innovation as students analyse the shape of a figure, and then calculate the volume of the figure. .",
+      "learningActivities": "Students are guided to: 1.Count the number of faces, edges and vertices from models of cubes and cuboids, pyramids, cones, cylinders and spheres. 2.Calculate volumes cubes and cuboids of the model of known measurement. 3.Watch videos on three dimensional figures and how to calculate their volumes.",
+      "teachingAndLearningResources": "• Models of cubes and cuboids, pyramids, cones, cylinders and spheres. • Standard or improvised cubes, cuboids, pyramids, cones, cylinders and spheres. • videos on three dimensional figures and how to calcu late their volumes.",
+      "evaluationGuide": "Students to: 1. state properties in terms of edges, faces and vertices of cubes, cuboids pyramids, cones, cylinders and spheres; 2. find the volumes cubes and cuboids by the use of the formula."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-20",
+      "title": "Construction",
+      "theme": "Mensuration and Geometry",
+      "sourcePageLabels": [
+        "22"
+      ],
+      "physicalPageNumbers": [
+        34
+      ],
+      "targetTopicCodes": [
+        "jss1-math-construction"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Develop understanding of geometric shapes, properties, and theorem s.",
+      "focalCompetency": "Constructing parallel, perpendicular lines and special angle s.",
+      "performanceObjectives": [
+        "Students should be able to: 1. construct parallel and perpendicular lines; 2. construct special angles: 600, and 900; 3. bisect a given line segment."
+      ],
+      "contentKnowledgeAndSkills": "Knowledg e 1. Construction of parallel lanes. 2. Construction of perpendicular lines. 3. Construction of special angles: 600, and 900 4. Bisecting of given line segment Skills 1. Manipulating mathematical instruments in constructing and bisecting line segments and angles. 2. Accuracy in construction s. 3 . Spatial ability.",
+      "keyCompetenciesAndValues": "Creativity and Innovation as students are effective and efficient in handling construction related environmental problems involving measurement of corners and lines. Collaboration as students share construction materials among themselves such as pencils, eraser and mathematical set of instruments, open to peers’ opinion on better ways of drawing and bisecting lines.",
+      "learningActivities": "Students are guided to: 1.Construct parallel lines by using pair of compasses. 2.Construct perpendicular lines by using pair of compasses. 3.Construct special angles: 600, and 900 by using protractor and ruler. 4.Watch short video on how to construct special angles 600, and 900 etc.",
+      "teachingAndLearningResources": "• Mathematical set • Ruler • Pencil • Eraser • C ard board paper • Video on how to construct special angles 600, and 900 etc.",
+      "evaluationGuide": "Student s to: 1.Construct parallel lines; 2.Construct perpendicular lines; 3.Construct special angles: 600, and 900 4.Bisect of given line segments."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-21",
+      "title": "Angles",
+      "theme": "Mensuration and Geometry",
+      "sourcePageLabels": [
+        "23"
+      ],
+      "physicalPageNumbers": [
+        35
+      ],
+      "targetTopicCodes": [
+        "jss1-math-angles"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised source topic retains the existing planning topic."
+      },
+      "learningOutcome": "Engage in mathematical reasoning, critical reflectio n and visualization for accurate measurement of shap es.",
+      "focalCompetency": "Measuring angles and state the propertie s.",
+      "performanceObjectives": [
+        "Students should be able to : 1. measure angles. 2. identify vertically opposite, adjacent, alternate and corresponding angles; 3. identify angles at a point and angles on a straight line and state their properties; 4. relate angles with real life situation."
+      ],
+      "contentKnowledgeAndSkills": "Knowledg e 1. Measuring angle s. 2. Identification and properties of: vertically opposite, adjacent, alternate and corresponding angles. 3. Identification and properties of angles at a point and angles on a straight line. Skills 1. Manipulation of mathematical instruments in measuring angles. 2. Accuracy in measurement. 3. Creativity.",
+      "keyCompetenciesAndValues": "ICT/Digital competences as students search, locate and retrieve information on the properties of angles.",
+      "learningActivities": "Students are guided to: 1. Measure given angles by using protractor; 2. Search the internet for the properties of angles; 3. Identify an angle at a point and angle at straight line. 4. Relate angles with real life situation. Example, angle of elevation or angle of depression for calculating height and distances.",
+      "teachingAndLearningResources": "• Mathematica l set • A4 sheet of pa per • Eraser. • Internet Enabled Digital devices",
+      "evaluationGuide": "Student s to: 1.measure given angle by using protractor; 2. identify angles in terms of being: • vertically opposite, • adjacent, alternate and • corresponding; 3. state situations where angles relate with real life."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-22",
+      "title": "Need for statistics",
+      "theme": "Everyday Statistics",
+      "sourcePageLabels": [
+        "24"
+      ],
+      "physicalPageNumbers": [
+        36
+      ],
+      "targetTopicCodes": [
+        "jss1-math-need-for-statistics",
+        "jss1-math-data-collection"
+      ],
+      "mappingKind": "split",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised topic includes both the purposes of statistics and data collection; Graspy keeps those as separate planning topics for lesson sequencing."
+      },
+      "learningOutcome": "Collect, organize, and interpret data using graphs and charts, drawing conclusions based on information obtaine d.",
+      "focalCompetency": "Recognizing the uses of statistics in our daily lives.",
+      "performanceObjectives": [
+        "Students should be able to: 1.list the purposes of statistics; 2.collect data; 3.recognize the uses of statistics for planning purposes; 4.apply the chance events or probability in everyday life; 5.recognize the uses of statistics for prediction pu rposes; 6.perform a simple experim ent with d ice."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge 1. Purposes of statistics 2. Data collection strategy. 3. Data for planning purposes. Skills 1.Data collection 2.Decision making of collected data 3.Simplification of collected data etc.",
+      "keyCompetenciesAndValues": "Creativity and innovation as students display creativity when handling data in everyday life. ICT/Digital competences as students search, locate and retrieve information on the uses of statistics to our daily lives. Patience and perseverance as student are pa tient and persevere in analyzing data collected from class then initiate simple planning proces ses using the data.",
+      "learningActivities": "Students are guided to: 1.Brainstorm in groups on the purposes of statistics. 2.Collect data from class in terms ages or heights of the students. 3.Use the collected class data to initiate some planning processes. 4.Search the internet for the uses of statistics in our daily lives. 5.Use dice to perform simple probability experiments and discuss how probability can be used for simple prediction.",
+      "teachingAndLearningResources": "• Websites of NECO, WAEC and NPC for data generation. • Calculator. • Internet enabled digital devices",
+      "evaluationGuide": "Students to: 1. list purposes of statistics; 2. browse and download data from NECO on 2024 mathematics results for further analysis; 3. provide examples of the application of probability in everyday life; 4. state situations where statistics is used for prediction. 5. collect data from simple experiment by casting dice and record the outc ome."
+    },
+    {
+      "sourceTopicCode": "nerdc-2025-topic-23",
+      "title": "Data representation",
+      "theme": "Everyday Statistics",
+      "sourcePageLabels": [
+        "25"
+      ],
+      "physicalPageNumbers": [
+        37
+      ],
+      "targetTopicCodes": [
+        "jss1-math-data-presentation"
+      ],
+      "mappingKind": "retained",
+      "mappingReview": {
+        "state": "approved",
+        "rationale": "The revised median objective aligns with the existing data-presentation planning topic."
+      },
+      "learningOutcome": "Collect, organize, and interpret data using graphs and charts, drawing conclusions based on information obtained.",
+      "focalCompetency": "Drawing conclusions based on information obtained from given data.",
+      "performanceObjectives": [
+        "Students should be able to determine the median of a given data set."
+      ],
+      "contentKnowledgeAndSkills": "Knowledge Medi an of data set Skills Logical thinking and weighing evidence.",
+      "keyCompetenciesAndValues": "Creativity and Innovation as students as representing data set gathered from everyday situ ation with a single value for decisions making and judgments. Information Literacy as students evaluate and present information critically and creatively.",
+      "learningActivities": "Students are guided to: 1. Identify median from a given data set. Example 1: Identify the median from: 3,8,6,4 and 9. 2. Watch short videos on how to calculate the median of a set o f given data.",
+      "teachingAndLearningResources": "• Charts illustrating median • Videos on how to calculate the median of a set of given data",
+      "evaluationGuide": "Students to: 1. identify the median of a given odd number data set; 2. determine the median of a given even number data set."
+    }
+  ],
+  "sourceLinkCorrections": [
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-decimals-to-fractions",
+      "recordId": "ch04-b039",
+      "reviewState": "approved",
+      "rationale": "This worked example directly demonstrates converting a decimal to a common fraction.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-decimals-to-fractions",
+      "recordId": "ch04-b040-i01",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a decimal to a common fraction.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-decimals-to-fractions",
+      "recordId": "ch04-b040-i02",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a decimal to a common fraction.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-decimals-to-fractions",
+      "recordId": "ch04-b040-i03",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a decimal to a common fraction.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-fractions-to-decimals",
+      "recordId": "ch04-b042-i01",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a common fraction to a decimal.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-fractions-to-decimals",
+      "recordId": "ch04-b042-i02",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a common fraction to a decimal.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-fractions-to-decimals",
+      "recordId": "ch04-b042-i03",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a common fraction to a decimal.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-fractions-to-decimals",
+      "recordId": "ch04-b044",
+      "reviewState": "approved",
+      "rationale": "This worked example directly demonstrates converting a common fraction to a decimal.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-fractions-to-decimals",
+      "recordId": "ch04-b045-i01",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a common fraction to a decimal.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-fractions-to-decimals",
+      "recordId": "ch04-b045-i02",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a common fraction to a decimal.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    },
+    {
+      "objectiveCode": "fractions-to-decimals-ao-convert-fractions-to-decimals",
+      "recordId": "ch04-b045-i03",
+      "reviewState": "approved",
+      "rationale": "This exercise directly assesses converting a common fraction to a decimal.",
+      "reason": "The donor link omitted its rationale; the linked textbook record directly matches the named objective."
+    }
+  ],
+  "goldenLessonReviews": [
+    {
+      "reviewId": "ordering-fractions-september-2025-v1",
+      "subtopicCode": "jss1-math-fractions-ordering-of-fractions",
+      "sourceTopicCode": "nerdc-2025-topic-06",
+      "physicalPageNumber": 19,
+      "state": "approved",
+      "resolution": "mapped",
+      "approvedObjectiveCodes": [
+        "ordering-of-fractions-ao-arrange-ascending",
+        "ordering-of-fractions-ao-arrange-descending"
+      ],
+      "approvedSourceRecordIds": [
+        "ch04-b032",
+        "ch04-b033-i01",
+        "ch04-b033-i02"
+      ],
+      "excludedSourceRecordIds": [
+        "ch04-b033-i03"
+      ],
+      "rationale": "The revised curriculum explicitly requires ascending and descending ordering. The approved records directly demonstrate or assess those two objectives; the mixed-scope exercise is excluded because it also tests equivalence and improper-fraction reasoning.",
+      "rubric": {
+        "objectiveAlignment": {
+          "result": "pass",
+          "rationale": "Every retained record directly targets ascending or descending ordering."
+        },
+        "curriculumScope": {
+          "result": "pass",
+          "rationale": "The lesson remains within the revised Fractions performance objective on ordering by magnitude."
+        },
+        "mathematicalCorrectness": {
+          "result": "pass",
+          "rationale": "The worked ordering and both expected answers use valid common-denominator comparisons."
+        },
+        "pedagogicalUsefulness": {
+          "result": "pass",
+          "rationale": "The sequence contains a worked ascending example followed by direct ascending and descending practice."
+        }
+      }
+    }
+  ]
+}

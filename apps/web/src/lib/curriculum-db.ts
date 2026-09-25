@@ -36,7 +36,14 @@ export async function savePlanChange(next: CurriculumData): Promise<void> {
   const existing = await promisify<CurriculumData | undefined>(store.get(KEY));
   if (!existing) return;
   const { id: _id, planId: _planId, createdAt: _createdAt, ...changes } = next;
-  await promisify(store.put({ ...existing, ...changes, updatedAt: Date.now() }));
+  await promisify(
+    store.put({ ...existing, ...changes, updatedAt: Date.now() }),
+  );
+}
+
+/** Keeps the plan as the learner's account holds it: its ids and dates as they came. */
+export async function holdCurriculum(plan: CurriculumData): Promise<void> {
+  await promisify((await planStore("readwrite")).put({ ...plan, id: KEY }));
 }
 
 export async function deleteCurriculum(): Promise<void> {

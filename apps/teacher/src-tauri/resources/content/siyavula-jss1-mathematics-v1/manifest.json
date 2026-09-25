@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "packageId": "siyavula-jss1-mathematics-v1",
+  "title": "Siyavula Mathematics JSS 1",
+  "publisher": "Siyavula",
+  "sourceUrl": "https://ng.siyavula.com/read",
+  "licenceId": "CC-BY-3.0",
+  "licenceName": "Creative Commons Attribution 3.0 Unported",
+  "licenceUrl": "https://creativecommons.org/licenses/by/3.0/",
+  "attribution": "Siyavula Mathematics JSS 1, from https://ng.siyavula.com/read, licensed under Creative Commons Attribution 3.0 Unported. Processed into structured excerpts by graspy; formatting and segmentation changed.",
+  "modificationNotice": "Processed into structured excerpts by graspy; formatting and segmentation changed.",
+  "sourceSha256": "3010f4501d072184f9edc669cd854835f0cafe30a7cffbc8e98b70baa639cdb0",
+  "corpusSha256": "d75d9c0be87fff0aa6751be3571b1ec05879eb9491cb9ff27d9649129c510fb3",
+  "recordCount": 1500,
+  "figureCount": 68,
+  "recordSubtopicCount": 2031,
+  "subtopicSourceCount": 1240
+}

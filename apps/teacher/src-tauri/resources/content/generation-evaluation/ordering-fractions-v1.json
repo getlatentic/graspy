@@ -1,0 +1,119 @@
+{
+  "id": "nigeria-jss1-mathematics-ordering-fractions",
+  "version": "1.0.0",
+  "cases": [
+    {
+      "key": "jss1-ordering-fractions-approved-review",
+      "covers": {
+        "subject": "Mathematics",
+        "classLevel": "JSS 1"
+      },
+      "input": {
+        "lessonContext": {
+          "countryCode": "NG",
+          "subject": "Mathematics",
+          "classLevel": "JSS 1",
+          "topic": "Fractions",
+          "subtopic": "Ordering of fractions",
+          "learningGoals": [
+            {
+              "code": "ordering-of-fractions-ao-arrange-ascending",
+              "text": "Arrange fractions in ascending order."
+            },
+            {
+              "code": "ordering-of-fractions-ao-arrange-descending",
+              "text": "Arrange fractions in descending order."
+            }
+          ]
+        },
+        "sourceMaterial": [
+          {
+            "recordId": "ch04-b032",
+            "role": "workedExample",
+            "learningGoalCode": "ordering-of-fractions-ao-arrange-ascending",
+            "text": "Arrange 5/6, 7/8 and 3/4 in ascending order after expressing the fractions with a common denominator."
+          },
+          {
+            "recordId": "ch04-b033-i01",
+            "role": "practice",
+            "learningGoalCode": "ordering-of-fractions-ao-arrange-ascending",
+            "text": "Arrange 8/9, 11/12 and 5/6 in ascending order.",
+            "expectedAnswer": "5/6, 8/9, 11/12"
+          },
+          {
+            "recordId": "ch04-b033-i02",
+            "role": "practice",
+            "learningGoalCode": "ordering-of-fractions-ao-arrange-descending",
+            "text": "Arrange 5/8, 8/14 and 18/28 in descending order.",
+            "expectedAnswer": "18/28, 5/8, 8/14"
+          }
+        ]
+      },
+      "expected": {
+        "requiredLearningGoalCodes": [
+          "ordering-of-fractions-ao-arrange-ascending",
+          "ordering-of-fractions-ao-arrange-descending"
+        ],
+        "requiredSourceRecordIds": [
+          "ch04-b032",
+          "ch04-b033-i01",
+          "ch04-b033-i02"
+        ],
+        "excludedSourceRecordIds": [
+          "ch04-b033-i03"
+        ],
+        "requiredLessonParts": [
+          "explanation",
+          "workedExample",
+          "practice",
+          "assessmentAnswer"
+        ],
+        "reviewedAnswers": {
+          "ascending": "5/6, 8/9, 11/12",
+          "descending": "18/28, 5/8, 8/14"
+        }
+      }
+    }
+  ],
+  "thresholds": [
+    {
+      "metric": "objectiveAlignment",
+      "minimum": 1.0
+    },
+    {
+      "metric": "sourceBoundary",
+      "minimum": 1.0
+    },
+    {
+      "metric": "mathematicalCorrectness",
+      "minimum": 1.0
+    },
+    {
+      "metric": "lessonCompleteness",
+      "minimum": 1.0
+    }
+  ],
+  "review": {
+    "reviewId": "ordering-fractions-september-2025-v1",
+    "state": "approved",
+    "curriculumSourceTopicCode": "nerdc-2025-topic-06",
+    "approvedLearningGoalCodes": [
+      "ordering-of-fractions-ao-arrange-ascending",
+      "ordering-of-fractions-ao-arrange-descending"
+    ],
+    "approvedSourceRecordIds": [
+      "ch04-b032",
+      "ch04-b033-i01",
+      "ch04-b033-i02"
+    ],
+    "excludedSourceRecordIds": [
+      "ch04-b033-i03"
+    ],
+    "qualityChecks": {
+      "objectiveAlignment": "pass",
+      "curriculumScope": "pass",
+      "mathematicalCorrectness": "pass",
+      "pedagogicalUsefulness": "pass"
+    }
+  }
+}

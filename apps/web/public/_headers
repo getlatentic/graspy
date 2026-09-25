@@ -6,13 +6,18 @@
 # even if it reaches the DOM. Cloudflare Web Analytics loads its beacon script
 # and posts to cloudflareinsights.com. frame-src names the API because the
 # tutor's cards are MCP Apps views, framed in a sandbox the API serves.
+#
+# Google sign-in (Firebase, by popup): the SDK loads Google's frame helper from
+# apis.google.com and frames the project's auth domain, which passes the popup's
+# result back; it signs in and refreshes tokens at identitytoolkit and
+# securetoken.
 
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
-  Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-attcroNCc1g/8N4J1Kx3LpQLlXyI5Iu/09PGeUuArr8=' https://static.cloudflareinsights.com; connect-src 'self' https://graspy-api.getlatentic.com https://cloudflareinsights.com; frame-src https://graspy-api.getlatentic.com
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-attcroNCc1g/8N4J1Kx3LpQLlXyI5Iu/09PGeUuArr8=' https://static.cloudflareinsights.com https://apis.google.com; connect-src 'self' https://graspy-api.getlatentic.com https://cloudflareinsights.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src https://graspy-api.getlatentic.com https://graspy-f482e.firebaseapp.com
 
 # The service worker is always checked for a new version: a stale one would
 # serve a stale app.

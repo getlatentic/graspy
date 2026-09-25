@@ -4,7 +4,7 @@ Local base: `http://localhost:8081`. Interactive docs are at `/api/docs`, except
 
 ## Session
 
-Generation, the learner's record, `/a2a` and `/mcp` need an anonymous session token. The token names the device, and the device owns the record. Tokens are signed with HMAC-SHA256 and expire after 12 hours. The app gets a new one when a request returns `401`.
+Generation, the learner's record, `/a2a` and `/mcp` need a session token. It names the device, or, when the learner signs in, their account. Send `firebaseIdToken` with `deviceId` to sign in: Google verifies it, and the account takes in that device's record once. Tokens are signed with HMAC-SHA256 and expire after 12 hours. The app gets a new one when a request returns `401`.
 
 ```bash
 TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/json' \
@@ -23,6 +23,8 @@ TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/j
 | `/api/learner` | GET | ✓ | The device's record for `planId`: topics with a lesson or finished, and answers |
 | `/api/learner/plan` | POST | ✓ | Keeps the record in step as the plan changes |
 | `/api/learner/import` | POST | ✓ | Brings what an earlier app version kept on the device to the record, once |
+| `/api/learner/curriculum` | GET, PUT | ✓ | The plan the learner's devices share. PUT keeps the newer by `updatedAt` and returns the plan to hold |
+| `/api/learner/curriculum/join` | POST | ✓ | A device's first sign-in: merges its plan into the account's and moves its progress, returning the one plan |
 | `/api/education/systems` | GET | | Every school system in the catalogue |
 | `/api/education/countries/{country}` | GET | | A country's systems and classes, main system first |
 | `/api/education/systems/{id}` | GET | | One system, such as `NG` or `GB-SCT` |
@@ -70,7 +72,7 @@ A reply is the answer as text plus a data part:
 
 | Status | Meaning |
 |---|---|
-| 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp` |
+| 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A refused sign-in is `sign_in_invalid` |
 | 422 | Invalid request. `detail` names the field, never the value |
 | 429 | Rate limited. Wait `Retry-After` seconds |
 | 5xx | Server failure. The details are logged, not returned |

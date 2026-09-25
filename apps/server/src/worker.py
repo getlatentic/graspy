@@ -147,6 +147,7 @@ logging.basicConfig(format="%(levelname)s | %(name)s | %(message)s")
 CONVERSATION_KEY = "exchanges"
 LESSON_KEY = "lesson"
 LEARNER_KEY = "record"
+PLAN_KEY = "plan"
 MAKING_KEY = "making"
 JOB_KEY = "job"
 KEEP_MS = KEEP_DAYS * 24 * 60 * 60 * 1000
@@ -211,7 +212,7 @@ class Conversation(DurableObject):
 
 
 class Learner(DurableObject):
-    """One learner's record, changed under the same input gates."""
+    """One learner's record and plan, changed under the same input gates."""
 
     async def load(self) -> str:
         return await self.ctx.storage.get(LEARNER_KEY) or ""
@@ -219,6 +220,12 @@ class Learner(DurableObject):
     async def change(self, change_json: str) -> None:
         stored = await self.ctx.storage.get(LEARNER_KEY)
         await self.ctx.storage.put(LEARNER_KEY, changed(stored, change_json))
+
+    async def plan(self) -> str:
+        return await self.ctx.storage.get(PLAN_KEY) or ""
+
+    async def keep_plan(self, plan_json: str) -> None:
+        await self.ctx.storage.put(PLAN_KEY, plan_json)
 
 
 class LessonMaker(DurableObject):

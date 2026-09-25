@@ -13,7 +13,7 @@ flowchart LR
         V["MCP Apps views"]
     end
     S --> DO[("Durable Objects<br/>conversations, lessons, learner records")]
-    P & T --> B[["Amazon Bedrock<br/>gpt-oss-120b"]]
+    P & T --> B[["gpt-oss-120b<br/>Amazon Bedrock or Workers AI"]]
 ```
 
 ## Two kinds of model work
@@ -37,7 +37,7 @@ The views are the server's own UI (`apps/server/ui`). The web app is only their 
 
 ## State
 
-- **Nobody signs in.** The app names its device with a random id and gets a signed session token for it. The server keeps one record per device: the topics with a lesson or finished, and every answer.
+- **Signing in is optional.** The app names its device with a random id and gets a signed session token for it. A learner who signs in with Google (Firebase) gets a token for their account instead; the account takes in each device's record once and keeps the plan all their devices share. The server keeps one record per learner: the topics with a lesson or finished, and every answer.
 - **Durable Objects** keep each tutor conversation (older exchanges folded into a summary), each lesson, and each learner record. A lesson is made in a Durable Object's alarm, not in a request, so it carries on while the learner is elsewhere.
 - **The browser** keeps the plan, conversations and copies of lessons in IndexedDB, and a service worker keeps the app, so both open offline. What a view does offline waits in an outbox until the connection is back.
 - **The school catalogue** (`apps/server/src/app/education/data/systems`) has one file per school system. It lists every class from the first year of primary to the last of secondary, as learners there name them (JSS 1, Year 9, Grade 9 in Junior School), with the age a learner starts it. Each file cites the official sources it was checked against and says how far it can be trusted:
@@ -53,5 +53,28 @@ The Worker runs CPython on Pyodide. The same app runs under uvicorn locally, wit
 
 - **No threads**, so every handler and dependency is `async`, and every model call is awaited.
 - **Startup is a snapshot.** Top-level imports run at deploy and are snapshotted. Nothing may draw randomness at import, so the DSPy modules are built on first use. The snapshot has an unpublished size cap, so unused packages are stubbed or excluded, and the A2A SDK loads inside the first request.
-- **No LiteLLM.** DSPy calls Bedrock through its own engine, lm15, over an httpx transport. It uses Bedrock's `bedrock-mantle` Chat Completions endpoint; `bedrock-runtime` mixes gpt-oss's reasoning into the answer.
+- **No LiteLLM.** DSPy calls the model through its own engine, lm15, over an httpx transport. Both hosts answer OpenAI Chat Completions: Bedrock on its `bedrock-mantle` endpoint (`bedrock-runtime` mixes gpt-oss's reasoning into the answer), Workers AI on the account's `/ai/v1` endpoint. `LLM_HOST` chooses.
 - **No `dspy.configure`.** DSPy lets only the task that first called it call it again, so the app sets the model for each request.
+
+## graspy-teacher
+
+`apps/teacher` (graspy-teacher) is the app for teachers and schools. It shares no code or data with the web app or the server, and it works without a connection.
+
+```mermaid
+flowchart LR
+    T([Teacher]) --> UI["React 19 + Carbon<br/>Tauri webview"]
+    UI -->|"Tauri commands"| R["Rust core"]
+    R --> DB[("SQLite<br/>app data directory")]
+    R --> C[("Content packages<br/>curriculum, scheme, textbook")]
+    R -->|"127.0.0.1"| L[["llama-server sidecar<br/>Gemma 4 E2B"]]
+```
+
+- **The network is for the model files only.** The model, and the projector that lets it read a photograph of a lesson plan, are downloaded once from a pinned Hugging Face revision or copied from a drive. Each file is checked by byte size and SHA-256 before install, and an interrupted download resumes. Everything else runs on the teacher's computer.
+- **The model runs in a sidecar.** `llama-server` (llama.cpp, a static Metal build) listens on a loopback port. A small supervisor, `graspy-inference-runner`, stops it when the app exits. Only a model that passed the [qualification](../apps/teacher/docs/content/ordering-fractions-gemma-qualification.md) for the shipped program is offered.
+- **A lesson is a program of stages.** `lesson-plan.granular` writes objectives, knowledge, assessments and steps as separate model calls. Each call has a JSON Schema that constrains decoding and a validator in Rust. Deterministic stages assemble the result. Runs are saved stage by stage, so a closed app resumes where it stopped.
+- **Content ships with the app.** The NERDC JSS 1 Mathematics curriculum, the Lagos scheme of work and a Siyavula textbook corpus are packages in `src-tauri/resources/content`. Lessons cite the passages they were written from. Licences: [THIRD_PARTY_CONTENT.md](../apps/teacher/THIRD_PARTY_CONTENT.md).
+- **State is SQLite.** Migrations are in `src-tauri/src/db/migrations`. Approved materials are append-only: an edit makes a new version.
+- **The two halves agree by test.** The Rust suite writes every command's answer type to `contracts/command-answers.json`, and a frontend test checks its types against that file.
+- **Export is native.** PDF and print use WebKit and AppKit, with KaTeX and the fonts embedded, so exported documents need no network.
+
+Design notes for each feature: `apps/teacher/docs/architecture/`.

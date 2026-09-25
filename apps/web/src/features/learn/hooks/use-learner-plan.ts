@@ -9,6 +9,7 @@ import type { Translate } from "@/lib/i18n-context";
 import { emptyCurriculum } from "../lib/curriculum-accumulator";
 import { carryPaths, loadSavedPlan } from "../lib/saved-plan";
 import { usePlanGeneration } from "./use-plan-generation";
+import { usePlanSync } from "./use-plan-sync";
 
 type Show = (plan: CurriculumData) => void;
 type ChooseNext = (subject: CurriculumSubject | null) => void;
@@ -27,21 +28,30 @@ function useNextSubject() {
   return { nextSubject, chooseNext, nextOf };
 }
 
-function useSavedPlan(show: Show, chooseNext: ChooseNext) {
+/** Shows a plan read from storage or the account, with the subject it names next. */
+function usePresent(show: Show, chooseNext: ChooseNext) {
+  return useCallback(
+    (plan: CurriculumData) => {
+      show(plan);
+      const next = plan.assessment?.nextSubject;
+      chooseNext(plan.subjects.find(({ slug }) => slug === next) ?? null);
+    },
+    [show, chooseNext],
+  );
+}
+
+function useSavedPlan(present: Show) {
   const [isLoaded, setIsLoaded] = useState(false);
   const loadSaved = useCallback(async () => {
     try {
       const saved = await loadSavedPlan();
-      if (!saved) return;
-      show(saved);
-      const next = saved.assessment?.nextSubject;
-      chooseNext(saved.subjects.find(({ slug }) => slug === next) ?? null);
+      if (saved) present(saved);
     } catch (err) {
       console.error("Failed to load data from IndexedDB:", err);
     } finally {
       setIsLoaded(true);
     }
-  }, [show, chooseNext]);
+  }, [present]);
   return { isLoaded, loadSaved };
 }
 
@@ -50,18 +60,24 @@ export function useLearnerPlan() {
     emptyCurriculum,
   );
   const { nextSubject, chooseNext, nextOf } = useNextSubject();
-  const { isLoaded, loadSaved } = useSavedPlan(setCurriculum, chooseNext);
+  const present = usePresent(setCurriculum, chooseNext);
+  const { isLoaded, loadSaved } = useSavedPlan(present);
   const { generate, isGenerating, isPrimingLesson, error } = usePlanGeneration({
     show: setCurriculum,
     next: nextOf,
     chooseNext,
     gradeLevel: curriculum?.gradeLevel,
   });
+  const sync = usePlanSync(isLoaded && !isGenerating, present);
 
-  const applyCurriculum = useCallback(async (next: CurriculumData) => {
-    setCurriculum({ ...next, updatedAt: Date.now() });
-    await savePlanChange(next);
-  }, []);
+  const applyCurriculum = useCallback(
+    async (next: CurriculumData) => {
+      setCurriculum({ ...next, updatedAt: Date.now() });
+      await savePlanChange(next);
+      sync();
+    },
+    [sync],
+  );
 
   const regenerate = useCallback(
     async (request: CurriculumRequest, t: Translate) => {

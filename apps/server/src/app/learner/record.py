@@ -77,6 +77,8 @@ class LearnerRecord(Wire):
     topics: list[TopicMark] = Field(default_factory=list)
     answers: list[Answer] = Field(default_factory=list)
     imported: bool = False
+    # The devices whose records an account has taken in.
+    joined: list[str] = Field(default_factory=list)
     # A hint only: two phones of one model share one.
     fingerprint: str | None = None
 
@@ -98,7 +100,9 @@ class LearnerRecord(Wire):
         )
 
     def for_app(self, plan_id: str) -> dict:
-        return self.in_plan(plan_id).model_dump(by_alias=True, exclude={"fingerprint"})
+        return self.in_plan(plan_id).model_dump(
+            by_alias=True, exclude={"fingerprint", "joined"}
+        )
 
     def in_plan(self, plan_id: str) -> LearnerRecord:
         return self.model_copy(
@@ -137,6 +141,25 @@ class Imported(Wire):
     answers: list[Answer] = Field(default_factory=list, max_length=MAX_ANSWERS)
 
 
+class DeviceJoined(Wire):
+    """A device's record, taken into an account on its first sign-in there."""
+
+    kind: Literal["device_joined"] = "device_joined"
+    device: Id
+    topics: list[TopicMark] = Field(default_factory=list, max_length=MAX_TOPICS)
+    answers: list[Answer] = Field(default_factory=list, max_length=MAX_ANSWERS)
+
+
+class PlanMerged(Wire):
+    """Moves what was kept for one plan into another, by subject and topic
+    name: the topic's place in the new plan."""
+
+    kind: Literal["plan_merged"] = "plan_merged"
+    from_plan: Id
+    to_plan: Id
+    topics: dict[str, dict[str, int]] = Field(default_factory=dict)
+
+
 # What the learner's app does to the record as their plan changes. A plan
 # made again is a new plan: its positions name different topics, so what was
 # kept for the old one is dropped, except for subjects carried into it.
@@ -173,7 +196,9 @@ Change = Annotated[
     | Imported
     | SubjectDropped
     | SubjectsCarried
-    | PlanKept,
+    | PlanKept
+    | DeviceJoined
+    | PlanMerged,
     Field(discriminator="kind"),
 ]
 _CHANGE = TypeAdapter(Change)
@@ -194,11 +219,11 @@ def _with_mark(record: LearnerRecord, ref: TopicRef, **update) -> LearnerRecord:
     return record.model_copy(update={"topics": [*others, marked][-MAX_TOPICS:]})
 
 
-def _imported(record: LearnerRecord, change: Imported) -> LearnerRecord:
-    """Merged under what the server already has, which is newer."""
-    if record.imported:
-        return record
-    for mark in change.topics:
+def _taken_in(
+    record: LearnerRecord, topics: list[TopicMark], answers: list[Answer]
+) -> LearnerRecord:
+    """Under what the record already has, which wins."""
+    for mark in topics:
         existing = record.mark(mark)
         record = _with_mark(
             record,
@@ -206,10 +231,45 @@ def _imported(record: LearnerRecord, change: Imported) -> LearnerRecord:
             lesson_id=(existing and existing.lesson_id) or mark.lesson_id,
             learnt_at=(existing and existing.learnt_at) or mark.learnt_at,
         )
-    answers = sorted([*change.answers, *record.answers], key=lambda a: a.at)
-    return record.model_copy(
-        update={"answers": answers[-MAX_ANSWERS:], "imported": True}
-    )
+    known = {answer.key for answer in record.answers if answer.key}
+    fresh = [answer for answer in answers if not (answer.key and answer.key in known)]
+    ordered = sorted([*fresh, *record.answers], key=lambda a: a.at)
+    return record.model_copy(update={"answers": ordered[-MAX_ANSWERS:]})
+
+
+def _imported(record: LearnerRecord, change: Imported) -> LearnerRecord:
+    if record.imported:
+        return record
+    taken = _taken_in(record, change.topics, change.answers)
+    return taken.model_copy(update={"imported": True})
+
+
+def _device_joined(record: LearnerRecord, change: DeviceJoined) -> LearnerRecord:
+    if change.device in record.joined:
+        return record
+    taken = _taken_in(record, change.topics, change.answers)
+    return taken.model_copy(update={"joined": [*record.joined, change.device]})
+
+
+def _plan_merged(record: LearnerRecord, change: PlanMerged) -> LearnerRecord:
+    def place(plan_id, slug, topic):
+        if plan_id != change.from_plan:
+            return None
+        return change.topics.get(slug, {}).get(topic)
+
+    moved = [
+        mark.model_copy(update={"plan_id": change.to_plan, "topic_index": index})
+        for mark in record.topics
+        if (index := place(mark.plan_id, mark.subject_slug, mark.topic)) is not None
+    ]
+    answers = [
+        answer.model_copy(update={"plan_id": change.to_plan})
+        if place(answer.plan_id, answer.subject_slug, answer.topic) is not None
+        else answer
+        for answer in record.answers
+    ]
+    kept = record.model_copy(update={"answers": answers})
+    return _taken_in(kept, moved, [])
 
 
 def _kept_where(record: LearnerRecord, keep) -> LearnerRecord:
@@ -276,6 +336,10 @@ def applied(record: LearnerRecord, change: Change) -> LearnerRecord:
             return _imported(record, change)
         case SubjectDropped() | SubjectsCarried() | PlanKept():
             return _planned(record, change)
+        case DeviceJoined():
+            return _device_joined(record, change)
+        case PlanMerged():
+            return _plan_merged(record, change)
 
 
 def changed(stored: str | None, change_json: str) -> str:

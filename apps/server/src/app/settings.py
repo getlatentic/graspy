@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,9 +15,13 @@ DEPLOYMENT_KEYS = (
     "PUBLIC_BASE_URL",
     "A2A_PATH_PREFIX",
     "SESSION_SECRET",
+    "LLM_HOST",
     "LLM_MODEL_ID",
     "AWS_REGION",
     "AWS_BEARER_TOKEN_BEDROCK",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_API_TOKEN",
+    "FIREBASE_API_KEY",
 )
 
 
@@ -45,12 +50,22 @@ class Settings(BaseSettings):
 
     session_secret: str | None = Field(default=None, alias="SESSION_SECRET")
 
-    # A Bedrock mantle id, which carries no version suffix.
-    llm_model_id: str = Field(default="openai.gpt-oss-120b", alias="LLM_MODEL_ID")
+    llm_host: Literal["bedrock", "workers-ai"] = Field(
+        default="bedrock", alias="LLM_HOST"
+    )
+    # Unset means the host's own gpt-oss-120b id.
+    llm_model_id: str | None = Field(default=None, alias="LLM_MODEL_ID")
     aws_region: str = Field(default="us-east-1", alias="AWS_REGION")
     aws_bearer_token_bedrock: str | None = Field(
         default=None, alias="AWS_BEARER_TOKEN_BEDROCK"
     )
+    cloudflare_account_id: str | None = Field(
+        default=None, alias="CLOUDFLARE_ACCOUNT_ID"
+    )
+    cloudflare_api_token: str | None = Field(default=None, alias="CLOUDFLARE_API_TOKEN")
+    # The Firebase project's web API key: public, but it names the project
+    # whose sign-ins are accepted. Unset turns sign-in off.
+    firebase_api_key: str | None = Field(default=None, alias="FIREBASE_API_KEY")
 
     @field_validator("cors_origins", mode="before")
     @classmethod

@@ -1,0 +1,127 @@
+/* Cascade contract for the whole app — see docs/architecture/css-cascade-layers.md.
+ * Precedence (lowest → highest): theme < base < carbon < components < utilities.
+ * Carbon emits into layer(carbon) from carbon.scss; theme.css and all feature
+ * stylesheets live in layer(components) so they out-rank Carbon without selector
+ * wars while Tailwind utilities stay strongest. */
+@layer theme, base, carbon, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "./theme.css" layer(components);
+
+/* The single definition of every graspy token.
+ *
+ * These lived in a separate tokens.css as plain :root properties, which Tailwind cannot
+ * see — it generates utilities only from @theme. A hand-written @theme block
+ * mirrored seven of the forty-six, and because hand-written CSS kept reading
+ * :root directly, nothing failed while the mirror drifted. The result was no
+ * p-lg, no text-ink-secondary, no gap-2xs, and eleven stylesheets restating the
+ * same values.
+ *
+ * Declared here, Tailwind emits each one to :root itself and generates the
+ * matching utility, so there is one definition and nothing to drift. Tailwind's
+ * namespaces decide the utility: --spacing-* gives p/m/gap, --color-* gives
+ * text/bg/border, --text-* gives font sizes. */
+@theme {
+  /* Taken from the Graspy.dc.html design, by frequency of use in it:
+   * #12232e ink (88), #2893C8 brand (73), #5a6672 secondary (61),
+   * #e5e9ee rule (47), #9aa4af muted (32), #eaf4fa accent wash (24),
+   * #f5f8fa canvas (5), #0F7838 success (8). */
+  --color-canvas: #f5f8fa;
+  --color-paper: #ffffff;
+  --color-paper-soft: #f7fafc;
+  --color-paper-accent: #eaf4fa;
+  --color-rule: #e5e9ee;
+  --color-rule-strong: #c9d2da;
+  --color-ink: #12232e;
+  --color-ink-secondary: #5a6672;
+  --color-muted: #9aa4af;
+  --color-brand: #2893C8;
+  --color-accent: #2893C8;
+  --color-accent-hover: #1f7099;
+  --color-accent-active: #185a7c;
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #cfe0ea;
+  --color-success: #0f7838;
+  --color-focus: #2893C8;
+  --color-success-soft: #e8f5ed;
+  --color-error: #b3261e;
+  --color-error-soft: #fdecea;
+  --color-backdrop: rgb(18 35 46 / 0.45);
+
+  /* One family for the whole interface — IBM Plex Sans, headings included. The
+   * brand reserves Poppins for the wordmark alone: "never use it for headings,
+   * UI or body", so it lives in its own name that only the wordmark reads. */
+  --font-display: "IBM Plex Sans Variable", system-ui, -apple-system, sans-serif;
+  --font-body: "IBM Plex Sans Variable", system-ui, -apple-system, sans-serif;
+  --font-wordmark: "Poppins", "IBM Plex Sans Variable", sans-serif;
+  --font-technical: "Geist Mono Variable", "Geist Mono", monospace;
+
+  /* The design's scale, by use: 15px is its running text and 14px its UI text,
+   * both a step up from the 13-14px this app inherited from Carbon. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-display: clamp(1.75rem, 2.5vw, 2.25rem);
+
+  --leading-display: 1.1;
+  --leading-heading: 1.25;
+  --leading-ui: 1.4;
+  --leading-body: 1.5;
+  --leading-reading: 1.6;
+
+  --spacing-3xs: 0.125rem;
+  --spacing-2xs: 0.25rem;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2.5rem;
+  --spacing-2xl: 4rem;
+  --spacing-3xl: 6rem;
+  /* Not Tailwind namespaces, so these emit as variables without generating a
+   * utility. They belong here anyway: one file defines every token. */
+  --measure-reading: 68ch;
+
+  --radius-control: 0;
+  --radius-panel: 0;
+  --radius-frame: 0;
+  --radius-pill: 999px;
+  /* The design floats content on rounded 16px cards; panels above are the older
+     square treatment, kept until each screen is reconciled. */
+  --radius-card: 16px;
+
+  --rule-hairline: 1px;
+  --rule-focus: 2px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --shadow-frame: none;
+  --shadow-control: none;
+  --shadow-raised: 0 6px 24px rgb(18 35 46 / 0.12);
+  --shadow-overlay: 0 14px 40px rgb(18 35 46 / 0.2);
+
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+}
+
+/* The printed page box — the one style no utility can express. */
+@media print {
+  @page {
+    margin: 16mm;
+  }
+}

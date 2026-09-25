@@ -1,0 +1,48 @@
+{
+  "redistributionApproved": true,
+  "package": {
+    "packageId": "ai.graspy.scheme.ng.lagos.jss1.mathematics",
+    "title": "Lagos JSS 1 Mathematics scheme",
+    "publisher": "Graspy",
+    "jurisdiction": "Lagos State, Nigeria",
+    "edition": "Undated unified edition",
+    "sourceUrl": "https://syllabus.ng/jss1-scheme-of-work/math/",
+    "sourceSha256": "384150beee26361a43678a2b8896010a52fb380360c689fd0c0a59ff370907b9",
+    "rightsBasis": {
+      "kind": "officialText",
+      "name": "Official government schedule",
+      "statement": "Public Lagos State Government Ministry of Education scheme-of-work data.",
+      "url": "https://syllabus.ng/jss1-scheme-of-work/math/"
+    },
+    "attribution": "Lagos State Ministry of Education, Unified Schemes of Work for Junior Secondary School, Mathematics JSS 1.",
+    "modificationNotice": "Converted by Graspy into three machine-readable term plans, preserving teaching, revision, test, examination and break weeks. The recovered source artifact was delivered through SyllabusNG; SyllabusNG branding and presentation are excluded. Curriculum links use the Graspy September 2025 NERDC JSS 1 Mathematics package."
+  },
+  "course": {
+    "subject": "Mathematics",
+    "gradeLevelCode": "JSS1"
+  },
+  "curriculum": {
+    "packageId": "ai.graspy.curriculum.ng.nerdc.jss1.mathematics",
+    "courseKey": "mathematics-jss1"
+  },
+  "weekTitleCorrections": [
+    {
+      "termOrdinal": 2,
+      "weekOrdinal": 9,
+      "sourceTitle": "ALGEBRAIC ii. Open sentences and authentic iii. Word problems involving use of symbols. iv. Identification of Coefficient of Terms Basic Authentic Operations Applied to algebraic Expressions. v. Collection and simplification of like terms and the use of brackets.",
+      "title": "Algebraic processes"
+    },
+    {
+      "termOrdinal": 2,
+      "weekOrdinal": 10,
+      "sourceTitle": "10 ALGEBRAIC PROCESSES COUNDED PROCESSES",
+      "title": "Algebraic processes continued"
+    },
+    {
+      "termOrdinal": 2,
+      "weekOrdinal": 11,
+      "sourceTitle": "11 REVISION OF THE SECOND TERM'S WORK AND PREPARATION FOR EXAMINATION",
+      "title": "Revision of the second term's work and preparation for examination"
+    }
+  ]
+}

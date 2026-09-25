@@ -1,0 +1,114 @@
+/* The app's base layer: root defaults, element resets, the Carbon token
+   mapping, and Carbon-wide policies. Everything class-shaped lives as token
+   utilities in the components (styling rule). */
+:root {
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  font-family: var(--font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+
+  /* The first bar's own height. The content offset below is both bars together;
+     the workspace shell, which always carries the workspace bar, overrides it
+     to the sum. */
+  --app-header-bar-block-size: 3.5rem;
+  --app-header-block-size: 4.5rem;
+
+  --cds-background: var(--color-canvas);
+  --cds-layer-01: var(--color-paper);
+  --cds-layer-02: var(--color-paper-soft);
+  --cds-text-primary: var(--color-ink);
+  --cds-text-secondary: var(--color-ink-secondary);
+  --cds-field: var(--color-paper-soft);
+  --cds-field-01: var(--color-paper-soft);
+  --cds-border-subtle-01: var(--color-rule);
+  --cds-border-strong-01: var(--color-rule-strong);
+  --cds-focus: var(--color-focus);
+  --cds-link-primary: var(--color-accent);
+  --cds-button-primary: var(--color-accent);
+  --cds-button-primary-hover: var(--color-accent-hover);
+  --cds-button-primary-active: var(--color-accent-active);
+  --cds-button-tertiary: var(--color-accent);
+  --cds-button-tertiary-hover: var(--color-accent);
+  --cds-button-tertiary-active: var(--color-accent-active);
+  --cds-support-success: var(--color-success);
+  --cds-support-error: var(--color-error);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  inline-size: 100%;
+  min-inline-size: 320px;
+  min-block-size: 100%;
+  margin: 0;
+  overflow-x: clip;
+}
+
+#root {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-block-size: 100dvh;
+}
+
+body,
+[class*="cds--"] {
+  font-family: var(--font-body);
+}
+
+/* Controls take the app's typeface but keep Carbon's own size, weight and
+ * leading — `font: inherit` would out-rank layer(carbon) and reset all four. */
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Carbon's default control is 48px tall, which reads as a slab across a screen
+ * of them. graspy's is 40px: still a comfortable target with a pointer, and the
+ * height is set once here rather than argued with per screen. Height stays auto
+ * so a label that wraps is not clipped. */
+.cds--btn {
+  --cds-layout-size-height: 2.5rem;
+  min-block-size: 2.5rem;
+  block-size: auto;
+}
+
+/* The single button-alignment policy: graspy centres icon-less labels, which
+ * requires symmetric padding because Carbon reserves 63px inline-end for a
+ * trailing icon. Buttons WITH icons keep Carbon's native left-aligned layout. */
+.cds--btn:not(:has(.cds--btn__icon)) {
+  justify-content: center;
+  padding-inline: var(--spacing-md);
+}
+
+/* Carbon floors notifications at 18rem, which is wider than a 320px screen can
+ * hold once the lesson has any padding, so the whole column is dragged past the
+ * viewport. graspy lets them narrow to their container instead. */
+.cds--inline-notification {
+  margin-block-start: var(--spacing-xl);
+  border-radius: var(--radius-control);
+  min-inline-size: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: var(--dur-micro) !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--dur-micro) !important;
+  }
+}

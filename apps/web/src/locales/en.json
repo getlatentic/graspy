@@ -274,7 +274,15 @@
     "practiceRight": "{right} of {answered} right",
     "practiceNone": "No practice questions answered yet. Ask graspy to test you on a topic.",
     "onMyOwn": "Learning on my own",
-    "change": "Change"
+    "change": "Change",
+    "account": "Your account",
+    "signInPrompt": "Sign in with Google to keep your learning on all your devices",
+    "signIn": "Sign in with Google",
+    "signingIn": "Signing in…",
+    "signedIn": "Your learning is kept on every device you sign in on.",
+    "signOut": "Sign out",
+    "signInBlocked": "Your browser blocked the sign-in window. Allow pop-ups for graspy, then try again.",
+    "signInFailed": "Sign-in did not work. Check your connection, then try again."
   },
   "ask": {
     "currentTopic": "Your current topic",

@@ -1,0 +1,11 @@
+-- Record which days a school teaches on.
+--
+-- The week was Monday to Friday for everyone. That is the week nearly every
+-- school keeps, so it stays the default — but a school that teaches on a
+-- Saturday could not say so, and the slot table has always taken any day of
+-- the week, so the only thing missing was somewhere to say it.
+--
+-- Held as the days themselves rather than a flag per weekday: a school that
+-- does not teach on a Wednesday is as real as one that teaches on a Saturday,
+-- and a list says both without a column for each.
+ALTER TABLE school_day ADD COLUMN teaching_days TEXT NOT NULL DEFAULT '[1,2,3,4,5]';

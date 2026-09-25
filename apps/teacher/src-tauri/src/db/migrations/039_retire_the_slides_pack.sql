@@ -1,0 +1,14 @@
+-- Retire the slides and quick-check pack.
+--
+-- The pack was slides a class is taught from and a few questions with answers.
+-- It is withdrawn as a product feature: the documents a teacher works from are
+-- the lesson plan and the note pupils copy, and slides that cannot leave the
+-- app are not slides. Bringing them back means exporting a real presentation
+-- file, which is a different feature from this table.
+--
+-- Dropping rather than keeping the table unread: a table nothing writes and
+-- nothing reads is a claim that the feature still exists. The lesson plans and
+-- notes the packs were written from are untouched, so nothing a teacher
+-- authored is lost — only the generated slides, which are reproducible from the
+-- plan if the feature returns.
+DROP TABLE IF EXISTS lesson_packs;

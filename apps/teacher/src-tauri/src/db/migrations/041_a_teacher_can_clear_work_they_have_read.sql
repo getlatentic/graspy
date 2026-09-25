@@ -1,0 +1,12 @@
+-- Let a teacher put a failure away for good.
+--
+-- The bar was built so no failure is ever dropped, and it kept that promise too
+-- well: the only control offered on ended work was wired to cancellation, which
+-- does nothing to a task that has already ended. The owner's own library opened
+-- on thirteen failures, the oldest four days old, that no action could clear.
+--
+-- Clearing is recorded rather than remembered on the screen, because the point
+-- is that it survives closing the app. A dismissed task keeps its history — it
+-- is put away, not deleted, so the record of what the app did to a lesson stays
+-- whole.
+ALTER TABLE background_tasks ADD COLUMN dismissed_at TEXT;

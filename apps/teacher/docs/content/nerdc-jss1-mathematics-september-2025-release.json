@@ -1,0 +1,35 @@
+{
+  "redistributionApproved": true,
+  "package": {
+    "packageId": "ai.graspy.curriculum.ng.nerdc.jss1.mathematics",
+    "title": "Nigeria JSS 1 Mathematics",
+    "publisher": "Graspy",
+    "countryCode": "NG",
+    "jurisdictionCode": "NG",
+    "edition": "September 2025",
+    "effectiveFrom": "2025-09-19",
+    "effectiveTo": null,
+    "sourceUrl": "https://lmis.nerdcportals.com.ng/jss_1/necurrdc/2.pdf",
+    "sourceSha256": "278b771e2e41fa2101b6b11627eb3df8466cb5994bec457221de128eac7a26e6",
+    "rightsBasis": {
+      "kind": "officialText",
+      "name": "Official administrative text",
+      "statement": "Redistribution basis recorded for an official government curriculum text under section 3(b) of Nigeria's Copyright Act 2022.",
+      "url": "https://www.copyright.gov.ng/wp-content/uploads/2023/04/CopyrightAct2023FinalPublication1.pdf"
+    },
+    "attribution": "Nigerian Educational Research and Development Council (NERDC), New Revised Basic Education Curriculum, Mathematics JSS 1, September 2025.",
+    "modificationNotice": "Converted by Graspy into a granular, machine-readable planning package. Stable planning nodes and source links are reused from the plan-to-tutor dataset; source-topic mappings and extracted source fields are recorded in the revision overlay.",
+    "framework": {
+      "name": "New Revised Basic Education Curriculum",
+      "authority": "Nigerian Educational Research and Development Council"
+    }
+  },
+  "course": {
+    "courseKey": "mathematics-jss1",
+    "title": "Mathematics · JSS 1",
+    "subject": "Mathematics",
+    "gradeSystemCode": "NG-BASIC-SECONDARY",
+    "gradeSystemVersion": "1",
+    "gradeLevelCode": "JSS1"
+  }
+}

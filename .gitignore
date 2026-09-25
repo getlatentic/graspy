@@ -67,3 +67,14 @@ apps/server/mutants/
 # Web app end-to-end runs (apps/web)
 apps/web/cypress/screenshots/
 apps/web/cypress/videos/
+
+# graspy-teacher (apps/teacher)
+# Rust build output.
+apps/teacher/src-tauri/target/
+# The sidecar executables scripts/fetch-sidecars.sh writes. Their licences are committed.
+apps/teacher/src-tauri/binaries/*
+!apps/teacher/src-tauri/binaries/licenses/
+# Model files, qualification audits and browser-automation output.
+apps/teacher/models/
+apps/teacher/output/
+apps/teacher/.playwright-cli/

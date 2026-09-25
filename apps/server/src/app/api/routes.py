@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field, StringConstraints
 from sse_starlette.sse import EventSourceResponse
 
 from ..caller import Caller
 from ..config.generation import DEFAULT_GRADE_LEVEL
-from ..learner.record import Seen
+from ..learner.record import DeviceJoined, Seen
+from ..security.firebase import InvalidSignIn, account_learner, verified_uid
 from ..security.guard import require_session
 from ..security.session import issue
 from .sse import sse_response
@@ -72,11 +73,16 @@ class SessionRequest(BaseModel):
     )
     # FingerprintJS's visitor id.
     fingerprint: str | None = Field(default=None, pattern=r"^[a-f0-9]{8,64}$")
+    # Present when the learner signs in: the session then names their account.
+    firebase_id_token: str | None = Field(
+        default=None, alias="firebaseIdToken", max_length=4096
+    )
 
 
 class SessionResponse(BaseModel):
     token: str
     expires_in: int = Field(serialization_alias="expiresIn")
+    signed_in: bool = Field(default=False, serialization_alias="signedIn")
 
 
 GENERATION_GUARD = [Depends(require_session)]
@@ -96,14 +102,46 @@ async def create_session(
     request: Request, body: SessionRequest | None = None
 ) -> SessionResponse:
     """An anonymous token: not authentication, but one cheap endpoint to rate
-    limit in front of every expensive one."""
-    device = body.device_id if body else None
-    issued = issue(request.app.state.session_secret, learner=device)
-    if device and body.fingerprint:
-        await Caller(device, request.app.state.keeping).change(
-            Seen(fingerprint=body.fingerprint)
+    limit in front of every expensive one. With a Firebase ID token it names
+    the learner's account instead, taking in the device's record once."""
+    body = body or SessionRequest()
+    keeping = request.app.state.keeping
+    learner = body.device_id
+    if body.firebase_id_token:
+        learner = await _signed_in(request, body)
+    elif learner and body.fingerprint:
+        await Caller(learner, keeping).change(Seen(fingerprint=body.fingerprint))
+    issued = issue(request.app.state.session_secret, learner=learner)
+    return SessionResponse(
+        token=issued.token,
+        expires_in=issued.expires_in,
+        signed_in=bool(body.firebase_id_token),
+    )
+
+
+async def _signed_in(request: Request, body: SessionRequest) -> str:
+    api_key = request.app.state.settings.firebase_api_key
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "Sign-in is not available.", "code": "sign_in_off"},
         )
-    return SessionResponse(token=issued.token, expires_in=issued.expires_in)
+    try:
+        uid = await verified_uid(body.firebase_id_token, api_key)
+    except InvalidSignIn as refused:
+        raise HTTPException(
+            status_code=401, detail={"error": str(refused), "code": "sign_in_invalid"}
+        ) from refused
+    account = account_learner(uid)
+    if body.device_id:
+        keeping = request.app.state.keeping
+        device = await Caller(body.device_id, keeping).record()
+        await Caller(account, keeping).change(
+            DeviceJoined(
+                device=body.device_id, topics=device.topics, answers=device.answers
+            )
+        )
+    return account
 
 
 @api_router.get(

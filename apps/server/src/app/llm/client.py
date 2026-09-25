@@ -4,18 +4,13 @@ import logging
 
 import dspy
 from dspy.clients.engines import AsyncLM15Engine
-from dspy.lm15 import RouterConfig
 
 from ..config.generation import LLM_MAX_TOKENS, LLM_REASONING_EFFORT, LLM_TEMPERATURE
 from ..settings import Settings
+from .hosts import host_of
 from .transport import HttpxTransport
 
 logger = logging.getLogger(__name__)
-
-# Bedrock's Chat Completions on bedrock-mantle. The same wire on
-# bedrock-runtime inlines gpt-oss's reasoning into the answer, which then
-# fails to parse.
-PROVIDER = "bedrock-mantle-chat"
 
 # A Worker's filesystem is memory and an isolate gets 128 MB, so there is no
 # disk cache and a small memory one.
@@ -34,30 +29,18 @@ class AsyncOnlyEngine:
         )
 
 
-def resolve_model(settings: Settings, model_id: str | None = None) -> str:
-    if not settings.aws_bearer_token_bedrock:
-        raise RuntimeError(
-            "AWS_BEARER_TOKEN_BEDROCK is required: Amazon Bedrock is the only provider."
-        )
-    model_id = model_id or settings.llm_model_id
-    return model_id if model_id.startswith(f"{PROVIDER}:") else f"{PROVIDER}:{model_id}"
+def resolve_model(settings: Settings) -> str:
+    return host_of(settings).model(settings)
 
 
-def build_lm(
-    settings: Settings,
-    transport: HttpxTransport | None = None,
-    model_id: str | None = None,
-) -> dspy.LM:
-    model = resolve_model(settings, model_id)
-    config = RouterConfig(
-        api_keys={PROVIDER: settings.aws_bearer_token_bedrock},
-        settings={PROVIDER: {"region": settings.aws_region}},
-        transport=transport or HttpxTransport(),
-    )
+def build_lm(settings: Settings, transport: HttpxTransport | None = None) -> dspy.LM:
+    host = host_of(settings)
     return dspy.LM(
-        model,
+        host.model(settings),
         engine=AsyncOnlyEngine(),
-        async_engine=AsyncLM15Engine(config),
+        async_engine=AsyncLM15Engine(
+            host.config(settings, transport or HttpxTransport())
+        ),
         max_tokens=LLM_MAX_TOKENS,
         temperature=LLM_TEMPERATURE,
         reasoning_effort=LLM_REASONING_EFFORT,

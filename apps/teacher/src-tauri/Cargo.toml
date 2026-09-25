@@ -1,0 +1,77 @@
+[package]
+name = "graspy-teacher"
+version = "0.1.0"
+description = "Teacher workspace for curriculum-aligned lesson materials"
+authors = ["graspy contributors"]
+edition = "2021"
+publish = false
+license = "AGPL-3.0-only"
+
+[lib]
+name = "graspy_teacher_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+comrak = { version = "0.52", default-features = false }
+ed25519-dalek = "2"
+fs2 = "0.4"
+futures-util = "0.3"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
+pdf-extract = "0.12.0"
+quick-xml = "0.41.0"
+regex = "1"
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "stream"] }
+rusqlite = { version = "0.40", features = ["bundled"] }
+schemars = "1.2.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0.150"
+sha2 = "0.10"
+sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "=2.6.0"
+tauri-plugin-shell = "2.3.5"
+tauri-plugin-single-instance = "2"
+tempfile = "3"
+tokio = { version = "1.52.4", features = ["fs", "io-util", "macros", "rt", "sync", "time"] }
+tokio-util = { version = "0.7.18", features = ["rt"] }
+uuid = { version = "1.18", features = ["v4"] }
+zip = { version = "8.6.0", default-features = false, features = ["deflate"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+block2 = "0.6"
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = [
+  "NSPrintInfo",
+  "NSPrintOperation",
+] }
+objc2-core-foundation = { version = "0.3", features = ["CFData", "CFCGTypes"] }
+objc2-core-graphics = { version = "0.3", features = [
+  "CGContext",
+  "CGDataConsumer",
+  "CGDataProvider",
+  "CGPDFContext",
+  "CGPDFDocument",
+  "CGPDFPage",
+] }
+objc2-foundation = { version = "0.3", features = ["NSData", "NSError", "NSString", "NSURL"] }
+objc2-pdf-kit = { version = "0.3", default-features = false, features = [
+  "PDFDocument",
+  "objc2-app-kit",
+] }
+objc2-web-kit = { version = "0.3", features = [
+  "WKNavigation",
+  "WKPDFConfiguration",
+  "WKWebView",
+  "WKWebViewConfiguration",
+  "block2",
+] }
+
+# Full debug info dominates target/debug (10 GiB at its peak). Line tables keep
+# file/line in backtraces and panics.
+[profile.dev]
+debug = "line-tables-only"

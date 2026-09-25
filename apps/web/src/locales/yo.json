@@ -274,7 +274,15 @@
     "practiceRight": "{right} nínú {answered} ló tọ̀nà",
     "practiceNone": "O kò tíì dáhùn ìbéèrè ìdánrawò kankan. Ní kí graspy dán ọ wò lórí kókó kan.",
     "onMyOwn": "Mò ń kẹ́kọ̀ọ́ fúnra mi",
-    "change": "Yí i padà"
+    "change": "Yí i padà",
+    "account": "Àkọọ́lẹ̀ rẹ",
+    "signInPrompt": "Wọlé pẹ̀lú Google kí ẹ̀kọ́ rẹ lè wà lórí gbogbo ẹ̀rọ rẹ",
+    "signIn": "Wọlé pẹ̀lú Google",
+    "signingIn": "Ó ń wọlé…",
+    "signedIn": "Ẹ̀kọ́ rẹ wà lórí gbogbo ẹ̀rọ tí o bá wọlé sí.",
+    "signOut": "Jáde",
+    "signInBlocked": "Aṣàwákiri rẹ dí fèrèsé ìwọlé. Gba àwọn fèrèsé agbéjáde láàyè fún graspy, kí o sì tún gbìyànjú.",
+    "signInFailed": "Ìwọlé kò ṣiṣẹ́. Ṣàyẹ̀wò ìsopọ̀ rẹ, kí o sì tún gbìyànjú."
   },
   "ask": {
     "currentTopic": "Àkòrí rẹ báyìí",

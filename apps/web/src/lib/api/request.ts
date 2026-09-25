@@ -34,3 +34,23 @@ export async function getJson<T>(url: string): Promise<T> {
 
   throw lastError ?? new ApiError("Request failed", 0);
 }
+
+/** One attempt: a write is not retried here. */
+export async function sendJson<T>(
+  url: string,
+  method: "POST" | "PUT",
+  body: unknown,
+): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetchWithSession(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (cause) {
+    throw toNetworkError(cause);
+  }
+  if (!response.ok) throw await toApiError(response);
+  return response.json() as Promise<T>;
+}

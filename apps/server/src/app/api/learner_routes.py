@@ -1,6 +1,7 @@
-"""The learner's record for their app: read it, keep it in step with the plan,
-and once bring across what the device kept before the server did. The views
-write it through MCP."""
+"""The learner's record and plan for their app: read the record, keep it in
+step with the plan, once bring across what the device kept before the server
+did, and share one plan across the learner's devices. The views write the
+record through MCP."""
 
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from pydantic import (
 
 from ..caller import Caller
 from ..domains.lesson.lesson import Lesson
+from ..learner.plan import MAX_PLAN_CHARS, Plan, joined, newer
 from ..learner.record import (
     MAX_ANSWERS,
     MAX_TOPICS,
@@ -28,6 +30,7 @@ from ..learner.record import (
     TopicMark,
     TopicRef,
 )
+from ..learner.time import now_ms
 from ..security.guard import Session, require_session
 from ..wire import Wire
 
@@ -112,3 +115,42 @@ async def import_records(caller: CallerDep, records: DeviceRecords) -> dict:
 async def change_plan(caller: CallerDep, change: Annotated[PlanChange, Body()]) -> dict:
     await caller.change(change)
     return {"changed": True}
+
+
+async def _stored_plan(caller: Caller) -> Plan | None:
+    stored = await caller.keeping.learners.plan(caller.learner)
+    return Plan.model_validate_json(stored) if stored else None
+
+
+async def _sent_plan(request: Request) -> Plan:
+    body = await request.body()
+    if len(body) > MAX_PLAN_CHARS:
+        raise HTTPException(status_code=413, detail="The plan is too large")
+    try:
+        return Plan.model_validate_json(body)
+    except ValidationError as error:
+        raise HTTPException(status_code=422, detail="The plan is malformed") from error
+
+
+@learner_router.get("/learner/curriculum", response_model=None)
+async def shared_plan(caller: CallerDep) -> dict:
+    plan = await _stored_plan(caller)
+    return {"plan": plan.model_dump(by_alias=True) if plan else None}
+
+
+@learner_router.put("/learner/curriculum", response_model=None)
+async def keep_plan(caller: CallerDep, request: Request) -> dict:
+    """The newer plan wins; a device sending an older one gets the newer back."""
+    kept = newer(await _stored_plan(caller), await _sent_plan(request))
+    await caller.keeping.learners.keep_plan(caller.learner, kept.json())
+    return {"plan": kept.model_dump(by_alias=True)}
+
+
+@learner_router.post("/learner/curriculum/join", response_model=None)
+async def join_plan(caller: CallerDep, request: Request) -> dict:
+    """A device's first sign-in: its plan and the account's become one."""
+    result = joined(await _stored_plan(caller), await _sent_plan(request), now_ms())
+    await caller.keeping.learners.keep_plan(caller.learner, result.plan.json())
+    if result.carried:
+        await caller.change(result.carried)
+    return {"plan": result.plan.model_dump(by_alias=True)}

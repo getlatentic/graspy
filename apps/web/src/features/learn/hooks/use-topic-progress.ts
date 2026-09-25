@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAccount } from "@/lib/account/use-account";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import {
   keptRecord,
@@ -24,7 +25,9 @@ function useRecordedMarks(plan: CurriculumData | null, settled: boolean) {
   const planId = plan?.planId ?? null;
   const [marks, setMarks] = useState<TopicMarks>(NO_MARKS);
   const [asked, setAsked] = useState(0);
-  const loadKey = settled ? `${planId}:${plan?.updatedAt}` : null;
+  // Signing in or out changes whose record this is.
+  const reader = useAccount()?.uid ?? "device";
+  const loadKey = settled ? `${reader}:${planId}:${plan?.updatedAt}` : null;
   // Not a dependency: the plan's identity changes on every write; loadKey tracks what matters.
   const planNow = useRef(plan);
   useEffect(() => {

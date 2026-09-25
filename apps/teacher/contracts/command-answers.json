@@ -1,0 +1,4263 @@
+{
+  "answers": {
+    "add_teaching_assignment": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "approve_classwork_version": {
+      "$ref": "#/$defs/ClassworkWorkspaceSnapshot"
+    },
+    "archive_scheme_entry": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "archive_teaching_assignment": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "assign_curriculum_course": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "can_read_a_lesson_plan_photograph": {
+      "type": "boolean"
+    },
+    "cancel_background_task": {
+      "type": "null"
+    },
+    "cancel_lesson_note_completion": {
+      "type": "null"
+    },
+    "cancel_lesson_preparation_completion": {
+      "type": "null"
+    },
+    "cancel_model_acquisition": {
+      "type": "null"
+    },
+    "choose_lesson_model": {
+      "type": "null"
+    },
+    "confirm_granular_lesson": {
+      "$ref": "#/$defs/LessonWorkspaceSnapshot"
+    },
+    "create_academic_session": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "create_academic_workspace": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "create_granular_lesson_completion": {
+      "$ref": "#/$defs/GranularLessonRecord"
+    },
+    "create_lesson_note_completion": {
+      "type": "string"
+    },
+    "create_lesson_preparation_completion": {
+      "type": "string"
+    },
+    "create_scheme_from_template": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "create_scheme_of_work": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "discard_lesson": {
+      "$ref": "#/$defs/LessonWorkspaceSnapshot"
+    },
+    "dismiss_background_task": {
+      "type": "null"
+    },
+    "download_model": {
+      "$ref": "#/$defs/ModelInstallationSnapshot"
+    },
+    "download_photograph_reading": {
+      "$ref": "#/$defs/ModelInstallationSnapshot"
+    },
+    "edit_classwork_block": {
+      "$ref": "#/$defs/ClassworkWorkspaceSnapshot"
+    },
+    "get_academic_workspace": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "get_background_task": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BackgroundTask"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "get_class_timetable": {
+      "items": {
+        "$ref": "#/$defs/TeachingSlot"
+      },
+      "type": "array"
+    },
+    "get_classwork_figure": {
+      "type": "string"
+    },
+    "get_classwork_section_history": {
+      "$ref": "#/$defs/ClassworkSectionHistory"
+    },
+    "get_classwork_workspace": {
+      "$ref": "#/$defs/ClassworkWorkspaceSnapshot"
+    },
+    "get_curriculum_catalog": {
+      "$ref": "#/$defs/CurriculumCatalogSnapshot"
+    },
+    "get_differentiated_classwork_workspace": {
+      "$ref": "#/$defs/DifferentiatedClassworkWorkspaceSnapshot"
+    },
+    "get_granular_lesson_program_input": {
+      "$ref": "#/$defs/GranularLessonProgramInput"
+    },
+    "get_lesson_evidence_workspace": {
+      "$ref": "#/$defs/LessonEvidenceWorkspaceSnapshot"
+    },
+    "get_lesson_preparation_progress": {
+      "items": {
+        "$ref": "#/$defs/PreparationStepProgress"
+      },
+      "type": "array"
+    },
+    "get_lesson_workspace": {
+      "$ref": "#/$defs/LessonWorkspaceSnapshot"
+    },
+    "get_model_installation": {
+      "$ref": "#/$defs/ModelInstallationSnapshot"
+    },
+    "get_next_teaching_slot": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/NextTeachingSlot"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "get_photograph_reading_installation": {
+      "$ref": "#/$defs/ModelInstallationSnapshot"
+    },
+    "get_scheme_of_work_context": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "get_school_day": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SchoolDay"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "get_todays_classes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "import_lesson_plan_document": {
+      "$ref": "#/$defs/ImportedLessonPlan"
+    },
+    "import_model": {
+      "$ref": "#/$defs/ModelInstallationSnapshot"
+    },
+    "import_photograph_reading": {
+      "$ref": "#/$defs/ModelInstallationSnapshot"
+    },
+    "install_curriculum_package": {
+      "$ref": "#/$defs/CurriculumCatalogSnapshot"
+    },
+    "install_scheme_template_package": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "launch_health": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LaunchFailure"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "list_background_tasks": {
+      "items": {
+        "$ref": "#/$defs/BackgroundTask"
+      },
+      "type": "array"
+    },
+    "list_lesson_models": {
+      "items": {
+        "$ref": "#/$defs/LessonModelChoice"
+      },
+      "type": "array"
+    },
+    "move_lesson_draft": {
+      "$ref": "#/$defs/LessonWorkspaceSnapshot"
+    },
+    "move_scheme_entry": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "prepare_classwork_export": {
+      "$ref": "#/$defs/PreparedClassworkExport"
+    },
+    "prepare_lesson_plan_export": {
+      "$ref": "#/$defs/PreparedClassworkExport"
+    },
+    "print_classwork_document": {
+      "type": "null"
+    },
+    "print_lesson_plan_document": {
+      "type": "null"
+    },
+    "read_lesson_plan_photograph": {
+      "$ref": "#/$defs/LessonPlanPhotograph"
+    },
+    "regenerate_classwork_section": {
+      "$ref": "#/$defs/ClassworkWorkspaceSnapshot"
+    },
+    "restore_classwork_section": {
+      "$ref": "#/$defs/ClassworkWorkspaceSnapshot"
+    },
+    "resume_lesson_preparation": {
+      "type": "null"
+    },
+    "retry_launch": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LaunchFailure"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "run_classwork_generation": {
+      "$ref": "#/$defs/ClassworkWorkspaceSnapshot"
+    },
+    "run_differentiated_classwork_generation": {
+      "$ref": "#/$defs/DifferentiatedClassworkWorkspaceSnapshot"
+    },
+    "save_authored_lesson": {
+      "$ref": "#/$defs/LessonWorkspaceSnapshot"
+    },
+    "save_classwork_pdf": {
+      "$ref": "#/$defs/ClassworkPdfArtifact"
+    },
+    "save_granular_lesson": {
+      "$ref": "#/$defs/LessonWorkspaceSnapshot"
+    },
+    "save_lesson_draft": {
+      "$ref": "#/$defs/LessonWorkspaceSnapshot"
+    },
+    "save_lesson_evidence": {
+      "$ref": "#/$defs/LessonEvidenceWorkspaceSnapshot"
+    },
+    "save_lesson_note": {
+      "type": "null"
+    },
+    "save_lesson_plan_pdf": {
+      "$ref": "#/$defs/ClassworkPdfArtifact"
+    },
+    "save_scheme_entry": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "save_scheme_week": {
+      "$ref": "#/$defs/SchemeContextSnapshot"
+    },
+    "set_active_academic_context": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "set_class_timetable": {
+      "items": {
+        "$ref": "#/$defs/TeachingSlot"
+      },
+      "type": "array"
+    },
+    "set_school_day": {
+      "$ref": "#/$defs/SchoolDay"
+    },
+    "stop_reading_lesson_plan_photograph": {
+      "type": "null"
+    },
+    "update_teaching_assignment": {
+      "$ref": "#/$defs/AcademicWorkspaceSnapshot"
+    },
+    "work_through_teacher_lesson_goals": {
+      "type": "null"
+    }
+  },
+  "types": {
+    "AcademicCalendarKind": {
+      "enum": [
+        "terms",
+        "semesters",
+        "quarters",
+        "custom"
+      ],
+      "type": "string"
+    },
+    "AcademicPeriod": {
+      "properties": {
+        "academicSessionId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/AcademicPeriodKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "ordinal": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "academicSessionId",
+        "ordinal",
+        "name",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "AcademicPeriodKind": {
+      "enum": [
+        "term",
+        "semester",
+        "quarter",
+        "custom"
+      ],
+      "type": "string"
+    },
+    "AcademicSession": {
+      "properties": {
+        "calendarKind": {
+          "$ref": "#/$defs/AcademicCalendarKind"
+        },
+        "endYear": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "startYear": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/AcademicSessionStatus"
+        }
+      },
+      "required": [
+        "id",
+        "startYear",
+        "endYear",
+        "label",
+        "calendarKind",
+        "status"
+      ],
+      "type": "object"
+    },
+    "AcademicSessionStatus": {
+      "enum": [
+        "open",
+        "archived"
+      ],
+      "type": "string"
+    },
+    "AcademicWorkspace": {
+      "properties": {
+        "activeAssignmentId": {
+          "type": "string"
+        },
+        "activePeriodId": {
+          "type": "string"
+        },
+        "activeSessionId": {
+          "type": "string"
+        },
+        "assignments": {
+          "items": {
+            "$ref": "#/$defs/TeachingAssignment"
+          },
+          "type": "array"
+        },
+        "periods": {
+          "items": {
+            "$ref": "#/$defs/AcademicPeriod"
+          },
+          "type": "array"
+        },
+        "school": {
+          "$ref": "#/$defs/SchoolProfile"
+        },
+        "sessions": {
+          "items": {
+            "$ref": "#/$defs/AcademicSession"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "school",
+        "sessions",
+        "periods",
+        "assignments",
+        "activeSessionId",
+        "activePeriodId",
+        "activeAssignmentId"
+      ],
+      "type": "object"
+    },
+    "AcademicWorkspaceSnapshot": {
+      "properties": {
+        "gradeLevels": {
+          "items": {
+            "$ref": "#/$defs/GradeLevel"
+          },
+          "type": "array"
+        },
+        "gradeSystems": {
+          "items": {
+            "$ref": "#/$defs/GradeSystem"
+          },
+          "type": "array"
+        },
+        "jurisdictions": {
+          "items": {
+            "$ref": "#/$defs/JurisdictionOption"
+          },
+          "type": "array"
+        },
+        "subjects": {
+          "items": {
+            "$ref": "#/$defs/SubjectOption"
+          },
+          "type": "array"
+        },
+        "workspace": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AcademicWorkspace"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "subjects",
+        "gradeLevels",
+        "jurisdictions",
+        "gradeSystems"
+      ],
+      "type": "object"
+    },
+    "AnswerReport": {
+      "description": "What the checks came to across a lesson's answers.",
+      "properties": {
+        "checked": {
+          "description": "Answers a checker read and agreed with.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unchecked": {
+          "description": "Answers no checker graspy has can read.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "wrong": {
+          "description": "What is wrong with the answers a checker disagreed with, in the words\nthe checker that read them used.",
+          "items": {
+            "$ref": "#/$defs/WrongAnswer"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "checked",
+        "unchecked",
+        "wrong"
+      ],
+      "type": "object"
+    },
+    "AssessmentItem": {
+      "additionalProperties": false,
+      "properties": {
+        "bloomLevel": {
+          "$ref": "#/$defs/BloomLevel"
+        },
+        "expectedAnswer": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "knowledgeComponentId": {
+          "type": "string"
+        },
+        "lessonObjectiveId": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "rubric": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "supportingRecordIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "lessonObjectiveId",
+        "knowledgeComponentId",
+        "question",
+        "expectedAnswer",
+        "bloomLevel",
+        "rubric",
+        "supportingRecordIds"
+      ],
+      "type": "object"
+    },
+    "AtomicObjective": {
+      "additionalProperties": false,
+      "properties": {
+        "bloomLevel": {
+          "$ref": "#/$defs/BloomLevel"
+        },
+        "bloomVerb": {
+          "type": "string"
+        },
+        "curriculumObjectiveId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "sequence": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "statement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "curriculumObjectiveId",
+        "statement",
+        "bloomVerb",
+        "bloomLevel",
+        "sequence"
+      ],
+      "type": "object"
+    },
+    "BackgroundTask": {
+      "description": "A task as every screen sees it: what it is working on, how far it has got,\nand how it ended if it has.",
+      "properties": {
+        "dismissedAt": {
+          "description": "When the teacher put this away, for work that has ended.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "failureMessage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "finishedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "lessonId": {
+          "type": "string"
+        },
+        "queuePosition": {
+          "description": "Place in line, counted across every class, for queued work only.",
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/TaskStatus"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "lessonId",
+        "label",
+        "status",
+        "startedAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "BloomLevel": {
+      "enum": [
+        "remember",
+        "understand",
+        "apply",
+        "analyze",
+        "evaluate",
+        "create"
+      ],
+      "type": "string"
+    },
+    "ClassworkBlock": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "learningGoalNumbers": {
+          "items": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "sourceMaterialKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "teacherEdited": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "text",
+        "learningGoalNumbers",
+        "sourceMaterialKeys",
+        "teacherEdited"
+      ],
+      "type": "object"
+    },
+    "ClassworkDocumentVersion": {
+      "properties": {
+        "approvedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "changeKind": {
+          "type": "string"
+        },
+        "changedSectionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "restoredFromVersionNumber": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "teacherDirection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "versionNumber": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "versionNumber",
+        "status",
+        "changeKind",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "ClassworkFigure": {
+      "properties": {
+        "altText": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "heightPx": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "sequence": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "sourceMaterialKey": {
+          "type": "string"
+        },
+        "widthPx": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "sourceMaterialKey",
+        "sequence",
+        "caption",
+        "altText",
+        "widthPx",
+        "heightPx"
+      ],
+      "type": "object"
+    },
+    "ClassworkPdfArtifact": {
+      "properties": {
+        "byteSize": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "fileName",
+        "byteSize"
+      ],
+      "type": "object"
+    },
+    "ClassworkQualityReport": {
+      "properties": {
+        "outcome": {
+          "type": "string"
+        },
+        "passes": {
+          "items": {
+            "$ref": "#/$defs/ClassworkValidationPass"
+          },
+          "type": "array"
+        },
+        "repairAttempted": {
+          "type": "boolean"
+        },
+        "scrubbedClaimCount": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "outcome",
+        "repairAttempted",
+        "scrubbedClaimCount",
+        "passes"
+      ],
+      "type": "object"
+    },
+    "ClassworkRun": {
+      "properties": {
+        "documentVersion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClassworkDocumentVersion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "figures": {
+          "items": {
+            "$ref": "#/$defs/ClassworkFigure"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lessonVersionId": {
+          "type": "string"
+        },
+        "lessonVersionNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "sectionRegeneration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClassworkSectionRegeneration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/ClassworkSection"
+          },
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/ClassworkSourceSummary"
+          },
+          "type": "array"
+        },
+        "status": {
+          "type": "string"
+        },
+        "taskId": {
+          "description": "The task this run's work is registered under.\n\nCarried rather than derived by whoever wants to stop the run: the rule\nthat builds it belongs to the backend, and a screen that rebuilt it by\nhand would silently stop nothing the day the rule changed.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "taskId",
+        "status",
+        "lessonVersionId",
+        "lessonVersionNumber",
+        "sources",
+        "figures",
+        "sections"
+      ],
+      "type": "object"
+    },
+    "ClassworkSection": {
+      "properties": {
+        "attemptCount": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/ClassworkBlock"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastError": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "learningGoalNumbers": {
+          "items": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClassworkQualityReport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "regenerated": {
+          "type": "boolean"
+        },
+        "sequence": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "status": {
+          "type": "string"
+        },
+        "stepTitle": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "sequence",
+        "stepTitle",
+        "status",
+        "learningGoalNumbers",
+        "attemptCount",
+        "regenerated",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "ClassworkSectionHistory": {
+      "properties": {
+        "currentVersionNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "versions": {
+          "items": {
+            "$ref": "#/$defs/ClassworkSectionHistoryVersion"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "currentVersionNumber",
+        "versions"
+      ],
+      "type": "object"
+    },
+    "ClassworkSectionHistoryVersion": {
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/ClassworkBlock"
+          },
+          "type": "array"
+        },
+        "changeKind": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "learningGoalNumbers": {
+          "items": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "regenerated": {
+          "type": "boolean"
+        },
+        "restoredFromVersionNumber": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "teacherDirection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "versionNumber": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "versionNumber",
+        "createdAt",
+        "changeKind",
+        "title",
+        "learningGoalNumbers",
+        "regenerated",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "ClassworkSectionRegeneration": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "lastError": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sectionId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "teacherDirection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "sectionId",
+        "status"
+      ],
+      "type": "object"
+    },
+    "ClassworkSourceSummary": {
+      "properties": {
+        "attribution": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "licenceName": {
+          "type": "string"
+        },
+        "licenceUrl": {
+          "type": "string"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "sourceUrl": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "publisher",
+        "sourceUrl",
+        "licenceName",
+        "licenceUrl",
+        "attribution"
+      ],
+      "type": "object"
+    },
+    "ClassworkValidationCheck": {
+      "properties": {
+        "check": {
+          "type": "string"
+        },
+        "details": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "passed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "check",
+        "passed",
+        "details"
+      ],
+      "type": "object"
+    },
+    "ClassworkValidationPass": {
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/ClassworkValidationCheck"
+          },
+          "type": "array"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "stage": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "passed",
+        "checks"
+      ],
+      "type": "object"
+    },
+    "ClassworkWorkspaceSnapshot": {
+      "properties": {
+        "lesson": {
+          "$ref": "#/$defs/ConfirmedLessonContext"
+        },
+        "run": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClassworkRun"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "lesson"
+      ],
+      "type": "object"
+    },
+    "ConfirmedLessonContext": {
+      "properties": {
+        "grade": {
+          "type": "string"
+        },
+        "learningGoals": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "lessonId": {
+          "type": "string"
+        },
+        "lessonVersionId": {
+          "type": "string"
+        },
+        "lessonVersionNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "lessonId",
+        "lessonVersionId",
+        "lessonVersionNumber",
+        "subject",
+        "grade",
+        "topic",
+        "learningGoals"
+      ],
+      "type": "object"
+    },
+    "CurriculumCatalogSnapshot": {
+      "properties": {
+        "courses": {
+          "items": {
+            "$ref": "#/$defs/CurriculumCourseOption"
+          },
+          "type": "array"
+        },
+        "packages": {
+          "items": {
+            "$ref": "#/$defs/CurriculumPackageSummary"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "packages",
+        "courses"
+      ],
+      "type": "object"
+    },
+    "CurriculumCourse": {
+      "properties": {
+        "framework": {
+          "$ref": "#/$defs/CurriculumFramework"
+        },
+        "gradeLevel": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "subject",
+        "gradeLevel",
+        "framework"
+      ],
+      "type": "object"
+    },
+    "CurriculumCourseOption": {
+      "properties": {
+        "edition": {
+          "type": "string"
+        },
+        "framework": {
+          "type": "string"
+        },
+        "gradeLevel": {
+          "type": "string"
+        },
+        "gradeLevelId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "jurisdictionId": {
+          "type": "string"
+        },
+        "packageId": {
+          "type": "string"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "subjectId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "trust": {
+          "$ref": "#/$defs/CurriculumPackageTrust"
+        }
+      },
+      "required": [
+        "id",
+        "packageId",
+        "jurisdictionId",
+        "framework",
+        "subjectId",
+        "subject",
+        "gradeLevelId",
+        "gradeLevel",
+        "title",
+        "publisher",
+        "edition",
+        "trust"
+      ],
+      "type": "object"
+    },
+    "CurriculumFramework": {
+      "properties": {
+        "authority": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sourceUri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "authority",
+        "jurisdiction",
+        "version"
+      ],
+      "type": "object"
+    },
+    "CurriculumObjectiveRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sequence": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "statement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "sequence"
+      ],
+      "type": "object"
+    },
+    "CurriculumOutcome": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "statement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "statement"
+      ],
+      "type": "object"
+    },
+    "CurriculumPackageOrigin": {
+      "enum": [
+        "bundled",
+        "imported"
+      ],
+      "type": "string"
+    },
+    "CurriculumPackageSummary": {
+      "properties": {
+        "attribution": {
+          "type": "string"
+        },
+        "earlierVersionsKept": {
+          "description": "How many earlier conversions of this same curriculum are still\ninstalled. They stay because lessons already cite them, and a teacher is\nowed that fact rather than a second identical row.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "edition": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "installedAt": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "jurisdictionId": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/CurriculumPackageOrigin"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "rightsName": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "trust": {
+          "$ref": "#/$defs/CurriculumPackageTrust"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "publisher",
+        "jurisdictionId",
+        "jurisdiction",
+        "edition",
+        "rightsName",
+        "attribution",
+        "trust",
+        "origin",
+        "installedAt",
+        "earlierVersionsKept"
+      ],
+      "type": "object"
+    },
+    "CurriculumPackageTrust": {
+      "enum": [
+        "verified",
+        "school"
+      ],
+      "type": "string"
+    },
+    "CurriculumSnapshot": {
+      "additionalProperties": false,
+      "description": "A lesson either comes from an installed curriculum, in which case every field\nbelow names exactly which one, or the teacher wrote it themselves and there is\nno package to name. Partly-filled provenance is rejected: a teacher reading\nthe sources on their classwork has to be able to trust what it says.",
+      "properties": {
+        "atomicObjectives": {
+          "items": {
+            "$ref": "#/$defs/AtomicObjective"
+          },
+          "type": "array"
+        },
+        "courseId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "curriculumNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "knowledgeComponents": {
+          "items": {
+            "$ref": "#/$defs/KnowledgeComponent"
+          },
+          "type": "array"
+        },
+        "objectives": {
+          "items": {
+            "$ref": "#/$defs/CurriculumObjectiveRef"
+          },
+          "type": "array"
+        },
+        "packageId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packageSha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packageTitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "objectives",
+        "atomicObjectives",
+        "knowledgeComponents"
+      ],
+      "type": "object"
+    },
+    "CurriculumUnit": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "type": "object"
+    },
+    "DifferentiatedClassworkBaseSection": {
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/ClassworkBlock"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "learningGoalNumbers": {
+          "items": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "sequence": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "stepTitle": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sequence",
+        "stepTitle",
+        "title",
+        "learningGoalNumbers",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "DifferentiatedClassworkBlock": {
+      "properties": {
+        "baseBlockId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "learningGoalNumbers": {
+          "items": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "sourceMaterialKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "baseBlockId",
+        "kind",
+        "text",
+        "learningGoalNumbers",
+        "sourceMaterialKeys"
+      ],
+      "type": "object"
+    },
+    "DifferentiatedClassworkGroup": {
+      "properties": {
+        "evidenceGroupId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "learnerState": {
+          "items": {
+            "$ref": "#/$defs/PersonalisationLearningGoalState"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "position": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/DifferentiatedClassworkSection"
+          },
+          "type": "array"
+        },
+        "sessionSignals": {
+          "$ref": "#/$defs/PersonalisationSessionSignals"
+        }
+      },
+      "required": [
+        "id",
+        "evidenceGroupId",
+        "position",
+        "name",
+        "learnerState",
+        "sessionSignals",
+        "sections"
+      ],
+      "type": "object"
+    },
+    "DifferentiatedClassworkReadiness": {
+      "properties": {
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "canStart": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "canStart",
+        "blockers"
+      ],
+      "type": "object"
+    },
+    "DifferentiatedClassworkRun": {
+      "properties": {
+        "baseRunId": {
+          "type": "string"
+        },
+        "evidenceRevision": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "evidenceSetId": {
+          "type": "string"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/DifferentiatedClassworkGroup"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "taskId": {
+          "description": "The task this run's work is registered under, so a screen stops the run\nby a value the backend gave it rather than one it rebuilt.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "taskId",
+        "status",
+        "baseRunId",
+        "evidenceSetId",
+        "evidenceRevision",
+        "groups"
+      ],
+      "type": "object"
+    },
+    "DifferentiatedClassworkSection": {
+      "properties": {
+        "attemptCount": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "baseSection": {
+          "$ref": "#/$defs/DifferentiatedClassworkBaseSection"
+        },
+        "baseSectionId": {
+          "type": "string"
+        },
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/DifferentiatedClassworkBlock"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastError": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "learningGoalNumbers": {
+          "items": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClassworkQualityReport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sequence": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "status": {
+          "type": "string"
+        },
+        "stepTitle": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "baseSectionId",
+        "sequence",
+        "stepTitle",
+        "status",
+        "attemptCount",
+        "learningGoalNumbers",
+        "baseSection",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "DifferentiatedClassworkWorkspaceSnapshot": {
+      "properties": {
+        "lesson": {
+          "$ref": "#/$defs/ConfirmedLessonContext"
+        },
+        "readiness": {
+          "$ref": "#/$defs/DifferentiatedClassworkReadiness"
+        },
+        "run": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DifferentiatedClassworkRun"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "lesson",
+        "readiness"
+      ],
+      "type": "object"
+    },
+    "EvidenceEntry": {
+      "properties": {
+        "confidenceScore": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "difficultyScore": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "learningGoalNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "misunderstandingNote": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "questionsCorrect": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "questionsTotal": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "learningGoalNumber"
+      ],
+      "type": "object"
+    },
+    "EvidenceGroup": {
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/EvidenceEntry"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "interestScore": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "lessonFeelingScore": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "position": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "position",
+        "name",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "EvidenceLesson": {
+      "properties": {
+        "learningGoals": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "lessonId": {
+          "type": "string"
+        },
+        "lessonVersionId": {
+          "type": "string"
+        },
+        "lessonVersionNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "lessonId",
+        "lessonVersionId",
+        "lessonVersionNumber",
+        "topic",
+        "learningGoals"
+      ],
+      "type": "object"
+    },
+    "EvidenceStatus": {
+      "enum": [
+        "draft",
+        "complete"
+      ],
+      "type": "string"
+    },
+    "GradeLevel": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "gradeSystemId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "gradeSystemId",
+        "code",
+        "displayName"
+      ],
+      "type": "object"
+    },
+    "GradeSystem": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "jurisdictionId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "jurisdictionId",
+        "name",
+        "version"
+      ],
+      "type": "object"
+    },
+    "GranularLessonPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "assessments": {
+          "items": {
+            "$ref": "#/$defs/AssessmentItem"
+          },
+          "type": "array"
+        },
+        "atomicObjectives": {
+          "items": {
+            "$ref": "#/$defs/AtomicObjective"
+          },
+          "type": "array"
+        },
+        "curriculumObjectives": {
+          "items": {
+            "$ref": "#/$defs/CurriculumObjectiveRef"
+          },
+          "type": "array"
+        },
+        "knowledgeComponents": {
+          "items": {
+            "$ref": "#/$defs/KnowledgeComponent"
+          },
+          "type": "array"
+        },
+        "lessonObjectives": {
+          "items": {
+            "$ref": "#/$defs/LessonObjective"
+          },
+          "type": "array"
+        },
+        "materials": {
+          "description": "A confirmed plan is sealed by a digest and a trigger holds it immutable,\nso the key it was written under cannot be rewritten and is not renamed\nhere. The field is the code's name; `materials` is the record's.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "misconceptions": {
+          "items": {
+            "$ref": "#/$defs/Misconception"
+          },
+          "type": "array"
+        },
+        "priorKnowledge": {
+          "items": {
+            "$ref": "#/$defs/PriorKnowledgeItem"
+          },
+          "type": "array"
+        },
+        "references": {
+          "items": {
+            "$ref": "#/$defs/LessonReference"
+          },
+          "type": "array"
+        },
+        "schemaVersion": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/LessonPlanStep"
+          },
+          "type": "array"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "topic",
+        "curriculumObjectives",
+        "atomicObjectives",
+        "lessonObjectives",
+        "knowledgeComponents",
+        "misconceptions",
+        "priorKnowledge",
+        "materials",
+        "references",
+        "steps",
+        "assessments"
+      ],
+      "type": "object"
+    },
+    "GranularLessonProgramInput": {
+      "additionalProperties": false,
+      "properties": {
+        "curriculumSnapshot": {
+          "$ref": "#/$defs/CurriculumSnapshot"
+        },
+        "lessonDurationMinutes": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sourceEvidenceSnapshot": {
+          "$ref": "#/$defs/SourceEvidenceSnapshot"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "teacherSource": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic",
+        "lessonDurationMinutes",
+        "curriculumSnapshot",
+        "sourceEvidenceSnapshot"
+      ],
+      "type": "object"
+    },
+    "GranularLessonRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "curriculumSnapshot": {
+          "$ref": "#/$defs/CurriculumSnapshot"
+        },
+        "plan": {
+          "$ref": "#/$defs/GranularLessonPlan"
+        },
+        "programSnapshot": {
+          "$ref": "#/$defs/LessonProgramSnapshot"
+        },
+        "sourceEvidenceSnapshot": {
+          "$ref": "#/$defs/SourceEvidenceSnapshot"
+        }
+      },
+      "required": [
+        "plan",
+        "curriculumSnapshot",
+        "sourceEvidenceSnapshot",
+        "programSnapshot"
+      ],
+      "type": "object"
+    },
+    "ImportedLessonPlan": {
+      "description": "What a teacher gets back: the words, and the file they came from so the\nscreen can say what was read.",
+      "properties": {
+        "fileName": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fileName",
+        "text"
+      ],
+      "type": "object"
+    },
+    "InstallationState": {
+      "enum": [
+        "absent",
+        "partial",
+        "installed"
+      ],
+      "type": "string"
+    },
+    "JurisdictionOption": {
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "countryCode",
+        "country",
+        "name"
+      ],
+      "type": "object"
+    },
+    "KnowledgeComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "atomicObjectiveIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "bloomLevel": {
+          "$ref": "#/$defs/BloomLevel"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "isPriorKnowledge": {
+          "type": "boolean"
+        },
+        "knowledgeType": {
+          "$ref": "#/$defs/KnowledgeType"
+        },
+        "prerequisiteKnowledgeComponentIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sourceForm": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "supportingRecordIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "targetForm": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "knowledgeType",
+        "bloomLevel",
+        "atomicObjectiveIds",
+        "prerequisiteKnowledgeComponentIds",
+        "supportingRecordIds",
+        "isPriorKnowledge"
+      ],
+      "type": "object"
+    },
+    "KnowledgeType": {
+      "enum": [
+        "concept",
+        "procedure",
+        "representation"
+      ],
+      "type": "string"
+    },
+    "LaunchFailure": {
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/LaunchFailureCode"
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "detail"
+      ],
+      "type": "object"
+    },
+    "LaunchFailureCode": {
+      "enum": [
+        "needs-app-update",
+        "lesson-library-unavailable",
+        "interrupted-work-unresolved",
+        "source-material-unavailable",
+        "included-content-unavailable"
+      ],
+      "type": "string"
+    },
+    "LessonContentBlock": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "type": {
+              "const": "explanation",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "content"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "finalAnswer": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "problem": {
+              "type": "string"
+            },
+            "steps": {
+              "items": {
+                "$ref": "#/$defs/WorkedExampleStep"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "worked_example",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "problem",
+            "steps",
+            "finalAnswer"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "expectedAnswer": {
+              "type": "string"
+            },
+            "hints": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "id": {
+              "type": "string"
+            },
+            "lessonObjectiveId": {
+              "type": "string"
+            },
+            "question": {
+              "type": "string"
+            },
+            "type": {
+              "const": "practice",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "lessonObjectiveId",
+            "question",
+            "expectedAnswer",
+            "hints"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "altText": {
+              "type": "string"
+            },
+            "assetFileName": {
+              "type": "string"
+            },
+            "caption": {
+              "type": "string"
+            },
+            "figureSha256": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "sourceRecordId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "visual",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "sourceRecordId",
+            "assetFileName",
+            "figureSha256",
+            "caption",
+            "altText"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "LessonCurriculumOutcome": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "statement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "statement"
+      ],
+      "type": "object"
+    },
+    "LessonCurriculumUnit": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "type": "object"
+    },
+    "LessonDraft": {
+      "properties": {
+        "academicPeriodId": {
+          "type": "string"
+        },
+        "academicPeriodName": {
+          "type": "string"
+        },
+        "academicSessionId": {
+          "type": "string"
+        },
+        "answerReport": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AnswerReport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What graspy's own checks found in this lesson's answers, where it has a\ndetailed plan to check. A teacher is told rather than blocked: by the\ntime they are editing a lesson, refusing the save would stop them fixing\nthe very thing being complained about."
+        },
+        "assessment": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "assignment": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "authoredContent": {
+          "description": "The lesson as its teacher wrote it by hand, when it was written by hand.\nOwned and validated by the frontend (lessonContent.ts); the database keeps\nit as one JSON document, so it is carried here as-is rather than re-typed."
+        },
+        "curriculumOutcomes": {
+          "items": {
+            "$ref": "#/$defs/LessonCurriculumOutcome"
+          },
+          "type": "array"
+        },
+        "curriculumUnit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LessonCurriculumUnit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "granularRecord": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GranularLessonRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "inputMode": {
+          "$ref": "#/$defs/LessonInputMode"
+        },
+        "instructionalMaterials": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "latestVersionNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "learningGoals": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "planFormat": {
+          "$ref": "#/$defs/LessonPlanFormat"
+        },
+        "preparation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LessonPreparation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "previousKnowledge": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rawPlan": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "references": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "schemeEntryId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schemeWeekId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourcePlanText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/LessonStatus"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/LessonStep"
+          },
+          "type": "array"
+        },
+        "studentNote": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StudentNote"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A student's note kept beside this lesson, when one has been written."
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "teachingAssignmentId": {
+          "type": "string"
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "academicSessionId",
+        "academicPeriodId",
+        "academicPeriodName",
+        "teachingAssignmentId",
+        "inputMode",
+        "planFormat",
+        "topic",
+        "learningGoals",
+        "steps",
+        "instructionalMaterials",
+        "previousKnowledge",
+        "assessment",
+        "assignment",
+        "references",
+        "curriculumOutcomes",
+        "status",
+        "latestVersionNumber"
+      ],
+      "type": "object"
+    },
+    "LessonEvidenceSet": {
+      "properties": {
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/EvidenceGroup"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/EvidenceStatus"
+        }
+      },
+      "required": [
+        "id",
+        "status",
+        "revision",
+        "groups"
+      ],
+      "type": "object"
+    },
+    "LessonEvidenceWorkspaceSnapshot": {
+      "properties": {
+        "evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LessonEvidenceSet"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lesson": {
+          "$ref": "#/$defs/EvidenceLesson"
+        }
+      },
+      "required": [
+        "lesson"
+      ],
+      "type": "object"
+    },
+    "LessonInputMode": {
+      "enum": [
+        "structured",
+        "pasted"
+      ],
+      "type": "string"
+    },
+    "LessonModelChoice": {
+      "description": "What a teacher is told about one choice. Sizes are bytes so the screen can\nphrase them; the domain does not decide how a gigabyte is written.",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "downloadBytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fitsThisMachine": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "isInstalled": {
+          "type": "boolean"
+        },
+        "isSelected": {
+          "type": "boolean"
+        },
+        "memoryRequiredBytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "displayName",
+        "summary",
+        "downloadBytes",
+        "memoryRequiredBytes",
+        "fitsThisMachine",
+        "isInstalled",
+        "isSelected"
+      ],
+      "type": "object"
+    },
+    "LessonObjective": {
+      "additionalProperties": false,
+      "properties": {
+        "atomicObjectiveId": {
+          "type": "string"
+        },
+        "curriculumObjectiveId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "knowledgeComponentId": {
+          "type": "string"
+        },
+        "sequence": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "statement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "sequence",
+        "curriculumObjectiveId",
+        "atomicObjectiveId",
+        "knowledgeComponentId"
+      ],
+      "type": "object"
+    },
+    "LessonPlanFormat": {
+      "enum": [
+        "legacy_import",
+        "granular"
+      ],
+      "type": "string"
+    },
+    "LessonPlanPhotograph": {
+      "description": "What a teacher gets back from a photograph: the words, and the page they\nwere read off.\n\nThe page comes back because two written words in three survive the reading,\nand nobody can correct a word whose source they cannot see. It travels with\nthe answer rather than being loaded from disk afterwards, so what the screen\nshows is the image the words were read from.",
+      "properties": {
+        "fileName": {
+          "type": "string"
+        },
+        "page": {
+          "description": "The page as a data URL, sized to sit beside the words on screen.",
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "fileName",
+        "text",
+        "page"
+      ],
+      "type": "object"
+    },
+    "LessonPlanStep": {
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/LessonContentBlock"
+          },
+          "type": "array"
+        },
+        "durationMinutes": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "knowledgeType": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KnowledgeType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "learnerActivities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "lessonObjectiveId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "$ref": "#/$defs/LessonStepRole"
+        },
+        "sequence": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "teacherActivities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sequence",
+        "role",
+        "title",
+        "summary",
+        "durationMinutes",
+        "teacherActivities",
+        "learnerActivities",
+        "blocks"
+      ],
+      "type": "object"
+    },
+    "LessonPreparation": {
+      "properties": {
+        "answerReport": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AnswerReport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What graspy's own checks found in this lesson's answers, where it has a\ndetailed plan to check. A teacher is told rather than blocked: by the\ntime they are editing a lesson, refusing the save would stop them fixing\nthe very thing being complained about."
+        },
+        "assessment": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "granularRecord": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GranularLessonRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "instructionalMaterials": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "learningGoals": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "lessonId": {
+          "type": "string"
+        },
+        "planFormat": {
+          "$ref": "#/$defs/LessonPlanFormat"
+        },
+        "previousKnowledge": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "references": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sourceRawPlan": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/LessonStep"
+          },
+          "type": "array"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "lessonId",
+        "sourceRawPlan",
+        "topic",
+        "learningGoals",
+        "steps",
+        "instructionalMaterials",
+        "previousKnowledge",
+        "assessment",
+        "references",
+        "planFormat"
+      ],
+      "type": "object"
+    },
+    "LessonProgramSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "programDigest": {
+          "type": "string"
+        },
+        "programId": {
+          "type": "string"
+        },
+        "programRunId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "programVersion": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "programId",
+        "programVersion",
+        "programDigest"
+      ],
+      "type": "object"
+    },
+    "LessonReference": {
+      "additionalProperties": false,
+      "properties": {
+        "attribution": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordId",
+        "title",
+        "attribution"
+      ],
+      "type": "object"
+    },
+    "LessonSchemeEntryOption": {
+      "properties": {
+        "assessment": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "curriculumOutcomes": {
+          "items": {
+            "$ref": "#/$defs/LessonCurriculumOutcome"
+          },
+          "type": "array"
+        },
+        "curriculumUnit": {
+          "$ref": "#/$defs/LessonCurriculumUnit"
+        },
+        "entryId": {
+          "type": "string"
+        },
+        "instructionalMaterials": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "learningGoals": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        },
+        "weekId": {
+          "type": "string"
+        },
+        "weekOrdinal": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "weekId",
+        "weekOrdinal",
+        "entryId",
+        "topic",
+        "curriculumUnit",
+        "curriculumOutcomes",
+        "learningGoals",
+        "assessment",
+        "instructionalMaterials"
+      ],
+      "type": "object"
+    },
+    "LessonStatus": {
+      "enum": [
+        "draft",
+        "confirmed"
+      ],
+      "type": "string"
+    },
+    "LessonStep": {
+      "properties": {
+        "durationMinutes": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "learnerActivity": {
+          "type": "string"
+        },
+        "sequence": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "teacherActivity": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sequence",
+        "title",
+        "teacherActivity",
+        "learnerActivity"
+      ],
+      "type": "object"
+    },
+    "LessonStepRole": {
+      "enum": [
+        "introduction",
+        "core",
+        "evaluation"
+      ],
+      "type": "string"
+    },
+    "LessonSummary": {
+      "properties": {
+        "classworkComplete": {
+          "description": "Whether every part of this lesson's classwork is written.\n\nA teacher walks into the room with the plan *and* the worked examples\nand practice. Counting a confirmed plan as ready to teach told them\nthree lessons were ready while all three had unwritten classwork.",
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "inputMode": {
+          "$ref": "#/$defs/LessonInputMode"
+        },
+        "latestVersionNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "planFormat": {
+          "$ref": "#/$defs/LessonPlanFormat"
+        },
+        "schemeEntryId": {
+          "description": "Which entry of the teacher's scheme this lesson plans, so the workspace\ncan tell a planned week from one still waiting for a plan.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "startedAt": {
+          "description": "When the teacher started this lesson, as the library recorded it.\n\nTwo drafts of the same subtopic with no week between them are alike in\nevery other way the list can show, so this is what tells them apart.",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/LessonStatus"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        },
+        "weekOrdinal": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "topic",
+        "status",
+        "inputMode",
+        "planFormat",
+        "latestVersionNumber",
+        "classworkComplete",
+        "startedAt"
+      ],
+      "type": "object"
+    },
+    "LessonWorkspaceSnapshot": {
+      "properties": {
+        "availableSchemeEntries": {
+          "items": {
+            "$ref": "#/$defs/LessonSchemeEntryOption"
+          },
+          "type": "array"
+        },
+        "lessons": {
+          "items": {
+            "$ref": "#/$defs/LessonSummary"
+          },
+          "type": "array"
+        },
+        "selectedLesson": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LessonDraft"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "lessons",
+        "availableSchemeEntries"
+      ],
+      "type": "object"
+    },
+    "Misconception": {
+      "additionalProperties": false,
+      "properties": {
+        "correction": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "knowledgeComponentIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "statement": {
+          "type": "string"
+        },
+        "supportingRecordIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "correction",
+        "knowledgeComponentIds",
+        "supportingRecordIds"
+      ],
+      "type": "object"
+    },
+    "ModelInstallationSnapshot": {
+      "properties": {
+        "artifactLicense": {
+          "type": "string"
+        },
+        "artifactLicenseUrl": {
+          "type": "string"
+        },
+        "downloadedBytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "state": {
+          "$ref": "#/$defs/InstallationState"
+        },
+        "totalBytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "upstreamTermsUrl": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "state",
+        "downloadedBytes",
+        "totalBytes",
+        "artifactLicense",
+        "artifactLicenseUrl",
+        "upstreamTermsUrl"
+      ],
+      "type": "object"
+    },
+    "NextLesson": {
+      "properties": {
+        "lessonId": {
+          "type": "string"
+        },
+        "readyToTeach": {
+          "description": "Whether the lesson is confirmed and its classwork written.",
+          "type": "boolean"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "lessonId",
+        "topic",
+        "readyToTeach"
+      ],
+      "type": "object"
+    },
+    "NextLessonSummary": {
+      "properties": {
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "type": "object"
+    },
+    "NextTeachingSlot": {
+      "description": "What a teacher teaches next, and what they will be teaching in it.\n\nThe lesson is whatever the week's plan holds, because a week's plan is\ntaught across that week's periods — so the answer is found through the class\nrather than recorded a second time against the slot.",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "isToday": {
+          "description": "True when the slot falls on the day this was asked, rather than later.",
+          "type": "boolean"
+        },
+        "lesson": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NextLesson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "period": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "teachingAssignmentId": {
+          "type": "string"
+        },
+        "weekOrdinal": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "weekday": {
+          "$ref": "#/$defs/Weekday"
+        }
+      },
+      "required": [
+        "teachingAssignmentId",
+        "className",
+        "subject",
+        "weekday",
+        "period",
+        "isToday"
+      ],
+      "type": "object"
+    },
+    "PersonalisationLearningGoalState": {
+      "properties": {
+        "commonMisunderstanding": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "learningGoal": {
+          "type": "string"
+        },
+        "learningGoalNumber": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "mastery": {
+          "type": "string"
+        },
+        "masteryBand": {
+          "type": "string"
+        },
+        "perceivedDifficulty": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "learningGoalNumber",
+        "learningGoal",
+        "masteryBand",
+        "mastery"
+      ],
+      "type": "object"
+    },
+    "PersonalisationSessionSignals": {
+      "properties": {
+        "interest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lessonFeeling": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "PreparationStep": {
+      "enum": [
+        "learning-goals",
+        "prior-knowledge",
+        "checks",
+        "source-material",
+        "teaching-sequence",
+        "practice",
+        "putting-together"
+      ],
+      "type": "string"
+    },
+    "PreparationStepProgress": {
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/PreparationStepState"
+        },
+        "step": {
+          "$ref": "#/$defs/PreparationStep"
+        }
+      },
+      "required": [
+        "step",
+        "state"
+      ],
+      "type": "object"
+    },
+    "PreparationStepState": {
+      "enum": [
+        "pending",
+        "running",
+        "done",
+        "failed",
+        "stopped"
+      ],
+      "type": "string"
+    },
+    "PreparedClassworkExport": {
+      "properties": {
+        "fileName": {
+          "type": "string"
+        },
+        "html": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "fileName",
+        "html"
+      ],
+      "type": "object"
+    },
+    "PriorKnowledgeItem": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "knowledgeComponentIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "statement": {
+          "type": "string"
+        },
+        "supportingRecordIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "knowledgeComponentIds",
+        "supportingRecordIds"
+      ],
+      "type": "object"
+    },
+    "SchemeContextSnapshot": {
+      "properties": {
+        "availableTemplates": {
+          "items": {
+            "$ref": "#/$defs/SchemeTemplateSummary"
+          },
+          "type": "array"
+        },
+        "scheme": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchemeOfWork"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "availableTemplates"
+      ],
+      "type": "object"
+    },
+    "SchemeEntry": {
+      "properties": {
+        "assessment": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "curriculumOutcomes": {
+          "items": {
+            "$ref": "#/$defs/CurriculumOutcome"
+          },
+          "type": "array"
+        },
+        "curriculumUnit": {
+          "$ref": "#/$defs/CurriculumUnit"
+        },
+        "id": {
+          "type": "string"
+        },
+        "instructionalMaterials": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectives": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "plannedLessonId": {
+          "description": "The lesson written from this weekly plan, where one already exists.\n\nA weekly plan carries at most one lesson — `idx_lessons_scheme_entry`\nholds that — so a screen offering to start a second one is offering\nsomething the library will refuse. Carrying the lesson here is what lets\nthe term plan offer the way into it instead.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sequence": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "subtopic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sequence",
+        "topic",
+        "curriculumUnit",
+        "curriculumOutcomes",
+        "objectives",
+        "assessment",
+        "instructionalMaterials"
+      ],
+      "type": "object"
+    },
+    "SchemeOfWork": {
+      "properties": {
+        "academicPeriodId": {
+          "type": "string"
+        },
+        "academicPeriodName": {
+          "type": "string"
+        },
+        "academicSessionId": {
+          "type": "string"
+        },
+        "calendar": {
+          "$ref": "#/$defs/TermCalendar"
+        },
+        "curriculum": {
+          "$ref": "#/$defs/CurriculumCourse"
+        },
+        "id": {
+          "type": "string"
+        },
+        "originTemplateId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "teachingAssignmentId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "weeks": {
+          "items": {
+            "$ref": "#/$defs/SchemeWeek"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "academicSessionId",
+        "academicPeriodId",
+        "academicPeriodName",
+        "teachingAssignmentId",
+        "curriculum",
+        "calendar",
+        "weeks"
+      ],
+      "type": "object"
+    },
+    "SchemeTemplateOrigin": {
+      "enum": [
+        "bundled",
+        "imported"
+      ],
+      "type": "string"
+    },
+    "SchemeTemplateSummary": {
+      "properties": {
+        "edition": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/SchemeTemplateOrigin"
+        },
+        "planCount": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "trust": {
+          "$ref": "#/$defs/SchemeTemplateTrust"
+        },
+        "weekCount": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "weeks": {
+          "items": {
+            "$ref": "#/$defs/SchemeTemplateWeekPreview"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "publisher",
+        "jurisdiction",
+        "edition",
+        "trust",
+        "origin",
+        "weekCount",
+        "planCount",
+        "weeks"
+      ],
+      "type": "object"
+    },
+    "SchemeTemplateTrust": {
+      "enum": [
+        "verified",
+        "school"
+      ],
+      "type": "string"
+    },
+    "SchemeTemplateWeekPreview": {
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SchemeWeekKind"
+        },
+        "ordinal": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topics": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "ordinal",
+        "kind",
+        "topics"
+      ],
+      "type": "object"
+    },
+    "SchemeWeek": {
+      "properties": {
+        "endsOn": {
+          "type": "string"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/SchemeEntry"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SchemeWeekKind"
+        },
+        "ordinal": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "startsOn": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "ordinal",
+        "startsOn",
+        "endsOn",
+        "kind",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "SchemeWeekKind": {
+      "enum": [
+        "teaching",
+        "revision",
+        "test",
+        "break",
+        "examination"
+      ],
+      "type": "string"
+    },
+    "SchemeWeekSummary": {
+      "properties": {
+        "ordinal": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "standing": {
+          "$ref": "#/$defs/TermStanding",
+          "description": "Where today falls against this week's term."
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "ordinal",
+        "standing"
+      ],
+      "type": "object"
+    },
+    "SchoolBreak": {
+      "description": "The shape of the school day, as a school states it.\n\nThe periods are never stored: they are worked out from this, so a bell that\nmoves moves them all. The arithmetic lives with the screens that read it\n(`schoolDay.ts`); what is kept here is the description it reads.",
+      "properties": {
+        "afterPeriod": {
+          "description": "The break comes after this many periods have been taught.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "minutes": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "afterPeriod",
+        "minutes"
+      ],
+      "type": "object"
+    },
+    "SchoolDay": {
+      "properties": {
+        "endsAt": {
+          "type": "string"
+        },
+        "longBreak": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchoolBreak"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "periodMinutes": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "shortBreak": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchoolBreak"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startsAt": {
+          "type": "string"
+        },
+        "teachingDays": {
+          "description": "The days this school teaches on, named the way every other day on the\ncontract is named. Numbers are the column's business, not the screen's.",
+          "items": {
+            "$ref": "#/$defs/Weekday"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "teachingDays",
+        "startsAt",
+        "endsAt",
+        "periodMinutes"
+      ],
+      "type": "object"
+    },
+    "SchoolProfile": {
+      "properties": {
+        "countryCode": {
+          "type": "string"
+        },
+        "gradeSystem": {
+          "type": "string"
+        },
+        "gradeSystemId": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "jurisdictionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jurisdictionId",
+        "jurisdiction",
+        "countryCode",
+        "gradeSystemId",
+        "gradeSystem"
+      ],
+      "type": "object"
+    },
+    "SourceEvidenceFigure": {
+      "additionalProperties": false,
+      "properties": {
+        "altText": {
+          "type": "string"
+        },
+        "assetFileName": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "sourceRecordId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceRecordId",
+        "assetFileName",
+        "sha256",
+        "caption",
+        "altText"
+      ],
+      "type": "object"
+    },
+    "SourceEvidenceRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "attribution": {
+          "type": "string"
+        },
+        "excerpt": {
+          "type": "string"
+        },
+        "excerptSha256": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordId",
+        "title",
+        "excerpt",
+        "excerptSha256",
+        "attribution"
+      ],
+      "type": "object"
+    },
+    "SourceEvidenceSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "figures": {
+          "items": {
+            "$ref": "#/$defs/SourceEvidenceFigure"
+          },
+          "type": "array"
+        },
+        "records": {
+          "items": {
+            "$ref": "#/$defs/SourceEvidenceRecord"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "records",
+        "figures"
+      ],
+      "type": "object"
+    },
+    "StudentNote": {
+      "properties": {
+        "paragraphs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "writtenFromVersion": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "paragraphs",
+        "writtenFromVersion"
+      ],
+      "type": "object"
+    },
+    "SubjectOption": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "TaskStatus": {
+      "description": "The lifecycle every background task moves through. `Queued` and `Running`\nare the live states — queued work is recorded and cancellable but has not\nreached the engine — and everything else is terminal except `Interrupted`,\nwhich marks work the app was closed under and which can be resumed or\ncancelled.",
+      "enum": [
+        "queued",
+        "running",
+        "interrupted",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ],
+      "type": "string"
+    },
+    "TeachingAssignment": {
+      "properties": {
+        "academicSessionId": {
+          "type": "string"
+        },
+        "classSection": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "currentWeek": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchemeWeekSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the class stands in its adopted scheme of work for the active term:\nthe week covering today (or the nearest one) and the first lesson in it.\nAbsent when the class has no scheme adopted for the term."
+        },
+        "curriculumCourseId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "curriculumPublisher": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "curriculumTitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "curriculumTrust": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "gradeLevel": {
+          "type": "string"
+        },
+        "gradeLevelId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lessonsReady": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lessonsTotal": {
+          "description": "Lessons the teacher has planned for this class, and how many of those\nthey have confirmed as ready. The home and class views show the pair.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "nextLesson": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NextLessonSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/TeachingAssignmentStatus"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "subjectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "academicSessionId",
+        "subjectId",
+        "subject",
+        "gradeLevelId",
+        "gradeLevel",
+        "displayName",
+        "status",
+        "lessonsTotal",
+        "lessonsReady"
+      ],
+      "type": "object"
+    },
+    "TeachingAssignmentStatus": {
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "type": "string"
+    },
+    "TeachingSlot": {
+      "description": "One period of one day on which a class is taught.",
+      "properties": {
+        "period": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "weekday": {
+          "$ref": "#/$defs/Weekday"
+        }
+      },
+      "required": [
+        "weekday",
+        "period"
+      ],
+      "type": "object"
+    },
+    "TermCalendar": {
+      "properties": {
+        "endsOn": {
+          "type": "string"
+        },
+        "startsOn": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "startsOn",
+        "endsOn"
+      ],
+      "type": "object"
+    },
+    "TermStanding": {
+      "description": "Where today sits in a term, so a card can say it rather than imply it.\n\nA term whose weeks have all ended used to fall back to its first week and\nshow it as though it were now — a class card read \"WEEK 1\" eight months\nafter the term closed.",
+      "oneOf": [
+        {
+          "const": "thisWeek",
+          "description": "Today is inside this week.",
+          "type": "string"
+        },
+        {
+          "const": "notStarted",
+          "description": "The term has not started; this is the week it starts on.",
+          "type": "string"
+        },
+        {
+          "const": "finished",
+          "description": "Every week has ended; this is the last one taught.",
+          "type": "string"
+        }
+      ]
+    },
+    "Weekday": {
+      "description": "A day of the school week, as a teacher names it.\n\nNumbered from Monday because that is how a timetable is read and how the\nnext slot after today is found. Saturday and Sunday exist because some\nschools teach on a Saturday, and refusing to record one would make the app\nwrong about a real timetable rather than opinionated about a good one.",
+      "enum": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
+      "type": "string"
+    },
+    "WorkedExampleStep": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "content"
+      ],
+      "type": "object"
+    },
+    "WrongAnswer": {
+      "properties": {
+        "problem": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "problem"
+      ],
+      "type": "object"
+    }
+  }
+}

@@ -18,7 +18,7 @@ def settings(**overrides) -> Settings:
     return Settings(**{"aws_bearer_token_bedrock": KEY, "_env_file": None, **overrides})
 
 
-def bedrock(sent: list[httpx.Request]) -> HttpxTransport:
+def answering(sent: list[httpx.Request]) -> HttpxTransport:
     def answer(request: httpx.Request) -> httpx.Response:
         sent.append(request)
         return httpx.Response(
@@ -50,7 +50,7 @@ async def test_a_call_reaches_bedrock_mantle_with_the_key_the_model_and_the_limi
     sent: list[httpx.Request] = []
     lm = build_lm(
         settings(llm_model_id="openai.gpt-oss-120b", aws_region="us-west-2"),
-        transport=bedrock(sent),
+        transport=answering(sent),
     )
 
     reply = await lm.acall("Hello")
@@ -72,7 +72,7 @@ async def test_a_call_reaches_bedrock_mantle_with_the_key_the_model_and_the_limi
 
 def test_a_synchronous_call_is_refused_everywhere():
     """Workers cannot make one, so it is refused locally too."""
-    lm = build_lm(settings(), transport=bedrock([]))
+    lm = build_lm(settings(), transport=answering([]))
 
     with pytest.raises(LMError) as refused:
         lm("Hello")
@@ -84,29 +84,74 @@ def test_a_synchronous_call_is_refused_everywhere():
     )
 
 
+async def test_a_call_reaches_workers_ai_with_the_account_the_token_and_the_limits():
+    sent: list[httpx.Request] = []
+    lm = build_lm(
+        settings(
+            llm_host="workers-ai",
+            aws_bearer_token_bedrock=None,
+            cloudflare_account_id="acct123",
+            cloudflare_api_token="cf-test",
+        ),
+        transport=answering(sent),
+    )
+
+    reply = await lm.acall("Hello")
+
+    [request] = sent
+    body = json.loads(request.content)
+    assert reply == ["Hi"]
+    assert str(request.url) == (
+        "https://api.cloudflare.com/client/v4/accounts/acct123/ai/v1/chat/completions"
+    )
+    assert request.headers["authorization"] == "Bearer cf-test"
+    assert body["model"] == "@cf/openai/gpt-oss-120b"
+    assert body["reasoning_effort"] == "low"
+    assert body["messages"] == [{"role": "user", "content": "Hello"}]
+
+
 @pytest.mark.parametrize(
-    ("model_id", "expected"),
+    ("overrides", "expected"),
     [
-        ("openai.gpt-oss-120b", "bedrock-mantle-chat:openai.gpt-oss-120b"),
+        ({}, "bedrock-mantle-chat:openai.gpt-oss-120b"),
         (
-            "bedrock-mantle-chat:openai.gpt-oss-20b",
+            {"llm_model_id": "bedrock-mantle-chat:openai.gpt-oss-20b"},
             "bedrock-mantle-chat:openai.gpt-oss-20b",
         ),
+        (
+            {
+                "llm_host": "workers-ai",
+                "cloudflare_account_id": "a",
+                "cloudflare_api_token": "t",
+            },
+            "openai-chat:@cf/openai/gpt-oss-120b",
+        ),
     ],
-    ids=["bare", "already-routed"],
+    ids=["bedrock-default", "already-routed", "workers-ai-default"],
 )
-def test_the_model_is_routed_through_bedrock_mantle(model_id, expected):
-    assert resolve_model(settings(llm_model_id=model_id)) == expected
+def test_each_host_routes_its_own_gpt_oss(overrides, expected):
+    assert resolve_model(settings(**overrides)) == expected
 
 
-def test_there_is_no_model_without_a_bedrock_key():
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        (
+            {"aws_bearer_token_bedrock": None},
+            "LLM_HOST=bedrock needs AWS_BEARER_TOKEN_BEDROCK.",
+        ),
+        (
+            {"llm_host": "workers-ai", "cloudflare_account_id": "a"},
+            "LLM_HOST=workers-ai needs CLOUDFLARE_API_TOKEN.",
+        ),
+    ],
+    ids=["bedrock", "workers-ai"],
+)
+def test_a_host_without_its_credentials_is_refused(overrides, message):
     with pytest.raises(RuntimeError) as refused:
-        resolve_model(settings(aws_bearer_token_bedrock=None))
+        resolve_model(settings(**overrides))
 
-    assert (
-        str(refused.value)
-        == "AWS_BEARER_TOKEN_BEDROCK is required: Amazon Bedrock is the only provider."
-    )
+    assert str(refused.value) == message
 
 
 def test_configuring_dspy_installs_the_model_and_a_memory_only_cache():

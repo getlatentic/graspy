@@ -1,0 +1,266 @@
+"""Signing in: an account takes in each device's record once, and the
+learner's devices share one plan."""
+
+import httpx
+import httpx2
+import pytest
+
+from app.factory import create_app
+from app.learner.plan import Plan, joined
+from app.learner.record import (
+    Answer,
+    Answered,
+    DeviceJoined,
+    LearnerRecord,
+    Learnt,
+    PlanMerged,
+    TopicMark,
+    TopicRef,
+    changed,
+    parsed,
+    serialised,
+)
+from app.learner.store import InMemoryLearnerStore
+from app.security import firebase
+from app.settings import Settings
+
+DEVICE = "device-0001"
+UID = "uid123"
+
+
+def fractions(plan="plan-device", index=1) -> TopicRef:
+    return TopicRef(
+        plan_id=plan, subject_slug="mathematics", topic_index=index, topic="Fractions"
+    )
+
+
+def answer(key="q1", at=1, plan="plan-device") -> Answer:
+    return Answer(
+        plan_id=plan,
+        subject_slug="mathematics",
+        topic="Fractions",
+        key=key,
+        source="practice",
+        question="1/2 + 1/4?",
+        correct=True,
+        at=at,
+    )
+
+
+def after(*changes) -> LearnerRecord:
+    stored = None
+    for change in changes:
+        stored = changed(stored, serialised(change))
+    return parsed(stored)
+
+
+def plan(plan_id, updated_at, subjects: dict[str, list[str]]) -> Plan:
+    return Plan.model_validate(
+        {
+            "planId": plan_id,
+            "updatedAt": updated_at,
+            "gradeLevel": "JSS 1",
+            "subjects": [{"name": slug.title(), "slug": slug} for slug in subjects],
+            "topics": subjects,
+        }
+    )
+
+
+def test_a_device_is_taken_in_once_under_what_the_account_has():
+    joining = DeviceJoined(
+        device=DEVICE,
+        topics=[TopicMark(**fractions().model_dump(), learnt_at=5)],
+        answers=[answer()],
+    )
+
+    record = after(Answered(answer=answer(at=9)), joining, joining)
+
+    assert record.joined == [DEVICE]
+    assert [a.at for a in record.answers] == [9]
+    assert record.mark(fractions()).learnt_at == 5
+
+
+def test_a_merged_plan_moves_its_topics_by_name_to_their_new_place():
+    record = after(
+        Learnt(topic=fractions(index=1), at=5),
+        Answered(answer=answer()),
+        PlanMerged(
+            from_plan="plan-device",
+            to_plan="plan-account",
+            topics={"mathematics": {"Fractions": 3}},
+        ),
+    )
+
+    moved = record.mark(fractions(plan="plan-account", index=3))
+    assert moved is not None and moved.learnt_at == 5
+    assert record.in_plan("plan-account").answers[0].topic == "Fractions"
+
+
+def test_joining_keeps_the_accounts_subjects_and_adds_the_devices_others():
+    account = plan("plan-account", 10, {"mathematics": ["Decimals", "Fractions"]})
+    device = plan(
+        "plan-device",
+        20,
+        {"mathematics": ["Fractions"], "biology": ["Cells"]},
+    )
+
+    result = joined(account, device, now=30)
+
+    assert [s.slug for s in result.plan.subjects] == ["mathematics", "biology"]
+    assert result.plan.topics["mathematics"] == ["Decimals", "Fractions"]
+    assert result.plan.updated_at == 30
+    assert result.plan.model_dump(by_alias=True)["gradeLevel"] == "JSS 1"
+    assert result.carried.topics == {
+        "mathematics": {"Fractions": 1},
+        "biology": {"Cells": 0},
+    }
+
+
+@pytest.mark.parametrize(
+    ("account", "expected"),
+    [
+        (None, "device"),
+        (plan("same", 5, {}), "device"),
+        (plan("same", 50, {}), "account"),
+    ],
+    ids=["no-account-plan", "device-newer", "account-newer"],
+)
+def test_one_plan_between_account_and_device_is_the_newer(account, expected):
+    device = plan("same", 20, {})
+
+    result = joined(account, device, now=99)
+
+    assert result.carried is None
+    assert result.plan == (device if expected == "device" else account)
+
+
+def google(status: int, body: dict) -> httpx.AsyncClient:
+    return httpx.AsyncClient(
+        transport=httpx.MockTransport(
+            lambda _request: httpx.Response(status, json=body)
+        )
+    )
+
+
+async def test_google_names_the_account_of_a_valid_token():
+    uid = await firebase.verified_uid(
+        "token", "key", google(200, {"users": [{"localId": UID}]})
+    )
+
+    assert uid == UID
+
+
+@pytest.mark.parametrize(
+    ("status", "body"),
+    [(400, {"error": {"message": "INVALID_ID_TOKEN"}}), (200, {"users": []})],
+    ids=["refused", "no-user"],
+)
+async def test_a_token_google_does_not_vouch_for_is_refused(status, body):
+    with pytest.raises(firebase.InvalidSignIn):
+        await firebase.verified_uid("token", "key", google(status, body))
+
+
+@pytest.fixture
+def app(monkeypatch):
+    async def verified(id_token, _api_key):
+        if id_token != "good":
+            raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
+        return UID
+
+    monkeypatch.setattr("app.api.routes.verified_uid", verified)
+    return create_app(
+        Settings(
+            aws_bearer_token_bedrock="bedrock-test",
+            session_secret="s",
+            firebase_api_key="key",
+            _env_file=None,
+        ),
+        learners=InMemoryLearnerStore(),
+    )
+
+
+async def signed_in(http, **sent) -> dict:
+    response = await http.post("/api/session", json=sent)
+    http.headers["Authorization"] = f"Bearer {response.json().get('token')}"
+    return response.json()
+
+
+def client(app):
+    return httpx2.AsyncClient(
+        transport=httpx2.ASGITransport(app=app), base_url="http://test"
+    )
+
+
+async def test_signing_in_brings_the_devices_record_to_the_account(app):
+    async with client(app) as http:
+        app.state.keeping.learners._stored[DEVICE] = changed(
+            None, serialised(Learnt(topic=fractions(plan="p"), at=7))
+        )
+
+        session = await signed_in(http, deviceId=DEVICE, firebaseIdToken="good")
+        record = (await http.get("/api/learner", params={"planId": "p"})).json()
+
+    assert session["signedIn"] is True
+    assert [t["learntAt"] for t in record["topics"]] == [7]
+    assert "joined" not in record
+
+
+@pytest.mark.parametrize(
+    ("key", "status", "code"),
+    [("key", 401, "sign_in_invalid"), (None, 503, "sign_in_off")],
+    ids=["bad-token", "sign-in-off"],
+)
+async def test_a_sign_in_that_cannot_be_trusted_is_refused(app, key, status, code):
+    app.state.settings = app.state.settings.model_copy(update={"firebase_api_key": key})
+    async with client(app) as http:
+        response = await http.post(
+            "/api/session", json={"deviceId": DEVICE, "firebaseIdToken": "bad"}
+        )
+
+    assert response.status_code == status
+    assert response.json()["detail"]["code"] == code
+
+
+async def test_devices_share_the_newer_plan_and_a_stale_one_gets_it_back(app):
+    newer, older = plan("p", 20, {"maths": ["A"]}), plan("p", 10, {"maths": ["B"]})
+    async with client(app) as http:
+        await signed_in(http, deviceId=DEVICE, firebaseIdToken="good")
+        await http.put("/api/learner/curriculum", content=newer.json())
+        answered = await http.put("/api/learner/curriculum", content=older.json())
+        shared = (await http.get("/api/learner/curriculum")).json()
+
+    assert answered.json()["plan"]["topics"] == {"maths": ["A"]}
+    assert shared["plan"]["updatedAt"] == 20
+
+
+async def test_joining_merges_the_plans_and_moves_the_devices_progress(app):
+    account = plan("plan-account", 10, {"mathematics": ["Decimals", "Fractions"]})
+    device = plan("plan-device", 20, {"mathematics": ["Fractions"]})
+    async with client(app) as http:
+        await signed_in(http, deviceId=DEVICE, firebaseIdToken="good")
+        await http.put("/api/learner/curriculum", content=account.json())
+        await http.post(
+            "/api/learner/plan", json={"kind": "plan_kept", "planId": "plan-device"}
+        )
+        app.state.keeping.learners._stored[f"account:{UID}"] = changed(
+            None, serialised(Learnt(topic=fractions(index=0), at=7))
+        )
+
+        merged = (
+            await http.post("/api/learner/curriculum/join", content=device.json())
+        ).json()["plan"]
+        record = (
+            await http.get("/api/learner", params={"planId": "plan-account"})
+        ).json()
+
+    assert merged["planId"] == "plan-account"
+    assert [(t["topicIndex"], t["learntAt"]) for t in record["topics"]] == [(1, 7)]
+
+
+async def test_a_plan_too_large_or_malformed_is_refused(app):
+    async with client(app) as http:
+        await signed_in(http, deviceId=DEVICE)
+        too_large = await http.put("/api/learner/curriculum", content=b"x" * 1_000_001)
+        malformed = await http.put("/api/learner/curriculum", content=b"{}")
+
+    assert (too_large.status_code, malformed.status_code) == (413, 422)

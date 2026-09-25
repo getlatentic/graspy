@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PencilLine } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useAccount } from "@/lib/account/use-account";
 import { ProgressBar } from "@/components/ui/progress";
 import { useI18n } from "@/lib/i18n-context";
 import {
@@ -46,6 +47,7 @@ function usePracticeAnswers(): RecordedAnswer[] | null {
   const { curriculum, isLoaded } = usePlan();
   // Before the saved plan loads, the plan is a placeholder with no record.
   const planId = isLoaded ? curriculum?.planId : undefined;
+  const reader = useAccount()?.uid;
   const [records, setRecords] = useState<RecordedAnswer[] | null>(() =>
     planId ? (keptRecord(planId)?.answers ?? null) : null,
   );
@@ -62,7 +64,7 @@ function usePracticeAnswers(): RecordedAnswer[] | null {
     return () => {
       current = false;
     };
-  }, [planId]);
+  }, [planId, reader]);
 
   return records;
 }

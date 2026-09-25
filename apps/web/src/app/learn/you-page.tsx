@@ -9,6 +9,7 @@ import { useUserProfile } from "@/lib/use-user-profile";
 import type { UserProfile } from "@/lib/user-storage";
 import { ProgressSummary } from "@/features/learn/components/progress-summary";
 import { PracticeRecordCard } from "@/features/learn/components/practice-record-card";
+import { AccountCard } from "@/features/learn/components/account-card";
 
 export default function YouPage() {
   const { t } = useI18n();
@@ -26,6 +27,8 @@ export default function YouPage() {
       <PracticeRecordCard />
 
       <DetailsCard profile={profile} />
+
+      <AccountCard />
 
       <Link
         to="/app/learn/plan"
