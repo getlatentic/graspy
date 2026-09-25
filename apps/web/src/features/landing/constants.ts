@@ -1,4 +1,4 @@
-export const CONTACT_EMAIL = "hello@graspy.org";
+export const CONTACT_EMAIL = "hello@getlatentic.com";
 
 export function contactHref(subject?: string): string {
   const query = subject
