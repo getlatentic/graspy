@@ -307,12 +307,34 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `a sign-in left part-way marks the Google account, for the next sign-in`() = runBlocking {
+    fun `a sign-in left part-way marks the Google account and leaves itself for the next start to undo`() = runBlocking {
         val left = AccountEntry(context, { throw CancellationException("The learner left") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
 
         runCatching { left.signIn() }
 
-        assertEquals(setOf("google_account"), signOutPending.keys)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending.keys)
+    }
+
+    @Test
+    fun `a sign-in that ends clears its note, whether it succeeded, failed or was closed`() = runBlocking {
+        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
+            AccountEntry(context, { outcome }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+            assertFalse(outcome.toString(), "signing_in" in signOutPending)
+        }
+    }
+
+    @Test
+    fun `a sign-in cut short is undone at the next start, its Google account forgotten, never adopted`() = runBlocking {
+        accounts.set(null)
+        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()
+        val start = CoroutineScope(Dispatchers.IO + Job())
+
+        entry(wipe).reconcile(start)
+        start.coroutineContext[Job]!!.children.forEach { it.join() }
+
+        assertNull(accounts.account.value)
+        assertEquals(listOf<Account?>(null), forgotten)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
     }
 
     @Test

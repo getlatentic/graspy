@@ -28,13 +28,22 @@ class AccountEntry(
 
     /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
     suspend fun signIn(): SignInOutcome {
+        // Cleared only when the sign-in ends; one cut short leaves it for [reconcile] to undo rather than adopt.
+        forgetting.edit(commit = true) { putBoolean(SIGNING_IN, true) }
         val outcome = try {
-            google.signIn(askWhichAccount = !lastGoogleAccountForgotten())
+            signInThroughGoogle()
         } catch (cancelled: CancellationException) {
-            // Left mid-sign-in, perhaps after an account was chosen: marked, it is forgotten before the next one.
+            // Left part-way, perhaps with an account chosen and Firebase signed in: undone now, as far as it went.
             markGoogleAccountToForget()
+            firebase.signOut()
             throw cancelled
         }
+        forgetting.edit(commit = true) { remove(SIGNING_IN) }
+        return outcome
+    }
+
+    private suspend fun signInThroughGoogle(): SignInOutcome {
+        val outcome = google.signIn(askWhichAccount = !lastGoogleAccountForgotten())
         // A failed sign-in may have got as far as a Google account (Firebase refusing its credential); forgetting
         // it on any failure keeps the next sign-in from taking it unasked, at worst asking once more than needed.
         if (outcome is SignInOutcome.Failed) forgetGoogleAccountOrLeaveMarked()
@@ -120,14 +129,21 @@ class AccountEntry(
     }
 
     /**
-     * At start. An account signed in before accounts held learners is kept, and its learning here
-     * joins the first learner chosen; an account Firebase no longer holds is signed out; and a
-     * sign-out that had yet to forget its Google account forgets it.
+     * At start. A sign-in cut short is undone, never adopted. Otherwise an account signed in before
+     * accounts held learners is kept, and its learning here joins the first learner chosen; an account
+     * Firebase no longer holds is signed out; and a sign-out that had yet to forget its Google account
+     * forgets it.
      */
     fun reconcile(scope: CoroutineScope) {
         val uid = firebase.userId
         val account = accounts.account.value
         when {
+            account == null && forgetting.getBoolean(SIGNING_IN, false) -> scope.finish("Undoing a sign-in cut short") {
+                markGoogleAccountToForget()
+                firebase.signOut()
+                forgetting.edit(commit = true) { remove(SIGNING_IN) }
+                forgetGoogleAccount()
+            }
             uid != null && account == null -> accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
             account != null && account.uid != uid -> scope.finish("Finishing a sign-out") { signOut() }
             account == null && forgetting.getBoolean(GOOGLE_ACCOUNT, false) ->
@@ -156,5 +172,6 @@ class AccountEntry(
     private companion object {
         const val TAG = "GraspyAccount"
         const val GOOGLE_ACCOUNT = "google_account"
+        const val SIGNING_IN = "signing_in"
     }
 }
