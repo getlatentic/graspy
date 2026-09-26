@@ -99,14 +99,13 @@ fun LearnerPlan.levelLabel(learn: LearnCopy): String = when {
 // schoolDescriptor's shape: the class's name, its stage in brackets, then the system and the age.
 private val SCHOOL_CLASS = Regex("^(.+?) \\(.*\\), .+, age \\d+$")
 
-// The catalogue's Nigerian levels are "primary-4"; voice lessons are taught in primary school alone.
-private val NIGERIAN_PRIMARY = Regex("^primary-([1-6])$")
-
-/** The voice-lesson class of a learner in Nigeria's system, as the web's voiceClassOf; null when there are none. */
+/**
+ * The voice-lesson class of a learner in Nigeria's system, as the web's voiceClassOf; null when there are none.
+ * The catalogue names a class "nursery-1" or "primary-4", the voice curriculum "nursery_1" or "primary_4".
+ */
 fun LearnerPlan.voiceClass(): SchoolClass? {
     if (system != "NG") return null
-    val year = NIGERIAN_PRIMARY.find(level.orEmpty())?.groupValues?.get(1) ?: return null
-    return SchoolClass.fromWire("primary_$year")
+    return SchoolClass.fromWire(level.orEmpty().replace('-', '_'))?.takeIf { it.voiceLessons }
 }
 
 /** The teacher speaks the learner's language when she can, and English otherwise. */
