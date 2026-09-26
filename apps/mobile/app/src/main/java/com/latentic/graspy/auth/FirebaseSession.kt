@@ -18,8 +18,11 @@ class FirebaseSession(private val auth: FirebaseAuth = FirebaseAuth.getInstance(
         auth.signInWithCredential(GoogleAuthProvider.getCredential(googleIdToken, null)).await()
     }
 
-    suspend fun signOut(context: Context) {
-        auth.signOut()
+    /** At once; the Google account the sign-in used is forgotten apart from it, by [forgetGoogleAccount]. */
+    fun signOut() = auth.signOut()
+
+    /** So the next sign-in asks which Google account rather than taking the last one. It can wait on Play services. */
+    suspend fun forgetGoogleAccount(context: Context) {
         CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())
     }
 

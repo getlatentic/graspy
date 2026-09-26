@@ -38,12 +38,15 @@ class KeptPlanTest {
     }
 
     @Test
-    fun `an older version's unowned plan is never read, and goes on the next keep`() {
-        preferences.edit(commit = true) { putString("plan", LearnerPlan(planId = "whose").toJson().toString()) }
+    fun `an older version's unowned plan is never read, and goes as soon as a kept plan is opened`() {
+        preferences.edit(commit = true) {
+            putString("plan", LearnerPlan(planId = "whose").toJson().toString())
+            putString("record", "{}")
+        }
 
-        assertNull(tunde.read())
-        tunde.keep(PlanState.Ready(LearnerPlan(planId = "tundes-plan"), LearnerRecord()))
+        val opened = KeptPlan(preferences, "u/tunde") { true }
 
-        assertEquals(setOf("plan:u/tunde", "record:u/tunde"), preferences.all.keys)
+        assertNull(opened.read())
+        assertEquals(emptySet<String>(), preferences.all.keys)
     }
 }

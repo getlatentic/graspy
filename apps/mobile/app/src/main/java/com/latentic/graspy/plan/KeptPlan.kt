@@ -17,6 +17,10 @@ class KeptPlan(
     private val planKey = "plan:$ownerId"
     private val recordKey = "record:$ownerId"
 
+    init {
+        if (UNOWNED_KEYS.any(preferences::contains)) preferences.edit { UNOWNED_KEYS.forEach(::remove) }
+    }
+
     fun read(): PlanState.Ready? {
         val plan = preferences.getString(planKey, null) ?: return null
         return runCatching {
@@ -30,7 +34,6 @@ class KeptPlan(
         preferences.edit {
             putString(planKey, ready.plan.toJson().toString())
             putString(recordKey, planJson.encodeToString(LearnerRecord.serializer(), ready.record))
-            UNOWNED_KEYS.forEach(::remove)
         }
     }
 

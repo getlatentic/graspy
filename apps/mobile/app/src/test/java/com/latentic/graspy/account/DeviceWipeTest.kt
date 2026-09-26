@@ -1,5 +1,9 @@
 package com.latentic.graspy.account
 
+import android.os.Looper
+import com.google.firebase.auth.FirebaseAuth
+import com.latentic.graspy.auth.FirebaseSession
+import com.latentic.graspy.auth.GoogleSignIn
 import com.latentic.graspy.collection.RECORDINGS_DIRECTORY
 import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.LearnerProfile
@@ -7,6 +11,10 @@ import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.practice.TEACHER_AUDIO_DIRECTORY
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -19,6 +27,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class DeviceWipeTest {
@@ -41,6 +50,10 @@ class DeviceWipeTest {
     private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) {
         workCancelled = true
         accountWhenWiped = accounts.account.value
+    }
+    private val firebase = FirebaseSession(FirebaseAuth.getInstance(demoFirebase()))
+    private val unusedSessionApi = object : SessionApi {
+        override suspend fun session(request: SessionRequestDto): IssuedSessionDto = error("No session is asked for")
     }
     private val ada = learnerKey(UID, ADA.id)
     private val bayo = learnerKey(UID, BAYO.id)
@@ -91,11 +104,33 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `signing out lets the account go before the wipe`() = runBlocking {
+    fun `signing out lets the account go last, once all of it is wiped`() = runBlocking {
         wipe.wipeDevice()
 
         assertTrue(workCancelled)
-        assertNull(accountWhenWiped)
+        assertEquals(signedIn(ADA, deviceJoins = false), accountWhenWiped)
+        assertNull(accounts.account.value)
+    }
+
+    @Test
+    fun `a sign-out cut short, the account still here and Firebase signed out, is finished at the next start`() = runBlocking {
+        val entry = AccountEntry(context, GoogleSignIn(context, firebase, "demo-client"), firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+        val start = CoroutineScope(Dispatchers.IO + Job())
+
+        entry.reconcile(start)
+        // The sign-out's last step, forgetting the Google account, answers on the main thread this test holds and
+        // never does under Robolectric: step the main thread until the account is gone, which is the wipe done.
+        val deadline = System.currentTimeMillis() + 10_000
+        while (accounts.account.value != null && System.currentTimeMillis() < deadline) {
+            shadowOf(Looper.getMainLooper()).idle()
+            Thread.sleep(10)
+        }
+        start.cancel()
+
+        assertLearnerDataGone()
+        assertNull(profiles.load(ada))
+        assertNull(accounts.account.value)
+        assertNotEquals(deviceId, deviceIds.current())
     }
 
     @Test

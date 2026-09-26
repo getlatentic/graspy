@@ -31,22 +31,29 @@ class AccountEntry(
             throw error
         } catch (error: Exception) {
             Log.w(TAG, "graspy did not issue the account's session", error)
-            firebase.signOut(context)
+            firebase.signOut()
+            firebase.forgetGoogleAccount(context)
             SignInOutcome.Failed(error.message ?: "graspy did not issue a session")
         }
     }
 
-    /** Nothing of the account or its learners stays on the device. */
+    /**
+     * Nothing of the account or its learners stays on the device. Firebase goes first, so a sign-out cut short
+     * finds the account still here and Firebase signed out, and [reconcile] finishes it at the next start. The
+     * Google account is forgotten last: it waits on Play services, and the wipe must not.
+     */
     suspend fun signOut() {
+        firebase.signOut()
         wipe.wipeDevice()
-        firebase.signOut(context)
+        firebase.forgetGoogleAccount(context)
     }
 
     /** Before a learner is chosen the device holds only its own learning, which stays. */
     suspend fun leaveForAnotherAccount() {
         sessions.forget()
         accounts.set(null)
-        firebase.signOut(context)
+        firebase.signOut()
+        firebase.forgetGoogleAccount(context)
     }
 
     /**
@@ -59,7 +66,15 @@ class AccountEntry(
         if (uid != null && account == null) {
             accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
         } else if (account != null && account.uid != uid) {
-            scope.launch { signOut() }
+            scope.launch {
+                try {
+                    signOut()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    Log.w(TAG, "Finishing a sign-out failed", error)
+                }
+            }
         }
     }
 
