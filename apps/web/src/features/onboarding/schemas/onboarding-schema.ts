@@ -13,7 +13,14 @@ export const detailsSchema = z
     language: z.string().min(1, "onboarding.errors.language"),
     system: z.string(),
     level: z.string().min(1, "onboarding.errors.grade"),
-    school: z.object({ names, descriptor: z.string() }).nullable(),
+    // voiceOnly is the catalogue's, for a class chosen from it; a class kept from before has none.
+    school: z
+      .object({
+        names,
+        descriptor: z.string(),
+        voiceOnly: z.boolean().optional(),
+      })
+      .nullable(),
     course: z.string().max(COURSE_MAX),
   })
   .superRefine((data, ctx) => {

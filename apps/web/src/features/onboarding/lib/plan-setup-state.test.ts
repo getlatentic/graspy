@@ -12,12 +12,12 @@ import {
 
 const stats = { subjectCount: 2, topicCount: 9 };
 
-const inClass = (level: string): OnboardingSchema => ({
+const inClass = (level: string, voiceOnly = false): OnboardingSchema => ({
   country: "NG",
   language: "en",
   system: "NG",
   level,
-  school: { names: { en: level }, descriptor: `${level}, Nigeria` },
+  school: { names: { en: level }, descriptor: `${level}, Nigeria`, voiceOnly },
   course: "",
   selectedSubjects: ["maths"],
 });
@@ -26,7 +26,7 @@ describe("startSetup", () => {
   it("keeps the plan at once for a class that learns by voice alone", () => {
     const run = { keep: vi.fn(() => "kept"), make: vi.fn(() => "made") };
 
-    expect(startSetup(inClass("kindergarten"), run)).toBe("kept");
+    expect(startSetup(inClass("kindergarten", true), run)).toBe("kept");
     expect(run.make).not.toHaveBeenCalled();
   });
 

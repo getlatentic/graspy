@@ -22,6 +22,7 @@ from ..agent.reply import Outcome
 from ..agent.toolkit import TOOLS, Turn
 from ..app_tool import AppTool
 from ..caller import Caller
+from ..learner.route import LEARNER_TOOLS
 from ..lessons.tools import LESSON_TOOLS, LESSON_UI
 from .views import Views
 
@@ -178,7 +179,9 @@ def tools() -> dict[str, McpTool]:
         for spec in TOOLS
         if spec.ui is not None
     ]
-    offered += [_app_tool(tool) for tool in (*APP_TOOLS.values(), *LESSON_TOOLS)]
+    offered += [
+        _app_tool(tool) for tool in (*APP_TOOLS.values(), *LESSON_TOOLS, *LEARNER_TOOLS)
+    ]
     return {tool.name: tool for tool in offered}
 
 

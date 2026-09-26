@@ -53,7 +53,7 @@ class PlanOnboardingFlowTest {
         id = "NG", country = "NG", name = Names("Nigeria"), main = true,
         stages = listOf(SchoolStage("early-childhood", Names("Early childhood")), SchoolStage("jss", Names("Junior Secondary School"))),
         levels = listOf(
-            SchoolLevel("nursery-1", "early-childhood", Names("Nursery 1"), listOf("N1"), 3),
+            SchoolLevel("nursery-1", "early-childhood", Names("Nursery 1"), listOf("N1"), 3, voiceOnly = true),
             SchoolLevel("jss-1", "jss", Names("JSS 1"), listOf("JS1"), 12),
         ),
     )
@@ -69,7 +69,7 @@ class PlanOnboardingFlowTest {
     fun `a new learner chooses their class and subjects and gets their plan`() {
         var made: Pair<LearnerDetails, List<String>>? = null
         val plan = LearnerPlan(planId = "plan-1")
-        onboarding { details, subjects -> made = details to subjects; plan }
+        onboarding(make = { details, subjects -> made = details to subjects; plan })
 
         compose.onNodeWithText(words.stepOf.filled("current" to 1, "total" to 2)).assertExists()
         header()
@@ -98,13 +98,13 @@ class PlanOnboardingFlowTest {
     }
 
     @Test
-    fun `a Nigerian nursery learner starts from their details, with no subjects to choose and no plan to wait for`() {
+    fun `a class the catalogue says learns by voice alone starts from its details, with no subjects to choose and no plan to wait for`() {
         var streamed = false
         val stream = CurriculumSource { _, _ ->
             streamed = true
             null
         }
-        onboarding { details, subjects -> PlanMaker(stream).make(details, subjects) }
+        onboarding(keep = { PlanMaker(stream).voiceOnly(it) })
 
         chooseClass("Nursery 1")
         compose.onNodeWithText(words.stepOf.filled("current" to 1, "total" to 1)).assertExists()
@@ -126,11 +126,13 @@ class PlanOnboardingFlowTest {
     @Test
     fun `a nursery plan not kept leaves the learner on their details, saying so, to try again`() {
         var tries = 0
-        onboarding { details, subjects ->
-            tries += 1
-            if (tries == 1) throw IOException("offline")
-            PlanMaker(CurriculumSource { _, _ -> null }).make(details, subjects)
-        }
+        onboarding(
+            keep = { details ->
+                tries += 1
+                if (tries == 1) throw IOException("offline")
+                PlanMaker(CurriculumSource { _, _ -> null }).voiceOnly(details)
+            },
+        )
 
         chooseClass("Nursery 1")
         compose.onNodeWithText(words.start).performClick()
@@ -149,7 +151,10 @@ class PlanOnboardingFlowTest {
         assertEquals("nursery-1", requireNotNull(done).level)
     }
 
-    private fun onboarding(make: suspend (LearnerDetails, List<String>) -> LearnerPlan) {
+    private fun onboarding(
+        make: suspend (LearnerDetails, List<String>) -> LearnerPlan = { _, _ -> error("No plan is made from subjects here") },
+        keep: suspend (LearnerDetails) -> LearnerPlan = { error("No plan is kept at once here") },
+    ) {
         val form = DetailsFormViewModel { country -> listOf(nigeria).filter { it.country == country } }
         val setup = PlanSetupViewModel { country, language, gradeLevel, onSubjects ->
             subjectsAsked += listOf(country, language, gradeLevel)
@@ -168,6 +173,7 @@ class PlanOnboardingFlowTest {
                     suggestedCountry = "NG",
                     display = Locale.ENGLISH,
                     make = make,
+                    keep = keep,
                     onBack = null,
                     onDone = { done = it },
                 )

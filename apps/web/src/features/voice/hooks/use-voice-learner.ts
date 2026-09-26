@@ -1,12 +1,17 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { currentAccount, onAccountChange } from "@/lib/account/account-store";
 import { deviceId } from "@/lib/device-id";
+import {
+  askRoute,
+  keptRoute,
+  onRouteKept,
+  routeKey,
+} from "@/lib/learner-route";
 import { useUserProfile } from "@/lib/use-user-profile";
 import {
   classOf,
   lessonLanguageOf,
   voiceClassOf,
-  voiceOnly,
 } from "@/lib/voice/voice-learner";
 import { voiceLearnerKey } from "@/lib/voice/voice-learner-key";
 import type { LessonLanguage } from "@/lib/voice/voice-types";
@@ -42,8 +47,21 @@ export function useVoiceLearner(): VoiceLearner | null {
   };
 }
 
-/** Whether the learner's class learns by voice alone, with no slide subjects. */
-export function useVoiceOnly(): boolean {
+/** Whether the server has the learner's class learn by voice alone, with no slide subjects;
+ * null until it has said, here or on an earlier visit. */
+export function useVoiceOnly(): boolean | null {
   const { details } = useLearnerClass();
-  return details ? voiceOnly(details) : false;
+  const { isLoaded } = usePlan();
+  const key = details ? routeKey(details) : null;
+  const kept = useSyncExternalStore(onRouteKept, () =>
+    details ? keptRoute(details) : null,
+  );
+
+  useEffect(() => {
+    if (isLoaded && details) void askRoute(details);
+    // Keyed on the class: the details object is new on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, isLoaded]);
+
+  return kept;
 }

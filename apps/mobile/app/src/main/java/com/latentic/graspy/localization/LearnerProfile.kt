@@ -6,13 +6,12 @@ import com.latentic.graspy.account.PreferenceFiles
 
 /**
  * Nigerian school classes graspy teaches; the wire value travels with every sample. [primary]: taught by one class
- * teacher. [voiceLessons]: the voice lesson catalogue has lessons for it. [voiceOnly]: its children do not read
- * yet, and slide lessons are text, so it has voice lessons and no slide subjects.
+ * teacher. [voiceLessons]: the voice lesson catalogue has lessons for it.
  */
-enum class SchoolClass(val wireValue: String, val primary: Boolean, val voiceLessons: Boolean, val voiceOnly: Boolean = false) {
-    NURSERY_1("nursery_1", primary = true, voiceLessons = true, voiceOnly = true),
-    NURSERY_2("nursery_2", primary = true, voiceLessons = true, voiceOnly = true),
-    KINDERGARTEN("kindergarten", primary = true, voiceLessons = true, voiceOnly = true),
+enum class SchoolClass(val wireValue: String, val primary: Boolean, val voiceLessons: Boolean) {
+    NURSERY_1("nursery_1", primary = true, voiceLessons = true),
+    NURSERY_2("nursery_2", primary = true, voiceLessons = true),
+    KINDERGARTEN("kindergarten", primary = true, voiceLessons = true),
     PRIMARY_1("primary_1", primary = true, voiceLessons = true),
     PRIMARY_2("primary_2", primary = true, voiceLessons = true),
     PRIMARY_3("primary_3", primary = true, voiceLessons = true),

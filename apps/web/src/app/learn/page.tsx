@@ -26,7 +26,7 @@ export default function HomePage() {
   const { t } = useI18n();
   const userProfile = useUserProfile();
   const { curriculum, isGenerating, error, nextSubject, generate } = usePlan();
-  const voiceOnly = useVoiceOnly();
+  const voiceOnly = useVoiceOnly() === true;
   const current = currentTopic(curriculum, nextSubject);
   const subjects = curriculum?.subjects ?? [];
   const ask = useAskIdeas(

@@ -143,17 +143,17 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
     }
 
     /**
-     * A class that learns by voice alone has no subjects to choose and no plan to wait for: its plan is made
-     * with no subjects and handed to [onKept] at once. One not kept leaves the learner on their details, to try again.
+     * A class that learns by voice alone has no subjects to choose and no plan to wait for: its plan is kept with
+     * [keep] and handed to [onKept] at once. One not kept leaves the learner on their details, to try again.
      */
-    fun keep(details: LearnerDetails, make: suspend (LearnerDetails, List<String>) -> LearnerPlan, onKept: (LearnerPlan) -> Unit) {
+    fun keep(details: LearnerDetails, keep: suspend (LearnerDetails) -> LearnerPlan, onKept: (LearnerPlan) -> Unit) {
         if (keepingShown.value) return
         keepingShown.value = true
         notKeptShown.value = false
         setupShown.value = null
         making = viewModelScope.launch {
             try {
-                onKept(make(details, emptyList()))
+                onKept(keep(details))
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {

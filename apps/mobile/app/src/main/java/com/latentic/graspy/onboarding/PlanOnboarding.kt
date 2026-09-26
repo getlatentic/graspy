@@ -35,7 +35,6 @@ import com.latentic.graspy.localization.PlanOnboardingCopy
 import com.latentic.graspy.localization.filled
 import com.latentic.graspy.plan.LearnerDetails
 import com.latentic.graspy.plan.LearnerPlan
-import com.latentic.graspy.plan.voiceOnly
 import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.GraspyHeader
 import com.latentic.graspy.ui.GraspyRadius
@@ -52,8 +51,8 @@ private const val CHIPS_SHOWN = 6
 
 /**
  * Making a plan, as the web's onboarding does: about you, then your subjects, then the plan being built; a class
- * that learns by voice alone goes from about you straight to [onDone]. [make] makes and keeps the plan; [onBack]
- * leaves a replan for the details it started from.
+ * the catalogue says learns by voice alone goes from about you straight to [onDone]. [make] makes and keeps the
+ * plan, [keep] keeps one with no subjects; [onBack] leaves a replan for the details it started from.
  */
 @Composable
 fun PlanOnboarding(
@@ -63,6 +62,7 @@ fun PlanOnboarding(
     suggestedCountry: String?,
     display: Locale,
     make: suspend (LearnerDetails, List<String>) -> LearnerPlan,
+    keep: suspend (LearnerDetails) -> LearnerPlan,
     onBack: (() -> Unit)?,
     onDone: (LearnerPlan) -> Unit,
 ) {
@@ -73,9 +73,9 @@ fun PlanOnboarding(
     val keeping by setup.keeping.collectAsStateWithLifecycle()
     val notKeptYet by setup.notKept.collectAsStateWithLifecycle()
     val words = learn.onboarding
-    val voiceOnly = values.details().voiceOnly
+    val voiceOnly = values.learnsByVoiceAlone(now = false)
     val notKept = notKeptYet && voiceOnly
-    val finish = { if (voiceOnly) setup.keep(values.details(), make, onDone) else setup.make(values.details(), make) }
+    val finish = { if (voiceOnly) setup.keep(values.details(), keep, onDone) else setup.make(values.details(), make) }
     Frame {
         val made = building
         if (made != null) {

@@ -19,7 +19,6 @@ import com.latentic.graspy.localization.LearnCopy
 import com.latentic.graspy.onboarding.DetailsFormViewModel
 import com.latentic.graspy.onboarding.ProfileStep
 import com.latentic.graspy.plan.LearnerDetails
-import com.latentic.graspy.plan.voiceOnly
 import com.latentic.graspy.ui.GraspyCard
 import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.PageTitle
@@ -35,8 +34,8 @@ enum class DetailsSave { KEEP, NEW, ASK }
  * A class that learns by voice alone shows no subjects, so its plan only takes the details, subjects and all. A plan
  * with no subjects has nothing to keep for another class; otherwise the learner chooses.
  */
-fun detailsSave(next: LearnerDetails, planHasSubjects: Boolean): DetailsSave = when {
-    next.voiceOnly -> DetailsSave.KEEP
+fun detailsSave(voiceOnly: Boolean, planHasSubjects: Boolean): DetailsSave = when {
+    voiceOnly -> DetailsSave.KEEP
     planHasSubjects -> DetailsSave.ASK
     else -> DetailsSave.NEW
 }
@@ -50,11 +49,12 @@ fun DetailsScreen(
     learn: LearnCopy,
     form: DetailsFormViewModel,
     current: LearnerDetails,
+    voiceOnlyNow: Boolean,
     planHasSubjects: Boolean,
     display: Locale,
     onBack: () -> Unit,
     onNewPlan: (LearnerDetails) -> Unit,
-    onKeepPlan: (LearnerDetails) -> Unit,
+    onKeepPlan: (LearnerDetails, Boolean) -> Unit,
 ) {
     val values by form.form.collectAsStateWithLifecycle()
     var asking by rememberSaveable { mutableStateOf(false) }
@@ -67,8 +67,9 @@ fun DetailsScreen(
         if (!asking) {
             PrimaryButton(learn.details.save, {
                 val next = values.details()
-                when (detailsSave(next, planHasSubjects)) {
-                    DetailsSave.KEEP -> onKeepPlan(next)
+                val alone = values.learnsByVoiceAlone(voiceOnlyNow)
+                when (detailsSave(alone, planHasSubjects)) {
+                    DetailsSave.KEEP -> onKeepPlan(next, alone)
                     DetailsSave.NEW -> onNewPlan(next)
                     DetailsSave.ASK -> asking = true
                 }
@@ -79,7 +80,7 @@ fun DetailsScreen(
                 Text(learn.details.askBody, style = MaterialTheme.typography.bodyMedium, color = GraspyColor.Muted)
                 Row(horizontalArrangement = Arrangement.spacedBy(space(2))) {
                     PrimaryButton(learn.details.newPlan, { onNewPlan(values.details()) })
-                    SecondaryButton(learn.details.keepPlan, { onKeepPlan(values.details()) })
+                    SecondaryButton(learn.details.keepPlan, { onKeepPlan(values.details(), values.learnsByVoiceAlone(voiceOnlyNow)) })
                 }
             }
         }

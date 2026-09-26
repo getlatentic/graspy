@@ -5,6 +5,7 @@ import { placeEarlierClass } from "@/lib/earlier-class";
 import { useI18n } from "@/lib/i18n-context";
 import { curriculumRequest, planWanted } from "../lib/curriculum-request";
 import { usePlan } from "../learner-context";
+import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 
 /** Null until the saved plan loads, so pages mount after it. */
 export function useLearnerStart(): UserProfile | null {
@@ -27,7 +28,8 @@ export function useLearnerStart(): UserProfile | null {
     loadSaved().then(() => setLoaded(true));
   }, [navigate, loadSaved]);
 
-  const wanted = profile !== null && planWanted(curriculum, profile);
+  const voiceOnly = useVoiceOnly();
+  const wanted = profile !== null && planWanted(curriculum, voiceOnly);
   useEffect(() => {
     if (!profile || !loaded || !wanted || isGenerating) return;
     if (generated.current) return;

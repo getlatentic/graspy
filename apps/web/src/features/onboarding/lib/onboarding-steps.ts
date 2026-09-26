@@ -1,6 +1,5 @@
-import { voiceOnly } from "@/lib/voice/voice-learner";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
-import { learnerDetails } from "./details";
+import { learnsByVoiceAlone } from "./details";
 
 export const STEPS = ["profile", "subjects"] as const;
 export type StepKey = (typeof STEPS)[number];
@@ -9,7 +8,7 @@ export type StepKey = (typeof STEPS)[number];
 const VOICE_ONLY_STEPS: readonly StepKey[] = ["profile"];
 
 export const stepsFor = (details: DetailsSchema): readonly StepKey[] =>
-  voiceOnly(learnerDetails(details)) ? VOICE_ONLY_STEPS : STEPS;
+  learnsByVoiceAlone(details, false) ? VOICE_ONLY_STEPS : STEPS;
 
 /** The last step's button tries again once its plan was not kept. */
 export function nextLabelKey(

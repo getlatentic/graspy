@@ -12,7 +12,10 @@ import {
   detailsOf,
   detailsSave,
   learnerDetails,
+  learnsByVoiceAlone,
 } from "@/features/onboarding/lib/details";
+import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
+import { keepRoute } from "@/lib/learner-route";
 import {
   detailsSchema,
   type DetailsSchema,
@@ -69,10 +72,13 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
   const navigate = useNavigate();
   const { curriculum, applyCurriculum } = usePlan();
   const values = useFormContext<DetailsSchema>().watch();
+  const voiceOnlyNow = useVoiceOnly() === true;
   const [asking, setAsking] = useState(false);
 
   const keepPlan = async () => {
     const details = learnerDetails(values);
+    // The catalogue's word stands for the class until the server is asked about it.
+    keepRoute(details, learnsByVoiceAlone(values, voiceOnlyNow));
     saveUserProfile(details);
     if (curriculum) {
       await applyCurriculum({ ...curriculum, ...planDetails(details) });
@@ -83,7 +89,11 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
     navigate("/app/onboarding", { state: { replan: values } });
 
   const save = () => {
-    const choice = detailsSave(values, Boolean(curriculum?.subjects.length));
+    const choice = detailsSave(
+      values,
+      Boolean(curriculum?.subjects.length),
+      voiceOnlyNow,
+    );
     if (choice === "keep") void keepPlan();
     else if (choice === "new") newPlan();
     else setAsking(true);

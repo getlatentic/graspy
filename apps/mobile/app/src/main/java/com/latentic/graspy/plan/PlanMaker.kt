@@ -17,12 +17,11 @@ private const val DEFAULT_GRADE_LEVEL = "middle school"
 class PlanMaker(private val source: CurriculumSource, private val clock: () -> Long = System::currentTimeMillis) {
     /**
      * A new plan for [details] with [subjects], replacing whatever the learner had; [onProgress] shows it as
-     * it grows. An empty subject list asks the server to choose the subjects. A class that learns by voice alone
-     * gets a plan with no subjects without asking: the plan still carries who it is for to the learner's devices.
+     * it grows. An empty subject list asks the server to choose the subjects.
      */
     suspend fun make(details: LearnerDetails, subjects: List<String>, onProgress: (LearnerPlan) -> Unit = {}): LearnerPlan {
         val createdAt = clock()
-        val accumulator = CurriculumAccumulator(normalizeSubjectNames(if (details.voiceOnly) emptyList() else subjects))
+        val accumulator = CurriculumAccumulator(normalizeSubjectNames(subjects))
         val planNow = {
             LearnerPlan(planId = "plan-$createdAt", createdAt = createdAt, updatedAt = clock())
                 .withDetails(details)
@@ -33,12 +32,21 @@ class PlanMaker(private val source: CurriculumSource, private val clock: () -> L
                     assessment = Assessment(accumulator.firstSubject?.slug),
                 )
         }
-        if (details.voiceOnly) return planNow()
         val failure = source.curriculum(details.request(subjects)) { result ->
             if (accumulator.apply(result)) onProgress(planNow())
         }
         if (failure != null) throw PlanNotMade(failure)
         return planNow()
+    }
+
+    /**
+     * The plan of a class that learns by voice alone, as the web's keepVoiceOnlyPlan: who it is for, which the
+     * learner's devices share, and no subjects, so the stream is not asked. It replaces whatever the learner had.
+     */
+    fun voiceOnly(details: LearnerDetails): LearnerPlan {
+        val createdAt = clock()
+        return LearnerPlan(planId = "plan-$createdAt", createdAt = createdAt, updatedAt = createdAt, assessment = Assessment(null))
+            .withDetails(details)
     }
 
     /** Topics for subjects new to a plan; subjects it keeps keep theirs, and their progress. */

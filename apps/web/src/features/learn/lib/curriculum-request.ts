@@ -1,7 +1,6 @@
 import type { CurriculumRequest } from "@/lib/curriculum-api";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { getUserProfile, type UserProfile } from "@/lib/user-storage";
-import { classOf, voiceOnly } from "@/lib/voice/voice-learner";
 import { pathsOf } from "./curriculum-edit";
 
 export function curriculumRequest(
@@ -16,13 +15,12 @@ export function curriculumRequest(
   };
 }
 
-/** Whether a plan is still to be made: the learner has no subjects, and their class learns from slides. */
+/** Whether a plan is still to be made: the learner has no subjects, and the server has said
+ * their class learns by slides and voice. */
 export const planWanted = (
   curriculum: CurriculumData | null,
-  profile: UserProfile,
-): boolean =>
-  !curriculum?.subjects.length &&
-  !voiceOnly(classOf(curriculum, profile) ?? profile);
+  voiceOnly: boolean | null,
+): boolean => !curriculum?.subjects.length && voiceOnly === false;
 
 /** Paths are left out: they stay as the learner accepted them. */
 export function rebuildRequest(

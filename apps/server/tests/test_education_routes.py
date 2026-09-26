@@ -63,6 +63,20 @@ def test_a_system_is_served_whole(client):
     assert nigeria["levels"][9]["age"] == 12
 
 
+def test_each_level_says_whether_it_learns_by_voice_alone(client):
+    nigeria = client.get("/api/education/countries/NG").json()[0]
+    ghana = client.get("/api/education/countries/GH").json()[0]
+
+    alone = {level["id"] for level in nigeria["levels"] if level["voiceOnly"]}
+    assert alone == {"nursery-1", "nursery-2", "kindergarten"}
+    assert nigeria["stages"][0] == {
+        "id": "early-childhood",
+        "name": {"en": "Early childhood", "local": {}},
+        "voiceOnly": True,
+    }
+    assert not any(level["voiceOnly"] for level in ghana["levels"])
+
+
 @pytest.mark.parametrize(
     ("path", "status"),
     [

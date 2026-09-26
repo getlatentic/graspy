@@ -31,7 +31,7 @@ function DashboardLayoutContent() {
   const { pathname } = useLocation();
   const userProfile = useLearnerStart();
   useKeptAnswers();
-  const voiceOnly = useVoiceOnly();
+  const voiceOnly = useVoiceOnly() === true;
   const redirect = pageRedirect(pathname, voiceOnly);
   const sections = sectionsFor(voiceOnly);
   const chat = isChatPath(pathname);

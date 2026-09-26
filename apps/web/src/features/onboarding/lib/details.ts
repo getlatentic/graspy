@@ -4,7 +4,6 @@ import {
   levelComplete,
 } from "@/lib/learner-level";
 import type { LearnerDetails, UserProfile } from "@/lib/user-storage";
-import { voiceOnly } from "@/lib/voice/voice-learner";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
 
 export function learnerDetails(details: DetailsSchema): LearnerDetails {
@@ -50,14 +49,26 @@ export function detailsOf(profile: UserProfile): DetailsSchema {
   };
 }
 
+/** Whether the class learns by voice alone, as the server says: the catalogue's word for a
+ * class chosen from it, `now` for the class the learner already has; a level after school
+ * never does. */
+export function learnsByVoiceAlone(
+  details: DetailsSchema,
+  now: boolean,
+): boolean {
+  if (!details.school) return false;
+  return details.school.voiceOnly ?? now;
+}
+
 /** What saving new details does to the plan. A class that learns by voice alone shows no
  * subjects, so its plan only takes the details, subjects and all. A plan with no subjects
  * has nothing to keep for another class; otherwise the learner chooses. */
 export function detailsSave(
   details: DetailsSchema,
   planHasSubjects: boolean,
+  voiceOnlyNow: boolean,
 ): "keep" | "new" | "ask" {
-  if (voiceOnly(learnerDetails(details))) return "keep";
+  if (learnsByVoiceAlone(details, voiceOnlyNow)) return "keep";
   return planHasSubjects ? "ask" : "new";
 }
 

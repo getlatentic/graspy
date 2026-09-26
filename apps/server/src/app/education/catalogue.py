@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 SYSTEMS = Path(__file__).parent / "data" / "systems"
 
 
+class LevelView(Level):
+    # Its stage's, so an app choosing a class needs no rule of its own.
+    voice_only: bool = False
+
+
 class SystemView(Wire):
     id: str
     country: str
@@ -26,7 +31,7 @@ class SystemView(Wire):
     main: bool
     status: Status
     stages: list[Stage]
-    levels: list[Level]
+    levels: list[LevelView]
     until: int | None = None
     notes: str | None = None
 
@@ -41,7 +46,12 @@ class SystemSummary(Wire):
 
 
 def view(system: System) -> SystemView:
-    return SystemView.model_validate(system.model_dump())
+    stages = {stage.id: stage for stage in system.stages}
+    levels = [
+        {**level.model_dump(), "voice_only": stages[level.stage].voice_only}
+        for level in system.levels
+    ]
+    return SystemView.model_validate({**system.model_dump(), "levels": levels})
 
 
 def checked(path: Path) -> tuple[System | None, list[str]]:

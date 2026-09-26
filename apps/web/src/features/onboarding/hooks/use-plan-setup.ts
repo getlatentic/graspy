@@ -1,6 +1,7 @@
 import { useReducer, useRef, useState, type Dispatch } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n-context";
+import { keepRoute } from "@/lib/learner-route";
 import { saveUserProfile } from "@/lib/user-storage";
 import { learnerDetails } from "../lib/details";
 import {
@@ -85,6 +86,8 @@ async function keepVoiceOnly(
 ) {
   await keepLearner(data, [], setLocale);
   await keepVoiceOnlyPlan(learnerDetails(data));
+  // The catalogue's word stands for the class until the server is asked about it.
+  keepRoute(learnerDetails(data), true);
   saveUserProfile({ onboardingCompleted: true });
 }
 

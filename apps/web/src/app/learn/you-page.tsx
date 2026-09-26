@@ -17,7 +17,7 @@ export default function YouPage() {
   const profile = useUserProfile();
   // Topics learnt and practice come from slide subjects and Ask, which a class
   // that learns by voice alone does not have.
-  const voiceOnly = useVoiceOnly();
+  const voiceOnly = useVoiceOnly() === true;
   if (!profile) return null;
 
   return (

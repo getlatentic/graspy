@@ -20,6 +20,8 @@ export interface SchoolLevel {
   name: Names;
   aliases: string[];
   age: number;
+  /** The server's rule: its children learn by voice alone, with no slide subjects. */
+  voiceOnly?: boolean;
 }
 
 export interface SchoolSystem {

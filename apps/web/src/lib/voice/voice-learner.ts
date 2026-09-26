@@ -13,17 +13,11 @@ const CLASSES_WITH_LESSONS = new Set([
   "primary_6",
 ]);
 
-// Slide lessons are text, and children in these classes do not read yet.
-const EARLY_YEARS = new Set(["nursery-1", "nursery-2", "kindergarten"]);
-
-interface ClassDetails {
+export interface ClassDetails {
   system?: string;
   level?: string;
+  gradeLevel?: string;
 }
-
-/** Nigeria's nursery and kindergarten classes: voice lessons, and no slide subjects. */
-export const voiceOnly = (details: ClassDetails): boolean =>
-  details.system === "NG" && EARLY_YEARS.has(details.level ?? "");
 
 /** The plan's class, and the profile's for a plan made before plans carried it. */
 export const classOf = (

@@ -1,8 +1,7 @@
 import type { Dispatch } from "react";
-import { voiceOnly } from "@/lib/voice/voice-learner";
 import type { GeneratedSubject } from "../types";
 import type { OnboardingSchema } from "../schemas/onboarding-schema";
-import { learnerDetails } from "./details";
+import { learnerDetails, learnsByVoiceAlone } from "./details";
 import type { GenerationStats } from "./generate-plan";
 
 export const GENERATION_STEP_SEQUENCE = [
@@ -68,7 +67,7 @@ export function startSetup<T>(
   data: OnboardingSchema,
   run: { keep: () => T; make: () => T },
 ): T {
-  return voiceOnly(learnerDetails(data)) ? run.keep() : run.make();
+  return learnsByVoiceAlone(data, false) ? run.keep() : run.make();
 }
 
 /** A plan kept at once leaves the form once kept, and stays on it, saying so, when not. */

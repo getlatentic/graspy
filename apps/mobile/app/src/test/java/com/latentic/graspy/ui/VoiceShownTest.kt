@@ -5,9 +5,7 @@ import com.latentic.graspy.localization.LearnerProfile
 import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.plan.LearnerPlan
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Which voice lessons a learner's app shows: their plan's class, or the device's while the plan cannot be read. */
@@ -38,20 +36,5 @@ class VoiceShownTest {
     @Test
     fun `a device with no class shows none`() {
         assertNull(voiceShown(null, ready = null))
-    }
-
-    @Test
-    fun `the plan's class decides whether the learner learns by voice alone`() {
-        assertTrue(learnsByVoiceAlone(LearnerPlan(planId = "p", system = "NG", level = "nursery-1"), jss))
-        assertFalse(learnsByVoiceAlone(LearnerPlan(planId = "p", system = "NG", level = "primary-1"), nursery))
-    }
-
-    @Test
-    fun `a plan with no class, or none read, follows the device's class, as the web's classOf`() {
-        assertTrue(learnsByVoiceAlone(LearnerPlan(planId = "p", gradeLevel = "Nursery 1"), nursery))
-        assertTrue(learnsByVoiceAlone(LearnerPlan(planId = "p", level = ""), nursery))
-        assertTrue(learnsByVoiceAlone(null, nursery))
-        assertFalse(learnsByVoiceAlone(null, jss))
-        assertFalse(learnsByVoiceAlone(null, null))
     }
 }
