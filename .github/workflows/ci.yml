@@ -91,11 +91,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      # Pinned, so a new Rust's clippy warnings arrive with a deliberate upgrade, not on an unrelated PR.
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.98.1
-          components: clippy
+      - name: Rust from apps/teacher/rust-toolchain.toml
+        working-directory: apps/teacher
+        run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/teacher/src-tauri
@@ -107,5 +105,8 @@ jobs:
       - name: Stand-in sidecars
         working-directory: apps/teacher/src-tauri/binaries
         run: touch llama-server-aarch64-apple-darwin graspy-inference-runner-aarch64-apple-darwin
-      - run: cargo clippy --manifest-path apps/teacher/src-tauri/Cargo.toml --all-targets -- -D warnings
-      - run: cargo test --manifest-path apps/teacher/src-tauri/Cargo.toml
+      - name: Clippy and tests
+        working-directory: apps/teacher
+        run: |
+          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+          cargo test --manifest-path src-tauri/Cargo.toml
