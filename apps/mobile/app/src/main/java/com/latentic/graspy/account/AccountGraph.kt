@@ -38,7 +38,7 @@ class AccountGraph(private val context: Application) {
             idToken = firebase::idToken,
             exchange = sessionApi::session,
             learnerGone = { wipe.leaveLearner() },
-            signedOutElsewhere = { entry.signOut() },
+            signedOutElsewhere = { uid -> entry.signOut(of = uid) },
         )
     }
 
