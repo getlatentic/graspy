@@ -52,9 +52,7 @@ class AccountEntry(
             currentCoroutineContext().ensureActive()
             failedByCancelledTask()
         }
-        if (outcome is SignInOutcome.Succeeded) {
-            forgetting.edit(commit = true) { remove(SIGNING_IN) }
-        } else {
+        if (outcome !is SignInOutcome.Succeeded) {
             // Firebase writes its sign-out to disk in the background, so the note stays: a kill before that write
             // leaves Firebase's user for the next start to find, with the note to undo it by.
             firebase.signOut()
@@ -94,13 +92,15 @@ class AccountEntry(
     /**
      * Nothing of the account or its learners stays on the device. Its note goes first, so a sign-out cut short
      * finds the account still here, or Firebase's user with no account, and [reconcile] finishes it at the next
-     * start. The Google account is forgotten last: it waits on Play services, and the wipe must not.
+     * start. The Google account is forgotten last: it waits on Play services, and the wipe must not. Given [of],
+     * only that account is signed out: a refusal of one left behind leaves the next sign-in alone.
      */
-    suspend fun signOut() {
+    suspend fun signOut(of: String? = null) {
         // A sign-out asked for again while one runs (a session refused mid-wipe, the start's reconcile) waits for
         // it, and then has nothing left to do.
         val signedOut = signingOut.withLock {
-            if (accounts.account.value == null && firebase.userId == null) return@withLock false
+            val holding = accounts.account.value?.uid ?: firebase.userId ?: return@withLock false
+            if (of != null && holding != of) return@withLock false
             forgetting.edit(commit = true) {
                 putBoolean(GOOGLE_ACCOUNT, true)
                 putBoolean(SIGNING_OUT, true)
@@ -220,8 +220,17 @@ class AccountEntry(
     private suspend fun startAccountSession(uid: String) {
         val idToken = checkNotNull(firebase.idToken(uid, fresh = false)) { "Google did not confirm the sign-in" }
         val issued = sessionApi.session(SessionRequestDto(deviceId = deviceIds.current(), firebaseIdToken = idToken))
-        accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
-        sessions.keep(uid, issued)
+        // Stored, and its notes dropped, in one step and only while Firebase still holds this sign-in: a sign-out
+        // run meanwhile has signed Firebase out and keeps its note; one run after finds the account and notes itself.
+        signingOut.withLock {
+            check(firebase.userId == uid) { "Signed out while signing in" }
+            accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
+            sessions.keep(uid, issued)
+            forgetting.edit(commit = true) {
+                remove(SIGNING_IN)
+                remove(SIGNING_OUT)
+            }
+        }
     }
 
     private companion object {
