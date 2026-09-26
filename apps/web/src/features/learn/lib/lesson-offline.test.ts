@@ -9,6 +9,8 @@ const graspy = {
   reachable: true,
   answers: {} as Record<string, unknown>,
   called: [] as string[],
+  /** Topics whose lesson the server fails to give. */
+  failing: new Set<string>(),
 };
 function reach() {
   if (!graspy.reachable) throw new TypeError("Failed to fetch");
@@ -23,9 +25,16 @@ vi.mock("@modelcontextprotocol/client", () => ({
       ],
     });
     listResources = async () => ({ resources: [] });
-    callTool = async ({ name }: { name: string }) => {
+    callTool = async ({
+      name,
+      arguments: args,
+    }: {
+      name: string;
+      arguments: { target: { topic: string } };
+    }) => {
       reach();
       graspy.called.push(name);
+      if (graspy.failing.has(args.target.topic)) throw new Error("502");
       return graspy.answers[name];
     };
   },
@@ -45,6 +54,12 @@ const PLAN: CurriculumData = {
   updatedAt: 0,
 };
 const MATHS = PLAN.subjects[0];
+const NUMBER_SYSTEMS = {
+  planId: "plan-1",
+  subjectSlug: "mathematics",
+  topicIndex: 0,
+  topic: "Number Systems",
+};
 const FRACTIONS = {
   planId: "plan-1",
   subjectSlug: "mathematics",
@@ -82,6 +97,7 @@ beforeEach(() => {
   online = true;
   graspy.reachable = true;
   graspy.called = [];
+  graspy.failing = new Set();
   graspy.answers = {
     give_lesson: result("ready"),
     lesson_progress: result("ready"),
@@ -163,6 +179,17 @@ describe("the copies", () => {
     goOffline();
 
     await expect(openLessonOrCopy(target)).resolves.toEqual(opened);
+  });
+
+  it("go on past a lesson the server fails to give", async () => {
+    const { copiedTopics, copyReadyLessons } = await fresh();
+    graspy.failing.add("Number Systems");
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await copyReadyLessons(PLAN, [NUMBER_SYSTEMS, FRACTIONS]);
+
+    expect(await copiedTopics()).toEqual([FRACTIONS]);
+    expect(console.warn).toHaveBeenCalledOnce();
   });
 
   it("keep only a lesson the server has whole", async () => {
