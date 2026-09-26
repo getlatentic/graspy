@@ -1,9 +1,7 @@
 package com.latentic.graspy.mcp
 
 import android.util.Base64
-import com.latentic.graspy.account.SessionRefusal
 import com.latentic.graspy.network.readTimeout
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.Dispatchers
@@ -41,11 +39,6 @@ data class ViewCard(
     val toolInput: JsonObject,
     val toolResult: JsonObject,
 )
-
-class McpRefusal(message: String) : IOException(message)
-
-/** No answer came, as the web's failed fetch: neither the server nor the session in front of it refused. */
-fun Throwable.isUnreachable(): Boolean = this is IOException && this !is McpRefusal && this !is SessionRefusal
 
 fun JsonObject.isToolError(): Boolean = (this["isError"] as? JsonPrimitive)?.booleanOrNull == true
 
@@ -90,10 +83,15 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
     suspend fun view(uri: String): UiView = views[uri] ?: readView(uri).also { views[uri] = it }
 
     private suspend fun catalogue(): Catalogue = catalogueLock.withLock {
-        catalogue ?: catalogueOf(
-            tools = rpc("tools/list", JsonObject(emptyMap()))["tools"]?.jsonArray.orEmpty(),
-            resources = rpc("resources/list", JsonObject(emptyMap()))["resources"]?.jsonArray.orEmpty(),
-        ).also { catalogue = it }
+        catalogue ?: try {
+            catalogueOf(
+                tools = rpc("tools/list", JsonObject(emptyMap()))["tools"]?.jsonArray.orEmpty(),
+                resources = rpc("resources/list", JsonObject(emptyMap()))["resources"]?.jsonArray.orEmpty(),
+            ).also { catalogue = it }
+        } catch (refused: McpRefusal) {
+            // A server that cannot be connected to has said nothing of the call that needed it.
+            throw McpRefusal("The server's catalogue was not read: ${refused.message}", aboutTheCall = false)
+        }
     }
 
     private fun catalogueOf(tools: List<JsonElement>, resources: List<JsonElement>): Catalogue {
@@ -146,17 +144,17 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
     }
 
     private fun resultOf(response: Response, method: String): JsonObject {
-        // The server answered: a refusal, not a lost connection, so nothing is kept to send again.
-        if (!response.isSuccessful) throw McpRefusal("$method failed: HTTP ${response.code}")
         val text = response.body.string()
+        // The server answered: not a lost connection, so no copy stands in for it.
+        if (!response.isSuccessful) throw McpRefusal("$method failed: HTTP ${response.code}", refusedOverHttp(response.code, text))
         val message = if (response.header("Content-Type").orEmpty().startsWith("text/event-stream")) {
             text.lineSequence().filter { it.startsWith("data:") }.lastOrNull()?.removePrefix("data:")?.trim()
         } else {
             text
         }
-        val reply = message?.let(::replyOf) ?: throw McpRefusal("$method returned no JSON-RPC message")
-        reply["error"]?.let { throw McpRefusal("$method refused: $it") }
-        return reply["result"] as? JsonObject ?: throw McpRefusal("$method returned no result")
+        val reply = message?.let(::replyOf) ?: throw McpRefusal("$method returned no JSON-RPC message", aboutTheCall = false)
+        reply["error"]?.let { throw McpRefusal("$method refused: $it", refusedOverRpc(it)) }
+        return reply["result"] as? JsonObject ?: throw McpRefusal("$method returned no result", aboutTheCall = false)
     }
 
     private fun replyOf(message: String): JsonObject? = try {

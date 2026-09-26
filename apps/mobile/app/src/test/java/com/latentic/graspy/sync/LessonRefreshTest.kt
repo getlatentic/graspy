@@ -8,6 +8,7 @@ import com.latentic.graspy.collection.VoiceRefusal
 import com.latentic.graspy.collection.outbox.UploadDisposition
 import com.latentic.graspy.collection.outbox.UploadFailurePolicy
 import com.latentic.graspy.localization.AppLanguage
+import com.latentic.graspy.network.fromGraspy
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -75,9 +76,9 @@ class LessonRefreshTest {
         assertEquals(VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.of(refused))
         assertEquals(
             UploadDisposition.PERMANENT_FAILURE,
-            UploadFailurePolicy.forHttp(409, attemptIndex = 0, refusal = VoiceRefusal.of(refused)),
+            UploadFailurePolicy.forHttp(409, attemptIndex = 0, fromGraspy = fromGraspy(refused), refusal = VoiceRefusal.of(refused)),
         )
-        assertEquals(UploadDisposition.RETRY, UploadFailurePolicy.forHttp(503, attemptIndex = 0))
+        assertEquals(UploadDisposition.RETRY, UploadFailurePolicy.forHttp(503, attemptIndex = 0, fromGraspy = false))
     }
 
     private fun httpError(code: Int, body: String) = HttpException(

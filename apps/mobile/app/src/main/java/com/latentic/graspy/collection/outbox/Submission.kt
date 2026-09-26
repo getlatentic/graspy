@@ -34,13 +34,19 @@ enum class UploadDisposition {
 object UploadFailurePolicy {
     const val MAX_ATTEMPTS = 5
 
-    /** A refusal the server named decides, whatever its status; an unnamed one goes by the status. */
-    fun forHttp(statusCode: Int, attemptIndex: Int, refusal: VoiceRefusal? = null): UploadDisposition = when (refusal) {
-        VoiceRefusal.LEARNER_REQUIRED -> UploadDisposition.WAIT_FOR_LEARNER
-        VoiceRefusal.AUDIO_NOT_READY -> disposition(true, attemptIndex)
-        VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.UNSUPPORTED_PROMPT, VoiceRefusal.IDEMPOTENCY_CONFLICT ->
-            UploadDisposition.PERMANENT_FAILURE
-        null -> disposition(transient(statusCode), attemptIndex)
+    /**
+     * A refusal the server named decides, whatever its status; an unnamed one goes by the status. A 4xx without the
+     * voice API's own body ([fromGraspy]) came from something in the way, so the voice API gave no answer at all.
+     */
+    fun forHttp(statusCode: Int, attemptIndex: Int, fromGraspy: Boolean, refusal: VoiceRefusal? = null): UploadDisposition = when {
+        statusCode < 500 && !fromGraspy -> forNetwork(attemptIndex)
+        else -> when (refusal) {
+            VoiceRefusal.LEARNER_REQUIRED -> UploadDisposition.WAIT_FOR_LEARNER
+            VoiceRefusal.AUDIO_NOT_READY -> disposition(true, attemptIndex)
+            VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.UNSUPPORTED_PROMPT, VoiceRefusal.IDEMPOTENCY_CONFLICT ->
+                UploadDisposition.PERMANENT_FAILURE
+            null -> disposition(transient(statusCode), attemptIndex)
+        }
     }
 
     private fun transient(statusCode: Int) =

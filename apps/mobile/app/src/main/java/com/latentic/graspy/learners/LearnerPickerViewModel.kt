@@ -14,10 +14,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class ChoiceProblem { UNSENT, FULL, FAILED }
+/** [UNSENT] asks whether to switch anyway; the others only say why nothing changed. */
+enum class ChoiceProblem { OFFLINE, UNSENT, FULL, FAILED }
 
 fun choiceProblem(error: Throwable): ChoiceProblem = when {
-    error is UnsentChanges -> ChoiceProblem.UNSENT
+    error is UnsentChanges -> if (error.offline) ChoiceProblem.OFFLINE else ChoiceProblem.UNSENT
     refusalCode(error) == "too_many_learners" -> ChoiceProblem.FULL
     else -> ChoiceProblem.FAILED
 }
@@ -37,6 +38,8 @@ class LearnerPickerViewModel(application: Application) : AndroidViewModel(applic
     private val account = AppGraph.account(application)
     private val mutableState = MutableStateFlow(PickerState())
     private var loadedFor: String? = null
+    /** Picked last, added already if it was new, so switching anyway never adds them twice. */
+    private var chosen: LearnerDto? = null
 
     val state = mutableState.asStateFlow()
 
@@ -69,20 +72,30 @@ class LearnerPickerViewModel(application: Application) : AndroidViewModel(applic
 
     fun stopAdding() = mutableState.update { it.copy(adding = false) }
 
-    fun choose(learner: LearnerDto, onChosen: () -> Unit) = run(onChosen) { account.choice.choose(learner) }
+    fun choose(learner: LearnerDto, onChosen: () -> Unit) = run(onChosen) { learner }
 
-    fun addAndChoose(name: String, onChosen: () -> Unit) = run(onChosen) { account.choice.addAndChoose(name) }
+    fun addAndChoose(name: String, onChosen: () -> Unit) = run(onChosen) { account.choice.add(name) }
+
+    /** Switches to the learner last picked though what the device holds has not all reached graspy. */
+    fun anyway(onChosen: () -> Unit) {
+        val learner = chosen ?: return
+        run(onChosen, loseUnsent = true) { learner }
+    }
+
+    fun cancel() = mutableState.update { it.copy(problem = null) }
 
     fun leaveForAnotherAccount() {
         viewModelScope.launch { account.entry.leaveForAnotherAccount() }
     }
 
-    private fun run(onChosen: () -> Unit, pick: suspend () -> Unit) {
+    private fun run(onChosen: () -> Unit, loseUnsent: Boolean = false, pick: suspend () -> LearnerDto) {
         if (mutableState.value.busy) return
         mutableState.update { it.copy(busy = true, problem = null) }
         viewModelScope.launch {
             try {
-                pick()
+                val learner = pick()
+                chosen = learner
+                account.choice.choose(learner, loseUnsent)
                 mutableState.update { it.copy(busy = false, adding = false) }
                 onChosen()
             } catch (error: CancellationException) {

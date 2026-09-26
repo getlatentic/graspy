@@ -4,15 +4,18 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import retrofit2.HttpException
 
 @RunWith(RobolectricTestRunner::class)
 class LearnerChoiceTest {
     private val api = FakeAccountApi()
     private val events = api.calls
     private var everythingSent = true
+    private var online = true
 
     private fun choice(accounts: AccountStore) = LearnerChoice(
         accounts = accounts,
@@ -20,6 +23,7 @@ class LearnerChoiceTest {
         sessions = heldSessions(accounts),
         deviceId = { DEVICE },
         outbox = { learner -> events += "flush:$learner"; everythingSent },
+        online = { online },
         leaveLearner = {
             events += "wipe"
             accounts.setLearner(null)
@@ -39,22 +43,59 @@ class LearnerChoiceTest {
     }
 
     @Test
-    fun `a later choice sends what is unsent, wipes the device, then takes up the learner`() = runBlocking {
+    fun `a later choice sends what is unsent, has the learner's session issued, then wipes the device and takes them up`() = runBlocking {
         val accounts = accountStore(signedIn(ADA, deviceJoins = false))
 
         choice(accounts).choose(BAYO)
 
-        assertEquals(listOf("flush:${learnerKey(UID, ADA.id)}", "wipe", "session:${BAYO.id}:null"), events)
+        assertEquals(listOf("flush:${learnerKey(UID, ADA.id)}", "session:${BAYO.id}:null", "wipe"), events)
         assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
     }
 
     @Test
-    fun `a switch that cannot send everything is refused, and nothing is wiped`() {
+    fun `offline, a switch that cannot send everything is refused, and nothing is wiped`() {
+        val accounts = accountStore(signedIn(ADA, deviceJoins = false))
+        everythingSent = false
+        online = false
+
+        val refused = assertThrows(UnsentChanges::class.java) { runBlocking { choice(accounts).choose(BAYO) } }
+
+        assertTrue(refused.offline)
+        assertEquals(listOf("flush:${learnerKey(UID, ADA.id)}"), events)
+        assertEquals(ChosenLearner(ADA.id, ADA.name), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `online, a switch that could not send everything asks first, and nothing is wiped`() {
         val accounts = accountStore(signedIn(ADA, deviceJoins = false))
         everythingSent = false
 
-        assertThrows(UnsentChanges::class.java) { runBlocking { choice(accounts).choose(BAYO) } }
+        val refused = assertThrows(UnsentChanges::class.java) { runBlocking { choice(accounts).choose(BAYO) } }
+
+        assertFalse(refused.offline)
         assertEquals(listOf("flush:${learnerKey(UID, ADA.id)}"), events)
+        assertEquals(ChosenLearner(ADA.id, ADA.name), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `switching anyway goes ahead with what could not be sent`() = runBlocking {
+        val accounts = accountStore(signedIn(ADA, deviceJoins = false))
+        everythingSent = false
+
+        choice(accounts).choose(BAYO, loseUnsent = true)
+
+        assertEquals(listOf("session:${BAYO.id}:null", "wipe"), events)
+        assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `a switch graspy does not issue a session for leaves the device as it was`() {
+        val accounts = accountStore(signedIn(ADA, deviceJoins = false))
+        api.sessionRefusedWith = 503
+
+        assertThrows(HttpException::class.java) { runBlocking { choice(accounts).choose(BAYO, loseUnsent = true) } }
+
+        assertEquals(listOf("session:${BAYO.id}:null"), events)
         assertEquals(ChosenLearner(ADA.id, ADA.name), accounts.account.value?.learner)
     }
 
@@ -73,16 +114,14 @@ class LearnerChoiceTest {
 
         choice(accounts).choose(BAYO)
 
-        assertEquals(listOf("wipe", "session:${BAYO.id}:null"), events)
+        assertEquals(listOf("session:${BAYO.id}:null", "wipe"), events)
     }
 
     @Test
-    fun `adding a learner confirms the guardian, then chooses them`() = runBlocking {
-        val accounts = accountStore(signedIn(learner = null))
+    fun `adding a learner confirms the guardian`() = runBlocking {
+        val added = choice(accountStore(signedIn(learner = null))).add("Tolu")
 
-        choice(accounts).addAndChoose("Tolu")
-
-        assertEquals("add:Tolu:true", events.first())
-        assertEquals("Tolu", accounts.account.value?.learner?.name)
+        assertEquals(listOf("add:Tolu:true"), events)
+        assertEquals("Tolu", added.name)
     }
 }
