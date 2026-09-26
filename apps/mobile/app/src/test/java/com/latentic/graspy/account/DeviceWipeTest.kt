@@ -331,27 +331,7 @@ class DeviceWipeTest {
         signingIn.cancelAndJoin()
 
         assertNull(firebaseUid)
-        assertEquals(setOf("google_account", "signing_in", "sign_in_cut_short"), signOutPending.keys)
-    }
-
-    @Test
-    fun `a sign-in cut short is undone at the next start though a later one ended, Firebase having finished it late`() = runBlocking {
-        accounts.set(null)
-        val atSheet = CompletableDeferred<Unit>()
-        val left = AccountEntry(context, { atSheet.complete(Unit); awaitCancellation() }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
-        val signingIn = launch { left.signIn() }
-        atSheet.await()
-        signingIn.cancelAndJoin()
-        AccountEntry(context, { SignInOutcome.Cancelled }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
-        firebaseUid = UID
-        val start = CoroutineScope(Dispatchers.IO + Job())
-
-        entry(wipe).reconcile(start)
-        start.coroutineContext[Job]!!.children.forEach { it.join() }
-
-        assertNull(accounts.account.value)
-        assertNull(firebaseUid)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending.keys)
     }
 
     @Test
@@ -399,9 +379,9 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `a sign-in that stored its account before it was cut short is kept, its notes gone`() = runBlocking {
+    fun `a sign-in that stored its account before it was cut short is kept, its note gone`() = runBlocking {
         firebaseUid = UID
-        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).putBoolean("sign_in_cut_short", true).commit()
+        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()
 
         entry(wipe).reconcile(CoroutineScope(Dispatchers.IO + Job()))
 
