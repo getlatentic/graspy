@@ -71,6 +71,7 @@ class HomeCatalogueViewModel(application: Application, private val ownerId: Stri
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(KEEP_ALIVE_MILLIS), CatalogueState.Loading)
 
     fun open(language: AppLanguage, schoolClass: SchoolClass) {
+        if (!AppGraph.account(getApplication()).learnsAs(ownerId)) return
         opened.value = OpenCatalogue(ownerId, schoolClass.wireValue, language)
         scheduler.refresh(LessonRefreshRequest(ownerId, schoolClass.wireValue, language))
     }

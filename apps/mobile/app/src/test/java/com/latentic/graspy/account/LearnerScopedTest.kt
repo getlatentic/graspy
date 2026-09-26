@@ -18,6 +18,7 @@ import com.latentic.graspy.practice.PracticeLessonViewModel
 import com.latentic.graspy.sync.lessonRefreshWorkName
 import com.latentic.graspy.ui.LearnerScope
 import com.latentic.graspy.ui.LearnerViewModels
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
@@ -48,6 +49,9 @@ class LearnerScopedTest {
         if (!WorkManager.isInitialized()) WorkManager.initialize(application, Configuration.Builder().setExecutor { it.run() }.build())
         assertNull(AppGraph.account(application).learnerInUse())
     }
+
+    @After
+    fun signOut() = AppGraph.account(application).accounts.set(null)
 
     @Test
     fun `a view model is made for the learner of its scope, and anew for the next learner`() {
@@ -80,18 +84,29 @@ class LearnerScopedTest {
     }
 
     @Test
-    fun `voice lessons open for their own learner after the device has left them`() {
-        PracticeLessonViewModel(application, "account:u/ada").prepare(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
-        assertScheduledFor("account:u/ada")
+    fun `voice lessons ask for newer lessons for their own learner`() {
+        AppGraph.account(application).accounts.set(Account("u", null, ChosenLearner("ada", "Ada"), deviceJoins = false))
 
-        HomeCatalogueViewModel(application, "account:u/tunde").open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
-        assertScheduledFor("account:u/tunde")
+        PracticeLessonViewModel(application, "u/ada").prepare(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+        assertEquals(1, refreshesFor("u/ada"))
+        forgetRefreshes("u/ada")
+
+        HomeCatalogueViewModel(application, "u/ada").open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+        assertEquals(1, refreshesFor("u/ada"))
     }
 
-    private fun assertScheduledFor(learnerKey: String) {
-        val name = lessonRefreshWorkName(learnerKey)
-        assertTrue("no lesson refresh for $learnerKey", work.getWorkInfosForUniqueWork(name).get().isNotEmpty())
-        work.cancelUniqueWork(name).result.get()
+    @Test
+    fun `nothing starts for a learner the device has left, and nothing crashes`() {
+        PracticeLessonViewModel(application, "u/ada").prepare(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+        HomeCatalogueViewModel(application, "u/ada").open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+
+        assertEquals(0, refreshesFor("u/ada"))
+    }
+
+    private fun refreshesFor(learnerKey: String) = work.getWorkInfosForUniqueWork(lessonRefreshWorkName(learnerKey)).get().size
+
+    private fun forgetRefreshes(learnerKey: String) {
+        work.cancelUniqueWork(lessonRefreshWorkName(learnerKey)).result.get()
         work.pruneWork().result.get()
     }
 }

@@ -70,6 +70,7 @@ class PracticeLessonViewModel(application: Application, private val ownerId: Str
     private var arrivingState: ClassroomState? = null
 
     fun prepare(language: AppLanguage, schoolClass: SchoolClass) {
+        if (!AppGraph.account(getApplication()).learnsAs(ownerId)) return
         val previous = learner
         learner = Learner(schoolClass, language)
         if (previous?.schoolClass == schoolClass) {
@@ -104,7 +105,7 @@ class PracticeLessonViewModel(application: Application, private val ownerId: Str
 
     /** Ask WorkManager for a newer step. Repeated asks coalesce; nothing on screen waits for the answer. */
     fun refresh() {
-        val learner = learner ?: return
+        val learner = learner?.takeIf { AppGraph.account(getApplication()).learnsAs(ownerId) } ?: return
         refreshRequestedAtEpochMillis = System.currentTimeMillis()
         scheduler.refresh(
             LessonRefreshRequest(ownerId, learner.schoolClass.wireValue, learner.language, openedPlanId),
