@@ -1,0 +1,146 @@
+{
+  "id": "mathematics.multiplication.table-4",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 24,
+  "title": {
+    "en": "The four times table",
+    "yo": "Table four",
+    "pcm": "Table four"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 4,
+  "objectives": [
+    {
+      "en": "Say every fact from four times one to four times twelve without help.",
+      "yo": "Sọ gbogbo fact láti four times one dé four times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from four times one reach four times twelve without help."
+    },
+    {
+      "en": "Answer any four times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí four times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any four times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-3"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of four mangoes. Today we count in fours.",
+        "pcm": "Look three groups of four mango. Today we go count four four.",
+        "yo": "Wo groups three ti four mango. Lónìí a ó kà ní four four."
+      },
+      "show": {
+        "en": "4, 8, 12…",
+        "yo": "4, 8, 12…",
+        "pcm": "4, 8, 12…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the four times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table four. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table four. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the three times table? What is three times four?",
+        "pcm": "You remember table three? Three times four na how much?",
+        "yo": "Ṣé o rántí table three? Kí ni three times four?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_3x4_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of four mangoes show this. We count four, eight, twelve. Four times three is twelve.",
+        "pcm": "See three groups of four mango: four, eight, twelve. Four times three na twelve.",
+        "yo": "Wo groups mẹ́ta ti four mango: four, eight, twelve. Four times three jẹ́ twelve."
+      },
+      "show": {
+        "en": "4 × 3 = 12",
+        "yo": "4 × 3 = 12",
+        "pcm": "4 × 3 = 12"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: four times three is twelve.",
+        "pcm": "Say am with me: four times three na twelve.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: four times three jẹ́ twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_4x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the four times table. Start with four times one. End with four times twelve.",
+        "pcm": "Say table four. Start with four times one. End with four times twelve.",
+        "yo": "Sọ table four. Bẹ̀rẹ̀ pẹ̀lú four times one. Parí pẹ̀lú four times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_4_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is four times seven?",
+        "pcm": "Four times seven na how much?",
+        "yo": "Kí ni four times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_4x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the four times table once more. Then we start the five times table.",
+        "pcm": "You do well. Tomorrow we go check table four again. Then we start table five.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table four. Lẹ́yìn náà a ó bẹ̀rẹ̀ table five."
+      }
+    }
+  ]
+}

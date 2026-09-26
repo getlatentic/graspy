@@ -1,0 +1,146 @@
+{
+  "id": "mathematics.multiplication.table-5",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 25,
+  "title": {
+    "en": "The five times table",
+    "yo": "Table five",
+    "pcm": "Table five"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 4,
+  "objectives": [
+    {
+      "en": "Say every fact from five times one to five times twelve without help.",
+      "yo": "Sọ gbogbo fact láti five times one dé five times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from five times one reach five times twelve without help."
+    },
+    {
+      "en": "Answer any five times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí five times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any five times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-4"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of five mangoes. Today we count in fives.",
+        "pcm": "Look three groups of five mango. Today we go count five five.",
+        "yo": "Wo groups three ti five mango. Lónìí a ó kà ní five five."
+      },
+      "show": {
+        "en": "5, 10, 15…",
+        "yo": "5, 10, 15…",
+        "pcm": "5, 10, 15…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the five times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table five. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table five. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the four times table? What is four times five?",
+        "pcm": "You remember table four? Four times five na how much?",
+        "yo": "Ṣé o rántí table four? Kí ni four times five?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_4x5_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of five mangoes show this. We count five, ten, fifteen. Five times three is fifteen.",
+        "pcm": "See three groups of five mango: five, ten, fifteen. Five times three na fifteen.",
+        "yo": "Wo groups mẹ́ta ti five mango: five, ten, fifteen. Five times three jẹ́ fifteen."
+      },
+      "show": {
+        "en": "5 × 3 = 15",
+        "yo": "5 × 3 = 15",
+        "pcm": "5 × 3 = 15"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: five times three is fifteen.",
+        "pcm": "Say am with me: five times three na fifteen.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: five times three jẹ́ fifteen."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_5x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the five times table. Start with five times one. End with five times twelve.",
+        "pcm": "Say table five. Start with five times one. End with five times twelve.",
+        "yo": "Sọ table five. Bẹ̀rẹ̀ pẹ̀lú five times one. Parí pẹ̀lú five times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_5_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is five times seven?",
+        "pcm": "Five times seven na how much?",
+        "yo": "Kí ni five times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_5x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the five times table once more. Then we start the six times table.",
+        "pcm": "You do well. Tomorrow we go check table five again. Then we start table six.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table five. Lẹ́yìn náà a ó bẹ̀rẹ̀ table six."
+      }
+    }
+  ]
+}

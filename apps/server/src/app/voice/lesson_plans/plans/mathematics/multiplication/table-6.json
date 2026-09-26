@@ -1,0 +1,146 @@
+{
+  "id": "mathematics.multiplication.table-6",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 26,
+  "title": {
+    "en": "The six times table",
+    "yo": "Table six",
+    "pcm": "Table six"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 4,
+  "objectives": [
+    {
+      "en": "Say every fact from six times one to six times twelve without help.",
+      "yo": "Sọ gbogbo fact láti six times one dé six times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from six times one reach six times twelve without help."
+    },
+    {
+      "en": "Answer any six times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí six times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any six times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-5"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of six mangoes. Today we count in sixs.",
+        "pcm": "Look three groups of six mango. Today we go count six six.",
+        "yo": "Wo groups three ti six mango. Lónìí a ó kà ní six six."
+      },
+      "show": {
+        "en": "6, 12, 18…",
+        "yo": "6, 12, 18…",
+        "pcm": "6, 12, 18…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the six times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table six. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table six. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the five times table? What is five times six?",
+        "pcm": "You remember table five? Five times six na how much?",
+        "yo": "Ṣé o rántí table five? Kí ni five times six?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_5x6_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of six mangoes show this. We count six, twelve, eighteen. Six times three is eighteen.",
+        "pcm": "See three groups of six mango: six, twelve, eighteen. Six times three na eighteen.",
+        "yo": "Wo groups mẹ́ta ti six mango: six, twelve, eighteen. Six times three jẹ́ eighteen."
+      },
+      "show": {
+        "en": "6 × 3 = 18",
+        "yo": "6 × 3 = 18",
+        "pcm": "6 × 3 = 18"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: six times three is eighteen.",
+        "pcm": "Say am with me: six times three na eighteen.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: six times three jẹ́ eighteen."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_6x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the six times table. Start with six times one. End with six times twelve.",
+        "pcm": "Say table six. Start with six times one. End with six times twelve.",
+        "yo": "Sọ table six. Bẹ̀rẹ̀ pẹ̀lú six times one. Parí pẹ̀lú six times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_6_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is six times seven?",
+        "pcm": "Six times seven na how much?",
+        "yo": "Kí ni six times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_6x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the six times table once more. Then we start the seven times table.",
+        "pcm": "You do well. Tomorrow we go check table six again. Then we start table seven.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table six. Lẹ́yìn náà a ó bẹ̀rẹ̀ table seven."
+      }
+    }
+  ]
+}

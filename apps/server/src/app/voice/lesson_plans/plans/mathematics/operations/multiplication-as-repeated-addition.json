@@ -1,0 +1,259 @@
+{
+  "id": "mathematics.operations.multiplication-as-repeated-addition",
+  "subject": "mathematics",
+  "topic": "operations",
+  "sequence": 18,
+  "title": {
+    "en": "Adding the same number again and again",
+    "yo": "Fífi nọ́ńbà kan náà kún ara rẹ̀ léraléra",
+    "pcm": "Adding the same number again and again"
+  },
+  "classes": [
+    "primary_2"
+  ],
+  "term": 2,
+  "week": 9,
+  "objectives": [
+    {
+      "en": "Say that adding the same number again and again is multiplying.",
+      "yo": "Sọ pé fífi nọ́ńbà kan náà kún ara rẹ̀ léraléra ni multiplying.",
+      "pcm": "Talk say when you add the same number again and again, na multiplying be that."
+    },
+    {
+      "en": "Write repeated adding with the times sign, like four add four is four times two.",
+      "yo": "Kọ repeated adding pẹ̀lú àmì times, bíi four add four jẹ́ four times two.",
+      "pcm": "Write repeated adding with the times sign, like four add four na four times two."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.operations.addition-facts-to-twenty"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiplication as repeated addition and the use of symbol '×'"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three heaps of oranges. Each heap has two oranges. Two add two add two.",
+        "pcm": "Look three heap of orange. Every heap get two orange. Two add two add two. Today we go learn a faster way.",
+        "yo": "Wo òkìtì ọ̀sàn three. Òkìtì kọ̀ọ̀kan ní ọ̀sàn two. Two add two add two. Lónìí a ó kọ́ ọ̀nà yíyára."
+      },
+      "show": {
+        "en": "2 + 2 + 2 = ?",
+        "yo": "2 + 2 + 2 = ?",
+        "pcm": "2 + 2 + 2 = ?"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will turn repeated adding into times.",
+        "pcm": "Today you go turn repeated adding into times.",
+        "yo": "Lónìí, ìwọ yóò yí repeated adding padà sí times."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember adding? Two oranges, then two more, then two more. Say the total as you go.",
+        "pcm": "You remember adding? Two orange, then two more, then two more. Say the total as you go.",
+        "yo": "Ṣé o rántí addition? Ọ̀sàn two, two sí i, two sí i. Sọ àpapọ̀ bí o ṣe ń lọ."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "two",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "four",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "six",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Adding the same number again and again is multiplying. Two add two add two is six. Three twos make two times three.",
+        "pcm": "When you add the same number again and again, na multiplying. Two add two add two na six. Three twos na two times three. The times sign be like small cross.",
+        "yo": "Fífi nọ́ńbà kan náà kún ara rẹ̀ léraléra ni multiplying. Two add two add two jẹ́ six. Three twos ni two times three. Àmì times dà bí àgbélébùú kékeré."
+      },
+      "show": {
+        "en": "2 + 2 + 2 = 2 × 3 = 6",
+        "yo": "2 + 2 + 2 = 2 × 3 = 6",
+        "pcm": "2 + 2 + 2 = 2 × 3 = 6"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Let us add. Two heaps have four oranges each. Four add four. How many in all?",
+        "pcm": "Make we do am together now. Two heap, four orange for every heap. Four add four. How many orange all together?",
+        "yo": "Bá mi ṣe é papọ̀ báyìí. Òkìtì two, ọ̀sàn four nínú òkìtì kọ̀ọ̀kan. Four add four. Ọ̀sàn mélòó ni gbogbo rẹ̀?"
+      },
+      "show": {
+        "en": "4 + 4 = 4 × 2",
+        "yo": "4 + 4 = 4 × 2",
+        "pcm": "4 + 4 = 4 × 2"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "eight",
+            "8"
+          ],
+          "yo": [
+            "eight",
+            "8",
+            "mẹ́jọ"
+          ],
+          "pcm": [
+            "eight",
+            "8"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn: three wraps have five sweets each. Five add five add five. How many sweets in all?",
+        "pcm": "Na your turn: three wrap get five sweet each. Five add five add five. How many sweet all?",
+        "yo": "Ìwọ ná: Ìdì three ní sweets five kọ̀ọ̀kan. Five add five add five. Sweets mélòó ni gbogbo rẹ̀?"
+      },
+      "show": {
+        "en": "5 + 5 + 5 = 5 × 3",
+        "yo": "5 + 5 + 5 = 5 × 3",
+        "pcm": "5 + 5 + 5 = 5 × 3"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "fifteen",
+            "15"
+          ],
+          "yo": [
+            "fifteen",
+            "15",
+            "mẹ́ẹ̀ẹ́dógún",
+            "mẹ́ẹ̀dógún",
+            "mẹ́dógún"
+          ],
+          "pcm": [
+            "fifteen",
+            "15"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix it together. Count the wraps: five, ten, fifteen. Five times three is fifteen.",
+        "pcm": "Make we fix am together. Count the wrap: five, ten, fifteen. Five times three na fifteen.",
+        "yo": "Jẹ́ ká tún ṣe é papọ̀. Kà ìdì náà: five, ten, fifteen. Five times three jẹ́ fifteen."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Two rows have six eggs each. Six add six?",
+        "pcm": "Make we see wetin you remember. Two row get six egg each. Six add six?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Ìlà two ní ẹyin six kọ̀ọ̀kan. Six add six?"
+      },
+      "show": {
+        "en": "6 + 6 = 6 × 2",
+        "yo": "6 + 6 = 6 × 2",
+        "pcm": "6 + 6 = 6 × 2"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "twelve",
+            "12"
+          ],
+          "yo": [
+            "twelve",
+            "12",
+            "méjìlá"
+          ],
+          "pcm": [
+            "twelve",
+            "12"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Twelve eggs make one dozen. Tomorrow we add again.",
+        "pcm": "You do well. Twelve egg make one dozen. Tomorrow we go add again.",
+        "yo": "O ṣe dáadáa. Ẹyin twelve jẹ́ dosin kan. Lọ́la a ó tún ṣe addition."
+      }
+    }
+  ]
+}

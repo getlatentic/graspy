@@ -1,0 +1,259 @@
+{
+  "id": "mathematics.time.telling-the-time",
+  "subject": "mathematics",
+  "topic": "time",
+  "sequence": 42,
+  "title": {
+    "en": "Telling the time",
+    "yo": "Sísọ àkókò",
+    "pcm": "Telling time"
+  },
+  "classes": [
+    "primary_2",
+    "primary_3"
+  ],
+  "term": 3,
+  "week": 2,
+  "objectives": [
+    {
+      "en": "Say the o'clock time when the long hand is on twelve.",
+      "yo": "Sọ àkókò o'clock nígbà tí ọwọ́ gígùn bá wà lórí twelve.",
+      "pcm": "Talk the o'clock time when the long hand dey on twelve."
+    },
+    {
+      "en": "Know that the long hand on six means half past.",
+      "yo": "Mọ̀ pé ọwọ́ gígùn lórí six túmọ̀ sí half past.",
+      "pcm": "Know say when the long hand dey on six, na half past."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.time.days-of-the-week"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Mensuration and Geometry / Primary Measures / Time",
+    "objective": "Tell the time on the hour and the half hour",
+    "note": "Scheme families disagree on the term for Primary 2; term 3 is safe for Primary 3."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "The school bell rings at eight o'clock. Break is half past ten. A clock tells the time.",
+        "pcm": "School bell dey ring eight o'clock. Break na half past ten. Clock dey tell the time.",
+        "yo": "Agogo ilé ìwé máa ń lu ní eight o'clock. Ìsinmi jẹ́ half past ten. Aago ń sọ àkókò."
+      },
+      "show": {
+        "en": "8 o'clock",
+        "yo": "8 o'clock",
+        "pcm": "8 o'clock"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will look at clocks and say times.",
+        "pcm": "Today you go look clock and talk times.",
+        "yo": "Lónìí, ìwọ yóò wo aago kí o sọ àkókò."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Let us name three days. Say Monday, Tuesday, Wednesday.",
+        "pcm": "Make we name three days. Talk Monday, Tuesday, Wednesday.",
+        "yo": "Jẹ́ ká sọ ọjọ́ mẹ́ta. Sọ Monday, Tuesday, Wednesday."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "monday",
+            "spoken": {
+              "en": [
+                "Monday"
+              ],
+              "yo": [
+                "Monday",
+                "Ọjọ́ Ajé"
+              ],
+              "pcm": [
+                "Monday"
+              ]
+            }
+          },
+          {
+            "id": "tuesday",
+            "spoken": {
+              "en": [
+                "Tuesday"
+              ],
+              "yo": [
+                "Tuesday",
+                "Ọjọ́ Ìṣẹ́gun"
+              ],
+              "pcm": [
+                "Tuesday"
+              ]
+            }
+          },
+          {
+            "id": "wednesday",
+            "spoken": {
+              "en": [
+                "Wednesday"
+              ],
+              "yo": [
+                "Wednesday",
+                "Ọjọ́rú"
+              ],
+              "pcm": [
+                "Wednesday"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "A clock has short and long hands. Short hands show hours, long hands show minutes. Twelve means o'clock, and six means half past.",
+        "pcm": "Clock get short and long hands. Short hand dey show hour, long hand dey show minutes. Twelve mean o'clock, and six mean half past.",
+        "yo": "Aago ní ọwọ́ kúkúrú àti gígùn. Ọwọ́ kúkúrú ń fi wákàtí hàn, ọwọ́ gígùn sì ń fi ìṣẹ́jú hàn. Twelve túmọ̀ sí o'clock, six sì túmọ̀ sí half past."
+      },
+      "show": {
+        "en": "long hand on 12 = o'clock",
+        "yo": "long hand on 12 = o'clock",
+        "pcm": "long hand on 12 = o'clock"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Let us read one: long hand is on twelve. Short hand is on two. Say two o'clock with me.",
+        "pcm": "Make we read one: long hand dey on twelve. Short hand dey on two. Say am with me: two o'clock.",
+        "yo": "Jẹ́ ká ka ọ̀kan: ọwọ́ gígùn wà lórí twelve. Ọwọ́ kúkúrú wà lórí two. Sọ two o'clock pẹ̀lú mi."
+      },
+      "show": {
+        "en": "2 o'clock",
+        "yo": "2 o'clock",
+        "pcm": "2 o'clock"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "two o'clock",
+            "two oclock",
+            "2 o clock",
+            "2 oclock"
+          ],
+          "yo": [
+            "two o'clock",
+            "two oclock",
+            "2 o clock",
+            "2 oclock",
+            "aago méjì"
+          ],
+          "pcm": [
+            "two o'clock",
+            "two oclock",
+            "2 o clock",
+            "2 oclock"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. Long hand on twelve, short hand on three. What time is it?",
+        "pcm": "Na your turn. Long hand dey twelve, short hand dey three. Which time be that?",
+        "yo": "Ìwọ náà. Ọwọ́ gígùn lórí twelve, ọwọ́ kúkúrú lórí three. Àkókò wo ni?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "three o'clock",
+            "three oclock",
+            "3 o clock",
+            "3 oclock"
+          ],
+          "yo": [
+            "three o'clock",
+            "three oclock",
+            "3 o clock",
+            "3 oclock",
+            "aago mẹ́ta"
+          ],
+          "pcm": [
+            "three o'clock",
+            "three oclock",
+            "3 o clock",
+            "3 oclock"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Look at the short hand again. It names the hour. Long hand on twelve says o'clock.",
+        "pcm": "Look the short hand again. E name the hour. Long hand for twelve talk o'clock.",
+        "yo": "Tún wo ọwọ́ kúkúrú. Ó ń sọ wákàtí. Ọwọ́ gígùn lórí twelve ń sọ o'clock."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Long hand on twelve, short hand on five. What time is it?",
+        "pcm": "Make we see wetin you remember. Long hand dey twelve, short hand dey five. Which time be that?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Ọwọ́ gígùn lórí twelve, ọwọ́ kúkúrú lórí five. Àkókò wo ni?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "five o'clock",
+            "five oclock",
+            "5 o clock",
+            "5 oclock"
+          ],
+          "yo": [
+            "five o'clock",
+            "five oclock",
+            "5 o clock",
+            "5 oclock",
+            "aago márùn-ún",
+            "aago márùn"
+          ],
+          "pcm": [
+            "five o'clock",
+            "five oclock",
+            "5 o clock",
+            "5 oclock"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we tell time again. Next we learn half past four.",
+        "pcm": "Well done. Tomorrow we go tell time again. Next we learn half past four.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún sọ àkókò. Lẹ́yìn náà, a ó kọ́ half past four."
+      }
+    }
+  ]
+}

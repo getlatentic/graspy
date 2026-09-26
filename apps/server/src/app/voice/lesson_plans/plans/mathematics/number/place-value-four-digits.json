@@ -1,0 +1,204 @@
+{
+  "id": "mathematics.number.place-value-four-digits",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 52,
+  "title": {
+    "en": "Place value in four-digit numbers",
+    "yo": "Place value nínú nọ́ńbà tó ní digit four",
+    "pcm": "Place value for four-digit number"
+  },
+  "classes": [
+    "primary_4"
+  ],
+  "term": 1,
+  "week": 1,
+  "objectives": [
+    {
+      "en": "Give the place value of each digit in a four-digit number.",
+      "yo": "Sọ place value ti digit kọ̀ọ̀kan nínú nọ́ńbà tó ní digit four.",
+      "pcm": "Talk the place value of every digit inside four-digit number."
+    },
+    {
+      "en": "Break a four-digit number into thousands, hundreds, tens and units.",
+      "yo": "Pín nọ́ńbà tó ní digit four sí thousands, hundreds, tens àti units.",
+      "pcm": "Break four-digit number into thousands, hundreds, tens and units."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.number.place-value-tens-and-units"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration",
+    "objective": "Give the place value of each digit in a 4-digit number"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "A bus from Ibadan to Lagos costs three thousand, five hundred naira. Write that fare down and it has four digits. Each digit tells you something different.",
+        "yo": "Owó ọkọ̀ láti Ibadan dé Lagos jẹ́ naira three thousand, five hundred. Kọ owó náà sílẹ̀, ó ní digit four. Digit kọ̀ọ̀kan ń sọ nǹkan ọ̀tọ̀ọ̀tọ̀ fún ọ.",
+        "pcm": "Bus from Ibadan go Lagos dey cost three thousand, five hundred naira. Write that fare down, e get four digits. Every digit dey tell you different thing."
+      },
+      "show": {
+        "en": "3500",
+        "yo": "3500",
+        "pcm": "3500"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will say the place value of any digit in a four-digit number.",
+        "yo": "Lónìí, ìwọ yóò sọ place value ti digit èyíkéyìí nínú nọ́ńbà tó ní digit four.",
+        "pcm": "Today you go fit talk the place value of any digit inside four-digit number."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "You already know tens and units. In the number four seven, what is the place value of the four?",
+        "yo": "O ti mọ tens àti units. Nínú nọ́ńbà four seven, kí ni place value ti four?",
+        "pcm": "You sabi tens and units already. For the number four seven, wetin be the place value of the four?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "forty",
+            "40"
+          ],
+          "yo": [
+            "forty",
+            "40",
+            "ogójì"
+          ],
+          "pcm": [
+            "forty",
+            "40"
+          ]
+        }
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Take four eight six two. Counting from the right, the columns are units, tens, hundreds, thousands. So the two stands for two. The six stands for sixty. The eight stands for eight hundred. The four stands for four thousand.",
+        "yo": "Mú four eight six two. Bí a ṣe ń ka láti ọwọ́ ọ̀tún, àwọn column ni units, tens, hundreds, thousands. Nítorí náà two dúró fún two. Six dúró fún sixty. Eight dúró fún eight hundred. Four dúró fún four thousand.",
+        "pcm": "Take four eight six two. As you dey count from your right hand side, the columns na units, tens, hundreds, thousands. So the two stand for two. The six stand for sixty. The eight stand for eight hundred. The four stand for four thousand."
+      },
+      "show": {
+        "en": "4862 = 4000 + 800 + 60 + 2",
+        "yo": "4862 = 4000 + 800 + 60 + 2",
+        "pcm": "4862 = 4000 + 800 + 60 + 2"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Together now. Take three two five six. Three stands for three thousand. Your turn: what is the place value of five?",
+        "yo": "Jẹ́ ká ṣe é papọ̀. Mú three two five six. Three dúró fún three thousand. Ìwọ ná: kí ni place value ti five?",
+        "pcm": "Make we do am together. Take three two five six. The three stand for three thousand. Your turn: wetin be the place value of the five?"
+      },
+      "show": {
+        "en": "3 2 5 6",
+        "yo": "3 2 5 6",
+        "pcm": "3 2 5 6"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "fifty",
+            "50"
+          ],
+          "yo": [
+            "fifty",
+            "50",
+            "àádọ́ta"
+          ],
+          "pcm": [
+            "fifty",
+            "50"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn alone. In six three nine four, what is the place value of the three?",
+        "yo": "Ìwọ nìkan báyìí. Nínú nọ́ńbà six three nine four, kí ni place value ti three?",
+        "pcm": "Na your turn alone. For the number six three nine four, wetin be the place value of the three?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "three hundred",
+            "300"
+          ],
+          "yo": [
+            "three hundred",
+            "300"
+          ],
+          "pcm": [
+            "three hundred",
+            "300"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If you missed it, name the columns from the right: units, tens, hundreds, thousands. Then say which column that digit sits in.",
+        "yo": "Tí o bá ṣì í, pe àwọn column láti ọwọ́ ọ̀tún: units, tens, hundreds, thousands. Lẹ́yìn náà sọ column tí digit náà wà.",
+        "pcm": "If you miss am, call the columns from your right hand side: units, tens, hundreds, thousands. Then talk which column that digit dey."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. In five one seven three, what is the place value of the five?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí, láìsí ìrànlọ́wọ́. Nínú nọ́ńbà five one seven three, kí ni place value ti five?",
+        "pcm": "Make we see wetin you remember, no help. For the number five one seven three, wetin be the place value of the five?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "five thousand",
+            "5000"
+          ],
+          "yo": [
+            "five thousand",
+            "5000"
+          ],
+          "pcm": [
+            "five thousand",
+            "5000"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check place value once more. Soon we read and write Roman numerals.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún wo place value. Láìpẹ́ a ó kà, a ó sì kọ Roman numerals.",
+        "pcm": "You do well. Tomorrow we go check place value. Soon we go read and write Roman numerals."
+      }
+    }
+  ]
+}

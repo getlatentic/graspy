@@ -34,6 +34,8 @@ The server's environment holds only what changes between deployments or is secre
 | `LLM_MODEL_ID` | Overrides the host's model id. Unset uses the host's gpt-oss-120b |
 | `FIREBASE_API_KEY` | The Firebase project's web API key: the project whose sign-ins are accepted. A Worker secret in production. Unset turns sign-in off |
 | `FIREBASE_AUTH_EMULATOR_HOST` | The Auth emulator's `host:port`, which then checks sign-ins in place of Google. Development only: the server refuses to start with it in production |
+| `INTRON_API_KEY` | Intron's speech recognition, which hears the learner in voice lessons. Worker only: `.dev.vars` locally, a secret in production |
+| `SPITCH_API_KEY` | Spitch's speech synthesis, the teacher's voice in voice lessons. Worker only: `.dev.vars` locally, a secret in production |
 | `SESSION_SECRET` | Signs session tokens. Required in production; in development a temporary key is made |
 | `CORS_ORIGINS` | Allowed origins, comma-separated or JSON. One wildcard label is allowed; `*` is refused |
 | `PUBLIC_BASE_URL` / `A2A_PATH_PREFIX` | The origin the agent card advertises, and the tutor's path (default `/a2a`) |
@@ -70,10 +72,19 @@ npm run worker:dev -- --port 8799
 
 This runs `workerd` with the rate limits, Durable Objects and views. The first run vendors the Python packages, which takes a minute.
 
+Voice lessons run only here. Add `INTRON_API_KEY` and `SPITCH_API_KEY` to `.dev.vars`, create the local database once, and start the tutor Worker beside the API in a second terminal. The API finds it through the service binding:
+
+```bash
+cd apps/server && npx wrangler d1 migrations apply graspy --local
+cd apps/tutor && npx wrangler dev --port 8798
+```
+
+D1 and R2 are local; Workers AI is remote, so `npx wrangler login` first. Signing in is not available here, so voice is tried as a signed-out device.
+
 ## Build and deploy
 
 - **Web:** `npm run build` writes `apps/web/dist` for Cloudflare Pages, using `.env.production`.
-- **Server:** needs the Workers Paid plan, because a lesson needs more than 10 ms of CPU. `npx wrangler login`, then `npx wrangler secret put` for `SESSION_SECRET`, `FIREBASE_API_KEY` and the host's credentials (`AWS_BEARER_TOKEN_BEDROCK`, or `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`), then `npm run deploy` in `apps/server`. The plain values and bindings are in `apps/server/wrangler.jsonc`.
+- **Server:** needs the Workers Paid plan, because a lesson needs more than 10 ms of CPU. `npx wrangler login`, then `npx wrangler secret put` for `SESSION_SECRET`, `FIREBASE_API_KEY`, `INTRON_API_KEY`, `SPITCH_API_KEY` and the host's credentials (`AWS_BEARER_TOKEN_BEDROCK`, or `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`), then `npm run deploy` in `apps/server`. The plain values and bindings are in `apps/server/wrangler.jsonc`.
 - **Imports that load at startup** grow the Worker's startup snapshot. It has a size cap, and past it a deploy fails with code 10013. Near the cap, the same build can pass or fail, so deploy a change that adds imports three times.
 - `pylock.toml` pins what the Worker vendors. `pywrangler` rewrites it when `pyproject.toml` changes. Commit it.
 

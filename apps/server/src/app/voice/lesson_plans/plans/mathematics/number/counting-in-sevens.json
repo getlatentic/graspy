@@ -1,0 +1,549 @@
+{
+  "id": "mathematics.number.counting-in-sevens",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 51,
+  "title": {
+    "en": "Counting in sevens",
+    "yo": "Kíkà ní seven seven",
+    "pcm": "Counting for seven seven"
+  },
+  "classes": [
+    "primary_4"
+  ],
+  "term": 1,
+  "week": 3,
+  "objectives": [
+    {
+      "en": "Count in sevens from seven to eighty-four without help.",
+      "yo": "Kà ní seven seven láti seven dé eighty-four láìsí ìrànlọ́wọ́.",
+      "pcm": "Count for seven seven from seven reach eighty-four without help."
+    },
+    {
+      "en": "Change weeks to days, because seven days make one week.",
+      "yo": "Yí ọ̀sẹ̀ padà sí ọjọ́, nítorí ọjọ́ seven ni ó wà nínú ọ̀sẹ̀ kan.",
+      "pcm": "Change weeks to days, because seven days make one week."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.number.counting-in-fives"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration",
+    "objective": "Apply knowledge of counting to local counting in groups of sevens (weeks and days), and change days to weeks",
+    "note": "NERDC teaches fives, sevens and sixties as one Primary 4 objective; this lesson takes the sevens."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at the league table. Your team plays Saturday, then next Saturday. That is seven days. A week has seven days.",
+        "yo": "Wo tábìlì ìdíje bọ́ọ̀lù nínú ìwé ìròyìn. Ẹgbẹ́ rẹ máa ń ṣeré ní Saturday, ó tún máa ń ṣeré ní Saturday tó tẹ̀lé e. Ọjọ́ seven ni ọ̀sẹ̀ kan.",
+        "pcm": "Look the league table for newspaper. Your team dey play for Saturday, then e go play again the next Saturday. Na seven days be that. Seven days make one week."
+      },
+      "show": {
+        "en": "7, 14, 21…",
+        "yo": "7, 14, 21…",
+        "pcm": "7, 14, 21…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will count in sevens from seven to eighty-four by yourself.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò kà ní seven seven láti seven dé eighty-four.",
+        "pcm": "Today you go fit count for seven seven from seven reach eighty-four by yourself."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "First, the fives you already know. Count in fives from five to twenty-five.",
+        "yo": "Ní àkọ́kọ́, àwọn five tí o ti mọ̀. Kà ní five five láti five dé twenty-five.",
+        "pcm": "First, the fives wey you sabi. Count for five five from five reach twenty-five."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "15",
+            "spoken": {
+              "en": [
+                "15",
+                "fifteen"
+              ],
+              "yo": [
+                "15",
+                "fifteen",
+                "mẹ́ẹ̀ẹ́dógún",
+                "mẹ́ẹ̀dógún",
+                "mẹ́dógún",
+                "ẹ̀ẹ́dógún"
+              ],
+              "pcm": [
+                "15",
+                "fifteen"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          },
+          {
+            "id": "25",
+            "spoken": {
+              "en": [
+                "25",
+                "twenty-five"
+              ],
+              "yo": [
+                "25",
+                "twenty-five",
+                "márùndínlọ́gbọ̀n"
+              ],
+              "pcm": [
+                "25",
+                "twenty-five"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "One week is seven days. Two weeks is fourteen days. Three weeks is twenty-one days. Every week we add seven more: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two.",
+        "yo": "Ọ̀sẹ̀ kan jẹ́ ọjọ́ seven. Ọ̀sẹ̀ two jẹ́ ọjọ́ fourteen. Ọ̀sẹ̀ three jẹ́ ọjọ́ twenty-one. Ní ọ̀sẹ̀ kọ̀ọ̀kan a fi seven kún un: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two.",
+        "pcm": "One week na seven days. Two weeks na fourteen days. Three weeks na twenty-one days. Every week we dey add seven more: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two."
+      },
+      "show": {
+        "en": "7 14 21 28 35 42",
+        "yo": "7 14 21 28 35 42",
+        "pcm": "7 14 21 28 35 42"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Start together: seven, fourteen, twenty-one, twenty-eight. Say it with me.",
+        "yo": "Jẹ́ ká bẹ̀rẹ̀ papọ̀: seven, fourteen, twenty-one, twenty-eight.",
+        "pcm": "Make we start together: seven, fourteen, twenty-one, twenty-eight."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "21",
+            "spoken": {
+              "en": [
+                "21",
+                "twenty-one"
+              ],
+              "yo": [
+                "21",
+                "twenty-one",
+                "mọ́kànlélógún"
+              ],
+              "pcm": [
+                "21",
+                "twenty-one"
+              ]
+            }
+          },
+          {
+            "id": "28",
+            "spoken": {
+              "en": [
+                "28",
+                "twenty-eight"
+              ],
+              "yo": [
+                "28",
+                "twenty-eight",
+                "méjìdínlọ́gbọ̀n"
+              ],
+              "pcm": [
+                "28",
+                "twenty-eight"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. Count in sevens from seven to eighty-four in one aloud.",
+        "yo": "Ìwọ ná. Kà ní seven seven láti seven dé eighty-four nínú aloud kan.",
+        "pcm": "Na your turn. Count for seven seven from seven reach eighty-four aloud."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "21",
+            "spoken": {
+              "en": [
+                "21",
+                "twenty-one"
+              ],
+              "yo": [
+                "21",
+                "twenty-one",
+                "mọ́kànlélógún"
+              ],
+              "pcm": [
+                "21",
+                "twenty-one"
+              ]
+            }
+          },
+          {
+            "id": "28",
+            "spoken": {
+              "en": [
+                "28",
+                "twenty-eight"
+              ],
+              "yo": [
+                "28",
+                "twenty-eight",
+                "méjìdínlọ́gbọ̀n"
+              ],
+              "pcm": [
+                "28",
+                "twenty-eight"
+              ]
+            }
+          },
+          {
+            "id": "35",
+            "spoken": {
+              "en": [
+                "35",
+                "thirty-five"
+              ],
+              "yo": [
+                "35",
+                "thirty-five",
+                "márùndínlógójì"
+              ],
+              "pcm": [
+                "35",
+                "thirty-five"
+              ]
+            }
+          },
+          {
+            "id": "42",
+            "spoken": {
+              "en": [
+                "42",
+                "forty-two"
+              ],
+              "yo": [
+                "42",
+                "forty-two",
+                "méjìlélógójì"
+              ],
+              "pcm": [
+                "42",
+                "forty-two"
+              ]
+            }
+          },
+          {
+            "id": "49",
+            "spoken": {
+              "en": [
+                "49",
+                "forty-nine"
+              ],
+              "yo": [
+                "49",
+                "forty-nine",
+                "mọ́kàndínláàádọ́ta",
+                "mọ́kàndínláàdọ́ta",
+                "mọ́kàndínládọ́ta"
+              ],
+              "pcm": [
+                "49",
+                "forty-nine"
+              ]
+            }
+          },
+          {
+            "id": "56",
+            "spoken": {
+              "en": [
+                "56",
+                "fifty-six"
+              ],
+              "yo": [
+                "56",
+                "fifty-six",
+                "mẹ́rìndínlọ́gọ́ta"
+              ],
+              "pcm": [
+                "56",
+                "fifty-six"
+              ]
+            }
+          },
+          {
+            "id": "63",
+            "spoken": {
+              "en": [
+                "63",
+                "sixty-three"
+              ],
+              "yo": [
+                "63",
+                "sixty-three",
+                "mẹ́tàlélọ́gọ́ta"
+              ],
+              "pcm": [
+                "63",
+                "sixty-three"
+              ]
+            }
+          },
+          {
+            "id": "70",
+            "spoken": {
+              "en": [
+                "70",
+                "seventy"
+              ],
+              "yo": [
+                "70",
+                "seventy",
+                "àádọ́rin"
+              ],
+              "pcm": [
+                "70",
+                "seventy"
+              ]
+            }
+          },
+          {
+            "id": "77",
+            "spoken": {
+              "en": [
+                "77",
+                "seventy-seven"
+              ],
+              "yo": [
+                "77",
+                "seventy-seven",
+                "mẹ́tàdínlọ́gọ́rin"
+              ],
+              "pcm": [
+                "77",
+                "seventy-seven"
+              ]
+            }
+          },
+          {
+            "id": "84",
+            "spoken": {
+              "en": [
+                "84",
+                "eighty-four"
+              ],
+              "yo": [
+                "84",
+                "eighty-four",
+                "mẹ́rìnlélọ́gọ́rin"
+              ],
+              "pcm": [
+                "84",
+                "eighty-four"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Listen to the numbers you skipped. Each time, add seven to the number before it.",
+        "yo": "Gbọ́ àwọn nọ́ńbà tí o fò. Nígbà kọ̀ọ̀kan, fi seven kún nọ́ńbà tó ṣáájú rẹ̀.",
+        "pcm": "Hear the numbers wey you jump. Every time, add seven to the number wey come before am."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember, no help. How many days are in six weeks?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí, láìsí ìrànlọ́wọ́. Ọjọ́ mélòó ni ó wà nínú ọ̀sẹ̀ six?",
+        "pcm": "Make we see wetin you remember, no help. How many days dey inside six weeks?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "forty-two",
+            "42"
+          ],
+          "yo": [
+            "forty-two",
+            "42",
+            "méjìlélógójì"
+          ],
+          "pcm": [
+            "forty-two",
+            "42"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we count in sevens once more. Soon we give the place value of every digit in a four-digit number.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún kà ní seven seven lẹ́ẹ̀kan sí i. Láìpẹ́ a ó sọ place value ti digit kọ̀ọ̀kan nínú nọ́ńbà tó ní digit four.",
+        "pcm": "You do well. Tomorrow we go count for seven seven one more time. Soon we go talk the place value of every digit inside four-digit number."
+      }
+    }
+  ]
+}

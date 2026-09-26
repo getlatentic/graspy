@@ -7,6 +7,7 @@ runs lifespan once per request.
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlsplit
 
 import dspy
@@ -23,6 +24,7 @@ from .api.account_routes import account_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
 from .api.routes import api_router
+from .api.voice_routes import voice_router
 from .caller import Keeping
 from .config.cors import build_origin_rules, origin_matcher
 from .domains.curriculum.service import CurriculumService
@@ -43,6 +45,7 @@ from .security.headers import SecurityHeadersMiddleware
 from .security.rate_limit import Budgets, RateLimitMiddleware
 from .security.session import resolve_secret
 from .settings import Settings, get_settings
+from .voice.keeping import NO_VOICE, BoundVoice
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +61,12 @@ def create_app(
     making: LessonMaking | None = None,
     views: Views | None = None,
     budgets: Budgets | None = None,
+    voice: Any | None = None,
 ) -> FastAPI:
     """The keyword arguments are the Worker's bindings; without them
-    everything is kept in memory and no request budget applies."""
+    everything is kept in memory, no request budget applies and voice lessons
+    are unavailable. ``voice`` is the Worker's env, which the voice modules
+    read their bindings from."""
     settings = settings or get_settings()
     lm = build_lm(settings)
     logger.info("Serving with model: %s", lm.model)
@@ -71,13 +77,15 @@ def create_app(
     origins = _origins(settings)
     _add_middleware(app, settings, origins, session_secret, budgets, lm)
     _add_exception_handlers(app)
-    keeping = _keeping(lessons, learners, making, conversations, lm)
+    keeping = _keeping(lessons, learners, making, conversations, lm, voice)
     _add_state(app, settings, session_secret, origins, keeping, views)
+    app.state.voice = voice
 
     app.include_router(api_router, prefix="/api")
     app.include_router(learner_router, prefix="/api")
     app.include_router(account_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
+    app.include_router(voice_router, prefix="/api")
     # Imported on the Worker's first request, not at startup: the A2A SDK and
     # its protobuf types would take the startup snapshot over its size cap.
     from .agent.a2a import a2a_routes
@@ -106,6 +114,7 @@ def _keeping(
     making: LessonMaking | None,
     conversations: ConversationStore | None,
     lm: dspy.LM,
+    voice: Any | None,
 ) -> Keeping:
     lessons = lessons or InMemoryLessonStore()
     learners = learners or InMemoryLearnerStore()
@@ -117,6 +126,7 @@ def _keeping(
         lessons=lessons,
         making=making,
         conversations=conversations or InMemoryConversationStore(),
+        voice=NO_VOICE if voice is None else BoundVoice(voice),
     )
 
 

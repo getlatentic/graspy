@@ -1,0 +1,282 @@
+{
+  "id": "mathematics.number.roman-numerals",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 55,
+  "title": {
+    "en": "Roman numerals",
+    "yo": "Àwọn nọ́ńbà Roman",
+    "pcm": "Roman numbers"
+  },
+  "classes": [
+    "primary_4"
+  ],
+  "term": 1,
+  "week": 4,
+  "objectives": [
+    {
+      "en": "Read a Roman numeral from I to C and say the number it means.",
+      "yo": "Ka Roman numeral láti I dé C, kí o sì sọ nọ́ńbà tí ó túmọ̀ sí.",
+      "pcm": "Read any Roman numeral from I reach C and talk the number wey e mean."
+    },
+    {
+      "en": "Write a number up to one hundred as a Roman numeral.",
+      "yo": "Kọ nọ́ńbà tí kò ju one hundred lọ ní Roman numeral.",
+      "pcm": "Write any number wey no pass one hundred as Roman numeral."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration",
+    "objective": "Read and write Roman numerals I to C (1 to 100)",
+    "note": "Three scheme families give three different weeks; the topic sits in first term, weeks 3 to 5."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at the big clock on the wall at home. Instead of one, two, three it shows I, II, III. Your textbook names its chapters the same way. Those letters are Roman numerals.",
+        "yo": "Wo aago ńlá tó wà lára ògiri nílé. Dípò one, two, three, ó fi I, II, III hàn. Ìwé ìkẹ́kọ̀ọ́ rẹ náà ń pe àwọn orí rẹ̀ bákan náà. Àwọn lẹ́tà wọ̀nyí ni Roman numerals.",
+        "pcm": "Look the big clock wey dey wall for house. Instead of one, two, three, e dey show I, II, III. Your textbook too dey name im chapters the same way. Those letters na Roman numerals."
+      },
+      "show": {
+        "en": "XII = 12",
+        "yo": "XII = 12",
+        "pcm": "XII = 12"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will read Roman numerals and write numbers in them by yourself.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò ka Roman numerals, ìwọ yóò sì kọ nọ́ńbà nínú wọn.",
+        "pcm": "Today you go fit read Roman numerals and write numbers with dem by yourself."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "First, counting in tens. Count in tens from ten to fifty.",
+        "yo": "Ní àkọ́kọ́, kíkà ní ten ten. Kà ní ten ten láti ten dé fifty.",
+        "pcm": "First, counting for ten ten. Count for ten ten from ten reach fifty."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          },
+          {
+            "id": "30",
+            "spoken": {
+              "en": [
+                "30",
+                "thirty"
+              ],
+              "yo": [
+                "30",
+                "thirty",
+                "ọgbọ̀n"
+              ],
+              "pcm": [
+                "30",
+                "thirty"
+              ]
+            }
+          },
+          {
+            "id": "40",
+            "spoken": {
+              "en": [
+                "40",
+                "forty"
+              ],
+              "yo": [
+                "40",
+                "forty",
+                "ogójì"
+              ],
+              "pcm": [
+                "40",
+                "forty"
+              ]
+            }
+          },
+          {
+            "id": "50",
+            "spoken": {
+              "en": [
+                "50",
+                "fifty"
+              ],
+              "yo": [
+                "50",
+                "fifty",
+                "àádọ́ta"
+              ],
+              "pcm": [
+                "50",
+                "fifty"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "I is one. V is five. X is ten. L is fifty. C is one hundred. A letter after a bigger one is added. X I is eleven. A smaller letter before a bigger one is taken away. I X is nine.",
+        "yo": "I jẹ́ one. V jẹ́ five. X jẹ́ ten. L jẹ́ fifty. C jẹ́ one hundred. Lẹ́tà tí a bá kọ lẹ́yìn lẹ́tà tó tóbi jù ni a fi kún un, nítorí náà X I jẹ́ eleven. Lẹ́tà kékeré tí a bá kọ ṣáájú èyí tó tóbi ni a yọ kúrò, nítorí náà I X jẹ́ nine.",
+        "pcm": "I na one. V na five. X na ten. L na fifty. C na one hundred. Any letter wey dey after big letter, we dey add am, so X I na eleven. Small letter wey dey before big one, we dey take am comot, so I X na nine."
+      },
+      "show": {
+        "en": "I=1 V=5 X=10 L=50 C=100",
+        "yo": "I=1 V=5 X=10 L=50 C=100",
+        "pcm": "I=1 V=5 X=10 L=50 C=100"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Now the other way. Ten is X. Thirty is X X X. Your turn: say the Roman numeral for four, letter by letter?",
+        "yo": "Wá ṣe é ní ọ̀nà kejì, lẹ́tà láti inú nọ́ńbà. Ten jẹ́ X. Thirty jẹ́ X X X. Ìwọ ná: sọ Roman numeral fún four, lẹ́tà kọ̀ọ̀kan.",
+        "pcm": "Now make we do am the other way, letters from number. Ten na X. Thirty na X X X. Your turn: talk the Roman numeral for four, letter by letter."
+      },
+      "show": {
+        "en": "4 = ?",
+        "yo": "4 = ?",
+        "pcm": "4 = ?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "i v",
+            "iv"
+          ],
+          "yo": [
+            "i v",
+            "iv"
+          ],
+          "pcm": [
+            "i v",
+            "iv"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn alone. What number is the Roman numeral X I I?",
+        "yo": "Ìwọ nìkan báyìí. Nọ́ńbà wo ni Roman numeral X I I?",
+        "pcm": "Na your turn alone. Which number be the Roman numeral X I I?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "twelve",
+            "12"
+          ],
+          "yo": [
+            "twelve",
+            "12",
+            "méjìlá"
+          ],
+          "pcm": [
+            "twelve",
+            "12"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If you missed it, take the letters one at a time. X is ten, I is one, and the second I is one more. Add them.",
+        "yo": "Tí o bá ṣì í, mú àwọn lẹ́tà náà lọ́kọ̀ọ̀kan. X jẹ́ ten, I jẹ́ one, I kejì sì jẹ́ one mìíràn. Fi wọ́n kún ara wọn.",
+        "pcm": "If you miss am, take the letters one by one. X na ten, I na one, and the second I na one more. Add dem together."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember, no help. What number is the Roman numeral L X?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí, láìsí ìrànlọ́wọ́. Nọ́ńbà wo ni Roman numeral L X?",
+        "pcm": "Make we see wetin you remember, no help. Which number be the Roman numeral L X?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "sixty",
+            "60"
+          ],
+          "yo": [
+            "sixty",
+            "60",
+            "ọgọ́ta"
+          ],
+          "pcm": [
+            "sixty",
+            "60"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we read Roman numerals again. Soon we put whole numbers in order with less than and greater than.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ka Roman numerals. Láìpẹ́ a ó to àwọn nọ́ńbà ní ètò pẹ̀lú less than àti greater than.",
+        "pcm": "You do well. Tomorrow we go read Roman numerals again. Soon we go arrange whole numbers with less than and greater than."
+      }
+    }
+  ]
+}

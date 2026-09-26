@@ -62,13 +62,18 @@ class RateLimitMiddleware:
         path = scope["path"]
         if path == "/api/session":
             return self._budgets.session
-        if path.startswith(("/api/curriculum/", "/api/subjects/")):
+        if path.startswith(("/api/curriculum/", "/api/subjects/")) or _evaluation(path):
             return self._budgets.generate
         if path == self._agent_prefix or path.startswith(f"{self._agent_prefix}/"):
             return self._budgets.agent
         if path.startswith("/api") or path == self._mcp_path:
             return self._budgets.api
         return None
+
+
+def _evaluation(path: str) -> bool:
+    """Marking a recording runs speech recognition and models."""
+    return path.startswith("/api/voice/samples/") and path.endswith("/evaluation")
 
 
 def client_key(scope) -> str:

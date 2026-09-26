@@ -1,0 +1,146 @@
+{
+  "id": "mathematics.multiplication.table-3",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 23,
+  "title": {
+    "en": "The three times table",
+    "yo": "Table three",
+    "pcm": "Table three"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 3,
+  "objectives": [
+    {
+      "en": "Say every fact from three times one to three times twelve without help.",
+      "yo": "Sọ gbogbo fact láti three times one dé three times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from three times one reach three times twelve without help."
+    },
+    {
+      "en": "Answer any three times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí three times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any three times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-2"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of three mangoes. Today we count in threes.",
+        "pcm": "Look three groups of three mango. Today we go count three three.",
+        "yo": "Wo groups three ti three mango. Lónìí a ó kà ní three three."
+      },
+      "show": {
+        "en": "3, 6, 9…",
+        "yo": "3, 6, 9…",
+        "pcm": "3, 6, 9…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the three times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table three. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table three. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the two times table? What is two times three?",
+        "pcm": "You remember table two? Two times three na how much?",
+        "yo": "Ṣé o rántí table two? Kí ni two times three?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_2x3_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of three mangoes show this. We count three, six, nine. Three times three is nine.",
+        "pcm": "See three groups of three mango: three, six, nine. Three times three na nine.",
+        "yo": "Wo groups mẹ́ta ti three mango: three, six, nine. Three times three jẹ́ nine."
+      },
+      "show": {
+        "en": "3 × 3 = 9",
+        "yo": "3 × 3 = 9",
+        "pcm": "3 × 3 = 9"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: three times three is nine.",
+        "pcm": "Say am with me: three times three na nine.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: three times three jẹ́ nine."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_3x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the three times table. Start with three times one. End with three times twelve.",
+        "pcm": "Say table three. Start with three times one. End with three times twelve.",
+        "yo": "Sọ table three. Bẹ̀rẹ̀ pẹ̀lú three times one. Parí pẹ̀lú three times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_3_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is three times seven?",
+        "pcm": "Three times seven na how much?",
+        "yo": "Kí ni three times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_3x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the three times table once more. Then we start the four times table.",
+        "pcm": "You do well. Tomorrow we go check table three again. Then we start table four.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table three. Lẹ́yìn náà a ó bẹ̀rẹ̀ table four."
+      }
+    }
+  ]
+}

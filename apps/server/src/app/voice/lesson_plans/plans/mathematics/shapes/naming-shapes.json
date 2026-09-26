@@ -1,0 +1,173 @@
+{
+  "id": "mathematics.shapes.naming-shapes",
+  "subject": "mathematics",
+  "topic": "shapes",
+  "sequence": 6,
+  "title": {
+    "en": "Naming shapes",
+    "yo": "Sísọ orúkọ ìrísí",
+    "pcm": "Calling shape name"
+  },
+  "classes": [
+    "kindergarten"
+  ],
+  "term": 1,
+  "week": 5,
+  "objectives": [
+    {
+      "en": "Name a circle, a square and a triangle.",
+      "yo": "Sọ orúkọ circle, square àti triangle.",
+      "pcm": "Call the name of circle, square and triangle."
+    },
+    {
+      "en": "Pick the right shape from a spoken clue.",
+      "yo": "Yan ìrísí tó tọ́ látinú ìtọ́kasí tí a sọ.",
+      "pcm": "Pick the correct shape from clue wey person talk."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "scheme-of-work",
+    "strand": "Number Work (Mathematics)",
+    "objective": "Name a circle, a triangle, a square and a rectangle",
+    "note": "Lagos State teaches plane shapes in Kindergarten first term week 5; they do not appear in its Nursery 1 or Nursery 2 number work at all."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at a plate. Look at a window. Shapes are around you.",
+        "pcm": "Look plate. Look window. Shape dey around you.",
+        "yo": "Wo àwo. Wo fèrèsé. Ìrísí wà káàkiri yí ọ ká."
+      },
+      "show": {
+        "en": "○ □ △",
+        "yo": "○ □ △",
+        "pcm": "○ □ △"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will name three shapes. Listen for each clue.",
+        "pcm": "Today you go name three shape. Listen for each clue.",
+        "yo": "Lónìí o ó sọ orúkọ ìrísí mẹ́ta. Fetí sí ìtọ́kasí kọ̀ọ̀kan."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Think of your ball. Think of your window. Their shapes differ.",
+        "pcm": "Think about your ball. Think about your window. Their shape no be the same.",
+        "yo": "Ronú nípa bọ́ọ̀lù rẹ. Ronú nípa fèrèsé rẹ. Ìrísí wọn kò jọra."
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+      "en": "A circle is round all over. A square has four equal sides. A triangle has only three sides.",
+      "pcm": "Circle dey round everywhere. Square get four sides wey equal. Triangle get only three sides.",
+      "yo": "Circle yíká káàkiri. Square ní ẹ̀gbẹ́ mẹ́rin dọ́gba. Triangle ní ẹ̀gbẹ́ mẹ́ta péré."
+      },
+      "show": {
+        "en": "circle ○, square □, triangle △",
+        "yo": "circle ○, square □, triangle △",
+        "pcm": "circle ○, square □, triangle △"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Let us try together. It has three straight sides. What shape is it?",
+        "pcm": "Make we try together. E get three straight sides. Which shape be am?",
+        "yo": "Jẹ́ kí a jọ gbìyànjú. Ó ní ẹ̀gbẹ́ mẹ́ta tààrà. Ìrísí wo ni?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "triangle"
+          ],
+          "yo": [
+            "triangle",
+            "onígunmẹ́ta"
+          ],
+          "pcm": [
+            "triangle"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. It is round like a plate. What shape is it?",
+        "pcm": "Na your turn. E round like plate. Which shape be am?",
+        "yo": "Ìwọ ná. Ó yíká bí àwo. Ìrísí wo ni?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "circle"
+          ],
+          "yo": [
+            "circle",
+            "òbìrìkítí"
+          ],
+          "pcm": [
+            "circle"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Good try. Let us look at the shapes again.",
+        "pcm": "Good try. Make we look the shapes again.",
+        "yo": "Ìgbìyànjú rere. Jẹ́ ká tún wo àwọn ìrísí náà."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+      "en": "Your last turn. It has four sides, all the same. What shape is it?",
+        "pcm": "Your last turn. E get four equal sides. Which shape be am?",
+        "yo": "Ìwọ tún gbìyànjú lẹ́ẹ̀kan. Ó ní ẹ̀gbẹ́ mẹ́rin dọ́gba. Ìrísí wo ni?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "square"
+          ],
+          "yo": [
+            "square",
+            "onígunmẹ́rin"
+          ],
+          "pcm": [
+            "square"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we find shapes at home.",
+        "pcm": "You do well. Tomorrow we find shape for house.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó wá ìrísí nínú ilé."
+      }
+    }
+  ]
+}

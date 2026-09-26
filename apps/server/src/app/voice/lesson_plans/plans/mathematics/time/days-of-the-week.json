@@ -1,0 +1,448 @@
+{
+  "id": "mathematics.time.days-of-the-week",
+  "subject": "mathematics",
+  "topic": "time",
+  "sequence": 40,
+  "title": {
+    "en": "The days of the week",
+    "yo": "Àwọn ọjọ́ ọ̀sẹ̀",
+    "pcm": "Days of the week"
+  },
+  "classes": [
+    "primary_2"
+  ],
+  "term": 3,
+  "week": 3,
+  "objectives": [
+    {
+      "en": "Say the seven days of the week in order from Monday to Sunday without help.",
+      "yo": "Sọ àwọn ọjọ́ méje ọ̀sẹ̀ ní ètò láti Monday dé Sunday láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk the seven days of the week for order from Monday reach Sunday without help."
+    },
+    {
+      "en": "Say which day comes after any day.",
+      "yo": "Sọ ọjọ́ tí ó tẹ̀lé ọjọ́ èyíkéyìí.",
+      "pcm": "Talk which day dey come after any day."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Mensuration and Geometry / Primary Measures / Time",
+    "objective": "Name the days of the week and arrange them in order, Sunday to Saturday",
+    "note": "One scheme family teaches this in second term instead."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "You may go to school Monday to Friday. Saturday can bring play, and Sunday worship or rest. A week has seven days.",
+        "pcm": "You fit go school Monday to Friday. Saturday fit bring play, and Sunday worship or rest. One week get seven days.",
+        "yo": "O lè lọ sí ilé ìwé láti Monday dé Friday. Saturday lè jẹ́ eré, Sunday sì lè jẹ́ ìjọ́sìn tàbí ìsinmi. Ọ̀sẹ̀ kan ní ọjọ́ méje."
+      },
+      "show": {
+        "en": "Sunday … Saturday",
+        "yo": "Sunday … Saturday",
+        "pcm": "Sunday … Saturday"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will say seven days in order alone.",
+        "pcm": "Today you go talk seven days for order alone.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò sọ ọjọ́ méje ní ètò."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the week? Say Sunday, Monday, Tuesday.",
+        "pcm": "You remember the week? Talk Sunday, Monday, Tuesday.",
+        "yo": "Ṣé o rántí ọ̀sẹ̀? Sọ Sunday, Monday, Tuesday."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "sunday",
+            "spoken": {
+              "en": [
+                "Sunday"
+              ],
+              "yo": [
+                "Sunday",
+                "Ọjọ́ Àìkú"
+              ],
+              "pcm": [
+                "Sunday"
+              ]
+            }
+          },
+          {
+            "id": "monday",
+            "spoken": {
+              "en": [
+                "Monday"
+              ],
+              "yo": [
+                "Monday",
+                "Ọjọ́ Ajé"
+              ],
+              "pcm": [
+                "Monday"
+              ]
+            }
+          },
+          {
+            "id": "tuesday",
+            "spoken": {
+              "en": [
+                "Tuesday"
+              ],
+              "yo": [
+                "Tuesday",
+                "Ọjọ́ Ìṣẹ́gun"
+              ],
+              "pcm": [
+                "Tuesday"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "See seven children in a line. Name them Sunday to Saturday. After Saturday, Sunday comes again.",
+        "pcm": "See seven children for line. Name them Sunday reach Saturday. After Saturday, Sunday dey come again.",
+        "yo": "Wo ọmọ méje tó dúró ní ìlà. Sọ wọ́n láti Sunday dé Saturday. Lẹ́yìn Saturday, Sunday tún dé."
+      },
+      "show": {
+        "en": "Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday",
+        "yo": "Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday",
+        "pcm": "Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say three days with me. Sunday, Monday, Tuesday. Now you.",
+        "pcm": "Say am with me. Sunday, Monday, Tuesday. Na your turn now.",
+        "yo": "Sọ ọjọ́ mẹ́ta pẹ̀lú mi. Sunday, Monday, Tuesday. Ìwọ náà báyìí."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "sunday",
+            "spoken": {
+              "en": [
+                "Sunday"
+              ],
+              "yo": [
+                "Sunday",
+                "Ọjọ́ Àìkú"
+              ],
+              "pcm": [
+                "Sunday"
+              ]
+            }
+          },
+          {
+            "id": "monday",
+            "spoken": {
+              "en": [
+                "Monday"
+              ],
+              "yo": [
+                "Monday",
+                "Ọjọ́ Ajé"
+              ],
+              "pcm": [
+                "Monday"
+              ]
+            }
+          },
+          {
+            "id": "tuesday",
+            "spoken": {
+              "en": [
+                "Tuesday"
+              ],
+              "yo": [
+                "Tuesday",
+                "Ọjọ́ Ìṣẹ́gun"
+              ],
+              "pcm": [
+                "Tuesday"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say all seven days from Sunday to Saturday.",
+        "pcm": "Talk all seven days from Sunday reach Saturday.",
+        "yo": "Sọ gbogbo ọjọ́ méje láti Sunday dé Saturday."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "sunday",
+            "spoken": {
+              "en": [
+                "Sunday"
+              ],
+              "yo": [
+                "Sunday",
+                "Ọjọ́ Àìkú"
+              ],
+              "pcm": [
+                "Sunday"
+              ]
+            }
+          },
+          {
+            "id": "monday",
+            "spoken": {
+              "en": [
+                "Monday"
+              ],
+              "yo": [
+                "Monday",
+                "Ọjọ́ Ajé"
+              ],
+              "pcm": [
+                "Monday"
+              ]
+            }
+          },
+          {
+            "id": "tuesday",
+            "spoken": {
+              "en": [
+                "Tuesday"
+              ],
+              "yo": [
+                "Tuesday",
+                "Ọjọ́ Ìṣẹ́gun"
+              ],
+              "pcm": [
+                "Tuesday"
+              ]
+            }
+          },
+          {
+            "id": "wednesday",
+            "spoken": {
+              "en": [
+                "Wednesday"
+              ],
+              "yo": [
+                "Wednesday",
+                "Ọjọ́rú"
+              ],
+              "pcm": [
+                "Wednesday"
+              ]
+            }
+          },
+          {
+            "id": "thursday",
+            "spoken": {
+              "en": [
+                "Thursday"
+              ],
+              "yo": [
+                "Thursday",
+                "Ọjọ́bọ"
+              ],
+              "pcm": [
+                "Thursday"
+              ]
+            }
+          },
+          {
+            "id": "friday",
+            "spoken": {
+              "en": [
+                "Friday"
+              ],
+              "yo": [
+                "Friday",
+                "Ọjọ́ Ẹtì"
+              ],
+              "pcm": [
+                "Friday"
+              ]
+            }
+          },
+          {
+            "id": "saturday",
+            "spoken": {
+              "en": [
+                "Saturday"
+              ],
+              "yo": [
+                "Saturday",
+                "Ọjọ́ Àbámẹ́ta"
+              ],
+              "pcm": [
+                "Saturday"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the days you mixed up. Say them with me.",
+        "pcm": "Make we hear the days again. Say am with me.",
+        "yo": "Jẹ́ ká tún àwọn ọjọ́ tí o dàpọ̀ ṣe. Sọ wọ́n pẹ̀lú mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Say Sunday to Saturday.",
+        "pcm": "Make we see wetin you remember. Talk Sunday reach Saturday.",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Sọ Sunday dé Saturday."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "sunday",
+            "spoken": {
+              "en": [
+                "Sunday"
+              ],
+              "yo": [
+                "Sunday",
+                "Ọjọ́ Àìkú"
+              ],
+              "pcm": [
+                "Sunday"
+              ]
+            }
+          },
+          {
+            "id": "monday",
+            "spoken": {
+              "en": [
+                "Monday"
+              ],
+              "yo": [
+                "Monday",
+                "Ọjọ́ Ajé"
+              ],
+              "pcm": [
+                "Monday"
+              ]
+            }
+          },
+          {
+            "id": "tuesday",
+            "spoken": {
+              "en": [
+                "Tuesday"
+              ],
+              "yo": [
+                "Tuesday",
+                "Ọjọ́ Ìṣẹ́gun"
+              ],
+              "pcm": [
+                "Tuesday"
+              ]
+            }
+          },
+          {
+            "id": "wednesday",
+            "spoken": {
+              "en": [
+                "Wednesday"
+              ],
+              "yo": [
+                "Wednesday",
+                "Ọjọ́rú"
+              ],
+              "pcm": [
+                "Wednesday"
+              ]
+            }
+          },
+          {
+            "id": "thursday",
+            "spoken": {
+              "en": [
+                "Thursday"
+              ],
+              "yo": [
+                "Thursday",
+                "Ọjọ́bọ"
+              ],
+              "pcm": [
+                "Thursday"
+              ]
+            }
+          },
+          {
+            "id": "friday",
+            "spoken": {
+              "en": [
+                "Friday"
+              ],
+              "yo": [
+                "Friday",
+                "Ọjọ́ Ẹtì"
+              ],
+              "pcm": [
+                "Friday"
+              ]
+            }
+          },
+          {
+            "id": "saturday",
+            "spoken": {
+              "en": [
+                "Saturday"
+              ],
+              "yo": [
+                "Saturday",
+                "Ọjọ́ Àbámẹ́ta"
+              ],
+              "pcm": [
+                "Saturday"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we say the days again. Then we learn the months.",
+        "pcm": "Well done. Tomorrow we go talk the days again. Then we learn months.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún sọ àwọn ọjọ́. Lẹ́yìn náà, a ó kọ́ àwọn oṣù."
+      }
+    }
+  ]
+}

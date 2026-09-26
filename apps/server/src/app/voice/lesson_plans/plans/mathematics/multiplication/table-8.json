@@ -1,0 +1,146 @@
+{
+  "id": "mathematics.multiplication.table-8",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 28,
+  "title": {
+    "en": "The eight times table",
+    "yo": "Table eight",
+    "pcm": "Table eight"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 5,
+  "objectives": [
+    {
+      "en": "Say every fact from eight times one to eight times twelve without help.",
+      "yo": "Sọ gbogbo fact láti eight times one dé eight times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from eight times one reach eight times twelve without help."
+    },
+    {
+      "en": "Answer any eight times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí eight times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any eight times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-7"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of eight mangoes. Today we count in eights.",
+        "pcm": "Look three groups of eight mango. Today we go count eight eight.",
+        "yo": "Wo groups three ti eight mango. Lónìí a ó kà ní eight eight."
+      },
+      "show": {
+        "en": "8, 16, 24…",
+        "yo": "8, 16, 24…",
+        "pcm": "8, 16, 24…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the eight times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table eight. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table eight. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the seven times table? What is seven times four?",
+        "pcm": "You remember table seven? Seven times four na how much?",
+        "yo": "Ṣé o rántí table seven? Kí ni seven times four?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_7x4_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of eight mangoes show this. We count eight, sixteen, twenty-four. Eight times three is twenty-four.",
+        "pcm": "See three groups of eight mango: eight, sixteen, twenty-four. Eight times three na twenty-four.",
+        "yo": "Wo groups mẹ́ta ti eight mango: eight, sixteen, twenty-four. Eight times three jẹ́ twenty-four."
+      },
+      "show": {
+        "en": "8 × 3 = 24",
+        "yo": "8 × 3 = 24",
+        "pcm": "8 × 3 = 24"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: eight times three is twenty-four.",
+        "pcm": "Say am with me: eight times three na twenty-four.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: eight times three jẹ́ twenty-four."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_8x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the eight times table. Start with eight times one. End with eight times twelve.",
+        "pcm": "Say table eight. Start with eight times one. End with eight times twelve.",
+        "yo": "Sọ table eight. Bẹ̀rẹ̀ pẹ̀lú eight times one. Parí pẹ̀lú eight times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_8_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is eight times seven?",
+        "pcm": "Eight times seven na how much?",
+        "yo": "Kí ni eight times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_8x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the eight times table once more. Then we start the nine times table.",
+        "pcm": "You do well. Tomorrow we go check table eight again. Then we start table nine.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table eight. Lẹ́yìn náà a ó bẹ̀rẹ̀ table nine."
+      }
+    }
+  ]
+}

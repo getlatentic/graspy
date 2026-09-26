@@ -82,12 +82,13 @@ async def _forgot_kept(keeping: Keeping, key: str) -> None:
     for mark in record.topics:
         if mark.lesson_id:
             await keeping.lessons.forget(mark.lesson_id)
+    await keeping.voice.forget(key)
     await keeping.learners.forget(key)
 
 
 async def removed(keeping: Keeping, uid: str, learner_id: str) -> Directory:
-    """Everything kept for the learner goes: their record, plan, lessons and
-    tutor conversations."""
+    """Everything kept for the learner goes: their record, plan, lessons,
+    tutor conversations and voice lessons."""
     await learner_of(keeping, uid, learner_id)
     await _forgot_kept(keeping, learner_key(uid, learner_id))
     await keeping.learners.change_directory(

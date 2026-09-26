@@ -56,6 +56,8 @@
   },
   // Secrets, set with `npx wrangler secret put <NAME>`, never in this file:
   //   AWS_BEARER_TOKEN_BEDROCK, SESSION_SECRET, FIREBASE_API_KEY
+  //   INTRON_API_KEY (hears the learner) and SPITCH_API_KEY (the teacher's
+  //   voice), for voice lessons
 
   "durable_objects": {
     "bindings": [
@@ -65,6 +67,22 @@
       { "name": "LESSON_MAKERS", "class_name": "LessonMaker" }
     ]
   },
+  // Voice lessons: recordings and marked turns, the steps each learner was
+  // offered and heard (D1, keyed by learner), recordings and the teacher's
+  // voice (R2), the tutor Worker that marks answers and remembers them, and
+  // Workers AI for language detection and the teacher's choice of step.
+  "ai": { "binding": "AI" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "graspy",
+      "database_id": "6a8a185b-a967-4f1b-889d-1e5f73d2cc93",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "AUDIO", "bucket_name": "graspy-audio" }],
+  "services": [{ "binding": "TUTOR", "service": "graspy-tutor" }],
+
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Conversation"] },
     { "tag": "v2", "new_sqlite_classes": ["Lesson"] },

@@ -76,13 +76,14 @@ def test_a_preflight_outside_the_policy_is_refused(client, origin, method, refus
     ("method", "path"),
     [
         ("PUT", "/api/learner/curriculum"),
+        ("PUT", "/api/voice/samples/gvm_1/audio"),
         ("PATCH", "/api/account/learners/a1b2c3"),
         ("DELETE", "/api/account/learners/a1b2c3"),
         ("DELETE", "/api/account"),
     ],
 )
 def test_every_method_the_app_sends_passes_its_preflight(client, method, path):
-    """The shared plan is sent with PUT, and a
+    """The shared plan and a recording's audio are sent with PUT, and a
     learner is renamed with PATCH and removed with DELETE."""
     response = client.options(
         path,

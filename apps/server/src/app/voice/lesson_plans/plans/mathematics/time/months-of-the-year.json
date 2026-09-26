@@ -1,0 +1,599 @@
+{
+  "id": "mathematics.time.months-of-the-year",
+  "subject": "mathematics",
+  "topic": "time",
+  "sequence": 41,
+  "title": {
+    "en": "The months of the year",
+    "yo": "Àwọn oṣù ọdún",
+    "pcm": "Months of the year"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 3,
+  "week": 5,
+  "objectives": [
+    {
+      "en": "Say the twelve months of the year in order from January to December without help.",
+      "yo": "Sọ àwọn oṣù méjìlá ọdún ní ètò láti January dé December láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk the twelve months of the year for order from January reach December without help."
+    },
+    {
+      "en": "Say which month comes after any month.",
+      "yo": "Sọ oṣù tí ó tẹ̀lé oṣù èyíkéyìí.",
+      "pcm": "Talk which month dey come after any month."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.time.days-of-the-week"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Mensuration and Geometry / Primary Measures / Time",
+    "objective": "Read a calendar: the days of the months and the months of the year"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "January starts the year. May and June may bring rain. December ends a year of twelve months.",
+        "pcm": "January dey start the year. May and June fit bring rain. December dey end one year of twelve months.",
+        "yo": "January bẹ̀rẹ̀ ọdún. Òjò lè rọ̀ ní May àti June. December parí ọdún kan tí ó ní oṣù méjìlá."
+      },
+      "show": {
+        "en": "January … December",
+        "yo": "January … December",
+        "pcm": "January … December"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will say twelve months in order alone.",
+        "pcm": "Today you go talk twelve months for order alone.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò sọ oṣù méjìlá ní ètò."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the week? Say Monday, Tuesday, Wednesday.",
+        "pcm": "You remember the week? Talk Monday, Tuesday, Wednesday.",
+        "yo": "Ṣé o rántí ọ̀sẹ̀? Sọ Monday, Tuesday, Wednesday."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "monday",
+            "spoken": {
+              "en": [
+                "Monday"
+              ],
+              "yo": [
+                "Monday",
+                "Ọjọ́ Ajé"
+              ],
+              "pcm": [
+                "Monday"
+              ]
+            }
+          },
+          {
+            "id": "tuesday",
+            "spoken": {
+              "en": [
+                "Tuesday"
+              ],
+              "yo": [
+                "Tuesday",
+                "Ọjọ́ Ìṣẹ́gun"
+              ],
+              "pcm": [
+                "Tuesday"
+              ]
+            }
+          },
+          {
+            "id": "wednesday",
+            "spoken": {
+              "en": [
+                "Wednesday"
+              ],
+              "yo": [
+                "Wednesday",
+                "Ọjọ́rú"
+              ],
+              "pcm": [
+                "Wednesday"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "See twelve naira notes in twelve groups. Name the months from January to December. After December, January comes again.",
+        "pcm": "See twelve naira notes for twelve groups. Name the months January reach December. After December, January dey come again.",
+        "yo": "Wo owó naira méjìlá ní àwùjọ méjìlá. Sọ oṣù láti January dé December. Lẹ́yìn December, January tún dé."
+      },
+      "show": {
+        "en": "January, February, March, April, May, June, July, August, September, October, November, December",
+        "yo": "January, February, March, April, May, June, July, August, September, October, November, December",
+        "pcm": "January, February, March, April, May, June, July, August, September, October, November, December"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say three months with me. January, February, March. Now you.",
+        "pcm": "Say am with me. January, February, March. Na your turn now.",
+        "yo": "Sọ oṣù mẹ́ta pẹ̀lú mi. January, February, March. Ìwọ náà báyìí."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "january",
+            "spoken": {
+              "en": [
+                "January"
+              ],
+              "yo": [
+                "January",
+                "Ṣẹ́rẹ́"
+              ],
+              "pcm": [
+                "January"
+              ]
+            }
+          },
+          {
+            "id": "february",
+            "spoken": {
+              "en": [
+                "February"
+              ],
+              "yo": [
+                "February",
+                "Èrèlé"
+              ],
+              "pcm": [
+                "February"
+              ]
+            }
+          },
+          {
+            "id": "march",
+            "spoken": {
+              "en": [
+                "March"
+              ],
+              "yo": [
+                "March",
+                "Ẹrẹ̀nà"
+              ],
+              "pcm": [
+                "March"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say all twelve months from January to December.",
+        "pcm": "Talk all twelve months from January reach December.",
+        "yo": "Sọ gbogbo oṣù méjìlá láti January dé December."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "january",
+            "spoken": {
+              "en": [
+                "January"
+              ],
+              "yo": [
+                "January",
+                "Ṣẹ́rẹ́"
+              ],
+              "pcm": [
+                "January"
+              ]
+            }
+          },
+          {
+            "id": "february",
+            "spoken": {
+              "en": [
+                "February"
+              ],
+              "yo": [
+                "February",
+                "Èrèlé"
+              ],
+              "pcm": [
+                "February"
+              ]
+            }
+          },
+          {
+            "id": "march",
+            "spoken": {
+              "en": [
+                "March"
+              ],
+              "yo": [
+                "March",
+                "Ẹrẹ̀nà"
+              ],
+              "pcm": [
+                "March"
+              ]
+            }
+          },
+          {
+            "id": "april",
+            "spoken": {
+              "en": [
+                "April"
+              ],
+              "yo": [
+                "April",
+                "Ìgbé"
+              ],
+              "pcm": [
+                "April"
+              ]
+            }
+          },
+          {
+            "id": "may",
+            "spoken": {
+              "en": [
+                "May"
+              ],
+              "yo": [
+                "May",
+                "Ẹ̀bibi"
+              ],
+              "pcm": [
+                "May"
+              ]
+            }
+          },
+          {
+            "id": "june",
+            "spoken": {
+              "en": [
+                "June"
+              ],
+              "yo": [
+                "June",
+                "Òkúdu"
+              ],
+              "pcm": [
+                "June"
+              ]
+            }
+          },
+          {
+            "id": "july",
+            "spoken": {
+              "en": [
+                "July"
+              ],
+              "yo": [
+                "July",
+                "Agẹmọ"
+              ],
+              "pcm": [
+                "July"
+              ]
+            }
+          },
+          {
+            "id": "august",
+            "spoken": {
+              "en": [
+                "August"
+              ],
+              "yo": [
+                "August",
+                "Ògún"
+              ],
+              "pcm": [
+                "August"
+              ]
+            }
+          },
+          {
+            "id": "september",
+            "spoken": {
+              "en": [
+                "September"
+              ],
+              "yo": [
+                "September",
+                "Owewe"
+              ],
+              "pcm": [
+                "September"
+              ]
+            }
+          },
+          {
+            "id": "october",
+            "spoken": {
+              "en": [
+                "October"
+              ],
+              "yo": [
+                "October",
+                "Ọ̀wàrà"
+              ],
+              "pcm": [
+                "October"
+              ]
+            }
+          },
+          {
+            "id": "november",
+            "spoken": {
+              "en": [
+                "November"
+              ],
+              "yo": [
+                "November",
+                "Bélú"
+              ],
+              "pcm": [
+                "November"
+              ]
+            }
+          },
+          {
+            "id": "december",
+            "spoken": {
+              "en": [
+                "December"
+              ],
+              "yo": [
+                "December",
+                "Ọ̀pẹ̀"
+              ],
+              "pcm": [
+                "December"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the months you mixed up. Say them with me.",
+        "pcm": "Make we hear the months again. Say am with me.",
+        "yo": "Jẹ́ ká tún àwọn oṣù tí o dàpọ̀ ṣe. Sọ wọ́n pẹ̀lú mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Say January to December.",
+        "pcm": "Make we see wetin you remember. Talk January reach December.",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Sọ January dé December."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "january",
+            "spoken": {
+              "en": [
+                "January"
+              ],
+              "yo": [
+                "January",
+                "Ṣẹ́rẹ́"
+              ],
+              "pcm": [
+                "January"
+              ]
+            }
+          },
+          {
+            "id": "february",
+            "spoken": {
+              "en": [
+                "February"
+              ],
+              "yo": [
+                "February",
+                "Èrèlé"
+              ],
+              "pcm": [
+                "February"
+              ]
+            }
+          },
+          {
+            "id": "march",
+            "spoken": {
+              "en": [
+                "March"
+              ],
+              "yo": [
+                "March",
+                "Ẹrẹ̀nà"
+              ],
+              "pcm": [
+                "March"
+              ]
+            }
+          },
+          {
+            "id": "april",
+            "spoken": {
+              "en": [
+                "April"
+              ],
+              "yo": [
+                "April",
+                "Ìgbé"
+              ],
+              "pcm": [
+                "April"
+              ]
+            }
+          },
+          {
+            "id": "may",
+            "spoken": {
+              "en": [
+                "May"
+              ],
+              "yo": [
+                "May",
+                "Ẹ̀bibi"
+              ],
+              "pcm": [
+                "May"
+              ]
+            }
+          },
+          {
+            "id": "june",
+            "spoken": {
+              "en": [
+                "June"
+              ],
+              "yo": [
+                "June",
+                "Òkúdu"
+              ],
+              "pcm": [
+                "June"
+              ]
+            }
+          },
+          {
+            "id": "july",
+            "spoken": {
+              "en": [
+                "July"
+              ],
+              "yo": [
+                "July",
+                "Agẹmọ"
+              ],
+              "pcm": [
+                "July"
+              ]
+            }
+          },
+          {
+            "id": "august",
+            "spoken": {
+              "en": [
+                "August"
+              ],
+              "yo": [
+                "August",
+                "Ògún"
+              ],
+              "pcm": [
+                "August"
+              ]
+            }
+          },
+          {
+            "id": "september",
+            "spoken": {
+              "en": [
+                "September"
+              ],
+              "yo": [
+                "September",
+                "Owewe"
+              ],
+              "pcm": [
+                "September"
+              ]
+            }
+          },
+          {
+            "id": "october",
+            "spoken": {
+              "en": [
+                "October"
+              ],
+              "yo": [
+                "October",
+                "Ọ̀wàrà"
+              ],
+              "pcm": [
+                "October"
+              ]
+            }
+          },
+          {
+            "id": "november",
+            "spoken": {
+              "en": [
+                "November"
+              ],
+              "yo": [
+                "November",
+                "Bélú"
+              ],
+              "pcm": [
+                "November"
+              ]
+            }
+          },
+          {
+            "id": "december",
+            "spoken": {
+              "en": [
+                "December"
+              ],
+              "yo": [
+                "December",
+                "Ọ̀pẹ̀"
+              ],
+              "pcm": [
+                "December"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we say the months again. Then we join days and months.",
+        "pcm": "Well done. Tomorrow we go talk the months again. Then we join days and months.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún sọ àwọn oṣù. Lẹ́yìn náà, a ó so ọjọ́ àti oṣù pọ̀."
+      }
+    }
+  ]
+}

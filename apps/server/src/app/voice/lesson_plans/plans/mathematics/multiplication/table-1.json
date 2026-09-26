@@ -1,0 +1,144 @@
+{
+  "id": "mathematics.multiplication.table-1",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 21,
+  "title": {
+    "en": "The one times table",
+    "yo": "Table one",
+    "pcm": "Table one"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 3,
+  "objectives": [
+    {
+      "en": "Say every fact from one times one to one times twelve without help.",
+      "yo": "Sọ gbogbo fact láti one times one dé one times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from one times one reach one times twelve without help."
+    },
+    {
+      "en": "Answer any one times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí one times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any one times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of one mangoes. Today we count in ones.",
+        "pcm": "Look three groups of one mango. Today we go count one one.",
+        "yo": "Wo groups three ti one mango. Lónìí a ó kà ní one one."
+      },
+      "show": {
+        "en": "1, 2, 3…",
+        "yo": "1, 2, 3…",
+        "pcm": "1, 2, 3…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the one times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table one. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table one. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember counting in ones? What is one times two?",
+        "pcm": "You remember how we count one one? One times two na how much?",
+        "yo": "Ṣé o rántí bí a ṣe ń kà ní one? Kí ni one times two?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_1x2_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of one mango show this. We count one, two, three. One times three is three.",
+        "pcm": "See three groups of one mango: one, two, three. One times three na three.",
+        "yo": "Wo groups mẹ́ta ti one mango: one, two, three. One times three jẹ́ three."
+      },
+      "show": {
+        "en": "1 × 3 = 3",
+        "yo": "1 × 3 = 3",
+        "pcm": "1 × 3 = 3"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: one times three is three.",
+        "pcm": "Say am with me: one times three na three.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: one times three jẹ́ three."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_1x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the one times table. Start with one times one. End with one times twelve.",
+        "pcm": "Say table one. Start with one times one. End with one times twelve.",
+        "yo": "Sọ table one. Bẹ̀rẹ̀ pẹ̀lú one times one. Parí pẹ̀lú one times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_1_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is one times seven?",
+        "pcm": "One times seven na how much?",
+        "yo": "Kí ni one times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_1x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the one times table once more. Then we start the two times table.",
+        "pcm": "You do well. Tomorrow we go check table one again. Then we start table two.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table one. Lẹ́yìn náà a ó bẹ̀rẹ̀ table two."
+      }
+    }
+  ]
+}

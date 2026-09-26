@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://graspy.app/curriculum/lesson-plan.schema.json",
+  "title": "graspy lesson plan",
+  "description": "One lesson as Gagné's nine events of instruction, spoken in English, Yoruba, and Pidgin, with activities the engine can mark.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "subject",
+    "sequence",
+    "topic",
+    "title",
+    "classes",
+    "objectives",
+    "prerequisites",
+    "events"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z-]+\\.[a-z0-9-]+$",
+      "description": "subject.topic.lesson, unique across the catalogue"
+    },
+    "subject": {
+      "type": "string",
+      "pattern": "^[a-z-]+$",
+      "description": "the subject folder under plans/, e.g. mathematics, english, science"
+    },
+    "topic": {
+      "type": "string",
+      "pattern": "^[a-z-]+$"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "teaching order across the whole catalogue; lower comes first"
+    },
+    "title": {
+      "$ref": "#/$defs/text"
+    },
+    "classes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "nursery_1",
+          "nursery_2",
+          "kindergarten",
+          "primary_1",
+          "primary_2",
+          "primary_3",
+          "primary_4",
+          "primary_5",
+          "primary_6",
+          "jss_1",
+          "jss_2",
+          "jss_3"
+        ]
+      }
+    },
+    "term": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "the term a Nigerian scheme of work teaches this lesson in"
+    },
+    "week": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 13,
+      "description": "the week within that term"
+    },
+    "objectives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/text"
+      }
+    },
+    "prerequisites": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+\\.[a-z-]+\\.[a-z0-9-]+$"
+      }
+    },
+    "curriculum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "strand",
+        "objective"
+      ],
+      "description": "where this lesson comes from in the national curriculum, so a reviewer can check it",
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "nerdc",
+            "scheme-of-work",
+            "ungrounded"
+          ],
+          "description": "nerdc when an official document was read; scheme-of-work when only a widely used Nigerian scheme could be found; ungrounded when neither"
+        },
+        "strand": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the curriculum theme, e.g. Number and Numeration"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the performance objective this lesson teaches, in the curriculum's own words"
+        },
+        "note": {
+          "type": "string",
+          "description": "anything a reviewer should know, e.g. that the class differs from the scheme"
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "$ref": "#/$defs/event"
+      },
+      "uniqueItems": true,
+      "description": "the nine events in Gagné order; event ids are unique within the plan"
+    }
+  },
+  "$defs": {
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "yo",
+        "pcm"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "yo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pcm": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "event",
+        "say"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "unique within the plan; forms the utterance id plan.<lesson>.<event>"
+        },
+        "event": {
+          "type": "string",
+          "enum": [
+            "gain_attention",
+            "inform_objectives",
+            "stimulate_recall",
+            "present_content",
+            "provide_guidance",
+            "elicit_performance",
+            "provide_feedback",
+            "assess_performance",
+            "enhance_retention"
+          ]
+        },
+        "say": {
+          "$ref": "#/$defs/text"
+        },
+        "show": {
+          "$ref": "#/$defs/text",
+          "description": "what the screen shows while the teacher speaks; short, for a child"
+        },
+        "activity": {
+          "$ref": "#/$defs/activity"
+        },
+        "review_after_days": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "enhance_retention only: when this lesson comes back for a check"
+        }
+      }
+    },
+    "activity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "prompt_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "existing"
+            },
+            "prompt_id": {
+              "type": "string",
+              "pattern": "^mul_(table_\\d+_recite_(1_12|facts_[\\d-]+)|fact_\\d+x\\d+_(say|answer))$",
+              "description": "a marker the Worker already has, by its prompt id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sequence"
+            },
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "spoken"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "spoken": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "en",
+                      "yo",
+                      "pcm"
+                    ],
+                    "properties": {
+                      "en": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "yo": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "pcm": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "uniqueItems": true,
+              "description": "said in this order; item ids are unique within the activity"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expected"
+          ],
+          "properties": {
+            "kind": {
+              "const": "answer"
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "yo",
+                "pcm"
+              ],
+              "properties": {
+                "en": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "yo": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "pcm": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

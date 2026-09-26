@@ -1,0 +1,146 @@
+{
+  "id": "mathematics.multiplication.table-7",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 27,
+  "title": {
+    "en": "The seven times table",
+    "yo": "Table seven",
+    "pcm": "Table seven"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 5,
+  "objectives": [
+    {
+      "en": "Say every fact from seven times one to seven times twelve without help.",
+      "yo": "Sọ gbogbo fact láti seven times one dé seven times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from seven times one reach seven times twelve without help."
+    },
+    {
+      "en": "Answer any seven times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí seven times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any seven times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-6"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of seven mangoes. Today we count in sevens.",
+        "pcm": "Look three groups of seven mango. Today we go count seven seven.",
+        "yo": "Wo groups three ti seven mango. Lónìí a ó kà ní seven seven."
+      },
+      "show": {
+        "en": "7, 14, 21…",
+        "yo": "7, 14, 21…",
+        "pcm": "7, 14, 21…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the seven times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table seven. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table seven. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the six times table? What is six times seven?",
+        "pcm": "You remember table six? Six times seven na how much?",
+        "yo": "Ṣé o rántí table six? Kí ni six times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_6x7_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of seven mangoes show this. We count seven, fourteen, twenty-one. Seven times three is twenty-one.",
+        "pcm": "See three groups of seven mango: seven, fourteen, twenty-one. Seven times three na twenty-one.",
+        "yo": "Wo groups mẹ́ta ti seven mango: seven, fourteen, twenty-one. Seven times three jẹ́ twenty-one."
+      },
+      "show": {
+        "en": "7 × 3 = 21",
+        "yo": "7 × 3 = 21",
+        "pcm": "7 × 3 = 21"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: seven times three is twenty-one.",
+        "pcm": "Say am with me: seven times three na twenty-one.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: seven times three jẹ́ twenty-one."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_7x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the seven times table. Start with seven times one. End with seven times twelve.",
+        "pcm": "Say table seven. Start with seven times one. End with seven times twelve.",
+        "yo": "Sọ table seven. Bẹ̀rẹ̀ pẹ̀lú seven times one. Parí pẹ̀lú seven times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_7_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is seven times seven?",
+        "pcm": "Seven times seven na how much?",
+        "yo": "Kí ni seven times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_7x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the seven times table once more. Then we start the eight times table.",
+        "pcm": "You do well. Tomorrow we go check table seven again. Then we start table eight.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table seven. Lẹ́yìn náà a ó bẹ̀rẹ̀ table eight."
+      }
+    }
+  ]
+}

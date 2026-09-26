@@ -1,0 +1,1160 @@
+{
+  "id": "mathematics.number.counting-to-twenty",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 5,
+  "title": {
+    "en": "Counting to twenty",
+    "yo": "Kíkà dé twenty",
+    "pcm": "Counting reach twenty"
+  },
+  "classes": [
+    "primary_1"
+  ],
+  "term": 1,
+  "week": 2,
+  "objectives": [
+    {
+      "en": "Count from one to twenty in order without help.",
+      "yo": "Kà láti one dé twenty ní ètò láìsí ìrànlọ́wọ́.",
+      "pcm": "Count from one reach twenty for order without help."
+    },
+    {
+      "en": "Say the number that comes after any number up to twenty.",
+      "yo": "Sọ nọ́ńbà tí ó tẹ̀lé nọ́ńbà èyíkéyìí dé twenty.",
+      "pcm": "Talk the number wey dey come after any number reach twenty."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration",
+    "objective": "Count, read and write whole numbers 1 to 20"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Count the fingers on your two hands: one, two, three, up to ten. Now count your toes too. All of them are twenty.",
+        "yo": "Ka àwọn ìka ọwọ́ rẹ méjèèjì: one, two, three, dé ten. Ka àwọn ìka ẹsẹ̀ rẹ pẹ̀lú. Gbogbo wọn jẹ́ twenty.",
+        "pcm": "Count the finger for your two hand: one, two, three, reach ten. Now count your toe too. All of them na twenty."
+      },
+      "show": {
+        "en": "1, 2, 3… 20",
+        "yo": "1, 2, 3… 20",
+        "pcm": "1, 2, 3… 20"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Count from one to twenty yourself.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò kà láti one dé twenty.",
+        "pcm": "Today you go fit count from one reach twenty by yourself."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "First, a small warm-up. Count from one to five.",
+        "yo": "Ní àkọ́kọ́, ìdánrawò kékeré. Kà láti one dé five.",
+        "pcm": "First, small warm up. Count from one reach five."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "1",
+            "spoken": {
+              "en": [
+                "1",
+                "one"
+              ],
+              "yo": [
+                "1",
+                "one",
+                "ọ̀kan"
+              ],
+              "pcm": [
+                "1",
+                "one"
+              ]
+            }
+          },
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "After ten comes eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Every number is one more than the number before it.",
+        "yo": "Lẹ́yìn ten ni eleven, twelve, thirteen, fourteen, fifteen. Lẹ́yìn náà ni sixteen, seventeen, eighteen, nineteen, twenty. Nọ́ńbà kọ̀ọ̀kan ju èyí tó ṣáájú rẹ̀ lọ ní one.",
+        "pcm": "After ten na eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Every number pass the one wey dey before am by one."
+      },
+      "show": {
+        "en": "11, 12, 13… 20",
+        "yo": "11, 12, 13… 20",
+        "pcm": "11, 12, 13… 20"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say the first ten with me: one, two, three, four, five, six, seven, eight, nine, ten. Now you.",
+        "yo": "Sọ ten àkọ́kọ́ pẹ̀lú mi: one, two, three, four, five, six, seven, eight, nine, ten. Ìwọ ná.",
+        "pcm": "Talk the first ten with me: one, two, three, four, five, six, seven, eight, nine, ten. Now you."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "1",
+            "spoken": {
+              "en": [
+                "1",
+                "one"
+              ],
+              "yo": [
+                "1",
+                "one",
+                "ọ̀kan"
+              ],
+              "pcm": [
+                "1",
+                "one"
+              ]
+            }
+          },
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "9",
+            "spoken": {
+              "en": [
+                "9",
+                "nine"
+              ],
+              "yo": [
+                "9",
+                "nine",
+                "mẹ́sàn-án",
+                "mẹ́sàn",
+                "ẹ̀sán"
+              ],
+              "pcm": [
+                "9",
+                "nine"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. Count from one to twenty in one aloud.",
+        "yo": "Ìwọ ná. Kà láti one dé twenty nínú aloud kan.",
+        "pcm": "Na your turn. Count from one reach twenty aloud."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "1",
+            "spoken": {
+              "en": [
+                "1",
+                "one"
+              ],
+              "yo": [
+                "1",
+                "one",
+                "ọ̀kan"
+              ],
+              "pcm": [
+                "1",
+                "one"
+              ]
+            }
+          },
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "9",
+            "spoken": {
+              "en": [
+                "9",
+                "nine"
+              ],
+              "yo": [
+                "9",
+                "nine",
+                "mẹ́sàn-án",
+                "mẹ́sàn",
+                "ẹ̀sán"
+              ],
+              "pcm": [
+                "9",
+                "nine"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "11",
+            "spoken": {
+              "en": [
+                "11",
+                "eleven"
+              ],
+              "yo": [
+                "11",
+                "eleven",
+                "mọ́kànlá"
+              ],
+              "pcm": [
+                "11",
+                "eleven"
+              ]
+            }
+          },
+          {
+            "id": "12",
+            "spoken": {
+              "en": [
+                "12",
+                "twelve"
+              ],
+              "yo": [
+                "12",
+                "twelve",
+                "méjìlá"
+              ],
+              "pcm": [
+                "12",
+                "twelve"
+              ]
+            }
+          },
+          {
+            "id": "13",
+            "spoken": {
+              "en": [
+                "13",
+                "thirteen"
+              ],
+              "yo": [
+                "13",
+                "thirteen",
+                "mẹ́tàlá"
+              ],
+              "pcm": [
+                "13",
+                "thirteen"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "15",
+            "spoken": {
+              "en": [
+                "15",
+                "fifteen"
+              ],
+              "yo": [
+                "15",
+                "fifteen",
+                "mẹ́ẹ̀ẹ́dógún",
+                "mẹ́ẹ̀dógún",
+                "mẹ́dógún",
+                "ẹ̀ẹ́dógún"
+              ],
+              "pcm": [
+                "15",
+                "fifteen"
+              ]
+            }
+          },
+          {
+            "id": "16",
+            "spoken": {
+              "en": [
+                "16",
+                "sixteen"
+              ],
+              "yo": [
+                "16",
+                "sixteen",
+                "mẹ́rìndínlógún"
+              ],
+              "pcm": [
+                "16",
+                "sixteen"
+              ]
+            }
+          },
+          {
+            "id": "17",
+            "spoken": {
+              "en": [
+                "17",
+                "seventeen"
+              ],
+              "yo": [
+                "17",
+                "seventeen",
+                "mẹ́tàdínlógún"
+              ],
+              "pcm": [
+                "17",
+                "seventeen"
+              ]
+            }
+          },
+          {
+            "id": "18",
+            "spoken": {
+              "en": [
+                "18",
+                "eighteen"
+              ],
+              "yo": [
+                "18",
+                "eighteen",
+                "méjìdínlógún"
+              ],
+              "pcm": [
+                "18",
+                "eighteen"
+              ]
+            }
+          },
+          {
+            "id": "19",
+            "spoken": {
+              "en": [
+                "19",
+                "nineteen"
+              ],
+              "yo": [
+                "19",
+                "nineteen",
+                "mọ́kàndínlógún"
+              ],
+              "pcm": [
+                "19",
+                "nineteen"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Listen to the numbers you skipped. We count them again.",
+        "yo": "Gbọ́ nọ́ńbà tí o fò. A ó tún kà pọ̀.",
+        "pcm": "Hear the numbers wey you jump. We go count dem again."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Count from one to twenty without help.",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Kà láti one dé twenty láìsí ìrànlọ́wọ́.",
+        "pcm": "Make we see wetin you remember. Count from one reach twenty without help."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "1",
+            "spoken": {
+              "en": [
+                "1",
+                "one"
+              ],
+              "yo": [
+                "1",
+                "one",
+                "ọ̀kan"
+              ],
+              "pcm": [
+                "1",
+                "one"
+              ]
+            }
+          },
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "9",
+            "spoken": {
+              "en": [
+                "9",
+                "nine"
+              ],
+              "yo": [
+                "9",
+                "nine",
+                "mẹ́sàn-án",
+                "mẹ́sàn",
+                "ẹ̀sán"
+              ],
+              "pcm": [
+                "9",
+                "nine"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "11",
+            "spoken": {
+              "en": [
+                "11",
+                "eleven"
+              ],
+              "yo": [
+                "11",
+                "eleven",
+                "mọ́kànlá"
+              ],
+              "pcm": [
+                "11",
+                "eleven"
+              ]
+            }
+          },
+          {
+            "id": "12",
+            "spoken": {
+              "en": [
+                "12",
+                "twelve"
+              ],
+              "yo": [
+                "12",
+                "twelve",
+                "méjìlá"
+              ],
+              "pcm": [
+                "12",
+                "twelve"
+              ]
+            }
+          },
+          {
+            "id": "13",
+            "spoken": {
+              "en": [
+                "13",
+                "thirteen"
+              ],
+              "yo": [
+                "13",
+                "thirteen",
+                "mẹ́tàlá"
+              ],
+              "pcm": [
+                "13",
+                "thirteen"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "15",
+            "spoken": {
+              "en": [
+                "15",
+                "fifteen"
+              ],
+              "yo": [
+                "15",
+                "fifteen",
+                "mẹ́ẹ̀ẹ́dógún",
+                "mẹ́ẹ̀dógún",
+                "mẹ́dógún",
+                "ẹ̀ẹ́dógún"
+              ],
+              "pcm": [
+                "15",
+                "fifteen"
+              ]
+            }
+          },
+          {
+            "id": "16",
+            "spoken": {
+              "en": [
+                "16",
+                "sixteen"
+              ],
+              "yo": [
+                "16",
+                "sixteen",
+                "mẹ́rìndínlógún"
+              ],
+              "pcm": [
+                "16",
+                "sixteen"
+              ]
+            }
+          },
+          {
+            "id": "17",
+            "spoken": {
+              "en": [
+                "17",
+                "seventeen"
+              ],
+              "yo": [
+                "17",
+                "seventeen",
+                "mẹ́tàdínlógún"
+              ],
+              "pcm": [
+                "17",
+                "seventeen"
+              ]
+            }
+          },
+          {
+            "id": "18",
+            "spoken": {
+              "en": [
+                "18",
+                "eighteen"
+              ],
+              "yo": [
+                "18",
+                "eighteen",
+                "méjìdínlógún"
+              ],
+              "pcm": [
+                "18",
+                "eighteen"
+              ]
+            }
+          },
+          {
+            "id": "19",
+            "spoken": {
+              "en": [
+                "19",
+                "nineteen"
+              ],
+              "yo": [
+                "19",
+                "nineteen",
+                "mọ́kàndínlógún"
+              ],
+              "pcm": [
+                "19",
+                "nineteen"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we count to twenty. Then we count in twos.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó kà dé twenty. Lẹ́yìn náà a ó kà ní méjì méjì.",
+        "pcm": "You do well. Tomorrow we go count reach twenty. Then we go count for two two."
+      }
+    }
+  ]
+}

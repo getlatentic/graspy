@@ -1,0 +1,144 @@
+{
+  "id": "mathematics.multiplication.table-10",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 90,
+  "title": {
+    "en": "The ten times table",
+    "yo": "Table ten",
+    "pcm": "Table ten"
+  },
+  "classes": [
+    "primary_4"
+  ],
+  "objectives": [
+    {
+      "en": "Say every fact from ten times one to ten times twelve without help.",
+      "yo": "Sọ gbogbo fact láti ten times one dé ten times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from ten times one reach ten times twelve without help."
+    },
+    {
+      "en": "Answer any ten times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí ten times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any ten times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-9"
+  ],
+  "curriculum": {
+    "source": "ungrounded",
+    "strand": "Basic Operations",
+    "objective": "Recite the 10 times table",
+    "note": "NERDC's primary ceiling is 9 x 9; no class requires this table. Kept as enrichment after Primary 3."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of ten mangoes. Today we count in tens.",
+        "pcm": "Look three groups of ten mango. Today we go count ten ten.",
+        "yo": "Wo groups three ti ten mango. Lónìí a ó kà ní ten ten."
+      },
+      "show": {
+        "en": "10, 20, 30…",
+        "yo": "10, 20, 30…",
+        "pcm": "10, 20, 30…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the ten times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table ten. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table ten. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the nine times table? What is nine times four?",
+        "pcm": "You remember table nine? Nine times four na how much?",
+        "yo": "Ṣé o rántí table nine? Kí ni nine times four?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_9x4_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of ten mangoes show this. We count ten, twenty, thirty. Ten times three is thirty.",
+        "pcm": "See three groups of ten mango: ten, twenty, thirty. Ten times three na thirty.",
+        "yo": "Wo groups mẹ́ta ti ten mango: ten, twenty, thirty. Ten times three jẹ́ thirty."
+      },
+      "show": {
+        "en": "10 × 3 = 30",
+        "yo": "10 × 3 = 30",
+        "pcm": "10 × 3 = 30"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: ten times three is thirty.",
+        "pcm": "Say am with me: ten times three na thirty.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: ten times three jẹ́ thirty."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_10x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the ten times table. Start with ten times one. End with ten times twelve.",
+        "pcm": "Say table ten. Start with ten times one. End with ten times twelve.",
+        "yo": "Sọ table ten. Bẹ̀rẹ̀ pẹ̀lú ten times one. Parí pẹ̀lú ten times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_10_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is ten times seven?",
+        "pcm": "Ten times seven na how much?",
+        "yo": "Kí ni ten times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_10x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the ten times table once more. Then we start the eleven times table.",
+        "pcm": "You do well. Tomorrow we go check table ten again. Then we start table eleven.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table ten. Lẹ́yìn náà a ó bẹ̀rẹ̀ table eleven."
+      }
+    }
+  ]
+}

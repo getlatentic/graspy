@@ -1,0 +1,1732 @@
+{
+  "id": "english.alphabet.saying-the-alphabet",
+  "subject": "english",
+  "topic": "alphabet",
+  "sequence": 4,
+  "title": {
+    "en": "Saying the alphabet",
+    "yo": "Sísọ álífábẹ́ẹ̀tì",
+    "pcm": "Talking the alphabet"
+  },
+  "classes": [
+    "nursery_2"
+  ],
+  "term": 1,
+  "week": 7,
+  "objectives": [
+    {
+      "en": "Say the letters of the alphabet from A to Z.",
+      "yo": "Sọ àwọn lẹ́tà álífábẹ́ẹ̀tì láti A dé Z.",
+      "pcm": "Talk the alphabet letters from A reach Z."
+    },
+    {
+      "en": "Keep the letters in the right order.",
+      "yo": "Pa àwọn lẹ́tà náà mọ́ ní ètò tó tọ́.",
+      "pcm": "Keep the letters for the correct order."
+    }
+  ],
+  "prerequisites": [
+    "english.alphabet.letter-sounds"
+  ],
+  "curriculum": {
+    "source": "scheme-of-work",
+    "strand": "Letter Work (English Studies)",
+    "objective": "Say the letters a to z in order",
+    "note": "Lagos State builds a to z across Nursery 2 first term, complete by week 7."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Do you know the alphabet song? Sing it with me.",
+        "pcm": "You sabi alphabet song? Sing am with me.",
+        "yo": "Ṣé o mọ orin álífábẹ́ẹ̀tì? Kọ́rin rẹ̀ pẹ̀lú mi."
+      },
+      "show": {
+        "en": "A B C … Z",
+        "yo": "A B C … Z",
+        "pcm": "A B C … Z"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will say each letter. Say A to Z.",
+        "pcm": "Today you go talk each letter. Talk A reach Z.",
+        "yo": "Lónìí, ìwọ yóò sọ lẹ́tà kọ̀ọ̀kan. Sọ A dé Z."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Let us warm up. Say A to E.",
+        "pcm": "Make we warm up. Talk A reach E.",
+        "yo": "Jẹ́ ká mú ara gbóná. Sọ A dé E."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "a",
+            "spoken": {
+              "en": [
+                "a",
+                "ay"
+              ],
+              "yo": [
+                "a",
+                "ay"
+              ],
+              "pcm": [
+                "a",
+                "ay"
+              ]
+            }
+          },
+          {
+            "id": "b",
+            "spoken": {
+              "en": [
+                "b",
+                "bee"
+              ],
+              "yo": [
+                "b",
+                "bee"
+              ],
+              "pcm": [
+                "b",
+                "bee"
+              ]
+            }
+          },
+          {
+            "id": "c",
+            "spoken": {
+              "en": [
+                "c",
+                "see"
+              ],
+              "yo": [
+                "c",
+                "see"
+              ],
+              "pcm": [
+                "c",
+                "see"
+              ]
+            }
+          },
+          {
+            "id": "d",
+            "spoken": {
+              "en": [
+                "d",
+                "dee"
+              ],
+              "yo": [
+                "d",
+                "dee"
+              ],
+              "pcm": [
+                "d",
+                "dee"
+              ]
+            }
+          },
+          {
+            "id": "e",
+            "spoken": {
+              "en": [
+                "e",
+                "ee"
+              ],
+              "yo": [
+                "e",
+                "ee"
+              ],
+              "pcm": [
+                "e",
+                "ee"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Alphabet starts at A and ends at Z. Each letter has a name. We say them in order.",
+        "pcm": "Alphabet start for A and end for Z. Each letter get name. We talk them in order.",
+        "yo": "Álifábẹ́ẹ̀tì bẹ̀rẹ̀ ní A, ó sì parí ní Z. Lẹ́tà kọ̀ọ̀kan ní orúkọ. A ń sọ wọ́n ní ètò."
+      },
+      "show": {
+        "en": "A B C D … X Y Z",
+        "yo": "A B C D … X Y Z",
+        "pcm": "A B C D … X Y Z"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say the letters with me. A, B, C, D, E, F, G. H, I, J, K, L, M, N. O, P, Q, R, S, T, U. V, W, X, Y, Z.",
+        "pcm": "Say am with me. A, B, C, D, E, F, G. H, I, J, K, L, M, N. O, P, Q, R, S, T, U. V, W, X, Y, Z.",
+        "yo": "Sọ àwọn lẹ́tà pẹ̀lú mi. A, B, C, D, E, F, G. H, I, J, K, L, M, N. O, P, Q, R, S, T, U. V, W, X, Y, Z."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "a",
+            "spoken": {
+              "en": [
+                "a",
+                "ay"
+              ],
+              "yo": [
+                "a",
+                "ay"
+              ],
+              "pcm": [
+                "a",
+                "ay"
+              ]
+            }
+          },
+          {
+            "id": "b",
+            "spoken": {
+              "en": [
+                "b",
+                "bee"
+              ],
+              "yo": [
+                "b",
+                "bee"
+              ],
+              "pcm": [
+                "b",
+                "bee"
+              ]
+            }
+          },
+          {
+            "id": "c",
+            "spoken": {
+              "en": [
+                "c",
+                "see"
+              ],
+              "yo": [
+                "c",
+                "see"
+              ],
+              "pcm": [
+                "c",
+                "see"
+              ]
+            }
+          },
+          {
+            "id": "d",
+            "spoken": {
+              "en": [
+                "d",
+                "dee"
+              ],
+              "yo": [
+                "d",
+                "dee"
+              ],
+              "pcm": [
+                "d",
+                "dee"
+              ]
+            }
+          },
+          {
+            "id": "e",
+            "spoken": {
+              "en": [
+                "e",
+                "ee"
+              ],
+              "yo": [
+                "e",
+                "ee"
+              ],
+              "pcm": [
+                "e",
+                "ee"
+              ]
+            }
+          },
+          {
+            "id": "f",
+            "spoken": {
+              "en": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "yo": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "pcm": [
+                "f",
+                "ef",
+                "eff"
+              ]
+            }
+          },
+          {
+            "id": "g",
+            "spoken": {
+              "en": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "yo": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "pcm": [
+                "g",
+                "gee",
+                "jee"
+              ]
+            }
+          },
+          {
+            "id": "h",
+            "spoken": {
+              "en": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "yo": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "pcm": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ]
+            }
+          },
+          {
+            "id": "i",
+            "spoken": {
+              "en": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "yo": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "pcm": [
+                "i",
+                "eye",
+                "ai"
+              ]
+            }
+          },
+          {
+            "id": "j",
+            "spoken": {
+              "en": [
+                "j",
+                "jay"
+              ],
+              "yo": [
+                "j",
+                "jay"
+              ],
+              "pcm": [
+                "j",
+                "jay"
+              ]
+            }
+          },
+          {
+            "id": "k",
+            "spoken": {
+              "en": [
+                "k",
+                "kay"
+              ],
+              "yo": [
+                "k",
+                "kay"
+              ],
+              "pcm": [
+                "k",
+                "kay"
+              ]
+            }
+          },
+          {
+            "id": "l",
+            "spoken": {
+              "en": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "yo": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "pcm": [
+                "l",
+                "el",
+                "ell"
+              ]
+            }
+          },
+          {
+            "id": "m",
+            "spoken": {
+              "en": [
+                "m",
+                "em"
+              ],
+              "yo": [
+                "m",
+                "em"
+              ],
+              "pcm": [
+                "m",
+                "em"
+              ]
+            }
+          },
+          {
+            "id": "n",
+            "spoken": {
+              "en": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "yo": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "pcm": [
+                "n",
+                "en",
+                "enn"
+              ]
+            }
+          },
+          {
+            "id": "o",
+            "spoken": {
+              "en": [
+                "o",
+                "oh"
+              ],
+              "yo": [
+                "o",
+                "oh"
+              ],
+              "pcm": [
+                "o",
+                "oh"
+              ]
+            }
+          },
+          {
+            "id": "p",
+            "spoken": {
+              "en": [
+                "p",
+                "pee",
+                "pea"
+              ],
+              "yo": [
+                "p",
+                "pee",
+                "pea"
+              ],
+              "pcm": [
+                "p",
+                "pee",
+                "pea"
+              ]
+            }
+          },
+          {
+            "id": "q",
+            "spoken": {
+              "en": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ],
+              "yo": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ],
+              "pcm": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ]
+            }
+          },
+          {
+            "id": "r",
+            "spoken": {
+              "en": [
+                "r",
+                "ar",
+                "arr"
+              ],
+              "yo": [
+                "r",
+                "ar",
+                "arr"
+              ],
+              "pcm": [
+                "r",
+                "ar",
+                "arr"
+              ]
+            }
+          },
+          {
+            "id": "s",
+            "spoken": {
+              "en": [
+                "s",
+                "es",
+                "ess"
+              ],
+              "yo": [
+                "s",
+                "es",
+                "ess"
+              ],
+              "pcm": [
+                "s",
+                "es",
+                "ess"
+              ]
+            }
+          },
+          {
+            "id": "t",
+            "spoken": {
+              "en": [
+                "t",
+                "tee",
+                "tea"
+              ],
+              "yo": [
+                "t",
+                "tee",
+                "tea"
+              ],
+              "pcm": [
+                "t",
+                "tee",
+                "tea"
+              ]
+            }
+          },
+          {
+            "id": "u",
+            "spoken": {
+              "en": [
+                "u",
+                "yu",
+                "yoo"
+              ],
+              "yo": [
+                "u",
+                "yu",
+                "yoo"
+              ],
+              "pcm": [
+                "u",
+                "yu",
+                "yoo"
+              ]
+            }
+          },
+          {
+            "id": "v",
+            "spoken": {
+              "en": [
+                "v",
+                "vee"
+              ],
+              "yo": [
+                "v",
+                "vee"
+              ],
+              "pcm": [
+                "v",
+                "vee"
+              ]
+            }
+          },
+          {
+            "id": "w",
+            "spoken": {
+              "en": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ],
+              "yo": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ],
+              "pcm": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ]
+            }
+          },
+          {
+            "id": "x",
+            "spoken": {
+              "en": [
+                "x",
+                "ex",
+                "eks"
+              ],
+              "yo": [
+                "x",
+                "ex",
+                "eks"
+              ],
+              "pcm": [
+                "x",
+                "ex",
+                "eks"
+              ]
+            }
+          },
+          {
+            "id": "y",
+            "spoken": {
+              "en": [
+                "y",
+                "why",
+                "wye"
+              ],
+              "yo": [
+                "y",
+                "why",
+                "wye"
+              ],
+              "pcm": [
+                "y",
+                "why",
+                "wye"
+              ]
+            }
+          },
+          {
+            "id": "z",
+            "spoken": {
+              "en": [
+                "z",
+                "zed",
+                "zee"
+              ],
+              "yo": [
+                "z",
+                "zed",
+                "zee"
+              ],
+              "pcm": [
+                "z",
+                "zed",
+                "zee"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Now your turn. Say A to Z.",
+        "pcm": "Na your turn now. Talk A reach Z.",
+        "yo": "Ìwọ náà báyìí. Sọ A dé Z."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "a",
+            "spoken": {
+              "en": [
+                "a",
+                "ay"
+              ],
+              "yo": [
+                "a",
+                "ay"
+              ],
+              "pcm": [
+                "a",
+                "ay"
+              ]
+            }
+          },
+          {
+            "id": "b",
+            "spoken": {
+              "en": [
+                "b",
+                "bee"
+              ],
+              "yo": [
+                "b",
+                "bee"
+              ],
+              "pcm": [
+                "b",
+                "bee"
+              ]
+            }
+          },
+          {
+            "id": "c",
+            "spoken": {
+              "en": [
+                "c",
+                "see"
+              ],
+              "yo": [
+                "c",
+                "see"
+              ],
+              "pcm": [
+                "c",
+                "see"
+              ]
+            }
+          },
+          {
+            "id": "d",
+            "spoken": {
+              "en": [
+                "d",
+                "dee"
+              ],
+              "yo": [
+                "d",
+                "dee"
+              ],
+              "pcm": [
+                "d",
+                "dee"
+              ]
+            }
+          },
+          {
+            "id": "e",
+            "spoken": {
+              "en": [
+                "e",
+                "ee"
+              ],
+              "yo": [
+                "e",
+                "ee"
+              ],
+              "pcm": [
+                "e",
+                "ee"
+              ]
+            }
+          },
+          {
+            "id": "f",
+            "spoken": {
+              "en": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "yo": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "pcm": [
+                "f",
+                "ef",
+                "eff"
+              ]
+            }
+          },
+          {
+            "id": "g",
+            "spoken": {
+              "en": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "yo": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "pcm": [
+                "g",
+                "gee",
+                "jee"
+              ]
+            }
+          },
+          {
+            "id": "h",
+            "spoken": {
+              "en": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "yo": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "pcm": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ]
+            }
+          },
+          {
+            "id": "i",
+            "spoken": {
+              "en": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "yo": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "pcm": [
+                "i",
+                "eye",
+                "ai"
+              ]
+            }
+          },
+          {
+            "id": "j",
+            "spoken": {
+              "en": [
+                "j",
+                "jay"
+              ],
+              "yo": [
+                "j",
+                "jay"
+              ],
+              "pcm": [
+                "j",
+                "jay"
+              ]
+            }
+          },
+          {
+            "id": "k",
+            "spoken": {
+              "en": [
+                "k",
+                "kay"
+              ],
+              "yo": [
+                "k",
+                "kay"
+              ],
+              "pcm": [
+                "k",
+                "kay"
+              ]
+            }
+          },
+          {
+            "id": "l",
+            "spoken": {
+              "en": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "yo": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "pcm": [
+                "l",
+                "el",
+                "ell"
+              ]
+            }
+          },
+          {
+            "id": "m",
+            "spoken": {
+              "en": [
+                "m",
+                "em"
+              ],
+              "yo": [
+                "m",
+                "em"
+              ],
+              "pcm": [
+                "m",
+                "em"
+              ]
+            }
+          },
+          {
+            "id": "n",
+            "spoken": {
+              "en": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "yo": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "pcm": [
+                "n",
+                "en",
+                "enn"
+              ]
+            }
+          },
+          {
+            "id": "o",
+            "spoken": {
+              "en": [
+                "o",
+                "oh"
+              ],
+              "yo": [
+                "o",
+                "oh"
+              ],
+              "pcm": [
+                "o",
+                "oh"
+              ]
+            }
+          },
+          {
+            "id": "p",
+            "spoken": {
+              "en": [
+                "p",
+                "pee",
+                "pea"
+              ],
+              "yo": [
+                "p",
+                "pee",
+                "pea"
+              ],
+              "pcm": [
+                "p",
+                "pee",
+                "pea"
+              ]
+            }
+          },
+          {
+            "id": "q",
+            "spoken": {
+              "en": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ],
+              "yo": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ],
+              "pcm": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ]
+            }
+          },
+          {
+            "id": "r",
+            "spoken": {
+              "en": [
+                "r",
+                "ar",
+                "arr"
+              ],
+              "yo": [
+                "r",
+                "ar",
+                "arr"
+              ],
+              "pcm": [
+                "r",
+                "ar",
+                "arr"
+              ]
+            }
+          },
+          {
+            "id": "s",
+            "spoken": {
+              "en": [
+                "s",
+                "es",
+                "ess"
+              ],
+              "yo": [
+                "s",
+                "es",
+                "ess"
+              ],
+              "pcm": [
+                "s",
+                "es",
+                "ess"
+              ]
+            }
+          },
+          {
+            "id": "t",
+            "spoken": {
+              "en": [
+                "t",
+                "tee",
+                "tea"
+              ],
+              "yo": [
+                "t",
+                "tee",
+                "tea"
+              ],
+              "pcm": [
+                "t",
+                "tee",
+                "tea"
+              ]
+            }
+          },
+          {
+            "id": "u",
+            "spoken": {
+              "en": [
+                "u",
+                "yu",
+                "yoo"
+              ],
+              "yo": [
+                "u",
+                "yu",
+                "yoo"
+              ],
+              "pcm": [
+                "u",
+                "yu",
+                "yoo"
+              ]
+            }
+          },
+          {
+            "id": "v",
+            "spoken": {
+              "en": [
+                "v",
+                "vee"
+              ],
+              "yo": [
+                "v",
+                "vee"
+              ],
+              "pcm": [
+                "v",
+                "vee"
+              ]
+            }
+          },
+          {
+            "id": "w",
+            "spoken": {
+              "en": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ],
+              "yo": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ],
+              "pcm": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ]
+            }
+          },
+          {
+            "id": "x",
+            "spoken": {
+              "en": [
+                "x",
+                "ex",
+                "eks"
+              ],
+              "yo": [
+                "x",
+                "ex",
+                "eks"
+              ],
+              "pcm": [
+                "x",
+                "ex",
+                "eks"
+              ]
+            }
+          },
+          {
+            "id": "y",
+            "spoken": {
+              "en": [
+                "y",
+                "why",
+                "wye"
+              ],
+              "yo": [
+                "y",
+                "why",
+                "wye"
+              ],
+              "pcm": [
+                "y",
+                "why",
+                "wye"
+              ]
+            }
+          },
+          {
+            "id": "z",
+            "spoken": {
+              "en": [
+                "z",
+                "zed",
+                "zee"
+              ],
+              "yo": [
+                "z",
+                "zed",
+                "zee"
+              ],
+              "pcm": [
+                "z",
+                "zed",
+                "zee"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "You sang well. Let us fix any missed letters.",
+        "pcm": "You sing well. Make we fix any letter wey you miss.",
+        "yo": "O kọrin dáadáa. Jẹ́ ká tún lẹ́tà tí o pàdánù ṣe."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Say the whole alphabet.",
+        "pcm": "Make we see wetin you remember. Talk the whole alphabet.",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Sọ gbogbo álífábẹ́ẹ̀tì."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "a",
+            "spoken": {
+              "en": [
+                "a",
+                "ay"
+              ],
+              "yo": [
+                "a",
+                "ay"
+              ],
+              "pcm": [
+                "a",
+                "ay"
+              ]
+            }
+          },
+          {
+            "id": "b",
+            "spoken": {
+              "en": [
+                "b",
+                "bee"
+              ],
+              "yo": [
+                "b",
+                "bee"
+              ],
+              "pcm": [
+                "b",
+                "bee"
+              ]
+            }
+          },
+          {
+            "id": "c",
+            "spoken": {
+              "en": [
+                "c",
+                "see"
+              ],
+              "yo": [
+                "c",
+                "see"
+              ],
+              "pcm": [
+                "c",
+                "see"
+              ]
+            }
+          },
+          {
+            "id": "d",
+            "spoken": {
+              "en": [
+                "d",
+                "dee"
+              ],
+              "yo": [
+                "d",
+                "dee"
+              ],
+              "pcm": [
+                "d",
+                "dee"
+              ]
+            }
+          },
+          {
+            "id": "e",
+            "spoken": {
+              "en": [
+                "e",
+                "ee"
+              ],
+              "yo": [
+                "e",
+                "ee"
+              ],
+              "pcm": [
+                "e",
+                "ee"
+              ]
+            }
+          },
+          {
+            "id": "f",
+            "spoken": {
+              "en": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "yo": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "pcm": [
+                "f",
+                "ef",
+                "eff"
+              ]
+            }
+          },
+          {
+            "id": "g",
+            "spoken": {
+              "en": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "yo": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "pcm": [
+                "g",
+                "gee",
+                "jee"
+              ]
+            }
+          },
+          {
+            "id": "h",
+            "spoken": {
+              "en": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "yo": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "pcm": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ]
+            }
+          },
+          {
+            "id": "i",
+            "spoken": {
+              "en": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "yo": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "pcm": [
+                "i",
+                "eye",
+                "ai"
+              ]
+            }
+          },
+          {
+            "id": "j",
+            "spoken": {
+              "en": [
+                "j",
+                "jay"
+              ],
+              "yo": [
+                "j",
+                "jay"
+              ],
+              "pcm": [
+                "j",
+                "jay"
+              ]
+            }
+          },
+          {
+            "id": "k",
+            "spoken": {
+              "en": [
+                "k",
+                "kay"
+              ],
+              "yo": [
+                "k",
+                "kay"
+              ],
+              "pcm": [
+                "k",
+                "kay"
+              ]
+            }
+          },
+          {
+            "id": "l",
+            "spoken": {
+              "en": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "yo": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "pcm": [
+                "l",
+                "el",
+                "ell"
+              ]
+            }
+          },
+          {
+            "id": "m",
+            "spoken": {
+              "en": [
+                "m",
+                "em"
+              ],
+              "yo": [
+                "m",
+                "em"
+              ],
+              "pcm": [
+                "m",
+                "em"
+              ]
+            }
+          },
+          {
+            "id": "n",
+            "spoken": {
+              "en": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "yo": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "pcm": [
+                "n",
+                "en",
+                "enn"
+              ]
+            }
+          },
+          {
+            "id": "o",
+            "spoken": {
+              "en": [
+                "o",
+                "oh"
+              ],
+              "yo": [
+                "o",
+                "oh"
+              ],
+              "pcm": [
+                "o",
+                "oh"
+              ]
+            }
+          },
+          {
+            "id": "p",
+            "spoken": {
+              "en": [
+                "p",
+                "pee",
+                "pea"
+              ],
+              "yo": [
+                "p",
+                "pee",
+                "pea"
+              ],
+              "pcm": [
+                "p",
+                "pee",
+                "pea"
+              ]
+            }
+          },
+          {
+            "id": "q",
+            "spoken": {
+              "en": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ],
+              "yo": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ],
+              "pcm": [
+                "q",
+                "cue",
+                "queue",
+                "kyu"
+              ]
+            }
+          },
+          {
+            "id": "r",
+            "spoken": {
+              "en": [
+                "r",
+                "ar",
+                "arr"
+              ],
+              "yo": [
+                "r",
+                "ar",
+                "arr"
+              ],
+              "pcm": [
+                "r",
+                "ar",
+                "arr"
+              ]
+            }
+          },
+          {
+            "id": "s",
+            "spoken": {
+              "en": [
+                "s",
+                "es",
+                "ess"
+              ],
+              "yo": [
+                "s",
+                "es",
+                "ess"
+              ],
+              "pcm": [
+                "s",
+                "es",
+                "ess"
+              ]
+            }
+          },
+          {
+            "id": "t",
+            "spoken": {
+              "en": [
+                "t",
+                "tee",
+                "tea"
+              ],
+              "yo": [
+                "t",
+                "tee",
+                "tea"
+              ],
+              "pcm": [
+                "t",
+                "tee",
+                "tea"
+              ]
+            }
+          },
+          {
+            "id": "u",
+            "spoken": {
+              "en": [
+                "u",
+                "yu",
+                "yoo"
+              ],
+              "yo": [
+                "u",
+                "yu",
+                "yoo"
+              ],
+              "pcm": [
+                "u",
+                "yu",
+                "yoo"
+              ]
+            }
+          },
+          {
+            "id": "v",
+            "spoken": {
+              "en": [
+                "v",
+                "vee"
+              ],
+              "yo": [
+                "v",
+                "vee"
+              ],
+              "pcm": [
+                "v",
+                "vee"
+              ]
+            }
+          },
+          {
+            "id": "w",
+            "spoken": {
+              "en": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ],
+              "yo": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ],
+              "pcm": [
+                "w",
+                "double u",
+                "double you",
+                "dubya"
+              ]
+            }
+          },
+          {
+            "id": "x",
+            "spoken": {
+              "en": [
+                "x",
+                "ex",
+                "eks"
+              ],
+              "yo": [
+                "x",
+                "ex",
+                "eks"
+              ],
+              "pcm": [
+                "x",
+                "ex",
+                "eks"
+              ]
+            }
+          },
+          {
+            "id": "y",
+            "spoken": {
+              "en": [
+                "y",
+                "why",
+                "wye"
+              ],
+              "yo": [
+                "y",
+                "why",
+                "wye"
+              ],
+              "pcm": [
+                "y",
+                "why",
+                "wye"
+              ]
+            }
+          },
+          {
+            "id": "z",
+            "spoken": {
+              "en": [
+                "z",
+                "zed",
+                "zee"
+              ],
+              "yo": [
+                "z",
+                "zed",
+                "zee"
+              ],
+              "pcm": [
+                "z",
+                "zed",
+                "zee"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Lovely work. Tomorrow we sing the alphabet again.",
+        "pcm": "Fine work. Tomorrow we go sing alphabet again.",
+        "yo": "Iṣẹ́ àtàtà. Lọ́la a ó tún kọ orin álífábẹ́ẹ̀tì."
+      }
+    }
+  ]
+}

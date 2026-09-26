@@ -74,6 +74,11 @@ async def call(
         ("GET", "/a2a/.well-known/agent-card.json", "agent"),
         ("GET", "/api/health", "api"),
         ("POST", "/mcp", "api"),
+        ("POST", "/api/voice/samples/gvm_1/evaluation", "generate"),
+        ("POST", "/api/voice/samples", "api"),
+        ("PUT", "/api/voice/samples/gvm_1/audio", "api"),
+        ("GET", "/api/voice/lesson", "api"),
+        ("GET", "/api/voice/teacher-audio/prompt", "api"),
     ],
 )
 async def test_each_path_spends_its_own_budget(method, path, budget):

@@ -1,0 +1,746 @@
+{
+  "id": "mathematics.number.counting-in-twos",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 10,
+  "title": {
+    "en": "Counting in twos",
+    "yo": "Kíkà ní méjì méjì",
+    "pcm": "Counting for two two"
+  },
+  "classes": [
+    "primary_1"
+  ],
+  "term": 1,
+  "week": 8,
+  "objectives": [
+    {
+      "en": "Count in twos from two to twenty-four without help.",
+      "yo": "Kà ní méjì méjì láti méjì dé mẹ́rìnlélógún láìsí ìrànlọ́wọ́.",
+      "pcm": "Count for two two from two reach twenty-four without help."
+    },
+    {
+      "en": "Say the next number when you hear a number from the twos.",
+      "yo": "Sọ nọ́ńbà tó kàn nígbà tí o bá gbọ́ nọ́ńbà kan nínú àwọn méjì méjì.",
+      "pcm": "Talk the next number when you hear one number from the two two."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "ungrounded",
+    "strand": "Number and Numeration",
+    "objective": "Count in twos",
+    "note": "Not a NERDC topic in any class. Kept as readiness for multiplication. Schemes name no such topic; week 8 is a readiness slot, not a scheme placement."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "One pair of slippers is two slippers. Two pairs make four. Today we count in twos.",
+        "yo": "Bàtà sílíbà kan jẹ́ méjì. Bàtà méjì jẹ́ mẹ́rin. Lónìí a ó kà ní méjì méjì.",
+        "pcm": "One pair of slippers na two slippers. Two pairs na four. Today we go count for two two."
+      },
+      "show": {
+        "en": "2, 4, 6…",
+        "yo": "2, 4, 6…",
+        "pcm": "2, 4, 6…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Count in twos from two to twenty-four yourself.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò kà ní méjì méjì láti méjì dé mẹ́rìnlélógún.",
+        "pcm": "Today you go fit count for two two from two reach twenty-four by yourself."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "First, plain counting. Count from one to five.",
+        "yo": "Ní àkọ́kọ́, kíkà lásán. Kà láti ọ̀kan dé márùn-ún.",
+        "pcm": "First, normal counting. Count from one reach five."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "1",
+            "spoken": {
+              "en": [
+                "1",
+                "one"
+              ],
+              "yo": [
+                "1",
+                "one",
+                "ọ̀kan"
+              ],
+              "pcm": [
+                "1",
+                "one"
+              ]
+            }
+          },
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Two, four, six, eight. Each time we add two more. Two and two make four. Four and two make six.",
+        "yo": "Méjì, mẹ́rin, mẹ́fà, mẹ́jọ. Nígbà kọ̀ọ̀kan a fi méjì kún un. Méjì àti méjì jẹ́ mẹ́rin. Mẹ́rin àti méjì jẹ́ mẹ́fà.",
+        "pcm": "Two, four, six, eight. Every time we add two more. Two and two na four. Four and two na six."
+      },
+      "show": {
+        "en": "2, 4, 6, 8…",
+        "yo": "2, 4, 6, 8…",
+        "pcm": "2, 4, 6, 8…"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say these with me: two, four, six, eight.",
+        "yo": "Wá sọ pẹ̀lú mi: méjì, mẹ́rin, mẹ́fà, mẹ́jọ.",
+        "pcm": "Talk with me: two four six eight."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. Count in twos from two to twenty-four in one aloud.",
+        "yo": "Ìwọ ná. Kà ní méjì méjì láti méjì dé mẹ́rìnlélógún nínú aloud kan.",
+        "pcm": "Na your turn. Count for two two from two reach twenty-four aloud."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "12",
+            "spoken": {
+              "en": [
+                "12",
+                "twelve"
+              ],
+              "yo": [
+                "12",
+                "twelve",
+                "méjìlá"
+              ],
+              "pcm": [
+                "12",
+                "twelve"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "16",
+            "spoken": {
+              "en": [
+                "16",
+                "sixteen"
+              ],
+              "yo": [
+                "16",
+                "sixteen",
+                "mẹ́rìndínlógún"
+              ],
+              "pcm": [
+                "16",
+                "sixteen"
+              ]
+            }
+          },
+          {
+            "id": "18",
+            "spoken": {
+              "en": [
+                "18",
+                "eighteen"
+              ],
+              "yo": [
+                "18",
+                "eighteen",
+                "méjìdínlógún"
+              ],
+              "pcm": [
+                "18",
+                "eighteen"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          },
+          {
+            "id": "22",
+            "spoken": {
+              "en": [
+                "22",
+                "twenty-two"
+              ],
+              "yo": [
+                "22",
+                "twenty-two",
+                "méjìlélógún"
+              ],
+              "pcm": [
+                "22",
+                "twenty-two"
+              ]
+            }
+          },
+          {
+            "id": "24",
+            "spoken": {
+              "en": [
+                "24",
+                "twenty-four"
+              ],
+              "yo": [
+                "24",
+                "twenty-four",
+                "mẹ́rìnlélógún"
+              ],
+              "pcm": [
+                "24",
+                "twenty-four"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Listen to the numbers you skipped. We count them again.",
+        "yo": "Gbọ́ nọ́ńbà tí o fò. A ó tún kà pọ̀.",
+        "pcm": "Hear the numbers wey you jump. We go count dem again."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Count in twos from two to twenty-four without help.",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Kà ní méjì méjì láti méjì dé mẹ́rìnlélógún láìsí ìrànlọ́wọ́.",
+        "pcm": "Make we see wetin you remember. Count for two two from two reach twenty-four without help."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "12",
+            "spoken": {
+              "en": [
+                "12",
+                "twelve"
+              ],
+              "yo": [
+                "12",
+                "twelve",
+                "méjìlá"
+              ],
+              "pcm": [
+                "12",
+                "twelve"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "16",
+            "spoken": {
+              "en": [
+                "16",
+                "sixteen"
+              ],
+              "yo": [
+                "16",
+                "sixteen",
+                "mẹ́rìndínlógún"
+              ],
+              "pcm": [
+                "16",
+                "sixteen"
+              ]
+            }
+          },
+          {
+            "id": "18",
+            "spoken": {
+              "en": [
+                "18",
+                "eighteen"
+              ],
+              "yo": [
+                "18",
+                "eighteen",
+                "méjìdínlógún"
+              ],
+              "pcm": [
+                "18",
+                "eighteen"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          },
+          {
+            "id": "22",
+            "spoken": {
+              "en": [
+                "22",
+                "twenty-two"
+              ],
+              "yo": [
+                "22",
+                "twenty-two",
+                "méjìlélógún"
+              ],
+              "pcm": [
+                "22",
+                "twenty-two"
+              ]
+            }
+          },
+          {
+            "id": "24",
+            "spoken": {
+              "en": [
+                "24",
+                "twenty-four"
+              ],
+              "yo": [
+                "24",
+                "twenty-four",
+                "mẹ́rìnlélógún"
+              ],
+              "pcm": [
+                "24",
+                "twenty-four"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we count in twos. Then we count in fives.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó kà ní méjì méjì. Lẹ́yìn náà a ó kà ní márùn-ún márùn-ún.",
+        "pcm": "You do well. Tomorrow we go count for two two. Then we go count for five five."
+      }
+    }
+  ]
+}

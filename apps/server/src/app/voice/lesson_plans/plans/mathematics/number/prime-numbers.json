@@ -1,0 +1,340 @@
+{
+  "id": "mathematics.number.prime-numbers",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 60,
+  "title": {
+    "en": "Prime numbers",
+    "yo": "Àwọn prime number",
+    "pcm": "Prime numbers"
+  },
+  "classes": [
+    "primary_5"
+  ],
+  "term": 1,
+  "week": 5,
+  "objectives": [
+    {
+      "en": "Say what makes a number prime: only one and the number itself divide it.",
+      "yo": "Sọ ohun tí ó mú kí nọ́ńbà jẹ́ prime: one àti nọ́ńbà náà fúnra rẹ̀ nìkan ni ó lè pín in.",
+      "pcm": "Talk wetin make number be prime: na only one and the number itself fit divide am."
+    },
+    {
+      "en": "Find the prime numbers below one hundred.",
+      "yo": "Wá àwọn prime number tí ó kéré sí one hundred.",
+      "pcm": "Find the prime numbers wey dey below one hundred."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.operations.division-facts"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration",
+    "objective": "Find the prime numbers below 100",
+    "note": "Only one scheme family gives prime numbers a week of its own."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "In the market, a trader puts oranges in rows. Twelve make three rows of four. Thirteen never makes equal rows. One is left over. Thirteen is prime.",
+        "yo": "Ní ọjà, olówó ọjà kan ń to ọsàn sí ọ̀wọ̀. Ọsàn twelve lè ṣe ọ̀wọ̀ three ti four. Ṣùgbọ́n thirteen kò lè ṣe ọ̀wọ̀ tó dọ́gba. Ọ̀kan máa ń kù. Thirteen jẹ́ prime number.",
+        "pcm": "For market, one trader dey arrange her orange for rows. Twelve orange go make three rows of four. But thirteen orange no fit make equal rows, one go always remain. Number like thirteen na prime number."
+      },
+      "show": {
+        "en": "13: only 1 and 13",
+        "yo": "13: only 1 and 13",
+        "pcm": "13: only 1 and 13"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will pick out the prime numbers below one hundred by yourself.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò yan àwọn prime number tí ó kéré sí one hundred.",
+        "pcm": "Today you go fit pick the prime numbers wey dey below one hundred by yourself."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "First, division. What is twelve divided by four?",
+        "yo": "Ní àkọ́kọ́, division. Kí ni twelve divided by four?",
+        "pcm": "First, division. Wetin be twelve divided by four?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "three",
+            "3"
+          ],
+          "yo": [
+            "three",
+            "3",
+            "mẹ́ta"
+          ],
+          "pcm": [
+            "three",
+            "3"
+          ]
+        }
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "A prime number has two factors: one and itself. Two, three, five and seven are prime. Nine is not prime. Three times three is nine. One is not prime. It has one factor.",
+        "yo": "Prime number ní factor two péré, one àti nọ́ńbà náà fúnra rẹ̀. Two, three, five àti seven jẹ́ prime. Nine kì í ṣe prime, nítorí three times three jẹ́ nine, nítorí náà three náà lè pín in. One kì í ṣe prime, nítorí ó ní factor one péré.",
+        "pcm": "Prime number get only two factors, one and the number itself. Two, three, five and seven na prime. Nine no be prime, because three times three na nine, so three fit divide am too. One no be prime, because e get only one factor."
+      },
+      "show": {
+        "en": "2 3 5 7 11 13",
+        "yo": "2 3 5 7 11 13",
+        "pcm": "2 3 5 7 11 13"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Together now. Seven can be divided by one, and by seven, and by nothing else. So how many numbers divide seven exactly?",
+        "yo": "Jẹ́ ká ṣe é papọ̀. One lè pín seven, seven náà lè pín in, kò sí ohun mìíràn tí ó lè pín in. Nọ́ńbà mélòó ni ó lè pín seven pátápátá?",
+        "pcm": "Make we do am together. One fit divide seven, seven itself fit divide am, and nothing else fit divide am. So how many numbers dey divide seven complete?"
+      },
+      "show": {
+        "en": "7 ÷ 1, 7 ÷ 7",
+        "yo": "7 ÷ 1, 7 ÷ 7",
+        "pcm": "7 ÷ 1, 7 ÷ 7"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "two",
+            "2"
+          ],
+          "yo": [
+            "two",
+            "2",
+            "méjì"
+          ],
+          "pcm": [
+            "two",
+            "2"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. Say every prime number below twenty, in order.",
+        "yo": "Ìwọ náà. Sọ gbogbo prime number tí ó kéré sí twenty, ní ètò.",
+        "pcm": "Na your turn. Talk every prime number wey dey below twenty, for order."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "11",
+            "spoken": {
+              "en": [
+                "11",
+                "eleven"
+              ],
+              "yo": [
+                "11",
+                "eleven",
+                "mọ́kànlá"
+              ],
+              "pcm": [
+                "11",
+                "eleven"
+              ]
+            }
+          },
+          {
+            "id": "13",
+            "spoken": {
+              "en": [
+                "13",
+                "thirteen"
+              ],
+              "yo": [
+                "13",
+                "thirteen",
+                "mẹ́tàlá"
+              ],
+              "pcm": [
+                "13",
+                "thirteen"
+              ]
+            }
+          },
+          {
+            "id": "17",
+            "spoken": {
+              "en": [
+                "17",
+                "seventeen"
+              ],
+              "yo": [
+                "17",
+                "seventeen",
+                "mẹ́tàdínlógún"
+              ],
+              "pcm": [
+                "17",
+                "seventeen"
+              ]
+            }
+          },
+          {
+            "id": "19",
+            "spoken": {
+              "en": [
+                "19",
+                "nineteen"
+              ],
+              "yo": [
+                "19",
+                "nineteen",
+                "mọ́kàndínlógún"
+              ],
+              "pcm": [
+                "19",
+                "nineteen"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Check the ones you missed. Try to divide each number by two, by three, by five and by seven. If none of them divides it, the number is prime.",
+        "yo": "Ṣàyẹ̀wò àwọn tí o pàdánù. Gbìyànjú láti pín nọ́ńbà kọ̀ọ̀kan pẹ̀lú two, three, five àti seven. Tí ọ̀kankan wọn kò bá lè pín in, nọ́ńbà náà jẹ́ prime.",
+        "pcm": "Check the ones wey you miss. Try divide every number with two, with three, with five and with seven. If none of dem divide am, that number na prime."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember, no help. Which prime number comes just after nineteen?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí, láìsí ìrànlọ́wọ́. Prime number wo ni ó tẹ̀lé nineteen?",
+        "pcm": "Make we see wetin you remember, no help. Which prime number come just after nineteen?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "twenty-three",
+            "23"
+          ],
+          "yo": [
+            "twenty-three",
+            "23",
+            "mẹ́tàlélógún"
+          ],
+          "pcm": [
+            "twenty-three",
+            "23"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we look for primes again. Soon we change fractions to decimals and percentages.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún wá àwọn prime number. Láìpẹ́ a ó yí fractions padà sí decimals àti percentages.",
+        "pcm": "You do well. Tomorrow we go look for primes again. Soon we go change fractions to decimals and percentages."
+      }
+    }
+  ]
+}

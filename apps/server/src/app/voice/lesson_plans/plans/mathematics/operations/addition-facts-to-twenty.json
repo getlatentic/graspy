@@ -1,0 +1,382 @@
+{
+  "id": "mathematics.operations.addition-facts-to-twenty",
+  "subject": "mathematics",
+  "topic": "operations",
+  "sequence": 17,
+  "title": {
+    "en": "Adding up to twenty",
+    "yo": "Addition dé twenty",
+    "pcm": "Adding reach twenty"
+  },
+  "classes": [
+    "primary_1",
+    "primary_2"
+  ],
+  "term": 2,
+  "week": 2,
+  "objectives": [
+    {
+      "en": "Answer any add fact with an answer up to twenty.",
+      "yo": "Dáhùn add fact èyíkéyìí tí ìdáhùn rẹ̀ kò ju twenty lọ.",
+      "pcm": "Answer any add fact wey the answer no pass twenty."
+    },
+    {
+      "en": "Count on from the bigger number to find the answer.",
+      "yo": "Bẹ̀rẹ̀ láti nọ́ńbà tó tóbi jù, kí o sì kà síwájú láti rí ìdáhùn.",
+      "pcm": "Start from the big number, then count go front to find the answer."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.number.counting-to-twenty"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Add two whole numbers, sum not greater than 18",
+    "note": "NERDC caps the sum at 18; this lesson goes to 20."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "You have seven sweets. Your friend gives five more. How many now?",
+        "pcm": "You get seven sweet. Your padi give you five more. How many now?",
+        "yo": "O ní seven sweets. Ọ̀rẹ́ rẹ fún ọ ní five sí i. Mélòó ni o ní báyìí?"
+      },
+      "show": {
+        "en": "7 + 5 = ?",
+        "yo": "7 + 5 = ?",
+        "pcm": "7 + 5 = ?"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will add numbers up to twenty by yourself.",
+        "pcm": "Today you go fit add numbers reach twenty by yourself.",
+        "yo": "Lónìí ìwọ yóò ṣe addition dé twenty fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember counting? Count from one to ten.",
+        "pcm": "You remember counting? Count from one reach ten.",
+        "yo": "Ṣé o rántí kíkà? Kà láti one dé ten."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "1",
+            "spoken": {
+              "en": [
+                "1",
+                "one"
+              ],
+              "yo": [
+                "1",
+                "one",
+                "ọ̀kan"
+              ],
+              "pcm": [
+                "1",
+                "one"
+              ]
+            }
+          },
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "9",
+            "spoken": {
+              "en": [
+                "9",
+                "nine"
+              ],
+              "yo": [
+                "9",
+                "nine",
+                "mẹ́sàn-án",
+                "mẹ́sàn",
+                "ẹ̀sán"
+              ],
+              "pcm": [
+                "9",
+                "nine"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Seven add five. Start at seven and count five more: eight, nine, ten, eleven, twelve. Seven add five is twelve.",
+        "pcm": "Seven add five. Start for seven and count five more: eight, nine, ten, eleven, twelve. Seven add five na twelve.",
+        "yo": "Seven add five. Bẹ̀rẹ̀ láti seven kí o kà five sí i: eight, nine, ten, eleven, twelve. Seven add five jẹ́ twelve."
+      },
+      "show": {
+        "en": "7 + 5 = 12",
+        "yo": "7 + 5 = 12",
+        "pcm": "7 + 5 = 12"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Let us add together. What is four add three? Count on from four: five, six, seven.",
+        "pcm": "Make we do easy one together. Wetin be four add three? Count go front from four: five, six, seven. Say am with me: seven.",
+        "yo": "Ọ̀kan tó rọrùn papọ̀. Kí ni four add three? Kà síwájú láti four: five, six, seven. Sọ seven pẹ̀lú mi."
+      },
+      "show": {
+        "en": "4 + 3 = 7",
+        "yo": "4 + 3 = 7",
+        "pcm": "4 + 3 = 7"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "seven",
+            "7"
+          ],
+          "yo": [
+            "seven",
+            "7",
+            "méje"
+          ],
+          "pcm": [
+            "seven",
+            "7"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. What is seven add five?",
+        "pcm": "Na your turn. Wetin be seven add five?",
+        "yo": "Ìwọ ná. Kí ni seven add five?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "twelve",
+            "12"
+          ],
+          "yo": [
+            "twelve",
+            "12",
+            "méjìlá"
+          ],
+          "pcm": [
+            "twelve",
+            "12"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If your answer was not twelve, count on again from seven: eight, nine, ten, eleven, twelve.",
+        "pcm": "If your answer no be twelve, count go front again from seven: eight, nine, ten, eleven, twelve.",
+        "yo": "Tí ìdáhùn rẹ kò bá jẹ́ twelve, tún kà síwájú láti seven: eight, nine, ten, eleven, twelve."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. What is nine add six?",
+        "pcm": "Make we see wetin you remember. Wetin be nine add six?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Kí ni nine add six?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "fifteen",
+            "15"
+          ],
+          "yo": [
+            "fifteen",
+            "15",
+            "mẹ́ẹ̀ẹ́dógún",
+            "mẹ́ẹ̀dógún",
+            "mẹ́dógún"
+          ],
+          "pcm": [
+            "fifteen",
+            "15"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we add again. Soon we take numbers away.",
+        "pcm": "You do well. Tomorrow we go add again. Soon we go take numbers comot.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣe addition. Láìpẹ́ a ó kọ́ subtraction."
+      }
+    }
+  ]
+}

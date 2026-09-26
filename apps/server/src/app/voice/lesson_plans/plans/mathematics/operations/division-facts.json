@@ -1,0 +1,276 @@
+{
+  "id": "mathematics.operations.division-facts",
+  "subject": "mathematics",
+  "topic": "operations",
+  "sequence": 32,
+  "title": {
+    "en": "Sharing into equal groups",
+    "yo": "Pínpín sí ẹgbẹ́ tí ó dọ́gba",
+    "pcm": "Sharing into equal group"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 6,
+  "objectives": [
+    {
+      "en": "Share any number up to forty eight into two, three, four, five or six equal groups.",
+      "yo": "Pín nọ́ńbà èyíkéyìí dé forty eight sí ẹgbẹ́ dọ́gba two, three, four, five tàbí six.",
+      "pcm": "Share any number reach forty eight into two, three, four, five or six equal group."
+    },
+    {
+      "en": "Use a times fact backwards to find the missing number.",
+      "yo": "Lo times fact padà sẹ́yìn láti rí nọ́ńbà tí ó sọnù.",
+      "pcm": "Use times fact backwards to find the number wey miss."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-9"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "divide numbers up to 48 by 2, 3, 4, 5 and 6 with no remainder; find factors and multiples; find a missing factor"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "You have twenty four oranges and six friends. Every friend gets the same number. Today we share.",
+        "pcm": "You get twenty four orange and six padi. Share am equal. Today we go share.",
+        "yo": "O ní ọ̀sàn twenty four àti ọ̀rẹ́ six. Pín wọn dọ́gba. Lónìí a ó pín."
+      },
+      "show": {
+        "en": "24 ÷ 6 = ?",
+        "yo": "24 ÷ 6 = ?",
+        "pcm": "24 ÷ 6 = ?"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will share numbers into equal groups by yourself.",
+        "pcm": "Today you go fit share numbers into equal groups.",
+        "yo": "Lónìí ìwọ yóò pín nọ́ńbà sí ẹgbẹ́ dọ́gba."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember your sixes? Count in sixes to twenty four.",
+        "pcm": "You remember your sixes? Count in sixes reach twenty four.",
+        "yo": "Ṣé o rántí sixes rẹ? Kà ní sixes dé twenty four."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "six",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "twelve",
+            "spoken": {
+              "en": [
+                "12",
+                "twelve"
+              ],
+              "yo": [
+                "12",
+                "twelve",
+                "méjìlá"
+              ],
+              "pcm": [
+                "12",
+                "twelve"
+              ]
+            }
+          },
+          {
+            "id": "eighteen",
+            "spoken": {
+              "en": [
+                "18",
+                "eighteen"
+              ],
+              "yo": [
+                "18",
+                "eighteen",
+                "méjìdínlógún"
+              ],
+              "pcm": [
+                "18",
+                "eighteen"
+              ]
+            }
+          },
+          {
+            "id": "twenty-four",
+            "spoken": {
+              "en": [
+                "24",
+                "twenty four"
+              ],
+              "yo": [
+                "24",
+                "twenty four",
+                "mẹ́rìnlélógún"
+              ],
+              "pcm": [
+                "24",
+                "twenty four"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Sharing equally is dividing. Twenty four oranges go to six friends, four each. Six times four is twenty-four.",
+        "pcm": "To share equal equal na dividing. Twenty four orange go six padi, four each. Six times four na twenty-four.",
+        "yo": "Pínpín dọ́gba ni dividing. A pín ọ̀sàn twenty four sí ọ̀rẹ́ six, four fún ẹnìkọ̀ọ̀kan. Six times four jẹ́ twenty-four."
+      },
+      "show": {
+        "en": "24 ÷ 6 = 4",
+        "yo": "24 ÷ 6 = 4",
+        "pcm": "24 ÷ 6 = 4"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Now together. Fifteen mangoes, five children, the same number each. Five times what makes fifteen?",
+        "pcm": "Make we share together. Fifteen mango, five pikin, equal each. Five times wetin go give fifteen?",
+        "yo": "Jẹ́ ká pín papọ̀. Mángòrò fifteen, ọmọ five, dọ́gba fún gbogbo wọn. Five times kí ni ó jẹ́ fifteen?"
+      },
+      "show": {
+        "en": "15 ÷ 5 = 3",
+        "yo": "15 ÷ 5 = 3",
+        "pcm": "15 ÷ 5 = 3"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "three",
+            "3"
+          ],
+          "yo": [
+            "three",
+            "3",
+            "mẹ́ta"
+          ],
+          "pcm": [
+            "three",
+            "3"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. Thirty six sweets, four children, equal each. How many sweets does one child get?",
+        "pcm": "Na your turn. Thirty six sweet, four pikin, equal each. How many sweet one pikin go collect?",
+        "yo": "Ìwọ ná. Sweets thirty six, ọmọ four, dọ́gba fún gbogbo wọn. Sweets mélòó ni ọmọ kan gbà?"
+      },
+      "show": {
+        "en": "36 ÷ 4 = ?",
+        "yo": "36 ÷ 4 = ?",
+        "pcm": "36 ÷ 4 = ?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "nine",
+            "9"
+          ],
+          "yo": [
+            "nine",
+            "9",
+            "mẹ́sàn-án",
+            "mẹ́sàn"
+          ],
+          "pcm": [
+            "nine",
+            "9"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If your answer was not nine, use four times nine. Four times nine is thirty-six. Each group gets nine.",
+        "pcm": "Make we fix am together. Use four times nine: thirty-six. So each one get nine.",
+        "yo": "Jẹ́ ká tún ṣe é papọ̀. Lo four times nine: thirty-six. Nítorí náà ẹnìkọ̀ọ̀kan gba nine."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Forty two exercise books are shared among six pupils. How many books does each pupil get?",
+        "pcm": "Make we see wetin you remember. Forty two book share for six pupil. How many each one go get?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Ìwé forty two fún akẹ́kọ̀ọ́ six. Mélòó ni ẹnìkọ̀ọ̀kan gbà?"
+      },
+      "show": {
+        "en": "42 ÷ 6 = ?",
+        "yo": "42 ÷ 6 = ?",
+        "pcm": "42 ÷ 6 = ?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "seven",
+            "7"
+          ],
+          "yo": [
+            "seven",
+            "7",
+            "méje"
+          ],
+          "pcm": [
+            "seven",
+            "7"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Sharing turns times work backwards. Tomorrow we share. Soon we find factors.",
+        "pcm": "You do well. Sharing turns times work backwards. Tomorrow we share again, then find factors and multiples.",
+        "yo": "O ṣe dáadáa. Pínpín yí times sí ẹ̀yìn. Lọ́la a ó tún pín, a ó sì wá factors àti multiples."
+      }
+    }
+  ]
+}

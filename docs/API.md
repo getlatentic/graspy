@@ -26,7 +26,7 @@ TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/j
 | `/api/learner/curriculum` | GET, PUT | ✓ | The plan the learner's devices share. PUT keeps the newer by `updatedAt` and returns the plan to hold |
 | `/api/learner/curriculum/join` | POST | ✓ | A device's first choice of a learner, returning the learner's one plan. A plan for the same country, language and class merges into the learner's and brings its progress; for another class, the newer plan wins whole |
 | `/api/account/learners` | GET, POST | ✓ signed in | The account's learners; POST adds one, with `guardian: true` from their parent, guardian or themselves. At most 8 |
-| `/api/account/learners/{id}` | PATCH, DELETE | ✓ signed in | Renames a learner, or forgets them with their record, plan, lessons and tutor conversations |
+| `/api/account/learners/{id}` | PATCH, DELETE | ✓ signed in | Renames a learner, or forgets them with their record, plan, lessons, tutor conversations and voice lessons |
 | `/api/account/learners/{id}/session` | POST | ✓ signed in | A session as that learner. With `deviceId`, the device's own record joins them once |
 | `/api/account` | DELETE | ✓ signed in | Forgets every learner and everything kept for them. The Google account is Google's |
 | `/api/education/systems` | GET | | Every school system in the catalogue |
@@ -72,6 +72,23 @@ A reply is the answer as text plus a data part:
 
 `/mcp` is a stateless MCP server over Streamable HTTP. It lists the tools that show UI (`give_practice`, `give_passage`, `give_lesson`), the app-only tools their views call, and the `ui://` resources. A lesson is not a REST endpoint: the app calls `give_lesson` and frames the view it returns.
 
+## Voice
+
+Voice lessons for the learner the session names: an account's learner or a signed-out device. They run on the Worker only; under uvicorn every endpoint answers `503 voice_unavailable`. Their errors carry `detail` as a sentence, as the Android app reads them.
+
+| Endpoint | Method | Returns |
+|---|---|---|
+| `/api/voice/lesson` | GET | The teacher's next step (`move`), for `learner_class`, `language` (`en`, `yo`, `pcm`) and optionally `plan`, the lesson the learner opened. The step is recorded as offered |
+| `/api/voice/catalogue` | GET | Every lesson of `learner_class`, with where the learner stands on it |
+| `/api/voice/lesson/events` | POST | Records that the learner heard `plan_id` and `event_id`. `409` for a step never offered |
+| `/api/voice/teacher-audio/{utterance}` | GET | The teacher's voice for a lesson line, in `language`, with an `ETag`. `If-None-Match` with it answers `304` |
+| `/api/voice/samples` | POST | A new recording's metadata, with an `Idempotency-Key` header. `201` with `sample_id` and `upload_path`; the same key and metadata again answer `200` with the same sample, other metadata `409` |
+| `/api/voice/samples/{id}/audio` | PUT | The recording: WAV or Ogg (`415` otherwise), a positive `Content-Length` (`411`), at most 10 MiB (`413`) |
+| `/api/voice/samples/{id}/evaluation` | POST | Marks the recording and returns the turn: `decision` (`correct`, `try_again`, `not_understood`), `feedback`, `transcript`. `409` when it answers a step the learner was never offered; `502` when recognition failed, `422` when the audio held no speech |
+| `/api/voice/samples/{id}/reply-audio` | GET | The teacher's voice for the turn's `feedback` |
+
+A recording's metadata needs `speaker_id`, `language_pair` (`yo-en` or `pcm-en`), `task`, `topic` and `consent: {"granted": true}`. With `plan_id` and `event_id` it answers that lesson step, and its `prompt_id` must be one that step asks; `400` otherwise. Another learner's sample is `404`. Marking a recording spends the generation budget; the rest spend the API's.
+
 ## Errors
 
 | Status | Meaning |
@@ -80,5 +97,6 @@ A reply is the answer as text plus a data part:
 | 403 | A device's session asked for the account's learners (`account_required`) |
 | 409 | An account session asked for a learner's record (`learner_required`), or the account holds 8 learners (`too_many_learners`) |
 | 422 | Invalid request. `detail` names the field, never the value |
+| 503 | Voice lessons outside the Worker (`voice_unavailable`) |
 | 429 | Rate limited. Wait `Retry-After` seconds |
 | 5xx | Server failure. The details are logged, not returned |

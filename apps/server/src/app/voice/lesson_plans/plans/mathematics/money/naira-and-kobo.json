@@ -1,0 +1,293 @@
+{
+  "id": "mathematics.money.naira-and-kobo",
+  "subject": "mathematics",
+  "topic": "money",
+  "sequence": 45,
+  "title": {
+    "en": "Naira and kobo",
+    "yo": "Náírà àti kọ́bọ̀",
+    "pcm": "Naira and kobo"
+  },
+  "classes": [
+    "primary_1",
+    "primary_2",
+    "primary_3"
+  ],
+  "term": 3,
+  "week": 2,
+  "objectives": [
+    {
+      "en": "Say how many kobo make one naira.",
+      "yo": "Sọ iye kọ́bọ̀ tí ó jẹ́ náírà kan.",
+      "pcm": "Talk how many kobo make one naira."
+    },
+    {
+      "en": "Work out the change from a small buying.",
+      "yo": "Ṣírò ìyókù owó nígbà tí o bá ra ohun kékeré.",
+      "pcm": "Calculate the change wey dem go give you when you buy small thing."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Mensuration and Geometry / Primary Measures / Money",
+    "objective": "Recognise Nigerian coins and notes and give change",
+    "note": "Scheme families disagree on the term for Primary 1 and 2; Primary 3 is term 2 week 9."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "You see naira notes at the market: fifty, one hundred, two hundred, five hundred, one thousand naira. We count money in naira and kobo.",
+        "pcm": "You sabi the naira notes wey you see for market: fifty, one hundred, two hundred, five hundred, one thousand naira. We dey count money with naira and kobo.",
+        "yo": "O rí àwọn owó bébà náírà ní ọjà: fifty, one hundred, two hundred, five hundred, one thousand naira. A ń ka owó ní náírà àti kọ́bọ̀."
+      },
+      "show": {
+        "en": "₦50 ₦100 ₦500",
+        "yo": "₦50 ₦100 ₦500",
+        "pcm": "₦50 ₦100 ₦500"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will name kobo in one naira. You will find simple change.",
+        "pcm": "Today you go fit talk kobo for one naira. You go find simple change.",
+        "yo": "Lónìí ìwọ yóò sọ kọ́bọ̀ inú náírà kan. Ìwọ yóò ṣírò ìyókù owó."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember tens? Count by tens: ten, twenty, thirty, forty, fifty.",
+        "pcm": "You remember tens? Count by tens: ten, twenty, thirty, forty, fifty.",
+        "yo": "Ṣé o rántí tens? Kà ní tens: ten, twenty, thirty, forty, fifty."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          },
+          {
+            "id": "30",
+            "spoken": {
+              "en": [
+                "30",
+                "thirty"
+              ],
+              "yo": [
+                "30",
+                "thirty",
+                "ọgbọ̀n"
+              ],
+              "pcm": [
+                "30",
+                "thirty"
+              ]
+            }
+          },
+          {
+            "id": "40",
+            "spoken": {
+              "en": [
+                "40",
+                "forty"
+              ],
+              "yo": [
+                "40",
+                "forty",
+                "ogójì"
+              ],
+              "pcm": [
+                "40",
+                "forty"
+              ]
+            }
+          },
+          {
+            "id": "50",
+            "spoken": {
+              "en": [
+                "50",
+                "fifty"
+              ],
+              "yo": [
+                "50",
+                "fifty",
+                "àádọ́ta"
+              ],
+              "pcm": [
+                "50",
+                "fifty"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "One naira is one hundred kobo. Kobo coins are hard to see today. Five twenty naira notes make one hundred naira.",
+        "pcm": "One naira na one hundred kobo. Kobo coin hard to see today. Five twenty naira notes na one hundred naira.",
+        "yo": "Náírà kan jẹ́ one hundred kọ́bọ̀. Owó ẹyọ kọ́bọ̀ ṣòro láti rí lónìí. Owó bébà twenty naira márùn-ún jẹ́ one hundred naira."
+      },
+      "show": {
+        "en": "₦1 = 100 kobo",
+        "yo": "₦1 = 100 kobo",
+        "pcm": "₦1 = 100 kobo"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me. How many kobo make one naira? One hundred.",
+        "pcm": "Say am with me. How many kobo make one naira? One hundred.",
+        "yo": "Sọ ọ́ pẹ̀lú mi. Kọ́bọ̀ mélòó ni ó jẹ́ náírà kan? One hundred."
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "one hundred",
+            "hundred",
+            "100",
+            "one hundred kobo"
+          ],
+          "yo": [
+            "one hundred",
+            "hundred",
+            "100",
+            "ọgọ́rùn-ún",
+            "ọgọ́rùn",
+            "one hundred kọ́bọ̀"
+          ],
+          "pcm": [
+            "one hundred",
+            "hundred",
+            "100",
+            "one hundred kobo"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. A sweet costs thirty naira. You give one hundred naira. How much change?",
+        "pcm": "Na your turn. Sweet cost thirty naira. You give one hundred naira. How much change?",
+        "yo": "Ìwọ ná. Sweet jẹ́ thirty naira. O fún olùtà ní one hundred naira. Ìyókù mélòó?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "seventy",
+            "70",
+            "seventy naira"
+          ],
+          "yo": [
+            "seventy",
+            "70",
+            "àádọ́rin",
+            "seventy naira"
+          ],
+          "pcm": [
+            "seventy",
+            "70",
+            "seventy naira"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If the change was not right, count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. That is seventy naira.",
+        "pcm": "If the change no be right, count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. Na seventy naira.",
+        "yo": "Tí ìyókù kò bá tọ́, kà sókè láti thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. Ìyẹn jẹ́ seventy naira."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. A biscuit costs twenty naira. You give one hundred naira. How much change?",
+        "pcm": "Make we see wetin you remember. Biscuit cost twenty naira. You give one hundred naira. How much change?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Biscuit jẹ́ twenty naira. O fún un ní one hundred naira. Ìyókù mélòó?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "eighty",
+            "80",
+            "eighty naira"
+          ],
+          "yo": [
+            "eighty",
+            "80",
+            "ọgọ́rin",
+            "eighty naira"
+          ],
+          "pcm": [
+            "eighty",
+            "80",
+            "eighty naira"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we count money again. Next we learn to tell time.",
+        "pcm": "You do well. Tomorrow we go count money again. Next we learn tell time.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ka owó. Lẹ́yìn náà, a ó kọ́ àkókò."
+      }
+    }
+  ]
+}

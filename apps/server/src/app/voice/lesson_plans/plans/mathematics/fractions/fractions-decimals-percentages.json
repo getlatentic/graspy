@@ -1,0 +1,210 @@
+{
+  "id": "mathematics.fractions.fractions-decimals-percentages",
+  "subject": "mathematics",
+  "topic": "fractions",
+  "sequence": 62,
+  "title": {
+    "en": "Fractions, decimals and percentages",
+    "yo": "Fractions, decimals àti percentages",
+    "pcm": "Fractions, decimals and percentages"
+  },
+  "classes": [
+    "primary_5"
+  ],
+  "term": 1,
+  "week": 6,
+  "objectives": [
+    {
+      "en": "Change a fraction to a decimal and to a percentage.",
+      "yo": "Yí fraction padà sí decimal àti sí percentage.",
+      "pcm": "Change fraction to decimal and to percentage."
+    },
+    {
+      "en": "Change a percentage back to the fraction it came from.",
+      "yo": "Yí percentage padà sí fraction tí ó ti wá.",
+      "pcm": "Change percentage back to the fraction wey e come from."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration / Fractions",
+    "objective": "Change fraction to decimal to percentage and back"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "You buy one hundred naira airtime. The network gives fifty percent bonus. Fifty percent means one half, so the bonus is another fifty naira of airtime.",
+        "pcm": "You buy one hundred naira airtime. Network give fifty percent bonus. Fifty percent mean one half, so the bonus na another fifty naira airtime.",
+        "yo": "O ra airtime naira one hundred. O gba bonus fifty percent. Ó jẹ́ naira fifty sí i."
+      },
+      "show": {
+        "en": "1/2 = 0.5 = 50%",
+        "yo": "1/2 = 0.5 = 50%",
+        "pcm": "1/2 = 0.5 = 50%"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will change fractions into decimals and percentages.",
+        "pcm": "Today you go fit change fractions to decimals and percentages.",
+        "yo": "Lónìí ìwọ yóò yí fractions padà sí decimals àti percentages."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember halves? What is half of one hundred naira?",
+        "pcm": "You remember halves? Wetin be half of one hundred naira?",
+        "yo": "Ṣé o rántí ìdajì? Kí ni ìdajì naira one hundred?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "fifty",
+            "50"
+          ],
+          "yo": [
+            "fifty",
+            "50",
+            "àádọ́ta"
+          ],
+          "pcm": [
+            "fifty",
+            "50"
+          ]
+        }
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "One half as a decimal is nought point five. Multiply by one hundred, so one half is fifty percent. One quarter is nought point two five. That is twenty-five percent.",
+        "pcm": "One half na nought point five. One half na fifty percent. One quarter na nought point two five. One quarter na twenty-five percent.",
+        "yo": "Ìdajì jẹ́ nought point five. Ìdajì jẹ́ fifty percent. Ìdámẹ́rin jẹ́ nought point two five. Ìdámẹ́rin jẹ́ twenty-five percent."
+      },
+      "show": {
+        "en": "1/2 = 0.5 = 50%",
+        "yo": "1/2 = 0.5 = 50%",
+        "pcm": "1/2 = 0.5 = 50%"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Together now. One tenth is one part out of ten, so it is nought point one. Say one half as a decimal.",
+        "pcm": "Make we do am together. One tenth mean one part out of ten, so as decimal e be nought point one. Your turn. Say am with me: one half as decimal.",
+        "yo": "Jẹ́ ká ṣiṣẹ́ papọ̀. Ìdámẹ́wàá jẹ́ apá kan nínú mẹ́wàá. Sọ ìdajì ní decimal."
+      },
+      "show": {
+        "en": "1/10 = 0.1",
+        "yo": "1/10 = 0.1",
+        "pcm": "1/10 = 0.1"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "nought point five",
+            "zero point five",
+            "point five",
+            "0.5"
+          ],
+          "yo": [
+            "nought point five",
+            "zero point five",
+            "point five",
+            "0.5"
+          ],
+          "pcm": [
+            "nought point five",
+            "zero point five",
+            "point five",
+            "0.5"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn alone. Say three quarters as a percentage.",
+        "pcm": "Na your turn alone. Say three quarters as percentage.",
+        "yo": "Ìwọ nìkan báyìí. Sọ ìdámẹ́rin mẹ́ta ní percentage."
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "seventy-five",
+            "75"
+          ],
+          "yo": [
+            "seventy-five",
+            "75",
+            "márùndínlọ́gọ́rin"
+          ],
+          "pcm": [
+            "seventy-five",
+            "75"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If you missed it, remember one quarter is twenty-five percent. Three quarters is three lots of twenty-five percent.",
+        "pcm": "Make we fix am together. One quarter na twenty-five percent. Three quarters na three lots of twenty-five percent.",
+        "yo": "Jẹ́ ká tún ṣe é papọ̀. Ìdámẹ́rin jẹ́ twenty-five percent. Ìdámẹ́rin mẹ́ta jẹ́ three lots of twenty-five percent."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember. Say one tenth as a percentage.",
+        "pcm": "Make we see wetin you remember. Say one tenth as percentage.",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Sọ ìdámẹ́wàá ní percentage."
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "ten",
+            "10"
+          ],
+          "yo": [
+            "ten",
+            "10",
+            "mẹ́wàá",
+            "mẹ́wà"
+          ],
+          "pcm": [
+            "ten",
+            "10"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we change fractions again. Soon we learn squares and square roots.",
+        "pcm": "You do well. Tomorrow we go change fractions again. Soon we learn squares and square roots.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún yí fractions padà. Láìpẹ́ a ó kọ́ squares àti square roots."
+      }
+    }
+  ]
+}

@@ -1,0 +1,266 @@
+{
+  "id": "mathematics.number.lcm-and-hcf",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 70,
+  "title": {
+    "en": "LCM and HCF",
+    "yo": "LCM àti HCF",
+    "pcm": "LCM and HCF"
+  },
+  "classes": [
+    "primary_6"
+  ],
+  "term": 1,
+  "week": 5,
+  "objectives": [
+    {
+      "en": "Find the LCM of two whole numbers, the smallest number both of them divide.",
+      "yo": "Wá LCM ti nọ́ńbà méjì, ìyẹn nọ́ńbà tó kéré jù tí àwọn méjèèjì lè pín.",
+      "pcm": "Find the LCM of two numbers, na the smallest number wey the two of dem fit divide."
+    },
+    {
+      "en": "Find the HCF of two whole numbers, the biggest number that divides both.",
+      "yo": "Wá HCF ti nọ́ńbà méjì, ìyẹn nọ́ńbà tó tóbi jù tí ó lè pín àwọn méjèèjì.",
+      "pcm": "Find the HCF of two numbers, na the biggest number wey fit divide the two of dem."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.number.prime-numbers"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration",
+    "objective": "Find the LCM and HCF of 2-digit whole numbers"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "The small market holds every four days. The big one holds every six days. Both meet every twelve days. Twelve is the smallest number four and six divide.",
+        "yo": "Ọjà kékeré máa ń wáyé ní gbogbo ọjọ́ four. Ọjà ńlá máa ń wáyé ní gbogbo ọjọ́ six. Ní gbogbo ọjọ́ twelve, ọjà méjèèjì máa ń wáyé pọ̀. Twelve ni nọ́ńbà tó kéré jù tí four àti six lè pín.",
+        "pcm": "The small market dey hold every four days. The big market dey hold every six days. Every twelve days, both markets meet. Twelve na the smallest number wey four and six fit divide."
+      },
+      "show": {
+        "en": "LCM 4, 6 = 12",
+        "yo": "LCM 4, 6 = 12",
+        "pcm": "LCM 4, 6 = 12"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will find the LCM and the HCF of two numbers by yourself.",
+        "yo": "Lónìí, ìwọ fúnra rẹ yóò wá LCM àti HCF ti nọ́ńbà méjì.",
+        "pcm": "Today you go fit find the LCM and the HCF of two numbers by yourself."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "First, multiples. Say the first four multiples of six.",
+        "yo": "Ní àkọ́kọ́, multiples. Sọ multiples mẹ́rin àkọ́kọ́ ti six.",
+        "pcm": "First, multiples. Talk the first four multiples of six."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "12",
+            "spoken": {
+              "en": [
+                "12",
+                "twelve"
+              ],
+              "yo": [
+                "12",
+                "twelve",
+                "méjìlá"
+              ],
+              "pcm": [
+                "12",
+                "twelve"
+              ]
+            }
+          },
+          {
+            "id": "18",
+            "spoken": {
+              "en": [
+                "18",
+                "eighteen"
+              ],
+              "yo": [
+                "18",
+                "eighteen",
+                "méjìdínlógún"
+              ],
+              "pcm": [
+                "18",
+                "eighteen"
+              ]
+            }
+          },
+          {
+            "id": "24",
+            "spoken": {
+              "en": [
+                "24",
+                "twenty-four"
+              ],
+              "yo": [
+                "24",
+                "twenty-four",
+                "mẹ́rìnlélógún"
+              ],
+              "pcm": [
+                "24",
+                "twenty-four"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "The LCM is the smallest shared multiple. Three multiples are three, six, nine, twelve. Four multiples are four, eight, twelve. Their LCM is twelve. The HCF is the biggest shared factor. Eight factors are one, two, four, eight. Ten factors are one, two, five, ten. Their HCF is two.",
+        "yo": "LCM ni multiple tí ó kéré jù tí three àti four lè pín. Multiples ti three ni three, six, nine, twelve. Ti four ni four, eight, twelve. LCM wọn jẹ́ twelve. HCF ni factor tó tóbi jù. Factors ti eight ni one, two, four, eight. Ti ten ni one, two, five, ten. HCF wọn jẹ́ two.",
+        "pcm": "LCM na the smallest shared multiple. Multiples of three na three, six, nine, twelve. Multiples of four na four, eight, twelve. Their LCM na twelve. HCF na the biggest shared factor. Factors of eight na one, two, four, eight. Factors of ten na one, two, five, ten. Their HCF na two."
+      },
+      "show": {
+        "en": "LCM 3, 4 = 12    HCF 8, 10 = 2",
+        "yo": "LCM 3, 4 = 12    HCF 8, 10 = 2",
+        "pcm": "LCM 3, 4 = 12    HCF 8, 10 = 2"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Together now. What is the LCM of two and five? Count multiples of five. Stop at the first one two divides.",
+        "yo": "Jẹ́ ká ṣe é papọ̀. Kí ni LCM ti two àti five? Ka multiples ti five. Dúró ní èyí àkọ́kọ́ tí two lè pín.",
+        "pcm": "Make we do am together. Wetin be the LCM of two and five? Count multiples of five. Stop for the first one two fit divide too."
+      },
+      "show": {
+        "en": "LCM 2, 5 = ?",
+        "yo": "LCM 2, 5 = ?",
+        "pcm": "LCM 2, 5 = ?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "ten",
+            "10"
+          ],
+          "yo": [
+            "ten",
+            "10",
+            "mẹ́wàá",
+            "mẹ́wà"
+          ],
+          "pcm": [
+            "ten",
+            "10"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn alone. What is the HCF of twelve and eighteen?",
+        "yo": "Ìwọ nìkan báyìí. Kí ni HCF ti twelve àti eighteen?",
+        "pcm": "Na your turn alone. Wetin be the HCF of twelve and eighteen?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "six",
+            "6"
+          ],
+          "yo": [
+            "six",
+            "6",
+            "mẹ́fà"
+          ],
+          "pcm": [
+            "six",
+            "6"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If you missed it, write the numbers that divide twelve: one, two, three, four, six, twelve. Then the ones that divide eighteen: one, two, three, six, nine, eighteen. The biggest number in both lists is the HCF.",
+        "yo": "Tí o bá ṣì í, kọ àwọn nọ́ńbà tí ó lè pín twelve: one, two, three, four, six, twelve. Lẹ́yìn náà àwọn tí ó lè pín eighteen: one, two, three, six, nine, eighteen. Nọ́ńbà tó tóbi jù nínú àkójọ méjèèjì ni HCF.",
+        "pcm": "If you miss am, write the numbers wey fit divide twelve: one, two, three, four, six, twelve. Then the ones wey fit divide eighteen: one, two, three, six, nine, eighteen. The biggest number inside the two lists na the HCF."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember, no help. What is the LCM of six and eight?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí, láìsí ìrànlọ́wọ́. Kí ni LCM ti six àti eight?",
+        "pcm": "Make we see wetin you remember, no help. Wetin be the LCM of six and eight?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "twenty-four",
+            "24"
+          ],
+          "yo": [
+            "twenty-four",
+            "24",
+            "mẹ́rìnlélógún"
+          ],
+          "pcm": [
+            "twenty-four",
+            "24"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we do LCM and HCF once more. Soon we learn ratio and proportion.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣe LCM àti HCF lẹ́ẹ̀kan sí i. Láìpẹ́ a ó kọ́ ratio àti proportion.",
+        "pcm": "You do well. Tomorrow we go do LCM and HCF one more time. Soon we go learn ratio and proportion."
+      }
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "id": "mathematics.multiplication.table-11",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 91,
+  "title": {
+    "en": "The eleven times table",
+    "yo": "Table eleven",
+    "pcm": "Table eleven"
+  },
+  "classes": [
+    "primary_4"
+  ],
+  "objectives": [
+    {
+      "en": "Say every fact from eleven times one to eleven times twelve without help.",
+      "yo": "Sọ gbogbo fact láti eleven times one dé eleven times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from eleven times one reach eleven times twelve without help."
+    },
+    {
+      "en": "Answer any eleven times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí eleven times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any eleven times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-10"
+  ],
+  "curriculum": {
+    "source": "ungrounded",
+    "strand": "Basic Operations",
+    "objective": "Recite the 11 times table",
+    "note": "NERDC's primary ceiling is 9 x 9; no class requires this table. Kept as enrichment after Primary 3."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of eleven mangoes. Today we count in elevens.",
+        "pcm": "Look three groups of eleven mango. Today we go count eleven eleven.",
+        "yo": "Wo groups three ti eleven mango. Lónìí a ó kà ní eleven eleven."
+      },
+      "show": {
+        "en": "11, 22, 33…",
+        "yo": "11, 22, 33…",
+        "pcm": "11, 22, 33…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the eleven times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table eleven. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table eleven. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the ten times table? What is ten times four?",
+        "pcm": "You remember table ten? Ten times four na how much?",
+        "yo": "Ṣé o rántí table ten? Kí ni ten times four?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_10x4_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of eleven mangoes show this. We count eleven, twenty-two, thirty-three. Eleven times three is thirty-three.",
+        "pcm": "See three groups of eleven mango: eleven, twenty-two, thirty-three. Eleven times three na thirty-three.",
+        "yo": "Wo groups mẹ́ta ti eleven mango: eleven, twenty-two, thirty-three. Eleven times three jẹ́ thirty-three."
+      },
+      "show": {
+        "en": "11 × 3 = 33",
+        "yo": "11 × 3 = 33",
+        "pcm": "11 × 3 = 33"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: eleven times three is thirty-three.",
+        "pcm": "Say am with me: eleven times three na thirty-three.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: eleven times three jẹ́ thirty-three."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_11x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the eleven times table. Start with eleven times one. End with eleven times twelve.",
+        "pcm": "Say table eleven. Start with eleven times one. End with eleven times twelve.",
+        "yo": "Sọ table eleven. Bẹ̀rẹ̀ pẹ̀lú eleven times one. Parí pẹ̀lú eleven times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_11_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is eleven times seven?",
+        "pcm": "Eleven times seven na how much?",
+        "yo": "Kí ni eleven times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_11x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the eleven times table once more. Then we start the twelve times table.",
+        "pcm": "You do well. Tomorrow we go check table eleven again. Then we start table twelve.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table eleven. Lẹ́yìn náà a ó bẹ̀rẹ̀ table twelve."
+      }
+    }
+  ]
+}

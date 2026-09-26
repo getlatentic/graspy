@@ -1,0 +1,264 @@
+{
+  "id": "english.alphabet.letter-sounds",
+  "subject": "english",
+  "topic": "alphabet",
+  "sequence": 2,
+  "title": {
+    "en": "First letter sounds",
+    "yo": "Ohùn lẹ́tà àkọ́kọ́",
+    "pcm": "First letter sound"
+  },
+  "classes": [
+    "nursery_1"
+  ],
+  "term": 1,
+  "week": 3,
+  "objectives": [
+    {
+      "en": "Hear the first sound in a spoken word.",
+      "yo": "Gbọ́ ohùn àkọ́kọ́ nínú ọ̀rọ̀ tí a sọ.",
+      "pcm": "Hear the first sound for word wey person talk."
+    },
+    {
+      "en": "Name the letter a familiar word starts with.",
+      "yo": "Sọ lẹ́tà tí ọ̀rọ̀ tí o mọ̀ bẹ̀rẹ̀ pẹ̀lú.",
+      "pcm": "Talk the letter wey word wey you sabi dey start with."
+    }
+  ],
+  "prerequisites": [],
+  "curriculum": {
+    "source": "scheme-of-work",
+    "strand": "Letter Work (English Studies)",
+    "objective": "Say the sound each letter makes",
+    "note": "Lagos State teaches letter sounds across the whole of Nursery 1, from the sound of a in first term week 3; sounds come before letter names, so this no longer waits on the alphabet."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Listen well. Ball, bat, book start alike.",
+        "pcm": "Listen well. Ball, bat, book start the same way.",
+        "yo": "Fetí sílẹ̀ dáadáa. Ball, bat, book bẹ̀rẹ̀ bákan náà."
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will name first letters.",
+        "pcm": "Today you go talk first letters.",
+        "yo": "Lónìí, ìwọ yóò sọ lẹ́tà àkọ́kọ́."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Say A to E for me.",
+        "pcm": "Talk A reach E for me.",
+        "yo": "Sọ A dé E fún mi."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "a",
+            "spoken": {
+              "en": [
+                "a",
+                "ay"
+              ],
+              "yo": [
+                "a",
+                "ay"
+              ],
+              "pcm": [
+                "a",
+                "ay"
+              ]
+            }
+          },
+          {
+            "id": "b",
+            "spoken": {
+              "en": [
+                "b",
+                "bee"
+              ],
+              "yo": [
+                "b",
+                "bee"
+              ],
+              "pcm": [
+                "b",
+                "bee"
+              ]
+            }
+          },
+          {
+            "id": "c",
+            "spoken": {
+              "en": [
+                "c",
+                "see"
+              ],
+              "yo": [
+                "c",
+                "see"
+              ],
+              "pcm": [
+                "c",
+                "see"
+              ]
+            }
+          },
+          {
+            "id": "d",
+            "spoken": {
+              "en": [
+                "d",
+                "dee"
+              ],
+              "yo": [
+                "d",
+                "dee"
+              ],
+              "pcm": [
+                "d",
+                "dee"
+              ]
+            }
+          },
+          {
+            "id": "e",
+            "spoken": {
+              "en": [
+                "e",
+                "ee"
+              ],
+              "yo": [
+                "e",
+                "ee"
+              ],
+              "pcm": [
+                "e",
+                "ee"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Words start with sounds, and sounds have letters. Ball starts with B. Sun starts with S.",
+        "pcm": "Words dey start with sounds, and sounds get letters. Ball start with B. Sun start with S.",
+        "yo": "Àwọn ọ̀rọ̀ bẹ̀rẹ̀ pẹ̀lú ohùn, ohùn sì ní lẹ́tà. Ball bẹ̀rẹ̀ pẹ̀lú B. Sun bẹ̀rẹ̀ pẹ̀lú S."
+      },
+      "show": {
+        "en": "ball → B, sun → S",
+        "yo": "ball → B, sun → S",
+        "pcm": "ball → B, sun → S"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Let us try together. What letter starts dog?",
+        "pcm": "Make we try together. Which letter dog start with?",
+        "yo": "Jẹ́ ká gbìyànjú pọ̀. Lẹ́tà wo ni dog bẹ̀rẹ̀ pẹ̀lú?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "d",
+            "dee"
+          ],
+          "yo": [
+            "d",
+            "dee"
+          ],
+          "pcm": [
+            "d",
+            "dee"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Now your turn. What letter starts ball?",
+        "pcm": "Na your turn now. Which letter ball start with?",
+        "yo": "Ìwọ náà báyìí. Lẹ́tà wo ni ball bẹ̀rẹ̀ pẹ̀lú?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "b",
+            "bee"
+          ],
+          "yo": [
+            "b",
+            "bee"
+          ],
+          "pcm": [
+            "b",
+            "bee"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "You listened well. Let us try that one again.",
+        "pcm": "You listen well. Make we try that one again.",
+        "yo": "O fetí sílẹ̀ dáadáa. Jẹ́ ká tún ọ̀kan yẹn gbìyànjú."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Last one. What letter starts mango?",
+        "pcm": "Last one. Which letter mango start with?",
+        "yo": "Ìkẹyìn. Lẹ́tà wo ni mango bẹ̀rẹ̀ pẹ̀lú?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "m",
+            "em"
+          ],
+          "yo": [
+            "m",
+            "em"
+          ],
+          "pcm": [
+            "m",
+            "em"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we find letters.",
+        "pcm": "Well done. Tomorrow we go find letters.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó wá lẹ́tà."
+      }
+    }
+  ]
+}

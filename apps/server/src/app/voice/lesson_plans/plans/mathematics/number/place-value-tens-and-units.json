@@ -1,0 +1,390 @@
+{
+  "id": "mathematics.number.place-value-tens-and-units",
+  "subject": "mathematics",
+  "topic": "number",
+  "sequence": 15,
+  "title": {
+    "en": "Tens and units",
+    "yo": "Tens àti units",
+    "pcm": "Tens and units"
+  },
+  "classes": [
+    "primary_1",
+    "primary_2",
+    "primary_3"
+  ],
+  "term": 1,
+  "week": 4,
+  "objectives": [
+    {
+      "en": "Say how many tens and how many units are in a two figure number.",
+      "yo": "Sọ iye tens àti iye units tí ó wà nínú nọ́ńbà oní òǹkà méjì.",
+      "pcm": "Talk how many tens and how many units dey inside two figure number."
+    },
+    {
+      "en": "Break a number like thirty four into three tens and four units.",
+      "yo": "Pín nọ́ńbà bí thirty four sí three tens àti four units.",
+      "pcm": "Break number like thirty four into three tens and four units."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.number.counting-to-twenty"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Number and Numeration",
+    "objective": "Group and read whole numbers in tens and units"
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "In the market they tie oranges in tens. Three ties and four loose oranges are thirty four oranges.",
+        "yo": "Ní ọjà, wọ́n máa ń dì ọ̀sàn ní ten ten. Ìdì three àti ọ̀sàn four tí ó ṣẹ́kù jẹ́ ọ̀sàn thirty four.",
+        "pcm": "For market, dem dey tie orange for ten ten. Three tie and four extra orange na thirty four orange."
+      },
+      "show": {
+        "en": "3 tens + 4 units",
+        "yo": "3 tens + 4 units",
+        "pcm": "3 tens + 4 units"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will say tens and units up to ninety-nine.",
+        "yo": "Lónìí, ìwọ yóò sọ tens àti units nínú nọ́ńbà èyíkéyìí dé ninety nine.",
+        "pcm": "Today you go fit talk the tens and the units for any number reach ninety nine."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "First, counting. Count from one to ten.",
+        "yo": "Ní àkọ́kọ́, kíkà. Kà láti one dé ten.",
+        "pcm": "First, counting. Count from one reach ten."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "1",
+            "spoken": {
+              "en": [
+                "1",
+                "one"
+              ],
+              "yo": [
+                "1",
+                "one",
+                "ọ̀kan"
+              ],
+              "pcm": [
+                "1",
+                "one"
+              ]
+            }
+          },
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "3",
+            "spoken": {
+              "en": [
+                "3",
+                "three"
+              ],
+              "yo": [
+                "3",
+                "three",
+                "mẹ́ta"
+              ],
+              "pcm": [
+                "3",
+                "three"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "9",
+            "spoken": {
+              "en": [
+                "9",
+                "nine"
+              ],
+              "yo": [
+                "9",
+                "nine",
+                "mẹ́sàn-án",
+                "mẹ́sàn",
+                "ẹ̀sán"
+              ],
+              "pcm": [
+                "9",
+                "nine"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Thirty four is three tens and four units. The three stands for thirty. The four stands for four units.",
+        "yo": "Thirty four jẹ́ three tens àti four units. Three dúró fún thirty. Four dúró fún four units.",
+        "pcm": "Thirty four na three tens and four units. The three stand for thirty. The four stand for four units."
+      },
+      "show": {
+        "en": "34 = 3 tens + 4 units",
+        "yo": "34 = 3 tens + 4 units",
+        "pcm": "34 = 3 tens + 4 units"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Let us do one together. How many tens are in twenty five? Twenty is two tens. Say two with me.",
+        "yo": "Jẹ́ ká ṣe ọ̀kan tó rọrùn papọ̀. Tens mélòó ni ó wà nínú twenty five? Twenty jẹ́ two tens. Sọ two pẹ̀lú mi.",
+        "pcm": "Make we do easy one together. How many tens dey inside twenty five? Twenty na two tens. Talk two with me."
+      },
+      "show": {
+        "en": "25 = 2 tens + 5 units",
+        "yo": "25 = 2 tens + 5 units",
+        "pcm": "25 = 2 tens + 5 units"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "two",
+            "2",
+            "two tens"
+          ],
+          "yo": [
+            "two",
+            "2",
+            "méjì",
+            "two tens"
+          ],
+          "pcm": [
+            "two",
+            "2",
+            "two tens"
+          ]
+        }
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Your turn. How many tens are in thirty four?",
+        "yo": "Ìwọ ná. Tens mélòó ni ó wà nínú thirty four?",
+        "pcm": "Na your turn. How many tens dey inside thirty four?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "three",
+            "3",
+            "three tens"
+          ],
+          "yo": [
+            "three",
+            "3",
+            "mẹ́ta",
+            "three tens"
+          ],
+          "pcm": [
+            "three",
+            "3",
+            "three tens"
+          ]
+        }
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "If your number was not right, count the tens again: ten, twenty, thirty. Thirty is three tens, and four is left over.",
+        "yo": "Tí nọ́ńbà rẹ kò bá tọ́, tún ka tens: ten, twenty, thirty. Thirty jẹ́ three tens, four sì ṣẹ́kù.",
+        "pcm": "If your number no right, count the tens again: ten, twenty, thirty. Thirty na three tens, and four remain."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "Let us see what you remember, without help. How many tens are in fifty six?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí, láìsí ìrànlọ́wọ́. Tens mélòó ni ó wà nínú fifty six?",
+        "pcm": "Make we see wetin you remember, without help. How many tens dey inside fifty six?"
+      },
+      "activity": {
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "five",
+            "5",
+            "five tens"
+          ],
+          "yo": [
+            "five",
+            "5",
+            "márùn-ún",
+            "márùn",
+            "five tens"
+          ],
+          "pcm": [
+            "five",
+            "5",
+            "five tens"
+          ]
+        }
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check tens and units once more. Soon we add numbers up to twenty.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò tens àti units lẹ́ẹ̀kan sí i. Láìpẹ́ a ó kọ́ addition dé twenty.",
+        "pcm": "You do well. Tomorrow we go check tens and units one more time. Soon we go add numbers reach twenty."
+      }
+    }
+  ]
+}

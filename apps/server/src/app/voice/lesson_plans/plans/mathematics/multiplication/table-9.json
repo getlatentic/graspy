@@ -1,0 +1,146 @@
+{
+  "id": "mathematics.multiplication.table-9",
+  "subject": "mathematics",
+  "topic": "multiplication",
+  "sequence": 29,
+  "title": {
+    "en": "The nine times table",
+    "yo": "Table nine",
+    "pcm": "Table nine"
+  },
+  "classes": [
+    "primary_3"
+  ],
+  "term": 2,
+  "week": 5,
+  "objectives": [
+    {
+      "en": "Say every fact from nine times one to nine times twelve without help.",
+      "yo": "Sọ gbogbo fact láti nine times one dé nine times twelve láìsí ìrànlọ́wọ́.",
+      "pcm": "Talk every fact from nine times one reach nine times twelve without help."
+    },
+    {
+      "en": "Answer any nine times fact out of order.",
+      "yo": "Dáhùn èyíkéyìí nine times fact láìtẹ̀lé ètò.",
+      "pcm": "Answer any nine times fact wey no follow order."
+    }
+  ],
+  "prerequisites": [
+    "mathematics.multiplication.table-8"
+  ],
+  "curriculum": {
+    "source": "nerdc",
+    "strand": "Basic Operations",
+    "objective": "Multiply whole numbers 1 x 1 up to 9 x 9, using a 10 by 10 square chart",
+    "note": "No scheme subdivides the 1x1 to 9x9 block by table; only the term is supported."
+  },
+  "events": [
+    {
+      "id": "attention",
+      "event": "gain_attention",
+      "say": {
+        "en": "Look at three groups of nine mangoes. Today we count in nines.",
+        "pcm": "Look three groups of nine mango. Today we go count nine nine.",
+        "yo": "Wo groups three ti nine mango. Lónìí a ó kà ní nine nine."
+      },
+      "show": {
+        "en": "9, 18, 27…",
+        "yo": "9, 18, 27…",
+        "pcm": "9, 18, 27…"
+      }
+    },
+    {
+      "id": "objective",
+      "event": "inform_objectives",
+      "say": {
+        "en": "Today you will learn the nine times table. Then you will say it by yourself.",
+        "pcm": "Today you go learn table nine. Then you go talk am by yourself.",
+        "yo": "Lónìí ìwọ yóò kọ́ table nine. Lẹ́yìn náà, ìwọ yóò sọ ọ́ fúnra rẹ."
+      }
+    },
+    {
+      "id": "recall",
+      "event": "stimulate_recall",
+      "say": {
+        "en": "Do you remember the eight times table? What is eight times four?",
+        "pcm": "You remember table eight? Eight times four na how much?",
+        "yo": "Ṣé o rántí table eight? Kí ni eight times four?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_8x4_answer"
+      }
+    },
+    {
+      "id": "present",
+      "event": "present_content",
+      "say": {
+        "en": "Three groups of nine mangoes show this. We count nine, eighteen, twenty-seven. Nine times three is twenty-seven.",
+        "pcm": "See three groups of nine mango: nine, eighteen, twenty-seven. Nine times three na twenty-seven.",
+        "yo": "Wo groups mẹ́ta ti nine mango: nine, eighteen, twenty-seven. Nine times three jẹ́ twenty-seven."
+      },
+      "show": {
+        "en": "9 × 3 = 27",
+        "yo": "9 × 3 = 27",
+        "pcm": "9 × 3 = 27"
+      }
+    },
+    {
+      "id": "guide",
+      "event": "provide_guidance",
+      "say": {
+        "en": "Say it with me: nine times three is twenty-seven.",
+        "pcm": "Say am with me: nine times three na twenty-seven.",
+        "yo": "Sọ ọ́ pọ̀ mọ́ mi: nine times three jẹ́ twenty-seven."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_9x3_say"
+      }
+    },
+    {
+      "id": "practice",
+      "event": "elicit_performance",
+      "say": {
+        "en": "Say the nine times table. Start with nine times one. End with nine times twelve.",
+        "pcm": "Say table nine. Start with nine times one. End with nine times twelve.",
+        "yo": "Sọ table nine. Bẹ̀rẹ̀ pẹ̀lú nine times one. Parí pẹ̀lú nine times twelve."
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_table_9_recite_1_12"
+      }
+    },
+    {
+      "id": "feedback",
+      "event": "provide_feedback",
+      "say": {
+        "en": "Let us fix the ones you missed. Listen, then say them with me.",
+        "pcm": "Make we fix the ones you miss. Hear them, then say them with me.",
+        "yo": "Jẹ́ ká tún àwọn tí o pàdánù ṣe. Gbọ́, lẹ́yìn náà sọ wọ́n pọ̀ mọ́ mi."
+      }
+    },
+    {
+      "id": "assess",
+      "event": "assess_performance",
+      "say": {
+        "en": "What is nine times seven?",
+        "pcm": "Nine times seven na how much?",
+        "yo": "Kí ni nine times seven?"
+      },
+      "activity": {
+        "kind": "existing",
+        "prompt_id": "mul_fact_9x7_answer"
+      }
+    },
+    {
+      "id": "retain",
+      "event": "enhance_retention",
+      "say": {
+        "en": "Well done. Tomorrow we check the nine times table once more. Then we start the ten times table.",
+        "pcm": "You do well. Tomorrow we go check table nine again. Then we start table ten.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ṣàyẹ̀wò table nine. Lẹ́yìn náà a ó bẹ̀rẹ̀ table ten."
+      }
+    }
+  ]
+}

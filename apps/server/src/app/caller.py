@@ -7,6 +7,7 @@ from .learner.record import Change, LearnerRecord
 from .learner.store import LearnerStore
 from .lessons.makers import LessonMaking
 from .lessons.store import LessonStore
+from .voice.keeping import NO_VOICE, VoiceKeeping
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,7 @@ class Keeping:
     lessons: LessonStore
     making: LessonMaking
     conversations: ConversationStore
+    voice: VoiceKeeping = NO_VOICE
 
 
 @dataclass(frozen=True)
