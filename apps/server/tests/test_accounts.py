@@ -293,6 +293,34 @@ async def test_devices_share_the_newer_plan_and_a_stale_one_gets_it_back(app):
     assert shared["plan"]["updatedAt"] == 20
 
 
+async def test_a_plan_with_no_subjects_is_shared_with_its_class(app):
+    """A nursery class learns by voice alone: its plan names the class and no subjects."""
+    nursery = Plan.model_validate(
+        {
+            "planId": "plan-nursery",
+            "updatedAt": 5,
+            "gradeLevel": "Nursery 1 (Early childhood), Nigeria, age 3",
+            "system": "NG",
+            "level": "nursery-1",
+            "subjects": [],
+        }
+    )
+    async with client(app) as http:
+        await as_learner(http)
+        kept = await http.put("/api/learner/curriculum", content=nursery.json())
+        joined_plan = await http.post(
+            "/api/learner/curriculum/join", content=nursery.json()
+        )
+        shared = (await http.get("/api/learner/curriculum")).json()["plan"]
+
+    assert (kept.status_code, joined_plan.status_code) == (200, 200)
+    assert (shared["subjects"], shared["system"], shared["level"]) == (
+        [],
+        "NG",
+        "nursery-1",
+    )
+
+
 async def test_joining_merges_the_plans_and_moves_the_devices_progress(app):
     account = plan("plan-account", 10, {"mathematics": ["Decimals", "Fractions"]})
     device = plan("plan-device", 20, {"mathematics": ["Fractions"]})

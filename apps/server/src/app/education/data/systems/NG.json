@@ -11,7 +11,8 @@
       "id": "early-childhood",
       "name": {
         "en": "Early childhood"
-      }
+      },
+      "voiceOnly": true
     },
     {
       "id": "primary",

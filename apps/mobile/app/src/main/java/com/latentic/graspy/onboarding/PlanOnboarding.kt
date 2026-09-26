@@ -40,6 +40,7 @@ import com.latentic.graspy.ui.GraspyHeader
 import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.PageTitle
 import com.latentic.graspy.ui.PrimaryButton
+import com.latentic.graspy.ui.ProblemNote
 import com.latentic.graspy.ui.QuietButton
 import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.space
@@ -49,8 +50,9 @@ import java.util.Locale
 private const val CHIPS_SHOWN = 6
 
 /**
- * Making a plan, as the web's onboarding does: about you, then your subjects, then the plan being built.
- * [make] makes and keeps the plan; [onBack] leaves a replan for the details it started from.
+ * Making a plan, as the web's onboarding does: about you, then your subjects, then the plan being built; a class
+ * the catalogue says learns by voice alone goes from about you straight to [onDone]. [make] makes and keeps the
+ * plan, [keep] keeps one with no subjects; [onBack] leaves a replan for the details it started from.
  */
 @Composable
 fun PlanOnboarding(
@@ -60,6 +62,7 @@ fun PlanOnboarding(
     suggestedCountry: String?,
     display: Locale,
     make: suspend (LearnerDetails, List<String>) -> LearnerPlan,
+    keep: suspend (LearnerDetails) -> LearnerPlan,
     onBack: (() -> Unit)?,
     onDone: (LearnerPlan) -> Unit,
 ) {
@@ -67,36 +70,47 @@ fun PlanOnboarding(
     val values by form.form.collectAsStateWithLifecycle()
     val choices by setup.subjects.collectAsStateWithLifecycle()
     val building by setup.setup.collectAsStateWithLifecycle()
+    val keeping by setup.keeping.collectAsStateWithLifecycle()
+    val notKeptYet by setup.notKept.collectAsStateWithLifecycle()
     val words = learn.onboarding
+    val voiceOnly = values.learnsByVoiceAlone(now = false)
+    val notKept = notKeptYet && voiceOnly
+    val finish = { if (voiceOnly) setup.keep(values.details(), keep, onDone) else setup.make(values.details(), make) }
     Frame {
         val made = building
         if (made != null) {
-            SetupView(words, setup.chosenLabels, made, onRetry = { setup.make(values.details(), make) }, onAdjust = setup::adjust) { made.made?.let(onDone) }
+            SetupView(words, setup.chosenLabels, made, onRetry = finish, onAdjust = setup::adjust) { made.made?.let(onDone) }
             return@Frame
         }
         val index = step.ordinal
+        val steps = if (voiceOnly) 1 else SetupStep.entries.size
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(space(8))) {
             Column(verticalArrangement = Arrangement.spacedBy(space(2))) {
-                Text(words.stepOf.filled("current" to index + 1, "total" to SetupStep.entries.size), style = MaterialTheme.typography.bodyMedium, color = GraspyColor.Muted)
+                Text(words.stepOf.filled("current" to index + 1, "total" to steps), style = MaterialTheme.typography.bodyMedium, color = GraspyColor.Muted)
                 PageTitle(if (step == SetupStep.PROFILE) words.steps.profile.title else words.steps.subjects.title)
             }
             when (step) {
                 SetupStep.PROFILE -> ProfileStep(learn, form, suggestedCountry, display)
                 SetupStep.SUBJECTS -> SubjectsStep(words.subjects, choices, setup::toggle) { setup.readSubjects(values.details()) }
             }
+            if (notKept) ProblemNote(words.generating.failed)
         }
         val canNext = if (step == SetupStep.PROFILE) values.complete else choices.chosen.isNotEmpty() && !choices.loading && !choices.failed
+        val last = step == SetupStep.SUBJECTS || voiceOnly
         Footer(
             words,
-            last = step == SetupStep.SUBJECTS,
-            canNext = canNext,
+            label = when {
+                keeping -> words.settingUp
+                notKept -> words.generating.tryAgain
+                last -> words.start
+                else -> words.next
+            },
+            canNext = canNext && !keeping,
             onBack = when {
                 step == SetupStep.SUBJECTS && onBack == null -> setup::toProfile
                 else -> onBack
             },
-            onNext = {
-                if (step == SetupStep.PROFILE) setup.toSubjects(values.details()) else setup.make(values.details(), make)
-            },
+            onNext = { if (last) finish() else setup.toSubjects(values.details()) },
         )
     }
 }
@@ -115,11 +129,11 @@ private fun Frame(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-private fun Footer(words: PlanOnboardingCopy, last: Boolean, canNext: Boolean, onBack: (() -> Unit)?, onNext: () -> Unit) {
+private fun Footer(words: PlanOnboardingCopy, label: String, canNext: Boolean, onBack: (() -> Unit)?, onNext: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(space(3)), verticalAlignment = Alignment.CenterVertically) {
         onBack?.let { QuietButton(words.back, it) }
         Box(Modifier.weight(1f))
-        PrimaryButton(if (last) words.start else words.next, onNext, enabled = canNext)
+        PrimaryButton(label, onNext, enabled = canNext)
     }
 }
 

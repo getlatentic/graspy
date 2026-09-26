@@ -54,6 +54,9 @@ Status = Literal["draft", "sourced", "reviewed"]
 class Stage(Wire):
     id: Slug
     name: Names
+    # Its children do not read yet, and slide lessons are text: they learn
+    # by voice lessons alone.
+    voice_only: bool = False
 
 
 class Level(Wire):

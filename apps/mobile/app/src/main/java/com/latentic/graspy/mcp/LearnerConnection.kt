@@ -14,7 +14,7 @@ import okhttp3.HttpUrl
  */
 class LearnerConnection(
     database: GraspyDatabase,
-    ownerId: String,
+    val ownerId: String,
     calls: Call.Factory,
     endpoint: HttpUrl,
     stillLearning: () -> Boolean,
@@ -49,6 +49,9 @@ class LearnerConnection(
     override suspend fun keepShown(uri: String, view: UiView) = views.keepShown(uri, view)
 
     override suspend fun call(name: String, arguments: JsonObject): JsonObject = outbox.callOrKeep(name, arguments)
+
+    /** A call that only reads: never kept to send later, so without a connection it fails. */
+    suspend fun read(name: String, arguments: JsonObject): JsonObject = mcp.callTool(name, arguments)
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = mcp.openToolView(name, arguments)
 }

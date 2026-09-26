@@ -5,8 +5,11 @@ import com.latentic.graspy.plan.Names
 import com.latentic.graspy.plan.afterSchoolDescriptor
 import com.latentic.graspy.plan.isAfterSchool
 
-/** A class chosen from a school system: its names, and the level as the server reads it. */
-data class SchoolChoice(val names: Names, val descriptor: String)
+/**
+ * A class chosen from a school system: its names, the level as the server reads it, and, for a class chosen from the
+ * catalogue, the catalogue's word on whether it learns by voice alone; a class kept from before has none.
+ */
+data class SchoolChoice(val names: Names, val descriptor: String, val voiceOnly: Boolean? = null)
 
 /** The details being chosen, as the web's form holds them (features/onboarding/lib/details.ts). */
 data class DetailsForm(
@@ -25,6 +28,12 @@ data class DetailsForm(
     }
 
     val complete: Boolean get() = details().complete
+
+    /**
+     * Whether the class learns by voice alone, as the server says, as the web's learnsByVoiceAlone: the catalogue's
+     * word for a class chosen from it, [now] for the class the learner already has; a level after school never does.
+     */
+    fun learnsByVoiceAlone(now: Boolean): Boolean = school?.let { it.voiceOnly ?: now } ?: false
 
     /** Whether saving would change what the learner has. */
     fun changes(current: LearnerDetails): Boolean = details().let { next ->

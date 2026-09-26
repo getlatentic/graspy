@@ -10,8 +10,12 @@ import {
   detailsChanged,
   detailsComplete,
   detailsOf,
+  detailsSave,
   learnerDetails,
+  learnsByVoiceAlone,
 } from "@/features/onboarding/lib/details";
+import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
+import { keepRoute } from "@/lib/learner-route";
 import {
   detailsSchema,
   type DetailsSchema,
@@ -68,21 +72,37 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
   const navigate = useNavigate();
   const { curriculum, applyCurriculum } = usePlan();
   const values = useFormContext<DetailsSchema>().watch();
+  const voiceOnlyNow = useVoiceOnly() === true;
   const [asking, setAsking] = useState(false);
 
   const keepPlan = async () => {
     const details = learnerDetails(values);
+    // The catalogue's word stands for the class until the server is asked about it.
+    keepRoute(details, learnsByVoiceAlone(values, voiceOnlyNow));
     saveUserProfile(details);
     if (curriculum) {
       await applyCurriculum({ ...curriculum, ...planDetails(details) });
     }
     navigate(YOU);
   };
+  const newPlan = () =>
+    navigate("/app/onboarding", { state: { replan: values } });
+
+  const save = () => {
+    const choice = detailsSave(
+      values,
+      Boolean(curriculum?.subjects.length),
+      voiceOnlyNow,
+    );
+    if (choice === "keep") void keepPlan();
+    else if (choice === "new") newPlan();
+    else setAsking(true);
+  };
 
   if (!asking) {
     return (
       <Button
-        onClick={() => setAsking(true)}
+        onClick={save}
         disabled={!detailsChanged(profile, values) || !detailsComplete(values)}
         className="self-start"
       >
@@ -90,14 +110,7 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
       </Button>
     );
   }
-  return (
-    <AskNewPlan
-      onNewPlan={() =>
-        navigate("/app/onboarding", { state: { replan: values } })
-      }
-      onKeepPlan={() => void keepPlan()}
-    />
-  );
+  return <AskNewPlan onNewPlan={newPlan} onKeepPlan={() => void keepPlan()} />;
 }
 
 function AskNewPlan({

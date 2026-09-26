@@ -1,6 +1,7 @@
 package com.latentic.graspy.mcp
 
 import android.app.Application
+import com.latentic.graspy.account.PreferenceFiles
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.account.Outbox
@@ -25,6 +26,8 @@ class LearnerViews internal constructor(
     constructor(application: Application, ownerId: String) : this(application, connectionFor(application, ownerId))
 
     val lessons: OfflineLessons = connection.lessons
+
+    val routes = LearnerRoutes(connection::read, application.getSharedPreferences(PreferenceFiles.PLAN, 0), connection.ownerId)
 
     init {
         viewModelScope.launch { networkReach(application).filter { it }.collect { bestEffort(TAG, "Sending the kept view calls") { connection.sendKept() } } }

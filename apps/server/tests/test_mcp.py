@@ -77,8 +77,11 @@ async def http_to(app, authorized: bool = True, device: str | None = None):
 
 
 @asynccontextmanager
-async def connected(app, device: str | None = None):
+async def connected(app, device: str | None = None, plan: dict | None = None):
     async with http_to(app, device=device) as http:
+        if plan is not None:
+            kept = await http.put("/api/learner/curriculum", json=plan)
+            assert kept.status_code == 200
         transport = streamable_http_client("http://test/mcp", http_client=http)
         ui = advertise(
             "io.modelcontextprotocol/ui", {"mimeTypes": ["text/html;profile=mcp-app"]}
@@ -106,7 +109,10 @@ async def test_the_tools_are_listed_with_their_ui_and_who_may_call_them(app):
         "lesson_progress",
         "answer_check",
         "finish_lesson",
+        "learner_route",
     }
+    # Both apps ask it for the learner; no model does.
+    assert tools["learner_route"].meta == {"ui": {"visibility": ["app"]}}
     assert tools["give_practice"].meta == {
         "ui": {"visibility": ["model", "app"], "resourceUri": "ui://graspy/practice"}
     }
@@ -176,6 +182,42 @@ async def test_answer_practice_marks_the_choice(app):
         "answerIndex": 0,
         "chosenIndex": 2,
     }
+
+
+def a_plan(**details) -> dict:
+    return {"planId": "plan-1", "updatedAt": 1, "subjects": [], **details}
+
+
+async def route(app, arguments: dict, plan: dict | None = None) -> bool:
+    async with connected(app, device="device-route-01", plan=plan) as client:
+        result = await client.call_tool("learner_route", arguments)
+    assert not result.is_error
+    return result.structured_content["voiceOnly"]
+
+
+async def test_a_nursery_class_learns_by_voice_alone_and_a_primary_one_by_slides(app):
+    assert await route(app, {"system": "NG", "level": "nursery-2"}) is True
+    assert await route(app, {"system": "NG", "level": "primary-2"}) is False
+
+
+async def test_a_plan_with_no_class_is_placed_by_the_level_the_server_reads(app):
+    nursery = {"gradeLevel": "Kindergarten (Early childhood), Nigeria, age 5"}
+    primary = {"gradeLevel": "Primary 1 (Primary), Nigeria, age 6"}
+
+    assert await route(app, nursery) is True
+    assert await route(app, primary) is False
+
+
+async def test_a_class_not_named_is_the_one_of_the_plan_the_devices_share(app):
+    shared = a_plan(gradeLevel="Nursery 1 (Early childhood), Nigeria, age 3")
+
+    assert await route(app, {}, plan=shared) is True
+    assert await route(app, {"gradeLevel": "middle school"}, plan=shared) is True
+
+
+async def test_a_class_the_catalogue_cannot_place_learns_by_slides_and_voice(app):
+    assert await route(app, {}) is False
+    assert await route(app, {"gradeLevel": "Undergraduate student"}) is False
 
 
 async def test_an_unknown_tool_is_a_protocol_error(app):

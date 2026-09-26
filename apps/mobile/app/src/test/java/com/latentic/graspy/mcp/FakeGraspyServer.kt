@@ -18,6 +18,7 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 
 const val LESSON_VIEW = "ui://graspy/lesson"
+const val ROUTE_TOOL = "learner_route"
 const val LESSON_HTML = "<!doctype html><script src=\"/views/assets/lesson.js\"></script>"
 
 /**
@@ -30,6 +31,11 @@ class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispa
     var answersWithNothing = false
     var toolReplies: Map<String, String> = emptyMap()
     val toolsCalled: MutableList<String> = CopyOnWriteArrayList()
+
+    /** The server's answer to learner_route, the classes it was asked for, and whether it answers at all. */
+    var voiceOnly = false
+    var routeFails = false
+    val routesAsked: MutableList<JsonObject> = CopyOnWriteArrayList()
     val web = MockWebServer().also { it.dispatcher = this }
 
     /** Calls bound for graspy's API, sent here instead, as the app's session-bearing calls are. */
@@ -55,6 +61,7 @@ class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispa
         val body = mcpJson.parseToJsonElement(request.body.readUtf8()).jsonObject
         val method = body.string("method").orEmpty()
         val tool = if (method == "tools/call") body.getValue("params").jsonObject.string("name")?.also(toolsCalled::add) else null
+        if (tool == ROUTE_TOOL) return route(body)
         tool?.let(toolReplies::get)?.let { return MockResponse().setHeader("Content-Type", "application/json").setBody(it) }
         return json(
             buildJsonObject {
@@ -75,6 +82,7 @@ class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispa
                         putJsonObject("_meta") { putJsonObject("ui") { put("resourceUri", LESSON_VIEW) } }
                     })
                     add(buildJsonObject { put("name", "lesson_progress") })
+                    add(buildJsonObject { put("name", ROUTE_TOOL) })
                 },
             )
         }
@@ -102,6 +110,22 @@ class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispa
             }
         }
         else -> error("$method is not answered here")
+    }
+
+    private fun route(body: JsonObject): MockResponse {
+        if (routeFails) return MockResponse().setResponseCode(503)
+        val params = body.getValue("params").jsonObject
+        routesAsked += params["arguments"]?.jsonObject ?: JsonObject(emptyMap())
+        return json(
+            buildJsonObject {
+                put("jsonrpc", "2.0")
+                put("id", body.getValue("id"))
+                putJsonObject("result") {
+                    put("content", buildJsonArray {})
+                    putJsonObject("structuredContent") { put("voiceOnly", voiceOnly) }
+                }
+            },
+        )
     }
 
     private fun json(body: JsonObject) = MockResponse().setHeader("Content-Type", "application/json").setBody(body.toString())

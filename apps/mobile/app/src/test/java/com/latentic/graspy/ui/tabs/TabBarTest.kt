@@ -17,6 +17,12 @@ class TabBarTest {
     }
 
     @Test
+    fun `a class that learns by voice alone has Home and You, without the read tabs`() {
+        assertEquals(LearnTab.entries, learnTabs(voiceOnly = false))
+        assertEquals(listOf(LearnTab.HOME, LearnTab.YOU), learnTabs(voiceOnly = true))
+    }
+
+    @Test
     fun `each tab is named in the web's words in every language`() {
         val arabic = learnCopyFor(InterfaceLanguage.ARABIC).nav
         assertEquals(listOf("الرئيسية", "المواد", "اسأل", "أنت"), LearnTab.entries.map { it.label(arabic) })

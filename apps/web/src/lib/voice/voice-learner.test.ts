@@ -1,9 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
+  classOf,
   languagePairOf,
   lessonLanguageOf,
   voiceClassOf,
 } from "./voice-learner";
+
+describe("classOf", () => {
+  const profile = { system: "NG", level: "nursery-1" };
+
+  it("is the plan's class once the plan carries one", () => {
+    expect(classOf({ system: "NG", level: "primary-2" }, profile)).toEqual({
+      system: "NG",
+      level: "primary-2",
+    });
+  });
+
+  it("is the profile's for a plan without a class, or none", () => {
+    expect(classOf({}, profile)).toBe(profile);
+    expect(classOf(null, profile)).toBe(profile);
+  });
+});
 
 describe("voiceClassOf", () => {
   it("names a Nigerian primary class as the voice curriculum keys it", () => {

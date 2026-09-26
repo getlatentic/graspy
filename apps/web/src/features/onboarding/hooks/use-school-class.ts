@@ -42,7 +42,11 @@ export function useSchoolClass() {
     setValue(
       "school",
       chosen && system
-        ? { names: chosen.name, descriptor: schoolDescriptor(system, chosen) }
+        ? {
+            names: chosen.name,
+            descriptor: schoolDescriptor(system, chosen),
+            voiceOnly: chosen.voiceOnly ?? false,
+          }
         : null,
     );
     setValue("level", value, { shouldValidate: true });

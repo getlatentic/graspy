@@ -40,6 +40,20 @@ class PlanMakingTest {
     }
 
     @Test
+    fun `a class that learns by voice alone gets a plan with no subjects, written for it, without the stream`() {
+        val nursery = details.copy(level = "nursery-1", levelNames = Names("Nursery 1"), gradeLevel = "Nursery 1 (Early childhood), Nigeria, age 3")
+        val maker = PlanMaker(streamOf(error = "The stream is not asked")) { 2_000L }
+
+        val plan = maker.voiceOnly(nursery)
+
+        assertEquals(null, asked)
+        assertEquals("plan-2000", plan.planId)
+        assertEquals(emptyList<PlanSubject>(), plan.subjects)
+        assertEquals(emptyMap<String, List<String>>(), plan.topics)
+        assertEquals(nursery, plan.details())
+    }
+
+    @Test
     fun `the stream's own error stops the plan`() {
         val maker = PlanMaker(streamOf(error = "Curriculum generation failed"))
         assertThrows(PlanNotMade::class.java) { runBlocking { maker.make(details, emptyList()) } }

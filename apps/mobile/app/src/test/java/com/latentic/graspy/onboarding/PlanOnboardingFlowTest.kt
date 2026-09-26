@@ -22,13 +22,13 @@ import com.latentic.graspy.plan.PlanMaker
 import com.latentic.graspy.plan.SchoolLevel
 import com.latentic.graspy.plan.SchoolStage
 import com.latentic.graspy.plan.SchoolSystem
-import com.latentic.graspy.plan.planJson
 import com.latentic.graspy.plan.voiceClass
 import com.latentic.graspy.ui.GraspyTheme
+import java.io.IOException
 import java.time.Duration
 import java.util.Locale
-import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,7 +36,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
-/** A new learner makes their plan from start to finish, under graspy's header: details, subjects, the plan being made, then ready. */
+/**
+ * A new learner makes their plan from start to finish, under graspy's header: details, subjects, the plan being made,
+ * then ready; a class that learns by voice alone goes from its details straight to its plan.
+ */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w412dp-h915dp-xxhdpi")
 class PlanOnboardingFlowTest {
@@ -50,7 +53,7 @@ class PlanOnboardingFlowTest {
         id = "NG", country = "NG", name = Names("Nigeria"), main = true,
         stages = listOf(SchoolStage("early-childhood", Names("Early childhood")), SchoolStage("jss", Names("Junior Secondary School"))),
         levels = listOf(
-            SchoolLevel("nursery-1", "early-childhood", Names("Nursery 1"), listOf("N1"), 3),
+            SchoolLevel("nursery-1", "early-childhood", Names("Nursery 1"), listOf("N1"), 3, voiceOnly = true),
             SchoolLevel("jss-1", "jss", Names("JSS 1"), listOf("JS1"), 12),
         ),
     )
@@ -60,68 +63,18 @@ class PlanOnboardingFlowTest {
         GeneratedSubject("art", "Cultural and Creative Arts", false),
     )
     private val subjectsAsked = mutableListOf<List<String>>()
+    private var done: LearnerPlan? = null
 
     @Test
     fun `a new learner chooses their class and subjects and gets their plan`() {
         var made: Pair<LearnerDetails, List<String>>? = null
         val plan = LearnerPlan(planId = "plan-1")
-
-        val done = planMadeFor("JSS 1") { details, subjects -> made = details to subjects; plan }
-
-        assertEquals(listOf(listOf("Nigeria", "English", "JSS 1 (Junior Secondary School), Nigeria, age 12")), subjectsAsked)
-        val (details, subjects) = requireNotNull(made)
-        assertEquals("NG", details.country)
-        assertEquals("en", details.language)
-        assertEquals("JSS 1 (Junior Secondary School), Nigeria, age 12", details.gradeLevel)
-        assertEquals(listOf("Mathematics", "English Language"), subjects)
-        assertEquals(plan, done)
-    }
-
-    @Test
-    fun `a Nigerian nursery learner's plan gives voice lessons in their class`() {
-        val stream = CurriculumSource { _, onResult ->
-            onResult(planJson.parseToJsonElement("""{"type":"result","subjects":["Mathematics"]}""").jsonObject)
-            null
-        }
-
-        val plan = requireNotNull(planMadeFor("Nursery 1") { details, subjects -> PlanMaker(stream).make(details, subjects) })
-
-        assertEquals(listOf("NG", "nursery-1"), listOf(plan.system, plan.level))
-        assertEquals(SchoolClass.NURSERY_1, plan.voiceClass())
-    }
-
-    /** Onboarding from the first step to the plan made, for the class named [className]. */
-    private fun planMadeFor(className: String, make: suspend (LearnerDetails, List<String>) -> LearnerPlan): LearnerPlan? {
-        val form = DetailsFormViewModel { country -> listOf(nigeria).filter { it.country == country } }
-        val setup = PlanSetupViewModel { country, language, gradeLevel, onSubjects ->
-            subjectsAsked += listOf(country, language, gradeLevel)
-            onSubjects(offered)
-            null
-        }
-        var done: LearnerPlan? = null
-        form.start(null, phoneCountry = "NG", phoneLanguage = "en")
-        setup.begin(replanFor = null)
-
-        compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
-                PlanOnboarding(
-                    learn = learn,
-                    form = form,
-                    setup = setup,
-                    suggestedCountry = "NG",
-                    display = Locale.ENGLISH,
-                    make = make,
-                    onBack = null,
-                    onDone = { done = it },
-                )
-            }
-        }
+        onboarding(make = { details, subjects -> made = details to subjects; plan })
 
         compose.onNodeWithText(words.stepOf.filled("current" to 1, "total" to 2)).assertExists()
         header()
         compose.onNodeWithText(words.next).assertIsNotEnabled()
-        compose.onNodeWithContentDescription(words.profile.gradeLabel, substring = true).performScrollTo().performClick()
-        compose.onNodeWithText(className).performClick()
+        chooseClass("JSS 1")
         compose.onNodeWithText(words.next).assertIsEnabled().performClick()
 
         compose.onNodeWithText(words.steps.subjects.title).assertExists()
@@ -134,7 +87,103 @@ class PlanOnboardingFlowTest {
         compose.onNodeWithText(words.ready.title).assertExists()
         header()
         compose.onNodeWithText(words.ready.`continue`).performClick()
-        return done
+
+        assertEquals(listOf(listOf("Nigeria", "English", "JSS 1 (Junior Secondary School), Nigeria, age 12")), subjectsAsked)
+        val (details, subjects) = requireNotNull(made)
+        assertEquals("NG", details.country)
+        assertEquals("en", details.language)
+        assertEquals("JSS 1 (Junior Secondary School), Nigeria, age 12", details.gradeLevel)
+        assertEquals(listOf("Mathematics", "English Language"), subjects)
+        assertEquals(plan, done)
+    }
+
+    @Test
+    fun `a class the catalogue says learns by voice alone starts from its details, with no subjects to choose and no plan to wait for`() {
+        var streamed = false
+        val stream = CurriculumSource { _, _ ->
+            streamed = true
+            null
+        }
+        onboarding(keep = { PlanMaker(stream).voiceOnly(it) })
+
+        chooseClass("Nursery 1")
+        compose.onNodeWithText(words.stepOf.filled("current" to 1, "total" to 1)).assertExists()
+        header()
+        compose.onNodeWithText(words.next).assertDoesNotExist()
+        compose.onNodeWithText(words.start).assertIsEnabled().performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText(words.steps.subjects.title).assertDoesNotExist()
+        compose.onNodeWithText(words.generating.title).assertDoesNotExist()
+        val plan = requireNotNull(done)
+        assertEquals(listOf("NG", "nursery-1"), listOf(plan.system, plan.level))
+        assertEquals(SchoolClass.NURSERY_1, plan.voiceClass())
+        assertTrue(plan.subjects.isEmpty())
+        assertEquals(false, streamed)
+        assertTrue(subjectsAsked.isEmpty())
+    }
+
+    @Test
+    fun `a nursery plan not kept leaves the learner on their details, saying so, to try again`() {
+        var tries = 0
+        onboarding(
+            keep = { details ->
+                tries += 1
+                if (tries == 1) throw IOException("offline")
+                PlanMaker(CurriculumSource { _, _ -> null }).voiceOnly(details)
+            },
+        )
+
+        chooseClass("Nursery 1")
+        compose.onNodeWithText(words.start).performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText(words.generating.failed).assertExists()
+        compose.onNodeWithText(words.generating.title).assertDoesNotExist()
+        compose.onNodeWithText(words.generating.adjust).assertDoesNotExist()
+        compose.onNodeWithText(words.steps.profile.title).assertExists()
+        assertEquals(null, done)
+
+        compose.onNodeWithText(words.generating.tryAgain).assertIsEnabled().performClick()
+        compose.waitForIdle()
+
+        assertEquals(2, tries)
+        assertEquals("nursery-1", requireNotNull(done).level)
+    }
+
+    private fun onboarding(
+        make: suspend (LearnerDetails, List<String>) -> LearnerPlan = { _, _ -> error("No plan is made from subjects here") },
+        keep: suspend (LearnerDetails) -> LearnerPlan = { error("No plan is kept at once here") },
+    ) {
+        val form = DetailsFormViewModel { country -> listOf(nigeria).filter { it.country == country } }
+        val setup = PlanSetupViewModel { country, language, gradeLevel, onSubjects ->
+            subjectsAsked += listOf(country, language, gradeLevel)
+            onSubjects(offered)
+            null
+        }
+        form.start(null, phoneCountry = "NG", phoneLanguage = "en")
+        setup.begin(replanFor = null)
+
+        compose.setContent {
+            GraspyTheme(InterfaceLanguage.ENGLISH) {
+                PlanOnboarding(
+                    learn = learn,
+                    form = form,
+                    setup = setup,
+                    suggestedCountry = "NG",
+                    display = Locale.ENGLISH,
+                    make = make,
+                    keep = keep,
+                    onBack = null,
+                    onDone = { done = it },
+                )
+            }
+        }
+    }
+
+    private fun chooseClass(className: String) {
+        compose.onNodeWithContentDescription(words.profile.gradeLabel, substring = true).performScrollTo().performClick()
+        compose.onNodeWithText(className).performClick()
     }
 
     /** graspy's header, over every part of onboarding as over the rest of the app. */

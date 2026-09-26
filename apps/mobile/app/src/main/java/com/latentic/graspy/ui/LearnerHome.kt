@@ -21,6 +21,8 @@ import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.LearnerProfile
 import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.localization.learnCopyFor
+import com.latentic.graspy.mcp.LearnerViews
+import com.latentic.graspy.mcp.classAsk
 import com.latentic.graspy.onboarding.DetailsFormViewModel
 import com.latentic.graspy.onboarding.PlanOnboarding
 import com.latentic.graspy.onboarding.PlanSetupViewModel
@@ -53,6 +55,7 @@ fun LearnerHome(
     val plan by planViewModel.state.collectAsStateWithLifecycle()
     val form: DetailsFormViewModel = viewModel()
     val setup: PlanSetupViewModel = viewModel()
+    val views: LearnerViews = viewModel()
     val setupActive by setup.active.collectAsStateWithLifecycle()
     val ready = (plan as? PlanState.Ready)?.plan
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }
@@ -77,15 +80,26 @@ fun LearnerHome(
                 suggestedCountry = phone.country.takeIf { it.isNotBlank() },
                 display = Locale.forLanguageTag(interfaceLanguage.tag),
                 make = planViewModel::make,
+                keep = { details ->
+                    // The catalogue's word stands for the class until the server is asked about it.
+                    planViewModel.keepVoiceOnly(details).also { views.routes.keep(it.classAsk(), voiceOnly = true) }
+                },
                 onBack = if (replanning) setup::finish else null,
                 onDone = { setup.finish() },
             )
         }
-        else -> GraspyRoot(copy, appLanguage, interfaceLanguage, voice.value.takeIf { ready == null || ready.voiceClass() != null }, account, menu) {
+        else -> GraspyRoot(copy, appLanguage, interfaceLanguage, voiceShown(voice.value, ready), account, menu) {
             setup.begin(replanFor = form.form.value.details())
         }
     }
 }
+
+/**
+ * The learner's voice lessons: in the class their plan names, or, while the plan cannot be read, the class this
+ * device last knew; none for a class without voice lessons.
+ */
+internal fun voiceShown(device: LearnerProfile?, ready: LearnerPlan?): LearnerProfile? =
+    device?.takeIf { it.schoolClass.voiceLessons && (ready == null || ready.voiceClass() != null) }
 
 /** The words follow the plan's language, English when graspy has no words in it; voice lessons follow its class. */
 private fun followPlan(plan: LearnerPlan, learnerKey: String, voice: MutableState<LearnerProfile?>, profiles: LearnerProfileStore, onWords: (InterfaceLanguage) -> Unit) {

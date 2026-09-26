@@ -78,7 +78,7 @@ class DetailsFormViewModel(private val schoolSystems: suspend (country: String) 
     fun chooseLevel(id: String) {
         val system = (systemsShown.value as? Systems.Ready)?.systems?.firstOrNull { it.id == shown.value.system }
         val level = system?.levels?.firstOrNull { it.id == id }
-        shown.update { it.copy(level = id, school = if (system != null && level != null) SchoolChoice(level.name, schoolDescriptor(system, level)) else null) }
+        shown.update { it.copy(level = id, school = if (system != null && level != null) SchoolChoice(level.name, schoolDescriptor(system, level), level.voiceOnly) else null) }
     }
 
     fun setCourse(course: String) = shown.update { it.copy(course = course.take(COURSE_MAX)) }

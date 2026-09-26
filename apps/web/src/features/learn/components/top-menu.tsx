@@ -1,10 +1,14 @@
 import { Link, useLocation } from "react-router";
 import { Logo } from "@/components/brand/logo";
-import { SECTIONS, sectionOf } from "@/features/learn/lib/app-sections";
+import { sectionOf, type Section } from "@/features/learn/lib/app-sections";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 
-export default function TopMenu() {
+export default function TopMenu({
+  sections,
+}: {
+  sections: readonly Section[];
+}) {
   const { t } = useI18n();
   const current = sectionOf(useLocation().pathname);
 
@@ -19,7 +23,7 @@ export default function TopMenu() {
           <Logo />
         </Link>
         <nav aria-label={t("nav.label")} className="hidden gap-1 lg:flex">
-          {SECTIONS.map((section) => {
+          {sections.map((section) => {
             const active = section.id === current;
             return (
               <Link

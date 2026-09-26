@@ -3,15 +3,13 @@ import { useNavigate } from "react-router";
 import type { FieldPath, UseFormReturn } from "react-hook-form";
 import { DETAILS_PAGE } from "@/features/learn/lib/app-sections";
 import { detailsComplete } from "../lib/details";
+import { stepsFor, type StepKey } from "../lib/onboarding-steps";
 import type {
   DetailsSchema,
   OnboardingSchema,
 } from "../schemas/onboarding-schema";
 import type { GeneratedSubject } from "../types";
 import { useSubjectChoices } from "./use-subject-choices";
-
-export const STEPS = ["profile", "subjects"] as const;
-export type StepKey = (typeof STEPS)[number];
 
 const STEP_FIELDS: Record<StepKey, FieldPath<OnboardingSchema>[]> = {
   profile: ["country", "language", "system", "level", "course"],
@@ -25,10 +23,12 @@ export function useOnboardingSteps(
   finish: (data: OnboardingSchema, subjects: GeneratedSubject[]) => void,
 ) {
   const navigate = useNavigate();
-  const [index, setIndex] = useState(replan ? 1 : 0);
-  const step = STEPS[index];
-  const isLast = index === STEPS.length - 1;
+  const [chosen, setIndex] = useState(replan ? 1 : 0);
   const values = form.watch();
+  const steps = stepsFor(values);
+  const index = Math.min(chosen, steps.length - 1);
+  const step = steps[index];
+  const isLast = index === steps.length - 1;
   const subjects = useSubjectChoices(form, step === "subjects");
 
   const next = async () => {
@@ -45,6 +45,7 @@ export function useOnboardingSteps(
   return {
     step,
     index,
+    count: steps.length,
     isLast,
     subjects,
     canNext:

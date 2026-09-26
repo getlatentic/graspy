@@ -49,15 +49,15 @@ fun tabLook(selected: Boolean): TabLook = if (selected) {
 /** What Ask's tab shows beyond its icon, as the web's does: a spinner while the tutor answers, a dot for a reply not seen. */
 data class AskMarks(val busy: Boolean = false, val unread: Boolean = false, val unreadLabel: String = "")
 
-/** The web's app tab bar: Home, Subjects, Ask and You, along the bottom. */
+/** The web's app tab bar: the learner's [tabs], Home, Subjects, Ask and You for most, along the bottom. */
 @Composable
-fun TabBar(copy: NavCopy, selected: LearnTab, ask: AskMarks, onSelect: (LearnTab) -> Unit) {
+fun TabBar(copy: NavCopy, tabs: List<LearnTab>, selected: LearnTab, ask: AskMarks, onSelect: (LearnTab) -> Unit) {
     Column(Modifier.fillMaxWidth().background(GraspyColor.Surface)) {
         HorizontalDivider(color = GraspyColor.Line)
         Row(
             Modifier.fillMaxWidth().semantics { contentDescription = copy.label }.selectableGroup(),
         ) {
-            LearnTab.entries.forEach { tab ->
+            tabs.forEach { tab ->
                 TabItem(tab.label(copy), tab, tab == selected, ask.takeIf { tab == LearnTab.ASK } ?: AskMarks(), Modifier.weight(1f)) { onSelect(tab) }
             }
         }

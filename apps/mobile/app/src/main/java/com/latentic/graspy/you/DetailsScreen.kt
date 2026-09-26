@@ -27,6 +27,19 @@ import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.space
 import java.util.Locale
 
+/** What saving new details does to the plan, as the web's detailsSave. */
+enum class DetailsSave { KEEP, NEW, ASK }
+
+/**
+ * A class that learns by voice alone shows no subjects, so its plan only takes the details, subjects and all. A plan
+ * with no subjects has nothing to keep for another class; otherwise the learner chooses.
+ */
+fun detailsSave(voiceOnly: Boolean, planHasSubjects: Boolean): DetailsSave = when {
+    voiceOnly -> DetailsSave.KEEP
+    planHasSubjects -> DetailsSave.ASK
+    else -> DetailsSave.NEW
+}
+
 /**
  * The learner's details, changed as the web changes them (app/learn/details-page.tsx): new details either get
  * a new plan, or the plan keeps its topics and takes the details, so the plan follows either way.
@@ -36,10 +49,12 @@ fun DetailsScreen(
     learn: LearnCopy,
     form: DetailsFormViewModel,
     current: LearnerDetails,
+    voiceOnlyNow: Boolean,
+    planHasSubjects: Boolean,
     display: Locale,
     onBack: () -> Unit,
     onNewPlan: (LearnerDetails) -> Unit,
-    onKeepPlan: (LearnerDetails) -> Unit,
+    onKeepPlan: (LearnerDetails, Boolean) -> Unit,
 ) {
     val values by form.form.collectAsStateWithLifecycle()
     var asking by rememberSaveable { mutableStateOf(false) }
@@ -50,14 +65,22 @@ fun DetailsScreen(
         }
         ProfileStep(learn, form, current.country, display)
         if (!asking) {
-            PrimaryButton(learn.details.save, { asking = true }, enabled = values.changes(current) && values.complete)
+            PrimaryButton(learn.details.save, {
+                val next = values.details()
+                val alone = values.learnsByVoiceAlone(voiceOnlyNow)
+                when (detailsSave(alone, planHasSubjects)) {
+                    DetailsSave.KEEP -> onKeepPlan(next, alone)
+                    DetailsSave.NEW -> onNewPlan(next)
+                    DetailsSave.ASK -> asking = true
+                }
+            }, enabled = values.changes(current) && values.complete)
         } else {
             GraspyCard(Modifier.semantics { paneTitle = learn.details.askTitle }) {
                 Text(learn.details.askTitle, style = MaterialTheme.typography.titleSmall, color = GraspyColor.Ink)
                 Text(learn.details.askBody, style = MaterialTheme.typography.bodyMedium, color = GraspyColor.Muted)
                 Row(horizontalArrangement = Arrangement.spacedBy(space(2))) {
                     PrimaryButton(learn.details.newPlan, { onNewPlan(values.details()) })
-                    SecondaryButton(learn.details.keepPlan, { onKeepPlan(values.details()) })
+                    SecondaryButton(learn.details.keepPlan, { onKeepPlan(values.details(), values.learnsByVoiceAlone(voiceOnlyNow)) })
                 }
             }
         }

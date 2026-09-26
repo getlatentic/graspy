@@ -10,3 +10,7 @@ enum class LearnTab(val icon: Lucide, val label: (NavCopy) -> String) {
     ASK(Lucide.MessageCircle, NavCopy::ask),
     YOU(Lucide.UserRound, NavCopy::you),
 }
+
+/** As the web's sectionsFor: Subjects and Ask are read, so a class that learns by voice alone has neither. */
+fun learnTabs(voiceOnly: Boolean): List<LearnTab> =
+    if (voiceOnly) listOf(LearnTab.HOME, LearnTab.YOU) else LearnTab.entries

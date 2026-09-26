@@ -15,6 +15,13 @@ export function curriculumRequest(
   };
 }
 
+/** Whether a plan is still to be made: the learner has no subjects, and the server has said
+ * their class learns by slides and voice. */
+export const planWanted = (
+  curriculum: CurriculumData | null,
+  voiceOnly: boolean | null,
+): boolean => !curriculum?.subjects.length && voiceOnly === false;
+
 /** Paths are left out: they stay as the learner accepted them. */
 export function rebuildRequest(
   curriculum: CurriculumData,

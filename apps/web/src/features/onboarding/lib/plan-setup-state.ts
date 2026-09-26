@@ -1,6 +1,7 @@
+import type { Dispatch } from "react";
 import type { GeneratedSubject } from "../types";
 import type { OnboardingSchema } from "../schemas/onboarding-schema";
-import { learnerDetails } from "./details";
+import { learnerDetails, learnsByVoiceAlone } from "./details";
 import type { GenerationStats } from "./generate-plan";
 
 export const GENERATION_STEP_SEQUENCE = [
@@ -12,7 +13,8 @@ export const GENERATION_STEP_SEQUENCE = [
 export type GenerationTimelineStep = (typeof GENERATION_STEP_SEQUENCE)[number];
 
 export interface PlanSetupState {
-  phase: "form" | "generating" | "ready";
+  /** A class that learns by voice alone has its plan kept at once, with no wait. */
+  phase: "form" | "generating" | "ready" | "kept";
   step: GenerationTimelineStep;
   stats: GenerationStats | null;
   error: string | null;
@@ -24,6 +26,7 @@ export type PlanSetupEvent =
   | { type: "made"; stats: GenerationStats }
   | { type: "saved" }
   | { type: "failed"; error: string }
+  | { type: "kept" }
   | { type: "reset" };
 
 export const FORM_SHOWN: PlanSetupState = {
@@ -51,8 +54,37 @@ export function planSetupReducer(
       return { ...state, step: "personalizing", phase: "ready" };
     case "failed":
       return { ...state, error: event.error };
+    case "kept":
+      return { ...FORM_SHOWN, phase: "kept" };
     case "reset":
       return FORM_SHOWN;
+  }
+}
+
+/** A class that learns by voice alone keeps its plan at once; any other has one made
+ * from its subjects. */
+export function startSetup<T>(
+  data: OnboardingSchema,
+  run: { keep: () => T; make: () => T },
+): T {
+  return learnsByVoiceAlone(data, false) ? run.keep() : run.make();
+}
+
+/** A plan kept at once leaves the form once kept, and stays on it, saying so, when not. */
+export async function keepAtOnce(
+  keep: () => Promise<void>,
+  dispatch: Dispatch<PlanSetupEvent>,
+): Promise<void> {
+  dispatch({ type: "reset" });
+  try {
+    await keep();
+    dispatch({ type: "kept" });
+  } catch (e) {
+    console.error("Keeping the plan failed:", e);
+    dispatch({
+      type: "failed",
+      error: e instanceof Error ? e.message : "Error",
+    });
   }
 }
 

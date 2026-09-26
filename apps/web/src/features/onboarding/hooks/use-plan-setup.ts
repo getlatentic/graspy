@@ -1,18 +1,22 @@
 import { useReducer, useRef, useState, type Dispatch } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n-context";
+import { keepRoute } from "@/lib/learner-route";
 import { saveUserProfile } from "@/lib/user-storage";
 import { learnerDetails } from "../lib/details";
 import {
   generatePlan,
+  keepVoiceOnlyPlan,
   type GenerationStats,
   type PlanOrder,
 } from "../lib/generate-plan";
 import {
   FORM_SHOWN,
   GENERATION_STEP_SEQUENCE,
+  keepAtOnce,
   planRequest,
   planSetupReducer,
+  startSetup,
   type PlanSetupEvent,
 } from "../lib/plan-setup-state";
 import type { OnboardingSchema } from "../schemas/onboarding-schema";
@@ -75,6 +79,18 @@ async function keepLearner(
   });
 }
 
+/** No subjects to choose and nothing for the model to make: the plan is kept at once. */
+async function keepVoiceOnly(
+  data: OnboardingSchema,
+  setLocale: (locale: string) => void | Promise<void>,
+) {
+  await keepLearner(data, [], setLocale);
+  await keepVoiceOnlyPlan(learnerDetails(data));
+  // The catalogue's word stands for the class until the server is asked about it.
+  keepRoute(learnerDetails(data), true);
+  saveUserProfile({ onboardingCompleted: true });
+}
+
 export function usePlanSetup() {
   const { setLocale } = useI18n();
   const { mutateAsync: generate, isPending } = useMutation({
@@ -82,6 +98,7 @@ export function usePlanSetup() {
   });
   const [state, dispatch] = useReducer(planSetupReducer, FORM_SHOWN);
   const [subjectNames, setSubjectNames] = useState<string[]>([]);
+  const [keeping, setKeeping] = useState(false);
   // A run reads these after its awaits, where state would be stale.
   const runRef = useRef<number | null>(null);
   const orderRef = useRef<PlanOrder | null>(null);
@@ -94,7 +111,13 @@ export function usePlanSetup() {
     return () => runRef.current === id;
   };
 
-  const start = async (
+  const keep = async (data: OnboardingSchema) => {
+    setKeeping(true);
+    await keepAtOnce(() => keepVoiceOnly(data, setLocale), dispatch);
+    setKeeping(false);
+  };
+
+  const make = async (
     data: OnboardingSchema,
     available: GeneratedSubject[],
   ) => {
@@ -105,6 +128,12 @@ export function usePlanSetup() {
     await keepLearner(data, request.subjects, setLocale);
     await makePlan(() => generate(order), current, dispatch);
   };
+
+  const start = (data: OnboardingSchema, available: GeneratedSubject[]) =>
+    startSetup(data, {
+      keep: () => keep(data),
+      make: () => make(data, available),
+    });
 
   const retry = () => {
     const order = orderRef.current;
@@ -122,7 +151,7 @@ export function usePlanSetup() {
     subjectNames,
     pending: isPending,
     /** Includes an abandoned run still finishing. */
-    busy: isPending || state.phase === "generating",
+    busy: isPending || keeping || state.phase === "generating",
     start,
     retry,
     reset,

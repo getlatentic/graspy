@@ -39,6 +39,16 @@ class PlanMaker(private val source: CurriculumSource, private val clock: () -> L
         return planNow()
     }
 
+    /**
+     * The plan of a class that learns by voice alone, as the web's keepVoiceOnlyPlan: who it is for, which the
+     * learner's devices share, and no subjects, so the stream is not asked. It replaces whatever the learner had.
+     */
+    fun voiceOnly(details: LearnerDetails): LearnerPlan {
+        val createdAt = clock()
+        return LearnerPlan(planId = "plan-$createdAt", createdAt = createdAt, updatedAt = createdAt, assessment = Assessment(null))
+            .withDetails(details)
+    }
+
     /** Topics for subjects new to a plan; subjects it keeps keep theirs, and their progress. */
     suspend fun topicsFor(details: LearnerDetails, kept: List<PlanSubject>, added: List<String>): Pair<List<PlanSubject>, Map<String, List<String>>> {
         val accumulator = CurriculumAccumulator(normalizeSubjectList(kept + added.map { PlanSubject(it, "") }).drop(kept.size))

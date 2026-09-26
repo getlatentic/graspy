@@ -3,8 +3,9 @@ import { useNavigate } from "react-router";
 import { getUserProfile, type UserProfile } from "@/lib/user-storage";
 import { placeEarlierClass } from "@/lib/earlier-class";
 import { useI18n } from "@/lib/i18n-context";
-import { curriculumRequest } from "../lib/curriculum-request";
+import { curriculumRequest, planWanted } from "../lib/curriculum-request";
 import { usePlan } from "../learner-context";
+import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 
 /** Null until the saved plan loads, so pages mount after it. */
 export function useLearnerStart(): UserProfile | null {
@@ -27,13 +28,14 @@ export function useLearnerStart(): UserProfile | null {
     loadSaved().then(() => setLoaded(true));
   }, [navigate, loadSaved]);
 
-  const hasPlan = Boolean(curriculum?.subjects.length);
+  const voiceOnly = useVoiceOnly();
+  const wanted = profile !== null && planWanted(curriculum, voiceOnly);
   useEffect(() => {
-    if (!profile || !loaded || hasPlan || isGenerating) return;
+    if (!profile || !loaded || !wanted || isGenerating) return;
     if (generated.current) return;
     generated.current = true;
     generate(curriculumRequest(profile), t);
-  }, [profile, loaded, hasPlan, isGenerating, generate, t]);
+  }, [profile, loaded, wanted, isGenerating, generate, t]);
 
   return profile;
 }

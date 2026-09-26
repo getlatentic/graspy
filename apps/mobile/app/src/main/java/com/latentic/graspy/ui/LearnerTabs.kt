@@ -37,7 +37,9 @@ import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.LearnCopy
 import com.latentic.graspy.localization.LearnerProfile
+import com.latentic.graspy.mcp.LearnerRoutes
 import com.latentic.graspy.mcp.LearnerViews
+import com.latentic.graspy.mcp.classAsk
 import com.latentic.graspy.onboarding.DetailsFormViewModel
 import com.latentic.graspy.plan.LearnerPlan
 import com.latentic.graspy.plan.PlanState
@@ -56,6 +58,7 @@ import com.latentic.graspy.subjects.SubjectsTab
 import com.latentic.graspy.ui.tabs.AskMarks
 import com.latentic.graspy.ui.tabs.LearnTab
 import com.latentic.graspy.ui.tabs.TabBar
+import com.latentic.graspy.ui.tabs.learnTabs
 import com.latentic.graspy.you.DetailsScreen
 import com.latentic.graspy.you.LearnerDetail
 import com.latentic.graspy.you.YouTab
@@ -89,11 +92,20 @@ internal fun LearnerTabs(
     var editing by rememberSaveable { mutableStateOf(false) }
     var voicePage by rememberSaveable { mutableStateOf(false) }
     var askOpening by remember { mutableStateOf<AskOpening?>(null) }
-    LaunchedEffect(tab) { planViewModel.refresh() }
     val views: LearnerViews = viewModel()
+    val routes by views.routes.answers.collectAsStateWithLifecycle()
+    // The server decides, for the class the plan names; the answer kept stands until it does.
+    val classAsk = (plan as? PlanState.Ready)?.plan?.classAsk()
+    LaunchedEffect(classAsk) { classAsk?.let { views.routes.ask(it) } }
+    val voiceOnly = classAsk?.let { routes[it.key] } == true
+    val tabs = learnTabs(voiceOnly)
+    val shownTab = tab.takeIf { it in tabs } ?: LearnTab.HOME
+    val shownPlace = place.takeUnless { voiceOnly }
+    LaunchedEffect(tab) { planViewModel.refresh() }
     LaunchedEffect(planViewModel, views) { planViewModel.recordsRead.collect(views::copyReadyLessons) }
-    BackHandler(enabled = place != null || editing || voicePage || tab != LearnTab.HOME) {
-        val current = place
+    // What is shown decides what back does: a page hidden from a class that learns by voice alone is not left.
+    BackHandler(enabled = shownPlace != null || editing || voicePage || shownTab != LearnTab.HOME) {
+        val current = shownPlace
         when {
             current != null -> place = current.back()
             editing -> editing = false
@@ -115,17 +127,16 @@ internal fun LearnerTabs(
     Column(Modifier.fillMaxSize().background(GraspyColor.Canvas).navigationBarsPadding().imePadding()) {
         GraspyHeader()
         Box(Modifier.weight(1f)) {
-            val shown = place
             val ready = plan as? PlanState.Ready
             when {
-                shown != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shown, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
-                editing && ready != null -> Page { Details(learn, ready.plan, interfaceLanguage, planViewModel, onBack = { editing = false }, onReplan = onReplan) }
-                voicePage && voice != null && tab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
-                tab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
+                shownPlace != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shownPlace, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
+                editing && ready != null -> Page { Details(learn, ready.plan, voiceOnly, interfaceLanguage, planViewModel, views.routes, onBack = { editing = false }, onReplan = onReplan) }
+                voicePage && voice != null && shownTab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
+                shownTab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
                 else -> Page {
-                    when (tab) {
+                    when (shownTab) {
                         LearnTab.HOME -> Home(
-                            learn, voice, plan, planViewModel,
+                            learn, voice, voiceOnly, plan, planViewModel,
                             onVoice = { voicePage = true },
                             onAsk = {
                                 askOpening = it
@@ -134,12 +145,12 @@ internal fun LearnerTabs(
                             onPlace = { place = it },
                         ) { tab = LearnTab.SUBJECTS }
                         LearnTab.SUBJECTS -> SubjectsTab(learn, plan, onOpenSubject = { place = Place(it.slug) }, onRetry = planViewModel::refresh)
-                        else -> YouTab(learn, plan, learnerDetails(learn, plan, interfaceLanguage), account, menu.copy(onEditProfile = { editing = true }))
+                        else -> YouTab(learn, plan, voiceOnly, learnerDetails(learn, plan, interfaceLanguage), account, menu.copy(onEditProfile = { editing = true }))
                     }
                 }
             }
         }
-        TabBar(learn.nav, tab, AskMarks(turn.busyThreadId != null, unread.threads.isNotEmpty(), learn.chat.newTutorMessage)) {
+        TabBar(learn.nav, tabs, shownTab, AskMarks(turn.busyThreadId != null, unread.threads.isNotEmpty(), learn.chat.newTutorMessage)) {
             tab = it
             place = null
             editing = false
@@ -155,10 +166,12 @@ private fun Page(content: @Composable () -> Unit) {
     }
 }
 
+/** A class that learns by [voiceOnly] finds its voice lessons alone, as on the web. */
 @Composable
 private fun Home(
     learn: LearnCopy,
     voice: LearnerProfile?,
+    voiceOnly: Boolean,
     plan: PlanState,
     planViewModel: PlanViewModel,
     onVoice: () -> Unit,
@@ -166,6 +179,10 @@ private fun Home(
     onPlace: (Place) -> Unit,
     onSeeAllSubjects: () -> Unit,
 ) {
+    if (voiceOnly) {
+        voice?.let { VoiceCard(learn.voice, Teacher.forClass(it.schoolClass).first(), onVoice) }
+        return
+    }
     val making by planViewModel.makingState.collectAsStateWithLifecycle()
     HomeTab(
         learn = learn,
@@ -197,7 +214,16 @@ private fun OpenPlace(learn: LearnCopy, interfaceLanguage: InterfaceLanguage, re
 }
 
 @Composable
-private fun Details(learn: LearnCopy, plan: LearnerPlan, interfaceLanguage: InterfaceLanguage, planViewModel: PlanViewModel, onBack: () -> Unit, onReplan: () -> Unit) {
+private fun Details(
+    learn: LearnCopy,
+    plan: LearnerPlan,
+    voiceOnly: Boolean,
+    interfaceLanguage: InterfaceLanguage,
+    planViewModel: PlanViewModel,
+    routes: LearnerRoutes,
+    onBack: () -> Unit,
+    onReplan: () -> Unit,
+) {
     val form: DetailsFormViewModel = viewModel()
     val current = plan.details()
     LaunchedEffect(plan.planId) { form.load(current) }
@@ -206,10 +232,14 @@ private fun Details(learn: LearnCopy, plan: LearnerPlan, interfaceLanguage: Inte
         learn = learn,
         form = form,
         current = current,
+        voiceOnlyNow = voiceOnly,
+        planHasSubjects = plan.subjects.isNotEmpty(),
         display = Locale.forLanguageTag(interfaceLanguage.tag),
         onBack = onBack,
         onNewPlan = { onReplan() },
-        onKeepPlan = { details ->
+        onKeepPlan = { details, alone ->
+            // The catalogue's word stands for the class until the server is asked about it.
+            routes.keep(details.classAsk(), alone)
             scope.launch {
                 runCatching { planViewModel.apply(plan.withDetails(details)) }
                 onBack()

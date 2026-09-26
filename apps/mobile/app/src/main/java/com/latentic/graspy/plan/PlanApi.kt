@@ -44,8 +44,9 @@ data class LearningPath(val subject: String, val goal: String, val steps: List<P
 @Serializable
 data class SchoolStage(val id: String, val name: Names)
 
+/** [voiceOnly]: the server's rule, that its children learn by voice alone, with no slide subjects. */
 @Serializable
-data class SchoolLevel(val id: String, val stage: String, val name: Names, val aliases: List<String> = emptyList(), val age: Int)
+data class SchoolLevel(val id: String, val stage: String, val name: Names, val aliases: List<String> = emptyList(), val age: Int, val voiceOnly: Boolean = false)
 
 @Serializable
 data class SchoolSystem(

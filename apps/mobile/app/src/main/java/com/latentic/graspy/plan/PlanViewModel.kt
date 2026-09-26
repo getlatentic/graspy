@@ -98,6 +98,9 @@ class PlanViewModel internal constructor(
     /** A new plan for the learner's details and chosen subjects, replacing any they had, kept on the account. */
     suspend fun make(details: LearnerDetails, subjects: List<String>): LearnerPlan = apply(maker.make(details, subjects))
 
+    /** A plan with no subjects for a class that learns by voice alone, replacing any the learner had, kept on the account. */
+    suspend fun keepVoiceOnly(details: LearnerDetails): LearnerPlan = apply(maker.voiceOnly(details))
+
     /** New topics for every chosen subject, the learner's paths carried over, their progress cleared. */
     override fun rebuild(): Boolean {
         val previous = (shown.value as? PlanState.Ready)?.plan ?: return false
