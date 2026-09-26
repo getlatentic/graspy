@@ -8,6 +8,8 @@ import com.latentic.graspy.auth.GoogleAccountSheet
 import com.latentic.graspy.auth.SignInOutcome
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,10 +38,19 @@ class AccountEntry(
             // Left part-way, perhaps with an account chosen and Firebase signed in: undone now, as far as it went.
             markGoogleAccountToForget()
             firebase.signOut()
-            throw cancelled
+            currentCoroutineContext().ensureActive()
+            failedByCancelledTask()
         }
+        // Firebase may finish a sign-in after the coroutine that asked for it was cancelled.
+        if (outcome !is SignInOutcome.Succeeded) firebase.signOut()
         forgetting.edit(commit = true) { remove(SIGNING_IN) }
         return outcome
+    }
+
+    /** A Play services task cancelled while the sign-in still runs fails it, rather than ending it unanswered. */
+    private suspend fun failedByCancelledTask(): SignInOutcome {
+        forgetGoogleAccountOrLeaveMarked()
+        return SignInOutcome.Failed("A Google task was cancelled")
     }
 
     private suspend fun signInThroughGoogle(): SignInOutcome {
@@ -137,12 +148,16 @@ class AccountEntry(
     fun reconcile(scope: CoroutineScope) {
         val uid = firebase.userId
         val account = accounts.account.value
+        // A sign-in that stored its account got as far as it needed to.
+        if (account != null) forgetting.edit(commit = true) { remove(SIGNING_IN) }
         when {
             account == null && forgetting.getBoolean(SIGNING_IN, false) -> scope.finish("Undoing a sign-in cut short") {
-                markGoogleAccountToForget()
-                firebase.signOut()
-                forgetting.edit(commit = true) { remove(SIGNING_IN) }
-                forgetGoogleAccount()
+                signingOut.withLock {
+                    markGoogleAccountToForget()
+                    firebase.signOut()
+                    forgetting.edit(commit = true) { remove(SIGNING_IN) }
+                    forgetGoogleAccount()
+                }
             }
             uid != null && account == null -> accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
             account != null && account.uid != uid -> scope.finish("Finishing a sign-out") { signOut() }

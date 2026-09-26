@@ -10,11 +10,11 @@ import com.google.firebase.auth.GoogleAuthProvider
 import java.io.IOException
 import kotlinx.coroutines.tasks.await
 
-class FirebaseSession(
+open class FirebaseSession(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val clearCredentials: suspend (Context) -> Unit = ::clearCredentialState,
 ) {
-    val userId: String? get() = auth.currentUser?.uid
+    open val userId: String? get() = auth.currentUser?.uid
     val email: String? get() = auth.currentUser?.email
 
     suspend fun signInWithGoogle(googleIdToken: String) {
@@ -22,7 +22,7 @@ class FirebaseSession(
     }
 
     /** At once; the Google account the sign-in used is forgotten apart from it, by [forgetGoogleAccount]. */
-    fun signOut() = auth.signOut()
+    open fun signOut() = auth.signOut()
 
     /** So the next sign-in asks which Google account rather than taking the last one. It can wait on Play services. */
     suspend fun forgetGoogleAccount(context: Context) = clearCredentials(context)
