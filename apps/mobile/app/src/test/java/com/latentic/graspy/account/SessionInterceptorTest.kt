@@ -4,8 +4,10 @@ import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -129,6 +131,19 @@ class SessionInterceptorTest {
 
         assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
         assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun `a session is not renewed for a learner switched away while the request was out`() {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                accounts.setLearner(ChosenLearner(BAYO.id, BAYO.name))
+                return MockResponse().setResponseCode(401)
+            }
+        }
+
+        assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
+        assertEquals(1, exchanges)
     }
 
     @Test

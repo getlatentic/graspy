@@ -68,8 +68,7 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
         } else {
             read.getOrNull()?.let { ready(it) } ?: PlanState.None
         }
-        // A failed read keeps nothing: it may be the one that found the learner gone and wiped the phone.
-        if (read.isSuccess) keep(shown.value)
+        keep(shown.value)
     }
 
     override val plan: LearnerPlan? get() = (shown.value as? PlanState.Ready)?.plan

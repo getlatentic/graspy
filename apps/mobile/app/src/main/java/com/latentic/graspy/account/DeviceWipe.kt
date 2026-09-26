@@ -27,18 +27,19 @@ class DeviceWipe(
      * learner's class and language stay for when they learn here again.
      */
     suspend fun leaveLearner() = withContext(Dispatchers.IO) {
-        forgetLearnerData()
-        sessions.forget()
+        // The learner goes first, so whatever still runs for them finds them gone and writes nothing the wipe misses.
         accounts.setLearner(null)
+        sessions.forget()
+        forgetLearnerData()
     }
 
     /** Signed out: nothing of the account or any learner stays, and the device takes a new id. */
     suspend fun wipeDevice() = withContext(Dispatchers.IO) {
+        accounts.set(null)
+        sessions.forget()
         forgetLearnerData()
         profiles.forgetAll()
         File(context.cacheDir, TEACHER_AUDIO_DIRECTORY).deleteRecursively()
-        sessions.forget()
-        accounts.set(null)
         deviceIds.renew()
     }
 

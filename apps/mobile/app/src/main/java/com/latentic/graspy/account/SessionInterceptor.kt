@@ -31,6 +31,7 @@ class SessionInterceptor(
         val response = chain.proceed(request.bearing(token))
         if (!needsNewSession(response)) return response
         response.close()
+        requireLearner(request)
         val renewed = session { renew(token) }
         requireLearner(request)
         return chain.proceed(request.bearing(renewed))
