@@ -227,7 +227,6 @@ async function askOnce(
     }
   } catch (cause) {
     if (listener.signal?.aborted) throw new TurnStopped();
-    if (cause instanceof ApiError) throw cause;
     throw toNetworkError(cause);
   }
 

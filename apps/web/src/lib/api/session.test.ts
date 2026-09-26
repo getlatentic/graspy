@@ -49,7 +49,11 @@ async function loadSession() {
     import("./session"),
     import("./errors"),
   ]);
-  return { ...session, ApiError: errors.ApiError };
+  return {
+    ...session,
+    ApiError: errors.ApiError,
+    NetworkError: errors.NetworkError,
+  };
 }
 
 function stubStorage() {
@@ -300,13 +304,87 @@ describe("a signed-in learner's session", () => {
 
   it("fails rather than naming the device when Firebase cannot be reached", async () => {
     signedIn = ACCOUNT;
-    googleIdToken.mockRejectedValue(new Error("auth/network-request-failed"));
-    const { getSessionToken, ApiError } = await loadSession();
+    googleIdToken.mockRejectedValue(
+      firebaseError("auth/network-request-failed"),
+    );
+    const { getSessionToken, NetworkError } = await loadSession();
 
-    await expect(getSessionToken()).rejects.toBeInstanceOf(ApiError);
+    await expect(getSessionToken()).rejects.toBeInstanceOf(NetworkError);
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(setAccount).not.toHaveBeenCalled();
+  });
+});
+
+function firebaseError(code: string) {
+  return Object.assign(new Error(`Firebase: Error (${code}).`), {
+    name: "FirebaseError",
+    code,
+  });
+}
+
+describe("a session exchange", () => {
+  it.each([
+    [
+      "graspy cannot be reached",
+      () => fetchMock.mockRejectedValue(new TypeError("Failed to fetch")),
+    ],
+    [
+      "Google cannot be reached",
+      () => {
+        signedIn = ACCOUNT;
+        googleIdToken.mockRejectedValue(
+          firebaseError("auth/network-request-failed"),
+        );
+      },
+    ],
+    [
+      "the Google sign-in module cannot be loaded",
+      () => {
+        signedIn = ACCOUNT;
+        googleIdToken.mockRejectedValue(
+          new TypeError("Failed to fetch dynamically imported module"),
+        );
+      },
+    ],
+  ])("is unreachable when %s", async (_, arrange) => {
+    arrange();
+    const { getSessionToken, NetworkError } = await loadSession();
+
+    await expect(getSessionToken()).rejects.toBeInstanceOf(NetworkError);
+  });
+
+  it.each([
+    [
+      "graspy refuses the session",
+      () =>
+        fetchMock.mockResolvedValue({
+          ok: false,
+          status: 403,
+          json: async () => ({ error: "refused" }),
+        }),
+    ],
+    [
+      "graspy issues an empty session",
+      () => fetchMock.mockResolvedValue(minted("")),
+    ],
+    [
+      "Google refuses the sign-in",
+      () => {
+        signedIn = ACCOUNT;
+        googleIdToken.mockRejectedValue(
+          firebaseError("auth/user-token-expired"),
+        );
+      },
+    ],
+  ])("is an answer when %s", async (_, arrange) => {
+    arrange();
+    const { getSessionToken, ApiError, NetworkError } = await loadSession();
+
+    const failure = await getSessionToken().catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ApiError);
+    expect(failure).not.toBeInstanceOf(NetworkError);
   });
 });
 

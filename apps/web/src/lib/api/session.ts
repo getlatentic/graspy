@@ -103,12 +103,19 @@ async function deviceSession(device: string): Promise<Response> {
   return post({ deviceId: device, ...(hint ? { fingerprint: hint } : {}) });
 }
 
+// A module that failed to load is a TypeError; Firebase gives a failure to reach Google its own code.
+const couldNotReachGoogle = (cause: unknown) =>
+  cause instanceof TypeError ||
+  (cause as { code?: unknown } | null)?.code === "auth/network-request-failed";
+
 async function idToken(fresh: boolean): Promise<string | null> {
   try {
     const { googleIdToken } = await import("@/lib/account/google-auth");
     return await googleIdToken(fresh);
   } catch (cause) {
-    throw toNetworkError(cause);
+    if (couldNotReachGoogle(cause)) throw toNetworkError(cause);
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new ApiError(`Google refused the sign-in: ${message}`, 0);
   }
 }
 

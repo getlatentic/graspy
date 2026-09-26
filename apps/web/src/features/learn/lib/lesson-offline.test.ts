@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CurriculumData } from "@/lib/curriculum-record";
 
 // graspy's server as the MCP client reaches it, so the cards are the ones the app's own
-// server.ts builds.
+// server.ts builds. The client connects through the app's own session.ts.
 const VIEW = "ui://graspy/lesson";
+type SessionExchange = "issued" | "unreachable" | "refused" | "empty";
 const graspy = {
   reachable: true,
+  session: "issued" as SessionExchange,
   answers: {} as Record<string, unknown>,
   called: [] as string[],
   /** Topics whose lesson the server fails to give. */
@@ -18,11 +20,16 @@ const graspy = {
 function reach() {
   if (!graspy.reachable) throw new TypeError("Failed to fetch");
 }
+interface Transport {
+  url: URL;
+  fetch: (url: URL) => Promise<Response>;
+}
 vi.mock("@modelcontextprotocol/client", () => ({
   Client: class {
-    connect = async () => {
+    connect = async (transport: Transport) => {
       graspy.connects += 1;
       reach();
+      await transport.fetch(transport.url);
     };
     listTools = async () => ({
       tools: [
@@ -46,9 +53,29 @@ vi.mock("@modelcontextprotocol/client", () => ({
       return graspy.answers[name];
     };
   },
-  StreamableHTTPClientTransport: class {},
+  StreamableHTTPClientTransport: class implements Transport {
+    url: URL;
+    fetch: Transport["fetch"];
+    constructor(url: URL, opts: { fetch: Transport["fetch"] }) {
+      this.url = url;
+      this.fetch = opts.fetch;
+    }
+  },
 }));
-vi.mock("@/lib/api/session", () => ({ fetchWithSession: vi.fn() }));
+vi.mock("@/lib/device-id", async (actual) => ({
+  ...(await actual<typeof import("@/lib/device-id")>()),
+  fingerprint: async () => null,
+}));
+
+async function graspyFetch(input: string | URL): Promise<Response> {
+  if (!String(input).endsWith("/session")) return new Response(null);
+  if (graspy.session === "unreachable") throw new TypeError("Failed to fetch");
+  if (graspy.session === "refused") {
+    return Response.json({ error: "refused" }, { status: 403 });
+  }
+  const token = graspy.session === "empty" ? "" : "session-token";
+  return Response.json({ token, expiresIn: 3600 });
+}
 
 const PLAN: CurriculumData = {
   id: "c1",
@@ -104,6 +131,7 @@ async function fresh() {
 beforeEach(() => {
   online = true;
   graspy.reachable = true;
+  graspy.session = "issued";
   graspy.called = [];
   graspy.failing = new Set();
   graspy.refusing = new Set();
@@ -114,6 +142,7 @@ beforeEach(() => {
   };
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("IDBKeyRange", IDBKeyRange);
+  vi.stubGlobal("fetch", graspyFetch);
   vi.stubGlobal("navigator", {
     get onLine() {
       return online;
@@ -155,6 +184,38 @@ describe("a lesson without a connection", () => {
       lessonToolOrCopy(target, "lesson_progress", { target }),
     ).resolves.toEqual(result("ready"));
   });
+});
+
+describe("a lesson whose session must be renewed", () => {
+  async function openedWhole() {
+    const { lessonTarget, openLessonOrCopy } = await fresh();
+    const target = lessonTarget(PLAN, MATHS, 1)!;
+    return { target, whole: await openLessonOrCopy(target) };
+  }
+
+  it("opens from the copy kept when graspy cannot be reached to renew it", async () => {
+    const { target, whole } = await openedWhole();
+
+    graspy.session = "unreachable";
+    const { openLessonOrCopy } = await fresh();
+
+    await expect(openLessonOrCopy(target)).resolves.toEqual(whole);
+  });
+
+  it.each([
+    ["refuses it", "refused", "refused"],
+    ["issues it empty", "empty", "The server issued an empty session"],
+  ] as const)(
+    "is not stood in for when graspy %s",
+    async (_, exchange, answer) => {
+      const { target } = await openedWhole();
+
+      graspy.session = exchange;
+      const { openLessonOrCopy } = await fresh();
+
+      await expect(openLessonOrCopy(target)).rejects.toThrow(answer);
+    },
+  );
 });
 
 describe("the copies", () => {

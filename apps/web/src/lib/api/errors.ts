@@ -29,9 +29,19 @@ export async function toApiError(response: Response): Promise<ApiError> {
   );
 }
 
+/** A request that never reached graspy or Google, as opposed to one they answered. */
+export class NetworkError extends ApiError {
+  constructor(message: string) {
+    super(message, 0);
+    this.name = "NetworkError";
+  }
+}
+
+// An ApiError is kept: fetchWithSession's session exchange has already told an answer
+// from a failure to reach graspy or Google.
 export function toNetworkError(cause: unknown): ApiError {
-  return new ApiError(
+  if (cause instanceof ApiError) return cause;
+  return new NetworkError(
     cause instanceof Error ? cause.message : "Network request failed",
-    0,
   );
 }
