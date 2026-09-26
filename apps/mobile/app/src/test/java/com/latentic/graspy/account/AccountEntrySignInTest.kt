@@ -328,6 +328,28 @@ class AccountEntrySignInTest {
         assertEquals("uid-2", accounts.account.value?.uid)
     }
 
+    @Test
+    fun `a sign-in a sign-out overtook stores nothing, and the next start undoes it though Firebase's sign-out was lost`() = runBlocking {
+        lateinit var signingIn: AccountEntry
+        signingIn = entry(
+            sessionApi = object : SessionApi {
+                override suspend fun session(request: SessionRequestDto): IssuedSessionDto {
+                    signingIn.signOut()
+                    return issued("session-2", learner = null)
+                }
+            },
+            sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
+        )
+
+        signingIn.signIn()
+        // Firebase's sign-out never reached the disk.
+        firebase.uid = "uid-2"
+        start()
+
+        assertNull(accounts.account.value)
+        assertNull(firebase.uid)
+    }
+
     private fun entry(sessionApi: SessionApi = noSessionApi, sheet: GoogleAccountSheet = this.sheet) =
         AccountEntry(context, sheet, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
 
