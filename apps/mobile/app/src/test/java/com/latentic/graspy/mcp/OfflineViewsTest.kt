@@ -20,8 +20,9 @@ class OfflineViewsTest {
     private val dao = FakeDao()
     private var reachable = true
     private var refusal: Exception? = null
+    private var page = LESSON_PAGE
     private val lesson = UiView(
-        html = "<!doctype html><script src=\"/views/assets/lesson.js\"></script>",
+        html = LESSON_PAGE,
         title = "Lesson",
         csp = buildJsonObject { put("resourceDomains", buildJsonArray { add(JsonPrimitive("https://fonts.example")) }) },
         permissions = null,
@@ -30,7 +31,7 @@ class OfflineViewsTest {
         if (!reachable) throw IOException("no connection")
         refusal?.let { throw it }
         if (uri != LESSON) throw McpRefusal("$uri is not an MCP App view")
-        lesson
+        lesson.copy(html = page)
     }
 
     @Test
@@ -49,6 +50,29 @@ class OfflineViewsTest {
         assertThrows(McpRefusal::class.java) { runBlocking { views.view(LESSON) } }
         refusal = SessionRefusal("graspy did not issue a session")
         assertThrows(SessionRefusal::class.java) { runBlocking { views.view(LESSON) } }
+    }
+
+    @Test
+    fun `a background run keeps a view with no copy, and never replaces one kept by showing`() = runBlocking {
+        views.keepAll(listOf(LESSON))
+        views.view(LESSON)
+        page = DEPLOYED_PAGE
+
+        views.keepAll(listOf(LESSON))
+
+        reachable = false
+        assertEquals(LESSON_PAGE, views.view(LESSON).html)
+    }
+
+    @Test
+    fun `showing a view online replaces its copy`() = runBlocking {
+        views.keepAll(listOf(LESSON))
+        page = DEPLOYED_PAGE
+
+        views.view(LESSON)
+
+        reachable = false
+        assertEquals(DEPLOYED_PAGE, views.view(LESSON).html)
     }
 
     @Test
@@ -94,10 +118,16 @@ class OfflineViewsTest {
             writes += 1
         }
 
+        override suspend fun keepIfNone(view: KeptViewEntity) {
+            rows.putIfAbsent(view.uri, view)
+        }
+
         override suspend fun kept(uri: String) = rows[uri]
     }
 
     private companion object {
         const val LESSON = "ui://graspy/lesson"
+        const val LESSON_PAGE = "<!doctype html><script src=\"/views/assets/lesson-a1.js\"></script>"
+        const val DEPLOYED_PAGE = "<!doctype html><script src=\"/views/assets/lesson-b2.js\"></script>"
     }
 }

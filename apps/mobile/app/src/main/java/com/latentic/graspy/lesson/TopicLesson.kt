@@ -49,6 +49,10 @@ fun TopicLesson(
     target: LessonTarget,
     onBack: () -> Unit,
     onLearnt: () -> Unit,
+    /** Shows the lesson's view: its card, what its calls go to, and what its events mean. */
+    showView: @Composable (ViewCard, ViewServer, ViewEvents) -> Unit = { card, calls, events ->
+        AppView(card = card, server = calls, locale = locale, unavailable = learn.chat.viewUnavailable, events = events)
+    },
 ) {
     // Goes up only when the learner retries after a failure.
     var attempt by rememberSaveable(target) { mutableIntStateOf(0) }
@@ -71,12 +75,10 @@ fun TopicLesson(
                 Text(learn.lesson.loadFailed, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
                 SecondaryButton(learn.lesson.tryAgain, { attempt += 1 })
             }
-            is Opened.Shown -> AppView(
-                card = shown.card,
-                server = remember(shown.card) { LessonViewServer(server, lessons, target, shown.card) },
-                locale = locale,
-                unavailable = learn.chat.viewUnavailable,
-                events = ViewEvents(toolCalled = { name, _, _ -> if (name == FINISH_LESSON) onLearnt() }),
+            is Opened.Shown -> showView(
+                shown.card,
+                remember(shown.card) { LessonViewServer(server, lessons, target, shown.card) },
+                ViewEvents(toolCalled = { name, _, _ -> if (name == FINISH_LESSON) onLearnt() }),
             )
         }
     }

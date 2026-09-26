@@ -201,6 +201,17 @@ class OfflineLessonsTest {
     }
 
     @Test
+    fun `a topic the record marks with no lesson made is never asked for`() = runBlocking {
+        server.answers = lessonResult("ready")
+        val learntWithoutALesson = RecordRead(PLAN, LearnerRecord(topics = listOf(TopicMark("mathematics", 1, "Fractions", learntAt = 5))), askedAt = now)
+
+        copying(until = { server.viewsKept == 1 }) { lessons.copyReady(learntWithoutALesson) }
+
+        assertEquals(emptyList<String>(), server.called)
+        assertEquals(emptyList<CopiedTopic>(), copies.copied("uid/ada"))
+    }
+
+    @Test
     fun `the copy run keeps no lesson that is not whole`() = runBlocking {
         server.answers = lessonResult("ready", whole = false)
 
