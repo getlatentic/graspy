@@ -21,6 +21,7 @@ import kotlinx.serialization.json.jsonObject
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -82,16 +83,16 @@ class LearnerConnectionTest {
     }
 
     @Test
-    fun `a kept call answered with an empty reply is dropped, and the next goes`() = runBlocking {
-        assertKeptCallAnsweredWithDropped("")
+    fun `a kept call answered with an empty reply stays kept, as does the next, until the server takes them`() = runBlocking {
+        assertKeptCallAnsweredWithKept("")
     }
 
     @Test
-    fun `a kept call answered with a reply that is not JSON is dropped, and the next goes`() = runBlocking {
-        assertKeptCallAnsweredWithDropped("<html>Bad gateway</html>")
+    fun `a kept call answered with a reply that is not JSON stays kept, as does the next, until the server takes them`() = runBlocking {
+        assertKeptCallAnsweredWithKept("<html>Bad gateway</html>")
     }
 
-    private suspend fun assertKeptCallAnsweredWithDropped(reply: String) {
+    private suspend fun assertKeptCallAnsweredWithKept(reply: String) {
         var online = false
         val flaky = OkHttpClient.Builder().addInterceptor { chain ->
             if (!online) throw IOException("no connection")
@@ -104,9 +105,14 @@ class LearnerConnectionTest {
         online = true
         server.toolReplies = mapOf("give_lesson" to reply)
 
-        assertEquals(2, connection.sendKept())
-        assertEquals(listOf("give_lesson", "lesson_progress"), server.toolsCalled)
-        assertEquals(emptyList<KeptCallEntity>(), database.keptCallDao().kept(ADA_KEY))
+        assertEquals(0, connection.sendKept())
+        assertFalse(connection.sentEverything())
+        assertEquals(listOf("give_lesson", "lesson_progress"), database.keptCallDao().kept(ADA_KEY).map { it.name })
+        assertEquals(listOf("give_lesson", "give_lesson"), server.toolsCalled)
+
+        server.toolReplies = emptyMap()
+        assertTrue(connection.sentEverything())
+        assertEquals(listOf("give_lesson", "lesson_progress"), server.toolsCalled.drop(2))
     }
 
     @Test
@@ -151,6 +157,29 @@ class LearnerConnectionTest {
         wiping.join(WAIT_SECONDS * 1_000)
 
         assertEquals(emptyList<CopiedLesson>(), runBlocking { database.lessonCopyDao().copied(ADA_KEY) })
+    }
+
+    @Test
+    fun `a wipe waits for a view's call whose learner was already checked, and takes it too`() {
+        val checked = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val unreachable = OkHttpClient.Builder().addInterceptor { throw IOException("no connection") }.build()
+        val connection = LearnerConnection(database, ADA_KEY, unreachable, endpoint) {
+            checked.countDown()
+            release.await(WAIT_SECONDS, TimeUnit.SECONDS)
+            true
+        }
+
+        val calling = thread { runBlocking { connection.call("answer_check", JsonObject(emptyMap())) } }
+        assertTrue(checked.await(WAIT_SECONDS, TimeUnit.SECONDS))
+        val wiping = thread { database.clearAllTables() }
+        // Long enough for the wipe to finish, were nothing holding it back.
+        Thread.sleep(WIPE_MS)
+        release.countDown()
+        calling.join(WAIT_SECONDS * 1_000)
+        wiping.join(WAIT_SECONDS * 1_000)
+
+        assertEquals(emptyList<KeptCallEntity>(), runBlocking { database.keptCallDao().kept(ADA_KEY) })
     }
 
     private fun connection() = LearnerConnection(database, ADA_KEY, calls, endpoint) { true }
