@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
@@ -64,6 +66,40 @@ class AppViewScrollTest {
         assertEquals(0, touches)
     }
 
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun `a mouse moved and scrolled over a view not yet drawn reaches none of it`() {
+        var events = 0
+        compose.setContent {
+            AppView(card, Server, "unavailable", Modifier, waiting = {}, retry = {}, listening = true) { _, _, _, _ ->
+                AndroidView(
+                    factory = { context ->
+                        View(context).apply {
+                            setOnTouchListener { _, _ -> events += 1; true }
+                            // Compose hands a mouse button's press and release to the view past any pointer modifier.
+                            setOnGenericMotionListener { _, e ->
+                                if (e.actionMasked !in BUTTON) events += 1
+                                true
+                            }
+                        }
+                    },
+                    modifier = Modifier.testTag(VIEW).fillMaxWidth().height(400.dp),
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(VIEW, useUnmergedTree = true).performMouseInput {
+            moveTo(center)
+            scroll(3f)
+            press()
+            release()
+        }
+        compose.waitForIdle()
+
+        assertEquals(0, events)
+    }
+
     private object Server : ViewServer {
         override suspend fun view(uri: String) = UiView("<html></html>", "Lesson", csp = null, permissions = null)
 
@@ -77,5 +113,6 @@ class AppViewScrollTest {
     private companion object {
         const val PAGE = "page"
         const val VIEW = "view"
+        val BUTTON = setOf(MotionEvent.ACTION_BUTTON_PRESS, MotionEvent.ACTION_BUTTON_RELEASE)
     }
 }
