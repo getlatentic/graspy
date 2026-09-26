@@ -13,6 +13,7 @@ import com.latentic.graspy.practice.TEACHER_AUDIO_DIRECTORY
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -303,6 +304,15 @@ class DeviceWipeTest {
 
         assertEquals(1, forgotten.size)
         assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
+    fun `a sign-in left part-way marks the Google account, for the next sign-in`() = runBlocking {
+        val left = AccountEntry(context, { throw CancellationException("The learner left") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+
+        runCatching { left.signIn() }
+
+        assertEquals(setOf("google_account"), signOutPending.keys)
     }
 
     @Test

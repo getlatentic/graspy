@@ -11,12 +11,12 @@ import org.robolectric.RobolectricTestRunner
 /** Told to ask which account, the sheet never signs the last Google account in unasked. */
 @RunWith(RobolectricTestRunner::class)
 class SignInOptionsTest {
-    private fun signsLastAccountInUnasked(options: List<CredentialOption>) =
-        options.filterIsInstance<GetGoogleIdOption>().any { it.filterByAuthorizedAccounts && it.autoSelectEnabled }
+    private fun signsAnAccountInUnasked(options: List<CredentialOption>) =
+        options.filterIsInstance<GetGoogleIdOption>().any { it.autoSelectEnabled }
 
     @Test
     fun `the sheet may sign the last account in unasked`() {
-        assertTrue(signsLastAccountInUnasked(signInOptions("demo-client", askWhichAccount = false)))
+        assertTrue(signsAnAccountInUnasked(signInOptions("demo-client", askWhichAccount = false)))
     }
 
     @Test
@@ -24,6 +24,6 @@ class SignInOptionsTest {
         val options = signInOptions("demo-client", askWhichAccount = true)
 
         assertTrue(options.isNotEmpty())
-        assertFalse(signsLastAccountInUnasked(options))
+        assertFalse(signsAnAccountInUnasked(options))
     }
 }
