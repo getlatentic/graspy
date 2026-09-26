@@ -1,6 +1,7 @@
 import { sendKept, whenSettled } from "@/lib/voice/answer-outbox";
 import { forgetAnswer, passOver, settledOf } from "@/lib/voice/answer-store";
 import type { Sent } from "@/lib/voice/send-answer";
+import { inTime } from "./in-time";
 import type { LessonEvent } from "./lesson-state";
 
 // A server that was busy may take it now. Going online sends kept answers too, without
@@ -63,9 +64,11 @@ export async function followAnswer(
 export async function carryOn(
   key: string,
   emit: (event: LessonEvent) => void,
+  pause?: (ms: number) => Promise<unknown>,
 ): Promise<void> {
+  // Storage that never answers still lets the child on; the answer may then be shown at the next Start.
   try {
-    await passOver(key);
+    await inTime(passOver(key), pause);
   } catch (error) {
     console.warn("Passing over a kept answer failed:", error);
   }

@@ -5,11 +5,11 @@ import {
   VoiceError,
 } from "@/lib/voice/voice-api";
 import type { LessonLanguage, LessonMove } from "@/lib/voice/voice-types";
+import { inTime, wait } from "./in-time";
 import type { LessonEvent, Phase } from "./lesson-state";
 
 /** A breath between her last word and the next step: long enough to land, short enough not to wait on. */
 const TURN_PAUSE_MS = 1_500;
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface StepLearner {
   key: string;
@@ -43,20 +43,14 @@ async function teachersStep(
   return { type: "loaded", move };
 }
 
-// Storage that answers slower than this is passed over for the teacher's step.
-const UNSEEN_MS = 3_000;
-
 // A device whose storage cannot be read, or never answers, still has a lesson: the teacher's step.
 async function readUnseen(
   learner: StepLearner,
   plan: string | undefined,
   pause: (ms: number) => Promise<unknown>,
 ) {
-  const tooSlow = pause(UNSEEN_MS).then(() => {
-    throw new Error("Storage did not answer");
-  });
   try {
-    return await Promise.race([unseenAnswer(learner.key, plan), tooSlow]);
+    return await inTime(unseenAnswer(learner.key, plan), pause);
   } catch (error) {
     console.warn("Reading unseen answers failed:", error);
     return null;

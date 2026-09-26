@@ -392,6 +392,19 @@ describe("an answer the child carries on past", () => {
   });
 });
 
+describe("carrying on while storage never answers", () => {
+  it("still moves the lesson on", async () => {
+    vi.doMock("@/lib/voice/answer-store", async (actual) => ({
+      ...(await actual<typeof import("@/lib/voice/answer-store")>()),
+      passOver: () => new Promise(() => {}),
+    }));
+    const events: LessonEvent[] = [];
+    const app = await reload();
+    await app.carryOn("key-1", (event) => events.push(event), noPause);
+    expect(events).toEqual([{ type: "carriedOn", key: "key-1" }]);
+  });
+});
+
 describe("an answer whose outcome the device could not store", () => {
   it("stays on screen as kept, and shows its result on the next try", async () => {
     vi.doMock("@/lib/voice/answer-store", async (actual) => {

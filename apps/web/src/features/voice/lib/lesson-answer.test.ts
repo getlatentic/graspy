@@ -93,13 +93,32 @@ describe("keepTake", () => {
     { type: "recordStarted" },
   ] satisfies LessonEvent[];
 
-  async function lessonAfter(keep: () => Promise<void>) {
+  async function lessonAfter(
+    keep: () => Promise<void>,
+    pause?: () => Promise<unknown>,
+  ) {
     let state = recording.reduce(lessonReducer, START);
-    await keepTake(kept, keep, (event) => {
-      state = lessonReducer(state, event);
-    });
+    await keepTake(
+      kept,
+      keep,
+      (event) => {
+        state = lessonReducer(state, event);
+      },
+      pause,
+    );
     return state;
   }
+
+  it("gives the turn back, saying so, when the device never answers", async () => {
+    const state = await lessonAfter(
+      () => new Promise(() => {}),
+      async () => {},
+    );
+    expect(state).toEqual({
+      phase: { name: "your-turn", move: step },
+      note: "notSaved",
+    });
+  });
 
   it("checks the take once it is kept", async () => {
     const state = await lessonAfter(async () => {});

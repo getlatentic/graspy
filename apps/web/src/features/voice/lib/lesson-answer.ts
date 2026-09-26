@@ -5,6 +5,7 @@ import type {
 } from "@/lib/voice/voice-types";
 import type { KeptAnswer } from "@/lib/voice/answer-store";
 import { languagePairOf } from "@/lib/voice/voice-learner";
+import { inTime } from "./in-time";
 import type { LessonEvent } from "./lesson-state";
 
 // What the server's markers are filed under: a times-table prompt is reasoning about
@@ -68,9 +69,10 @@ export async function keepTake(
   answer: KeptAnswer,
   keep: (answer: KeptAnswer) => Promise<void>,
   emit: (event: LessonEvent) => void,
+  pause?: (ms: number) => Promise<unknown>,
 ): Promise<void> {
   try {
-    await keep(answer);
+    await inTime(keep(answer), pause);
   } catch {
     emit({ type: "recordFailed", note: "notSaved" });
     return;
