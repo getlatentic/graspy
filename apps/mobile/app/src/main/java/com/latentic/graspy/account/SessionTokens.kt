@@ -24,7 +24,8 @@ class SessionTokens(
     private val idToken: suspend (uid: String, fresh: Boolean) -> String?,
     private val exchange: suspend (SessionRequestDto) -> IssuedSessionDto,
     private val learnerGone: suspend () -> Unit,
-    private val signedOutElsewhere: suspend () -> Unit,
+    /** Told the uid of the account Google no longer holds. */
+    private val signedOutElsewhere: suspend (uid: String) -> Unit,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val exchanging = Mutex()
@@ -59,7 +60,7 @@ class SessionTokens(
         val account = accounts.account.value ?: throw SessionRefusal("Nobody is signed in on this device")
         val issued = exchangeFor(account)
         if (issued == null) {
-            signedOutElsewhere()
+            signedOutElsewhere(account.uid)
             throw SessionRefusal("Google no longer holds this sign-in")
         }
         follow(account.learner, issued.learner)
