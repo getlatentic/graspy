@@ -1,24 +1,13 @@
 """The sandbox proxy's page and the page it writes each view into, and their
-Content-Security-Policies: the view's is built from the domains the view's
-resource declared, and nothing else."""
+Content-Security-Policies. A view's policy is what graspy's views declare,
+built here and never read from a request: a view shares the proxy's origin,
+so it can frame the view's page itself, with any query it likes."""
 
 from __future__ import annotations
 
-import json
-import re
 from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
-from typing import Any
-
-# An origin, optionally with one wildcard subdomain; plain http only for this
-# machine. A quote or a space could smuggle a keyword into the policy.
-_ORIGIN = re.compile(
-    r"^((https|wss)://(\*\.)?[a-z0-9-]+(\.[a-z0-9-]+)*"
-    r"|http://(localhost|127\.0\.0\.1))(:\d{1,5})?$"
-)
-DOMAIN_KINDS = ("connectDomains", "resourceDomains", "frameDomains", "baseUriDomains")
-
 
 WORKER_PATH = "/ui-sandbox-sw.js"
 # Built with the views, and read as one of them.
@@ -36,31 +25,21 @@ def page() -> str:
     return (Path(__file__).parent / "sandbox.html").read_text(encoding="utf-8")
 
 
-def requested_csp(raw: str | None) -> dict[str, list[str]]:
-    """What cannot be read declares none."""
-    try:
-        declared = json.loads(raw) if raw else {}
-    except ValueError:
-        return {}
-    if not isinstance(declared, Mapping):
-        return {}
-    return {kind: _origins(declared.get(kind)) for kind in DOMAIN_KINDS}
+def declared_csp(origin: str) -> dict[str, list[str]]:
+    """What every graspy view declares: its files and base from this server,
+    and nothing else."""
+    return {"resourceDomains": [origin], "baseUriDomains": [origin]}
 
 
-def _origins(value: Any) -> list[str]:
-    if not isinstance(value, list):
-        return []
-    return [item for item in value if isinstance(item, str) and _ORIGIN.match(item)]
-
-
-def proxy_policy(host: str) -> str:
-    """The proxy runs its own script and frames only the view's page."""
+def proxy_policy(host: str, own: str) -> str:
+    """The proxy runs its own script and frames only the view's page: never
+    another page of its origin, some of which carry no policy."""
     return "; ".join(
         (
             "default-src 'none'",
             "script-src 'unsafe-inline'",
             "style-src 'unsafe-inline'",
-            "frame-src 'self'",
+            f"frame-src {own}{FRAME_PATH}",
             # The origin's service worker opens the view offline.
             "worker-src 'self'",
             "base-uri 'none'",

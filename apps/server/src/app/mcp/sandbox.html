@@ -32,6 +32,7 @@
         "use strict";
         const PROXY_READY = "ui/notifications/sandbox-proxy-ready";
         const RESOURCE_READY = "ui/notifications/sandbox-resource-ready";
+        const VIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms";
         const FEATURES = {
           camera: "camera",
           microphone: "microphone",
@@ -68,18 +69,14 @@
         let inner = null;
 
         // The view's frame loads a page of this origin, which the worker
-        // controls and serves offline, with the policy the view declared;
-        // the view is then written into it, so the worker serves its files.
-        // The sandbox and permissions apply as that page loads.
-        function load({ html, sandbox, permissions }) {
+        // controls and serves offline, with the policy graspy's views
+        // declare; the view is then written into it, so the worker serves
+        // its files. A host's own sandbox flags are not taken: writing the
+        // view needs the frame's origin, and the view never gets more.
+        function load({ html, permissions }) {
           if (inner || typeof html !== "string") return;
           inner = document.createElement("iframe");
-          inner.setAttribute(
-            "sandbox",
-            typeof sandbox === "string"
-              ? sandbox
-              : "allow-scripts allow-same-origin allow-forms",
-          );
+          inner.setAttribute("sandbox", VIEW_SANDBOX);
           const allow = Object.keys(permissions || {})
             .filter((key) => key in FEATURES)
             .map((key) => FEATURES[key]);

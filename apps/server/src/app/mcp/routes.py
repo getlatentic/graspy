@@ -21,9 +21,9 @@ from .sandbox import (
     WORKER_FILE,
     WORKER_PATH,
     WORKER_POLICY,
+    declared_csp,
     page,
     proxy_policy,
-    requested_csp,
     view_policy,
 )
 from .views import ViewsMissing
@@ -96,16 +96,19 @@ async def ui_sandbox(request: Request) -> Response:
     host = _framing_host(request)
     if host is None:
         return PlainTextResponse(NOT_A_HOST, 400)
-    return HTMLResponse(page(), headers={"content-security-policy": proxy_policy(host)})
+    own = f"{request.url.scheme}://{request.url.netloc}"
+    return HTMLResponse(
+        page(), headers={"content-security-policy": proxy_policy(host, own)}
+    )
 
 
 async def ui_sandbox_frame(request: Request) -> Response:
-    """The page the proxy writes the view into, with the policy the view's
-    resource declared."""
+    """The page the proxy writes the view into, with the policy graspy's
+    views declare, whatever the request asks for."""
     host = _framing_host(request)
     if host is None:
         return PlainTextResponse(NOT_A_HOST, 400)
-    csp = requested_csp(request.query_params.get("csp"))
+    csp = declared_csp(request.app.state.mcp.origin)
     return HTMLResponse(
         FRAME_PAGE, headers={"content-security-policy": view_policy(csp, host)}
     )
