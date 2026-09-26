@@ -10,6 +10,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -38,7 +39,7 @@ class AccountEntry(
             // Left part-way, perhaps with an account chosen and Firebase signed in: undone now, as far as it went.
             markGoogleAccountToForget()
             firebase.signOut()
-            currentCoroutineContext().ensureActive()
+            leftPartWay()
             failedByCancelledTask()
         }
         // Firebase may finish a sign-in after the coroutine that asked for it was cancelled.
@@ -47,7 +48,14 @@ class AccountEntry(
         return outcome
     }
 
-    /** A Play services task cancelled while the sign-in still runs fails it, rather than ending it unanswered. */
+    /** Firebase may still finish a sign-in its coroutine left, so the next start undoes it, whatever later sign-ins do. */
+    private suspend fun leftPartWay() {
+        if (currentCoroutineContext().isActive) return
+        forgetting.edit(commit = true) { putBoolean(CUT_SHORT, true) }
+        currentCoroutineContext().ensureActive()
+    }
+
+        /** A Play services task cancelled while the sign-in still runs fails it, rather than ending it unanswered. */
     private suspend fun failedByCancelledTask(): SignInOutcome {
         try {
             forgetGoogleAccountOrLeaveMarked()
@@ -153,9 +161,9 @@ class AccountEntry(
         val uid = firebase.userId
         val account = accounts.account.value
         // A sign-in that stored its account got as far as it needed to.
-        if (account != null) forgetting.edit(commit = true) { remove(SIGNING_IN) }
+        if (account != null) forgetSignInNotes()
         when {
-            account == null && forgetting.getBoolean(SIGNING_IN, false) -> undoSignInCutShort(scope)
+            account == null && signInCutShort() -> undoSignInCutShort(scope)
             uid != null && account == null -> accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
             account != null && account.uid != uid -> scope.finish("Finishing a sign-out") { signOut() }
             account == null && forgetting.getBoolean(GOOGLE_ACCOUNT, false) ->
@@ -167,8 +175,18 @@ class AccountEntry(
     private fun undoSignInCutShort(scope: CoroutineScope) {
         markGoogleAccountToForget()
         firebase.signOut()
-        forgetting.edit(commit = true) { remove(SIGNING_IN) }
-        scope.finish("Forgetting the Google account of a sign-in cut short") { signingOut.withLock { forgetGoogleAccount() } }
+        forgetSignInNotes()
+        scope.finish("Forgetting the Google account of a sign-in cut short") {
+            // A sign-in begun meanwhile may have forgotten it already.
+            signingOut.withLock { if (forgetting.getBoolean(GOOGLE_ACCOUNT, false)) forgetGoogleAccount() }
+        }
+    }
+
+    private fun signInCutShort() = forgetting.getBoolean(SIGNING_IN, false) || forgetting.getBoolean(CUT_SHORT, false)
+
+    private fun forgetSignInNotes() = forgetting.edit(commit = true) {
+        remove(SIGNING_IN)
+        remove(CUT_SHORT)
     }
 
     /** Work at start fails into the log: the app's scope has no handler, so an error there would end the app. */
@@ -193,5 +211,7 @@ class AccountEntry(
         const val TAG = "GraspyAccount"
         const val GOOGLE_ACCOUNT = "google_account"
         const val SIGNING_IN = "signing_in"
+        /** Set by a cancelled sign-in, whose Firebase sign-in may still finish; only the next start clears it. */
+        const val CUT_SHORT = "sign_in_cut_short"
     }
 }
