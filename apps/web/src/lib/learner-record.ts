@@ -17,7 +17,7 @@ export interface TopicRef {
   topic: string;
 }
 
-interface TopicMark extends TopicRef {
+export interface TopicMark extends TopicRef {
   lessonId?: string | null;
   learntAt?: number | null;
 }

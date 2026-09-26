@@ -2,12 +2,13 @@ import type { CallToolResult } from "@modelcontextprotocol/client";
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import {
-  copiedTopics,
+  copiedLessons,
   dropLessonCopies,
   keepLessonCopy,
   lessonCopy,
+  type CopiedLesson,
 } from "@/lib/lesson-copies";
-import type { TopicRef } from "@/lib/learner-record";
+import type { TopicMark, TopicRef } from "@/lib/learner-record";
 import { isUnreachable } from "@/lib/mcp/outbox";
 import { callAppTool } from "@/lib/mcp/server";
 import {
@@ -25,12 +26,15 @@ const isWhole = (result: CallToolResult) => {
   return state?.status === "ready" && state.whole;
 };
 
+/** `onRecord` names the lesson for a server that leaves its id out of the result. */
 export async function keepIfWhole(
   target: LessonTarget,
   card: TutorCard,
+  onRecord: string | null = null,
 ): Promise<void> {
   if (!isWhole(card.toolResult)) return;
-  await keepLessonCopy(target, card).catch((error: unknown) =>
+  const lessonId = lessonStateOf(card.toolResult)?.lessonId ?? onRecord;
+  await keepLessonCopy(target, card, lessonId).catch((error: unknown) =>
     console.warn("Keeping a copy of the lesson failed:", error),
   );
 }
@@ -71,27 +75,30 @@ const sameTopic = (a: TopicRef, b: TopicRef) =>
   a.topic === b.topic;
 
 // A lesson the server refuses is skipped; a server that cannot be reached ends the run.
-async function copyOne(target: LessonTarget) {
+async function copyOne(target: LessonTarget, lessonId: string | null) {
   try {
-    await keepIfWhole(target, await keptLesson(target));
+    await keepIfWhole(target, await keptLesson(target), lessonId);
   } catch (error) {
     if (isUnreachable(error)) throw error;
     console.warn(`Copying the lesson on ${target.topic} failed:`, error);
   }
 }
 
-async function copyAll(plan: CurriculumData, ready: TopicRef[]) {
+async function copyAll(plan: CurriculumData, ready: TopicMark[]) {
   const wanted = ready.filter((mark) => mark.planId === plan.planId);
-  const copied = await copiedTopics();
+  const copied = await copiedLessons();
   await dropLessonCopies(
     copied.filter((copy) => !wanted.some((mark) => sameTopic(mark, copy))),
   );
   for (const mark of wanted) {
-    if (copied.some((copy) => sameTopic(copy, mark))) continue;
+    const lessonId = mark.lessonId ?? null;
+    const held = (copy: CopiedLesson) =>
+      sameTopic(copy, mark) && copy.lessonId === lessonId;
+    if (copied.some(held)) continue;
     const subject = plan.subjects.find((s) => s.slug === mark.subjectSlug);
     const target = subject && lessonTarget(plan, subject, mark.topicIndex);
     if (!target || target.topic !== mark.topic) continue;
-    await copyOne(target);
+    await copyOne(target, lessonId);
   }
 }
 
@@ -100,7 +107,7 @@ let copying: Promise<void> | null = null;
 /** Copies exactly the plan's ready lessons, including ones made on another device. */
 export function copyReadyLessons(
   plan: CurriculumData,
-  ready: TopicRef[],
+  ready: TopicMark[],
 ): Promise<void> {
   copying ??= copyAll(plan, ready).finally(() => {
     copying = null;

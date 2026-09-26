@@ -4,9 +4,16 @@ import type { TopicRef } from "@/lib/learner-record";
 
 // The lesson view's card as the server last gave it, to open offline.
 
+/** A copy and the record's id for the lesson it holds; null when not known. */
+export interface CopiedLesson extends TopicRef {
+  lessonId: string | null;
+}
+
 interface LessonCopy extends TopicRef {
   card: TutorCard;
   savedAt: number;
+  // Missing on copies kept before copies named their lesson.
+  lessonId?: string | null;
 }
 
 const keyOf = (ref: TopicRef): IDBValidKey => [
@@ -19,6 +26,7 @@ const keyOf = (ref: TopicRef): IDBValidKey => [
 export async function keepLessonCopy(
   ref: TopicRef,
   card: TutorCard,
+  lessonId: string | null,
 ): Promise<void> {
   const db = await openDB();
   const store = db
@@ -31,6 +39,7 @@ export async function keepLessonCopy(
     topic: ref.topic,
     card,
     savedAt: Date.now(),
+    lessonId,
   };
   await promisify(store.put(copy));
 }
@@ -44,21 +53,19 @@ export async function lessonCopy(ref: TopicRef): Promise<TutorCard | null> {
   return copy?.card ?? null;
 }
 
-export async function copiedTopics(): Promise<TopicRef[]> {
+export async function copiedLessons(): Promise<CopiedLesson[]> {
   const db = await openDB();
   const store = db
     .transaction(LESSON_COPY_STORE, "readonly")
     .objectStore(LESSON_COPY_STORE);
-  const keys = await promisify(store.getAllKeys());
-  return keys.map((key) => {
-    const [planId, subjectSlug, topicIndex, topic] = key as [
-      string,
-      string,
-      number,
-      string,
-    ];
-    return { planId, subjectSlug, topicIndex, topic };
-  });
+  const copies = await promisify<LessonCopy[]>(store.getAll());
+  return copies.map(({ planId, subjectSlug, topicIndex, topic, lessonId }) => ({
+    planId,
+    subjectSlug,
+    topicIndex,
+    topic,
+    lessonId: lessonId ?? null,
+  }));
 }
 
 export async function dropLessonCopies(refs: TopicRef[]): Promise<void> {
