@@ -1,6 +1,7 @@
 package com.latentic.graspy.account
 
 import java.io.IOException
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.mockwebserver.MockResponse
@@ -18,6 +19,7 @@ class SessionInterceptorTest {
     private val accounts = accountStore(signedIn(ADA, deviceJoins = false))
     private var exchanges = 0
     private var refuseExchange = false
+    private var learnerHeld = true
 
     private val sessions = SessionTokens(
         accounts = accounts,
@@ -26,9 +28,9 @@ class SessionInterceptorTest {
         exchange = {
             if (refuseExchange) throw httpError(503, """{"detail":{"code":"sign_in_off"}}""")
             exchanges += 1
-            issued("session-$exchanges", ADA)
+            issued("session-$exchanges", ADA.takeIf { learnerHeld })
         },
-        learnerGone = {},
+        learnerGone = { accounts.setLearner(null) },
         signedOutElsewhere = {},
     )
 
@@ -71,6 +73,39 @@ class SessionInterceptorTest {
     }
 
     @Test
+    fun `a session naming no learner, for a learner removed elsewhere, leaves the device asking who is learning`() {
+        server.enqueue(learnerRequired())
+        runBlocking { sessions.token() }
+        learnerHeld = false
+
+        assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
+
+        assertEquals(null, accounts.account.value?.learner)
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun `a session naming no learner, for a learner still on the account, is renewed and the request sent again`() {
+        server.enqueue(learnerRequired())
+        server.enqueue(MockResponse().setBody("ok"))
+
+        assertEquals("ok", call(request(learner = learnerKey(UID, ADA.id))).body.string())
+        assertEquals(ADA.id, accounts.account.value?.learner?.id)
+        assertEquals(2, exchanges)
+    }
+
+    @Test
+    fun `other refusals are the caller's to read, with the session kept`() {
+        server.enqueue(MockResponse().setResponseCode(409).setBody("""{"detail":"refused","code":"step_not_offered"}"""))
+
+        val response = call(request())
+
+        assertEquals(409, response.code)
+        assertEquals("""{"detail":"refused","code":"step_not_offered"}""", response.body.string())
+        assertEquals(1, exchanges)
+    }
+
+    @Test
     fun `a request for the learner in use is sent as them`() {
         server.enqueue(MockResponse())
 
@@ -99,4 +134,8 @@ class SessionInterceptorTest {
         .build()
 
     private fun call(request: Request) = client.newCall(request).execute()
+
+    private fun learnerRequired() = MockResponse()
+        .setResponseCode(409)
+        .setBody("""{"detail":{"error":"Choose a learner first","code":"learner_required"}}""")
 }

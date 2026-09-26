@@ -1,5 +1,6 @@
 package com.latentic.graspy.localization
 
+import com.latentic.graspy.practice.numberWords
 import java.util.Locale
 
 enum class AppLanguage(val displayName: String) {
@@ -71,6 +72,14 @@ data class AppCopy(
     val correctFeedback: String,
     val wrongAnswerTemplate: String,
     val notUnderstoodFeedback: String,
+    val contributeTitle: String,
+    val question: String,
+    val yes: String,
+    val no: String,
+    val thanksForChecking: String,
+    val microphoneNeeded: String,
+    val recordingNotStarted: String,
+    val recordingNotSaved: String,
     val lesson: LessonCopy,
     val home: HomeCopy,
     val onboarding: OnboardingCopy,
@@ -108,10 +117,19 @@ data class HomeCopy(
 data class OnboardingCopy(
     val whatClass: String,
     val whichLanguage: String,
+    /** Said where the lesson language is chosen: the teacher speaks only these, whatever the app's words. */
+    val lessonLanguageNote: String,
+    val whichInterface: String,
+    val interfaceNote: String,
+    val followPhone: String,
     val next: String,
     val classAndLanguage: String,
     val detectLanguage: String,
-)
+    /** Each class as a school names it, keyed by its wire value. */
+    val classLabels: Map<String, String>,
+) {
+    fun classLabel(schoolClass: SchoolClass): String = classLabels.getValue(schoolClass.wireValue)
+}
 
 data class LessonCopy(
     val steps: List<String>,
@@ -141,7 +159,6 @@ data class LessonCopy(
     val completeFeedback: String,
     val retryFeedback: String,
     val notUnderstoodFeedback: String,
-    val recordAgain: String,
     val playAgain: String,
     val teacherAudioFailed: String,
     val retryTeacherAudio: String,
@@ -149,7 +166,6 @@ data class LessonCopy(
     val keptOnPhone: String,
     val showWords: String,
     val showMaths: String,
-    val sendAgain: String,
     val threadSubtitle: String,
     val today: String,
     val resultEyebrow: String,
@@ -169,10 +185,14 @@ data class LessonCopy(
     val factResultEyebrow: String,
     val chats: String,
     val openChat: String,
+    /** Whether a table's numbers read as the words the teacher says them in, or as digits. */
+    val numbersInWords: Boolean = true,
 ) {
+    fun number(value: Int): String = if (numbersInWords) numberWords(value) else value.toString()
+
     /** Resolve every table template for one lesson; the number word stays English in all modes. */
     fun forTable(table: Int): LessonCopy {
-        val word = com.latentic.graspy.practice.Curriculum.NUMBER_WORDS[table] ?: table.toString()
+        val word = number(table)
         fun String.filled() = replace("%1\$s", word)
         return copy(
             title = title.filled(),
@@ -188,8 +208,9 @@ data class LessonCopy(
     }
 }
 
-fun copyFor(language: AppLanguage): AppCopy = when (language) {
-    AppLanguage.ENGLISH -> ENGLISH_COPY
-    AppLanguage.YORUBA -> YORUBA_COPY
-    AppLanguage.PIDGIN -> PIDGIN_COPY
+fun copyFor(language: InterfaceLanguage): AppCopy = when (language) {
+    InterfaceLanguage.ENGLISH -> ENGLISH_COPY
+    InterfaceLanguage.YORUBA -> YORUBA_COPY
+    InterfaceLanguage.PIDGIN -> PIDGIN_COPY
+    InterfaceLanguage.ARABIC -> ARABIC_COPY
 }

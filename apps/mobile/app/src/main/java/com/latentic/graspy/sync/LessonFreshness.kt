@@ -1,7 +1,6 @@
 package com.latentic.graspy.sync
 
 import androidx.work.WorkInfo
-import retrofit2.HttpException
 
 /** Where the single lesson refresh for a learner has got to. */
 enum class RefreshState { RUNNING, SUCCEEDED, FAILED }
@@ -27,6 +26,3 @@ enum class MoveOrigin { CACHED, ISSUED }
  */
 fun moveOrigin(fetchedAtEpochMillis: Long, refreshRequestedAtEpochMillis: Long): MoveOrigin =
     if (fetchedAtEpochMillis >= refreshRequestedAtEpochMillis) MoveOrigin.ISSUED else MoveOrigin.CACHED
-
-/** The Worker answers 409 when a step was not the one it issued; the phone must take a new one. */
-fun stepWasNotOffered(error: HttpException): Boolean = error.code() == 409

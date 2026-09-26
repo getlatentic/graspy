@@ -1,5 +1,7 @@
 package com.latentic.graspy.collection.outbox
 
+import com.latentic.graspy.collection.VoiceRefusal
+
 data class NewSubmission(
     val ownerId: String,
     val participantId: String,
@@ -24,15 +26,25 @@ enum class SubmissionStatus {
 enum class UploadDisposition {
     RETRY,
     PERMANENT_FAILURE,
+
+    /** The session names no learner: the recording waits until its learner is chosen again. */
+    WAIT_FOR_LEARNER,
 }
 
 object UploadFailurePolicy {
     const val MAX_ATTEMPTS = 5
 
-    fun forHttp(statusCode: Int, attemptIndex: Int): UploadDisposition {
-        val transient = statusCode == 408 || statusCode == 425 || statusCode == 429 || statusCode >= 500
-        return disposition(transient, attemptIndex)
+    /** A refusal the server named decides, whatever its status; an unnamed one goes by the status. */
+    fun forHttp(statusCode: Int, attemptIndex: Int, refusal: VoiceRefusal? = null): UploadDisposition = when (refusal) {
+        VoiceRefusal.LEARNER_REQUIRED -> UploadDisposition.WAIT_FOR_LEARNER
+        VoiceRefusal.AUDIO_NOT_READY -> disposition(true, attemptIndex)
+        VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.UNSUPPORTED_PROMPT, VoiceRefusal.IDEMPOTENCY_CONFLICT ->
+            UploadDisposition.PERMANENT_FAILURE
+        null -> disposition(transient(statusCode), attemptIndex)
     }
+
+    private fun transient(statusCode: Int) =
+        statusCode == 408 || statusCode == 425 || statusCode == 429 || statusCode >= 500
 
     fun forNetwork(attemptIndex: Int): UploadDisposition = disposition(true, attemptIndex)
 

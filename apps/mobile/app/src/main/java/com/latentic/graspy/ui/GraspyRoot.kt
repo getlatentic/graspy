@@ -23,6 +23,7 @@ import com.latentic.graspy.account.Account
 import com.latentic.graspy.localization.AccountCopy
 import com.latentic.graspy.localization.AppCopy
 import com.latentic.graspy.localization.AppLanguage
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.LearnerProfile
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +37,7 @@ fun GraspyRoot(
     copy: AppCopy,
     accountCopy: AccountCopy,
     appLanguage: AppLanguage,
+    interfaceLanguage: InterfaceLanguage,
     profile: LearnerProfile,
     account: Account,
     menu: AccountMenu,
@@ -96,6 +98,7 @@ fun GraspyRoot(
                 Screen.LESSON -> PracticeLessonScreen(
                     copy = copy,
                     appLanguage = appLanguage,
+                    interfaceLanguage = interfaceLanguage,
                     languageSelection = profile.language,
                     schoolClass = profile.schoolClass,
                     teacher = Teacher.forClass(profile.schoolClass).first(),

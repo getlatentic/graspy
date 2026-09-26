@@ -1,6 +1,6 @@
 package com.latentic.graspy.home
 
-import com.latentic.graspy.localization.AppLanguage
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -51,12 +51,12 @@ class MasteryBadgesTest {
 
         assertEquals(
             "One more good day on table-2 wins its badge.",
-            copyFor(AppLanguage.ENGLISH).home.oneMoreDay.format(nearest),
+            copyFor(InterfaceLanguage.ENGLISH).home.oneMoreDay.format(nearest),
         )
         assertEquals(
             "One more better day for table-2 go win im badge.",
-            copyFor(AppLanguage.PIDGIN).home.oneMoreDay.format(nearest),
+            copyFor(InterfaceLanguage.PIDGIN).home.oneMoreDay.format(nearest),
         )
-        assertTrue(copyFor(AppLanguage.YORUBA).home.oneMoreDay.format(nearest).contains("table-2"))
+        assertTrue(copyFor(InterfaceLanguage.YORUBA).home.oneMoreDay.format(nearest).contains("table-2"))
     }
 }

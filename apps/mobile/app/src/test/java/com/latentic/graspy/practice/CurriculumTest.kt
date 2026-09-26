@@ -1,6 +1,6 @@
 package com.latentic.graspy.practice
 
-import com.latentic.graspy.localization.AppLanguage
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertEquals
@@ -32,11 +32,11 @@ class CurriculumTest {
 
     @Test
     fun `lesson copy is resolved per table with english number words in every mode`() {
-        val en = copyFor(AppLanguage.ENGLISH).lesson.forTable(7)
+        val en = copyFor(InterfaceLanguage.ENGLISH).lesson.forTable(7)
         assertEquals("The seven times table", en.title)
         assertTrue(en.teacherPrompt.startsWith("Now the seven times table."))
-        assertTrue(copyFor(AppLanguage.ENGLISH).lesson.forTable(1).teacherPrompt.startsWith("Recite the one times table"))
-        assertEquals("Table seven", copyFor(AppLanguage.YORUBA).lesson.forTable(7).threadSubtitle)
+        assertTrue(copyFor(InterfaceLanguage.ENGLISH).lesson.forTable(1).teacherPrompt.startsWith("Recite the one times table"))
+        assertEquals("Table seven", copyFor(InterfaceLanguage.YORUBA).lesson.forTable(7).threadSubtitle)
         assertEquals("You know the seven times table now. Well done.", en.masteredTable)
     }
 }

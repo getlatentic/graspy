@@ -1,7 +1,7 @@
 package com.latentic.graspy.practice
 
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.collection.outbox.SubmissionStatus
-import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LessonThreadTest {
-    private val copy = copyFor(AppLanguage.ENGLISH)
+    private val copy = copyFor(InterfaceLanguage.ENGLISH)
 
     private fun turn(status: SubmissionStatus, reason: String? = null, decision: PracticeDecision? = null) = LessonTurn(
         localId = "l", promptId = "mul_table_1_recite_1_12", task = "reasoning", topic = "multiplication", table = 1,

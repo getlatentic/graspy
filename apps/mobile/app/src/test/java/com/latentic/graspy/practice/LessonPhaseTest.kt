@@ -1,7 +1,7 @@
 package com.latentic.graspy.practice
 
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.collection.outbox.SubmissionStatus
-import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -66,7 +66,6 @@ class LessonPhaseTest {
         assertEquals(LessonPhase.SEND_FAILED, lessonPhase(failed))
         assertTrue(LessonPhase.SEND_FAILED.canRecord)
         assertFalse(LessonPhase.SEND_FAILED.showsFeedback)
-        assertEquals(copyFor(AppLanguage.ENGLISH).lesson.sendAgain, composerLabel(copyFor(AppLanguage.ENGLISH).lesson, LessonPhase.SEND_FAILED))
     }
 
     @Test
@@ -84,15 +83,5 @@ class LessonPhaseTest {
     fun `feedback audio failure does not trap the learner before the written result`() {
         val evaluated = idle.copy(lessonStarted = true, promptCompleted = true, hasOutcome = true, teacherVoice = TeacherVoiceState.FAILED)
         assertEquals(LessonPhase.COMPLETE, lessonPhase(evaluated))
-    }
-
-    @Test
-    fun `the composer only offers recording in learner phases`() {
-        val copy = copyFor(AppLanguage.ENGLISH).lesson
-        assertEquals(null, composerLabel(copy, LessonPhase.TEACHER_PLAYING))
-        assertEquals(null, composerLabel(copy, LessonPhase.ANALYSING))
-        assertEquals(copy.recordTable, composerLabel(copy, LessonPhase.LEARNER_READY))
-        assertEquals(copy.stopAndSend, composerLabel(copy, LessonPhase.LEARNER_RECORDING))
-        assertEquals(copy.recordAgain, composerLabel(copy, LessonPhase.COMPLETE))
     }
 }

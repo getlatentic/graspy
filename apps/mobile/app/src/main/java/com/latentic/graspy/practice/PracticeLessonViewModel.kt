@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.latentic.graspy.account.PreferenceFiles
 import com.latentic.graspy.collection.LessonEventDto
+import com.latentic.graspy.collection.VoiceRefusal
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.SchoolClass
@@ -17,7 +18,6 @@ import com.latentic.graspy.sync.lessonRefreshWorkName
 import com.latentic.graspy.sync.move
 import com.latentic.graspy.sync.moveOrigin
 import com.latentic.graspy.sync.refreshState
-import com.latentic.graspy.sync.stepWasNotOffered
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -277,8 +277,12 @@ class PracticeLessonViewModel(application: Application) : AndroidViewModel(appli
                 .lessonEventHeard(LessonEventDto(move.planId, move.eventId, learner.schoolClass.wireValue))
             continueRequested = true
         } catch (error: HttpException) {
-            if (!stepWasNotOffered(error)) throw error
-            Log.i(TAG, "The Worker has already moved this learner past ${move.eventId}")
+            when (VoiceRefusal.of(error)) {
+                VoiceRefusal.STEP_NOT_OFFERED -> Log.i(TAG, "The Worker has already moved this learner past ${move.eventId}")
+                // The device is leaving this learner for "Who's learning?"; there is no step to take.
+                VoiceRefusal.LEARNER_REQUIRED -> return
+                else -> throw error
+            }
         }
         refresh()
     }

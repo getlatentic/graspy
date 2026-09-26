@@ -25,7 +25,7 @@ private const val BAR_MS = 90
 
 /**
  * The child's own voice, drawn as it arrives: one bar per tenth of a second of microphone loudness,
- * newest on the right.
+ * newest at the end of the line: the right, or the left in a right-to-left language.
  *
  * Bars that move tell a child the phone is hearing them, and a flat line says speak up while there is
  * still time, not after the answer has been sent. Slots not yet filled stay in the quiet colour so the

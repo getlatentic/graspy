@@ -1,6 +1,9 @@
 package com.latentic.graspy.localization
 
-/** Signing in, choosing who is learning, and managing the account's learners, worded as the web app words them. */
+/**
+ * Signing in, choosing who is learning, and managing the account's learners, worded as the web app
+ * words them. English, Yorùbá and Arabic are the web's own text; Pidgin is written for this app.
+ */
 data class AccountCopy(
     val signInTitle: String,
     val signInBody: String,
@@ -55,10 +58,11 @@ fun String.withName(name: String): String = replace("{name}", name)
 
 fun String.withEmail(email: String): String = replace("{email}", email)
 
-fun accountCopyFor(language: AppLanguage): AccountCopy = when (language) {
-    AppLanguage.ENGLISH -> ENGLISH
-    AppLanguage.YORUBA -> YORUBA
-    AppLanguage.PIDGIN -> PIDGIN
+fun accountCopyFor(language: InterfaceLanguage): AccountCopy = when (language) {
+    InterfaceLanguage.ENGLISH -> ENGLISH
+    InterfaceLanguage.YORUBA -> YORUBA
+    InterfaceLanguage.PIDGIN -> PIDGIN
+    InterfaceLanguage.ARABIC -> ARABIC
 }
 
 private val ENGLISH = AccountCopy(
@@ -209,4 +213,54 @@ private val PIDGIN = AccountCopy(
     signOutUnsent = "Some changes never reach graspy yet. If you sign out now, dem go loss.",
     signOutAnyway = "Sign out anyway",
     signingOut = "E dey sign out…",
+)
+
+private val ARABIC = AccountCopy(
+    signInTitle = "سجّل الدخول إلى graspy",
+    signInBody = "تابع خطتك وتقدّمك على أي جهاز. يسجّل وليّ الأمر الدخول مرة واحدة، ثم يضيف كل طفل متعلّمًا.",
+    signIn = "تسجيل الدخول باستخدام Google",
+    signingIn = "جارٍ تسجيل الدخول…",
+    noPassword = "لا يحتفظ graspy بأي كلمة مرور: Google هو من يتحقّق من هويتك.",
+    signInFailed = "لم ينجح تسجيل الدخول. تحقّق من اتصالك، ثم حاول مرة أخرى.",
+    noGoogleAccount = "لا يوجد حساب Google على هذا الجهاز.",
+    title = "من يتعلّم؟",
+    body = "اختر من يتعلّم على هذا الجهاز. لكل متعلّم خطته وتقدّمه.",
+    bodyFirst = "أضف أول متعلّم في هذا الحساب: أنت، أو طفلك.",
+    signedInAs = "مسجّل الدخول باسم {email}",
+    back = "رجوع",
+    inUse = "يتعلّم على هذا الجهاز",
+    addTile = "أضف متعلّمًا",
+    full = "في هذا الحساب 8 متعلّمين، وهو الحد الأقصى. احذف واحدًا من صفحة المتعلّمين لتضيف آخر.",
+    devicePlan = "الخطة الموجودة على هذا الجهاز تنتقل إلى المتعلّم الذي تختاره، أو إلى من تضيفه.",
+    otherAccount = "استخدم حساب Google آخر",
+    opening = "جارٍ الفتح…",
+    loadFailed = "تعذّر تحميل المتعلّمين. تحقّق من اتصالك، ثم حاول مرة أخرى.",
+    tryAgain = "حاول مرة أخرى",
+    failed = "لم ينجح ذلك. تحقّق من اتصالك، ثم حاول مرة أخرى.",
+    unsent = "بعض التغييرات لم تصل إلى graspy بعد. اتصل بالإنترنت ثم بدّل المتعلّم، حتى لا يضيع شيء.",
+    addTitle = "أضف متعلّمًا",
+    addBody = "ستكون له خطته وتقدّمه. يمكنك تغيير اسمه أو إزالته لاحقًا.",
+    nameLabel = "اسم المتعلّم",
+    guardian = "أنا هذا المتعلّم، أو والده أو وليّ أمره",
+    addButton = "إضافة",
+    cancel = "إلغاء",
+    manageTitle = "المتعلّمون",
+    manageBody = "غيّر أسماء المتعلّمين في هذا الحساب أو احذفهم.",
+    rename = "تغيير الاسم",
+    save = "حفظ",
+    remove = "حذف",
+    removeConfirm = "حذف {name}؟ تُحذف خطته وتقدّمه ودروسه ومحادثاته من graspy. لا يمكن التراجع عن ذلك.",
+    removeYes = "احذف {name}",
+    deleteTitle = "احذف حسابك",
+    deleteBody = "يحذف هذا كل المتعلّمين في هذا الحساب من graspy، ويسجّل خروجك. يبقى حساب Google نفسه لدى Google.",
+    deleteButton = "احذف حسابي",
+    deleteConfirm = "حذف هذا الحساب؟ تُحذف خطط كل المتعلّمين وتقدّمهم ودروسهم ومحادثاتهم من graspy. لا يمكن التراجع عن ذلك.",
+    deleteYes = "نعم، احذف حسابي",
+    learningAs = "يتعلّم الآن: {name}",
+    switchLearner = "تبديل المتعلّم",
+    manageLearners = "المتعلّمون",
+    signOut = "تسجيل الخروج",
+    signOutUnsent = "بعض التغييرات لم تصل إلى graspy بعد. إذا سجّلت الخروج الآن فستضيع.",
+    signOutAnyway = "سجّل الخروج على أي حال",
+    signingOut = "جارٍ تسجيل الخروج…",
 )

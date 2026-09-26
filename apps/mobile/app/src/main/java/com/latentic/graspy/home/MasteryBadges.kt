@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.latentic.graspy.localization.AppCopy
+import com.latentic.graspy.localization.fillWith
 import com.latentic.graspy.ui.Graspy
 
 /**
@@ -73,7 +74,7 @@ fun MasteryBadges(copy: AppCopy, shelf: MasteryShelf) {
 @Composable
 private fun NextBadgeLine(copy: AppCopy, nearest: CatalogueLesson) {
     Text(
-        copy.home.oneMoreDay.format(nearest.title),
+        copy.home.oneMoreDay.fillWith(nearest.title),
         color = Graspy.TextMuted,
         style = MaterialTheme.typography.bodyMedium,
     )

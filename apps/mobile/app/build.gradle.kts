@@ -7,6 +7,20 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+/** Release signing comes from a Gradle property or the environment, never from a file in the repository. */
+fun releaseSetting(name: String): String? =
+    providers.gradleProperty(name).orElse(providers.environmentVariable(name)).orNull?.takeIf { it.isNotBlank() }
+
+val releaseStoreFile = releaseSetting("GRASPY_RELEASE_STORE_FILE")?.let(::file)
+val releaseKeyAlias = releaseSetting("GRASPY_RELEASE_KEY_ALIAS")
+val releaseStorePassword = releaseSetting("GRASPY_RELEASE_STORE_PASSWORD")
+val releaseSigningMissing = listOfNotNull(
+    "GRASPY_RELEASE_STORE_FILE".takeIf { releaseStoreFile?.isFile != true },
+    "GRASPY_RELEASE_KEY_ALIAS".takeIf { releaseKeyAlias == null },
+    "GRASPY_RELEASE_STORE_PASSWORD".takeIf { releaseStorePassword == null },
+)
+val releasePackaging = setOf("packageRelease", "packageReleaseBundle", "signReleaseBundle")
+
 kapt {
     correctErrorTypes = true
     arguments {
@@ -31,6 +45,18 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
+    signingConfigs {
+        if (releaseSigningMissing.isEmpty()) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                // A PKCS12 keystore has one password, for the store and its key.
+                keyPassword = releaseSetting("GRASPY_RELEASE_KEY_PASSWORD") ?: releaseStorePassword
+            }
+        }
+    }
+
     buildTypes {
         // Dataset recording exists to build the owner's benchmark set, so only test installs carry it.
         debug {
@@ -40,6 +66,7 @@ android {
             buildConfigField("String", "AUTH_EMULATOR", "\"$authEmulator\"")
         }
         release {
+            signingConfig = signingConfigs.findByName("release")
             buildConfigField("boolean", "DATASET_RECORDING", "false")
             buildConfigField("String", "AUTH_EMULATOR", "\"\"")
         }
@@ -52,6 +79,18 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+// A release is signed with graspy's release key or not built at all: never unsigned, never debug-signed.
+gradle.taskGraph.whenReady {
+    val packagesRelease = allTasks.any { it.project == project && it.name in releasePackaging }
+    if (packagesRelease && releaseSigningMissing.isNotEmpty()) {
+        throw GradleException(
+            "A release build needs graspy's release key. Not set, or naming no file: " +
+                "${releaseSigningMissing.joinToString()}. Run scripts/release.sh, which reads the password " +
+                "from the Keychain, or set them as Gradle properties or environment variables (README.md).",
+        )
     }
 }
 

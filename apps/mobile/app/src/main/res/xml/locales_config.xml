@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The languages of the app's words, offered in the phone's per-app language settings. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="yo" />
+    <locale android:name="pcm" />
+    <locale android:name="ar" />
+</locale-config>

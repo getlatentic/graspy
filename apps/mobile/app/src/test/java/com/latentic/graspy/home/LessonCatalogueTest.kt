@@ -1,5 +1,6 @@
 package com.latentic.graspy.home
 
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.copyFor
@@ -11,8 +12,8 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class LessonCatalogueTest {
-    private val copy = copyFor(AppLanguage.ENGLISH)
-    private val yoruba = copyFor(AppLanguage.YORUBA)
+    private val copy = copyFor(InterfaceLanguage.ENGLISH)
+    private val yoruba = copyFor(InterfaceLanguage.YORUBA)
 
     private val payload = """
         {"day": "2026-09-06", "lessons": [
@@ -144,7 +145,7 @@ class LessonCatalogueTest {
         )
         assertEquals(
             listOf("You sabi am", "Don learn am", "Don start", "Never start"),
-            LessonStanding.entries.map { standingBadge(copyFor(AppLanguage.PIDGIN).home, it).label },
+            LessonStanding.entries.map { standingBadge(copyFor(InterfaceLanguage.PIDGIN).home, it).label },
         )
     }
 }

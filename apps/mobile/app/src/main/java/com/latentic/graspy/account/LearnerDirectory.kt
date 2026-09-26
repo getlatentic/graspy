@@ -1,7 +1,6 @@
 package com.latentic.graspy.account
 
 import com.latentic.graspy.localization.LearnerProfileStore
-import retrofit2.HttpException
 
 /** Lists, renames and removes the account's learners, and deletes the account. */
 class LearnerDirectory(
@@ -34,11 +33,3 @@ class LearnerDirectory(
         signOut()
     }
 }
-
-/** The server's code for a refusal, such as `too_many_learners`. Peeked, so the body is still there to read. */
-fun refusalCode(error: Throwable): String? {
-    val body = (error as? HttpException)?.response()?.errorBody()?.source()?.peek()?.readUtf8() ?: return null
-    return REFUSAL_CODE.find(body)?.groupValues?.get(1)
-}
-
-private val REFUSAL_CODE = Regex(""""code"\s*:\s*"([a-z_]+)"""")

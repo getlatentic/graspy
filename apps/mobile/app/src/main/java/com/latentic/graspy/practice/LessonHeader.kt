@@ -1,10 +1,10 @@
 package com.latentic.graspy.practice
 
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,7 +32,7 @@ internal fun LessonHeader(state: ClassroomState, onBack: (() -> Unit)?) {
     ) {
         if (onBack != null) {
             IconButton(onClick = tapping(onBack)) {
-                Icon(Icons.Rounded.ChevronLeft, contentDescription = null, tint = Graspy.Brand)
+                Icon(Icons.AutoMirrored.Rounded.KeyboardArrowLeft, contentDescription = null, tint = Graspy.Brand)
             }
         }
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(5.dp)) {

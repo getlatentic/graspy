@@ -1,7 +1,7 @@
 package com.latentic.graspy.practice
 
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.collection.outbox.SubmissionStatus
-import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -19,7 +19,7 @@ class RecitationFeedbackTextTest {
 
     @Test
     fun `the teacher names the table instead of showing a template placeholder`() {
-        for (language in AppLanguage.entries) {
+        for (language in InterfaceLanguage.entries) {
             val copy = copyFor(language)
             for (decision in PracticeDecision.entries) {
                 val spoken = feedbackText(copy, recitation(2, decision), decision)
@@ -27,7 +27,7 @@ class RecitationFeedbackTextTest {
             }
         }
         val unheard = feedbackText(
-            copyFor(AppLanguage.ENGLISH),
+            copyFor(InterfaceLanguage.ENGLISH),
             recitation(7, PracticeDecision.NOT_UNDERSTOOD),
             PracticeDecision.NOT_UNDERSTOOD,
         )

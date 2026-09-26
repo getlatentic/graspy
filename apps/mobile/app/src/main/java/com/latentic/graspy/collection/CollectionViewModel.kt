@@ -2,6 +2,7 @@ package com.latentic.graspy.collection
 
 import android.Manifest
 import android.app.Application
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
@@ -45,7 +46,7 @@ data class CollectionUiState(
     val provider: String? = null,
     val latencyMs: Int? = null,
     val recitation: RecitationResult? = null,
-    val error: String? = null,
+    val problem: RecordingProblem? = null,
     val failureReason: String? = null,
 )
 
@@ -95,7 +96,7 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
 
     fun grantConsent() {
         consentStore.grant()
-        mutableState.update { it.copy(consentGranted = true, error = null) }
+        mutableState.update { it.copy(consentGranted = true, problem = null) }
     }
 
     fun selectLanguagePair(languagePair: String, spokenLanguage: String? = null) {
@@ -103,7 +104,7 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
         require(spokenLanguage == null || spokenLanguage in SPOKEN_LANGUAGES)
         check(!mutableState.value.isRecording) { "language cannot change during recording" }
         mutableState.update {
-            it.copy(languagePair = languagePair, spokenLanguage = spokenLanguage, error = null)
+            it.copy(languagePair = languagePair, spokenLanguage = spokenLanguage, problem = null)
         }
     }
 
@@ -141,12 +142,13 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
                     provider = null,
                     latencyMs = null,
                     recitation = null,
-                    error = null,
+                    problem = null,
                     failureReason = null,
                 )
             }
         } catch (error: RuntimeException) {
-            mutableState.update { it.copy(error = error.message ?: "recording could not start") }
+            Log.w(TAG, "The recording could not start", error)
+            mutableState.update { it.copy(problem = RecordingProblem.NOT_STARTED) }
         }
     }
 
@@ -179,7 +181,7 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
     fun stopAndQueue(exercise: PracticeExercise) {
         if (!mutableState.value.isRecording) return
         recordingTimeout?.cancel()
-        mutableState.update { it.copy(isRecording = false, isSaving = true, error = null) }
+        mutableState.update { it.copy(isRecording = false, isSaving = true, problem = null) }
         viewModelScope.launch {
             try {
                 val recording = recorder.stop()
@@ -215,9 +217,8 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
                 }
                 dropped.update { it + 1 }
             } catch (error: Exception) {
-                mutableState.update {
-                    it.copy(isSaving = false, error = error.message ?: "recording could not be queued")
-                }
+                Log.w(TAG, "The recording could not be queued", error)
+                mutableState.update { it.copy(isSaving = false, problem = RecordingProblem.NOT_SAVED) }
             }
         }
     }
@@ -230,7 +231,7 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
 
     fun retryFailedSubmission(localId: String? = mutableState.value.queuedLocalId) {
         localId ?: return
-        mutableState.update { it.copy(submissionStatus = SubmissionStatus.PENDING, error = null) }
+        mutableState.update { it.copy(submissionStatus = SubmissionStatus.PENDING, problem = null) }
         viewModelScope.launch {
             repository.retry(localId)
             observeSubmission(localId)
@@ -238,7 +239,7 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun reportPermissionDenied() {
-        mutableState.update { it.copy(error = "Microphone permission is required to record an answer.") }
+        mutableState.update { it.copy(problem = RecordingProblem.MICROPHONE_DENIED) }
     }
 
     private fun observeSubmission(localId: String) {
@@ -279,6 +280,7 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private companion object {
+        const val TAG = "GraspyRecording"
         const val PARTICIPANT_ID = "participant_id"
         val SPOKEN_LANGUAGES = setOf("en", "yo", "pcm")
     }

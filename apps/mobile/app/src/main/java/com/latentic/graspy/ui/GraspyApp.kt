@@ -1,6 +1,7 @@
 package com.latentic.graspy.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -12,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.core.os.ConfigurationCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -30,11 +32,14 @@ import com.latentic.graspy.learners.LearnersScreen
 import com.latentic.graspy.localization.AccountCopy
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.AppLanguageSelection
+import com.latentic.graspy.localization.InterfaceLanguage
+import com.latentic.graspy.localization.InterfaceLanguageStore
 import com.latentic.graspy.localization.LearnerProfile
 import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.localization.accountCopyFor
 import com.latentic.graspy.localization.copyFor
 import com.latentic.graspy.localization.resolveAppLanguage
+import com.latentic.graspy.localization.resolveInterfaceLanguage
 
 /** Signed out, choosing who is learning, managing learners, or learning as the learner chosen. */
 @Composable
@@ -45,30 +50,39 @@ fun GraspyApp() {
     val learnerViewModels: LearnerViewModels = viewModel()
     SideEffect { learnerViewModels.keepOnly(account?.learnerKey) }
     val profile = rememberProfile(graph.profiles, account?.learnerKey)
-    val language = appLanguage(profile.value)
-    val accountCopy = accountCopyFor(language)
+    val words = rememberInterfaceLanguage()
+    val languages = Languages(lessonLanguage(profile.value), resolveInterfaceLanguage(words.value, phoneLanguageTag()), words)
+    val accountCopy = accountCopyFor(languages.words)
     val signOut: SignOutViewModel = viewModel()
     val signingOut by signOut.state.collectAsStateWithLifecycle()
 
     GraspyTheme {
-        val signedIn = account
-        if (signedIn == null) {
-            val signIn: SignInViewModel = viewModel()
-            val state by signIn.state.collectAsStateWithLifecycle()
-            SignInScreen(accountCopy, state, signIn::signIn)
-        } else {
-            SignedIn(graph, signedIn, profile, language, accountCopy, learnerViewModels, signOut::start)
+        CompositionLocalProvider(LocalLayoutDirection provides languages.words.layoutDirection) {
+            val signedIn = account
+            if (signedIn == null) {
+                val signIn: SignInViewModel = viewModel()
+                val state by signIn.state.collectAsStateWithLifecycle()
+                SignInScreen(accountCopy, state, signIn::signIn)
+            } else {
+                SignedIn(graph, signedIn, profile, languages, accountCopy, learnerViewModels, signOut::start)
+            }
+            SignOutDialogs(accountCopy, signingOut, signOut::anyway, signOut::cancel)
         }
-        SignOutDialogs(accountCopy, signingOut, signOut::anyway, signOut::cancel)
     }
 }
+
+/**
+ * The language the teacher speaks, chosen for each learner, and the language of the app's words,
+ * chosen for the phone. [chosenWords] holds that choice: null follows the phone.
+ */
+private class Languages(val lesson: AppLanguage, val words: InterfaceLanguage, val chosenWords: MutableState<InterfaceLanguage?>)
 
 @Composable
 private fun SignedIn(
     graph: AccountGraph,
     account: Account,
     profile: MutableState<LearnerProfile?>,
-    language: AppLanguage,
+    languages: Languages,
     accountCopy: AccountCopy,
     learnerViewModels: LearnerViewModels,
     onSignOut: () -> Unit,
@@ -87,7 +101,7 @@ private fun SignedIn(
             account = account,
             learnerKey = learnerKey,
             profile = profile,
-            language = language,
+            languages = languages,
             accountCopy = accountCopy,
             learnerViewModels = learnerViewModels,
             menu = AccountMenu(
@@ -108,28 +122,29 @@ private fun Learning(
     account: Account,
     learnerKey: String,
     profile: MutableState<LearnerProfile?>,
-    language: AppLanguage,
+    languages: Languages,
     accountCopy: AccountCopy,
     learnerViewModels: LearnerViewModels,
     menu: AccountMenu,
 ) {
     val context = LocalContext.current
     var editingProfile by rememberSaveable { mutableStateOf(false) }
-    val copy = copyFor(language)
+    val copy = copyFor(languages.words)
     LaunchedEffect(learnerKey) {
         AppGraph.submissionRepository(context.applicationContext).recoverIncomplete(learnerKey)
     }
     val current = profile.value
     if (current == null || editingProfile) {
-        OnboardingScreen(copy = copy, initial = current, askLanguage = editingProfile) { chosen ->
+        OnboardingScreen(copy, current, askLanguage = editingProfile, interfaceLanguage = languages.chosenWords.value) { chosen, words ->
             graph.profiles.save(learnerKey, chosen)
             profile.value = chosen
+            languages.chosenWords.value = words
             editingProfile = false
         }
         return
     }
     LearnerScope(learnerKey, learnerViewModels) {
-        GraspyRoot(copy, accountCopy, language, current, account, menu.copy(onEditProfile = { editingProfile = true }))
+        GraspyRoot(copy, accountCopy, languages.lesson, languages.words, current, account, menu.copy(onEditProfile = { editingProfile = true }))
     }
 }
 
@@ -148,9 +163,20 @@ private fun rememberProfile(profiles: LearnerProfileStore, learnerKey: String?):
     return profile
 }
 
-/** Before a learner is chosen, the phone's own language. */
 @Composable
-private fun appLanguage(profile: LearnerProfile?): AppLanguage {
-    val phoneLanguage = ConfigurationCompat.getLocales(LocalConfiguration.current).get(0)?.toLanguageTag().orEmpty()
-    return resolveAppLanguage(profile?.language ?: AppLanguageSelection.SYSTEM, phoneLanguage)
+private fun phoneLanguageTag(): String =
+    ConfigurationCompat.getLocales(LocalConfiguration.current).get(0)?.toLanguageTag().orEmpty()
+
+/** The language the teacher speaks; before a learner has chosen one, the phone's, when she speaks it. */
+@Composable
+private fun lessonLanguage(profile: LearnerProfile?): AppLanguage =
+    resolveAppLanguage(profile?.language ?: AppLanguageSelection.SYSTEM, phoneLanguageTag())
+
+/** Saved whenever it changes; it outlives signing out, as the web keeps it for the browser. */
+@Composable
+private fun rememberInterfaceLanguage(): MutableState<InterfaceLanguage?> {
+    val store = InterfaceLanguageStore(LocalContext.current.applicationContext)
+    val chosen = remember { mutableStateOf(store.chosen()) }
+    LaunchedEffect(chosen.value) { store.choose(chosen.value) }
+    return chosen
 }

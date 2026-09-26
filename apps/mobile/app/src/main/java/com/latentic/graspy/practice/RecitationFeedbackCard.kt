@@ -1,5 +1,7 @@
 package com.latentic.graspy.practice
 
+import com.latentic.graspy.ui.leftToRight
+import com.latentic.graspy.ui.LeftToRight
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.localization.AppCopy
 import com.latentic.graspy.localization.LessonCopy
+import com.latentic.graspy.localization.fillWith
 import com.latentic.graspy.ui.Graspy
 import com.latentic.graspy.ui.Nunito
 import kotlinx.serialization.SerialName
@@ -31,10 +34,10 @@ import kotlinx.serialization.SerializationException
 
 data class FactLine(val fact: String, val note: String?)
 
-private fun LessonCopy.fact(exercise: PracticeExercise.FactAnswer, template: String): String = template.format(
-    Curriculum.NUMBER_WORDS.getValue(exercise.table),
-    Curriculum.NUMBER_WORDS.getValue(exercise.multiplier),
-    numberWords(exercise.expected),
+private fun LessonCopy.fact(exercise: PracticeExercise.FactAnswer, template: String): String = template.fillWith(
+    number(exercise.table),
+    number(exercise.multiplier),
+    number(exercise.expected),
 )
 
 /**
@@ -71,7 +74,7 @@ internal fun requestedFactLines(exercise: PracticeExercise.TimesTableRecitation)
     exercise.multipliers.map { FactLine("${exercise.table} × $it", null) }
 
 internal fun recitationSummary(copy: LessonCopy, exercise: PracticeExercise.TimesTableRecitation, result: RecitationResult): String =
-    copy.factsCorrectTemplate.format(result.correctMultipliers.size, exercise.multipliers.count())
+    copy.factsCorrectTemplate.fillWith(result.correctMultipliers.size, exercise.multipliers.count())
 
 internal fun missingFactLines(exercise: PracticeExercise.TimesTableRecitation, result: RecitationResult): List<FactLine> =
     result.missingMultipliers.map { FactLine("${exercise.table} × $it", null) }
@@ -81,7 +84,7 @@ internal fun uncertainFactLines(exercise: PracticeExercise.TimesTableRecitation,
 
 internal fun incorrectFactLines(copy: LessonCopy, exercise: PracticeExercise.TimesTableRecitation, result: RecitationResult): List<FactLine> =
     result.incorrectFacts.map {
-        FactLine("${exercise.table} × ${it.multiplier}", copy.heardTemplate.format(it.heard, it.expected))
+        FactLine("${exercise.table} × ${it.multiplier}", copy.heardTemplate.fillWith(it.heard, it.expected))
     }
 
 /** One segment per fact: green said correctly, red wrong, sun not sure, grey not heard. */
@@ -132,8 +135,8 @@ fun FactResultCard(copy: LessonCopy, exercise: PracticeExercise.FactAnswer, outc
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(copy.factResultEyebrow.uppercase(), color = Graspy.AccentText, style = MaterialTheme.typography.labelMedium)
-        Text("${exercise.table} × ${exercise.multiplier} = ${exercise.expected}", color = if (wrong) Graspy.Danger else Graspy.Text, style = MaterialTheme.typography.headlineSmall)
-        if (wrong) Text(copy.youSaid.format(outcome.parsedAnswer), color = Graspy.TextMuted, fontFamily = Nunito, fontSize = 13.sp)
+        Text("${exercise.table} × ${exercise.multiplier} = ${exercise.expected}", color = if (wrong) Graspy.Danger else Graspy.Text, style = MaterialTheme.typography.headlineSmall.leftToRight())
+        if (wrong) Text(copy.youSaid.fillWith(outcome.parsedAnswer), color = Graspy.TextMuted, fontFamily = Nunito, fontSize = 13.sp)
     }
 }
 
@@ -168,7 +171,7 @@ fun SequenceResultCard(copy: LessonCopy, result: SequenceResult) {
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(copy.factResultEyebrow.uppercase(), color = Graspy.AccentText, style = MaterialTheme.typography.labelMedium)
-        Text(copy.factsCorrectTemplate.format(result.said.size, total), color = Graspy.Text, style = MaterialTheme.typography.headlineSmall)
+        Text(copy.factsCorrectTemplate.fillWith(result.said.size, total), color = Graspy.Text, style = MaterialTheme.typography.headlineSmall)
         FactChips(copy.uncertainFacts, result.outOfOrder.map { FactLine(it, null) }, Graspy.WarningSurface, Graspy.WarningText)
         FactChips(copy.missingFacts, result.missing.map { FactLine(it, null) }, Graspy.Background, Graspy.TextMuted)
     }
@@ -185,7 +188,7 @@ internal fun FactChips(title: String, lines: List<FactLine>, chip: Color, text: 
                     Modifier.background(chip, RoundedCornerShape(999.dp)).padding(horizontal = 10.dp, vertical = 5.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(line.fact, color = text, fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                    Text(line.fact, color = text, fontFamily = Nunito, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, style = LeftToRight)
                     if (line.note != null) Text(line.note, color = text, fontFamily = Nunito, fontSize = 13.sp)
                 }
             }

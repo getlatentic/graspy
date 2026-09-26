@@ -1,8 +1,8 @@
 package com.latentic.graspy.practice
 
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.collection.EvaluatedSampleDto
 import com.latentic.graspy.collection.outbox.apiJson
-import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -45,7 +45,7 @@ class RecitationResultTest {
 
     @Test
     fun `the feedback card names the count, missing facts and heard values`() {
-        val copy = copyFor(AppLanguage.ENGLISH).lesson
+        val copy = copyFor(InterfaceLanguage.ENGLISH).lesson
         val exercise = PracticeExercise.TimesTableRecitation.TABLE_1
         val result = apiJson.decodeFromString(EvaluatedSampleDto.serializer(), worker).result!!
         assertEquals("8 of 12 said correctly", recitationSummary(copy, exercise, result))

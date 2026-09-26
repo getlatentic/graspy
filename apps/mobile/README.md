@@ -28,6 +28,14 @@ cd apps/mobile
 
 Unit tests run on the JVM. Tests that need Android (Room, preferences, files) run under Robolectric, which downloads its Android jars on the first run.
 
+## Release
+
+```bash
+apps/mobile/scripts/release.sh
+```
+
+It builds the signed bundle (`app/build/outputs/bundle/release/app-release.aab`) and APK with the release key, `~/.config/graspy/signing/graspy-release.jks` (alias `graspy`, backed up in iCloud Drive under `graspy-release`). The password comes from the Keychain item `graspy-release-keystore` into Gradle's environment only. Elsewhere, set `GRASPY_RELEASE_STORE_FILE`, `GRASPY_RELEASE_KEY_ALIAS` and `GRASPY_RELEASE_STORE_PASSWORD` as environment variables or Gradle properties outside the repository. Without them a release build stops; it is never built unsigned or with the debug key. Certificate SHA-1 `56:7C:36:8A:AA:8F:E7:40:1B:E3:06:18:86:1C:47:8B:58:B1:E4:78`.
+
 ## Run against a local API
 
 Voice lessons run only on the Worker, so the local API answers `503` for them; signing in, choosing a learner and managing learners work. Start the Auth emulator and the API from the repository root, as for the web app ([docs/DEVELOPMENT.md](../../docs/DEVELOPMENT.md)):

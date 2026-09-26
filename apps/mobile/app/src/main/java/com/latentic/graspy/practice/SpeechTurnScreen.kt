@@ -1,5 +1,6 @@
 package com.latentic.graspy.practice
 
+import com.latentic.graspy.ui.LeftToRight
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -37,6 +38,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.latentic.graspy.collection.CollectionViewModel
+import com.latentic.graspy.collection.text
 import com.latentic.graspy.collection.outbox.SubmissionStatus
 import com.latentic.graspy.localization.AppCopy
 import com.latentic.graspy.ui.Correct
@@ -74,15 +76,15 @@ fun SpeechTurnScreen(
                 Text(copy.back, color = Graspy.Brand, style = MaterialTheme.typography.labelLarge)
             }
             Text(modeLabel, color = Graspy.TextCaption, style = MaterialTheme.typography.labelMedium)
-            Text("Help Graspy listen better.", color = Graspy.Text, style = MaterialTheme.typography.headlineLarge)
+            Text(copy.contributeTitle, color = Graspy.Text, style = MaterialTheme.typography.headlineLarge)
             Card(
                 colors = CardDefaults.cardColors(containerColor = Graspy.Surface),
                 border = BorderStroke(1.dp, Graspy.Border),
                 shape = RoundedCornerShape(20.dp),
             ) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("QUESTION", color = Graspy.TextCaption, style = MaterialTheme.typography.labelMedium)
-                    Text("7 × 8", color = Graspy.Text, fontSize = 48.sp, lineHeight = 54.sp, fontWeight = FontWeight.SemiBold)
+                    Text(copy.question, color = Graspy.TextCaption, style = MaterialTheme.typography.labelMedium)
+                    Text("7 × 8", color = Graspy.Text, fontSize = 48.sp, lineHeight = 54.sp, fontWeight = FontWeight.SemiBold, style = LeftToRight)
                     Text(copy.prompt, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyLarge)
                 }
             }
@@ -147,11 +149,11 @@ fun SpeechTurnScreen(
                         Text(copy.feedbackQuestion, color = Graspy.TextMuted, fontSize = 14.sp)
                         if (feedbackResponse == null) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { feedbackResponse = true }) { Text("Yes") }
-                                OutlinedButton(onClick = { feedbackResponse = false }) { Text("No") }
+                                OutlinedButton(onClick = { feedbackResponse = true }) { Text(copy.yes) }
+                                OutlinedButton(onClick = { feedbackResponse = false }) { Text(copy.no) }
                             }
                         } else {
-                            Text("Thanks for checking.", color = Graspy.TextMuted, style = MaterialTheme.typography.labelLarge)
+                            Text(copy.thanksForChecking, color = Graspy.TextMuted, style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -164,7 +166,7 @@ fun SpeechTurnScreen(
                 }
                 Text(message, color = Graspy.TextMuted)
             }
-            (state.error ?: state.failureReason)?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            (state.problem?.text(copy) ?: state.failureReason)?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
     }
 }

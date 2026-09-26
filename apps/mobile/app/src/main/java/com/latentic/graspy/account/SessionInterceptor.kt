@@ -1,5 +1,6 @@
 package com.latentic.graspy.account
 
+import com.latentic.graspy.network.refusalCode
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
@@ -11,9 +12,11 @@ import okhttp3.Response
 data class RequestLearner(val key: String)
 
 /**
- * Sends the graspy session with every request, and on a 401 exchanges the sign-in for a new session
- * and sends the request once more. It must come before the transport: Cronet answers the request
- * itself, so OkHttp's own authenticator would never see the 401.
+ * Sends the graspy session with every request. On a 401, or a 409 saying the session names no learner
+ * while the device learns as one, it exchanges the sign-in for a new session and sends the request once
+ * more. The exchange follows the learner: one removed elsewhere is left, and the device asks who is
+ * learning. It must come before the transport: Cronet answers the request itself, so OkHttp's own
+ * authenticator would never see the 401.
  */
 class SessionInterceptor(
     private val sessions: SessionTokens,
@@ -24,7 +27,7 @@ class SessionInterceptor(
         val token = session { token() }
         requireLearner(request)
         val response = chain.proceed(request.bearing(token))
-        if (response.code != UNAUTHORIZED) return response
+        if (!needsNewSession(response)) return response
         response.close()
         val renewed = session { renew(token) }
         requireLearner(request)
@@ -42,6 +45,12 @@ class SessionInterceptor(
         throw IOException("graspy did not issue a session: ${error.message}", error)
     }
 
+    private fun needsNewSession(response: Response): Boolean = when (response.code) {
+        UNAUTHORIZED -> true
+        CONFLICT -> learnerInUse() != null && refusalCode(response.peekBody(REFUSAL_BYTES).string()) == LEARNER_REQUIRED
+        else -> false
+    }
+
     private fun requireLearner(request: Request) {
         val wanted = request.tag(RequestLearner::class.java)?.key ?: return
         if (wanted != learnerInUse()) throw IOException("That learner is no longer learning on this device")
@@ -52,5 +61,8 @@ class SessionInterceptor(
 
     private companion object {
         const val UNAUTHORIZED = 401
+        const val CONFLICT = 409
+        const val LEARNER_REQUIRED = "learner_required"
+        const val REFUSAL_BYTES = 4_096L
     }
 }

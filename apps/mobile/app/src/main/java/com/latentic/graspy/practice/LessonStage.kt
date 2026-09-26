@@ -1,5 +1,6 @@
 package com.latentic.graspy.practice
 
+import com.latentic.graspy.ui.leftToRight
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
@@ -52,7 +53,7 @@ internal fun LessonStage(state: ClassroomState, copy: AppCopy, language: AppLang
             // Shrinks rather than wraps: "12 × 12 = 144" stays one line on a small phone.
             BasicText(
                 it,
-                style = MaterialTheme.typography.displayLarge.copy(color = Graspy.Brand, textAlign = TextAlign.Center),
+                style = MaterialTheme.typography.displayLarge.copy(color = Graspy.Brand, textAlign = TextAlign.Center).leftToRight(),
                 maxLines = 1,
                 autoSize = TextAutoSize.StepBased(minFontSize = 36.sp, maxFontSize = 64.sp),
             )

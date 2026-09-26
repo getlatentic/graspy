@@ -5,19 +5,19 @@ import androidx.core.content.edit
 import com.latentic.graspy.account.PreferenceFiles
 
 /** Nigerian school classes graspy teaches; the wire value travels with every sample. */
-enum class SchoolClass(val wireValue: String, val label: String, val primary: Boolean) {
-    NURSERY_1("nursery_1", "Nursery 1 · age 3", true),
-    NURSERY_2("nursery_2", "Nursery 2 · age 4", true),
-    KINDERGARTEN("kindergarten", "Nursery 3 / KG · age 5", true),
-    PRIMARY_1("primary_1", "Primary 1", true),
-    PRIMARY_2("primary_2", "Primary 2", true),
-    PRIMARY_3("primary_3", "Primary 3", true),
-    PRIMARY_4("primary_4", "Primary 4", true),
-    PRIMARY_5("primary_5", "Primary 5", true),
-    PRIMARY_6("primary_6", "Primary 6", true),
-    JSS_1("jss_1", "JSS 1", false),
-    JSS_2("jss_2", "JSS 2", false),
-    JSS_3("jss_3", "JSS 3", false),
+enum class SchoolClass(val wireValue: String, val primary: Boolean) {
+    NURSERY_1("nursery_1", true),
+    NURSERY_2("nursery_2", true),
+    KINDERGARTEN("kindergarten", true),
+    PRIMARY_1("primary_1", true),
+    PRIMARY_2("primary_2", true),
+    PRIMARY_3("primary_3", true),
+    PRIMARY_4("primary_4", true),
+    PRIMARY_5("primary_5", true),
+    PRIMARY_6("primary_6", true),
+    JSS_1("jss_1", false),
+    JSS_2("jss_2", false),
+    JSS_3("jss_3", false),
     ;
 
     companion object {

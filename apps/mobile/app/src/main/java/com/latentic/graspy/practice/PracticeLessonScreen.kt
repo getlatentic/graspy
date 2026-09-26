@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.latentic.graspy.collection.CollectionViewModel
+import com.latentic.graspy.collection.text
 import com.latentic.graspy.localization.*
 import com.latentic.graspy.ui.Graspy
 import com.latentic.graspy.ui.animationsAllowed
@@ -48,6 +49,7 @@ private const val MOTION_MS = 220
 fun PracticeLessonScreen(
     copy: AppCopy,
     appLanguage: AppLanguage,
+    interfaceLanguage: InterfaceLanguage,
     languageSelection: AppLanguageSelection,
     schoolClass: SchoolClass,
     teacher: Teacher = Teacher.AUNTY_CHIOMA,
@@ -62,7 +64,7 @@ fun PracticeLessonScreen(
     val voiceLevels by collectionViewModel.voiceLevels.collectAsStateWithLifecycle()
     val droppedTakes by collectionViewModel.droppedTakes.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val labels = classroomCopy(appLanguage)
+    val labels = classroomCopy(interfaceLanguage)
     val conversation = rememberScrollState()
     val exercise = classroom.move?.exercise
     val speaking = voice == TeacherVoiceState.SPEAKING || voice == TeacherVoiceState.BUFFERING
@@ -203,8 +205,8 @@ fun PracticeLessonScreen(
                 Settling(voice == TeacherVoiceState.FAILED, motion) {
                     Text(copy.lesson.teacherAudioFailed, color = Graspy.Danger)
                 }
-                Settling(recording.error != null, motion) {
-                    Text(recording.error.orEmpty(), color = Graspy.Danger)
+                Settling(recording.problem != null, motion) {
+                    Text(recording.problem?.text(copy).orEmpty(), color = Graspy.Danger)
                 }
             }
             // The one button sits in a foot of fixed height outside the scrolling lesson, so however long

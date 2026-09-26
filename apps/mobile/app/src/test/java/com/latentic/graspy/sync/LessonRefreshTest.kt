@@ -4,6 +4,7 @@ import androidx.work.BackoffPolicy
 import androidx.work.NetworkType
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
+import com.latentic.graspy.collection.VoiceRefusal
 import com.latentic.graspy.collection.outbox.UploadDisposition
 import com.latentic.graspy.collection.outbox.UploadFailurePolicy
 import com.latentic.graspy.localization.AppLanguage
@@ -68,15 +69,18 @@ class LessonRefreshTest {
     }
 
     @Test
-    fun `a 409 means the step was never this learner's, so it is taken again rather than retried`() {
-        assertTrue(stepWasNotOffered(httpError(409)))
-        assertFalse(stepWasNotOffered(httpError(500)))
-        assertEquals(UploadDisposition.PERMANENT_FAILURE, UploadFailurePolicy.forHttp(409, attemptIndex = 0))
+    fun `a step never offered is taken again rather than retried`() {
+        val refused = httpError(409, """{"detail":"that step was not offered to this learner","code":"step_not_offered"}""")
+
+        assertEquals(VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.of(refused))
+        assertEquals(
+            UploadDisposition.PERMANENT_FAILURE,
+            UploadFailurePolicy.forHttp(409, attemptIndex = 0, refusal = VoiceRefusal.of(refused)),
+        )
         assertEquals(UploadDisposition.RETRY, UploadFailurePolicy.forHttp(503, attemptIndex = 0))
     }
 
-    private fun httpError(code: Int) = HttpException(
-        Response.error<Unit>(code, """{"detail":"that step was not offered to this learner"}"""
-            .toResponseBody("application/json".toMediaType())),
+    private fun httpError(code: Int, body: String) = HttpException(
+        Response.error<Unit>(code, body.toResponseBody("application/json".toMediaType())),
     )
 }

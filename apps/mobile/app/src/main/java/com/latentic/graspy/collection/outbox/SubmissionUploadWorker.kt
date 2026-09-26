@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.latentic.graspy.collection.ConsentDto
+import com.latentic.graspy.collection.VoiceRefusal
 import com.latentic.graspy.collection.CreateSampleRequestDto
 import com.latentic.graspy.collection.isCompleteFor
 import com.latentic.graspy.localization.AppLanguage
@@ -11,7 +12,6 @@ import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.resolveAppLanguage
 import com.latentic.graspy.practice.fromSpoken
 import com.latentic.graspy.sync.LessonRefreshRequest
-import com.latentic.graspy.sync.stepWasNotOffered
 import java.io.File
 import java.io.IOException
 import java.util.Locale
@@ -94,11 +94,12 @@ class SubmissionUploadWorker(
             refreshLesson(ownerId, learnerClass)
             Result.success()
         } catch (error: HttpException) {
-            if (stepWasNotOffered(error)) refreshLesson(ownerId, learnerClass)
+            val refusal = VoiceRefusal.of(error)
+            if (refusal == VoiceRefusal.STEP_NOT_OFFERED) refreshLesson(ownerId, learnerClass)
             handleFailure(
                 localId,
                 failureCode(error) ?: "sample API returned HTTP ${error.code()}",
-                UploadFailurePolicy.forHttp(error.code(), runAttemptCount),
+                UploadFailurePolicy.forHttp(error.code(), runAttemptCount, refusal),
                 dao,
             )
         } catch (error: IOException) {
@@ -133,6 +134,10 @@ class SubmissionUploadWorker(
         UploadDisposition.PERMANENT_FAILURE -> {
             dao.markFailed(localId, reason)
             Result.failure()
+        }
+        UploadDisposition.WAIT_FOR_LEARNER -> {
+            dao.markPending(localId, "Waiting for the recording's learner")
+            Result.success()
         }
     }
 

@@ -1,13 +1,13 @@
 package com.latentic.graspy.practice
 
-import com.latentic.graspy.localization.AppLanguage
+import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class PracticeLessonScreenTest {
-    private val copy = copyFor(AppLanguage.ENGLISH)
+    private val copy = copyFor(InterfaceLanguage.ENGLISH)
 
     @Test
     fun `local silent recording explains how to retry`() {

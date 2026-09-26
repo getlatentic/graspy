@@ -1,5 +1,7 @@
 package com.latentic.graspy.practice
 
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import com.latentic.graspy.ui.leftToRight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -103,7 +104,7 @@ fun MemoryBoard(items: List<BoardItem>, modifier: Modifier = Modifier) {
             Text(
                 item.label,
                 color = text,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.leftToRight(),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .background(background, RoundedCornerShape(14.dp))
@@ -150,7 +151,7 @@ fun TeacherSpeakerButton(
             )
         } else {
             Icon(
-                Icons.Rounded.VolumeUp,
+                Icons.AutoMirrored.Rounded.VolumeUp,
                 contentDescription = null,
                 tint = if (leading) Graspy.OnAction else Graspy.Brand,
                 modifier = Modifier.size(44.dp),

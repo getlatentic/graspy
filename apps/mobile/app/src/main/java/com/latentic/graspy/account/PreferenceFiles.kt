@@ -6,6 +6,9 @@ object PreferenceFiles {
     const val DEVICE = "graspy_device"
     const val PROFILES = "graspy_profile"
     const val DEVICE_LANGUAGE = "graspy_language"
+
+    /** The app's words, chosen for the phone: kept when anyone signs out. */
+    const val INTERFACE = "graspy_interface"
     const val PLAYBACK = "lesson-playback"
     const val CONSENT = "graspy_recording_consent"
     const val IDENTITY = "graspy_identity"

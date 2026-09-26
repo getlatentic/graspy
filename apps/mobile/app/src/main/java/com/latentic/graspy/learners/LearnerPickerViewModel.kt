@@ -6,8 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.account.UnsentChanges
-import com.latentic.graspy.account.refusalCode
 import com.latentic.graspy.collection.outbox.AppGraph
+import com.latentic.graspy.network.refusalCode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
