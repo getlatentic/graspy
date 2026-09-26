@@ -39,7 +39,7 @@ fun LearnerRow(
         RowMode.RENAMING -> RenameForm(copy, learner.name, busy, { onRename(it) { mode = RowMode.SHOWN } }) { mode = RowMode.SHOWN }
         RowMode.REMOVING -> ConfirmCard(
             question = copy.removeConfirm.withName(learner.name),
-            confirm = copy.removeYes.withName(learner.name),
+            confirm = copy.removeYes,
             cancel = copy.cancel,
             busy = busy,
             onConfirm = onRemove,

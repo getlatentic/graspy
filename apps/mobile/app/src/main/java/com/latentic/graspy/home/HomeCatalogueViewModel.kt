@@ -30,7 +30,6 @@ sealed interface CatalogueState {
     data class Ready(
         val current: CatalogueLesson?,
         val topics: List<TopicLessons>,
-        val refreshing: Boolean,
     ) : CatalogueState
 
     /** Nothing is stored yet and the Worker cannot be reached. */
@@ -47,8 +46,8 @@ fun catalogueState(
     online: Boolean,
 ): CatalogueState = when {
     lessons.isNotEmpty() ->
-        CatalogueState.Ready(lessons.currentLesson(), lessons.byTopic(), refresh == RefreshState.RUNNING)
-    refresh == RefreshState.SUCCEEDED -> CatalogueState.Ready(null, emptyList(), false)
+        CatalogueState.Ready(lessons.currentLesson(), lessons.byTopic())
+    refresh == RefreshState.SUCCEEDED -> CatalogueState.Ready(null, emptyList())
     refresh == RefreshState.FAILED || !online -> CatalogueState.Failed
     else -> CatalogueState.Loading
 }

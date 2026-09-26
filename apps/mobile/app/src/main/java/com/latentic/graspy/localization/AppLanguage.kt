@@ -35,48 +35,9 @@ fun resolveAppLanguage(selection: AppLanguageSelection, osLanguageTag: String): 
     }
 
 data class AppCopy(
-    /** What each curriculum subject is called, keyed by the subject folder in the plans. */
-    val subjects: Map<String, String>,
     val topics: Map<String, String>,
-    val tagline: String,
-    val introduction: String,
-    val appLanguage: String,
-    val phoneLanguage: String,
-    val startPractice: String,
-    val startLesson: String,
-    val listen: String,
-    val preparingTeacher: String,
-    val practiceDetail: String,
-    val practise: String,
-    val contribute: String,
-    val recordEvaluation: String,
-    val contributionDetail: String,
-    val record: String,
-    val back: String,
-    val prompt: String,
-    val practiceDisclosure: String,
-    val contributionDisclosure: String,
-    val allowRecording: String,
-    val consentRecorded: String,
-    val languagePair: String,
-    val yorubaEnglish: String,
-    val pidginEnglish: String,
-    val recordAnswer: String,
-    val stopAndCheck: String,
-    val saving: String,
     val transcript: String,
-    val queued: String,
-    val retained: String,
-    val uploaded: String,
-    val feedbackQuestion: String,
-    val correctFeedback: String,
-    val wrongAnswerTemplate: String,
     val notUnderstoodFeedback: String,
-    val contributeTitle: String,
-    val question: String,
-    val yes: String,
-    val no: String,
-    val thanksForChecking: String,
     val microphoneNeeded: String,
     val recordingNotStarted: String,
     val recordingNotSaved: String,
@@ -85,21 +46,14 @@ data class AppCopy(
     val onboarding: OnboardingCopy,
 )
 
-/** A curriculum subject as the learner reads it; a subject with no name still reads as one. */
-fun AppCopy.subjectName(subject: String): String =
-    subjects[subject] ?: subject.replaceFirstChar(Char::uppercase)
-
 /** The theme a lesson sits under, named as a learner would say it rather than as the file is filed. */
 fun AppCopy.topicName(topic: String): String =
     topics[topic] ?: topic.replaceFirstChar(Char::uppercase)
 
 /** Home: the lesson the teacher gives next, then the class's lessons and how far each one has come. */
 data class HomeCopy(
-    val tab: String,
     val title: String,
-    val nextLesson: String,
     val loading: String,
-    val refreshing: String,
     val loadFailed: String,
     val retry: String,
     val noLessons: String,
@@ -111,7 +65,6 @@ data class HomeCopy(
     val oneMoreDay: String,
     val almostThere: String,
     val startHere: String,
-    val yourTeacher: String,
 )
 
 data class OnboardingCopy(
@@ -120,7 +73,6 @@ data class OnboardingCopy(
     /** Said where the lesson language is chosen: the teacher speaks only these, whatever the app's words. */
     val lessonLanguageNote: String,
     val whichInterface: String,
-    val interfaceNote: String,
     /** The app's words in the learner's lesson language, until other words are chosen. */
     val followLessons: String,
     val next: String,
@@ -133,80 +85,32 @@ data class OnboardingCopy(
 }
 
 data class LessonCopy(
-    val steps: List<String>,
-    val teacherPromptNext: String,
-    val eyebrow: String,
-    val title: String,
-    val detail: String,
-    val teacherPrompt: String,
-    val teacherReady: String,
     val teacherSpeaking: String,
     val yourTurn: String,
     val sayItYourWay: String,
     val speakNow: String,
     val recordTable: String,
     val stopAndSend: String,
-    val yourVoiceNote: String,
-    val listening: String,
     val sending: String,
-    val sent: String,
     val analysing: String,
-    val feedbackReady: String,
-    val factsCorrectTemplate: String,
-    val missingFacts: String,
-    val uncertainFacts: String,
-    val wrongFacts: String,
-    val heardTemplate: String,
-    val completeFeedback: String,
-    val retryFeedback: String,
     val notUnderstoodFeedback: String,
     val playAgain: String,
     val teacherAudioFailed: String,
-    val retryTeacherAudio: String,
     val waitingForTeacher: String,
-    val keptOnPhone: String,
-    val showWords: String,
-    val showMaths: String,
-    val threadSubtitle: String,
-    val today: String,
-    val resultEyebrow: String,
-    val sendFailed: String,
     val noSpeech: String,
     val couldNotCheck: String,
-    val noWords: String,
     val learnFact: String,
-    val askFact: String,
-    val retryFacts: String,
     val correctShort: String,
-    val doneToday: String,
-    val masteredTable: String,
-    val finished: String,
-    val youSaid: String,
     val tryAgain: String,
-    val factResultEyebrow: String,
-    val chats: String,
-    val openChat: String,
+    val loading: String,
+    val loadFailed: String,
     /** Whether a table's numbers read as the words the teacher says them in, or as digits. */
     val numbersInWords: Boolean = true,
 ) {
     fun number(value: Int): String = if (numbersInWords) numberWords(value) else value.toString()
 
-    /** Resolve every table template for one lesson; the number word stays English in all modes. */
-    fun forTable(table: Int): LessonCopy {
-        val word = number(table)
-        fun String.filled() = replace("%1\$s", word)
-        return copy(
-            title = title.filled(),
-            detail = detail.filled(),
-            teacherPrompt = (if (table == 1) teacherPrompt else teacherPromptNext).filled(),
-            threadSubtitle = threadSubtitle.filled(),
-            doneToday = doneToday.filled(),
-            masteredTable = masteredTable.filled(),
-            completeFeedback = completeFeedback.filled(),
-            retryFeedback = retryFeedback.filled(),
-            notUnderstoodFeedback = notUnderstoodFeedback.filled(),
-        )
-    }
+    /** Her stored words name the table the learner was reciting, in the words she says it in. */
+    fun forTable(table: Int): LessonCopy = copy(notUnderstoodFeedback = notUnderstoodFeedback.replace("%1\$s", number(table)))
 }
 
 fun copyFor(language: InterfaceLanguage): AppCopy = when (language) {

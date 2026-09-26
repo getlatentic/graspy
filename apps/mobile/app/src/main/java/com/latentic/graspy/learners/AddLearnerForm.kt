@@ -44,7 +44,7 @@ fun AddLearnerForm(copy: AccountCopy, busy: Boolean, onAdd: (String) -> Unit, on
     var name by rememberSaveable { mutableStateOf("") }
     var guardian by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        AccountHeading(copy.addTitle, copy.addBody)
+        AccountHeading(copy.addTitle)
         LearnerNameField(copy.nameLabel, name, autoFocus = true) { name = it }
         GuardianCheck(copy.guardian, guardian) { guardian = it }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

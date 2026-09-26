@@ -28,7 +28,7 @@ class LearnerIsolationTest {
     @Test
     fun `one learner's answers never show for another`() = runBlocking {
         answers.insert(answer("ada-1", ada))
-        answers.insert(answer("bayo-1", bayo, SubmissionStatus.COMPLETED, consentScope = "lesson"))
+        answers.insert(answer("bayo-1", bayo, SubmissionStatus.COMPLETED))
 
         assertEquals(listOf("ada-1"), answers.observeLessonTurns(ada).first().map { it.localId })
         assertEquals(listOf("bayo-1"), answers.observeLessonTurns(bayo).first().map { it.localId })
@@ -36,8 +36,6 @@ class LearnerIsolationTest {
         assertEquals(emptyList<String>(), answers.findIncomplete(bayo).map { it.localId })
         assertEquals(1, answers.observeIncompleteCount(ada).first())
         assertEquals(0, answers.observeIncompleteCount(bayo).first())
-        assertTrue(answers.hasRecordedConsent(ada))
-        assertFalse(answers.hasRecordedConsent(bayo))
     }
 
     @Test

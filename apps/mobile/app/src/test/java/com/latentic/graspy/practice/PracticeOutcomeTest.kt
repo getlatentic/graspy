@@ -57,7 +57,7 @@ class PracticeOutcomeTest {
         task = "reasoning",
         topic = "multiplication",
         promptId = "mul_7x8_explain",
-        consentScope = "hackathon_evaluation",
+        consentScope = "voice_lesson",
         status = SubmissionStatus.COMPLETED.name,
         serverSampleId = "gvm_sample",
         uploadPath = null,

@@ -30,16 +30,6 @@ class SubmissionRepositoryTest {
     }
 
     @Test
-    fun `a retry re-queues the stored submission and schedules it again`() = runBlocking {
-        val events = mutableListOf<String>()
-        val repository = SubmissionRepository(FakeSubmissionDao(events), SubmissionScheduler { events += "schedule:$it" })
-
-        repository.retry("local-9")
-
-        assertEquals(listOf("pending:local-9", "schedule:local-9"), events)
-    }
-
-    @Test
     fun `startup recovery schedules only the signed in owners incomplete submissions`() = runBlocking {
         val scheduled = mutableListOf<String>()
         val dao = FakeSubmissionDao(mutableListOf()).apply {
@@ -76,9 +66,7 @@ class SubmissionRepositoryTest {
 
         override fun observeIncompleteCount(ownerId: String): Flow<Int> = flowOf(incomplete.count { it.ownerId == ownerId })
 
-        override suspend fun hasRecordedConsent(ownerId: String) = submission?.ownerId == ownerId || incomplete.any { it.ownerId == ownerId }
-
-        override suspend fun holdsAny(ownerId: String) = hasRecordedConsent(ownerId)
+        override suspend fun holdsAny(ownerId: String) = submission?.ownerId == ownerId || incomplete.any { it.ownerId == ownerId }
 
         override suspend fun claim(uid: String, learnerKey: String) = Unit
 
@@ -119,7 +107,7 @@ class SubmissionRepositoryTest {
             task = "reasoning",
             topic = "multiplication",
             promptId = "seven-times-eight",
-            consentScope = "hackathon_evaluation",
+            consentScope = "voice_lesson",
         )
 
         fun entity(localId: String) = SubmissionEntity(
@@ -134,7 +122,7 @@ class SubmissionRepositoryTest {
             task = "reasoning",
             topic = "multiplication",
             promptId = null,
-            consentScope = "hackathon_evaluation",
+            consentScope = "voice_lesson",
             status = SubmissionStatus.PENDING.name,
             serverSampleId = null,
             uploadPath = null,

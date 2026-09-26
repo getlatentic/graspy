@@ -5,6 +5,6 @@
         <item name="android:navigationBarColor">@color/graspy_surface</item>
         <item name="android:statusBarColor">@color/graspy_surface</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowBackground">@color/graspy_surface</item>
+        <item name="android:windowBackground">@drawable/splash_window</item>
     </style>
 </resources>

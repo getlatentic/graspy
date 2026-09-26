@@ -2,12 +2,8 @@ package com.latentic.graspy.practice
 
 import com.latentic.graspy.collection.outbox.SubmissionEntity
 import com.latentic.graspy.localization.LessonCopy
-import com.latentic.graspy.localization.fillWith
 import com.latentic.graspy.collection.outbox.SubmissionStatus
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 data class LessonTurn(
     val localId: String,
@@ -65,10 +61,5 @@ internal fun unmarkedText(lesson: LessonCopy, turn: LessonTurn): String =
 
 internal fun wavSeconds(bytes: Long, sampleRate: Int = 16_000, bytesPerSample: Int = 2): Int =
     if (bytes <= 44L) 0 else ((bytes - 44L) / (sampleRate * bytesPerSample)).toInt()
-
-internal fun formatElapsed(seconds: Int): String = "%d:%02d".fillWith(seconds / 60, seconds % 60)
-
-internal fun noteTime(epochMillis: Long, locale: Locale = Locale.ROOT): String =
-    SimpleDateFormat("HH:mm", locale).format(Date(epochMillis))
 
 fun pendingLessonTurn(turns: List<LessonTurn>): LessonTurn? = turns.firstOrNull { !it.resultAcknowledged }

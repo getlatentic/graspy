@@ -64,7 +64,6 @@ fun PracticeLessonScreen(
     val voiceLevels by collectionViewModel.voiceLevels.collectAsStateWithLifecycle()
     val droppedTakes by collectionViewModel.droppedTakes.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val labels = classroomCopy(interfaceLanguage)
     val conversation = rememberScrollState()
     val exercise = classroom.move?.exercise
     val speaking = voice == TeacherVoiceState.SPEAKING || voice == TeacherVoiceState.BUFFERING
@@ -120,7 +119,6 @@ fun PracticeLessonScreen(
         }
     }
     val record = {
-        collectionViewModel.grantConsent()
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             collectionViewModel.startRecording(requireNotNull(exercise), classroom.planEvent)
         } else permission.launch(Manifest.permission.RECORD_AUDIO)
@@ -220,7 +218,7 @@ fun PracticeLessonScreen(
                     floor == LessonFloor.CHECKING ->
                         if (classroom.turn?.serverSampleId == null) copy.lesson.sending else copy.lesson.analysing
                     classroom.waitingForTeacher -> copy.lesson.waitingForTeacher
-                    else -> labels.loading
+                    else -> copy.lesson.loading
                 }
                 val caption = when (button) {
                     TurnButton.STOP_TEACHER -> null
@@ -228,7 +226,7 @@ fun PracticeLessonScreen(
                     TurnButton.RECORD -> rejected ?: copy.lesson.sayItYourWay.takeUnless { answeredThisLesson }
                     TurnButton.FINISH -> copy.lesson.speakNow
                     TurnButton.WAIT -> waiting
-                    TurnButton.RETRY -> labels.loadFailed
+                    TurnButton.RETRY -> copy.lesson.loadFailed
                 }
                 RoundTurnButton(
                     button,
@@ -236,7 +234,7 @@ fun PracticeLessonScreen(
                     description = when (button) {
                         TurnButton.RECORD -> copy.lesson.recordTable
                         TurnButton.FINISH -> copy.lesson.stopAndSend
-                        TurnButton.RETRY -> labels.retry
+                        TurnButton.RETRY -> copy.home.retry
                         else -> caption ?: copy.lesson.teacherSpeaking
                     },
                     motionMs = if (motion) MOTION_MS else 0,

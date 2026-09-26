@@ -1,9 +1,7 @@
 package com.latentic.graspy.practice
 
-import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.collection.EvaluatedSampleDto
 import com.latentic.graspy.collection.outbox.apiJson
-import com.latentic.graspy.localization.copyFor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -41,25 +39,5 @@ class RecitationResultTest {
         assertEquals(result, RecitationResult.fromJson(result.toJson()))
         assertNull(RecitationResult.fromJson(null))
         assertNull(RecitationResult.fromJson("not json"))
-    }
-
-    @Test
-    fun `the feedback card names the count, missing facts and heard values`() {
-        val copy = copyFor(InterfaceLanguage.ENGLISH).lesson
-        val exercise = PracticeExercise.TimesTableRecitation.TABLE_1
-        val result = apiJson.decodeFromString(EvaluatedSampleDto.serializer(), worker).result!!
-        assertEquals("8 of 12 said correctly", recitationSummary(copy, exercise, result))
-        assertEquals(listOf(FactLine("1 × 4", null)), missingFactLines(exercise, result))
-        assertEquals(listOf(FactLine("1 × 11", null), FactLine("1 × 12", null)), uncertainFactLines(exercise, result))
-        val colours = factSegments(exercise, result)
-        assertEquals(com.latentic.graspy.ui.Graspy.Warning, colours[10])
-        assertEquals(com.latentic.graspy.ui.Graspy.Border, colours[3])
-        assertEquals(listOf(FactLine("1 × 5", "heard 6, expected 5")), incorrectFactLines(copy, exercise, result))
-    }
-
-    @Test
-    fun `elapsed recording time is shown as minutes and seconds`() {
-        assertEquals("0:07", formatElapsed(7))
-        assertEquals("1:50", formatElapsed(110))
     }
 }

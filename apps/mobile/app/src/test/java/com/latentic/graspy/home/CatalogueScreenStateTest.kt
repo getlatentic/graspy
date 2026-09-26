@@ -2,7 +2,6 @@ package com.latentic.graspy.home
 
 import com.latentic.graspy.sync.RefreshState
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -13,12 +12,11 @@ class CatalogueScreenStateTest {
     )
 
     @Test
-    fun `a learner who has synced sees yesterday's lessons at once, with a quiet refresh`() {
+    fun `a learner who has synced sees yesterday's lessons at once, while the refresh runs`() {
         val state = catalogueState(stored, RefreshState.RUNNING, online = true) as CatalogueState.Ready
 
         assertEquals("The days of the week", state.current?.title)
         assertEquals(listOf("mathematics", "everyday"), state.topics.map { it.subject })
-        assertTrue(state.refreshing)
     }
 
     @Test
@@ -26,14 +24,6 @@ class CatalogueScreenStateTest {
         val state = catalogueState(stored, RefreshState.FAILED, online = false) as CatalogueState.Ready
 
         assertEquals(2, state.topics.sumOf { it.lessons.size })
-        assertFalse(state.refreshing)
-    }
-
-    @Test
-    fun `the refresh mark clears once the newer catalogue has landed`() {
-        val state = catalogueState(stored, RefreshState.SUCCEEDED, online = true) as CatalogueState.Ready
-
-        assertFalse(state.refreshing)
     }
 
     @Test

@@ -110,7 +110,6 @@ private fun SignedIn(
                 onSwitchLearner = { screens.show(AccountScreen.PICKER) },
                 onManageLearners = { screens.show(AccountScreen.LEARNERS) },
                 onEditProfile = {},
-                onContribute = null,
                 onSignOut = onSignOut,
             ),
         )

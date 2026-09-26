@@ -55,11 +55,6 @@ class SubmissionRepository(
         return localId
     }
 
-    /** Re-queue a permanently failed submission; the stored idempotency key makes the retry safe. */
-    suspend fun retry(localId: String) {
-        dao.markPending(localId, "retry requested")
-        scheduler.schedule(localId)
-    }
 
     suspend fun recoverIncomplete(ownerId: String) {
         dao.findIncomplete(ownerId).forEach { scheduler.schedule(it.localId) }

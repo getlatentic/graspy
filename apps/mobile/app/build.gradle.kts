@@ -58,16 +58,13 @@ android {
     }
 
     buildTypes {
-        // Dataset recording exists to build the owner's benchmark set, so only test installs carry it.
         debug {
-            buildConfigField("boolean", "DATASET_RECORDING", "true")
             // host:port of Firebase's Auth emulator, for signing in without a Google account (README.md).
             val authEmulator = providers.gradleProperty("GRASPY_AUTH_EMULATOR").orElse("").get()
             buildConfigField("String", "AUTH_EMULATOR", "\"$authEmulator\"")
         }
         release {
             signingConfig = signingConfigs.findByName("release")
-            buildConfigField("boolean", "DATASET_RECORDING", "false")
             buildConfigField("String", "AUTH_EMULATOR", "\"\"")
         }
     }

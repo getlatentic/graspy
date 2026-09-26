@@ -26,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.latentic.graspy.account.Account
 import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.localization.AccountCopy
-import com.latentic.graspy.localization.withEmail
 import com.latentic.graspy.ui.Graspy
 import com.latentic.graspy.ui.ProblemNote
 import com.latentic.graspy.ui.SecondaryButton
@@ -77,7 +76,7 @@ private fun Choosing(
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             onBack?.let { BackLink(copy.back, it) }
-            AccountHeading(copy.title, if (learners.isEmpty()) copy.bodyFirst else copy.body)
+            AccountHeading(copy.title)
         }
         TileGrid(learners.map(PickerTile::Learner) + listOfNotNull(PickerTile.Add.takeIf { !full })) { tile ->
             when (tile) {
@@ -152,13 +151,13 @@ private fun Status(copy: AccountCopy, state: PickerState) {
     )
 }
 
-/** Who is signed in; before a learner is chosen, a wrong account can be left without losing anything. */
+/** The account signed in; before a learner is chosen, a wrong one can be left without losing anything. */
 @Composable
 private fun AccountLine(copy: AccountCopy, account: Account, onOtherAccount: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         HorizontalDivider(color = Graspy.Border)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            account.email?.let { Text(copy.signedInAs.withEmail(it), color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium) }
+            account.email?.let { Text(it, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium) }
             if (account.deviceJoins) {
                 if (account.email != null) Text("·", color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium)
                 Text(

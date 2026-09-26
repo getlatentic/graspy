@@ -33,12 +33,11 @@ import com.latentic.graspy.localization.AccountCopy
 import com.latentic.graspy.localization.AppCopy
 import com.latentic.graspy.localization.withName
 
-/** What the account menu can do. [onContribute] is offered only in builds that record the dataset. */
+/** What the account menu can do. */
 data class AccountMenu(
     val onSwitchLearner: () -> Unit,
     val onManageLearners: () -> Unit,
     val onEditProfile: () -> Unit,
-    val onContribute: (() -> Unit)?,
     val onSignOut: () -> Unit,
 )
 
@@ -64,7 +63,6 @@ fun GraspyHeader(copy: AppCopy, accountCopy: AccountCopy, learner: ChosenLearner
                 MenuItem(accountCopy.switchLearner, Graspy.Text, closing(menu.onSwitchLearner))
                 MenuItem(accountCopy.manageLearners, Graspy.Text, closing(menu.onManageLearners))
                 MenuItem(copy.onboarding.classAndLanguage, Graspy.Text, closing(menu.onEditProfile))
-                menu.onContribute?.let { MenuItem(copy.contribute, Graspy.Text, closing(it)) }
                 MenuItem(accountCopy.signOut, Graspy.Danger, closing(menu.onSignOut))
             }
         }

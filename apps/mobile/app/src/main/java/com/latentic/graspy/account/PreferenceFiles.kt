@@ -10,6 +10,7 @@ object PreferenceFiles {
     /** The app's words, chosen for the phone: kept when anyone signs out. */
     const val INTERFACE = "graspy_interface"
     const val PLAYBACK = "lesson-playback"
+    /** No longer written; earlier versions left it, so a wipe still clears it. */
     const val CONSENT = "graspy_recording_consent"
     const val IDENTITY = "graspy_identity"
 

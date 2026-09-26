@@ -87,7 +87,7 @@ class VoiceApiTest {
             languagePair = "yo-en",
             task = "lesson",
             topic = "multiplication",
-            consent = ConsentDto(granted = true, scope = "hackathon_evaluation"),
+            consent = ConsentDto(granted = true, scope = "voice_lesson"),
         )
         const val MOVE = """{"revision":1,"day":"2026-09-26","move":{"kind":"event","plan_id":"mathematics.table-2",
             "event_id":"present","event":"present_content","subject":"mathematics","title":{"en":"Two"},

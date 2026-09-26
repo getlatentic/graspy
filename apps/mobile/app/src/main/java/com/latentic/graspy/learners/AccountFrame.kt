@@ -44,11 +44,8 @@ fun AccountFrame(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun AccountHeading(title: String, body: String?) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, color = Graspy.Text, style = MaterialTheme.typography.headlineLarge)
-        body?.let { Text(it, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyLarge) }
-    }
+fun AccountHeading(title: String) {
+    Text(title, color = Graspy.Text, style = MaterialTheme.typography.headlineLarge)
 }
 
 @Composable

@@ -66,14 +66,7 @@ fun HomeScreen(
                     Text(copy.home.loading, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyLarge)
                 CatalogueState.Failed -> RetryLine(copy.home, onRetry)
                 is CatalogueState.Ready -> {
-                    if (state.refreshing) {
-                        Text(
-                            copy.home.refreshing,
-                            color = Graspy.TextCaption,
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    }
-                    TeacherStrip(copy, teacherName, teacherInitial, language)
+                    TeacherStrip(teacherName, teacherInitial, language)
                     if (state.topics.isEmpty()) {
                         Text(copy.home.noLessons, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyLarge)
                     }
@@ -103,7 +96,7 @@ private fun RetryLine(copy: HomeCopy, onRetry: () -> Unit) {
 
 /** Who is teaching, said once, so no lesson row has to repeat it. */
 @Composable
-private fun TeacherStrip(copy: AppCopy, name: String, initial: String, language: String) {
+private fun TeacherStrip(name: String, initial: String, language: String) {
     val shape = RoundedCornerShape(18.dp)
     Row(
         Modifier
@@ -120,7 +113,7 @@ private fun TeacherStrip(copy: AppCopy, name: String, initial: String, language:
         Column {
             Text(name, color = Graspy.Text, style = MaterialTheme.typography.titleMedium)
             Text(
-                copy.home.yourTeacher + " · " + language,
+                language,
                 color = Graspy.TextMuted,
                 style = MaterialTheme.typography.labelMedium,
             )

@@ -19,7 +19,7 @@ class SampleApiSerializationTest {
             promptId = "mul_7x8_explain",
             device = "android",
             noiseCondition = null,
-            consent = ConsentDto(granted = true, scope = "hackathon_evaluation"),
+            consent = ConsentDto(granted = true, scope = "voice_lesson"),
         )
 
         val json = apiJson.encodeToString(request)

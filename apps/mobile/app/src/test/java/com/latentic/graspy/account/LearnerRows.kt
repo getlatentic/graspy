@@ -14,7 +14,6 @@ fun answer(
     localId: String,
     ownerId: String?,
     status: SubmissionStatus = SubmissionStatus.PENDING,
-    consentScope: String = "hackathon_evaluation",
 ) = SubmissionEntity(
     localId = localId,
     ownerId = ownerId,
@@ -27,7 +26,7 @@ fun answer(
     task = "lesson",
     topic = "multiplication",
     promptId = "plan.mathematics.table-2.ask",
-    consentScope = consentScope,
+    consentScope = "voice_lesson",
     status = status.name,
     serverSampleId = null,
     uploadPath = null,

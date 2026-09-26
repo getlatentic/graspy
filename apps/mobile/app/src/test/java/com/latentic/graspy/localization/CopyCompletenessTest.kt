@@ -1,6 +1,5 @@
 package com.latentic.graspy.localization
 
-import com.latentic.graspy.practice.classroomCopy
 import java.lang.reflect.Modifier
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -11,7 +10,6 @@ class CopyCompletenessTest {
     private val books: Map<String, (InterfaceLanguage) -> Any> = mapOf(
         "app" to ::copyFor,
         "account" to ::accountCopyFor,
-        "classroom" to ::classroomCopy,
     )
 
     @Test

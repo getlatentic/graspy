@@ -26,9 +26,6 @@ interface SubmissionDao {
     @Query("SELECT COUNT(*) FROM submissions WHERE ownerId = :ownerId AND status IN ('PENDING', 'UPLOADING')")
     fun observeIncompleteCount(ownerId: String): Flow<Int>
 
-    @Query("SELECT EXISTS(SELECT 1 FROM submissions WHERE ownerId = :ownerId AND consentScope = 'hackathon_evaluation')")
-    suspend fun hasRecordedConsent(ownerId: String): Boolean
-
     @Query("SELECT EXISTS(SELECT 1 FROM submissions WHERE ownerId = :ownerId)")
     suspend fun holdsAny(ownerId: String): Boolean
 

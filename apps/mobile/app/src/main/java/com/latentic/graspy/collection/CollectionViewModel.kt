@@ -15,10 +15,7 @@ import com.latentic.graspy.collection.recording.NoAudibleSpeechException
 import com.latentic.graspy.collection.recording.Pcm16WavRecorder
 import com.latentic.graspy.collection.recording.SpeechEndpoint
 import com.latentic.graspy.collection.recording.appendLevel
-import com.latentic.graspy.practice.PracticeDecision
 import com.latentic.graspy.practice.PracticeExercise
-import com.latentic.graspy.practice.RecitationResult
-import com.latentic.graspy.practice.practiceOutcome
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -30,22 +27,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class CollectionUiState(
-    val consentGranted: Boolean = false,
     val languagePair: String = "yo-en",
     val spokenLanguage: String? = null,
     val isRecording: Boolean = false,
     val isSaving: Boolean = false,
     val queuedLocalId: String? = null,
-    val submissionStatus: SubmissionStatus? = null,
-    val serverSampleId: String? = null,
-    val audioPath: String? = null,
-    val transcript: String? = null,
-    val parsedAnswer: Int? = null,
-    val decision: PracticeDecision? = null,
-    val feedback: String? = null,
-    val provider: String? = null,
-    val latencyMs: Int? = null,
-    val recitation: RecitationResult? = null,
     val problem: RecordingProblem? = null,
     val failureReason: String? = null,
 )
@@ -53,13 +39,19 @@ data class CollectionUiState(
 /** Where a learner's recordings wait on the phone until graspy has them. */
 const val RECORDINGS_DIRECTORY = "recordings"
 
+/**
+ * The consent a lesson recording carries. A learner is on the account only because whoever added them
+ * confirmed they are that learner, or their parent or guardian; the learner then records an answer by
+ * tapping to speak in their own lesson. The server accepts a recording only with consent granted.
+ */
+const val LESSON_CONSENT = "voice_lesson"
+
 class CollectionViewModel(application: Application) : AndroidViewModel(application) {
     private val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
     private val recorder = Pcm16WavRecorder(viewModelScope)
     private val repository = AppGraph.submissionRepository(application)
     private val participantId = participantId(application)
-    private val consentStore = RecordingConsentStore(application)
-    private val mutableState = MutableStateFlow(CollectionUiState(consentGranted = consentStore.isGranted))
+    private val mutableState = MutableStateFlow(CollectionUiState())
     private var submissionObservation: Job? = null
     private var recordingTimeout: Job? = null
 
@@ -78,27 +70,6 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
      */
     val droppedTakes = dropped.asStateFlow()
 
-    private val heard = MutableStateFlow(false)
-
-    /** Whether this recording has held a voice yet: until it has, there is nothing to be done with. */
-    val voiceHeard = heard.asStateFlow()
-
-    init {
-        if (!consentStore.isGranted) {
-            viewModelScope.launch {
-                if (AppGraph.database(application).submissionDao().hasRecordedConsent(ownerId)) {
-                    consentStore.grant()
-                    mutableState.update { it.copy(consentGranted = true) }
-                }
-            }
-        }
-    }
-
-    fun grantConsent() {
-        consentStore.grant()
-        mutableState.update { it.copy(consentGranted = true, problem = null) }
-    }
-
     fun selectLanguagePair(languagePair: String, spokenLanguage: String? = null) {
         require(languagePair == "yo-en" || languagePair == "pcm-en")
         require(spokenLanguage == null || spokenLanguage in SPOKEN_LANGUAGES)
@@ -112,7 +83,6 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
     fun startRecording(exercise: PracticeExercise, planEvent: Pair<String, String>? = null) {
         this.planEvent = planEvent
         val current = mutableState.value
-        check(current.consentGranted) { "consent is required before recording" }
         check(!current.isRecording) { "a recording is already active" }
         val output = File(
             getApplication<Application>().filesDir,
@@ -120,7 +90,6 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
         )
         try {
             levels.value = emptyList()
-            heard.value = false
             val endpoint = SpeechEndpoint()
             recorder.start(output) { level ->
                 levels.update { appendLevel(it, level) }
@@ -134,14 +103,6 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
                 it.copy(
                     isRecording = true,
                     queuedLocalId = null,
-                    audioPath = null,
-                    transcript = null,
-                    parsedAnswer = null,
-                    decision = null,
-                    feedback = null,
-                    provider = null,
-                    latencyMs = null,
-                    recitation = null,
                     problem = null,
                     failureReason = null,
                 )
@@ -160,7 +121,6 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
      * is handed to the main thread and happens once.
      */
     private fun endpointReached(state: SpeechEndpoint.State, exercise: PracticeExercise) {
-        if (state == SpeechEndpoint.State.SPEAKING && !heard.value) heard.value = true
         if (state != SpeechEndpoint.State.FINISHED && state != SpeechEndpoint.State.NOTHING_HEARD) return
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
             if (!mutableState.value.isRecording) return@launch
@@ -195,7 +155,7 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
                         task = exercise.task,
                         topic = exercise.topic,
                         promptId = exercise.promptId,
-                        consentScope = "hackathon_evaluation",
+                        consentScope = LESSON_CONSENT,
                         planId = planEvent?.first,
                         eventId = planEvent?.second,
                     ),
@@ -205,7 +165,6 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
                     it.copy(
                         isSaving = false,
                         queuedLocalId = localId,
-                        submissionStatus = SubmissionStatus.PENDING,
                     )
                 }
                 observeSubmission(localId)
@@ -229,15 +188,6 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
         mutableState.update { it.copy(failureReason = null) }
     }
 
-    fun retryFailedSubmission(localId: String? = mutableState.value.queuedLocalId) {
-        localId ?: return
-        mutableState.update { it.copy(submissionStatus = SubmissionStatus.PENDING, problem = null) }
-        viewModelScope.launch {
-            repository.retry(localId)
-            observeSubmission(localId)
-        }
-    }
-
     fun reportPermissionDenied() {
         mutableState.update { it.copy(problem = RecordingProblem.MICROPHONE_DENIED) }
     }
@@ -246,23 +196,8 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
         submissionObservation?.cancel()
         submissionObservation = viewModelScope.launch {
             repository.observe(localId).filterNotNull().collect { submission ->
-                val status = SubmissionStatus.valueOf(submission.status)
-                val outcome = submission.practiceOutcome()
-                mutableState.update {
-                    it.copy(
-                        submissionStatus = status,
-                        serverSampleId = submission.serverSampleId,
-                        audioPath = submission.audioPath,
-                        transcript = outcome?.transcript,
-                        parsedAnswer = outcome?.parsedAnswer,
-                        decision = outcome?.decision,
-                        feedback = outcome?.feedback,
-                        provider = outcome?.provider,
-                        latencyMs = outcome?.latencyMs,
-                        recitation = outcome?.recitation,
-                        failureReason = submission.failureReason?.takeIf { status == SubmissionStatus.FAILED },
-                    )
-                }
+                val failed = submission.status == SubmissionStatus.FAILED.name
+                mutableState.update { it.copy(failureReason = submission.failureReason?.takeIf { failed }) }
             }
         }
     }

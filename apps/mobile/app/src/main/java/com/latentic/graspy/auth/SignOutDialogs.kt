@@ -24,7 +24,7 @@ fun SignOutDialogs(copy: AccountCopy, state: SignOutState, onAnyway: () -> Unit,
         state.unsent -> AlertDialog(
             onDismissRequest = onCancel,
             text = { Text(copy.signOutUnsent, color = Graspy.Danger, style = MaterialTheme.typography.bodyLarge) },
-            confirmButton = { PrimaryButton(copy.signOutAnyway, onClick = onAnyway) },
+            confirmButton = { PrimaryButton(copy.signOut, onClick = onAnyway) },
             dismissButton = { SecondaryButton(copy.cancel, onClick = onCancel) },
             containerColor = Graspy.Surface,
         )

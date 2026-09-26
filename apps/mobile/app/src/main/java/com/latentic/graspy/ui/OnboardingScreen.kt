@@ -100,7 +100,7 @@ private fun StepHeading(copy: AppCopy, step: OnboardingStep) {
     val (heading, note) = when (step) {
         OnboardingStep.CLASS -> copy.onboarding.whatClass to null
         OnboardingStep.LANGUAGE -> copy.onboarding.whichLanguage to copy.onboarding.lessonLanguageNote
-        OnboardingStep.INTERFACE -> copy.onboarding.whichInterface to copy.onboarding.interfaceNote
+        OnboardingStep.INTERFACE -> copy.onboarding.whichInterface to null
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(heading, color = Graspy.Text, style = MaterialTheme.typography.headlineLarge)

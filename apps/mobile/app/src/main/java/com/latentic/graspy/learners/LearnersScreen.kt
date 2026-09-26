@@ -43,7 +43,7 @@ fun LearnersScreen(
     AccountFrame {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             BackLink(copy.back, onBack)
-            AccountHeading(copy.manageTitle, copy.manageBody)
+            AccountHeading(copy.manageTitle)
         }
         LearnerList(copy, state, learnerInUse, viewModel, onLeftLearner)
         if (state.failed) ProblemNote(copy.failed)
@@ -87,12 +87,12 @@ private fun DeleteAccount(copy: AccountCopy, busy: Boolean, onDelete: () -> Unit
     var asking by rememberSaveable { mutableStateOf(false) }
     Card {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(copy.deleteTitle, color = Graspy.Text, style = MaterialTheme.typography.titleMedium)
+            Text(copy.deleteAccount, color = Graspy.Text, style = MaterialTheme.typography.titleMedium)
             Text(copy.deleteBody, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium)
             if (asking) {
                 ConfirmCard(copy.deleteConfirm, copy.deleteYes, copy.cancel, busy, onDelete) { asking = false }
             } else {
-                SecondaryButton(copy.deleteButton, onClick = { asking = true })
+                SecondaryButton(copy.deleteAccount, onClick = { asking = true })
             }
         }
     }
