@@ -14,6 +14,9 @@ function deployed(paths: string[] = BUILD): SandboxWorker {
   return worker;
 }
 
+const pastFiles = (count: number) =>
+  Array.from({ length: count }, (_, index) => `/views/assets/past-${index}.js`);
+
 const fetchesOf = (worker: SandboxWorker, path: string) =>
   worker.fetched.filter((fetch) => fetch.url === `${ORIGIN}${path}`).length;
 
@@ -146,6 +149,45 @@ describe("the sandbox's service worker", () => {
     expect(cached).toEqual(expect.arrayContaining(BUILD));
     expect(cached).not.toContain("/views/assets/past-3.js");
     expect(cached).toContain("/views/assets/past-4.js");
+  });
+
+  it("trims nothing as a view loads, however full the cache", async () => {
+    const past = pastFiles(120);
+    const worker = deployed(past);
+    await worker.keep();
+    worker.serve(FONT, FONT);
+
+    await worker.request(`${ORIGIN}${FONT}`);
+
+    expect(worker.assets()).toEqual([...past, FONT]);
+  });
+
+  it("still trims when a file's fetch fails outright mid-pass", async () => {
+    const worker = deployed(pastFiles(120));
+    await worker.keep();
+    worker.list(BUILD);
+    for (const path of BUILD) worker.serve(path, path);
+    worker.network.set(`${ORIGIN}${LESSON[0]}`, () => {
+      throw new TypeError("Failed to fetch");
+    });
+
+    await worker.keep();
+
+    expect(worker.assets()).toHaveLength(120);
+    expect(worker.assets()).not.toContain("/views/assets/past-3.js");
+  });
+
+  it("drops the longest unused past files first", async () => {
+    const worker = deployed(pastFiles(120));
+    await worker.keep();
+    await worker.request(`${ORIGIN}/views/assets/past-0.js`);
+    worker.list(BUILD);
+    for (const path of BUILD) worker.serve(path, path);
+
+    await worker.keep();
+
+    expect(worker.assets()).toContain("/views/assets/past-0.js");
+    expect(worker.assets()).not.toContain("/views/assets/past-1.js");
   });
 
   it("still keeps what the sandbox page loaded when there is no list", async () => {

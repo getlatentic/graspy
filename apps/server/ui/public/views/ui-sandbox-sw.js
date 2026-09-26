@@ -14,7 +14,8 @@ const ASSET_PATH = "/views/assets/";
 const LIST = "/views/precache.json";
 // The apps keep pages from past builds, which need that build's files, and
 // which pages they keep is not visible here: past builds' files stay, the
-// oldest going past this many. The current build's files always stay.
+// longest unused going past this many. The current build's files always stay.
+// Trimming happens only in a pass that has the current list.
 const MAX_ASSETS = 120;
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -66,7 +67,11 @@ async function page(request) {
 async function asset(request) {
   const cache = await caches.open(ASSETS);
   const kept = await cache.match(request);
-  if (kept) return kept;
+  if (kept) {
+    // Put again, it goes last in the cache's order: the longest unused go first.
+    await cache.put(request, kept.clone());
+    return kept;
+  }
   const response = await fetch(request);
   if (response.ok) await cache.put(request, response.clone());
   return response;
