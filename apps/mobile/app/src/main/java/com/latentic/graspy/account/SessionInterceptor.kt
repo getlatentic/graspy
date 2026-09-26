@@ -12,6 +12,12 @@ import okhttp3.Response
 data class RequestLearner(val key: String)
 
 /**
+ * The session was refused, by graspy, by Google or because the request's learner is no longer in use.
+ * OkHttp fails a call only on an IOException, but no connection was lost: nothing stands in for the answer.
+ */
+class SessionRefusal(message: String, cause: Throwable? = null) : IOException(message, cause)
+
+/**
  * Sends the graspy session with every request. On a 401, or a 409 saying the session names no learner
  * while the device learns as one, it exchanges the sign-in for a new session and sends the request once
  * more. The exchange follows the learner: one removed elsewhere is left, and the device asks who is
@@ -37,7 +43,7 @@ class SessionInterceptor(
         return chain.proceed(request.bearing(renewed))
     }
 
-    /** OkHttp fails a call cleanly only on an IOException, so an exchange refused over HTTP becomes one. */
+    /** OkHttp fails a call cleanly only on an IOException, so an exchange refused over HTTP becomes a [SessionRefusal]. */
     private fun session(get: suspend SessionTokens.() -> String): String = try {
         runBlocking { sessions.get() }
     } catch (error: IOException) {
@@ -45,7 +51,7 @@ class SessionInterceptor(
     } catch (error: CancellationException) {
         throw IOException("The session exchange was cancelled", error)
     } catch (error: Exception) {
-        throw IOException("graspy did not issue a session: ${error.message}", error)
+        throw SessionRefusal("graspy did not issue a session: ${error.message}", error)
     }
 
     private fun needsNewSession(response: Response): Boolean = when (response.code) {
@@ -56,7 +62,7 @@ class SessionInterceptor(
 
     private fun requireLearner(request: Request) {
         val wanted = request.tag(RequestLearner::class.java)?.key ?: return
-        if (wanted != learnerInUse()) throw IOException("That learner is no longer learning on this device")
+        if (wanted != learnerInUse()) throw SessionRefusal("That learner is no longer learning on this device")
     }
 
     private fun Request.bearing(token: String): Request =

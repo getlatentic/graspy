@@ -3,7 +3,10 @@ import type {
   LessonMove,
   SampleMetadata,
 } from "@/lib/voice/voice-types";
+import type { KeptAnswer } from "@/lib/voice/answer-store";
 import { languagePairOf } from "@/lib/voice/voice-learner";
+import { inTime } from "./in-time";
+import type { LessonEvent } from "./lesson-state";
 
 // What the server's markers are filed under: a times-table prompt is reasoning about
 // multiplication, a said list a recitation of its subject, any other answer reasoning.
@@ -17,10 +20,16 @@ function taskAndTopic(move: LessonMove) {
     : { task: "reasoning", topic };
 }
 
+interface AnswerLearner {
+  speaker: string;
+  learnerClass: string;
+  language: LessonLanguage;
+}
+
 /** What one spoken answer to this step says about itself. */
 export function answerMetadata(
   move: LessonMove,
-  learner: { speaker: string; learnerClass: string; language: LessonLanguage },
+  learner: AnswerLearner,
 ): SampleMetadata {
   return {
     speaker_id: learner.speaker,
@@ -35,4 +44,44 @@ export function answerMetadata(
     device: "web",
     consent: { granted: true, scope: "voice_lesson" },
   };
+}
+
+/** One spoken answer as the device keeps it, with the step it answers. */
+export function answerToKeep(
+  move: LessonMove,
+  learner: AnswerLearner & { key: string },
+  wav: Blob,
+  key: string,
+  keptAt: number,
+): KeptAnswer {
+  return {
+    key,
+    learner: learner.key,
+    move,
+    metadata: answerMetadata(move, learner),
+    wav,
+    keptAt,
+  };
+}
+
+/** The take is checked only once it is kept, so nothing the child said is lost to the network. */
+export async function keepTake(
+  answer: KeptAnswer,
+  store: {
+    keep: (answer: KeptAnswer) => Promise<void>;
+    forget: (key: string) => Promise<void>;
+  },
+  emit: (event: LessonEvent) => void,
+  pause?: (ms: number) => Promise<unknown>,
+): Promise<void> {
+  const keeping = store.keep(answer);
+  try {
+    await inTime(keeping, pause);
+  } catch {
+    // The child was told it was not saved, so a save that lands late is let go.
+    keeping.then(() => store.forget(answer.key)).catch(() => undefined);
+    emit({ type: "recordFailed", note: "notSaved" });
+    return;
+  }
+  emit({ type: "recorded", key: answer.key });
 }

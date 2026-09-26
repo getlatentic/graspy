@@ -6,7 +6,6 @@ import androidx.room.Room
 import androidx.work.WorkManager
 import com.latentic.graspy.BuildConfig
 import com.latentic.graspy.account.AccountApi
-import com.latentic.graspy.ask.chatMigrations
 import com.latentic.graspy.account.AccountGraph
 import com.latentic.graspy.account.RequestLearner
 import com.latentic.graspy.account.SessionInterceptor
@@ -15,7 +14,6 @@ import com.latentic.graspy.network.HttpStack
 import com.latentic.graspy.network.ReadTimeoutInterceptor
 import com.latentic.graspy.sync.LessonRefreshScheduler
 import com.latentic.graspy.sync.WorkManagerLessonRefreshScheduler
-import com.latentic.graspy.sync.lessonCacheMigrations
 import kotlinx.serialization.json.Json
 import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
@@ -38,7 +36,7 @@ object AppGraph {
             context.applicationContext,
             GraspyDatabase::class.java,
             "graspy.db",
-        ).addMigrations(*submissionMigrations, *lessonCacheMigrations, *chatMigrations).build().also { databaseInstance = it }
+        ).addMigrations(*graspyMigrations).build().also { databaseInstance = it }
     }
 
     fun account(context: Context): AccountGraph = accountInstance ?: synchronized(this) {

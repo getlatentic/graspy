@@ -1,49 +1,83 @@
 import {
-  forgetAnswer,
-  keepAnswer,
+  keepProgress,
+  keptAnswer,
   keptAnswers,
-  type KeptAnswer,
+  settleAnswer,
+  settledOf,
+  type Settled,
 } from "./answer-store";
 import { sendAnswer, type Sent } from "./send-answer";
 import { createSample, evaluate, uploadAudio } from "./voice-api";
 
 const api = { createSample, uploadAudio, evaluate };
-const keeping = { keep: keepAnswer, forget: forgetAnswer };
+const keeping = { keep: keepProgress, settle: settleAnswer };
 
-type Listener = (key: string, sent: Sent) => void;
+type Listener = (key: string, sent: Settled) => void;
 const listeners = new Set<Listener>();
 
-/** Hears each kept answer the server marks or refuses, whoever sent it. */
-export function onAnswerSettled(listener: Listener): () => void {
-  listeners.add(listener);
-  return () => void listeners.delete(listener);
-}
-
-function settled(key: string, sent: Sent): Sent {
+async function sendIfWaiting(key: string): Promise<Sent | null> {
+  const answer = await keptAnswer(key);
+  if (!answer) return null;
+  const sent = await sendAnswer(answer, api, keeping);
   if (sent.kind !== "kept")
     for (const listener of listeners) listener(key, sent);
   return sent;
 }
 
-/** Keeps the answer on the device first, so nothing the child said is lost to the network. */
-export async function keepAndSend(answer: KeptAnswer): Promise<Sent> {
-  await keepAnswer(answer);
-  return settled(answer.key, await sendAnswer(answer, api, keeping));
+const inFlight = new Map<string, Promise<Sent | null>>();
+
+/**
+ * Sends one kept answer, or joins the send already under way; null once it is no longer waiting.
+ * Read afresh each time, so an answer settled and shown since is never sent again.
+ */
+export function sendKept(key: string): Promise<Sent | null> {
+  let sending = inFlight.get(key);
+  if (!sending) {
+    sending = sendIfWaiting(key).finally(() => inFlight.delete(key));
+    inFlight.set(key, sending);
+  }
+  return sending;
 }
 
-let sending: Promise<void> | null = null;
-
 async function sendAll(learner: string): Promise<void> {
-  for (const answer of await keptAnswers(learner)) {
-    const sent = settled(answer.key, await sendAnswer(answer, api, keeping));
-    if (sent.kind === "kept") return;
+  for (const { key } of await keptAnswers(learner)) {
+    const sent = await sendKept(key);
+    if (sent?.kind === "kept") return;
   }
 }
 
-/** Sends this learner's kept answers in the order they were said, one run at a time. */
+const sending = new Map<string, Promise<void>>();
+
+/** Sends this learner's kept answers in the order they were said, one run at a time for each learner. */
 export function sendKeptAnswers(learner: string): Promise<void> {
-  sending ??= sendAll(learner).finally(() => {
-    sending = null;
+  let run = sending.get(learner);
+  if (!run) {
+    run = sendAll(learner).finally(() => sending.delete(learner));
+    sending.set(learner, run);
+  }
+  return run;
+}
+
+/** The answer's outcome once the server has given one, whoever sent it; never once aborted. */
+export function whenSettled(
+  key: string,
+  signal: AbortSignal,
+): Promise<Settled> {
+  return new Promise((resolve) => {
+    const done = (sent: Settled) => {
+      stop();
+      if (!signal.aborted) resolve(sent);
+    };
+    const listener: Listener = (settled, sent) => settled === key && done(sent);
+    const stop = () => {
+      listeners.delete(listener);
+      signal.removeEventListener("abort", stop);
+    };
+    listeners.add(listener);
+    signal.addEventListener("abort", stop);
+    // Heard first, then read: an outcome given in between is caught by one or the other.
+    void settledOf(key)
+      .then((sent) => sent && done(sent))
+      .catch(() => undefined);
   });
-  return sending;
 }

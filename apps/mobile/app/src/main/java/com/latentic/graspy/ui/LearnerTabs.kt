@@ -96,6 +96,8 @@ internal fun LearnerTabs(
     val tabs = learnTabs(voiceOnly)
     val shownTab = tab.takeIf { it in tabs } ?: LearnTab.HOME
     LaunchedEffect(tab) { planViewModel.refresh() }
+    val views: LearnerViews = viewModel()
+    LaunchedEffect(planViewModel, views) { planViewModel.recordsRead.collect(views::copyReadyLessons) }
     BackHandler(enabled = place != null || editing || voicePage || shownTab != LearnTab.HOME) {
         val current = place
         when {
@@ -202,7 +204,7 @@ private fun OpenPlace(learn: LearnCopy, interfaceLanguage: InterfaceLanguage, re
         SubjectTopics(learn, ready, subject, onBack = { onPlace(null) }, onOpenTopic = { onPlace(place.copy(topicIndex = it)) })
     } else {
         val views: LearnerViews = viewModel()
-        TopicLesson(learn, interfaceLanguage.tag, views, target, onBack = { onPlace(place.back()) }, onLearnt = onLearnt)
+        TopicLesson(learn, interfaceLanguage.tag, views, views.lessons, target, onBack = { onPlace(place.back()) }, onLearnt = onLearnt)
     }
 }
 

@@ -19,6 +19,7 @@ import com.latentic.graspy.plan.PlanState
 import com.latentic.graspy.plan.PlanViewModel
 import com.latentic.graspy.practice.PracticeLessonViewModel
 import com.latentic.graspy.sync.lessonRefreshWorkName
+import com.latentic.graspy.ui.LEARNER_VIEW_MODELS
 import com.latentic.graspy.ui.LearnerScope
 import com.latentic.graspy.ui.LearnerViewModels
 import org.junit.After
@@ -76,6 +77,13 @@ class LearnerScopedTest {
 
         assertEquals(listOf("u/ada", "u/bayo"), made.map { it.learnerKey })
         assertNotSame(made[0], made[1])
+    }
+
+    @Test
+    fun `each listed maker makes the view model it is listed for`() {
+        LEARNER_VIEW_MODELS.forEach { (listed, make) ->
+            assertTrue(listed.simpleName, listed.isInstance(make(application, "u/ada")))
+        }
     }
 
     @Test

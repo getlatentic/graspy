@@ -1,6 +1,5 @@
 package com.latentic.graspy.account
 
-import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -97,7 +96,7 @@ class SessionTokensTest {
     fun `a sign-in Google no longer holds signs the device out`() {
         googleHolds = false
 
-        assertThrows(IOException::class.java) { runBlocking { sessions.token() } }
+        assertThrows(SessionRefusal::class.java) { runBlocking { sessions.token() } }
         assertEquals(listOf("signed out"), events)
         assertEquals(emptyList<SessionRequestDto>(), sent)
     }
