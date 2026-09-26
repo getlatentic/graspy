@@ -307,6 +307,27 @@ class AccountEntrySignInTest {
         assertEquals(emptyMap<String, Any?>(), signOutPending())
     }
 
+    @Test
+    fun `an account a sign-in stores is kept at the next start, though a sign-out ran while it signed in`() = runBlocking {
+        lateinit var signingIn: AccountEntry
+        signingIn = entry(
+            sessionApi = object : SessionApi {
+                override suspend fun session(request: SessionRequestDto) = issued("session-2", learner = null)
+            },
+            sheet = {
+                firebase.uid = "uid-2"
+                signingIn.signOut()
+                firebase.uid = "uid-2"
+                SignInOutcome.Succeeded("uid-2")
+            },
+        )
+
+        signingIn.signIn()
+        start()
+
+        assertEquals("uid-2", accounts.account.value?.uid)
+    }
+
     private fun entry(sessionApi: SessionApi = noSessionApi, sheet: GoogleAccountSheet = this.sheet) =
         AccountEntry(context, sheet, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
 

@@ -53,7 +53,13 @@ class AccountEntry(
             failedByCancelledTask()
         }
         if (outcome is SignInOutcome.Succeeded) {
-            forgetting.edit(commit = true) { remove(SIGNING_IN) }
+            // A sign-out run meanwhile left its note too; with this account stored, the next start must not wipe it.
+            signingOut.withLock {
+                forgetting.edit(commit = true) {
+                    remove(SIGNING_IN)
+                    remove(SIGNING_OUT)
+                }
+            }
         } else {
             // Firebase writes its sign-out to disk in the background, so the note stays: a kill before that write
             // leaves Firebase's user for the next start to find, with the note to undo it by.
