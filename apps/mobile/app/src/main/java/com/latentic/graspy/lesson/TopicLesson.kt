@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -63,8 +64,8 @@ fun TopicLesson(
     target: LessonTarget,
     onBack: () -> Unit,
     onLearnt: () -> Unit,
-    /** Shows the lesson's view: its card, what its calls go to, and what its events mean. */
-    showView: @Composable (ViewCard, ViewServer, ViewEvents) -> Unit = { card, calls, events ->
+    /** Shows the lesson's view: its card, what its calls go to, what its events mean, and how it is opened again. */
+    showView: @Composable (ViewCard, ViewServer, ViewEvents, @Composable () -> Unit) -> Unit = { card, calls, events, retry ->
         AppView(
             card = card,
             server = calls,
@@ -72,6 +73,7 @@ fun TopicLesson(
             unavailable = learn.chat.viewUnavailable,
             events = events,
             waiting = { LessonLoading(learn.lesson.loading, target.topic, announced = false) },
+            retry = retry,
         )
     },
 ) {
@@ -96,11 +98,14 @@ fun TopicLesson(
                 Text(learn.lesson.loadFailed, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
                 SecondaryButton(learn.lesson.tryAgain, { attempt += 1 })
             }
-            is Opened.Shown -> showView(
-                shown.card,
-                remember(shown.card) { LessonViewServer(server, lessons, target, shown.card) },
-                ViewEvents(toolCalled = { name, _, _ -> if (name == FINISH_LESSON) onLearnt() }),
-            )
+            // A retry can open the very card that failed, as from the phone's copy: its view starts again all the same.
+            is Opened.Shown -> key(attempt) {
+                showView(
+                    shown.card,
+                    remember(shown.card) { LessonViewServer(server, lessons, target, shown.card) },
+                    ViewEvents(toolCalled = { name, _, _ -> if (name == FINISH_LESSON) onLearnt() }),
+                ) { SecondaryButton(learn.lesson.tryAgain, { attempt += 1 }) }
+            }
         }
     }
 }
