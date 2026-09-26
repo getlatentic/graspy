@@ -33,12 +33,6 @@ export class VoiceError extends Error {
     this.status = status;
     this.code = code;
   }
-
-  /** The voice API gave no answer: the request did not get through, or no session could be
-   * had for it. It can be made again unchanged. */
-  get unanswered(): boolean {
-    return this.status === 0;
-  }
 }
 
 type Body = { detail?: unknown; code?: unknown; error?: unknown };
@@ -60,6 +54,7 @@ async function send(url: string, init?: RequestInit): Promise<Response> {
   try {
     response = await fetchWithSession(url, init);
   } catch (cause) {
+    // Status 0: the voice API never answered, whether the request or its session failed.
     const message = cause instanceof Error ? cause.message : String(cause);
     throw new VoiceError(message, 0, null);
   }

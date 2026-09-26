@@ -47,6 +47,15 @@ export class NetworkError extends ApiError {
   }
 }
 
+/** Google could not check the sign-in: busy, failing, or out of graspy's reach. A later try
+ * may pass, and kept copies stand in meanwhile, as when nothing could be reached. */
+export class SignInUnchecked extends ApiError {
+  constructor(message: string, status: number, data?: unknown) {
+    super(message, status, data);
+    this.name = "SignInUnchecked";
+  }
+}
+
 // An ApiError is kept: fetchWithSession's session exchange has already told an answer
 // from a failure to reach graspy or Google.
 export function toNetworkError(cause: unknown): ApiError {

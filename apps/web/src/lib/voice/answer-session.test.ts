@@ -15,7 +15,7 @@ vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
 vi.mock("./audio-format", () => ({ audioFormat: () => "mp3" }));
 
 type SessionAnswer = "issued" | "unchecked" | "refused";
-type VoiceAnswer = "marks" | "refuses" | "fails";
+type VoiceAnswer = "marks" | "refuses" | "fails" | "busy";
 const graspy = {
   session: "issued" as SessionAnswer,
   voice: "marks" as VoiceAnswer,
@@ -55,6 +55,12 @@ const VOICE_ANSWERS: Record<VoiceAnswer, () => Response> = {
       { status: 400 },
     ),
   fails: () => new Response("Bad gateway", { status: 502 }),
+  // As app/security/rate_limit.py answers.
+  busy: () =>
+    Response.json(
+      { error: "Too many requests", code: "rate_limited" },
+      { status: 429, headers: { "Retry-After": "60" } },
+    ),
 };
 
 async function graspyFetch(input: string | URL): Promise<Response> {
@@ -150,8 +156,11 @@ describe("a child's answer", () => {
     expect(kept.has(answer.key)).toBe(true);
   });
 
-  it("stays on the device when the voice API fails on its side", async () => {
-    graspy.voice = "fails";
+  it.each([
+    ["fails on its side", "fails"],
+    ["is rate limited", "busy"],
+  ] as const)("stays on the device when the voice API %s", async (_, voice) => {
+    graspy.voice = voice;
 
     await expect(sent()).resolves.toEqual({ kind: "kept" });
     expect(kept.has(answer.key)).toBe(true);

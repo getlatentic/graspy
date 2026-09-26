@@ -23,6 +23,7 @@ import {
   type ReplyData,
 } from "./reply-data";
 import { messageParts, type AppCallRequest } from "./request-data";
+import { rpcFailureIn, sdkFailure } from "./rpc-errors";
 
 // The wire format is protobuf-derived (numeric roles, `{content: {$case, value}}`
 // parts); this folder is the only place that shape is known.
@@ -46,14 +47,22 @@ const authenticatingFetch = createAuthenticatingFetchWithRetry(
   authentication,
 );
 
-// The SDK reports an HTTP answer as a plain Error with the status only in its text: thrown
-// here, the answer keeps its status.
+// The SDK reports an HTTP answer as a plain Error with the status only in its text, and drops
+// a JSON-RPC error's code: thrown here, each keeps what it says.
 async function answeredFetch(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response> {
   const response = await authenticatingFetch(input, init);
   if (!response.ok) throw await toApiError(response);
+  if (response.headers.get("Content-Type")?.includes("json")) {
+    const body: unknown = await response
+      .clone()
+      .json()
+      .catch(() => null);
+    const failure = rpcFailureIn(body);
+    if (failure) throw failure;
+  }
   return response;
 }
 
@@ -66,13 +75,14 @@ const factoryOptions = ClientFactoryOptions.createFrom(
 );
 
 /** A rejected fetch is a NetworkError and an HTTP answer an ApiError already; anything else
- * the SDK threw is an answer it could not read. */
+ * the SDK threw is a JSON-RPC error or an answer it could not read. */
 function tutorFailure(cause: unknown): ApiError {
   if (cause instanceof ApiError || cause instanceof TypeError) {
     return toNetworkError(cause);
   }
-  const message = cause instanceof Error ? cause.message : String(cause);
-  return new ApiError(message, UNREADABLE_ANSWER);
+  return cause instanceof Error
+    ? sdkFailure(cause)
+    : new ApiError(String(cause), UNREADABLE_ANSWER);
 }
 
 let client: Promise<Client> | null = null;

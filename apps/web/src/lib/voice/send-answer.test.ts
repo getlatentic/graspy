@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { KeptAnswer } from "./answer-store";
 import { sendAnswer, type AnswerApi } from "./send-answer";
-import { VoiceError } from "./voice-api";
+import { VoiceError, type VoiceCode } from "./voice-api";
 import type { MarkedTurn } from "./voice-types";
 
 const answer: KeptAnswer = {
@@ -115,22 +115,35 @@ describe("sendAnswer", () => {
 
   it.each([
     [422, "no_speech"],
-    [502, "provider_failure"],
     [409, "step_not_offered"],
     [409, "unsupported_prompt"],
     [409, "idempotency_conflict"],
+    [404, null],
   ] as const)(
     "hands back a %i %s and lets the answer go",
     async (status, code) => {
-      api.evaluate.mockRejectedValueOnce(new VoiceError(code, status, code));
+      api.evaluate.mockRejectedValueOnce(new VoiceError("no", status, code));
       await expect(send()).resolves.toEqual({ kind: "refused", code, status });
       expect(kept.size).toBe(0);
     },
   );
 
-  it("keeps the answer through a server failure that names no refusal", async () => {
-    api.createSample.mockRejectedValueOnce(new VoiceError("down", 503, null));
-    await expect(send()).resolves.toEqual({ kind: "kept" });
-    expect(kept.has("key-1")).toBe(true);
-  });
+  it.each([
+    [503, null],
+    [429, "rate_limited"],
+    [502, "provider_failure"],
+    [503, "voice_unavailable"],
+    [401, null],
+    [403, null],
+    [409, "learner_required"],
+  ] as const)(
+    "keeps the answer through a %i %s, which may pass on a later try",
+    async (status, code) => {
+      api.evaluate.mockRejectedValueOnce(
+        new VoiceError("later", status, code as VoiceCode | null),
+      );
+      await expect(send()).resolves.toEqual({ kind: "kept" });
+      expect(kept.has("key-1")).toBe(true);
+    },
+  );
 });

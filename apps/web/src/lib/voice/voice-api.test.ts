@@ -155,17 +155,6 @@ describe("the voice API client", () => {
       code: "voice_unavailable",
     });
   });
-
-  it("tells a network failure from a refusal", async () => {
-    fetchWithSession.mockImplementation(async () => {
-      throw new TypeError("Failed to fetch");
-    });
-    const error = (await api
-      .evaluate("gvm_1")
-      .catch((e: unknown) => e)) as InstanceType<typeof api.VoiceError>;
-    expect(error.unanswered).toBe(true);
-    expect(error.code).toBeNull();
-  });
 });
 
 describe("a child's answer when the session fails", () => {

@@ -1,3 +1,4 @@
+import { readJson } from "./body";
 import { ApiError, toApiError, toNetworkError } from "./errors";
 import { fetchWithSession } from "./session";
 
@@ -13,7 +14,7 @@ async function getOnce<T>(url: string): Promise<T> {
     throw toNetworkError(cause);
   }
   if (!response.ok) throw await toApiError(response);
-  return response.json() as Promise<T>;
+  return readJson<T>(response);
 }
 
 // Retries transient failures, which is only safe for reads.
@@ -46,5 +47,5 @@ export async function sendJson<T>(
     throw toNetworkError(cause);
   }
   if (!response.ok) throw await toApiError(response);
-  return response.json() as Promise<T>;
+  return readJson<T>(response);
 }

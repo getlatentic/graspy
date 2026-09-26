@@ -10,7 +10,14 @@ import { deviceId, fingerprint } from "@/lib/device-id";
 import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import { API_BASE_URL } from "@/lib/env";
-import { ApiError, toApiError, toNetworkError } from "./errors";
+import { readJson } from "./body";
+import {
+  ApiError,
+  NetworkError,
+  SignInUnchecked,
+  toApiError,
+  toNetworkError,
+} from "./errors";
 
 // A token naming this device, or once the learner signs in with Google their account, and
 // the account's learner the device learns as.
@@ -91,9 +98,26 @@ async function post(body: Record<string, string>): Promise<Response> {
   }
 }
 
+// graspy answers 503 sign_in_unchecked when it could not reach Google to check the sign-in.
+async function notIssued(response: Response): Promise<ApiError> {
+  const refused = await toApiError(response);
+  const { detail } = (refused.data ?? {}) as {
+    detail?: { error?: unknown; code?: unknown };
+  };
+  if (detail?.code !== "sign_in_unchecked") return refused;
+  return new SignInUnchecked(
+    String(detail.error),
+    refused.status,
+    refused.data,
+  );
+}
+
 async function issued(response: Response): Promise<Issued> {
-  if (!response.ok) throw await toApiError(response);
-  const body = (await response.json().catch(() => null)) as Issued | null;
+  if (!response.ok) throw await notIssued(response);
+  const body = await readJson<Issued | null>(response).catch((error) => {
+    if (error instanceof NetworkError) throw error;
+    return null;
+  });
   if (!body?.token) {
     throw new ApiError("The server issued an empty session", response.status);
   }
@@ -124,7 +148,10 @@ function googleFailure(cause: unknown): ApiError {
   const message = cause instanceof Error ? cause.message : String(cause);
   const failed = typeof code === "string" ? GOOGLE_FAILED.get(code) : undefined;
   return failed
-    ? new ApiError(`Google could not check the sign-in: ${message}`, failed)
+    ? new SignInUnchecked(
+        `Google could not check the sign-in: ${message}`,
+        failed,
+      )
     : new ApiError(`Google refused the sign-in: ${message}`, 401);
 }
 

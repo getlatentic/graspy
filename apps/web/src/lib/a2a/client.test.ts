@@ -75,22 +75,67 @@ describe("a tutor turn that fails", () => {
     expect(rpcCalls).toBe(2);
   });
 
-  it("is an answer the app could not read, tried once more, when the tutor's error is JSON-RPC", async () => {
-    rpc = async () =>
-      Response.json({
-        jsonrpc: "2.0",
-        id: 0,
-        error: { code: -32603, message: "Internal error" },
-      });
-
-    const { failure, ApiError, NetworkError, UNREADABLE_ANSWER } =
-      await asked();
-
-    expect(failure).toBeInstanceOf(ApiError);
-    expect(failure).not.toBeInstanceOf(NetworkError);
-    expect((failure as { status: number }).status).toBe(UNREADABLE_ANSWER);
-    expect(rpcCalls).toBe(2);
+  // The SDK numbers its requests from 1, and each turn here is a fresh client.
+  const rpcError = (code: number) => ({
+    jsonrpc: "2.0",
+    id: 1,
+    error: { code, message: `JSON-RPC ${code}` },
   });
+
+  it.each([
+    [-32603, "internal error"],
+    [-32050, "server error"],
+    [-32006, "invalid agent response"],
+  ])(
+    "is the tutor failing, tried once more, on JSON-RPC %i (%s)",
+    async (code) => {
+      rpc = async () => Response.json(rpcError(code));
+
+      const { failure, ApiError, NetworkError, UNREADABLE_ANSWER } =
+        await asked();
+
+      expect(failure).toBeInstanceOf(ApiError);
+      expect(failure).not.toBeInstanceOf(NetworkError);
+      expect((failure as { status: number }).status).toBe(UNREADABLE_ANSWER);
+      expect(rpcCalls).toBe(2);
+    },
+  );
+
+  it.each([
+    [-32600, 400, "invalid request"],
+    [-32601, 404, "method not found"],
+    [-32602, 400, "invalid params"],
+    [-32001, 404, "task not found"],
+  ])(
+    "is a refusal of the request, not tried again, on JSON-RPC %i",
+    async (code, status) => {
+      rpc = async () => Response.json(rpcError(code));
+
+      const { failure } = await asked();
+
+      expect(failure).toMatchObject({ status });
+      expect((failure as { retryable: boolean }).retryable).toBe(false);
+      expect(rpcCalls).toBe(1);
+    },
+  );
+
+  it.each([
+    [-32001, 404, 1],
+    [-32050, 502, 2],
+  ])(
+    "classifies JSON-RPC %i inside the stream as %i",
+    async (code, status, calls) => {
+      rpc = async () =>
+        new Response(`data: ${JSON.stringify(rpcError(code))}\n\n`, {
+          headers: { "Content-Type": "text/event-stream" },
+        });
+
+      const { failure } = await asked();
+
+      expect(failure).toMatchObject({ status });
+      expect(rpcCalls).toBe(calls);
+    },
+  );
 
   it("is a NetworkError, tried once more, when nothing reached the tutor", async () => {
     rpc = async () => {

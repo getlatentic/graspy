@@ -5,7 +5,7 @@ const fetchWithSession = vi.hoisted(() => vi.fn());
 vi.mock("./session", () => ({ fetchWithSession }));
 
 import { createSSEStream } from "./sse";
-import { ApiError, NetworkError } from "./errors";
+import { ApiError, NetworkError, UNREADABLE_ANSWER } from "./errors";
 
 function bodyOf(slices: Uint8Array[]) {
   let i = 0;
@@ -88,6 +88,7 @@ it("takes an OK answer with no stream as an answer a later try may read", async 
 
   expect(failure).toBeInstanceOf(ApiError);
   expect(failure).not.toBeInstanceOf(NetworkError);
+  expect((failure as ApiError).status).toBe(UNREADABLE_ANSWER);
   expect((failure as ApiError).retryable).toBe(true);
 });
 

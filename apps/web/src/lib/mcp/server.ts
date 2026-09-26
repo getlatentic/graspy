@@ -12,6 +12,7 @@ import {
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
+import { NotForViews } from "./refusal";
 import { isUnreachable } from "./unreachable";
 
 // The app is an MCP Apps host; graspy's server serves the views and runs their tools.
@@ -154,9 +155,7 @@ export async function callAppTool(
   args: Record<string, unknown>,
 ): Promise<CallToolResult> {
   const { client, appTools } = await server();
-  if (!appTools.has(name)) {
-    throw new Error(`${name} cannot be called from a view`);
-  }
+  if (!appTools.has(name)) throw new NotForViews(name);
   return (await client.callTool({ name, arguments: args })) as CallToolResult;
 }
 

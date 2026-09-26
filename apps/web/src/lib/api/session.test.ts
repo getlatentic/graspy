@@ -73,7 +73,7 @@ function minted(token: string, expiresIn = 3600, extra: object = {}) {
   return {
     ok: true,
     status: 200,
-    json: async () => ({ token, expiresIn, ...extra }),
+    text: async () => JSON.stringify({ token, expiresIn, ...extra }),
   };
 }
 
@@ -330,6 +330,17 @@ describe("a session exchange", () => {
       () => fetchMock.mockRejectedValue(new TypeError("Failed to fetch")),
     ],
     [
+      "the connection is cut while graspy's session is read",
+      () =>
+        fetchMock.mockResolvedValue({
+          ok: true,
+          status: 200,
+          text: async () => {
+            throw new TypeError("network error");
+          },
+        }),
+    ],
+    [
       "Google cannot be reached",
       () => {
         signedIn = ACCOUNT;
@@ -369,15 +380,11 @@ describe("a session exchange", () => {
       () => fetchMock.mockResolvedValue(minted("")),
     ],
     [
-      "graspy's answer is not a session",
+      "graspy's answer, read whole, is not a session",
       () =>
-        fetchMock.mockResolvedValue({
-          ok: true,
-          status: 200,
-          json: async () => {
-            throw new SyntaxError("Unexpected token '<'");
-          },
-        }),
+        fetchMock.mockResolvedValue(
+          new Response("<html>Welcome</html>", { status: 200 }),
+        ),
     ],
     [
       "Google refuses the sign-in",

@@ -1,5 +1,7 @@
+import { ProtocolError, ProtocolErrorCode } from "@modelcontextprotocol/client";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NotForViews } from "./refusal";
 
 const callAppTool = vi.fn();
 vi.mock("./server", () => ({ callAppTool }));
@@ -72,21 +74,79 @@ describe("a view's call", () => {
 
   it("is not kept when the server refuses it, and a kept one it refuses is dropped", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    const refused = new Error("give_practice cannot be called from a view");
+    const refused = new NotForViews("give_practice");
     callAppTool.mockRejectedValue(refused);
     const { callOrKeep, sendKept } = await fresh();
 
     await expect(callOrKeep("give_practice", {})).rejects.toBe(refused);
 
-    online = false;
-    callAppTool.mockReset().mockRejectedValue(new TypeError("Failed"));
-    await callOrKeep("answer_check", ANSWER);
-    online = true;
-    callAppTool.mockReset().mockRejectedValue(new Error("Invalid arguments"));
+    await keptOffline();
+    callAppTool
+      .mockReset()
+      .mockRejectedValue(
+        new ProtocolError(ProtocolErrorCode.InvalidParams, "Invalid arguments"),
+      );
     expect(await sendKept()).toBe(1);
     expect(await sendKept()).toBe(0);
   });
+
+  it.each([
+    [
+      "the session is rate limited",
+      (api: Errors) =>
+        new api.ApiError("Too many requests", 429, {
+          error: "Too many requests",
+          code: "rate_limited",
+        }),
+    ],
+    [
+      "Firebase is asked too often",
+      (api: Errors) => new api.SignInUnchecked("auth/too-many-requests", 429),
+    ],
+    [
+      "Firebase fails on its side",
+      (api: Errors) => new api.SignInUnchecked("auth/internal-error", 503),
+    ],
+    [
+      "the session exchange meets a bad gateway",
+      (api: Errors) => new api.ApiError("Bad gateway", 502),
+    ],
+    [
+      "the MCP endpoint fails",
+      () => new Error("Error POSTing to endpoint (HTTP 500): boom"),
+    ],
+    [
+      "the server fails the call",
+      () =>
+        new ProtocolError(ProtocolErrorCode.InternalError, "Internal error"),
+    ],
+  ])(
+    "stays kept, and blocks letting the learner go, when %s",
+    async (_, failure) => {
+      const { sendKept, sentEverything, errors } = await keptOffline();
+      callAppTool.mockReset().mockRejectedValue(failure(errors));
+
+      expect(await sendKept()).toBe(0);
+      expect(await sentEverything()).toBe(false);
+      callAppTool.mockReset().mockResolvedValue(DONE);
+      expect(await sendKept()).toBe(1);
+    },
+  );
 });
+
+type Errors = typeof import("@/lib/api/errors");
+
+/** One answer_check kept while offline, and the device back online. The errors come from the
+ * outbox's own module graph, as the session's do. */
+async function keptOffline() {
+  online = false;
+  callAppTool.mockReset().mockRejectedValue(new TypeError("Failed to fetch"));
+  const outbox = await fresh();
+  const errors: Errors = await import("@/lib/api/errors");
+  await outbox.callOrKeep("answer_check", ANSWER);
+  online = true;
+  return { ...outbox, errors };
+}
 
 describe("sentEverything", () => {
   it("is false while a kept call cannot reach the server, and true once sent", async () => {

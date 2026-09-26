@@ -27,10 +27,18 @@ const MARKING_POLLS = 20;
 const POLL_MS = 3_000;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Refusals of the session, not of the answer: it goes again once the session is sorted.
+const SESSION_STATUSES = new Set([401, 403]);
+
 /** Whether the answer is worth sending again: the voice API gave no answer (status 0, which
- * covers any failure to get a session), or was busy or failed on its side. */
+ * covers any failure to get a session), was busy or failed on its side, whatever code it
+ * named, or refused the session rather than the answer. */
 function transient(error: VoiceError): boolean {
-  return error.code === null && isRetryableStatus(error.status);
+  return (
+    isRetryableStatus(error.status) ||
+    SESSION_STATUSES.has(error.status) ||
+    error.code === "learner_required"
+  );
 }
 
 async function uploaded(

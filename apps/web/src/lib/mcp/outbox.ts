@@ -1,6 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/client";
 import { committed, openDB, OUTBOX_STORE, promisify } from "@/lib/idb";
 import { callAppTool } from "./server";
+import { refusesTheCall } from "./refusal";
 import { isUnreachable } from "./unreachable";
 
 // A view's tools/call made offline is kept and sent in order once back. These calls record
@@ -65,8 +66,8 @@ async function sendAll(): Promise<number> {
     try {
       await callAppTool(call.name, call.args);
     } catch (error) {
-      if (isUnreachable(error)) break;
-      // Refused now, it would be refused every time.
+      // What the learner did stays on the device until the server refuses this very call.
+      if (!refusesTheCall(error)) break;
       console.warn(`The server refused a kept ${call.name}:`, error);
     }
     await forget(call.id!);
@@ -84,7 +85,7 @@ export function sendKept(): Promise<number> {
   return sending;
 }
 
-/** Sends what was kept; false while some of it cannot reach the server. */
+/** Sends what was kept; false while some of it is still on the device. */
 export async function sentEverything(): Promise<boolean> {
   await sendKept();
   return (await keptCalls()).length === 0;
