@@ -2,7 +2,7 @@
 
 ## Set up
 
-Needs Node 24.13.1 or later, as CI uses, and [uv](https://docs.astral.sh/uv/). uv installs Python 3.14, the Workers runtime's version.
+Needs Node 24 (24.13.1 or a later 24), as CI uses, and [uv](https://docs.astral.sh/uv/). uv installs Python 3.14, the Workers runtime's version.
 
 ```bash
 npm install
