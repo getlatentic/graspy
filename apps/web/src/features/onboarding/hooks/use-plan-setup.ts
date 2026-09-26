@@ -2,9 +2,11 @@ import { useReducer, useRef, useState, type Dispatch } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n-context";
 import { saveUserProfile } from "@/lib/user-storage";
+import { voiceOnly } from "@/lib/voice/voice-learner";
 import { learnerDetails } from "../lib/details";
 import {
   generatePlan,
+  keepVoiceOnlyPlan,
   type GenerationStats,
   type PlanOrder,
 } from "../lib/generate-plan";
@@ -75,6 +77,16 @@ async function keepLearner(
   });
 }
 
+/** No subjects to choose and nothing for the model to make: the plan is kept at once. */
+async function keepVoiceOnly(
+  data: OnboardingSchema,
+  setLocale: (locale: string) => void | Promise<void>,
+) {
+  await keepLearner(data, [], setLocale);
+  await keepVoiceOnlyPlan(learnerDetails(data));
+  saveUserProfile({ onboardingCompleted: true });
+}
+
 export function usePlanSetup() {
   const { setLocale } = useI18n();
   const { mutateAsync: generate, isPending } = useMutation({
@@ -82,6 +94,7 @@ export function usePlanSetup() {
   });
   const [state, dispatch] = useReducer(planSetupReducer, FORM_SHOWN);
   const [subjectNames, setSubjectNames] = useState<string[]>([]);
+  const [keeping, setKeeping] = useState(false);
   // A run reads these after its awaits, where state would be stale.
   const runRef = useRef<number | null>(null);
   const orderRef = useRef<PlanOrder | null>(null);
@@ -94,10 +107,22 @@ export function usePlanSetup() {
     return () => runRef.current === id;
   };
 
+  const keep = async (data: OnboardingSchema) => {
+    setKeeping(true);
+    try {
+      await keepVoiceOnly(data, setLocale);
+      dispatch({ type: "kept" });
+    } catch (e) {
+      console.error("Keeping the plan failed:", e);
+      setKeeping(false);
+    }
+  };
+
   const start = async (
     data: OnboardingSchema,
     available: GeneratedSubject[],
   ) => {
+    if (voiceOnly(learnerDetails(data))) return keep(data);
     const request = planRequest(data, available);
     const order = { request, learner: learnerDetails(data) };
     setSubjectNames(request.subjects);
@@ -122,7 +147,7 @@ export function usePlanSetup() {
     subjectNames,
     pending: isPending,
     /** Includes an abandoned run still finishing. */
-    busy: isPending || state.phase === "generating",
+    busy: isPending || keeping || state.phase === "generating",
     start,
     retry,
     reset,

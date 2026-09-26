@@ -5,6 +5,7 @@ import {
   SECTIONS,
   sectionOf,
   type AppSection,
+  type Section,
 } from "@/features/learn/lib/app-sections";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
@@ -16,6 +17,7 @@ interface AppTabBarProps {
   unread?: boolean;
   /** Overrides the address: the landing page is Home to a visitor. */
   home?: { path: string; current: AppSection };
+  sections?: readonly Section[];
   className?: string;
 }
 
@@ -23,6 +25,7 @@ export function AppTabBar({
   tutorBusy = false,
   unread = false,
   home,
+  sections = SECTIONS,
   className,
 }: AppTabBarProps) {
   const { t } = useI18n();
@@ -37,7 +40,7 @@ export function AppTabBar({
         className,
       )}
     >
-      {SECTIONS.map((section) => {
+      {sections.map((section) => {
         const active = section.id === current;
         const isAsk = section.id === "ask";
         return (

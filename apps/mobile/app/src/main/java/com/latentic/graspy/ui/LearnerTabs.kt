@@ -48,6 +48,7 @@ import com.latentic.graspy.plan.languageName
 import com.latentic.graspy.plan.languageNativeName
 import com.latentic.graspy.plan.lessonTarget
 import com.latentic.graspy.plan.levelLabel
+import com.latentic.graspy.plan.voiceOnly
 import com.latentic.graspy.plan.withDetails
 import com.latentic.graspy.practice.Teacher
 import com.latentic.graspy.subjects.PlanUnread
@@ -56,6 +57,7 @@ import com.latentic.graspy.subjects.SubjectsTab
 import com.latentic.graspy.ui.tabs.AskMarks
 import com.latentic.graspy.ui.tabs.LearnTab
 import com.latentic.graspy.ui.tabs.TabBar
+import com.latentic.graspy.ui.tabs.learnTabs
 import com.latentic.graspy.you.DetailsScreen
 import com.latentic.graspy.you.LearnerDetail
 import com.latentic.graspy.you.YouTab
@@ -89,8 +91,12 @@ internal fun LearnerTabs(
     var editing by rememberSaveable { mutableStateOf(false) }
     var voicePage by rememberSaveable { mutableStateOf(false) }
     var askOpening by remember { mutableStateOf<AskOpening?>(null) }
+    // The plan's class, or the device's while the plan cannot be read.
+    val voiceOnly = (plan as? PlanState.Ready)?.plan?.voiceOnly() ?: (voice?.schoolClass?.voiceOnly == true)
+    val tabs = learnTabs(voiceOnly)
+    val shownTab = tab.takeIf { it in tabs } ?: LearnTab.HOME
     LaunchedEffect(tab) { planViewModel.refresh() }
-    BackHandler(enabled = place != null || editing || voicePage || tab != LearnTab.HOME) {
+    BackHandler(enabled = place != null || editing || voicePage || shownTab != LearnTab.HOME) {
         val current = place
         when {
             current != null -> place = current.back()
@@ -113,17 +119,17 @@ internal fun LearnerTabs(
     Column(Modifier.fillMaxSize().background(GraspyColor.Canvas).navigationBarsPadding().imePadding()) {
         GraspyHeader()
         Box(Modifier.weight(1f)) {
-            val shown = place
+            val shown = place.takeUnless { voiceOnly }
             val ready = plan as? PlanState.Ready
             when {
                 shown != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shown, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
                 editing && ready != null -> Page { Details(learn, ready.plan, interfaceLanguage, planViewModel, onBack = { editing = false }, onReplan = onReplan) }
-                voicePage && voice != null && tab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
-                tab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
+                voicePage && voice != null && shownTab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
+                shownTab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
                 else -> Page {
-                    when (tab) {
+                    when (shownTab) {
                         LearnTab.HOME -> Home(
-                            learn, voice, plan, planViewModel,
+                            learn, voice, voiceOnly, plan, planViewModel,
                             onVoice = { voicePage = true },
                             onAsk = {
                                 askOpening = it
@@ -132,12 +138,12 @@ internal fun LearnerTabs(
                             onPlace = { place = it },
                         ) { tab = LearnTab.SUBJECTS }
                         LearnTab.SUBJECTS -> SubjectsTab(learn, plan, onOpenSubject = { place = Place(it.slug) }, onRetry = planViewModel::refresh)
-                        else -> YouTab(learn, plan, learnerDetails(learn, plan, interfaceLanguage), account, menu.copy(onEditProfile = { editing = true }))
+                        else -> YouTab(learn, plan, voiceOnly, learnerDetails(learn, plan, interfaceLanguage), account, menu.copy(onEditProfile = { editing = true }))
                     }
                 }
             }
         }
-        TabBar(learn.nav, tab, AskMarks(turn.busyThreadId != null, unread.threads.isNotEmpty(), learn.chat.newTutorMessage)) {
+        TabBar(learn.nav, tabs, shownTab, AskMarks(turn.busyThreadId != null, unread.threads.isNotEmpty(), learn.chat.newTutorMessage)) {
             tab = it
             place = null
             editing = false
@@ -153,10 +159,12 @@ private fun Page(content: @Composable () -> Unit) {
     }
 }
 
+/** A class that learns by [voiceOnly] finds its voice lessons alone, as on the web. */
 @Composable
 private fun Home(
     learn: LearnCopy,
     voice: LearnerProfile?,
+    voiceOnly: Boolean,
     plan: PlanState,
     planViewModel: PlanViewModel,
     onVoice: () -> Unit,
@@ -164,6 +172,10 @@ private fun Home(
     onPlace: (Place) -> Unit,
     onSeeAllSubjects: () -> Unit,
 ) {
+    if (voiceOnly) {
+        voice?.let { VoiceCard(learn.voice, Teacher.forClass(it.schoolClass).first(), onVoice) }
+        return
+    }
     val making by planViewModel.makingState.collectAsStateWithLifecycle()
     HomeTab(
         learn = learn,

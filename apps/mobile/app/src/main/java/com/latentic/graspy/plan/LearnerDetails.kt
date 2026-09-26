@@ -99,14 +99,17 @@ fun LearnerPlan.levelLabel(learn: LearnCopy): String = when {
 // schoolDescriptor's shape: the class's name, its stage in brackets, then the system and the age.
 private val SCHOOL_CLASS = Regex("^(.+?) \\(.*\\), .+, age \\d+$")
 
-/**
- * The voice-lesson class of a learner in Nigeria's system, as the web's voiceClassOf; null when there are none.
- * The catalogue names a class "nursery-1" or "primary-4", the voice curriculum "nursery_1" or "primary_4".
- */
-fun LearnerPlan.voiceClass(): SchoolClass? {
-    if (system != "NG") return null
-    return SchoolClass.fromWire(level.orEmpty().replace('-', '_'))?.takeIf { it.voiceLessons }
-}
+/** The catalogue names a class "nursery-1" or "primary-4", the voice curriculum "nursery_1" or "primary_4". */
+private fun nigerianClass(system: String?, level: String?): SchoolClass? =
+    if (system == "NG") SchoolClass.fromWire(level.orEmpty().replace('-', '_')) else null
+
+/** The voice-lesson class of a learner in Nigeria's system, as the web's voiceClassOf; null when there are none. */
+fun LearnerPlan.voiceClass(): SchoolClass? = nigerianClass(system, level)?.takeIf { it.voiceLessons }
+
+/** Nigeria's nursery and kindergarten classes, as the web's voiceOnly: voice lessons, and no slide subjects. */
+val LearnerDetails.voiceOnly: Boolean get() = nigerianClass(system, level)?.voiceOnly == true
+
+fun LearnerPlan.voiceOnly(): Boolean = nigerianClass(system, level)?.voiceOnly == true
 
 /** The teacher speaks the learner's language when she can, and English otherwise. */
 fun LearnerPlan.voiceLanguage(): AppLanguageSelection = when (languageCodeOrGuess()) {

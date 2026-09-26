@@ -4,6 +4,7 @@ import {
   levelComplete,
 } from "@/lib/learner-level";
 import type { LearnerDetails, UserProfile } from "@/lib/user-storage";
+import { voiceOnly } from "@/lib/voice/voice-learner";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
 
 export function learnerDetails(details: DetailsSchema): LearnerDetails {
@@ -47,6 +48,17 @@ export function detailsOf(profile: UserProfile): DetailsSchema {
       : null,
     course: profile.course,
   };
+}
+
+/** What saving new details does to the plan. A class that learns by voice alone shows no
+ * subjects, so its plan only takes the details, and it has none worth keeping for another
+ * class; otherwise the learner chooses. */
+export function detailsSave(
+  profile: UserProfile,
+  details: DetailsSchema,
+): "keep" | "new" | "ask" {
+  if (voiceOnly(learnerDetails(details))) return "keep";
+  return voiceOnly(profile) ? "new" : "ask";
 }
 
 export function detailsChanged(

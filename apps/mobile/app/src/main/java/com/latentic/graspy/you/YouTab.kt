@@ -35,12 +35,15 @@ import com.latentic.graspy.ui.space
 /** A detail about the learner, as the web's details card lists them. */
 data class LearnerDetail(val label: String, val value: String)
 
-/** You, as the web's: progress, practice, the learner's details, and the account. */
+/**
+ * You, as the web's: progress, practice, the learner's details, and the account. Progress and practice come from
+ * slide subjects and Ask, which a class that learns by [voiceOnly] does not have.
+ */
 @Composable
-fun YouTab(learn: LearnCopy, plan: PlanState, details: List<LearnerDetail>, account: Account, menu: AccountMenu) {
+fun YouTab(learn: LearnCopy, plan: PlanState, voiceOnly: Boolean, details: List<LearnerDetail>, account: Account, menu: AccountMenu) {
     Column(verticalArrangement = Arrangement.spacedBy(space(6))) {
         PageTitle(learn.nav.you)
-        (plan as? PlanState.Ready)?.let {
+        (plan as? PlanState.Ready)?.takeUnless { voiceOnly }?.let {
             ProgressSummary(learn, it)
             PracticeRecord(learn, it)
         }

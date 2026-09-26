@@ -60,6 +60,7 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
     private val subjectsShown = MutableStateFlow(SubjectChoices())
     private val setupShown = MutableStateFlow<Setup?>(null)
     private val activeShown = MutableStateFlow(false)
+    private val keepingShown = MutableStateFlow(false)
     private var subjectsFor: LearnerDetails? = null
     private var reading: Job? = null
     private var making: Job? = null
@@ -72,6 +73,9 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
 
     /** From the first step until the learner leaves the plan it made. */
     val active: StateFlow<Boolean> = activeShown.asStateFlow()
+
+    /** While the plan of a class that learns by voice alone is being kept. */
+    val keeping: StateFlow<Boolean> = keepingShown.asStateFlow()
 
     /** A learner replanning from their details goes straight to the subjects taught at [replanFor]. */
     fun begin(replanFor: LearnerDetails?) {
@@ -130,6 +134,28 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
                 Log.w(TAG, "The plan was not made", error)
                 pace.cancel()
                 setupShown.update { it?.copy(failed = true) }
+            }
+        }
+    }
+
+    /**
+     * A class that learns by voice alone has no subjects to choose and no plan to wait for: its plan is made
+     * with no subjects and handed to [onKept] at once. A failure shows as the plan not made.
+     */
+    fun keep(details: LearnerDetails, make: suspend (LearnerDetails, List<String>) -> LearnerPlan, onKept: (LearnerPlan) -> Unit) {
+        if (keepingShown.value) return
+        keepingShown.value = true
+        setupShown.value = null
+        making = viewModelScope.launch {
+            try {
+                onKept(make(details, emptyList()))
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Log.w(TAG, "The plan was not kept", error)
+                setupShown.value = Setup(failed = true)
+            } finally {
+                keepingShown.value = false
             }
         }
     }

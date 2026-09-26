@@ -19,16 +19,29 @@ import { SubjectTiles } from "@/features/learn/components/subject-tiles";
 import { TrySomethingNew } from "@/features/learn/components/try-something-new";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
 import { VoiceCard } from "@/features/voice/components/voice-card";
+import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 
 export default function HomePage() {
   const { t } = useI18n();
   const userProfile = useUserProfile();
   const { curriculum, isGenerating, error, nextSubject, generate } = usePlan();
+  const voiceOnly = useVoiceOnly();
   const current = currentTopic(curriculum, nextSubject);
   const subjects = curriculum?.subjects ?? [];
-  const ask = useAskIdeas(current, subjects.length > 0 && !isGenerating);
+  const ask = useAskIdeas(
+    current,
+    subjects.length > 0 && !isGenerating && !voiceOnly,
+  );
 
   if (!userProfile) return null;
+
+  if (voiceOnly) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <VoiceCard />
+      </div>
+    );
+  }
 
   const errorAlert = error ? (
     <PlanErrorCard

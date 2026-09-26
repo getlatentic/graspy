@@ -10,7 +10,7 @@ import { StepFooter, StepHeading } from "../components/step-frame";
 import ProfileStep from "../components/steps/profile-step";
 import SubjectsStep from "../components/steps/subjects-step";
 import { useOnboardingForm } from "../hooks/use-onboarding-form";
-import { STEPS, useOnboardingSteps } from "../hooks/use-onboarding-steps";
+import { useOnboardingSteps } from "../hooks/use-onboarding-steps";
 import { usePlanSetup } from "../hooks/use-plan-setup";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
 
@@ -40,6 +40,7 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
     void setup.start(data, subjects);
   });
 
+  if (setup.phase === "kept") return <Navigate to="/app/learn" replace />;
   if (setup.phase !== "form") {
     return (
       <PlanSetupView setup={setup} onContinue={() => navigate("/app/learn")} />
@@ -48,7 +49,7 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
 
   return (
     <OnboardingLayout>
-      <StepHeading step={steps.step} index={steps.index} count={STEPS.length} />
+      <StepHeading step={steps.step} index={steps.index} count={steps.count} />
       <div
         key={steps.step}
         className={`mt-8 flex-1 min-h-0 motion-safe:animate-enter lg:pe-1 ${

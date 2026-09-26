@@ -10,6 +10,7 @@ import {
   detailsChanged,
   detailsComplete,
   detailsOf,
+  detailsSave,
   learnerDetails,
 } from "@/features/onboarding/lib/details";
 import {
@@ -78,11 +79,20 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
     }
     navigate(YOU);
   };
+  const newPlan = () =>
+    navigate("/app/onboarding", { state: { replan: values } });
+
+  const save = () => {
+    const choice = detailsSave(profile, values);
+    if (choice === "keep") void keepPlan();
+    else if (choice === "new") newPlan();
+    else setAsking(true);
+  };
 
   if (!asking) {
     return (
       <Button
-        onClick={() => setAsking(true)}
+        onClick={save}
         disabled={!detailsChanged(profile, values) || !detailsComplete(values)}
         className="self-start"
       >
@@ -90,14 +100,7 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
       </Button>
     );
   }
-  return (
-    <AskNewPlan
-      onNewPlan={() =>
-        navigate("/app/onboarding", { state: { replan: values } })
-      }
-      onKeepPlan={() => void keepPlan()}
-    />
-  );
+  return <AskNewPlan onNewPlan={newPlan} onKeepPlan={() => void keepPlan()} />;
 }
 
 function AskNewPlan({

@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from "react";
-import { Outlet, useLocation } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { cn } from "@/lib/cn";
@@ -12,9 +12,14 @@ import { useOpenChat } from "@/features/learn/hooks/use-open-chat";
 import { useLearnerChosen } from "@/features/learn/hooks/use-learner-chosen";
 import { useLearnerStart } from "@/features/learn/hooks/use-learner-start";
 import { useKeptAnswers } from "@/features/voice/hooks/use-kept-answers";
+import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
+import { VOICE_PAGE } from "@/features/voice/lib/voice-paths";
 import {
   isChatPath,
   lessonChatTarget,
+  pageShown,
+  sectionsFor,
+  type Section,
 } from "@/features/learn/lib/app-sections";
 import { scopeOf, type ChatTarget } from "@/features/learn/lib/chat-targets";
 import { LearnerProviders } from "@/features/learn/learner-providers";
@@ -27,8 +32,11 @@ function DashboardLayoutContent() {
   const { pathname } = useLocation();
   const userProfile = useLearnerStart();
   useKeptAnswers();
+  const voiceOnly = useVoiceOnly();
+  const shown = pageShown(pathname, voiceOnly);
+  const sections = sectionsFor(voiceOnly);
   const chat = isChatPath(pathname);
-  const lesson = lessonChatTarget(pathname);
+  const lesson = shown ? lessonChatTarget(pathname) : null;
   // iOS keeps dvh at full height while the keyboard is open.
   const visible = useVisualViewport(chat);
 
@@ -51,19 +59,21 @@ function DashboardLayoutContent() {
           : "h-dvh",
       )}
     >
-      <TopMenu />
+      <TopMenu sections={sections} />
       <div className="flex min-h-0 flex-1">
-        <PageArea chat={chat} />
+        <PageArea chat={chat} shown={shown} />
         {lesson && <LessonChat lesson={lesson} />}
       </div>
-      <ShellFooter lesson={lesson} chat={chat} />
+      <ShellFooter lesson={lesson} chat={chat} sections={sections} />
     </div>
   );
 }
 
 // Relative, so absolutely placed screen-reader text scrolls inside it rather
-// than stretching the document below the app.
-function PageArea({ chat }: { chat: boolean }) {
+// than stretching the document below the app. A page the learner's sections do
+// not hold, such as a slide lesson for a class that learns by voice alone, leads
+// to voice lessons.
+function PageArea({ chat, shown }: { chat: boolean; shown: boolean }) {
   const pageRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
   // Drawn before the saved plan is read, a page would flash its placeholder.
@@ -86,7 +96,7 @@ function PageArea({ chat }: { chat: boolean }) {
           : "overflow-y-auto overscroll-contain p-4 sm:p-6",
       )}
     >
-      {isLoaded && <Outlet />}
+      {isLoaded && (shown ? <Outlet /> : <Navigate to={VOICE_PAGE} replace />)}
     </main>
   );
 }
@@ -111,9 +121,11 @@ function LessonChat({ lesson }: { lesson: ChatTarget }) {
 function ShellFooter({
   lesson,
   chat,
+  sections,
 }: {
   lesson: ChatTarget | null;
   chat: boolean;
+  sections: readonly Section[];
 }) {
   const { busyThreadId, unread } = useChat();
   const openChat = useOpenChat();
@@ -132,6 +144,7 @@ function ShellFooter({
       className="pointer-coarse:group-has-[textarea:focus]/shell:hidden"
       tutorBusy={busyThreadId !== null && !chat}
       unread={unread.size > 0}
+      sections={sections}
     />
   );
 }

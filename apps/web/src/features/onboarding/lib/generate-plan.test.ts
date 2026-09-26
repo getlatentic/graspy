@@ -4,7 +4,7 @@ import type {
   CurriculumStreamEvent,
 } from "@/lib/curriculum-api";
 import type { LearnerDetails } from "@/lib/user-storage";
-import { generatePlan } from "./generate-plan";
+import { generatePlan, keepVoiceOnlyPlan } from "./generate-plan";
 
 const { streamCurriculum, saveCurriculum, deleteCurriculum } = vi.hoisted(
   () => ({
@@ -93,5 +93,34 @@ describe("generatePlan", () => {
 
     await expect(generatePlan({ request, learner })).rejects.toThrow("busy");
     expect(saveCurriculum).not.toHaveBeenCalled();
+  });
+});
+
+describe("keepVoiceOnlyPlan", () => {
+  it("keeps who the plan is for, with no subjects, and never asks the model", async () => {
+    await keepVoiceOnlyPlan({
+      ...learner,
+      level: "nursery-1",
+      levelNames: { en: "Nursery 1" },
+      gradeLevel: "Nursery 1 (Early childhood), Nigeria, age 3",
+    });
+
+    expect(streamCurriculum).not.toHaveBeenCalled();
+    expect(saveCurriculum).toHaveBeenCalledWith({
+      country: "Nigeria",
+      countryName: "Nigeria",
+      countryCode: "NG",
+      language: "English",
+      languageName: "English",
+      languageCode: "en",
+      gradeLevel: "Nursery 1 (Early childhood), Nigeria, age 3",
+      system: "NG",
+      level: "nursery-1",
+      levelNames: { en: "Nursery 1" },
+      course: "",
+      subjects: [],
+      topics: {},
+      assessment: { nextSubject: null },
+    });
   });
 });

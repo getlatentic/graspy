@@ -10,12 +10,14 @@ import { ASK_HUB, type ChatTarget } from "./chat-targets";
 
 export type AppSection = "home" | "subjects" | "ask" | "you";
 
-export const SECTIONS: ReadonlyArray<{
+export interface Section {
   id: AppSection;
   path: string;
   labelKey: string;
   icon: LucideIcon;
-}> = [
+}
+
+export const SECTIONS: readonly Section[] = [
   { id: "home", path: "/app/learn", labelKey: "nav.home", icon: House },
   {
     id: "subjects",
@@ -26,6 +28,19 @@ export const SECTIONS: ReadonlyArray<{
   { id: "ask", path: ASK_HUB, labelKey: "nav.ask", icon: MessageCircle },
   { id: "you", path: "/app/learn/you", labelKey: "nav.you", icon: UserRound },
 ];
+
+// Subjects and Ask are read, so a class that learns by voice alone has neither.
+const VOICE_ONLY_SECTIONS = SECTIONS.filter(
+  ({ id }) => id === "home" || id === "you",
+);
+
+export const sectionsFor = (voiceOnly: boolean) =>
+  voiceOnly ? VOICE_ONLY_SECTIONS : SECTIONS;
+
+/** Whether a page is in a section the learner has: a slide lesson, say, is not for a class
+ * that learns by voice alone. */
+export const pageShown = (pathname: string, voiceOnly: boolean): boolean =>
+  sectionsFor(voiceOnly).some(({ id }) => id === sectionOf(pathname));
 
 const LEARN = "/app/learn";
 

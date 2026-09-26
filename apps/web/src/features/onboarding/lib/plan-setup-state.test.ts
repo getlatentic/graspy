@@ -43,6 +43,13 @@ describe("planSetupReducer", () => {
     expect(planSetupReducer(failed, { type: "started" }).error).toBeNull();
     expect(planSetupReducer(failed, { type: "reset" })).toBe(FORM_SHOWN);
   });
+
+  it("goes from the form straight to a kept plan, with no timeline", () => {
+    expect(planSetupReducer(FORM_SHOWN, { type: "kept" })).toEqual({
+      ...FORM_SHOWN,
+      phase: "kept",
+    });
+  });
 });
 
 describe("planRequest", () => {

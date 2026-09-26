@@ -19,6 +19,7 @@ import com.latentic.graspy.localization.LearnCopy
 import com.latentic.graspy.onboarding.DetailsFormViewModel
 import com.latentic.graspy.onboarding.ProfileStep
 import com.latentic.graspy.plan.LearnerDetails
+import com.latentic.graspy.plan.voiceOnly
 import com.latentic.graspy.ui.GraspyCard
 import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.PageTitle
@@ -26,6 +27,19 @@ import com.latentic.graspy.ui.PrimaryButton
 import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.space
 import java.util.Locale
+
+/** What saving new details does to the plan, as the web's detailsSave. */
+enum class DetailsSave { KEEP, NEW, ASK }
+
+/**
+ * A class that learns by voice alone shows no subjects, so its plan only takes the details, and it has none worth
+ * keeping for another class; otherwise the learner chooses.
+ */
+fun detailsSave(current: LearnerDetails, next: LearnerDetails): DetailsSave = when {
+    next.voiceOnly -> DetailsSave.KEEP
+    current.voiceOnly -> DetailsSave.NEW
+    else -> DetailsSave.ASK
+}
 
 /**
  * The learner's details, changed as the web changes them (app/learn/details-page.tsx): new details either get
@@ -50,7 +64,14 @@ fun DetailsScreen(
         }
         ProfileStep(learn, form, current.country, display)
         if (!asking) {
-            PrimaryButton(learn.details.save, { asking = true }, enabled = values.changes(current) && values.complete)
+            PrimaryButton(learn.details.save, {
+                val next = values.details()
+                when (detailsSave(current, next)) {
+                    DetailsSave.KEEP -> onKeepPlan(next)
+                    DetailsSave.NEW -> onNewPlan(next)
+                    DetailsSave.ASK -> asking = true
+                }
+            }, enabled = values.changes(current) && values.complete)
         } else {
             GraspyCard(Modifier.semantics { paneTitle = learn.details.askTitle }) {
                 Text(learn.details.askTitle, style = MaterialTheme.typography.titleSmall, color = GraspyColor.Ink)

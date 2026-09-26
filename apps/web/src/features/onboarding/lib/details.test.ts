@@ -5,6 +5,7 @@ import {
   detailsChanged,
   detailsComplete,
   detailsOf,
+  detailsSave,
   learnerDetails,
 } from "./details";
 
@@ -77,5 +78,30 @@ describe("the learner's details", () => {
     const earlier = { ...profile(school), level: "", levelNames: null };
 
     expect(detailsOf(earlier)).toMatchObject({ level: "", school: null });
+  });
+});
+
+describe("saving new details", () => {
+  const inClass = (level: string, descriptor: string): DetailsSchema => ({
+    ...school,
+    level,
+    school: { names: { en: descriptor }, descriptor },
+  });
+  const nursery = inClass("nursery-1", "Nursery 1, Nigeria, age 3");
+  const primary = inClass("primary-1", "Primary 1, Nigeria, age 6");
+
+  it("lets a learner choose between a new plan and keeping theirs", () => {
+    expect(detailsSave(profile(school), primary)).toBe("ask");
+  });
+
+  it("keeps the plan for a class that learns by voice alone, with no subjects to make", () => {
+    expect(detailsSave(profile(primary), nursery)).toBe("keep");
+    expect(detailsSave(profile(nursery), { ...nursery, language: "en" })).toBe(
+      "keep",
+    );
+  });
+
+  it("makes a new plan for a learner leaving such a class, whose plan has no subjects", () => {
+    expect(detailsSave(profile(nursery), primary)).toBe("new");
   });
 });

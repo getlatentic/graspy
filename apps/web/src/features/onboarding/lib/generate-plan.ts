@@ -28,6 +28,19 @@ async function followStream(
   return failure;
 }
 
+/** The plan of a class that learns by voice alone: who it is for, which the learner's
+ * devices share, and no subjects, so the model is not asked. Replaces any plan they had. */
+export async function keepVoiceOnlyPlan(
+  learner: LearnerDetails,
+): Promise<void> {
+  await saveCurriculum({
+    ...planDetails(learner),
+    subjects: [],
+    topics: {},
+    assessment: { nextSubject: null },
+  });
+}
+
 /** Replaces any plan the learner had. The server is sent English names. */
 export async function generatePlan({
   request,

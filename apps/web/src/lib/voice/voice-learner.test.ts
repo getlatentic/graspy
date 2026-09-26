@@ -1,9 +1,47 @@
 import { describe, expect, it } from "vitest";
 import {
+  classOf,
   languagePairOf,
   lessonLanguageOf,
   voiceClassOf,
+  voiceOnly,
 } from "./voice-learner";
+
+describe("voiceOnly", () => {
+  it("holds for Nigeria's nursery and kindergarten classes, whose children do not read yet", () => {
+    expect(voiceOnly({ system: "NG", level: "nursery-1" })).toBe(true);
+    expect(voiceOnly({ system: "NG", level: "nursery-2" })).toBe(true);
+    expect(voiceOnly({ system: "NG", level: "kindergarten" })).toBe(true);
+  });
+
+  it("leaves primary classes their slide subjects as well as voice lessons", () => {
+    expect(voiceOnly({ system: "NG", level: "primary-1" })).toBe(false);
+    expect(voiceOnly({ system: "NG", level: "primary-6" })).toBe(false);
+  });
+
+  it("holds for no class past primary, outside Nigeria's system, or after school", () => {
+    expect(voiceOnly({ system: "NG", level: "jss-1" })).toBe(false);
+    expect(voiceOnly({ system: "GH", level: "kindergarten" })).toBe(false);
+    expect(voiceOnly({ system: "", level: "undergraduate" })).toBe(false);
+    expect(voiceOnly({})).toBe(false);
+  });
+});
+
+describe("classOf", () => {
+  const profile = { system: "NG", level: "nursery-1" };
+
+  it("is the plan's class once the plan carries one", () => {
+    expect(classOf({ system: "NG", level: "primary-2" }, profile)).toEqual({
+      system: "NG",
+      level: "primary-2",
+    });
+  });
+
+  it("is the profile's for a plan without a class, or none", () => {
+    expect(classOf({}, profile)).toBe(profile);
+    expect(classOf(null, profile)).toBe(profile);
+  });
+});
 
 describe("voiceClassOf", () => {
   it("names a Nigerian primary class as the voice curriculum keys it", () => {

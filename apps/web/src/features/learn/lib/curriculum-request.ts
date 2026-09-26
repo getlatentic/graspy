@@ -1,6 +1,7 @@
 import type { CurriculumRequest } from "@/lib/curriculum-api";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { getUserProfile, type UserProfile } from "@/lib/user-storage";
+import { classOf, voiceOnly } from "@/lib/voice/voice-learner";
 import { pathsOf } from "./curriculum-edit";
 
 export function curriculumRequest(
@@ -14,6 +15,14 @@ export function curriculumRequest(
     subjects,
   };
 }
+
+/** Whether a plan is still to be made: the learner has no subjects, and their class learns from slides. */
+export const planWanted = (
+  curriculum: CurriculumData | null,
+  profile: UserProfile,
+): boolean =>
+  !curriculum?.subjects.length &&
+  !voiceOnly(classOf(curriculum, profile) ?? profile);
 
 /** Paths are left out: they stay as the learner accepted them. */
 export function rebuildRequest(

@@ -81,11 +81,18 @@ fun LearnerHome(
                 onDone = { setup.finish() },
             )
         }
-        else -> GraspyRoot(copy, appLanguage, interfaceLanguage, voice.value.takeIf { ready == null || ready.voiceClass() != null }, account, menu) {
+        else -> GraspyRoot(copy, appLanguage, interfaceLanguage, voiceShown(voice.value, ready), account, menu) {
             setup.begin(replanFor = form.form.value.details())
         }
     }
 }
+
+/**
+ * The learner's voice lessons: in the class their plan names, or, while the plan cannot be read, the class this
+ * device last knew; none for a class without voice lessons.
+ */
+internal fun voiceShown(device: LearnerProfile?, ready: LearnerPlan?): LearnerProfile? =
+    device?.takeIf { it.schoolClass.voiceLessons && (ready == null || ready.voiceClass() != null) }
 
 /** The words follow the plan's language, English when graspy has no words in it; voice lessons follow its class. */
 private fun followPlan(plan: LearnerPlan, learnerKey: String, voice: MutableState<LearnerProfile?>, profiles: LearnerProfileStore, onWords: (InterfaceLanguage) -> Unit) {
