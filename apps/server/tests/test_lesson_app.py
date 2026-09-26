@@ -107,6 +107,7 @@ async def test_opening_a_topic_starts_its_lesson_and_answers_at_once(server):
         joined = await client.call_tool("lesson_progress", {"target": TARGET})
 
     assert opened.structured_content["status"] == "making"
+    assert opened.structured_content["lessonId"] is None
     assert opened.structured_content["target"] == {
         **TARGET,
         "gradeLevel": None,
@@ -132,6 +133,7 @@ async def test_the_lesson_goes_on_after_the_view_stops_asking_and_is_filed(serve
     assert len(server.state.service.requests) == 1
     [mark] = (await record_of(server))["topics"]
     assert mark["lessonId"]
+    assert reopened.structured_content["lessonId"] == mark["lessonId"]
 
 
 async def test_a_lesson_on_the_record_opens_without_being_made(server):
@@ -143,9 +145,12 @@ async def test_a_lesson_on_the_record_opens_without_being_made(server):
 
     async with connected(server) as client:
         opened = await client.call_tool("give_lesson", {"target": TARGET})
+        watched = await client.call_tool("lesson_progress", {"target": TARGET})
 
     assert opened.structured_content["status"] == "ready"
     assert opened.structured_content["whole"] is True
+    assert opened.structured_content["lessonId"] == "lesson-1"
+    assert watched.structured_content["lessonId"] == "lesson-1"
     assert server.state.service.requests == []
 
 

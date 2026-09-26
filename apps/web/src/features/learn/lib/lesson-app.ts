@@ -32,6 +32,8 @@ interface LessonState {
   status: "making" | "ready" | "failed";
   whole: boolean;
   lesson: unknown;
+  /** The record's id for the lesson once it is kept; older servers leave it out. */
+  lessonId?: string | null;
 }
 
 export function lessonTarget(

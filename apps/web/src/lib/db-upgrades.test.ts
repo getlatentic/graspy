@@ -19,6 +19,7 @@ async function storage() {
     ...(await import("@/lib/idb")),
     ...(await import("@/lib/curriculum-db")),
     ...(await import("@/lib/chat-db")),
+    ...(await import("@/lib/lesson-copies")),
   };
 }
 
@@ -71,6 +72,7 @@ interface Seed {
   lessons?: object[];
   messages?: object[];
   practice?: object[];
+  copies?: object[];
 }
 
 function createStores(db: IDBDatabase, version: number): void {
@@ -92,6 +94,11 @@ function createStores(db: IDBDatabase, version: number): void {
     store.createIndex("plan", "planId");
     store.createIndex("subject", ["planId", "subjectSlug"]);
   }
+  if (version < 8) return;
+  db.createObjectStore("lesson-copies", { keyPath: TOPIC_KEY });
+  db.createObjectStore("outbox", { keyPath: "id", autoIncrement: true });
+  if (version < 9) return;
+  db.createObjectStore("voice-answers", { keyPath: "key" });
 }
 
 function fill(tx: IDBTransaction, version: number, seed: Seed): void {
@@ -102,6 +109,7 @@ function fill(tx: IDBTransaction, version: number, seed: Seed): void {
   if (version >= 2) put("chat-threads", [THREAD]);
   put("lessons", seed.lessons);
   put("practice", seed.practice);
+  if (version >= 8) put("lesson-copies", seed.copies);
 }
 
 async function seed(version: number, seed: Seed = {}): Promise<void> {
@@ -437,6 +445,25 @@ describe("version 7: practice in sets, and a record for each question", () => {
         .put({ ...record, question: "1/4 as a decimal?" }),
     );
     expect(await practiceIn(db)).toHaveLength(2);
+  });
+});
+
+describe("version 10: lesson copies indexed by the lesson each holds", () => {
+  it("lists the copies already on the device, one kept before copies named their lesson", async () => {
+    const card = { resourceUri: "ui://graspy/lesson", toolName: "give_lesson" };
+    await seed(9, {
+      copies: [
+        { ...ref(1), card, savedAt: 1, lessonId: "lesson-1" },
+        { ...ref(2), card, savedAt: 1 },
+      ],
+    });
+
+    const db = await storage();
+
+    expect(await db.copiedLessons()).toEqual([
+      { ...ref(1), lessonId: "lesson-1" },
+      { ...ref(2), lessonId: null },
+    ]);
   });
 });
 
