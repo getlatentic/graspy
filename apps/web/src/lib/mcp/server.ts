@@ -110,16 +110,14 @@ async function readOnce(uri: string): Promise<UiView> {
   if (!view) {
     view = readView(client, uri, titles.get(uri) ?? uri);
     views.set(uri, view);
-    view.then(
-      (read) => keepView(uri, read),
-      () => views.delete(uri),
-    );
+    view.catch(() => views.delete(uri));
   }
   return view;
 }
 
 // Kept so a view still opens after a reload without a connection. The document is small:
-// its scripts and styles are files the sandbox's worker keeps.
+// its scripts and styles are hashed files the sandbox's worker keeps once a page has loaded them,
+// so only a view being shown replaces its copy; a newer page's files may not be kept until it is.
 const keptKey = (uri: string) => `graspy.view.${uri}`;
 
 function keepView(uri: string, view: UiView): void {
@@ -139,10 +137,12 @@ function keptView(uri: string): UiView | null {
   }
 }
 
-/** Read once per visit; with no server to reach, the copy last read. A refusal is its answer. */
+/** The view to show, read once per visit; with no server to reach, the copy last shown. A refusal is its answer. */
 export async function uiView(uri: string): Promise<UiView> {
   try {
-    return await readOnce(uri);
+    const view = await readOnce(uri);
+    keepView(uri, view);
+    return view;
   } catch (error) {
     const kept = isUnreachable(error) ? keptView(uri) : null;
     if (kept) return kept;
@@ -176,7 +176,12 @@ export async function openToolView(
   return { resourceUri, toolName: name, toolInput: args, toolResult };
 }
 
+/** Keeps each view that has no copy yet; a copy is left as it is. */
 export async function readAllViews(): Promise<void> {
   const { titles } = await server();
-  await Promise.all([...titles.keys()].map(uiView));
+  await Promise.all(
+    [...titles.keys()]
+      .filter((uri) => !keptView(uri))
+      .map(async (uri) => keepView(uri, await readOnce(uri))),
+  );
 }

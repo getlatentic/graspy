@@ -129,3 +129,41 @@ describe("a view", () => {
     await expect(uiView("ui://graspy/lesson")).rejects.toBe(failure);
   });
 });
+
+describe("the background read of every view", () => {
+  const newerView = (text: string) => ({
+    contents: [{ ...LESSON_VIEW.contents[0], text }],
+  });
+
+  it("keeps a view that has no copy, so it opens without a connection", async () => {
+    connect.mockResolvedValue(undefined);
+    await (await fresh()).readAllViews();
+
+    connect.mockRejectedValue(new TypeError("Failed to fetch"));
+    const offline = await (await fresh()).uiView("ui://graspy/lesson");
+
+    expect(offline.html).toBe("<html>lesson</html>");
+  });
+
+  it("leaves a kept copy as it is: its files were cached by showing it, a newer page's may not be", async () => {
+    await readOnline();
+    readResource.mockResolvedValue(newerView("<html>newer</html>"));
+    await (await fresh()).readAllViews();
+
+    connect.mockRejectedValue(new TypeError("Failed to fetch"));
+    const offline = await (await fresh()).uiView("ui://graspy/lesson");
+
+    expect(offline.html).toBe("<html>lesson</html>");
+  });
+
+  it("is overtaken by a view being shown, which replaces its copy", async () => {
+    await readOnline();
+    readResource.mockResolvedValue(newerView("<html>newer</html>"));
+    await readOnline();
+
+    connect.mockRejectedValue(new TypeError("Failed to fetch"));
+    const offline = await (await fresh()).uiView("ui://graspy/lesson");
+
+    expect(offline.html).toBe("<html>newer</html>");
+  });
+});
