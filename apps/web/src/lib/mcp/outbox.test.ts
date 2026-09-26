@@ -6,7 +6,6 @@ import {
 } from "@modelcontextprotocol/client";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { NotForViews } from "./refusal";
 
 const callAppTool = vi.fn();
 const reachServer = vi.fn();
@@ -87,11 +86,30 @@ describe("a view's call", () => {
     expect(await sendKept()).toBe(1);
   });
 
+  it.each([
+    ["fails on its side", () => httpError(503)],
+    ["is rate limited", () => httpError(429)],
+    ["refuses the session", () => httpError(401)],
+  ])("is kept, the view told so, when the server %s", async (_, failure) => {
+    callAppTool.mockRejectedValue(failure());
+    const { callOrKeep, sentEverything } = await fresh();
+
+    await expect(callOrKeep("answer_check", ANSWER)).resolves.toEqual({
+      content: [
+        { type: "text", text: "This is kept on the device and sent later." },
+      ],
+    });
+    callAppTool.mockReset().mockResolvedValue(DONE);
+    expect(await sentEverything()).toBe(true);
+    expect(callAppTool).toHaveBeenCalledWith("answer_check", ANSWER);
+  });
+
   it("is not kept when the server refuses it, and a kept one it refuses is dropped", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { callOrKeep, sendKept } = await fresh();
+    const { NotForViews }: Refusal = await import("./refusal");
     const refused = new NotForViews("give_practice");
     callAppTool.mockRejectedValue(refused);
-    const { callOrKeep, sendKept } = await fresh();
 
     await expect(callOrKeep("give_practice", {})).rejects.toBe(refused);
 

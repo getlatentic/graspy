@@ -2,10 +2,9 @@ import type { CallToolResult } from "@modelcontextprotocol/client";
 import { committed, openDB, OUTBOX_STORE, promisify } from "@/lib/idb";
 import { callAppTool, reachServer } from "./server";
 import { refusesTheCall } from "./refusal";
-import { isUnreachable } from "./unreachable";
 
-// A view's tools/call made offline is kept and sent in order once back. These calls record
-// what the learner did, and the server takes each again without harm.
+// A view's tools/call the server did not take is kept and sent in order later. These calls
+// record what the learner did, and the server takes each again without harm.
 interface KeptCall {
   id?: number;
   name: string;
@@ -17,7 +16,7 @@ const KEPT: CallToolResult = {
   content: [
     {
       type: "text",
-      text: "There is no connection: this is kept, and sent once there is.",
+      text: "This is kept on the device and sent later.",
     },
   ],
 };
@@ -38,7 +37,8 @@ export async function callOrKeep(
   try {
     return await callAppTool(name, args);
   } catch (error) {
-    if (!isUnreachable(error)) throw error;
+    // Kept as the outbox's run keeps it: until the server refuses this very call.
+    if (refusesTheCall(error)) throw error;
     await keep(name, args);
     return KEPT;
   }
