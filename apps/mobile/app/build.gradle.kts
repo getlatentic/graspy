@@ -77,6 +77,10 @@ android {
         compose = true
         buildConfig = true
     }
+    // Robolectric finds the Compose test host activity in the merged manifest.
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 // A release is signed with graspy's release key or not built at all: never unsigned, never debug-signed.
@@ -126,6 +130,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     kapt("androidx.room:room-compiler:2.8.4")
     debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    testImplementation(composeBom)
+    testImplementation("androidx.compose.ui:ui-test-junit4")
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:5.3.0")
     testImplementation("org.robolectric:robolectric:4.17")

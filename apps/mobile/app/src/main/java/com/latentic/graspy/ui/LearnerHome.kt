@@ -51,8 +51,8 @@ fun LearnerHome(
 ) {
     val planViewModel: PlanViewModel = viewModel()
     val plan by planViewModel.state.collectAsStateWithLifecycle()
-    val form: DetailsFormViewModel = viewModel()
-    val setup: PlanSetupViewModel = viewModel()
+    val form: DetailsFormViewModel = viewModel(factory = DetailsFormViewModel.Factory)
+    val setup: PlanSetupViewModel = viewModel(factory = PlanSetupViewModel.Factory)
     val setupActive by setup.active.collectAsStateWithLifecycle()
     val ready = (plan as? PlanState.Ready)?.plan
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }

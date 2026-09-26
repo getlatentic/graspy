@@ -1,9 +1,12 @@
 package com.latentic.graspy.onboarding
 
-import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.latentic.graspy.BuildConfig
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.plan.GeneratedSubject
@@ -38,6 +41,9 @@ data class SubjectChoices(
 /** Making the plan: the timeline stage shown, then the plan made; [failed] when it stopped. */
 data class Setup(val stage: Int = 0, val made: LearnerPlan? = null, val failed: Boolean = false)
 
+/** The subjects taught at a level, each time more arrive; the stream's own error, if it sent one. */
+typealias SubjectsSource = suspend (country: String, language: String, gradeLevel: String, onSubjects: (List<GeneratedSubject>) -> Unit) -> String?
+
 /** Unchanged when choosing one more would pass the limit. */
 fun toggledSelection(selected: List<String>, id: String): List<String> = when {
     id in selected -> selected - id
@@ -52,11 +58,7 @@ fun seededSelection(available: List<GeneratedSubject>): List<String> = available
  * A plan made as the web's onboarding makes one (features/onboarding): the learner's details, then the
  * subjects taught at their level, then the plan, with a timeline that moves however long the plan takes.
  */
-class PlanSetupViewModel(application: Application) : AndroidViewModel(application) {
-    private val streams = PlanStreams(
-        AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse())),
-        BuildConfig.API_BASE_URL.toHttpUrl(),
-    )
+class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
     private val stepShown = MutableStateFlow(SetupStep.PROFILE)
     private val subjectsShown = MutableStateFlow(SubjectChoices())
     private val setupShown = MutableStateFlow<Setup?>(null)
@@ -99,7 +101,7 @@ class PlanSetupViewModel(application: Application) : AndroidViewModel(applicatio
         subjectsShown.value = SubjectChoices(loading = true)
         reading = viewModelScope.launch {
             try {
-                val failure = streams.subjects(countryName(details.country), languageName(details.language), details.gradeLevel) { found ->
+                val failure = subjectsAt(countryName(details.country), languageName(details.language), details.gradeLevel) { found ->
                     subjectsShown.update { current ->
                         current.copy(available = found, chosen = current.chosen.ifEmpty { seededSelection(found) })
                     }
@@ -157,9 +159,18 @@ class PlanSetupViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    private companion object {
-        const val TAG = "GraspySetup"
-        const val STAGES = 3
-        const val STEP_MS = 1_500L
+    companion object {
+        private const val TAG = "GraspySetup"
+        private const val STAGES = 3
+        private const val STEP_MS = 1_500L
+
+        /** The subjects as the server streams them, for the learner the device learns as. */
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = requireNotNull(this[APPLICATION_KEY])
+                val calls = AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse()))
+                PlanSetupViewModel(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::subjects)
+            }
+        }
     }
 }

@@ -1,9 +1,12 @@
 package com.latentic.graspy.onboarding
 
-import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
 import com.latentic.graspy.plan.COUNTRY_LANGUAGES
@@ -36,8 +39,7 @@ sealed interface Systems {
  * The learner's country, language and class as they choose them. A class belongs to one system, so another
  * system, or a country without the chosen one, asks for the class again; a level after school stays.
  */
-class DetailsFormViewModel(application: Application) : AndroidViewModel(application) {
-    private val api = retrofit(AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse()))).create(PlanApi::class.java)
+class DetailsFormViewModel(private val schoolSystems: suspend (country: String) -> List<SchoolSystem>) : ViewModel() {
     private val shown = MutableStateFlow(DetailsForm())
     private val systemsShown = MutableStateFlow<Systems>(Systems.None)
     private var started = false
@@ -90,7 +92,7 @@ class DetailsFormViewModel(application: Application) : AndroidViewModel(applicat
         systemsShown.value = Systems.Loading
         reading = viewModelScope.launch {
             systemsShown.value = try {
-                Systems.Ready(api.schoolSystems(country))
+                Systems.Ready(schoolSystems(country))
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
@@ -107,7 +109,16 @@ class DetailsFormViewModel(application: Application) : AndroidViewModel(applicat
         chooseSystem(systems.firstOrNull()?.id.orEmpty())
     }
 
-    private companion object {
-        const val TAG = "GraspyDetails"
+    companion object {
+        private const val TAG = "GraspyDetails"
+
+        /** The school systems as the server lists them, for the learner the device learns as. */
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = requireNotNull(this[APPLICATION_KEY])
+                val calls = AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse()))
+                DetailsFormViewModel(retrofit(calls).create(PlanApi::class.java)::schoolSystems)
+            }
+        }
     }
 }
