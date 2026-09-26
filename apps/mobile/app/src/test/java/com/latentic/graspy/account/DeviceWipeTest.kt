@@ -2,7 +2,8 @@ package com.latentic.graspy.account
 
 import com.google.firebase.auth.FirebaseAuth
 import com.latentic.graspy.auth.FirebaseSession
-import com.latentic.graspy.auth.GoogleSignIn
+import com.latentic.graspy.auth.GoogleAccountSheet
+import com.latentic.graspy.auth.SignInOutcome
 import com.latentic.graspy.collection.RECORDINGS_DIRECTORY
 import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.LearnerProfile
@@ -62,6 +63,13 @@ class DeviceWipeTest {
         forgotten += accounts.account.value
     }
     private val signOutPending get() = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).all
+
+    /** For each sign-in, whether the sheet was told to ask which account, and how many forgets came before it. */
+    private val sheetAsked = mutableListOf<Pair<Boolean, Int>>()
+    private val sheet = GoogleAccountSheet { askWhichAccount ->
+        sheetAsked += askWhichAccount to forgotten.size
+        SignInOutcome.Cancelled
+    }
     private val unusedSessionApi = object : SessionApi {
         override suspend fun session(request: SessionRequestDto): IssuedSessionDto = error("No session is asked for")
     }
@@ -194,7 +202,7 @@ class DeviceWipeTest {
     @Test
     fun `a Google account a sign-out could not forget is forgotten at the next start`() = runBlocking {
         forgettingFails = true
-        runCatching { entry(wipe).signOut() }
+        entry(wipe).signOut()
         assertEquals(emptyList<Account?>(), forgotten)
 
         forgettingFails = false
@@ -218,8 +226,47 @@ class DeviceWipeTest {
         assertNull(escaped)
     }
 
+    @Test
+    fun `a sign-in after a sign-out that could not forget the Google account forgets it first`() = runBlocking {
+        forgettingFails = true
+        entry(wipe).signOut()
+        forgettingFails = false
+
+        entry(wipe).signIn()
+
+        assertEquals(listOf(false to 1), sheetAsked)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
+    fun `a sign-in that still cannot forget the last Google account asks which account`() = runBlocking {
+        forgettingFails = true
+        entry(wipe).signOut()
+
+        entry(wipe).signIn()
+
+        assertEquals(listOf(true to 0), sheetAsked)
+        assertEquals(setOf("google_account"), signOutPending.keys)
+    }
+
+    @Test
+    fun `a sign-in with nothing left to forget lets Google offer the last account`() = runBlocking {
+        entry(wipe).signIn()
+
+        assertEquals(listOf(false to 0), sheetAsked)
+    }
+
+    @Test
+    fun `leaving for another account marks a Google account it could not forget, for the next sign-in`() = runBlocking {
+        forgettingFails = true
+
+        entry(wipe).leaveForAnotherAccount()
+
+        assertEquals(setOf("google_account"), signOutPending.keys)
+    }
+
     private fun entry(wipe: DeviceWipe) =
-        AccountEntry(context, GoogleSignIn(context, firebase, "demo-client"), firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+        AccountEntry(context, sheet, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
 
     private suspend fun assertLearnerDataGone() {
         assertTrue(workCancelled)

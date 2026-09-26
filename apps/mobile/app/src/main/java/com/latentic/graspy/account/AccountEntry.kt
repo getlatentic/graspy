@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.core.content.edit
 import com.latentic.graspy.auth.FirebaseSession
-import com.latentic.graspy.auth.GoogleSignIn
+import com.latentic.graspy.auth.GoogleAccountSheet
 import com.latentic.graspy.auth.SignInOutcome
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +15,7 @@ import kotlinx.coroutines.sync.withLock
 /** How an account comes onto this device and leaves it. */
 class AccountEntry(
     private val context: Context,
-    private val google: GoogleSignIn,
+    private val google: GoogleAccountSheet,
     private val firebase: FirebaseSession,
     private val accounts: AccountStore,
     private val sessions: SessionTokens,
@@ -28,7 +28,7 @@ class AccountEntry(
 
     /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
     suspend fun signIn(): SignInOutcome {
-        val outcome = google.signIn()
+        val outcome = google.signIn(askWhichAccount = !lastGoogleAccountForgotten())
         if (outcome !is SignInOutcome.Succeeded) return outcome
         return try {
             startAccountSession(outcome.userId)
@@ -38,7 +38,7 @@ class AccountEntry(
         } catch (error: Exception) {
             Log.w(TAG, "graspy did not issue the account's session", error)
             firebase.signOut()
-            firebase.forgetGoogleAccount(context)
+            forgetGoogleAccountOrLeaveMarked()
             SignInOutcome.Failed(error.message ?: "graspy did not issue a session")
         }
     }
@@ -58,21 +58,52 @@ class AccountEntry(
             wipe.wipeDevice()
             true
         }
-        if (signedOut) forgetGoogleAccount()
+        if (signedOut) forgetGoogleAccountOrLeaveMarked()
     }
 
-    /** Cleared only once done, so a sign-out cut short while it waits on Play services is finished at the next start. */
+    /**
+     * Before a learner is chosen the device holds only its own learning, which stays. The account goes before
+     * Firebase: cut short between them, the next start signs the account back in rather than wiping that learning.
+     */
+    suspend fun leaveForAnotherAccount() {
+        sessions.forget()
+        accounts.set(null)
+        firebase.signOut()
+        forgetGoogleAccountOrLeaveMarked()
+    }
+
+    /** The mark goes only once done, so a Google account Play services could not forget is forgotten later. */
     private suspend fun forgetGoogleAccount() {
         firebase.forgetGoogleAccount(context)
         forgetting.edit(commit = true) { remove(GOOGLE_ACCOUNT) }
     }
 
-    /** Before a learner is chosen the device holds only its own learning, which stays. */
-    suspend fun leaveForAnotherAccount() {
-        sessions.forget()
-        accounts.set(null)
-        firebase.signOut()
-        firebase.forgetGoogleAccount(context)
+    private suspend fun forgetGoogleAccountOrLeaveMarked() {
+        forgetting.edit(commit = true) { putBoolean(GOOGLE_ACCOUNT, true) }
+        try {
+            forgetGoogleAccount()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Log.w(TAG, "Forgetting the Google account failed; it is forgotten before the next sign-in", error)
+        }
+    }
+
+    /**
+     * Before a sign-in: a sign-out still running is waited for, and a Google account one could not forget is
+     * forgotten now. False when it still cannot be, so the sign-in asks which account rather than taking it.
+     */
+    private suspend fun lastGoogleAccountForgotten(): Boolean = signingOut.withLock {
+        if (!forgetting.getBoolean(GOOGLE_ACCOUNT, false)) return@withLock true
+        try {
+            forgetGoogleAccount()
+            true
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Log.w(TAG, "Forgetting the last Google account failed; the sign-in asks which account", error)
+            false
+        }
     }
 
     /**
