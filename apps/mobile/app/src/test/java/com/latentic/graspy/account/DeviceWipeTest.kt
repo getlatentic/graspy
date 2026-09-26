@@ -1,6 +1,8 @@
 package com.latentic.graspy.account
 
 import com.latentic.graspy.collection.RECORDINGS_DIRECTORY
+import com.latentic.graspy.lesson.CopiedTopic
+import com.latentic.graspy.lesson.LessonCopyEntity
 import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.LearnerProfile
 import com.latentic.graspy.localization.LearnerProfileStore
@@ -51,6 +53,7 @@ class DeviceWipeTest {
         database.submissionDao().insert(answer("ada-1", ada))
         database.lessonCacheDao().replaceCatalogue(ada, "primary_3", listOf(storedLesson(ada)))
         database.lessonCacheDao().saveLessonMove(storedMove(ada))
+        database.lessonCopyDao().keep(LessonCopyEntity(ada, "plan-1", "mathematics", 1, "Fractions", "{}", savedAt = 1))
         PreferenceFiles.learnerData.forEach { context.getSharedPreferences(it, 0).edit().putBoolean("kept", true).commit() }
         profiles.save(ada, adaProfile)
         profiles.save(bayo, bayoProfile)
@@ -96,6 +99,7 @@ class DeviceWipeTest {
         assertEquals(emptyList<String>(), database.submissionDao().observeLessonTurns(ada).first().map { it.localId })
         assertEquals(emptyList<String>(), database.lessonCacheDao().observeCatalogue(ada, "primary_3").first().map { it.planId })
         assertNull(database.lessonCacheDao().observeLessonMove(ada, "primary_3").first())
+        assertEquals(emptyList<CopiedTopic>(), database.lessonCopyDao().copied(ada))
         PreferenceFiles.learnerData.forEach { assertEquals(it, emptyMap<String, Any>(), context.getSharedPreferences(it, 0).all) }
         assertFalse(recordings.exists())
     }

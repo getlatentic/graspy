@@ -51,12 +51,16 @@ class PlanViewModel(application: Application) : AndroidViewModel(application), P
     private val kept = application.getSharedPreferences(PreferenceFiles.PLAN, 0)
     private val shown = MutableStateFlow(keptState())
     private val making = MutableStateFlow<Making?>(null)
+    private val served = MutableStateFlow<PlanState.Ready?>(null)
     private var makingJob: Job? = null
     private var lastOrder: (suspend () -> LearnerPlan)? = null
 
     val state: StateFlow<PlanState> = shown.asStateFlow()
 
     val makingState: StateFlow<Making?> = making.asStateFlow()
+
+    /** The plan with the record the server last gave for it, never one kept on the phone or assumed. */
+    val recordRead: StateFlow<PlanState.Ready?> = served.asStateFlow()
 
     init {
         refresh()
@@ -163,8 +167,8 @@ class PlanViewModel(application: Application) : AndroidViewModel(application), P
     }
 
     private suspend fun ready(plan: LearnerPlan, known: LearnerRecord? = null): PlanState.Ready {
-        val record = runCatchingPlan { api.record(plan.planId) }.getOrNull() ?: known ?: LearnerRecord()
-        return PlanState.Ready(plan, record)
+        val read = runCatchingPlan { api.record(plan.planId) }.getOrNull()
+        return PlanState.Ready(plan, read ?: known ?: LearnerRecord()).also { if (read != null) served.value = it }
     }
 
     private fun keptState(): PlanState {

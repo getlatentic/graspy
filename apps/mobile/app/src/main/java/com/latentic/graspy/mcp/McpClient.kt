@@ -42,6 +42,9 @@ data class ViewCard(
 
 class McpRefusal(message: String) : IOException(message)
 
+/** The server gave no answer at all, as opposed to refusing. */
+fun Throwable.isUnreachable(): Boolean = this is IOException && this !is McpRefusal
+
 fun JsonObject.isToolError(): Boolean = (this["isError"] as? JsonPrimitive)?.booleanOrNull == true
 
 /**
