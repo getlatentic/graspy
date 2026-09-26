@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.BuildConfig
-import com.latentic.graspy.account.learnerViewModelFactory
+import android.app.Application
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.plan.GeneratedSubject
 import com.latentic.graspy.plan.LearnerDetails
@@ -161,9 +161,8 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
         private const val STAGES = 3
         private const val STEP_MS = 1_500L
 
-        /** The subjects as the server streams them, for the learner the device learns as. */
-        val Factory = learnerViewModelFactory { application, learnerKey ->
+        /** The subjects as the server streams them, asked as [learnerKey]. */
+        fun forLearner(application: Application, learnerKey: String) =
             PlanSetupViewModel(PlanStreams(AppGraph.callsFor(application, learnerKey), BuildConfig.API_BASE_URL.toHttpUrl())::subjects)
-        }
     }
 }

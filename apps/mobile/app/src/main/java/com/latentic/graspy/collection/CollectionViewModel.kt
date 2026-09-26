@@ -8,7 +8,6 @@ import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.account.PreferenceFiles
-import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.NewSubmission
 import com.latentic.graspy.collection.outbox.SubmissionStatus
@@ -222,11 +221,9 @@ class CollectionViewModel(application: Application, private val ownerId: String)
         }
     }
 
-    companion object {
-        val Factory = learnerViewModelFactory(::CollectionViewModel)
-
-        private const val TAG = "GraspyRecording"
-        private const val PARTICIPANT_ID = "participant_id"
-        private val SPOKEN_LANGUAGES = setOf("en", "yo", "pcm")
+    private companion object {
+        const val TAG = "GraspyRecording"
+        const val PARTICIPANT_ID = "participant_id"
+        val SPOKEN_LANGUAGES = setOf("en", "yo", "pcm")
     }
 }

@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.latentic.graspy.account.PreferenceFiles
-import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.LessonEventDto
 import com.latentic.graspy.collection.VoiceRefusal
 import com.latentic.graspy.collection.outbox.AppGraph
@@ -36,14 +35,13 @@ private const val TURN_PAUSE_MS = 1_500L
 private const val SYNC_WAIT_MS = 4_000L
 
 private data class Learner(
-    val ownerId: String,
     val schoolClass: SchoolClass,
     val language: AppLanguage,
 )
 
 /** The classroom reads the step stored on the phone; WorkManager brings a newer one behind it. */
 class PracticeLessonViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
-    val teacherVoice = TeacherVoice(application)
+    val teacherVoice = TeacherVoice(TeacherAudioRepository(application, AppGraph.sampleApiFor(application, ownerId)))
     private val mutableClassroom = MutableStateFlow(ClassroomState())
     val classroom = mutableClassroom.asStateFlow()
     private val mutableChatOpen = MutableStateFlow(false)
@@ -73,8 +71,8 @@ class PracticeLessonViewModel(application: Application, private val ownerId: Str
 
     fun prepare(language: AppLanguage, schoolClass: SchoolClass) {
         val previous = learner
-        learner = Learner(ownerId, schoolClass, language)
-        if (previous?.ownerId == ownerId && previous.schoolClass == schoolClass) {
+        learner = Learner(schoolClass, language)
+        if (previous?.schoolClass == schoolClass) {
             render()
             return
         }
@@ -109,7 +107,7 @@ class PracticeLessonViewModel(application: Application, private val ownerId: Str
         val learner = learner ?: return
         refreshRequestedAtEpochMillis = System.currentTimeMillis()
         scheduler.refresh(
-            LessonRefreshRequest(learner.ownerId, learner.schoolClass.wireValue, learner.language, openedPlanId),
+            LessonRefreshRequest(ownerId, learner.schoolClass.wireValue, learner.language, openedPlanId),
         )
         render()
     }
@@ -273,7 +271,7 @@ class PracticeLessonViewModel(application: Application, private val ownerId: Str
     private suspend fun markStepHeard(move: LessonMove) {
         val learner = requireNotNull(learner)
         try {
-            AppGraph.sampleApiFor(getApplication(), learner.ownerId)
+            AppGraph.sampleApiFor(getApplication(), ownerId)
                 .lessonEventHeard(LessonEventDto(move.planId, move.eventId, learner.schoolClass.wireValue))
             continueRequested = true
         } catch (error: HttpException) {
@@ -409,9 +407,7 @@ class PracticeLessonViewModel(application: Application, private val ownerId: Str
         super.onCleared()
     }
 
-    companion object {
-        val Factory = learnerViewModelFactory(::PracticeLessonViewModel)
-
-        private const val TAG = "GraspyLesson"
+    private companion object {
+        const val TAG = "GraspyLesson"
     }
 }

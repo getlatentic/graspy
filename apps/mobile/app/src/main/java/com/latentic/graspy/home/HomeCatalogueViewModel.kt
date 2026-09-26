@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
-import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.SchoolClass
@@ -88,9 +87,7 @@ class HomeCatalogueViewModel(application: Application, private val ownerId: Stri
         )
     }
 
-    companion object {
-        val Factory = learnerViewModelFactory(::HomeCatalogueViewModel)
-
-        private const val KEEP_ALIVE_MILLIS = 5_000L
+    private companion object {
+        const val KEEP_ALIVE_MILLIS = 5_000L
     }
 }

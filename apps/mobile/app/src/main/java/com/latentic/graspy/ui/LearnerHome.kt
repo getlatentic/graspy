@@ -49,10 +49,10 @@ fun LearnerHome(
     menu: AccountMenu,
     onWords: (InterfaceLanguage) -> Unit,
 ) {
-    val planViewModel: PlanViewModel = viewModel(factory = PlanViewModel.Factory)
+    val planViewModel: PlanViewModel = viewModel()
     val plan by planViewModel.state.collectAsStateWithLifecycle()
-    val form: DetailsFormViewModel = viewModel(factory = DetailsFormViewModel.Factory)
-    val setup: PlanSetupViewModel = viewModel(factory = PlanSetupViewModel.Factory)
+    val form: DetailsFormViewModel = viewModel()
+    val setup: PlanSetupViewModel = viewModel()
     val setupActive by setup.active.collectAsStateWithLifecycle()
     val ready = (plan as? PlanState.Ready)?.plan
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }

@@ -3,7 +3,6 @@ package com.latentic.graspy.mcp
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.sync.networkReach
 import kotlinx.coroutines.flow.filter
@@ -29,7 +28,4 @@ class LearnerViews(application: Application, private val ownerId: String) : Andr
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = mcp.openToolView(name, arguments)
 
-    companion object {
-        val Factory = learnerViewModelFactory(::LearnerViews)
-    }
 }

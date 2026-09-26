@@ -1,9 +1,7 @@
 package com.latentic.graspy.practice
 
-import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
-import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.localization.AppLanguage
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
@@ -77,12 +75,7 @@ data class TeacherReply(val sampleId: String) : TeacherLine {
 fun LessonMove.utterances(): List<TeacherUtterance> =
     (promptUtterances + exercise?.promptUtterances.orEmpty() + TeacherUtterance.NO_SPEECH).distinct()
 
-class TeacherVoice(
-    context: Context,
-    private val repository: TeacherAudioRepository = TeacherAudioRepository(
-        context.applicationContext, AppGraph.sampleApi(context.applicationContext),
-    ),
-) {
+class TeacherVoice(private val repository: TeacherAudioRepository) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val mutableState = MutableStateFlow(TeacherVoiceState.INITIALIZING)
     private val mutablePlaying = MutableStateFlow<TeacherLine?>(null)

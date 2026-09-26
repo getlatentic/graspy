@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.localization.ChatCopy
 import com.latentic.graspy.mcp.API_ORIGIN
@@ -191,11 +190,9 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
         override fun onActivity(tool: String) = turn.update { it.copy(activity = tool) }
     }
 
-    companion object {
-        val Factory = learnerViewModelFactory(::AskViewModel)
-
-        private const val TAG = "GraspyTutor"
+    private companion object {
+        const val TAG = "GraspyTutor"
         // Busy before the thread is known, so a second tap in the same moment is refused.
-        private const val PENDING = "pending"
+        const val PENDING = "pending"
     }
 }

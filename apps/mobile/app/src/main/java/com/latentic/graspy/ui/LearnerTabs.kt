@@ -79,9 +79,9 @@ internal fun LearnerTabs(
     onReplan: () -> Unit,
     openVoiceLesson: (String?) -> Unit,
 ) {
-    val planViewModel: PlanViewModel = viewModel(factory = PlanViewModel.Factory)
+    val planViewModel: PlanViewModel = viewModel()
     val plan by planViewModel.state.collectAsStateWithLifecycle()
-    val ask: AskViewModel = viewModel(factory = AskViewModel.Factory)
+    val ask: AskViewModel = viewModel()
     val turn by ask.turnState.collectAsStateWithLifecycle()
     val unread by ask.unread.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(LearnTab.HOME) }
@@ -189,14 +189,14 @@ private fun OpenPlace(learn: LearnCopy, interfaceLanguage: InterfaceLanguage, re
     if (target == null) {
         SubjectTopics(learn, ready, subject, onBack = { onPlace(null) }, onOpenTopic = { onPlace(place.copy(topicIndex = it)) })
     } else {
-        val views: LearnerViews = viewModel(factory = LearnerViews.Factory)
+        val views: LearnerViews = viewModel()
         TopicLesson(learn, interfaceLanguage.tag, views, target, onBack = { onPlace(place.back()) }, onLearnt = onLearnt)
     }
 }
 
 @Composable
 private fun Details(learn: LearnCopy, plan: LearnerPlan, interfaceLanguage: InterfaceLanguage, planViewModel: PlanViewModel, onBack: () -> Unit, onReplan: () -> Unit) {
-    val form: DetailsFormViewModel = viewModel(factory = DetailsFormViewModel.Factory)
+    val form: DetailsFormViewModel = viewModel()
     val current = plan.details()
     LaunchedEffect(plan.planId) { form.load(current) }
     val scope = rememberCoroutineScope()
@@ -233,7 +233,7 @@ private fun AskPane(
         Page { PlanUnread(learn, planViewModel::refresh) }
         return
     }
-    val views: LearnerViews = viewModel(factory = LearnerViews.Factory)
+    val views: LearnerViews = viewModel()
     val turn by ask.turnState.collectAsStateWithLifecycle()
     LaunchedEffect(turn.rebuilt) { if (turn.rebuilt != null) onRebuilt() }
     AskTab(learn, interfaceLanguage.tag, views, ask, ready, planViewModel, follow, opening, onOpened)
@@ -241,7 +241,7 @@ private fun AskPane(
 
 @Composable
 private fun VoiceSection(copy: AppCopy, learn: LearnCopy, appLanguage: AppLanguage, profile: LearnerProfile, openVoiceLesson: (String?) -> Unit) {
-    val homeViewModel: HomeCatalogueViewModel = viewModel(key = "home-catalogue", factory = HomeCatalogueViewModel.Factory)
+    val homeViewModel: HomeCatalogueViewModel = viewModel(key = "home-catalogue")
     val catalogue by homeViewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(appLanguage, profile.schoolClass) { homeViewModel.open(appLanguage, profile.schoolClass) }
     VoicePage(

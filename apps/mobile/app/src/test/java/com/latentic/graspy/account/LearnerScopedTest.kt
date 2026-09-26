@@ -15,11 +15,13 @@ import com.latentic.graspy.home.HomeCatalogueViewModel
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.practice.PracticeLessonViewModel
+import com.latentic.graspy.sync.lessonRefreshWorkName
 import com.latentic.graspy.ui.LearnerScope
 import com.latentic.graspy.ui.LearnerViewModels
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,12 +35,9 @@ class LearnerScopedTest {
     val compose = createComposeRule()
 
     private val application: Application = ApplicationProvider.getApplicationContext()
+    private val work get() = WorkManager.getInstance(application)
 
-    class Probe(application: Application, val learnerKey: String) : AndroidViewModel(application) {
-        companion object {
-            val Factory = learnerViewModelFactory(::Probe)
-        }
-    }
+    class Probe(application: Application, val learnerKey: String) : AndroidViewModel(application)
 
     @Before
     fun noLearnerOnTheDevice() {
@@ -54,10 +53,10 @@ class LearnerScopedTest {
     fun `a view model is made for the learner of its scope, and anew for the next learner`() {
         val learner = mutableStateOf("account:u/ada")
         val made = mutableListOf<Probe>()
-        val viewModels = LearnerViewModels()
+        val viewModels = LearnerViewModels(mapOf(Probe::class.java to ::Probe))
         compose.setContent {
             LearnerScope(learner.value, viewModels) {
-                val probe: Probe = viewModel(factory = Probe.Factory)
+                val probe: Probe = viewModel()
                 if (made.lastOrNull() !== probe) made += probe
             }
         }
@@ -70,11 +69,29 @@ class LearnerScopedTest {
     }
 
     @Test
-    fun `voice lessons open for their learner after the device has left them`() {
-        val lesson = PracticeLessonViewModel(application, "account:u/ada")
-        lesson.prepare(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+    fun `a learner's view model left off the list fails, naming itself`() {
+        val failure = runCatching {
+            compose.setContent {
+                LearnerScope("account:u/ada", LearnerViewModels(emptyMap())) { viewModel<Probe>() }
+            }
+            compose.waitForIdle()
+        }.exceptionOrNull() ?: error("A learner's view model was made without its learner")
+        assertTrue(failure.message.orEmpty(), failure.message.orEmpty().contains("Probe belongs to a learner"))
+    }
 
-        val home = HomeCatalogueViewModel(application, "account:u/ada")
-        home.open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+    @Test
+    fun `voice lessons open for their own learner after the device has left them`() {
+        PracticeLessonViewModel(application, "account:u/ada").prepare(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+        assertScheduledFor("account:u/ada")
+
+        HomeCatalogueViewModel(application, "account:u/tunde").open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+        assertScheduledFor("account:u/tunde")
+    }
+
+    private fun assertScheduledFor(learnerKey: String) {
+        val name = lessonRefreshWorkName(learnerKey)
+        assertTrue("no lesson refresh for $learnerKey", work.getWorkInfosForUniqueWork(name).get().isNotEmpty())
+        work.cancelUniqueWork(name).result.get()
+        work.pruneWork().result.get()
     }
 }

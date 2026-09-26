@@ -7,7 +7,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.BuildConfig
 import com.latentic.graspy.account.PreferenceFiles
-import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.ask.PlanChanges
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
@@ -72,7 +71,8 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
             } else {
                 read.getOrNull()?.let { ready(it) } ?: PlanState.None
             }
-            keep(shown.value)
+            // A failed read keeps nothing: it may be the one that found the learner gone and wiped the phone.
+            if (read.isSuccess) keep(shown.value)
         }
     }
 
@@ -193,11 +193,9 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
         Result.failure(error)
     }
 
-    companion object {
-        val Factory = learnerViewModelFactory(::PlanViewModel)
-
-        private const val TAG = "GraspyPlan"
-        private const val PLAN_KEY = "plan"
-        private const val RECORD_KEY = "record"
+    private companion object {
+        const val TAG = "GraspyPlan"
+        const val PLAN_KEY = "plan"
+        const val RECORD_KEY = "record"
     }
 }
