@@ -2,12 +2,12 @@
 
 The learner's app: a static Vite and React build for Cloudflare Pages.
 
-| Command | Does |
-|---|---|
-| `npm run dev` | http://localhost:5173 |
-| `npm run build` | Type-checks, then builds `dist/` |
-| `npm test` / `npm run lint` | Vitest; oxlint |
-| `npm run test:e2e` | Cypress, against the running server and a real model |
+| Command                     | Does                                                 |
+| --------------------------- | ---------------------------------------------------- |
+| `npm run dev`               | http://localhost:5173                                |
+| `npm run build`             | Type-checks, then builds `dist/`                     |
+| `npm test` / `npm run lint` | Vitest; oxlint                                       |
+| `npm run test:e2e`          | Cypress, against the running server and a real model |
 
 Start reading at `src/routes.tsx`. Each route's page is in `src/app/`, and what it renders is in `src/features/<feature>/`. Code shared by several features lives in `src/components/` and `src/lib/`. Pages under `/app` download when first opened, and a service worker (`public/sw.js`) keeps them for offline use.
 
