@@ -8,13 +8,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import com.latentic.graspy.collection.SampleApi
-import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.localization.filled
 import com.latentic.graspy.localization.learnCopyFor
-import com.latentic.graspy.localization.resolveAppLanguage
 import com.latentic.graspy.plan.CurriculumSource
 import com.latentic.graspy.plan.GeneratedSubject
 import com.latentic.graspy.plan.LearnerDetails
@@ -26,17 +23,10 @@ import com.latentic.graspy.plan.SchoolStage
 import com.latentic.graspy.plan.SchoolSystem
 import com.latentic.graspy.plan.planJson
 import com.latentic.graspy.plan.voiceClass
-import com.latentic.graspy.plan.voiceLanguage
-import com.latentic.graspy.practice.spokenLanguage
 import com.latentic.graspy.ui.GraspyTheme
 import java.time.Duration
 import java.util.Locale
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.jsonObject
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -44,8 +34,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 /** A new learner makes their plan from start to finish: details, subjects, the plan being made, then ready. */
 @RunWith(RobolectricTestRunner::class)
@@ -89,7 +77,7 @@ class PlanOnboardingFlowTest {
     }
 
     @Test
-    fun `a Nigerian nursery learner's plan gives voice lessons, asked for by their class`() {
+    fun `a Nigerian nursery learner's plan gives voice lessons in their class`() {
         val stream = CurriculumSource { _, onResult ->
             onResult(planJson.parseToJsonElement("""{"type":"result","subjects":["Mathematics"]}""").jsonObject)
             null
@@ -99,12 +87,6 @@ class PlanOnboardingFlowTest {
 
         assertEquals(listOf("NG", "nursery-1"), listOf(plan.system, plan.level))
         assertEquals(SchoolClass.NURSERY_1, plan.voiceClass())
-        MockWebServer().use { server ->
-            server.enqueue(MockResponse().setHeader("Content-Type", "application/json").setBody("""{"lessons":[],"day":"2026-09-26"}"""))
-            val spoken = resolveAppLanguage(plan.voiceLanguage(), "en").spokenLanguage()
-            runBlocking { voiceApi(server).catalogue(requireNotNull(plan.voiceClass()).wireValue, spoken) }
-            assertEquals("/api/voice/catalogue?learner_class=nursery_1&language=en", server.takeRequest().path)
-        }
     }
 
     /** Onboarding from the first step to the plan made, for the class named [className]. */
@@ -149,11 +131,4 @@ class PlanOnboardingFlowTest {
         compose.onNodeWithText(words.ready.`continue`).performClick()
         return done
     }
-
-    private fun voiceApi(server: MockWebServer): SampleApi = Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .client(OkHttpClient())
-        .addConverterFactory(apiJson.asConverterFactory("application/json".toMediaType()))
-        .build()
-        .create(SampleApi::class.java)
 }

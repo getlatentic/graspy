@@ -99,26 +99,13 @@ fun LearnerPlan.levelLabel(learn: LearnCopy): String = when {
 // schoolDescriptor's shape: the class's name, its stage in brackets, then the system and the age.
 private val SCHOOL_CLASS = Regex("^(.+?) \\(.*\\), .+, age \\d+$")
 
-/** Classes the voice curriculum teaches (apps/server/src/app/voice/curriculum.py). */
-private val CLASSES_WITH_LESSONS = setOf(
-    SchoolClass.NURSERY_1,
-    SchoolClass.NURSERY_2,
-    SchoolClass.KINDERGARTEN,
-    SchoolClass.PRIMARY_1,
-    SchoolClass.PRIMARY_2,
-    SchoolClass.PRIMARY_3,
-    SchoolClass.PRIMARY_4,
-    SchoolClass.PRIMARY_5,
-    SchoolClass.PRIMARY_6,
-)
-
 /**
  * The voice-lesson class of a learner in Nigeria's system, as the web's voiceClassOf; null when there are none.
  * The catalogue names a class "nursery-1" or "primary-4", the voice curriculum "nursery_1" or "primary_4".
  */
 fun LearnerPlan.voiceClass(): SchoolClass? {
     if (system != "NG") return null
-    return SchoolClass.fromWire(level.orEmpty().replace('-', '_'))?.takeIf { it in CLASSES_WITH_LESSONS }
+    return SchoolClass.fromWire(level.orEmpty().replace('-', '_'))?.takeIf { it.voiceLessons }
 }
 
 /** The teacher speaks the learner's language when she can, and English otherwise. */
