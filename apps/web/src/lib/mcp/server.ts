@@ -159,13 +159,18 @@ export async function callAppTool(
   return (await client.callTool({ name, arguments: args })) as CallToolResult;
 }
 
+/** The view `name`'s result is shown in. */
+export async function viewOf(name: string): Promise<string> {
+  const resourceUri = (await server()).viewOf.get(name);
+  if (!resourceUri) throw new Error(`${name} has no view`);
+  return resourceUri;
+}
+
 export async function openToolView(
   name: string,
   args: Record<string, unknown>,
 ): Promise<TutorCard> {
-  const { viewOf } = await server();
-  const resourceUri = viewOf.get(name);
-  if (!resourceUri) throw new Error(`${name} has no view`);
+  const resourceUri = await viewOf(name);
   const toolResult = await callAppTool(name, args);
   if (toolResult.isError) throw new Error(`${name} was refused`);
   return { resourceUri, toolName: name, toolInput: args, toolResult };

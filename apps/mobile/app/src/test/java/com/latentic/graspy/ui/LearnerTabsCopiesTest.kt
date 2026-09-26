@@ -1,22 +1,11 @@
 package com.latentic.graspy.ui
 
-import android.app.Application
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.lifecycle.HasDefaultViewModelProviderFactory
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.latentic.graspy.account.ADA
 import com.latentic.graspy.account.UID
-import com.latentic.graspy.account.accountStore
 import com.latentic.graspy.account.inMemoryDatabase
 import com.latentic.graspy.account.learnerKey
 import com.latentic.graspy.account.signedIn
-import com.latentic.graspy.ask.AskViewModel
 import com.latentic.graspy.lesson.CopiedTopic
 import com.latentic.graspy.lesson.PLAN
 import com.latentic.graspy.localization.AppLanguage
@@ -38,7 +27,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
@@ -51,25 +39,21 @@ class LearnerTabsCopiesTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private val application: Application = RuntimeEnvironment.getApplication()
     private val ada = learnerKey(UID, ADA.id)
-    private val account = signedIn(ADA, deviceJoins = false).also { accountStore(it) }
+    private val account = signedIn(ADA, deviceJoins = false)
     private val database = inMemoryDatabase()
     private val fractionsReady = LearnerRecord(topics = listOf(TopicMark("mathematics", 1, "Fractions", lessonId = "lesson-9")))
     private val server = FakeGraspyServer(PLAN, fractionsReady)
-    private val owner = LearnerModels(
-        mapOf(
-            PlanViewModel::class.java to { PlanViewModel(application, server.calls) },
-            LearnerViews::class.java to {
-                LearnerViews(application, LearnerConnection(database, ada, OkHttpClient(), server.web.url("/mcp")) { true })
-            },
-            AskViewModel::class.java to { AskViewModel(application) },
+    private val viewModels = LearnerViewModels(
+        LEARNER_VIEW_MODELS + mapOf(
+            PlanViewModel::class.java to { app, key -> PlanViewModel(app, key, server.calls) },
+            LearnerViews::class.java to { app, key -> LearnerViews(app, LearnerConnection(database, key, OkHttpClient(), server.web.url("/mcp")) { true }) },
         ),
     )
 
     @After
     fun close() {
-        owner.viewModelStore.clear()
+        viewModels.keepOnly(null)
         database.close()
         server.web.shutdown()
     }
@@ -78,7 +62,7 @@ class LearnerTabsCopiesTest {
     fun `the plan's ready lesson is copied once the tabs show, with nothing opened`() {
         val copy = copyFor(InterfaceLanguage.ENGLISH)
         compose.setContent {
-            CompositionLocalProvider(LocalViewModelStoreOwner provides owner) {
+            LearnerScope(ada, viewModels) {
                 GraspyTheme(InterfaceLanguage.ENGLISH) {
                     LearnerTabs(
                         copy = copy,
@@ -101,17 +85,6 @@ class LearnerTabsCopiesTest {
     }
 
     private fun copied() = runBlocking { database.lessonCopyDao().copied(ada) }
-
-    /** The learner's view models, each made as the test says rather than from the app's own server. */
-    private class LearnerModels(private val makers: Map<Class<*>, () -> ViewModel>) : ViewModelStoreOwner, HasDefaultViewModelProviderFactory {
-        override val viewModelStore = ViewModelStore()
-
-        override val defaultViewModelProviderFactory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
-                requireNotNull(makers[modelClass]) { "${modelClass.simpleName} is not made here" }() as T
-        }
-    }
 
     private companion object {
         const val TIMEOUT_MS = 10_000L

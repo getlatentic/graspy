@@ -43,9 +43,6 @@ object AppGraph {
         accountInstance ?: AccountGraph(context.applicationContext as Application).also { accountInstance = it }
     }
 
-    /** Calls for whichever learner the device learns as when the call is made. */
-    fun sampleApi(context: Context): SampleApi = api(httpStack(context).callFactory)
-
     /** Calls for one learner only: made as any other learner, they fail instead. */
     fun callsFor(context: Context, learnerKey: String): Call.Factory = Call.Factory { request ->
         httpStack(context).callFactory.newCall(

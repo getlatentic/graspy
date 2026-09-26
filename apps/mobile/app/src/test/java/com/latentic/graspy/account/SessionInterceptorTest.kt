@@ -4,8 +4,10 @@ import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -22,6 +24,7 @@ class SessionInterceptorTest {
     private var refuseExchange = false
     private var googleUnreachable = false
     private var learnerHeld = true
+    private var switchDuringExchange: LearnerDto? = null
 
     private val sessions = SessionTokens(
         accounts = accounts,
@@ -33,6 +36,7 @@ class SessionInterceptorTest {
         exchange = {
             if (refuseExchange) throw httpError(503, """{"detail":{"code":"sign_in_off"}}""")
             exchanges += 1
+            switchDuringExchange?.let { accounts.setLearner(ChosenLearner(it.id, it.name)) }
             issued("session-$exchanges", ADA.takeIf { learnerHeld })
         },
         learnerGone = { accounts.setLearner(null) },
@@ -120,9 +124,31 @@ class SessionInterceptorTest {
     }
 
     @Test
-    fun `a request for a learner no longer in use is refused before it is sent`() {
+    fun `a request for a learner no longer in use is refused before it is sent, with no session fetched for it`() {
         assertThrows(SessionRefusal::class.java) { call(request(learner = learnerKey(UID, BAYO.id))) }
         assertEquals(0, server.requestCount)
+        assertEquals(0, exchanges)
+    }
+
+    @Test
+    fun `a request whose learner is switched while its session is fetched is refused, never sent as the next learner`() {
+        switchDuringExchange = BAYO
+
+        assertThrows(SessionRefusal::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun `a session is not renewed for a learner switched away while the request was out`() {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                accounts.setLearner(ChosenLearner(BAYO.id, BAYO.name))
+                return MockResponse().setResponseCode(401)
+            }
+        }
+
+        assertThrows(SessionRefusal::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
+        assertEquals(1, exchanges)
     }
 
     @Test

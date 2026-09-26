@@ -21,6 +21,9 @@ class AccountGraph(private val context: Application) {
     /** The learner key of whoever the device learns as now, if anyone. */
     fun learnerInUse(): String? = accounts.account.value?.learnerKey
 
+    /** False once the device has left [learnerKey]: its screens may still be up, but nothing starts for them. */
+    fun learnsAs(learnerKey: String): Boolean = learnerInUse() == learnerKey
+
     /** The exchange sends no session of its own, so it goes around the session interceptor. */
     private val sessionApi: SessionApi by lazy { retrofit(OkHttpClient()).create(SessionApi::class.java) }
 

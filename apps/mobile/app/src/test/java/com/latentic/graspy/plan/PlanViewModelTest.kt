@@ -17,13 +17,14 @@ class PlanViewModelTest {
     private val record = LearnerRecord(topics = listOf(TopicMark("mathematics", 1, "Fractions", lessonId = "lesson-9")))
     private val server = FakeGraspyServer(PLAN, record)
     private val application: Application = RuntimeEnvironment.getApplication()
+    private val ada = "uid-1/aaaaaaaaaaaa"
 
     @After
     fun close() = server.web.shutdown()
 
     @Test
     fun `the record the server gives for the plan is told`() {
-        val plans = PlanViewModel(application, server.calls)
+        val plans = PlanViewModel(application, ada, server.calls)
 
         settleMain { plans.recordsRead.replayCache.isNotEmpty() }
 
@@ -35,7 +36,7 @@ class PlanViewModelTest {
     @Test
     fun `a record the server does not give is never told, though the plan is shown`() {
         server.recordFails = true
-        val plans = PlanViewModel(application, server.calls)
+        val plans = PlanViewModel(application, ada, server.calls)
 
         settleMain { plans.state.value is PlanState.Ready }
 

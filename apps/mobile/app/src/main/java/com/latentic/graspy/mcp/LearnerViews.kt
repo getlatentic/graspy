@@ -21,7 +21,7 @@ class LearnerViews internal constructor(
     application: Application,
     private val connection: LearnerConnection,
 ) : AndroidViewModel(application), ViewServer {
-    constructor(application: Application) : this(application, connectionOf(application))
+    constructor(application: Application, ownerId: String) : this(application, connectionFor(application, ownerId))
 
     val lessons: OfflineLessons = connection.lessons
 
@@ -43,13 +43,10 @@ class LearnerViews internal constructor(
     }
 }
 
-private fun connectionOf(application: Application): LearnerConnection {
-    val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
-    return LearnerConnection(
-        database = AppGraph.database(application),
-        ownerId = ownerId,
-        calls = AppGraph.callsFor(application, ownerId),
-        endpoint = "$API_ORIGIN/mcp".toHttpUrl(),
-        stillLearning = { AppGraph.account(application).learnerInUse() == ownerId },
-    )
-}
+private fun connectionFor(application: Application, ownerId: String) = LearnerConnection(
+    database = AppGraph.database(application),
+    ownerId = ownerId,
+    calls = AppGraph.callsFor(application, ownerId),
+    endpoint = "$API_ORIGIN/mcp".toHttpUrl(),
+    stillLearning = { AppGraph.account(application).learnsAs(ownerId) },
+)

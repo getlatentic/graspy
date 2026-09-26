@@ -2,7 +2,6 @@ package com.latentic.graspy.plan
 
 import android.app.Application
 import android.util.Log
-import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.BuildConfig
@@ -21,7 +20,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -46,16 +44,17 @@ data class Making(val plan: LearnerPlan?, val failed: Boolean = false)
  * The learner's shared plan and their record on it, as the web keeps them: read from the account, kept on
  * the phone for when there is no connection, and changed here the way the web changes it.
  */
-class PlanViewModel internal constructor(application: Application, calls: Call.Factory) : AndroidViewModel(application), PlanChanges {
-    constructor(application: Application) : this(
-        application,
-        AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse())),
-    )
+class PlanViewModel internal constructor(
+    application: Application,
+    ownerId: String,
+    calls: Call.Factory,
+) : AndroidViewModel(application), PlanChanges {
+    constructor(application: Application, ownerId: String) : this(application, ownerId, AppGraph.callsFor(application, ownerId))
 
     private val api = retrofit(calls).create(PlanApi::class.java)
     private val maker = PlanMaker(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::curriculum)
-    private val kept = application.getSharedPreferences(PreferenceFiles.PLAN, 0)
-    private val shown = MutableStateFlow(keptState())
+    private val kept = KeptPlan(application.getSharedPreferences(PreferenceFiles.PLAN, 0), ownerId) { AppGraph.account(application).learnsAs(ownerId) }
+    private val shown = MutableStateFlow<PlanState>(kept.read() ?: PlanState.Loading)
     private val making = MutableStateFlow<Making?>(null)
     private val records = ServerRecords { planId -> runCatchingPlan { api.record(planId) }.getOrNull() }
     private var makingJob: Job? = null
@@ -73,16 +72,14 @@ class PlanViewModel internal constructor(application: Application, calls: Call.F
     }
 
     /** What is shown stays while the newer copy is read. */
-    fun refresh() {
-        viewModelScope.launch {
-            val read = runCatchingPlan { api.plan().plan?.let(LearnerPlan::of) }
-            shown.value = if (read.isFailure) {
-                shown.value.takeIf { it is PlanState.Ready } ?: PlanState.Failed
-            } else {
-                read.getOrNull()?.let { records.ready(it) } ?: PlanState.None
-            }
-            keep(shown.value)
+    fun refresh(): Job = viewModelScope.launch {
+        val read = runCatchingPlan { api.plan().plan?.let(LearnerPlan::of) }
+        shown.value = if (read.isFailure) {
+            shown.value.takeIf { it is PlanState.Ready } ?: PlanState.Failed
+        } else {
+            read.getOrNull()?.let { records.ready(it) } ?: PlanState.None
         }
+        keep(shown.value)
     }
 
     override val plan: LearnerPlan? get() = (shown.value as? PlanState.Ready)?.plan
@@ -172,20 +169,8 @@ class PlanViewModel internal constructor(application: Application, calls: Call.F
             .onFailure { Log.w(TAG, "The record did not take the change $kind", it) }
     }
 
-    private fun keptState(): PlanState {
-        val plan = kept.getString(PLAN_KEY, null) ?: return PlanState.Loading
-        return runCatching {
-            val record = kept.getString(RECORD_KEY, null)?.let { planJson.decodeFromString<LearnerRecord>(it) } ?: LearnerRecord()
-            PlanState.Ready(LearnerPlan.of(planJson.parseToJsonElement(plan).jsonObject), record)
-        }.getOrDefault(PlanState.Loading)
-    }
-
     private fun keep(state: PlanState) {
-        val ready = state as? PlanState.Ready ?: return
-        kept.edit {
-            putString(PLAN_KEY, ready.plan.toJson().toString())
-            putString(RECORD_KEY, planJson.encodeToString(LearnerRecord.serializer(), ready.record))
-        }
+        (state as? PlanState.Ready)?.let(kept::keep)
     }
 
     private suspend fun <T> runCatchingPlan(block: suspend () -> T): Result<T> = try {
@@ -199,7 +184,5 @@ class PlanViewModel internal constructor(application: Application, calls: Call.F
 
     private companion object {
         const val TAG = "GraspyPlan"
-        const val PLAN_KEY = "plan"
-        const val RECORD_KEY = "record"
     }
 }
