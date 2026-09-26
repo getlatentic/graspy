@@ -25,7 +25,11 @@ export interface KeptAnswer {
 /** A marked or refused answer, kept until the lesson has shown it. */
 export interface SettledAnswer {
   key: string;
-  learner: string;
+  /**
+   * The learner, not under `learner`: a tab still running an app that predates outcomes sends
+   * every record with a `learner` as an answer, and would have this one refused and deleted.
+   */
+  shownTo: string;
   move: LessonMove;
   keptAt: number;
   sent: Settled;
@@ -36,20 +40,21 @@ type StoredAnswer = KeptAnswer | SettledAnswer;
 const isSettled = (answer: StoredAnswer): answer is SettledAnswer =>
   "sent" in answer;
 
+const learnerOf = (answer: StoredAnswer) =>
+  isSettled(answer) ? answer.shownTo : answer.learner;
+
 async function store(mode: IDBTransactionMode) {
   const db = await openDB();
   const tx = db.transaction(VOICE_ANSWER_STORE, mode);
   return { tx, answers: tx.objectStore(VOICE_ANSWER_STORE) };
 }
 
-async function put(answer: StoredAnswer): Promise<void> {
+export async function keepAnswer(answer: KeptAnswer): Promise<void> {
   const { tx, answers } = await store("readwrite");
   const done = committed(tx);
   answers.put(answer);
   await done;
 }
-
-export const keepAnswer = (answer: KeptAnswer): Promise<void> => put(answer);
 
 export async function forgetAnswer(key: string): Promise<void> {
   const { tx, answers } = await store("readwrite");
@@ -58,18 +63,43 @@ export async function forgetAnswer(key: string): Promise<void> {
   await done;
 }
 
+/**
+ * Writes to an answer only while it is still waiting to be sent, read and written in one
+ * transaction: another tab sending the same answer may have settled it, or shown and let it go.
+ */
+async function whileWaiting(
+  key: string,
+  write: (answers: IDBObjectStore) => void,
+): Promise<void> {
+  const { tx, answers } = await store("readwrite");
+  const done = committed(tx);
+  const found = answers.get(key);
+  found.onsuccess = () => {
+    const stored = found.result as StoredAnswer | undefined;
+    if (stored && !isSettled(stored)) write(answers);
+  };
+  await done;
+}
+
+/** How far sending has got, so a retry resumes there. */
+export const keepProgress = (answer: KeptAnswer): Promise<void> =>
+  whileWaiting(answer.key, (answers) => answers.put(answer));
+
 /** The recording goes; what the lesson needs to show the outcome stays. */
 export function settleAnswer(answer: KeptAnswer, sent: Settled): Promise<void> {
   const { key, learner, move, keptAt } = answer;
-  if (!move) return forgetAnswer(key);
-  return put({ key, learner, move, keptAt, sent });
+  return whileWaiting(key, (answers) =>
+    move
+      ? answers.put({ key, shownTo: learner, move, keptAt, sent })
+      : answers.delete(key),
+  );
 }
 
 async function learnersAnswers(learner: string): Promise<StoredAnswer[]> {
   const { answers } = await store("readonly");
   const all = await promisify<StoredAnswer[]>(answers.getAll());
   return all
-    .filter((answer) => answer.learner === learner)
+    .filter((answer) => learnerOf(answer) === learner)
     .sort((a, b) => a.keptAt - b.keptAt);
 }
 

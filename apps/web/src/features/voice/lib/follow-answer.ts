@@ -21,7 +21,9 @@ export async function followAnswer(
   if (signal.aborted) return;
   if (now?.kind === "kept") emit({ type: "kept", key });
   while (now?.kind === "kept") {
-    const again = pause(RETRY_MS).then(() => sendKept(key));
+    const again = pause(RETRY_MS).then(() =>
+      signal.aborted ? null : sendKept(key),
+    );
     now = await Promise.race([settled, again]);
     if (signal.aborted) return;
   }

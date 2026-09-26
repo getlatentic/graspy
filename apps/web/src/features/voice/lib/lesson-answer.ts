@@ -5,6 +5,7 @@ import type {
 } from "@/lib/voice/voice-types";
 import type { KeptAnswer } from "@/lib/voice/answer-store";
 import { languagePairOf } from "@/lib/voice/voice-learner";
+import type { LessonEvent } from "./lesson-state";
 
 // What the server's markers are filed under: a times-table prompt is reasoning about
 // multiplication, a said list a recitation of its subject, any other answer reasoning.
@@ -60,4 +61,19 @@ export function answerToKeep(
     wav,
     keptAt,
   };
+}
+
+/** The take is checked only once it is kept, so nothing the child said is lost to the network. */
+export async function keepTake(
+  answer: KeptAnswer,
+  keep: (answer: KeptAnswer) => Promise<void>,
+  emit: (event: LessonEvent) => void,
+): Promise<void> {
+  try {
+    await keep(answer);
+  } catch {
+    emit({ type: "recordFailed", note: "notSaved" });
+    return;
+  }
+  emit({ type: "recorded", key: answer.key });
 }

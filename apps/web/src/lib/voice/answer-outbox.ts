@@ -1,5 +1,5 @@
 import {
-  keepAnswer,
+  keepProgress,
   keptAnswer,
   keptAnswers,
   settleAnswer,
@@ -10,7 +10,7 @@ import { sendAnswer, type Sent } from "./send-answer";
 import { createSample, evaluate, uploadAudio } from "./voice-api";
 
 const api = { createSample, uploadAudio, evaluate };
-const keeping = { keep: keepAnswer, settle: settleAnswer };
+const keeping = { keep: keepProgress, settle: settleAnswer };
 
 type Listener = (key: string, sent: Settled) => void;
 const listeners = new Set<Listener>();

@@ -2,6 +2,7 @@ import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   answerTo,
+  ASKED,
   holdMarking,
   KEPT,
   LEARNER,
@@ -9,6 +10,7 @@ import {
   resetServer,
   respond,
   sent,
+  server,
 } from "./voice-worker.fake";
 
 vi.mock("@/lib/api/session", () => ({ fetchWithSession: respond }));
@@ -20,6 +22,7 @@ async function load() {
   return {
     ...(await import("./answer-store")),
     ...(await import("./answer-outbox")),
+    ...(await import("@/lib/idb")),
   };
 }
 
@@ -69,6 +72,74 @@ describe("the answers kept on the device", () => {
       1,
     );
     expect(await app.settledOf("key-1")).toBeNull();
+  });
+
+  it("never write an outcome back once another tab has shown it and let it go", async () => {
+    const tabB = await load();
+    await tabB.keepAnswer(KEPT);
+    const tabA = await load();
+    const releaseB = holdMarking();
+    const b = tabB.sendKept("key-1");
+    await vi.waitFor(() =>
+      expect(sent("POST /api/voice/samples/gvm_key-1/evaluation")).toHaveLength(
+        1,
+      ),
+    );
+
+    // Tab A's marking is not held: it lands first, and its lesson shows it and lets it go.
+    server.held.delete("gvm_key-1");
+    await expect(tabA.sendKept("key-1")).resolves.toMatchObject({
+      kind: "marked",
+    });
+    await tabA.forgetAnswer("key-1");
+    releaseB();
+    await b;
+
+    expect(await tabA.settledOf("key-1")).toBeNull();
+    expect(await tabA.unseenAnswer(LEARNER.key, undefined)).toBeNull();
+  });
+
+  it("keep no progress for an answer settled or let go meanwhile", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    await app.sendKept("key-1");
+    const progress = { ...KEPT, sampleId: "gvm_key-1", uploaded: true };
+
+    await app.keepProgress(progress);
+    expect(await app.settledOf("key-1")).toMatchObject({ kind: "marked" });
+    await app.forgetAnswer("key-1");
+    await app.keepProgress(progress);
+    expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
+  });
+
+  it("offer the oldest answer not yet shown, whatever its key", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    await app.keepAnswer(answerTo(ASKED, "key-z", 0));
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toEqual({
+      key: "key-z",
+      move: ASKED,
+    });
+  });
+
+  it("store an outcome where an app from before outcomes does not read it as an answer to send", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    await app.sendKept("key-1");
+    const db = await app.openDB();
+    const stored = await app.promisify<Array<{ learner?: string }>>(
+      db
+        .transaction(app.VOICE_ANSWER_STORE)
+        .objectStore(app.VOICE_ANSWER_STORE)
+        .getAll(),
+    );
+    // What that app sends: every record under the learner.
+    expect(stored.filter((record) => record.learner === LEARNER.key)).toEqual(
+      [],
+    );
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toMatchObject({
+      key: "key-1",
+    });
   });
 
   it("still send an answer kept without its step, and let it go once marked", async () => {

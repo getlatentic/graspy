@@ -3,7 +3,7 @@ import { keepAnswer } from "@/lib/voice/answer-store";
 import { startTake, type Take } from "@/lib/voice/recorder";
 import type { LessonMove } from "@/lib/voice/voice-types";
 import { followAnswer } from "../lib/follow-answer";
-import { answerToKeep } from "../lib/lesson-answer";
+import { answerToKeep, keepTake } from "../lib/lesson-answer";
 import type { LessonEvent, Phase } from "../lib/lesson-state";
 import type { VoiceLearner } from "./use-voice-learner";
 
@@ -16,23 +16,6 @@ const microphoneRefused = (error: unknown) =>
 
 const awaited = (phase: Phase) =>
   phase.name === "checking" || phase.name === "kept" ? phase.key : null;
-
-/** Kept on the device first, so nothing the child said is lost to the network. */
-async function keep(
-  wav: Blob,
-  move: LessonMove,
-  learner: VoiceLearner,
-  dispatch: Dispatch<LessonEvent>,
-) {
-  const key = crypto.randomUUID();
-  try {
-    await keepAnswer(answerToKeep(move, learner, wav, key, Date.now()));
-  } catch {
-    dispatch({ type: "recordFailed", note: "notSaved" });
-    return;
-  }
-  dispatch({ type: "recorded", key });
-}
 
 /** The child's spoken answer: recorded, kept on the device, sent and marked. */
 export function useAnswerTake(
@@ -70,8 +53,10 @@ export function useAnswerTake(
       const result = await take.current.done;
       take.current = null;
       if (result.kind === "nothing") dispatch({ type: "nothingHeard" });
-      if (result.kind === "answer")
-        await keep(result.wav, move, learner, dispatch);
+      if (result.kind !== "answer") return;
+      const key = crypto.randomUUID();
+      const kept = answerToKeep(move, learner, result.wav, key, Date.now());
+      await keepTake(kept, keepAnswer, dispatch);
     },
     [dispatch, learner],
   );

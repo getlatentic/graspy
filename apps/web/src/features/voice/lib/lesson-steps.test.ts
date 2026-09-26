@@ -205,6 +205,22 @@ describe("a voice lesson reloaded with an answer kept", () => {
     expect(names(page.shown)).toEqual(["checking"]);
   });
 
+  it("sends nothing when its retry comes due after the lesson is left", async () => {
+    server.reachable = false;
+    const page = lessonPage(await reload());
+    await page.open();
+    let due = () => {};
+    const retry = () => new Promise<void>((resolve) => (due = resolve));
+    const following = page.follow(retry);
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("kept"));
+
+    page.leave();
+    server.reachable = true;
+    due();
+    await following;
+    expect(server.asked).toEqual([]);
+  });
+
   it("opens another lesson at its own step, leaving the answer to its lesson", async () => {
     const app = await reload();
     const page = lessonPage(app, OTHER.plan_id);
