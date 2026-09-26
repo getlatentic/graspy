@@ -16,6 +16,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -141,6 +142,8 @@ class AccountEntrySignInTest {
                     firebaseFinishes.await()
                     firebase.uid = "uid-first"
                 }
+                // The sheet's next suspension, its caller gone.
+                yield()
                 SignInOutcome.Succeeded("uid-first")
             } else {
                 secondAsked.complete(askWhichAccount to google.forgotten.size)
@@ -157,7 +160,7 @@ class AccountEntrySignInTest {
         val (_, forgetsBefore) = secondAsked.await()
         first.join()
 
-        assertEquals(1, forgetsBefore)
+        assertEquals("the second sign-in forgot the Google account the first left marked", 1, forgetsBefore)
         assertEquals("uid-second", firebase.uid)
         second.cancelAndJoin()
     }
