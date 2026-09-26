@@ -5,7 +5,8 @@ import type { CurriculumData } from "@/lib/curriculum-record";
 // graspy's server as the MCP client reaches it, so the cards are the ones the app's own
 // server.ts builds. The client connects through the app's own session.ts.
 const VIEW = "ui://graspy/lesson";
-type SessionExchange = "issued" | "unreachable" | "refused" | "empty";
+type SessionExchange =
+  "issued" | "unreachable" | "unchecked" | "unavailable" | "refused" | "empty";
 const graspy = {
   reachable: true,
   session: "issued" as SessionExchange,
@@ -73,6 +74,16 @@ async function graspyFetch(input: string | URL): Promise<Response> {
   if (graspy.session === "unreachable") throw new TypeError("Failed to fetch");
   if (graspy.session === "refused") {
     return Response.json({ error: "refused" }, { status: 403 });
+  }
+  if (graspy.session === "unchecked") {
+    const detail = {
+      error: "Sign-in could not be checked. Try again.",
+      code: "sign_in_unchecked",
+    };
+    return Response.json({ detail }, { status: 503 });
+  }
+  if (graspy.session === "unavailable") {
+    return Response.json({ error: "unavailable" }, { status: 503 });
   }
   const token = graspy.session === "empty" ? "" : "session-token";
   return Response.json({ token, expiresIn: 3600 });
@@ -194,10 +205,13 @@ describe("a lesson whose session must be renewed", () => {
     return { target, whole: await openLessonOrCopy(target) };
   }
 
-  it("opens from the copy kept when graspy cannot be reached to renew it", async () => {
+  it.each([
+    ["graspy cannot be reached to renew it", "unreachable"],
+    ["graspy cannot reach Google to check the sign-in", "unchecked"],
+  ] as const)("opens from the copy kept when %s", async (_, exchange) => {
     const { target, whole } = await openedWhole();
 
-    graspy.session = "unreachable";
+    graspy.session = exchange;
     const { openLessonOrCopy } = await fresh();
 
     await expect(openLessonOrCopy(target)).resolves.toEqual(whole);
@@ -206,6 +220,7 @@ describe("a lesson whose session must be renewed", () => {
   it.each([
     ["refuses it", "refused", "refused"],
     ["issues it empty", "empty", "The server issued an empty session"],
+    ["answers 503 for another reason", "unavailable", "unavailable"],
   ] as const)(
     "is not stood in for when graspy %s",
     async (_, exchange, answer) => {
