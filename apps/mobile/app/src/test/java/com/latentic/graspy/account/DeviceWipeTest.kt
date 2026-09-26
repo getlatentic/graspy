@@ -14,14 +14,22 @@ import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.practice.TEACHER_AUDIO_DIRECTORY
 import java.io.File
 import java.io.IOException
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -62,9 +70,17 @@ class DeviceWipeTest {
     /** The account on the phone each time the Google account was forgotten. */
     private val forgotten = mutableListOf<Account?>()
     private var forgettingFails = false
-    private val firebase = FirebaseSession(FirebaseAuth.getInstance(demoFirebase())) {
+    /** Who Firebase holds signed in: the demo app never signs anyone in of its own. */
+    private var firebaseUid: String? = null
+    private val firebase = object : FirebaseSession(FirebaseAuth.getInstance(demoFirebase()), {
         if (forgettingFails) throw IOException("Play services did not answer")
         forgotten += accounts.account.value
+    }) {
+        override val userId get() = firebaseUid
+
+        override fun signOut() {
+            firebaseUid = null
+        }
     }
     private val signOutPending get() = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).all
 
@@ -289,6 +305,165 @@ class DeviceWipeTest {
 
         assertEquals(1, forgotten.size)
         assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
+    fun `a sign-in graspy does not take marks a Google account it could not forget, for the next sign-in`() = runBlocking {
+        forgettingFails = true
+
+        AccountEntry(context, { SignInOutcome.Succeeded(UID) }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+
+        assertEquals(setOf("google_account"), signOutPending.keys)
+    }
+
+    @Test
+    fun `a sign-in that fails after a Google account was chosen forgets it`() = runBlocking {
+        AccountEntry(context, { SignInOutcome.Failed("Firebase refused the credential") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+
+        assertEquals(1, forgotten.size)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
+    fun `a sign-in left part-way signs Firebase out, marks the Google account and leaves itself for the next start to undo`() = runBlocking {
+        accounts.set(null)
+        firebaseUid = UID
+        val atSheet = CompletableDeferred<Unit>()
+        val left = AccountEntry(context, { atSheet.complete(Unit); awaitCancellation() }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+
+        val signingIn = launch { left.signIn() }
+        atSheet.await()
+        signingIn.cancelAndJoin()
+
+        assertNull(firebaseUid)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending.keys)
+    }
+
+    @Test
+    fun `a sign-in waits for one left while Firebase finishes, which then cannot sign it out`() = runBlocking {
+        accounts.set(null)
+        val atFirstSheet = CompletableDeferred<Unit>()
+        val firebaseFinishes = CompletableDeferred<Unit>()
+        val secondAsked = CompletableDeferred<Pair<Boolean, Int>>()
+        var sheets = 0
+        val sheet = GoogleAccountSheet { askWhichAccount ->
+            sheets += 1
+            if (sheets == 1) {
+                atFirstSheet.complete(Unit)
+                // As FirebaseSession waits out Firebase's sign-in.
+                withContext(NonCancellable) {
+                    firebaseFinishes.await()
+                    firebaseUid = "uid-first"
+                }
+                SignInOutcome.Succeeded("uid-first")
+            } else {
+                secondAsked.complete(askWhichAccount to forgotten.size)
+                firebaseUid = "uid-second"
+                awaitCancellation()
+            }
+        }
+        val entry = AccountEntry(context, sheet, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+        val first = launch(Dispatchers.Default) { entry.signIn() }
+        atFirstSheet.await()
+        first.cancel()
+        val second = launch(Dispatchers.Default) { entry.signIn() }
+
+        firebaseFinishes.complete(Unit)
+        val (_, forgetsBefore) = secondAsked.await()
+        first.join()
+
+        assertEquals(1, forgetsBefore)
+        assertEquals("uid-second", firebaseUid)
+        second.cancelAndJoin()
+    }
+
+    @Test
+    fun `a Google task cancelled while the sign-in runs fails it, and the Google account is forgotten`() = runBlocking {
+        accounts.set(null)
+        val entry = AccountEntry(context, { throw CancellationException("A Play services task was cancelled") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+
+        val outcome = entry.signIn()
+
+        assertTrue(outcome.toString(), outcome is SignInOutcome.Failed)
+        assertEquals(listOf<Account?>(null), forgotten)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
+    fun `a sign-in that ends without an account leaves Firebase signed out, even one Firebase finished late`() = runBlocking {
+        accounts.set(null)
+        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
+            firebaseUid = UID
+            AccountEntry(context, { outcome }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+            assertNull(outcome.toString(), firebaseUid)
+        }
+    }
+
+    @Test
+    fun `a sign-in begun before the start's work runs is left alone by the undoing of one cut short`() = runBlocking {
+        accounts.set(null)
+        firebaseUid = UID
+        val prefs = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0)
+        prefs.edit().putBoolean("signing_in", true).commit()
+        val held = mutableListOf<Runnable>()
+        val start = CoroutineScope(Job() + object : CoroutineDispatcher() {
+            override fun dispatch(context: CoroutineContext, block: Runnable) {
+                held += block
+            }
+        })
+
+        entry(wipe).reconcile(start)
+        prefs.edit().putBoolean("signing_in", true).commit()
+        firebaseUid = "uid-2"
+        held.forEach { it.run() }
+
+        assertEquals("uid-2", firebaseUid)
+        assertTrue("signing_in" in signOutPending)
+    }
+
+    @Test
+    fun `a sign-in that stored its account before it was cut short is kept, its note gone`() = runBlocking {
+        firebaseUid = UID
+        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()
+
+        entry(wipe).reconcile(CoroutineScope(Dispatchers.IO + Job()))
+
+        assertEquals(UID, accounts.account.value?.uid)
+        assertEquals(UID, firebaseUid)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
+    fun `a sign-in that ends clears its note, whether it failed or was closed`() = runBlocking {
+        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
+            AccountEntry(context, { outcome }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+            assertFalse(outcome.toString(), "signing_in" in signOutPending)
+        }
+    }
+
+    @Test
+    fun `a sign-in cut short is undone at the next start, its Google account forgotten, never adopted`() = runBlocking {
+        accounts.set(null)
+        firebaseUid = UID
+        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()
+        val start = CoroutineScope(Dispatchers.IO + Job())
+
+        entry(wipe).reconcile(start)
+        start.coroutineContext[Job]!!.children.forEach { it.join() }
+
+        assertNull(accounts.account.value)
+        assertNull(firebaseUid)
+        assertEquals(listOf<Account?>(null), forgotten)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
+    fun `a failed sign-in marks a Google account it could not forget, for the next sign-in`() = runBlocking {
+        forgettingFails = true
+
+        AccountEntry(context, { SignInOutcome.Failed("Firebase refused the credential") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+
+        assertEquals(setOf("google_account"), signOutPending.keys)
     }
 
     @Test
