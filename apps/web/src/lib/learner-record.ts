@@ -17,7 +17,7 @@ export interface TopicRef {
   topic: string;
 }
 
-interface TopicMark extends TopicRef {
+export interface TopicMark extends TopicRef {
   lessonId?: string | null;
   learntAt?: number | null;
 }
@@ -142,10 +142,13 @@ export function rememberMark(topic: TopicRef, kind: "learnt" | "ready"): void {
   remember(recordKey(topic.planId), JSON.stringify(record));
 }
 
+/** A lesson marked ready on this device before the server's record names it. */
+export const ON_THIS_DEVICE = "on-this-device";
+
 function withMark(mark: TopicMark, kind: "learnt" | "ready"): TopicMark {
   return kind === "learnt"
     ? { ...mark, learntAt: mark.learntAt ?? Date.now() }
-    : { ...mark, lessonId: mark.lessonId ?? "on-this-device" };
+    : { ...mark, lessonId: mark.lessonId ?? ON_THIS_DEVICE };
 }
 
 export function changePlanRecord(change: PlanChange): Promise<void> {

@@ -117,9 +117,23 @@ const FRACTIONS = {
   topicIndex: 1,
   topic: "Fractions",
 };
-const result = (status: string, whole = status === "ready") => ({
+const result = (
+  status: string,
+  whole = status === "ready",
+  lessonId: string | null = "lesson-1",
+) => ({
   content: [],
-  structuredContent: { status, whole, lesson: { title: "t", slides: [] } },
+  structuredContent: {
+    status,
+    whole,
+    lessonId,
+    lesson: { title: lessonId ?? "t", slides: [] },
+  },
+});
+/** The topic as the record marks it once its lesson is kept. */
+const ready = (topic: typeof FRACTIONS, lessonId = "lesson-1") => ({
+  ...topic,
+  lessonId,
 });
 const card = (status: string, whole?: boolean) => ({
   resourceUri: VIEW,
@@ -141,6 +155,7 @@ async function fresh() {
     ...(await import("./lesson-offline")),
     ...(await import("./lesson-app")),
     ...(await import("@/lib/lesson-copies")),
+    ...(await import("@/lib/idb")),
   };
 }
 
@@ -300,22 +315,22 @@ describe("a signed-in lesson whose ID token Firebase cannot give", () => {
 
 describe("the copies", () => {
   it("follow the record: every lesson it has in the plan, and no other", async () => {
-    const { copiedTopics, copyReadyLessons, keepIfWhole, lessonTarget } =
+    const { copiedLessons, copyReadyLessons, keepIfWhole, lessonTarget } =
       await fresh();
     const gone = { ...lessonTarget(PLAN, MATHS, 0)!, planId: "plan-0" };
     await keepIfWhole(gone, card("ready"));
 
-    await copyReadyLessons(PLAN, [FRACTIONS]);
-    await copyReadyLessons(PLAN, [FRACTIONS]);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
 
-    expect(await copiedTopics()).toEqual([FRACTIONS]);
+    expect(await copiedLessons()).toEqual([ready(FRACTIONS)]);
     expect(graspy.called).toHaveLength(1);
   });
 
   it("never ask the server to make a lesson", async () => {
     const { copyReadyLessons } = await fresh();
 
-    await copyReadyLessons(PLAN, [FRACTIONS]);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
 
     expect(graspy.called).toEqual(["lesson_progress"]);
   });
@@ -325,7 +340,7 @@ describe("the copies", () => {
       await fresh();
     const target = lessonTarget(PLAN, MATHS, 1)!;
     const opened = await openLesson(target);
-    await copyReadyLessons(PLAN, [FRACTIONS]);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
 
     goOffline();
 
@@ -333,47 +348,147 @@ describe("the copies", () => {
   });
 
   it("go on past a lesson the server fails to give", async () => {
-    const { copiedTopics, copyReadyLessons } = await fresh();
+    const { copiedLessons, copyReadyLessons } = await fresh();
     graspy.failing.add("Number Systems");
     vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    await copyReadyLessons(PLAN, [NUMBER_SYSTEMS, FRACTIONS]);
+    await copyReadyLessons(PLAN, [ready(NUMBER_SYSTEMS), ready(FRACTIONS)]);
 
-    expect(await copiedTopics()).toEqual([FRACTIONS]);
+    expect(await copiedLessons()).toEqual([ready(FRACTIONS)]);
     expect(console.warn).toHaveBeenCalledOnce();
   });
 
   it("go on past a lesson the server refuses, and say so", async () => {
-    const { copiedTopics, copyReadyLessons } = await fresh();
+    const { copiedLessons, copyReadyLessons } = await fresh();
     graspy.refusing.add("Number Systems");
     vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    await copyReadyLessons(PLAN, [NUMBER_SYSTEMS, FRACTIONS]);
+    await copyReadyLessons(PLAN, [ready(NUMBER_SYSTEMS), ready(FRACTIONS)]);
 
-    expect(await copiedTopics()).toEqual([FRACTIONS]);
+    expect(await copiedLessons()).toEqual([ready(FRACTIONS)]);
     expect(console.warn).toHaveBeenCalledOnce();
   });
 
   it("stop at a server that cannot be reached, trying it once", async () => {
-    const { copiedTopics, copyReadyLessons } = await fresh();
+    const { copiedLessons, copyReadyLessons } = await fresh();
     vi.spyOn(console, "warn").mockImplementation(() => {});
     goOffline();
 
     await expect(
-      copyReadyLessons(PLAN, [NUMBER_SYSTEMS, FRACTIONS]),
+      copyReadyLessons(PLAN, [ready(NUMBER_SYSTEMS), ready(FRACTIONS)]),
     ).rejects.toThrow();
 
     expect(graspy.connects).toBe(1);
     expect(console.warn).not.toHaveBeenCalled();
-    expect(await copiedTopics()).toEqual([]);
+    expect(await copiedLessons()).toEqual([]);
+  });
+
+  it("are copied again once the record names a new lesson for the topic", async () => {
+    const { copyReadyLessons, lessonTarget, openLessonOrCopy } = await fresh();
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+    graspy.answers.lesson_progress = result("ready", true, "lesson-2");
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS, "lesson-2")]);
+
+    goOffline();
+    const copy = await openLessonOrCopy(lessonTarget(PLAN, MATHS, 1)!);
+    expect(copy.toolResult).toEqual(result("ready", true, "lesson-2"));
+  });
+
+  it("know the lesson the learner opened, so a run asks nothing of it", async () => {
+    const { copyReadyLessons, lessonTarget, openLessonOrCopy } = await fresh();
+    await openLessonOrCopy(lessonTarget(PLAN, MATHS, 1)!);
+    graspy.called = [];
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+
+    expect(graspy.called).toEqual([]);
+  });
+
+  it("take the record's lesson for a server that does not name it", async () => {
+    const { copiedLessons, copyReadyLessons } = await fresh();
+    graspy.answers.lesson_progress = result("ready", true, null);
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+
+    expect(await copiedLessons()).toEqual([ready(FRACTIONS)]);
+  });
+
+  it("ask once more for a copy kept before copies named their lesson", async () => {
+    const { copyReadyLessons, LESSON_COPY_STORE, openDB, promisify } =
+      await fresh();
+    const db = await openDB();
+    const store = db
+      .transaction(LESSON_COPY_STORE, "readwrite")
+      .objectStore(LESSON_COPY_STORE);
+    await promisify(
+      store.put({ ...FRACTIONS, card: card("ready"), savedAt: 1 }),
+    );
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+
+    expect(graspy.called).toEqual(["lesson_progress"]);
+  });
+
+  it("do not ask again for a lesson the server no longer has, even a copy kept before copies named their lesson", async () => {
+    const { copyReadyLessons, LESSON_COPY_STORE, openDB, promisify } =
+      await fresh();
+    const db = await openDB();
+    const store = db
+      .transaction(LESSON_COPY_STORE, "readwrite")
+      .objectStore(LESSON_COPY_STORE);
+    await promisify(
+      store.put({ ...FRACTIONS, card: card("ready"), savedAt: 1 }),
+    );
+    graspy.answers.lesson_progress = result("failed", false);
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+
+    expect(graspy.called).toEqual(["lesson_progress"]);
+  });
+
+  it("ask again for a lesson the server no longer had once the record names a new one", async () => {
+    const { copyReadyLessons } = await fresh();
+    graspy.answers.lesson_progress = result("failed", false);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS, "lesson-2")]);
+
+    expect(graspy.called).toEqual(["lesson_progress", "lesson_progress"]);
+  });
+
+  it("ask again for a lesson the server no longer had once the learner opens it", async () => {
+    const { copyReadyLessons, lessonTarget, openLessonOrCopy } = await fresh();
+    graspy.answers.lesson_progress = result("failed", false);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+    graspy.answers.give_lesson = result("making");
+    await openLessonOrCopy(lessonTarget(PLAN, MATHS, 1)!);
+    graspy.called = [];
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
+
+    expect(graspy.called).toEqual(["lesson_progress"]);
+  });
+
+  it("ask nothing for a lesson marked ready only on this device, and keep its copy", async () => {
+    const { copiedLessons, copyReadyLessons, keepIfWhole, lessonTarget } =
+      await fresh();
+    await keepIfWhole(lessonTarget(PLAN, MATHS, 1)!, card("ready"));
+
+    await copyReadyLessons(PLAN, [ready(FRACTIONS, "on-this-device")]);
+
+    expect(graspy.called).toEqual([]);
+    expect(await copiedLessons()).toEqual([ready(FRACTIONS)]);
   });
 
   it("keep only a lesson the server has whole", async () => {
-    const { copiedTopics, copyReadyLessons } = await fresh();
+    const { copiedLessons, copyReadyLessons } = await fresh();
     graspy.answers.lesson_progress = result("ready", false);
 
-    await copyReadyLessons(PLAN, [FRACTIONS]);
+    await copyReadyLessons(PLAN, [ready(FRACTIONS)]);
 
-    expect(await copiedTopics()).toEqual([]);
+    expect(await copiedLessons()).toEqual([]);
   });
 });
