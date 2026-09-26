@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.webkit.WebViewFeature
+import com.latentic.graspy.account.inMemoryDatabase
 import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.learnCopyFor
 import com.latentic.graspy.mcp.UiView
@@ -50,10 +51,11 @@ class LessonMakingTest {
         preparing()
     }
 
-    private fun show(server: ViewServer) {
+    private fun show(server: Server) {
+        val lessons = OfflineLessons(inMemoryDatabase().lessonCopyDao(), "uid/ada", server, stillLearning = { true })
         compose.setContent {
             GraspyTheme(InterfaceLanguage.ENGLISH) {
-                TopicLesson(learn, "en", server, target, onBack = {}, onLearnt = {})
+                TopicLesson(learn, "en", server, lessons, target, onBack = {}, onLearnt = {})
             }
         }
         compose.waitForIdle()
@@ -65,12 +67,22 @@ class LessonMakingTest {
     }
 
     /** A server whose lesson opens with [opened] and whose view never finishes loading. */
-    private class Server(private val opened: CompletableDeferred<ViewCard>) : ViewServer {
+    private class Server(private val opened: CompletableDeferred<ViewCard>) : ViewServer, LessonServer {
         override suspend fun view(uri: String): UiView = awaitCancellation()
+
+        override suspend fun keepShown(uri: String, view: UiView) = Unit
 
         override suspend fun call(name: String, arguments: JsonObject): JsonObject = awaitCancellation()
 
+        override suspend fun callTool(name: String, arguments: JsonObject): JsonObject = awaitCancellation()
+
         override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = opened.await()
+
+        override suspend fun viewOf(name: String): String = card.resourceUri
+
+        override suspend fun keepViews() = Unit
+
+        private val card = ViewCard("ui://graspy/lesson", "give_lesson", JsonObject(emptyMap()), JsonObject(emptyMap()))
     }
 }
 

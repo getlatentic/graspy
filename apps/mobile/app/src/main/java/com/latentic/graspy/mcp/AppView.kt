@@ -109,7 +109,8 @@ private fun HostedFrame(card: ViewCard, document: UiView, server: ViewServer, lo
             override fun resize(height: Int) {
                 if (height > 0) viewHeight = height
             }
-            override fun shown() = latestDrawn()
+            override suspend fun shown(uri: String, view: UiView) = server.keepShown(uri, view)
+            override fun drawn() = latestDrawn()
         }
     }
     AndroidView(

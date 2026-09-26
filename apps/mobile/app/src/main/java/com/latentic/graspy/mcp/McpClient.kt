@@ -1,6 +1,7 @@
 package com.latentic.graspy.mcp
 
 import android.util.Base64
+import com.latentic.graspy.account.SessionRefusal
 import com.latentic.graspy.network.readTimeout
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
@@ -10,6 +11,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -42,6 +44,9 @@ data class ViewCard(
 
 class McpRefusal(message: String) : IOException(message)
 
+/** No answer came, as the web's failed fetch: neither the server nor the session in front of it refused. */
+fun Throwable.isUnreachable(): Boolean = this is IOException && this !is McpRefusal && this !is SessionRefusal
+
 fun JsonObject.isToolError(): Boolean = (this["isError"] as? JsonPrimitive)?.booleanOrNull == true
 
 /**
@@ -69,11 +74,17 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
     }
 
     suspend fun openToolView(name: String, arguments: JsonObject): ViewCard {
-        val resourceUri = catalogue().viewOf[name] ?: throw McpRefusal("$name has no view")
+        val resourceUri = viewOf(name)
         val result = callTool(name, arguments)
         if (result.isToolError()) throw McpRefusal("$name was refused")
         return ViewCard(resourceUri, name, arguments, result)
     }
+
+    /** The view [name]'s result is shown in. */
+    suspend fun viewOf(name: String): String = catalogue().viewOf[name] ?: throw McpRefusal("$name has no view")
+
+    /** The views the server's tools are shown in. */
+    suspend fun viewUris(): Set<String> = catalogue().viewOf.values.toSet()
 
     /** Read once per process. */
     suspend fun view(uri: String): UiView = views[uri] ?: readView(uri).also { views[uri] = it }
@@ -142,10 +153,16 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
             text.lineSequence().filter { it.startsWith("data:") }.lastOrNull()?.removePrefix("data:")?.trim()
         } else {
             text
-        } ?: throw IOException("$method returned nothing")
-        val reply = mcpJson.parseToJsonElement(message).jsonObject
+        }
+        val reply = message?.let(::replyOf) ?: throw McpRefusal("$method returned no JSON-RPC message")
         reply["error"]?.let { throw McpRefusal("$method refused: $it") }
-        return reply["result"] as? JsonObject ?: throw IOException("$method returned no result")
+        return reply["result"] as? JsonObject ?: throw McpRefusal("$method returned no result")
+    }
+
+    private fun replyOf(message: String): JsonObject? = try {
+        mcpJson.parseToJsonElement(message) as? JsonObject
+    } catch (undecodable: SerializationException) {
+        null
     }
 
     companion object {

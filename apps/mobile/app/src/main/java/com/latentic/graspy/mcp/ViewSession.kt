@@ -29,8 +29,11 @@ interface ViewHost {
 
     fun resize(height: Int)
 
+    /** The view, loaded in the sandbox from [view]'s page, has initialised and has its tool's input and result. */
+    suspend fun shown(uri: String, view: UiView)
+
     /** The view has drawn its tool's result. */
-    fun shown() = Unit
+    fun drawn() = Unit
 }
 
 /** Told to a view when it initialises, as the web tells it: light, inline, at most [VIEW_MAX_HEIGHT] tall. */
@@ -107,13 +110,14 @@ class ViewSession(
         else -> null
     }
 
-    private fun heard(method: String, params: JsonObject) {
+    private suspend fun heard(method: String, params: JsonObject) {
         when (method) {
             PROXY_READY -> sendDocument()
             INITIALIZED -> {
                 send(notification(TOOL_INPUT, buildJsonObject { put("arguments", card.toolInput) }))
                 send(notification(TOOL_RESULT, card.toolResult))
                 resultSent = true
+                host.shown(card.resourceUri, view)
             }
             SIZE_CHANGED -> (params["height"] as? JsonPrimitive)?.doubleOrNull?.let { resized(ceil(it).toInt().coerceIn(0, VIEW_MAX_HEIGHT)) }
         }
@@ -124,7 +128,7 @@ class ViewSession(
         host.resize(height)
         if (resultSent && height > 0 && !drawn) {
             drawn = true
-            host.shown()
+            host.drawn()
         }
     }
 

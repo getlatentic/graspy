@@ -10,6 +10,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -62,14 +63,24 @@ class ViewSessionTest {
     }
 
     @Test
-    fun `a view is shown only once it has drawn its result, not when it is told it`() = runBlocking {
+    fun `a view has drawn only once it measures its result, not when it is told it`() = runBlocking {
         session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 40) }))
         session.receive(notification(ViewSession.INITIALIZED))
         session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 0) }))
-        assertFalse(host.shown)
+        assertFalse(host.drawn)
 
         session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 420) }))
-        assertTrue(host.shown)
+        assertTrue(host.drawn)
+    }
+
+    @Test
+    fun `the page is the host's to keep only once the view has initialised in the sandbox`() = runBlocking {
+        session.receive(notification(ViewSession.PROXY_READY))
+        session.receive(request(1, ViewSession.INITIALIZE))
+        assertNull(host.shown)
+
+        session.receive(notification(ViewSession.INITIALIZED))
+        assertEquals(card.resourceUri to view, host.shown)
     }
 
     @Test
@@ -132,7 +143,8 @@ class ViewSessionTest {
         val links = mutableListOf<String>()
         val heights = mutableListOf<Int>()
         val messages = mutableListOf<String>()
-        var shown = false
+        var shown: Pair<String, UiView>? = null
+        var drawn = false
         var takesMessages = true
 
         override suspend fun callTool(name: String, arguments: JsonObject): JsonObject {
@@ -158,8 +170,12 @@ class ViewSessionTest {
             heights += height
         }
 
-        override fun shown() {
-            shown = true
+        override suspend fun shown(uri: String, view: UiView) {
+            shown = uri to view
+        }
+
+        override fun drawn() {
+            drawn = true
         }
 
         companion object {
