@@ -27,7 +27,8 @@ class DeviceWipe(
      * learner's class and language stay for when they learn here again.
      */
     suspend fun leaveLearner() = withContext(Dispatchers.IO) {
-        // The learner goes first, so whatever still runs for them finds them gone and writes nothing the wipe misses.
+        // The learner goes first, so what checks for them before it writes (a lesson copy, a request's session)
+        // finds them gone.
         accounts.setLearner(null)
         sessions.forget()
         forgetLearnerData()

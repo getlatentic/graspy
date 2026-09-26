@@ -9,6 +9,7 @@ import com.latentic.graspy.plan.LessonTarget
 import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.plan.TopicMarks
 import com.latentic.graspy.plan.lessonTarget
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.json.JsonObject
@@ -21,6 +22,10 @@ import kotlinx.serialization.json.put
 private const val GIVE_LESSON = "give_lesson"
 private const val LESSON_PROGRESS = "lesson_progress"
 private const val TAG = "GraspyLessons"
+private const val READY = "ready"
+// lesson_progress's answer when no lesson is kept for the topic and none is being made, or its making failed
+// (apps/server lessons/tools.py). It never starts one, so asking again answers the same.
+private const val FAILED = "failed"
 
 fun isLessonTool(name: String): Boolean = name == GIVE_LESSON || name == LESSON_PROGRESS
 
@@ -54,6 +59,12 @@ class OfflineLessons(
 ) {
     private val asked = Channel<RecordRead>(Channel.CONFLATED)
 
+    /**
+     * Topics whose lesson the server no longer has though the record names it (lessons are kept for a time),
+     * with nothing making it: it answers the same until the learner opens the topic, so it is not asked again.
+     */
+    private val gone = ConcurrentHashMap.newKeySet<CopiedTopic>()
+
     /** [attempt] goes up only when the learner retries after a failure. */
     suspend fun openOrCopy(target: LessonTarget, attempt: Int = 0): ViewCard {
         val card = try {
@@ -63,6 +74,7 @@ class OfflineLessons(
         } catch (failure: Exception) {
             return standIn(target, failure)
         }
+        gone -= target.copied
         if (card.toolResult.isWhole()) keep(target, card)
         return card
     }
@@ -104,11 +116,14 @@ class OfflineLessons(
         val copied = bestEffort(TAG, "Reading the lesson copies") { copies.copied(ownerId) } ?: return
         bestEffort(TAG, "Dropping lessons no longer ready") { copies.dropAll(ownerId, copied - wanted.toSet(), read.askedAt) }
         val marks = TopicMarks(record)
-        for (topic in wanted - copied.toSet()) {
+        for (topic in wanted - copied.toSet() - gone) {
             val subject = plan.subject(topic.subjectSlug) ?: continue
             val target = lessonTarget(plan, subject, topic.topicIndex, marks)?.takeIf { it.topic == topic.topic } ?: continue
-            val card = bestEffort(TAG, "Copying the lesson on ${target.topic}") { keptLesson(target) }
-            if (card != null && card.toolResult.isWhole()) keep(target, card)
+            val card = bestEffort(TAG, "Copying the lesson on ${target.topic}") { keptLesson(target) } ?: continue
+            when {
+                card.toolResult.isWhole() -> keep(target, card)
+                card.toolResult.status() == FAILED -> gone += topic
+            }
         }
     }
 
@@ -146,10 +161,12 @@ class OfflineLessons(
     }
 }
 
-private fun JsonObject.isWhole(): Boolean {
-    val state = this["structuredContent"] as? JsonObject ?: return false
-    return state.string("status") == "ready" && (state["whole"] as? JsonPrimitive)?.booleanOrNull == true
-}
+private fun JsonObject.state(): JsonObject? = this["structuredContent"] as? JsonObject
+
+private fun JsonObject.status(): String? = state()?.string("status")
+
+private fun JsonObject.isWhole(): Boolean =
+    status() == READY && (state()?.get("whole") as? JsonPrimitive)?.booleanOrNull == true
 
 private fun lessonArguments(target: LessonTarget, attempt: Int): JsonObject = buildJsonObject {
     put("target", apiJson.encodeToJsonElement(target))

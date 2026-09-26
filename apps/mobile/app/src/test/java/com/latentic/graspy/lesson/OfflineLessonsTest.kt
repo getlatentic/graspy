@@ -156,6 +156,51 @@ class OfflineLessonsTest {
     }
 
     @Test
+    fun `a run with the same record asks nothing of lessons already copied`() = runBlocking {
+        server.answers = lessonResult("ready")
+        copying(until = { copies.copied("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
+        server.called.clear()
+
+        copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(emptyList<String>(), server.called)
+    }
+
+    @Test
+    fun `a topic whose lesson the server no longer has is not asked for again`() = runBlocking {
+        server.answers = lessonResult("failed", whole = false)
+        copying(until = { server.called.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
+        server.called.clear()
+
+        copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(emptyList<String>(), server.called)
+    }
+
+    @Test
+    fun `a lesson still being made is asked for again on the next run`() = runBlocking {
+        server.answers = lessonResult("making")
+        copying(until = { server.called.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(listOf("lesson_progress", "lesson_progress"), server.called)
+    }
+
+    @Test
+    fun `a topic the server no longer had is asked for again once the learner opens it`() = runBlocking {
+        server.answers = lessonResult("failed", whole = false)
+        copying(until = { server.called.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
+        server.gives = lessonCard("making")
+        lessons.openOrCopy(fractions)
+        server.called.clear()
+
+        copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(listOf("lesson_progress"), server.called)
+    }
+
+    @Test
     fun `the copy run keeps no lesson that is not whole`() = runBlocking {
         server.answers = lessonResult("ready", whole = false)
 

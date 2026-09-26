@@ -1,6 +1,7 @@
 package com.latentic.graspy.mcp
 
 import android.database.sqlite.SQLiteFullException
+import com.latentic.graspy.account.SessionRefusal
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
@@ -18,6 +19,7 @@ import org.robolectric.RobolectricTestRunner
 class OfflineViewsTest {
     private val dao = FakeDao()
     private var reachable = true
+    private var refusal: Exception? = null
     private val lesson = UiView(
         html = "<!doctype html><script src=\"/views/assets/lesson.js\"></script>",
         title = "Lesson",
@@ -26,6 +28,7 @@ class OfflineViewsTest {
     )
     private val views = OfflineViews(dao) { uri ->
         if (!reachable) throw IOException("no connection")
+        refusal?.let { throw it }
         if (uri != LESSON) throw McpRefusal("$uri is not an MCP App view")
         lesson
     }
@@ -36,6 +39,16 @@ class OfflineViewsTest {
 
         reachable = false
         assertEquals(lesson, views.view(LESSON))
+    }
+
+    @Test
+    fun `a refusal is the server's answer, never stood in for by the copy`() {
+        runBlocking { views.view(LESSON) }
+
+        refusal = McpRefusal("resources/read failed: HTTP 500")
+        assertThrows(McpRefusal::class.java) { runBlocking { views.view(LESSON) } }
+        refusal = SessionRefusal("graspy did not issue a session")
+        assertThrows(SessionRefusal::class.java) { runBlocking { views.view(LESSON) } }
     }
 
     @Test

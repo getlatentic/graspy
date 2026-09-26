@@ -33,7 +33,10 @@ interface KeptViewDao {
     suspend fun kept(uri: String): KeptViewEntity?
 }
 
-/** Views as the web reads them (lib/mcp/server.ts uiView): from the server, else the copy last read. */
+/**
+ * Views as the web reads them (lib/mcp/server.ts uiView): from the server, else, when it could not be
+ * reached, the copy last read. A refusal is its answer, as it is for lessons.
+ */
 class OfflineViews(private val dao: KeptViewDao, private val read: suspend (String) -> UiView) {
     private val keptThisRun = ConcurrentHashMap.newKeySet<String>()
 
@@ -43,7 +46,7 @@ class OfflineViews(private val dao: KeptViewDao, private val read: suspend (Stri
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
-            return kept(uri) ?: throw failure
+            return (if (failure.isUnreachable()) kept(uri) else null) ?: throw failure
         }
         keep(uri, view)
         return view
