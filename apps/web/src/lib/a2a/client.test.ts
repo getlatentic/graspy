@@ -137,6 +137,22 @@ describe("a tutor turn that fails", () => {
     },
   );
 
+  it("is the tutor failing, tried once more, when its stream ends with no answer", async () => {
+    rpc = async () =>
+      new Response("", { headers: { "Content-Type": "text/event-stream" } });
+
+    const { failure, ApiError, NetworkError, UNREADABLE_ANSWER } =
+      await asked();
+
+    expect(failure).toBeInstanceOf(ApiError);
+    expect(failure).not.toBeInstanceOf(NetworkError);
+    expect(failure).toMatchObject({
+      message: "The tutor stopped before answering",
+      status: UNREADABLE_ANSWER,
+    });
+    expect(rpcCalls).toBe(2);
+  });
+
   it("is a NetworkError, tried once more, when nothing reached the tutor", async () => {
     rpc = async () => {
       throw new TypeError("Failed to fetch");

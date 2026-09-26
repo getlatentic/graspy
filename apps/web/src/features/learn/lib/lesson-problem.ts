@@ -1,3 +1,4 @@
+import { SignInUnchecked } from "@/lib/api/errors";
 import { isUnreachable } from "@/lib/mcp/unreachable";
 
 export interface LessonProblem {
@@ -8,8 +9,11 @@ export interface LessonProblem {
 
 export type LessonFailure = "unreachable" | "failed";
 
-export const lessonFailure = (error: unknown): LessonFailure =>
-  isUnreachable(error) ? "unreachable" : "failed";
+// Google failing to check the sign-in is never the device's connection.
+export function lessonFailure(error: unknown): LessonFailure {
+  if (error instanceof SignInUnchecked && navigator.onLine) return "failed";
+  return isUnreachable(error) ? "unreachable" : "failed";
+}
 
 interface LessonPageState {
   loaded: boolean;

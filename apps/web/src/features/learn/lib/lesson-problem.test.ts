@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, NetworkError } from "@/lib/api/errors";
+import { ApiError, NetworkError, SignInUnchecked } from "@/lib/api/errors";
 import { lessonFailure, lessonProblem } from "./lesson-problem";
 
 let online = true;
@@ -31,10 +31,16 @@ describe("a lesson that did not open", () => {
     });
   });
 
-  it("says the device is offline when it is", () => {
+  it.each([
+    ["nothing could be fetched", new TypeError("Failed to fetch")],
+    [
+      "Google could not check the sign-in",
+      new SignInUnchecked("auth/internal-error", 503),
+    ],
+  ])("says the device is offline when it is and %s", (_, error) => {
     online = false;
 
-    expect(problemAfter(new TypeError("Failed to fetch"))).toEqual({
+    expect(problemAfter(error)).toEqual({
       key: "lesson.problem.offline",
       retryable: true,
     });
@@ -47,6 +53,10 @@ describe("a lesson that did not open", () => {
       new ApiError("The server issued an empty session", 200),
     ],
     ["graspy refused the lesson", new Error("give_lesson was refused")],
+    [
+      "Google could not check the sign-in",
+      new SignInUnchecked("auth/too-many-requests", 429),
+    ],
   ])("says only that it did not load when %s", (_, error) => {
     expect(problemAfter(error)).toEqual({ key: null, retryable: true });
   });

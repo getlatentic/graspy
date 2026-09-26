@@ -1,6 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/client";
 import { committed, openDB, OUTBOX_STORE, promisify } from "@/lib/idb";
-import { callAppTool } from "./server";
+import { callAppTool, reachServer } from "./server";
 import { refusesTheCall } from "./refusal";
 import { isUnreachable } from "./unreachable";
 
@@ -61,8 +61,16 @@ async function forget(id: number): Promise<void> {
 }
 
 async function sendAll(): Promise<number> {
+  const calls = await keptCalls();
+  if (calls.length === 0) return 0;
+  // A connection refused, whatever its status, is not the server refusing a call.
+  try {
+    await reachServer();
+  } catch {
+    return 0;
+  }
   let sent = 0;
-  for (const call of await keptCalls()) {
+  for (const call of calls) {
     try {
       await callAppTool(call.name, call.args);
     } catch (error) {

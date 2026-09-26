@@ -46,9 +46,13 @@ async function fresh() {
   return import("./server");
 }
 
-async function readOnline() {
+/** Read and shown: the view bridge keeps the page once the view has initialized. */
+async function shownOnline() {
   connect.mockResolvedValue(undefined);
-  return (await fresh()).uiView("ui://graspy/lesson");
+  const { uiView, keepView } = await fresh();
+  const view = await uiView("ui://graspy/lesson");
+  keepView("ui://graspy/lesson", view);
+  return view;
 }
 
 beforeEach(() => {
@@ -66,8 +70,8 @@ beforeEach(() => {
 });
 
 describe("a view", () => {
-  it("opens from the copy kept when it was last read, without a connection", async () => {
-    const read = await readOnline();
+  it("opens from the copy kept when it was last shown, without a connection", async () => {
+    const read = await shownOnline();
 
     connect.mockRejectedValue(new TypeError("Failed to fetch"));
     const offline = await (await fresh()).uiView("ui://graspy/lesson");
@@ -80,7 +84,7 @@ describe("a view", () => {
   });
 
   it("opens from the copy kept while the device is offline, whatever the failure", async () => {
-    const read = await readOnline();
+    const read = await shownOnline();
 
     online = false;
     connect.mockRejectedValue(new Error("Network request failed"));
@@ -90,7 +94,7 @@ describe("a view", () => {
   });
 
   it("opens from the copy kept when nothing answers the read before it times out", async () => {
-    const read = await readOnline();
+    const read = await shownOnline();
 
     readResource.mockRejectedValue(
       new SdkError(SdkErrorCode.RequestTimeout, "Request timed out", {
@@ -102,6 +106,21 @@ describe("a view", () => {
     expect(timedOut).toEqual(read);
   });
 
+  it("read but not shown leaves the copy kept as it is", async () => {
+    await shownOnline();
+    readResource.mockResolvedValue({
+      contents: [{ ...LESSON_VIEW.contents[0], text: "<html>newer</html>" }],
+    });
+    await expect(
+      (await fresh()).uiView("ui://graspy/lesson"),
+    ).resolves.toMatchObject({ html: "<html>newer</html>" });
+
+    connect.mockRejectedValue(new TypeError("Failed to fetch"));
+    const offline = await (await fresh()).uiView("ui://graspy/lesson");
+
+    expect(offline.html).toBe("<html>lesson</html>");
+  });
+
   it("never read cannot open without a connection", async () => {
     connect.mockRejectedValue(new TypeError("Failed to fetch"));
     const { uiView } = await fresh();
@@ -110,7 +129,7 @@ describe("a view", () => {
   });
 
   it("refused by the server does not open from the copy kept", async () => {
-    await readOnline();
+    await shownOnline();
 
     const refusal = new Error("Resource ui://graspy/lesson not found");
     readResource.mockRejectedValue(refusal);
@@ -120,7 +139,7 @@ describe("a view", () => {
   });
 
   it("does not open from the copy kept when the server answers with an error", async () => {
-    await readOnline();
+    await shownOnline();
 
     const failure = new Error("Error POSTing to endpoint (HTTP 500)");
     connect.mockRejectedValue(failure);
@@ -146,7 +165,7 @@ describe("the background read of every view", () => {
   });
 
   it("leaves a kept copy as it is: its files were cached by showing it, a newer page's may not be", async () => {
-    await readOnline();
+    await shownOnline();
     readResource.mockResolvedValue(newerView("<html>newer</html>"));
     await (await fresh()).readAllViews();
 
@@ -157,9 +176,9 @@ describe("the background read of every view", () => {
   });
 
   it("is overtaken by a view being shown, which replaces its copy", async () => {
-    await readOnline();
+    await shownOnline();
     readResource.mockResolvedValue(newerView("<html>newer</html>"));
-    await readOnline();
+    await shownOnline();
 
     connect.mockRejectedValue(new TypeError("Failed to fetch"));
     const offline = await (await fresh()).uiView("ui://graspy/lesson");

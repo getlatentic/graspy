@@ -109,19 +109,45 @@ describe("switching to another learner", () => {
   });
 
   it.each([
-    ["offline", () => vi.stubGlobal("navigator", { onLine: false })],
+    ["offline", true, () => vi.stubGlobal("navigator", { onLine: false })],
     [
       "the plan cannot be sent",
+      false,
       () => syncPlan.mockRejectedValueOnce(new TypeError()),
     ],
     [
       "a kept call cannot be sent",
+      false,
       () => sentEverything.mockResolvedValue(false),
     ],
-  ])("is refused, wiping nothing, when %s", async (_, arrange) => {
+  ])("is refused, wiping nothing, when %s", async (_, offline, arrange) => {
     arrange();
 
-    await expect(chooseLearner(GRACE)).rejects.toBeInstanceOf(UnsentChanges);
+    const refusal = await chooseLearner(GRACE).catch((error) => error);
+
+    expect(refusal).toBeInstanceOf(UnsentChanges);
+    expect(refusal).toMatchObject({ offline });
+    expect(wipeLearnerData).not.toHaveBeenCalled();
+    expect(signedIn?.learner).toEqual(ADA);
+  });
+
+  it("goes ahead once asked to lose what cannot be sent", async () => {
+    sentEverything.mockResolvedValue(false);
+
+    await expect(chooseLearner(GRACE, { loseUnsent: true })).resolves.toBe(
+      "/app/learn",
+    );
+
+    expect(sentEverything).not.toHaveBeenCalled();
+    expect(steps).toEqual(["wipe", "leave", `keep ${GRACE.id}`, "sync"]);
+  });
+
+  it("wipes nothing when graspy cannot issue the learner's session", async () => {
+    api.learnerSession.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    await expect(chooseLearner(GRACE, { loseUnsent: true })).rejects.toThrow(
+      "Failed to fetch",
+    );
 
     expect(wipeLearnerData).not.toHaveBeenCalled();
     expect(signedIn?.learner).toEqual(ADA);

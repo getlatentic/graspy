@@ -1,10 +1,16 @@
-import { ProtocolError, ProtocolErrorCode } from "@modelcontextprotocol/client";
+import {
+  ProtocolError,
+  ProtocolErrorCode,
+  SdkErrorCode,
+  SdkHttpError,
+} from "@modelcontextprotocol/client";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotForViews } from "./refusal";
 
 const callAppTool = vi.fn();
-vi.mock("./server", () => ({ callAppTool }));
+const reachServer = vi.fn();
+vi.mock("./server", () => ({ callAppTool, reachServer }));
 
 const ANSWER = { question: "3/8?", options: ["0.375", "0.38"], chosenIndex: 1 };
 const FINISH = { planId: "plan-1", topic: "Fractions" };
@@ -27,7 +33,16 @@ beforeEach(() => {
     },
   });
   callAppTool.mockReset();
+  reachServer.mockReset().mockResolvedValue(undefined);
 });
+
+// As the SDK throws a non-OK answer to a POST it cannot read as JSON-RPC.
+const httpError = (status: number) =>
+  new SdkHttpError(
+    SdkErrorCode.ClientHttpNotImplemented,
+    `Error POSTing to endpoint: ${status}`,
+    { status },
+  );
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -92,6 +107,49 @@ describe("a view's call", () => {
 
   it.each([
     [
+      "no longer offered to views",
+      (refusal: Refusal) => new refusal.NotForViews("answer_check"),
+    ],
+    [
+      "given invalid params",
+      () =>
+        new ProtocolError(ProtocolErrorCode.InvalidParams, "Invalid arguments"),
+    ],
+    ["too large for the server", () => httpError(413)],
+    ["answered 400 over HTTP", () => httpError(400)],
+  ])(
+    "kept, is dropped when the server refuses it as %s",
+    async (_, refusal) => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const outbox = await keptOffline();
+      callAppTool.mockReset().mockRejectedValue(refusal(outbox.refusal));
+
+      const { sendKept, sentEverything } = outbox;
+
+      expect(await sendKept()).toBe(1);
+      expect(await sentEverything()).toBe(true);
+    },
+  );
+
+  it("stays kept when the server cannot be connected to, whatever the status", async () => {
+    const { sendKept } = await keptOffline();
+    const refused = httpError(404);
+    reachServer.mockRejectedValue(refused);
+    callAppTool.mockReset().mockRejectedValue(refused);
+
+    expect(await sendKept()).toBe(0);
+    reachServer.mockResolvedValue(undefined);
+    callAppTool.mockReset().mockResolvedValue(DONE);
+    expect(await sendKept()).toBe(1);
+  });
+
+  it.each([
+    ["the MCP endpoint answers 500", () => httpError(500)],
+    ["the MCP endpoint is rate limited", () => httpError(429)],
+    ["the MCP endpoint times out the request", () => httpError(408)],
+    ["the session is refused over HTTP", () => httpError(401)],
+    ["the learner is forbidden over HTTP", () => httpError(403)],
+    [
       "the session is rate limited",
       (api: Errors) =>
         new api.ApiError("Too many requests", 429, {
@@ -135,17 +193,19 @@ describe("a view's call", () => {
 });
 
 type Errors = typeof import("@/lib/api/errors");
+type Refusal = typeof import("./refusal");
 
 /** One answer_check kept while offline, and the device back online. The errors come from the
- * outbox's own module graph, as the session's do. */
+ * outbox's own module graph, as the session's and the server's do. */
 async function keptOffline() {
   online = false;
   callAppTool.mockReset().mockRejectedValue(new TypeError("Failed to fetch"));
   const outbox = await fresh();
   const errors: Errors = await import("@/lib/api/errors");
+  const refusal: Refusal = await import("./refusal");
   await outbox.callOrKeep("answer_check", ANSWER);
   online = true;
-  return { ...outbox, errors };
+  return { ...outbox, errors, refusal };
 }
 
 describe("sentEverything", () => {

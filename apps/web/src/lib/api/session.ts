@@ -13,7 +13,6 @@ import { API_BASE_URL } from "@/lib/env";
 import { readJson } from "./body";
 import {
   ApiError,
-  NetworkError,
   SignInUnchecked,
   toApiError,
   toNetworkError,
@@ -114,10 +113,7 @@ async function notIssued(response: Response): Promise<ApiError> {
 
 async function issued(response: Response): Promise<Issued> {
   if (!response.ok) throw await notIssued(response);
-  const body = await readJson<Issued | null>(response).catch((error) => {
-    if (error instanceof NetworkError) throw error;
-    return null;
-  });
+  const body = await readJson<Issued | null>(response);
   if (!body?.token) {
     throw new ApiError("The server issued an empty session", response.status);
   }

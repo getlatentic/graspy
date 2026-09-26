@@ -14,7 +14,7 @@ vi.mock("@/lib/device-id", async (actual) => ({
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
 vi.mock("./audio-format", () => ({ audioFormat: () => "mp3" }));
 
-type SessionAnswer = "issued" | "unchecked" | "refused";
+type SessionAnswer = "issued" | "empty" | "unchecked" | "refused";
 type VoiceAnswer = "marks" | "refuses" | "fails" | "busy";
 const graspy = {
   session: "issued" as SessionAnswer,
@@ -23,6 +23,7 @@ const graspy = {
 
 const SESSION_ANSWERS: Record<SessionAnswer, () => Response> = {
   issued: () => Response.json({ token: "session-token", expiresIn: 3600 }),
+  empty: () => Response.json({ token: "", expiresIn: 3600 }),
   unchecked: () =>
     Response.json(
       {
@@ -129,6 +130,7 @@ describe("a child's answer", () => {
   it.each([
     ["graspy could not check the sign-in with Google", "unchecked"],
     ["graspy refuses the session", "refused"],
+    ["graspy issues an empty session", "empty"],
   ] as const)("stays on the device when %s", async (_, session) => {
     graspy.session = session;
 

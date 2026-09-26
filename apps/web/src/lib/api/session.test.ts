@@ -53,6 +53,7 @@ async function loadSession() {
     ...session,
     ApiError: errors.ApiError,
     NetworkError: errors.NetworkError,
+    UNREADABLE_ANSWER: errors.UNREADABLE_ANSWER,
   };
 }
 
@@ -380,10 +381,10 @@ describe("a session exchange", () => {
       () => fetchMock.mockResolvedValue(minted("")),
     ],
     [
-      "graspy's answer, read whole, is not a session",
+      "graspy's JSON answer, read whole, is not a session",
       () =>
         fetchMock.mockResolvedValue(
-          new Response("<html>Welcome</html>", { status: 200 }),
+          new Response(JSON.stringify({ ok: true }), { status: 200 }),
         ),
     ],
     [
@@ -404,6 +405,22 @@ describe("a session exchange", () => {
     expect(failure).toBeInstanceOf(ApiError);
     expect(failure).not.toBeInstanceOf(NetworkError);
     expect((failure as { retryable: boolean }).retryable).toBe(false);
+  });
+
+  it("is an answer the app cannot read, tried again later, when graspy's is not JSON", async () => {
+    fetchMock.mockResolvedValue(
+      new Response("<html>Welcome</html>", { status: 200 }),
+    );
+    const { getSessionToken, NetworkError, UNREADABLE_ANSWER } =
+      await loadSession();
+
+    const failure = await getSessionToken().catch((error: unknown) => error);
+
+    expect(failure).not.toBeInstanceOf(NetworkError);
+    expect(failure).toMatchObject({
+      status: UNREADABLE_ANSWER,
+      retryable: true,
+    });
   });
 
   it.each([

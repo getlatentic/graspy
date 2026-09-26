@@ -6,7 +6,13 @@ import {
 } from "@modelcontextprotocol/ext-apps/app-bridge";
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { callOrKeep } from "@/lib/mcp/outbox";
-import { HOST_INFO, SANDBOX_URL, uiView, type UiView } from "@/lib/mcp/server";
+import {
+  HOST_INFO,
+  SANDBOX_URL,
+  keepView,
+  uiView,
+  type UiView,
+} from "@/lib/mcp/server";
 
 export interface ViewHost {
   /** Defaults to the server, kept to send later while it cannot be reached. */
@@ -121,6 +127,7 @@ export async function showView(
   await bridge.connect(new PostMessageTransport(proxy, proxy));
   await bridge.sendSandboxResourceReady(view);
   await unlessAborted(initialized, signal);
+  keepView(card.resourceUri, view);
   await bridge.sendToolInput({ arguments: card.toolInput });
   await bridge.sendToolResult(card.toolResult);
 }

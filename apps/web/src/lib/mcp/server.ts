@@ -116,11 +116,14 @@ async function readOnce(uri: string): Promise<UiView> {
 }
 
 // Kept so a view still opens after a reload without a connection. The document is small:
-// its scripts and styles are hashed files the sandbox's worker keeps once a page has loaded them,
-// so only a view being shown replaces its copy; a newer page's files may not be kept until it is.
+// its scripts and styles are hashed files the sandbox's worker caches as the page loads them.
+// A shown view's page replaces its copy only once the view has initialized in the sandbox, so
+// the files it loaded are cached. The background read keeps a page only for a view with no
+// copy: a view never shown may have a copy whose files the sandbox has not cached.
 const keptKey = (uri: string) => `graspy.view.${uri}`;
 
-function keepView(uri: string, view: UiView): void {
+/** Keeps a view's page, to open without a connection. */
+export function keepView(uri: string, view: UiView): void {
   try {
     window.localStorage.setItem(keptKey(uri), JSON.stringify(view));
   } catch {
@@ -137,17 +140,20 @@ function keptView(uri: string): UiView | null {
   }
 }
 
-/** The view to show, read once per visit; with no server to reach, the copy last shown. A refusal is its answer. */
+/** The view to show, read once per visit; with no server to reach, the copy kept. A refusal is its answer. */
 export async function uiView(uri: string): Promise<UiView> {
   try {
-    const view = await readOnce(uri);
-    keepView(uri, view);
-    return view;
+    return await readOnce(uri);
   } catch (error) {
     const kept = isUnreachable(error) ? keptView(uri) : null;
     if (kept) return kept;
     throw error;
   }
+}
+
+/** Connects, or rejects with why it could not. */
+export async function reachServer(): Promise<void> {
+  await server();
 }
 
 export async function callAppTool(
