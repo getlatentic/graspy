@@ -20,12 +20,14 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -332,6 +334,44 @@ class DeviceWipeTest {
 
         assertNull(firebaseUid)
         assertEquals(setOf("google_account", "signing_in"), signOutPending.keys)
+    }
+
+    @Test
+    fun `a sign-in waits for one left while Firebase finishes, which then cannot sign it out`() = runBlocking {
+        accounts.set(null)
+        val atFirstSheet = CompletableDeferred<Unit>()
+        val firebaseFinishes = CompletableDeferred<Unit>()
+        val secondAsked = CompletableDeferred<Pair<Boolean, Int>>()
+        var sheets = 0
+        val sheet = GoogleAccountSheet { askWhichAccount ->
+            sheets += 1
+            if (sheets == 1) {
+                atFirstSheet.complete(Unit)
+                // As FirebaseSession waits out Firebase's sign-in.
+                withContext(NonCancellable) {
+                    firebaseFinishes.await()
+                    firebaseUid = "uid-first"
+                }
+                SignInOutcome.Succeeded("uid-first")
+            } else {
+                secondAsked.complete(askWhichAccount to forgotten.size)
+                firebaseUid = "uid-second"
+                awaitCancellation()
+            }
+        }
+        val entry = AccountEntry(context, sheet, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+        val first = launch(Dispatchers.Default) { entry.signIn() }
+        atFirstSheet.await()
+        first.cancel()
+        val second = launch(Dispatchers.Default) { entry.signIn() }
+
+        firebaseFinishes.complete(Unit)
+        val (_, forgetsBefore) = secondAsked.await()
+        first.join()
+
+        assertEquals(1, forgetsBefore)
+        assertEquals("uid-second", firebaseUid)
+        second.cancelAndJoin()
     }
 
     @Test

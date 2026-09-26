@@ -26,10 +26,14 @@ class AccountEntry(
     private val wipe: DeviceWipe,
 ) {
     private val signingOut = Mutex()
+    // One sign-in at a time: one left while Firebase finishes would otherwise sign the next one out under it.
+    private val signingIn = Mutex()
     private val forgetting = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0)
 
     /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
-    suspend fun signIn(): SignInOutcome {
+    suspend fun signIn(): SignInOutcome = signingIn.withLock { signInAlone() }
+
+    private suspend fun signInAlone(): SignInOutcome {
         // Cleared only when the sign-in ends; one cut short leaves it for [reconcile] to undo rather than adopt.
         forgetting.edit(commit = true) { putBoolean(SIGNING_IN, true) }
         val outcome = try {
@@ -41,7 +45,6 @@ class AccountEntry(
             currentCoroutineContext().ensureActive()
             failedByCancelledTask()
         }
-        // Firebase may finish a sign-in after the coroutine that asked for it was cancelled.
         if (outcome !is SignInOutcome.Succeeded) firebase.signOut()
         forgetting.edit(commit = true) { remove(SIGNING_IN) }
         return outcome
@@ -173,8 +176,6 @@ class AccountEntry(
             signingOut.withLock { if (forgetting.getBoolean(GOOGLE_ACCOUNT, false)) forgetGoogleAccount() }
         }
     }
-
-
 
     /** Work at start fails into the log: the app's scope has no handler, so an error there would end the app. */
     private fun CoroutineScope.finish(what: String, work: suspend () -> Unit) = launch {
