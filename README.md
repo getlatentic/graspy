@@ -5,6 +5,7 @@ An AI tutor that writes a curriculum for the learner's country and class, and te
 | Part | What it is |
 |---|---|
 | `apps/web` | The learner's app: React 19 and Vite, on Cloudflare Pages |
+| `apps/mobile` | The learner's app for Android: Kotlin and Jetpack Compose, on the same API ([README](apps/mobile/README.md)) |
 | `apps/server` | The API and the tutor: FastAPI and DSPy on a Cloudflare Python Worker, with gpt-oss-120b on Amazon Bedrock or Workers AI |
 | `apps/server/ui` | The lesson, practice and reading views the server serves ([MCP Apps](https://github.com/modelcontextprotocol/ext-apps)) |
 | `apps/teacher` | graspy-teacher, the teacher's app: lesson plans and materials made offline by a local Gemma 4 model, on Tauri 2 and React 19 for macOS |

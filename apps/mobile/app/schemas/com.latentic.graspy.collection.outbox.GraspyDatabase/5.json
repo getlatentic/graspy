@@ -1,0 +1,164 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 5,
+    "identityHash": "b2e98b5ebfeed2494389cdec02c797fd",
+    "entities": [
+      {
+        "tableName": "submissions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`localId` TEXT NOT NULL, `participantId` TEXT NOT NULL, `idempotencyKey` TEXT NOT NULL, `audioPath` TEXT NOT NULL, `speakerId` TEXT NOT NULL, `languagePair` TEXT NOT NULL, `spokenLanguage` TEXT, `task` TEXT NOT NULL, `topic` TEXT NOT NULL, `promptId` TEXT, `consentScope` TEXT NOT NULL, `status` TEXT NOT NULL, `serverSampleId` TEXT, `uploadPath` TEXT, `failureReason` TEXT, `transcript` TEXT, `parsedAnswer` INTEGER, `decision` TEXT, `feedback` TEXT, `provider` TEXT, `latencyMs` INTEGER, `resultJson` TEXT, `attemptCount` INTEGER NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `feedbackHeard` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`localId`))",
+        "fields": [
+          {
+            "fieldPath": "localId",
+            "columnName": "localId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "participantId",
+            "columnName": "participantId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idempotencyKey",
+            "columnName": "idempotencyKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "audioPath",
+            "columnName": "audioPath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speakerId",
+            "columnName": "speakerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "languagePair",
+            "columnName": "languagePair",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "spokenLanguage",
+            "columnName": "spokenLanguage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "task",
+            "columnName": "task",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "topic",
+            "columnName": "topic",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "promptId",
+            "columnName": "promptId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "consentScope",
+            "columnName": "consentScope",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverSampleId",
+            "columnName": "serverSampleId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "uploadPath",
+            "columnName": "uploadPath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "failureReason",
+            "columnName": "failureReason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "transcript",
+            "columnName": "transcript",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "parsedAnswer",
+            "columnName": "parsedAnswer",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "decision",
+            "columnName": "decision",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "feedback",
+            "columnName": "feedback",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "provider",
+            "columnName": "provider",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "latencyMs",
+            "columnName": "latencyMs",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "resultJson",
+            "columnName": "resultJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "attemptCount",
+            "columnName": "attemptCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtEpochMillis",
+            "columnName": "createdAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "feedbackHeard",
+            "columnName": "feedbackHeard",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "localId"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b2e98b5ebfeed2494389cdec02c797fd')"
+    ]
+  }
+}

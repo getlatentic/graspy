@@ -1,0 +1,76 @@
+package com.latentic.graspy.account
+
+import android.content.Context
+import android.util.Log
+import com.latentic.graspy.auth.FirebaseSession
+import com.latentic.graspy.auth.GoogleSignIn
+import com.latentic.graspy.auth.SignInOutcome
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
+/** How an account comes onto this device and leaves it. */
+class AccountEntry(
+    private val context: Context,
+    private val google: GoogleSignIn,
+    private val firebase: FirebaseSession,
+    private val accounts: AccountStore,
+    private val sessions: SessionTokens,
+    private val sessionApi: SessionApi,
+    private val deviceIds: DeviceIdStore,
+    private val wipe: DeviceWipe,
+) {
+    /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
+    suspend fun signIn(): SignInOutcome {
+        val outcome = google.signIn()
+        if (outcome !is SignInOutcome.Succeeded) return outcome
+        return try {
+            startAccountSession(outcome.userId)
+            outcome
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Log.w(TAG, "graspy did not issue the account's session", error)
+            firebase.signOut(context)
+            SignInOutcome.Failed(error.message ?: "graspy did not issue a session")
+        }
+    }
+
+    /** Nothing of the account or its learners stays on the device. */
+    suspend fun signOut() {
+        wipe.wipeDevice()
+        firebase.signOut(context)
+    }
+
+    /** Before a learner is chosen the device holds only its own learning, which stays. */
+    suspend fun leaveForAnotherAccount() {
+        sessions.forget()
+        accounts.set(null)
+        firebase.signOut(context)
+    }
+
+    /**
+     * At start. An account signed in before accounts held learners is kept, and its learning here
+     * joins the first learner chosen; an account Firebase no longer holds is signed out.
+     */
+    fun reconcile(scope: CoroutineScope) {
+        val uid = firebase.userId
+        val account = accounts.account.value
+        if (uid != null && account == null) {
+            accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
+        } else if (account != null && account.uid != uid) {
+            scope.launch { signOut() }
+        }
+    }
+
+    private suspend fun startAccountSession(uid: String) {
+        val idToken = checkNotNull(firebase.idToken(uid, fresh = false)) { "Google did not confirm the sign-in" }
+        val issued = sessionApi.session(SessionRequestDto(deviceId = deviceIds.current(), firebaseIdToken = idToken))
+        accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
+        sessions.keep(uid, issued)
+    }
+
+    private companion object {
+        const val TAG = "GraspyAccount"
+    }
+}

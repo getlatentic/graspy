@@ -78,3 +78,12 @@ apps/teacher/src-tauri/binaries/*
 apps/teacher/models/
 apps/teacher/output/
 apps/teacher/.playwright-cli/
+
+# graspy for Android (apps/mobile)
+# Gradle's caches and the SDK path Android Studio writes.
+apps/mobile/.gradle/
+apps/mobile/.kotlin/
+apps/mobile/local.properties
+*.iml
+# The Firebase client config: kept out of the repository (apps/mobile/README.md).
+apps/mobile/app/google-services.json
