@@ -66,7 +66,7 @@ class OfflineLessons(
     /**
      * Lessons the server no longer has though the record names them (lessons are kept for a time), with nothing
      * making them: it answers the same until the learner opens the topic or the record names a new lesson, so
-     * they are not asked for again.
+     * they are not asked for again. Held only while the record names them.
      */
     private val gone = ConcurrentHashMap.newKeySet<CopiedLesson>()
 
@@ -116,10 +116,11 @@ class OfflineLessons(
      */
     private suspend fun copyAll(read: RecordRead) {
         val (plan, record) = read
-        bestEffort(TAG, "Keeping the lesson views") { server.keepViews() }
         val wanted = record.topics.mapNotNull { mark ->
             mark.lessonId?.let { CopiedLesson(CopiedTopic(plan.planId, mark.subjectSlug, mark.topicIndex, mark.topic), it) }
         }
+        gone.retainAll(wanted.toSet())
+        bestEffort(TAG, "Keeping the lesson views") { server.keepViews() }
         val copied = bestEffort(TAG, "Reading the lesson copies") { copies.copied(ownerId) } ?: return
         val stale = copied.map { it.topic } - wanted.map { it.topic }.toSet()
         bestEffort(TAG, "Dropping lessons no longer ready") { copies.dropAll(ownerId, stale, read.askedAt) }
