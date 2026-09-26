@@ -8,6 +8,8 @@ import com.latentic.graspy.auth.SignInOutcome
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** How an account comes onto this device and leaves it. */
 class AccountEntry(
@@ -20,6 +22,8 @@ class AccountEntry(
     private val deviceIds: DeviceIdStore,
     private val wipe: DeviceWipe,
 ) {
+    private val signingOut = Mutex()
+
     /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
     suspend fun signIn(): SignInOutcome {
         val outcome = google.signIn()
@@ -43,9 +47,15 @@ class AccountEntry(
      * Google account is forgotten last: it waits on Play services, and the wipe must not.
      */
     suspend fun signOut() {
-        firebase.signOut()
-        wipe.wipeDevice()
-        firebase.forgetGoogleAccount(context)
+        // A sign-out asked for again while one runs (a session refused mid-wipe, the start's reconcile) waits for
+        // it, and then has nothing left to do.
+        val signedOut = signingOut.withLock {
+            if (accounts.account.value == null && firebase.userId == null) return@withLock false
+            firebase.signOut()
+            wipe.wipeDevice()
+            true
+        }
+        if (signedOut) firebase.forgetGoogleAccount(context)
     }
 
     /** Before a learner is chosen the device holds only its own learning, which stays. */

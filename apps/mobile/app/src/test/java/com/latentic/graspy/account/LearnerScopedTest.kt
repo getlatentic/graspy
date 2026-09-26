@@ -10,8 +10,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
 import androidx.work.WorkManager
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.home.HomeCatalogueViewModel
 import com.latentic.graspy.localization.AppLanguage
@@ -49,9 +47,7 @@ class LearnerScopedTest {
     @Before
     fun noLearnerOnTheDevice() {
         // The HTTP stack asks Firebase for sign-ins; the emulator's demo project stands in, as it does for the build.
-        if (FirebaseApp.getApps(application).isEmpty()) {
-            FirebaseApp.initializeApp(application, FirebaseOptions.Builder().setProjectId("demo-graspy").setApplicationId("1:0:android:0").setApiKey("demo-key").build())
-        }
+        demoFirebase()
         if (!WorkManager.isInitialized()) WorkManager.initialize(application, Configuration.Builder().setExecutor { it.run() }.build())
         assertNull(AppGraph.account(application).learnerInUse())
     }

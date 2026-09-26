@@ -1,10 +1,10 @@
 package com.latentic.graspy.onboarding
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.BuildConfig
-import android.app.Application
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.plan.GeneratedSubject
 import com.latentic.graspy.plan.LearnerDetails

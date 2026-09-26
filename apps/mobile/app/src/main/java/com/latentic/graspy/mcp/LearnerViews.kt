@@ -27,5 +27,4 @@ class LearnerViews(application: Application, private val ownerId: String) : Andr
     override suspend fun call(name: String, arguments: JsonObject): JsonObject = outbox.callOrKeep(name, arguments)
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = mcp.openToolView(name, arguments)
-
 }
