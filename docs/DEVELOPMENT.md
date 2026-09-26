@@ -63,7 +63,7 @@ cd apps/server && uv run mutmut run                       # finds tests that che
 - `tests/fixtures/slug-corpus.json` is read by both the server and the web app's tests. Both must spell a subject's slug the same way.
 - `apps/web/src/lib/csp.test.ts` fails with the new hash when the inline script in `index.html` changes. Put that hash in `public/_headers`.
 - A surviving mutant in `src/app/security/` or the calculator is a missing test.
-- Check dependencies with `npm audit --omit=dev` from the repository root, which covers every app's npm packages, and `uv run pip-audit` in `apps/server`. Rust crates and Android's Gradle dependencies are not scanned.
+- Check dependencies with `npm audit` from the repository root, which covers every app's npm packages and their dev tooling, and `uv run pip-audit` in `apps/server`. Rust crates, Android's Gradle dependencies and the teacher's data scripts are not scanned.
 
 ## Run the Worker locally
 
