@@ -1,6 +1,7 @@
 package com.latentic.graspy.mcp
 
 import android.util.Log
+import com.latentic.graspy.account.SessionRefusal
 import java.io.IOException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -31,21 +32,21 @@ fun interface ToolCaller {
 /**
  * A view's tools/call made with no connection is kept and sent in order once there is one, as the web's MCP
  * outbox does (lib/mcp/outbox.ts). These calls record what the learner did, and the server takes each again
- * without harm; one the server refuses is dropped, since it would be refused every time.
+ * without harm; one the server refuses is dropped, since it would be refused every time. A refused session
+ * is an answer too: nothing is kept for it, and what was kept waits, since it says nothing of the calls.
  */
 class McpOutbox(private val dao: KeptCallDao, private val ownerId: String, private val server: ToolCaller, private val clock: () -> Long = System::currentTimeMillis) {
     private val sending = Mutex()
 
     suspend fun callOrKeep(name: String, arguments: JsonObject): JsonObject = try {
         server.call(name, arguments)
-    } catch (refused: McpRefusal) {
-        throw refused
-    } catch (unreachable: IOException) {
+    } catch (failure: IOException) {
+        if (!failure.isUnreachable()) throw failure
         dao.keep(KeptCallEntity(ownerId = ownerId, name = name, argumentsJson = arguments.toString(), keptAt = clock()))
         KEPT_RESULT
     }
 
-    /** Sends what was kept, in order; stops at the first that cannot reach the server. How many went. */
+    /** Sends what was kept, in order; stops at the first that cannot reach the server or has its session refused. How many went. */
     suspend fun sendKept(): Int = sending.withLock {
         var sent = 0
         for (call in dao.kept(ownerId)) {
@@ -53,6 +54,9 @@ class McpOutbox(private val dao: KeptCallDao, private val ownerId: String, priva
                 server.call(call.name, mcpJson.parseToJsonElement(call.argumentsJson).jsonObject)
             } catch (refused: McpRefusal) {
                 Log.w(TAG, "The server refused a kept ${call.name}", refused)
+            } catch (sessionRefused: SessionRefusal) {
+                Log.w(TAG, "The session was refused; what was kept waits", sessionRefused)
+                break
             } catch (unreachable: IOException) {
                 break
             }

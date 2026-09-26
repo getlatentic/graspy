@@ -31,6 +31,8 @@ class LearnerConnection(
 
             override suspend fun callTool(name: String, arguments: JsonObject) = mcp.callTool(name, arguments)
 
+            override suspend fun viewOf(name: String) = mcp.viewOf(name)
+
             override suspend fun keepViews() = views.keepAll(mcp.viewUris())
         },
         stillLearning,

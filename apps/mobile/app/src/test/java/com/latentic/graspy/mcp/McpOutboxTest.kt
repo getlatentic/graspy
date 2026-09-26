@@ -1,5 +1,6 @@
 package com.latentic.graspy.mcp
 
+import com.latentic.graspy.account.SessionRefusal
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
@@ -8,15 +9,20 @@ import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /** A view's calls made with no connection are kept and sent in order, as the web's MCP outbox does. */
+@RunWith(RobolectricTestRunner::class)
 class McpOutboxTest {
     private val dao = FakeDao()
     private val sent = mutableListOf<String>()
     private var online = false
+    private var sessionRefused = false
     private val outbox = McpOutbox(dao, "uid/ada", { name, _ ->
         when {
             name == "refused" -> throw McpRefusal("refused")
+            sessionRefused -> throw SessionRefusal("graspy did not issue a session")
             !online -> throw IOException("no connection")
             else -> buildJsonObject { put("ok", true) }.also { sent += name }
         }
@@ -32,6 +38,28 @@ class McpOutboxTest {
     fun `a refusal is the server's answer, never kept`() {
         assertThrows(McpRefusal::class.java) { runBlocking { outbox.callOrKeep("refused", JsonObject(emptyMap())) } }
         assertEquals(0, dao.rows.size)
+    }
+
+    @Test
+    fun `a refused session is an answer, never kept`() {
+        sessionRefused = true
+
+        assertThrows(SessionRefusal::class.java) { runBlocking { outbox.callOrKeep("answer_practice", JsonObject(emptyMap())) } }
+        assertEquals(0, dao.rows.size)
+    }
+
+    @Test
+    fun `what was kept waits while the session is refused, and goes once it is issued`() = runBlocking {
+        outbox.callOrKeep("first", JsonObject(emptyMap()))
+        online = true
+        sessionRefused = true
+
+        assertEquals(0, outbox.sendKept())
+        assertEquals(listOf("first"), dao.kept("uid/ada").map { it.name })
+
+        sessionRefused = false
+        assertEquals(1, outbox.sendKept())
+        assertEquals(listOf("first"), sent)
     }
 
     @Test

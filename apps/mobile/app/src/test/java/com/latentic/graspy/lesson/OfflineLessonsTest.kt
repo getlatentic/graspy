@@ -1,8 +1,10 @@
 package com.latentic.graspy.lesson
 
 import com.latentic.graspy.account.SessionRefusal
+import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.mcp.McpRefusal
 import com.latentic.graspy.plan.LearnerRecord
+import com.latentic.graspy.plan.LessonTarget
 import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.plan.TopicMark
 import java.io.IOException
@@ -124,6 +126,7 @@ class OfflineLessonsTest {
     @Test
     fun `the copies follow the record, every ready lesson in the plan and no other, with their views`() = runBlocking {
         server.gives = lessonCard("ready")
+        server.answers = lessonResult("ready")
         lessons.openOrCopy(fractions.copy(planId = "plan-0"))
         server.opened.clear()
         now = 2
@@ -138,8 +141,23 @@ class OfflineLessonsTest {
     }
 
     @Test
+    fun `the copy run asks only for lessons already kept, never starting one, and keeps what comes back whole`() = runBlocking {
+        server.answers = lessonResult("ready")
+
+        copying(until = { copies.copied("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(listOf("lesson_progress"), server.called)
+        server.reachable = false
+        val copy = lessons.openOrCopy(fractions)
+        assertEquals("give_lesson", copy.toolName)
+        assertEquals(lessonCard("ready").resourceUri, copy.resourceUri)
+        assertEquals(fractions, apiJson.decodeFromJsonElement(LessonTarget.serializer(), copy.toolInput.getValue("target")))
+        assertEquals(lessonResult("ready"), copy.toolResult)
+    }
+
+    @Test
     fun `the copy run keeps no lesson that is not whole`() = runBlocking {
-        server.gives = lessonCard("ready", whole = false)
+        server.answers = lessonResult("ready", whole = false)
 
         copying(until = { server.opened.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
 
@@ -163,6 +181,7 @@ class OfflineLessonsTest {
     @Test
     fun `a record read after a lesson was kept, without it, drops it`() = runBlocking {
         server.gives = lessonCard("ready")
+        server.answers = lessonResult("ready")
         lessons.openOrCopy(fractions)
         now = 300
 
@@ -173,7 +192,7 @@ class OfflineLessonsTest {
 
     @Test
     fun `one lesson failing stops none after it`() = runBlocking {
-        server.gives = lessonCard("ready")
+        server.answers = lessonResult("ready")
         server.failsFor += "Fractions"
 
         copying(until = { server.opened.size == 2 }) { lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals")) }
@@ -183,7 +202,7 @@ class OfflineLessonsTest {
 
     @Test
     fun `every record the server gives runs, one run at a time, and one arriving mid-run is not lost`() = runBlocking {
-        server.gives = lessonCard("ready")
+        server.answers = lessonResult("ready")
         val release = CompletableDeferred<Unit>()
         server.holdUntil = release
 

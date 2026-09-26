@@ -52,6 +52,7 @@ suspend fun eventually(condition: suspend () -> Boolean) = withTimeout(5_000) {
     while (!condition()) delay(5)
 }
 
+/** A lesson server that records the tools asked of it, and can be held, refuse, or be out of reach. */
 class FakeLessonServer : LessonServer {
     var reachable = true
     var refuses = false
@@ -60,14 +61,37 @@ class FakeLessonServer : LessonServer {
     var answers: JsonObject = JsonObject(emptyMap())
     var holdUntil: CompletableDeferred<Unit>? = null
     val failsFor = mutableSetOf<String>()
+    val called = mutableListOf<String>()
     val opened = mutableListOf<LessonTarget>()
     var viewsKept = 0
     private var inFlight = 0
     var mostAtOnce = 0
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard {
+        asked(name, arguments)
+        return requireNotNull(gives).copy(toolInput = arguments)
+    }
+
+    override suspend fun callTool(name: String, arguments: JsonObject): JsonObject {
+        asked(name, arguments)
+        return answers
+    }
+
+    override suspend fun viewOf(name: String): String {
         answerable()
-        val target = apiJson.decodeFromJsonElement(LessonTarget.serializer(), arguments.getValue("target").jsonObject)
+        return requireNotNull(gives ?: lessonCard("ready")).resourceUri
+    }
+
+    override suspend fun keepViews() {
+        answerable()
+        viewsKept += 1
+    }
+
+    /** A lesson asked for: counted, held while [holdUntil] is open, and refused for a topic in [failsFor]. */
+    private suspend fun asked(name: String, arguments: JsonObject) {
+        answerable()
+        called += name
+        val target = arguments["target"]?.let { apiJson.decodeFromJsonElement(LessonTarget.serializer(), it.jsonObject) } ?: return
         inFlight += 1
         mostAtOnce = maxOf(mostAtOnce, inFlight)
         try {
@@ -77,17 +101,6 @@ class FakeLessonServer : LessonServer {
         }
         opened += target
         if (target.topic in failsFor) throw McpRefusal("${target.topic} was refused")
-        return requireNotNull(gives).copy(toolInput = arguments)
-    }
-
-    override suspend fun callTool(name: String, arguments: JsonObject): JsonObject {
-        answerable()
-        return answers
-    }
-
-    override suspend fun keepViews() {
-        answerable()
-        viewsKept += 1
     }
 
     private fun answerable() {

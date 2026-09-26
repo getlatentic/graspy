@@ -3,6 +3,7 @@ package com.latentic.graspy.mcp
 import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.plan.LearnerPlan
 import com.latentic.graspy.plan.LearnerRecord
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -26,6 +27,7 @@ const val LESSON_HTML = "<!doctype html><script src=\"/views/assets/lesson.js\">
 class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispatcher() {
     var recordFails = false
     var answersWithNothing = false
+    val toolsCalled: MutableList<String> = CopyOnWriteArrayList()
     val web = MockWebServer().also { it.dispatcher = this }
 
     /** Calls bound for graspy's API, sent here instead, as the app's session-bearing calls are. */
@@ -50,6 +52,7 @@ class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispa
         if (answersWithNothing) return MockResponse().setHeader("Content-Type", "text/event-stream").setBody("")
         val body = mcpJson.parseToJsonElement(request.body.readUtf8()).jsonObject
         val method = body.string("method").orEmpty()
+        if (method == "tools/call") body.getValue("params").jsonObject.string("name")?.let(toolsCalled::add)
         return json(
             buildJsonObject {
                 put("jsonrpc", "2.0")

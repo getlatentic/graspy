@@ -1,5 +1,6 @@
 package com.latentic.graspy.mcp
 
+import com.latentic.graspy.account.SessionRefusal
 import com.latentic.graspy.account.inMemoryDatabase
 import com.latentic.graspy.lesson.CopiedTopic
 import com.latentic.graspy.lesson.PLAN
@@ -14,6 +15,7 @@ import kotlin.concurrent.thread
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import okhttp3.OkHttpClient
 import org.junit.After
@@ -57,6 +59,7 @@ class LearnerConnectionTest {
         assertEquals(LESSON_VIEW, card.resourceUri)
         assertEquals("ready", card.toolResult.getValue("structuredContent").jsonObject.string("status"))
         assertEquals(LESSON_HTML, offline.view(card.resourceUri).html)
+        assertEquals(listOf("lesson_progress"), server.toolsCalled)
     }
 
     @Test
@@ -74,6 +77,19 @@ class LearnerConnectionTest {
 
         server.answersWithNothing = true
         assertThrows(McpRefusal::class.java) { runBlocking { connection.lessons.openOrCopy(topic(1)) } }
+    }
+
+    @Test
+    fun `a view's call whose session is refused after the learner was wiped keeps nothing, and fails`() {
+        val refusing = OkHttpClient.Builder().addInterceptor {
+            // As when the learner was removed elsewhere: the exchange wipes them, then the call is refused.
+            database.clearAllTables()
+            throw SessionRefusal("That learner is no longer learning on this device")
+        }.build()
+        val connection = LearnerConnection(database, ADA_KEY, refusing, endpoint) { false }
+
+        assertThrows(SessionRefusal::class.java) { runBlocking { connection.call("answer_check", JsonObject(emptyMap())) } }
+        assertEquals(emptyList<KeptCallEntity>(), runBlocking { database.keptCallDao().kept(ADA_KEY) })
     }
 
     @Test

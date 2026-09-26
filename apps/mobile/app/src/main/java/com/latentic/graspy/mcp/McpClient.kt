@@ -73,11 +73,14 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
     }
 
     suspend fun openToolView(name: String, arguments: JsonObject): ViewCard {
-        val resourceUri = catalogue().viewOf[name] ?: throw McpRefusal("$name has no view")
+        val resourceUri = viewOf(name)
         val result = callTool(name, arguments)
         if (result.isToolError()) throw McpRefusal("$name was refused")
         return ViewCard(resourceUri, name, arguments, result)
     }
+
+    /** The view [name]'s result is shown in. */
+    suspend fun viewOf(name: String): String = catalogue().viewOf[name] ?: throw McpRefusal("$name has no view")
 
     /** The views the server's tools are shown in. */
     suspend fun viewUris(): Set<String> = catalogue().viewOf.values.toSet()

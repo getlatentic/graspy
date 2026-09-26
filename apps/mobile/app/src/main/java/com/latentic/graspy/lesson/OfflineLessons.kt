@@ -30,6 +30,9 @@ interface LessonServer {
 
     suspend fun callTool(name: String, arguments: JsonObject): JsonObject
 
+    /** The view [name]'s result is shown in. */
+    suspend fun viewOf(name: String): String
+
     /** Keeps the documents lessons open in, so a lesson copied here opens with no connection. */
     suspend fun keepViews()
 }
@@ -104,9 +107,18 @@ class OfflineLessons(
         for (topic in wanted - copied.toSet()) {
             val subject = plan.subject(topic.subjectSlug) ?: continue
             val target = lessonTarget(plan, subject, topic.topicIndex, marks)?.takeIf { it.topic == topic.topic } ?: continue
-            val card = bestEffort(TAG, "Copying the lesson on ${target.topic}") { server.openToolView(GIVE_LESSON, lessonArguments(target, 0)) }
+            val card = bestEffort(TAG, "Copying the lesson on ${target.topic}") { keptLesson(target) }
             if (card != null && card.toolResult.isWhole()) keep(target, card)
         }
+    }
+
+    /**
+     * The lesson the server keeps for [target], as its view would open it. Asked with lesson_progress, which
+     * never starts one: give_lesson would pay to make a lesson nobody opened, for a record that may be stale.
+     */
+    private suspend fun keptLesson(target: LessonTarget): ViewCard {
+        val arguments = lessonArguments(target, 0)
+        return ViewCard(server.viewOf(GIVE_LESSON), GIVE_LESSON, arguments, server.callTool(LESSON_PROGRESS, arguments))
     }
 
     /** The copy stands in only for a server that could not be reached; otherwise the failure stands. */
