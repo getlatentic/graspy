@@ -2,7 +2,7 @@
   "name": "graspy",
   "version": "1.0.0",
   "license": "AGPL-3.0-only",
-  "packageManager": "npm@10.9.2",
+  "packageManager": "npm@11.6.2",
   "private": true,
   "scripts": {
     "dev": "turbo run dev --filter=!@graspy/teacher --filter=!@graspy/tutor",
