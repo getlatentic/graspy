@@ -1,5 +1,6 @@
+import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { TurnReplies } from "../src/replies";
+import { keepRepliesTable, REPLY_KEPT_MS, repliesIn, TurnReplies, type Sql } from "../src/replies";
 import type { Reply } from "../src/turn";
 
 const WELL_DONE: Reply = { verdict: "correct", expected: "9", said: "9", say: "Well done." };
@@ -52,5 +53,40 @@ describe("a turn asked again", () => {
     const { kept, turns } = replies();
     await turns.reply(undefined, async () => WELL_DONE);
     expect(kept.size).toBe(0);
+  });
+});
+
+describe("the replies an instance keeps", () => {
+  function stored(now: () => number) {
+    const db = new DatabaseSync(":memory:");
+    const sql: Sql = (strings, ...values) => db.prepare(strings.join("?")).all(...values);
+    keepRepliesTable(sql);
+    return { kept: repliesIn(sql, now), turns: () => sql`SELECT turn FROM replies ORDER BY turn` };
+  }
+
+  it("keep a turn's first reply as it was given, never a later one", () => {
+    const { kept } = stored(() => 0);
+    kept.put("gvm_1", WELL_DONE);
+    kept.put("gvm_1", AGAIN);
+    expect(kept.get("gvm_1")).toEqual(WELL_DONE);
+  });
+
+  it("let go of replies past a day whenever one is kept", () => {
+    let now = 0;
+    const { kept, turns } = stored(() => now);
+    kept.put("gvm_old", WELL_DONE);
+    now = REPLY_KEPT_MS / 2;
+    kept.put("gvm_recent", WELL_DONE);
+    now = REPLY_KEPT_MS + 1;
+    kept.put("gvm_new", AGAIN);
+
+    expect(turns()).toEqual([{ turn: "gvm_new" }, { turn: "gvm_recent" }]);
+    expect(kept.get("gvm_old")).toBeNull();
+  });
+
+  it("give a turn asked again its stored reply", async () => {
+    const turns = new TurnReplies(stored(() => 0).kept);
+    await turns.reply("gvm_1", async () => WELL_DONE);
+    await expect(turns.reply("gvm_1", async () => AGAIN)).resolves.toEqual(WELL_DONE);
   });
 });

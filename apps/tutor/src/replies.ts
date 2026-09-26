@@ -3,7 +3,37 @@ import type { Reply } from "./turn";
 /** Where a learner's instance keeps the reply it gave each turn. */
 export interface KeptReplies {
   get(turn: string): Reply | null;
+  /** Keeps a turn's first reply; a later one for the same turn is not kept. */
   put(turn: string, reply: Reply): void;
+}
+
+/** The Worker asks for a turn again within the hour; past a day the reply, and the child's words in
+ * it, are no longer kept. */
+export const REPLY_KEPT_MS = 24 * 60 * 60 * 1000;
+
+/** The instance's SQLite, as the agent's `sql` template runs it. */
+export type Sql = (
+  strings: TemplateStringsArray,
+  ...values: (string | number | boolean | null)[]
+) => Record<string, unknown>[];
+
+export function keepRepliesTable(sql: Sql): void {
+  sql`CREATE TABLE IF NOT EXISTS replies (turn TEXT PRIMARY KEY, reply TEXT NOT NULL, kept_at INTEGER NOT NULL)`;
+}
+
+/** Replies kept in the instance's SQLite, those past a day let go whenever one is kept. */
+export function repliesIn(sql: Sql, now: () => number = Date.now): KeptReplies {
+  return {
+    get(turn) {
+      const [row] = sql`SELECT reply FROM replies WHERE turn = ${turn}`;
+      return row ? (JSON.parse(String(row.reply)) as Reply) : null;
+    },
+    put(turn, reply) {
+      const at = now();
+      sql`DELETE FROM replies WHERE kept_at < ${at - REPLY_KEPT_MS}`;
+      sql`INSERT OR IGNORE INTO replies (turn, reply, kept_at) VALUES (${turn}, ${JSON.stringify(reply)}, ${at})`;
+    },
+  };
 }
 
 /**
