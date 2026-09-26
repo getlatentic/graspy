@@ -57,6 +57,7 @@ class AskViewModel(application: Application) : AndroidViewModel(application) {
     private val openScope = MutableStateFlow<ThreadScope?>(null)
     private val failures = MutableStateFlow<List<ChatMessage>>(emptyList())
     private val turn = MutableStateFlow(TurnState())
+    private val unreadState = MutableStateFlow(Unread())
     private val ids = AtomicLong()
     private var viewCalls = emptyList<JsonObject>()
     private var running: Job? = null
@@ -65,6 +66,11 @@ class AskViewModel(application: Application) : AndroidViewModel(application) {
     val threads: StateFlow<List<ChatThread>?> = store.threads.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val turnState: StateFlow<TurnState> = turn.asStateFlow()
+
+    val unread: StateFlow<Unread> = unreadState.asStateFlow()
+
+    /** The thread on screen, or null when no conversation is. */
+    fun viewing(threadId: String?) = unreadState.update { it.lookingAt(threadId) }
 
     /** The open conversation's messages, those kept and failures shown only now. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -142,6 +148,7 @@ class AskViewModel(application: Application) : AndroidViewModel(application) {
             failed(thread.id, if (retryable) context.words.temporaryProblem else context.words.tutorError)
         } finally {
             turn.update { it.copy(busyThreadId = null, streaming = "", activity = null) }
+            unreadState.update { it.answered(thread.id) }
         }
     }
 

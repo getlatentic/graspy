@@ -41,13 +41,14 @@ import com.latentic.graspy.ui.ForwardChevron
 import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.PillButton
+import com.latentic.graspy.ui.UnreadDot
 import com.latentic.graspy.ui.space
 import com.latentic.graspy.ui.tapping
 
 /** Changing the conversation, as the web's chat directory offers it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun TopicSheet(learn: LearnCopy, threads: List<ChatThread>, plan: LearnerPlan, open: ThreadScope, onClose: () -> Unit, onPick: (ChatTarget) -> Unit) {
+internal fun TopicSheet(learn: LearnCopy, threads: List<ChatThread>, unread: Set<String>, plan: LearnerPlan, open: ThreadScope, onClose: () -> Unit, onPick: (ChatTarget) -> Unit) {
     val directory = chatDirectory(threads, plan, currentTopic(plan), open)
     ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = GraspyColor.Canvas) {
         Column(
@@ -71,14 +72,15 @@ internal fun TopicSheet(learn: LearnCopy, threads: List<ChatThread>, plan: Learn
                 Group(learn.ask.recent) {
                     directory.recent.forEachIndexed { index, (thread, target) ->
                         if (index > 0) HorizontalDivider(color = GraspyColor.Line)
-                        ThreadRow(learn, plan, thread) { onPick(target) }
+                        ThreadRow(learn, plan, thread, thread.id in unread) { onPick(target) }
                     }
                 }
             }
             if (directory.offerAnything) {
                 Group(learn.ask.anythingTitle) {
                     val general = ThreadScope.General(plan.planId)
-                    OptionRow(learn.ask.anything, directory.anything?.preview, { ScopeIcon(plan, general, space(10)) }) { onPick(ChatTarget.General) }
+                    val dot = learn.chat.newTutorMessage.takeIf { directory.anything?.id in unread }
+                    OptionRow(learn.ask.anything, directory.anything?.preview, { ScopeIcon(plan, general, space(10)) }, dot) { onPick(ChatTarget.General) }
                 }
             }
             if (directory.offerTopics) Group(learn.ask.chooseTopic) { SubjectChooser(learn, plan, onPick) }
@@ -87,7 +89,7 @@ internal fun TopicSheet(learn: LearnCopy, threads: List<ChatThread>, plan: Learn
 }
 
 @Composable
-private fun ThreadRow(learn: LearnCopy, plan: LearnerPlan, thread: ChatThread, onOpen: () -> Unit) {
+private fun ThreadRow(learn: LearnCopy, plan: LearnerPlan, thread: ChatThread, unread: Boolean, onOpen: () -> Unit) {
     val (title, _) = describe(learn, plan, thread.scope)
     val subject = when (val scope = thread.scope) {
         is ThreadScope.Topic -> plan.subject(scope.subjectSlug)?.name
@@ -95,11 +97,11 @@ private fun ThreadRow(learn: LearnCopy, plan: LearnerPlan, thread: ChatThread, o
         is ThreadScope.General -> null
     }
     val detail = listOfNotNull(subject, thread.preview).joinToString(" · ")
-    OptionRow(title, detail.ifEmpty { null }, { ScopeIcon(plan, thread.scope, space(10)) }, onOpen)
+    OptionRow(title, detail.ifEmpty { null }, { ScopeIcon(plan, thread.scope, space(10)) }, learn.chat.newTutorMessage.takeIf { unread }, onOpen)
 }
 
 @Composable
-private fun OptionRow(title: String, detail: String?, icon: @Composable () -> Unit, onOpen: () -> Unit) {
+private fun OptionRow(title: String, detail: String?, icon: @Composable () -> Unit, dot: String? = null, onOpen: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = tapping(onOpen)).padding(horizontal = space(4), vertical = space(3)),
         verticalAlignment = Alignment.CenterVertically,
@@ -110,6 +112,7 @@ private fun OptionRow(title: String, detail: String?, icon: @Composable () -> Un
             Text(title, style = MaterialTheme.typography.labelLarge, color = GraspyColor.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             detail?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = GraspyColor.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
+        dot?.let { UnreadDot(it) }
         ForwardChevron()
     }
 }

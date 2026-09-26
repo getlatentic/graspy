@@ -59,6 +59,7 @@ fun AskTab(
     onOpened: () -> Unit = {},
 ) {
     val threads = ask.threads.collectAsStateWithLifecycle().value ?: return
+    val unread by ask.unread.collectAsStateWithLifecycle()
     var chosen by rememberSaveable(stateSaver = targetSaver) { mutableStateOf<ChatTarget?>(null) }
     var draft by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(opening) {
@@ -80,7 +81,7 @@ fun AskTab(
         Conversation(learn, locale, server, ask, scope, context, onLink, draft, Modifier.weight(1f))
     }
     if (choosing) {
-        TopicSheet(learn, threads, ready.plan, scope, onClose = { choosing = false }) {
+        TopicSheet(learn, threads, unread.threads, ready.plan, scope, onClose = { choosing = false }) {
             chosen = it
             draft = null
             choosing = false

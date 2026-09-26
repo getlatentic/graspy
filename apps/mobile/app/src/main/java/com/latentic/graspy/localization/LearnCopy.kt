@@ -125,6 +125,7 @@ data class VoiceNoteCopy(
 /** Ask: the tutor. */
 data class ChatCopy(
     val openTutor: String,
+    val newTutorMessage: String,
     val draftPlaceholderTopic: String,
     val aiTutorTitle: String,
     val aiTutorWelcome: String,
@@ -372,6 +373,7 @@ private val ENGLISH_LEARN = LearnCopy(
     ),
     chat = ChatCopy(
         openTutor = "Ask graspy",
+        newTutorMessage = "New message from graspy",
         draftPlaceholderTopic = "Ask graspy about {topic}",
         aiTutorTitle = "graspy tutor",
         aiTutorWelcome = "Hi! Ask me anything about your lesson.",
@@ -585,6 +587,7 @@ private val YORUBA_LEARN = LearnCopy(
     ),
     chat = ChatCopy(
         openTutor = "Béèrè lọ́wọ́ graspy",
+        newTutorMessage = "Ìfiránṣẹ́ tuntun láti ọ̀dọ̀ graspy",
         draftPlaceholderTopic = "Béèrè graspy nípa {topic}",
         aiTutorTitle = "Olùkọ́ graspy",
         aiTutorWelcome = "Ẹ káàbọ̀! Béèrè ohunkóhun lọ́wọ́ mi nípa ẹ̀kọ́ rẹ.",
@@ -798,6 +801,7 @@ private val PIDGIN_LEARN = LearnCopy(
     ),
     chat = ChatCopy(
         openTutor = "Ask graspy",
+        newTutorMessage = "New message from graspy",
         draftPlaceholderTopic = "Ask graspy about {topic}",
         aiTutorTitle = "graspy tutor",
         aiTutorWelcome = "How far! Ask me anything about your lesson.",
@@ -1011,6 +1015,7 @@ private val ARABIC_LEARN = LearnCopy(
     ),
     chat = ChatCopy(
         openTutor = "اسأل graspy",
+        newTutorMessage = "رسالة جديدة من graspy",
         draftPlaceholderTopic = "اسأل graspy عن {topic}",
         aiTutorTitle = "graspy المعلم الذكي",
         aiTutorWelcome = "مرحبًا! اسألني عن أي شيء في درسك.",

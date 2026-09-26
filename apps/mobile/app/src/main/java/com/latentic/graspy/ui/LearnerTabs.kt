@@ -53,6 +53,7 @@ import com.latentic.graspy.practice.Teacher
 import com.latentic.graspy.subjects.PlanUnread
 import com.latentic.graspy.subjects.SubjectTopics
 import com.latentic.graspy.subjects.SubjectsTab
+import com.latentic.graspy.ui.tabs.AskMarks
 import com.latentic.graspy.ui.tabs.LearnTab
 import com.latentic.graspy.ui.tabs.TabBar
 import com.latentic.graspy.you.DetailsScreen
@@ -80,6 +81,9 @@ internal fun LearnerTabs(
 ) {
     val planViewModel: PlanViewModel = viewModel()
     val plan by planViewModel.state.collectAsStateWithLifecycle()
+    val ask: AskViewModel = viewModel()
+    val turn by ask.turnState.collectAsStateWithLifecycle()
+    val unread by ask.unread.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(LearnTab.HOME) }
     var place by rememberSaveable(stateSaver = placeSaver) { mutableStateOf<Place?>(null) }
     var editing by rememberSaveable { mutableStateOf(false) }
@@ -115,7 +119,7 @@ internal fun LearnerTabs(
                 shown != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shown, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
                 editing && ready != null -> Page { Details(learn, ready.plan, interfaceLanguage, planViewModel, onBack = { editing = false }, onReplan = onReplan) }
                 voicePage && voice != null && tab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
-                tab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
+                tab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
                 else -> Page {
                     when (tab) {
                         LearnTab.HOME -> Home(
@@ -133,7 +137,7 @@ internal fun LearnerTabs(
                 }
             }
         }
-        TabBar(learn.nav, tab) {
+        TabBar(learn.nav, tab, AskMarks(turn.busyThreadId != null, unread.threads.isNotEmpty(), learn.chat.newTutorMessage)) {
             tab = it
             place = null
             editing = false
@@ -218,6 +222,7 @@ private fun AskPane(
     interfaceLanguage: InterfaceLanguage,
     plan: PlanState,
     planViewModel: PlanViewModel,
+    ask: AskViewModel,
     follow: (LinkTarget) -> Unit,
     opening: AskOpening?,
     onOpened: () -> Unit,
@@ -228,7 +233,6 @@ private fun AskPane(
         Page { PlanUnread(learn, planViewModel::refresh) }
         return
     }
-    val ask: AskViewModel = viewModel()
     val views: LearnerViews = viewModel()
     val turn by ask.turnState.collectAsStateWithLifecycle()
     LaunchedEffect(turn.rebuilt) { if (turn.rebuilt != null) onRebuilt() }

@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,6 +71,10 @@ internal fun Conversation(
     val turn by ask.turnState.collectAsStateWithLifecycle()
     val answering = turn.busyThreadId != null && (turn.busyThreadId == threadId || threadId == null)
     val send = { text: String -> ask.send(text, scope, context) }
+    DisposableEffect(threadId) {
+        ask.viewing(threadId)
+        onDispose { ask.viewing(null) }
+    }
     Column(modifier) {
         ChatLog(learn, locale, server, ask, scope, messages, turn, answering, send, onLink, Modifier.weight(1f))
         turn.pending?.takeIf { turn.pendingThreadId == null || turn.pendingThreadId == threadId }?.let { change ->
