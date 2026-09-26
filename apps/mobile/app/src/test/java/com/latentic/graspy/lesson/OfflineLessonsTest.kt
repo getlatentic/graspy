@@ -201,6 +201,26 @@ class OfflineLessonsTest {
     }
 
     @Test
+    fun `a lesson the learner opened names its lesson, so a run with the same record asks nothing of it`() = runBlocking {
+        server.gives = lessonCard("ready", lessonId = "lesson-1-Fractions-1")
+        lessons.openOrCopy(fractions)
+        server.called.clear()
+
+        copying(until = { server.viewsKept == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(emptyList<String>(), server.called)
+    }
+
+    @Test
+    fun `a copy from a server that does not name its lesson takes the record's`() = runBlocking {
+        server.answers = lessonResult("ready")
+
+        copying(until = { copies.topics("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(listOf(CopiedLesson(fractions.copied, "lesson-1-Fractions-1")), copies.copied("uid/ada"))
+    }
+
+    @Test
     fun `a lesson still being made is asked for again on the next run`() = runBlocking {
         server.answers = lessonResult("making")
         copying(until = { server.called.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }

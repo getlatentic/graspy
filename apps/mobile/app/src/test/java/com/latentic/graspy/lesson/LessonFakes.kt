@@ -35,17 +35,18 @@ val PLAN = LearnerPlan(
 
 fun topic(index: Int): LessonTarget = requireNotNull(lessonTarget(PLAN, MATHS, index, TopicMarks(LearnerRecord())))
 
-fun lessonResult(status: String, whole: Boolean = status == "ready", title: String = "Fractions") = buildJsonObject {
+fun lessonResult(status: String, whole: Boolean = status == "ready", title: String = "Fractions", lessonId: String? = null) = buildJsonObject {
     put("content", JsonArray(emptyList()))
     putJsonObject("structuredContent") {
         put("status", status)
         put("whole", whole)
+        put("lessonId", lessonId)
         putJsonObject("lesson") { put("title", title) }
     }
 }
 
-fun lessonCard(status: String, whole: Boolean = status == "ready") =
-    ViewCard("ui://graspy/lesson", "give_lesson", JsonObject(emptyMap()), lessonResult(status, whole))
+fun lessonCard(status: String, whole: Boolean = status == "ready", lessonId: String? = null) =
+    ViewCard("ui://graspy/lesson", "give_lesson", JsonObject(emptyMap()), lessonResult(status, whole, lessonId = lessonId))
 
 /** Fails the test instead of hanging it when what it waits for never comes. */
 suspend fun eventually(condition: suspend () -> Boolean) = withTimeout(5_000) {

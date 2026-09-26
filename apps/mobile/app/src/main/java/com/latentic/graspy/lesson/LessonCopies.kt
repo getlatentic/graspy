@@ -18,8 +18,8 @@ val LessonTarget.copied: CopiedTopic get() = CopiedTopic(planId, subjectSlug, to
 data class CopiedLesson(@Embedded val topic: CopiedTopic, val lessonId: String?)
 
 /**
- * The lesson's view card as the server last gave it whole, to open with no connection. The view's result
- * does not name its lesson, so [lessonId] is known only for a copy the copy run made from the record.
+ * The lesson's view card as the server last gave it whole, to open with no connection, and the record's id
+ * for the lesson it holds: null for a copy kept before copies named their lesson.
  */
 @Entity(tableName = "lesson_copies", primaryKeys = ["ownerId", "planId", "subjectSlug", "topicIndex", "topic"])
 data class LessonCopyEntity(

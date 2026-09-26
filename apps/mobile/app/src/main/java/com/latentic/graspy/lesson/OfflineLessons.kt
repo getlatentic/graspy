@@ -160,7 +160,8 @@ class OfflineLessons(
     private suspend fun standIn(target: LessonTarget, failure: Exception): ViewCard =
         (if (failure.isUnreachable()) copyOf(target) else null) ?: throw failure
 
-    private suspend fun keep(target: LessonTarget, card: ViewCard, lessonId: String? = null) {
+    /** [onRecord] names the lesson for a server that leaves its id out of the result. */
+    private suspend fun keep(target: LessonTarget, card: ViewCard, onRecord: String? = null) {
         val cardJson = withContext(Dispatchers.Default) { apiJson.encodeToString(ViewCard.serializer(), card) }
         val copy = LessonCopyEntity(
             ownerId = ownerId,
@@ -170,7 +171,7 @@ class OfflineLessons(
             topic = target.topic,
             cardJson = cardJson,
             savedAt = clock(),
-            lessonId = lessonId,
+            lessonId = card.toolResult.state()?.string("lessonId") ?: onRecord,
         )
         bestEffort(TAG, "Keeping a copy of the lesson on ${target.topic}") {
             inOneTransaction { if (stillLearning()) copies.keep(copy) }

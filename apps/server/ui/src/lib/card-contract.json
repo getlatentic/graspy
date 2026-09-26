@@ -106,7 +106,8 @@
         "language": "English",
         "gradeLevel": "JSS 1",
         "buildsOn": []
-      }
+      },
+      "lessonId": "lesson-1"
     }
   },
   "meta": {
