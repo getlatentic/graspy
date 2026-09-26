@@ -291,6 +291,33 @@ function deadlines() {
 }
 
 describe("an answer whose marking never answers", () => {
+  it("shows as kept, with the way on, once the retry comes due while the first try hangs", async () => {
+    server.hung = 1;
+    const runOut = deadlines();
+    const page = lessonPage(await reload());
+    await page.open();
+    let due = () => {};
+    const retry = () => new Promise<void>((resolve) => (due = resolve));
+    const following = page.follow(retry);
+    const marking = "POST /api/voice/samples/gvm_key-1/evaluation";
+    await vi.waitFor(() => expect(sent(marking)).toHaveLength(1));
+
+    due();
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("kept"));
+    expect(sent(marking)).toHaveLength(1);
+    runOut();
+    // Each try joins the first until it has given up; the one after sends again.
+    await vi.waitFor(() => {
+      due();
+      expect(sent(marking)).toHaveLength(2);
+    });
+    await following;
+    expect(page.state.phase).toMatchObject({
+      name: "result",
+      turn: turnOf("gvm_key-1"),
+    });
+  });
+
   it("shows as kept once the request is given up, and is sent again on the next try", async () => {
     server.hung = 1;
     const runOut = deadlines();
@@ -394,6 +421,20 @@ describe("an answer whose outcome the device could not store", () => {
       name: "result",
       move: ASKED,
       turn: turnOf("gvm_key-1"),
+    });
+  });
+});
+
+describe("a lesson opened on storage that never answers", () => {
+  it("opens on the teacher's step", async () => {
+    vi.doMock("@/lib/voice/answer-store", async (actual) => ({
+      ...(await actual<typeof import("@/lib/voice/answer-store")>()),
+      unseenAnswer: () => new Promise(() => {}),
+    }));
+    const app = await reload();
+    expect(await app.openingStep(LEARNER, undefined, noPause)).toEqual({
+      type: "loaded",
+      move: ASKED,
     });
   });
 });

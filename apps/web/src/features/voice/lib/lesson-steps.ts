@@ -43,10 +43,20 @@ async function teachersStep(
   return { type: "loaded", move };
 }
 
-// A device whose storage cannot be read still has a lesson: the teacher's step.
-async function readUnseen(learner: StepLearner, plan: string | undefined) {
+// Storage that answers slower than this is passed over for the teacher's step.
+const UNSEEN_MS = 3_000;
+
+// A device whose storage cannot be read, or never answers, still has a lesson: the teacher's step.
+async function readUnseen(
+  learner: StepLearner,
+  plan: string | undefined,
+  pause: (ms: number) => Promise<unknown>,
+) {
+  const tooSlow = pause(UNSEEN_MS).then(() => {
+    throw new Error("Storage did not answer");
+  });
   try {
-    return await unseenAnswer(learner.key, plan);
+    return await Promise.race([unseenAnswer(learner.key, plan), tooSlow]);
   } catch (error) {
     console.warn("Reading unseen answers failed:", error);
     return null;
@@ -61,8 +71,9 @@ async function readUnseen(learner: StepLearner, plan: string | undefined) {
 export async function openingStep(
   learner: StepLearner,
   plan: string | undefined,
+  pause: (ms: number) => Promise<unknown> = wait,
 ): Promise<LessonEvent> {
-  const answer = await readUnseen(learner, plan);
+  const answer = await readUnseen(learner, plan, pause);
   if (answer) return { type: "resumed", ...answer };
   return teachersStep(learner, plan);
 }

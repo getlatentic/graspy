@@ -56,15 +56,11 @@ async function refusalOf(response: Response): Promise<VoiceError> {
 
 // Past these a request is given up and counts as the network failing, so a retry sends it again.
 const REQUEST_MS = 30_000;
-// Marking holds the request while the server transcribes (up to 90 s) and the teacher decides (20 s).
+// Marking holds the request: transcription alone may take about 95 s, and the tutor's marking has no
+// limit of its own. A marking given up here is kept and asked for again.
 const MARKING_MS = 150_000;
 // A long answer on a slow connection: 8 KB a second, the slowest upload waited for.
 const uploadMs = (wav: Blob) => REQUEST_MS + Math.ceil(wav.size / 8);
-
-function deadline(ms: number, given?: AbortSignal | null): AbortSignal {
-  const timeout = AbortSignal.timeout(ms);
-  return given ? AbortSignal.any([given, timeout]) : timeout;
-}
 
 // Also covers the wait for a session token, which fetch's signal does not reach.
 const givenUp = (signal: AbortSignal) =>
@@ -80,7 +76,7 @@ async function send<T>(
   init: RequestInit = {},
   ms = REQUEST_MS,
 ): Promise<T> {
-  const signal = deadline(ms, init.signal);
+  const signal = AbortSignal.timeout(ms);
   const answered = async () => {
     const response = await fetchWithSession(url, { ...init, signal });
     if (!response.ok) throw await refusalOf(response);

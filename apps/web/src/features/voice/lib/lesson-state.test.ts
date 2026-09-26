@@ -144,6 +144,26 @@ describe("a voice lesson", () => {
     expect(other).toBe(checking);
   });
 
+  it("moves on past its own answer only, carried on past or seen elsewhere", () => {
+    const kept = run(
+      ...toYourTurn,
+      { type: "recordStarted" },
+      { type: "recorded", key: "k1" },
+      { type: "kept", key: "k1" },
+    );
+    expect(lessonReducer(kept, { type: "carriedOn", key: "k0" })).toBe(kept);
+    expect(lessonReducer(kept, { type: "seenElsewhere", key: "k0" })).toBe(
+      kept,
+    );
+    expect(lessonReducer(kept, { type: "carriedOn", key: "k1" }).phase).toEqual(
+      {
+        name: "moving-on",
+        move: ASKED,
+        heard: false,
+      },
+    );
+  });
+
   it("gives the turn back when nobody spoke, or the microphone would not open", () => {
     expect(
       run(...toYourTurn, { type: "recordStarted" }, { type: "nothingHeard" }),

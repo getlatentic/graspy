@@ -67,7 +67,10 @@ export function whenSettled(
       if (!signal.aborted) resolve(sent);
     };
     const listener: Listener = (settled, sent) => settled === key && done(sent);
-    const stop = () => void listeners.delete(listener);
+    const stop = () => {
+      listeners.delete(listener);
+      signal.removeEventListener("abort", stop);
+    };
     listeners.add(listener);
     signal.addEventListener("abort", stop);
     // Heard first, then read: an outcome given in between is caught by one or the other.

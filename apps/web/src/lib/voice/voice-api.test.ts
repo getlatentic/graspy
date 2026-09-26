@@ -164,6 +164,31 @@ describe("the voice API client", () => {
     expect(error.code).toBeNull();
   });
 
+  it("gives an upload time for its size, as on the slowest connection waited for", async () => {
+    const times: number[] = [];
+    const timeout = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((ms) => {
+        times.push(ms);
+        return new AbortController().signal;
+      });
+    fetchWithSession.mockResolvedValue(json({ state: "ready" }));
+    const wav = new Blob([new Uint8Array(800_000)], { type: "audio/wav" });
+    await api.uploadAudio("/api/voice/samples/gvm_1/audio", wav);
+    expect(times).toEqual([30_000 + 100_000]);
+    timeout.mockRestore();
+  });
+
+  it("counts an answer it cannot read as the network failing", async () => {
+    fetchWithSession.mockResolvedValue(
+      new Response("<html>gateway</html>", { status: 200 }),
+    );
+    await expect(api.evaluate("gvm_1")).rejects.toMatchObject({
+      status: 0,
+      code: null,
+    });
+  });
+
   it("gives up on a request that never answers, as the network failing", async () => {
     const deadlines: Array<[number, AbortController]> = [];
     const timeout = vi

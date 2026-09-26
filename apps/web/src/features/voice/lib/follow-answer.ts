@@ -34,7 +34,11 @@ export async function followAnswer(
   pause: (ms: number) => Promise<unknown> = wait,
 ): Promise<void> {
   const settled = whenSettled(key, signal);
-  let now = await answerNow(key);
+  // A first try that hangs shows the answer kept, and the way on, when the retry comes due.
+  let now = await Promise.race([
+    answerNow(key),
+    pause(RETRY_MS).then((): Sent => ({ kind: "kept" })),
+  ]);
   if (signal.aborted) return;
   if (now?.kind === "kept") emit({ type: "kept", key });
   while (now?.kind === "kept") {

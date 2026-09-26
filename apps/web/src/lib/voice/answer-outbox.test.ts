@@ -215,6 +215,16 @@ describe("the answers kept on the device", () => {
     expect(await app.settledOf("key-1")).toBeNull();
   });
 
+  it("give a lesson an outcome already on the device, however it got there", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    await (await load()).sendKeptAnswers(LEARNER.key);
+
+    await expect(
+      app.whenSettled("key-1", new AbortController().signal),
+    ).resolves.toMatchObject({ kind: "marked" });
+  });
+
   it("give a lesson that was left no outcome, even one already on the device", async () => {
     const app = await load();
     await app.keepAnswer(KEPT);
