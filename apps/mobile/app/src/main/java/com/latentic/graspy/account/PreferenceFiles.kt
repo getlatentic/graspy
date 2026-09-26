@@ -15,8 +15,8 @@ object PreferenceFiles {
     const val IDENTITY = "graspy_identity"
 
     /**
-     * That a sign-out has yet to forget its Google account, and that a sign-in has yet to be undone: kept through
-     * the wipe, so the next start finishes the one and undoes the other.
+     * That a sign-out has yet to forget its Google account, and that a sign-in, sign-out or leave may have left
+     * Firebase's user on disk: kept through the wipe, so the next start finishes the one and undoes the other.
      */
     const val SIGN_OUT = "graspy_sign_out"
 

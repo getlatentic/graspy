@@ -99,6 +99,8 @@ class FakeFirebase(google: GoogleAccountForgets) :
 
     override val userId get() = uid
 
+    override suspend fun idToken(uid: String, fresh: Boolean) = "id-token-$uid".takeIf { uid == this.uid }
+
     override fun signOut() {
         uid = null
     }

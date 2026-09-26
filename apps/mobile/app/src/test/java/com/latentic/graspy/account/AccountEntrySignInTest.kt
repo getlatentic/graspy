@@ -279,8 +279,44 @@ class AccountEntrySignInTest {
         assertEquals(emptyMap<String, Any?>(), signOutPending())
     }
 
-    private fun entry(sheet: GoogleAccountSheet = this.sheet) =
-        AccountEntry(context, sheet, firebase, accounts, sessions, noSessionApi, deviceIds, wipe)
+    @Test
+    fun `an account signed into after a sign-out is kept at the next start`() = runBlocking {
+        accounts.set(signedIn(learner = null))
+        firebase.uid = UID
+        entry().signOut()
+
+        signsInAnother().signIn()
+        start()
+
+        assertEquals("uid-2", accounts.account.value?.uid)
+        assertEquals("uid-2", firebase.uid)
+        assertEquals(emptyMap<String, Any?>(), signOutPending())
+    }
+
+    @Test
+    fun `an account signed into after leaving for another is kept at the next start`() = runBlocking {
+        accounts.set(signedIn(learner = null))
+        firebase.uid = UID
+        entry().leaveForAnotherAccount()
+
+        signsInAnother().signIn()
+        start()
+
+        assertEquals("uid-2", accounts.account.value?.uid)
+        assertEquals("uid-2", firebase.uid)
+        assertEquals(emptyMap<String, Any?>(), signOutPending())
+    }
+
+    private fun entry(sessionApi: SessionApi = noSessionApi, sheet: GoogleAccountSheet = this.sheet) =
+        AccountEntry(context, sheet, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
+
+    /** A sign-in Google, Firebase and graspy all take, of an account other than the one that left. */
+    private fun signsInAnother() = entry(
+        sessionApi = object : SessionApi {
+            override suspend fun session(request: SessionRequestDto) = issued("session-2", learner = null)
+        },
+        sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
+    )
 
     private fun leftSigningIn() =
         context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()

@@ -176,11 +176,11 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `signing out forgets the Google account once the device is wiped, and leaves nothing pending`() = runBlocking {
+    fun `signing out forgets the Google account once the device is wiped, and leaves only its note`() = runBlocking {
         entry(wipe).signOut()
 
         assertEquals(listOf<Account?>(null), google.forgotten)
-        assertEquals(emptyMap<String, Any?>(), signOutPending())
+        assertEquals(setOf("signing_out"), signOutPending().keys)
     }
 
     @Test
@@ -214,7 +214,7 @@ class DeviceWipeTest {
     fun `a sign-out marks the Google account to forget before it wipes, so one killed after the wipe still forgets it`() = runBlocking {
         entry(wipe).signOut()
 
-        assertEquals(setOf("google_account"), pendingWhenWiped?.keys)
+        assertEquals(setOf("google_account", "signing_out"), pendingWhenWiped?.keys)
     }
 
     @Test
@@ -227,7 +227,7 @@ class DeviceWipeTest {
         entry(wipe).leaveForAnotherAccount()
         watching.cancel()
 
-        assertEquals(setOf("google_account"), pendingWhenAccountWent?.keys)
+        assertEquals(setOf("google_account", "signing_in"), pendingWhenAccountWent?.keys)
     }
 
     @Test
@@ -236,11 +236,67 @@ class DeviceWipeTest {
 
         entry(wipe).leaveForAnotherAccount()
 
-        assertEquals(setOf("google_account"), signOutPending().keys)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
+    }
+
+    @Test
+    fun `a sign-out whose Firebase sign-out never reached the disk is not adopted, and keeps its note until Firebase is empty`() = runBlocking {
+        firebase.uid = UID
+        entry(wipe).signOut()
+
+        firebase.uid = UID
+        start()
+        assertNull("the signed-out account was adopted", accounts.account.value)
+        assertNull(firebase.uid)
+
+        firebase.uid = UID
+        start()
+        assertNull("the signed-out account was adopted", accounts.account.value)
+
+        start()
+        assertNull(accounts.account.value)
+        assertEquals(emptyMap<String, Any?>(), signOutPending())
+    }
+
+    @Test
+    fun `a sign-out cut short mid-wipe, its Firebase sign-out never on disk, is finished at the next start`() = runBlocking {
+        firebase.uid = UID
+        val killed = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) { error("The app was killed") }
+        runCatching { entry(killed).signOut() }
+
+        firebase.uid = UID
+        start()
+
+        assertLearnerDataGone()
+        assertNull(profiles.load(ada))
+        assertNull(accounts.account.value)
+        assertNull(firebase.uid)
+    }
+
+    @Test
+    fun `leaving for another account, its Firebase sign-out never on disk, is not adopted and keeps the learning`() = runBlocking {
+        accounts.set(signedIn(learner = null, deviceJoins = true))
+        firebase.uid = UID
+        entry(wipe).leaveForAnotherAccount()
+
+        firebase.uid = UID
+        start()
+
+        assertNull("the account left was adopted", accounts.account.value)
+        assertNull(firebase.uid)
+        assertEquals(0, wipes)
+        assertEquals(adaProfile, profiles.load(ada))
     }
 
     private fun entry(wipe: DeviceWipe) =
         AccountEntry(context, { error("No sign-in is asked for") }, firebase, accounts, sessions, noSessionApi, deviceIds, wipe)
+
+    /** The app's start, its work waited for. */
+    private suspend fun start() {
+        val scope = CoroutineScope(Dispatchers.IO + Job())
+        entry(wipe).reconcile(scope)
+        scope.coroutineContext[Job]!!.children.forEach { it.join() }
+    }
 
     private suspend fun assertLearnerDataGone() {
         assertTrue(workCancelled)
