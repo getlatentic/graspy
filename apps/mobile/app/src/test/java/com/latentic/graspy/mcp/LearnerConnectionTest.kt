@@ -2,7 +2,7 @@ package com.latentic.graspy.mcp
 
 import com.latentic.graspy.account.SessionRefusal
 import com.latentic.graspy.account.inMemoryDatabase
-import com.latentic.graspy.lesson.CopiedTopic
+import com.latentic.graspy.lesson.CopiedLesson
 import com.latentic.graspy.lesson.PLAN
 import com.latentic.graspy.lesson.eventually
 import com.latentic.graspy.lesson.topic
@@ -150,7 +150,7 @@ class LearnerConnectionTest {
         opening.join(WAIT_SECONDS * 1_000)
         wiping.join(WAIT_SECONDS * 1_000)
 
-        assertEquals(emptyList<CopiedTopic>(), runBlocking { database.lessonCopyDao().copied(ADA_KEY) })
+        assertEquals(emptyList<CopiedLesson>(), runBlocking { database.lessonCopyDao().copied(ADA_KEY) })
     }
 
     private fun connection() = LearnerConnection(database, ADA_KEY, calls, endpoint) { true }

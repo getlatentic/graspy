@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +23,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.webkit.JavaScriptReplyProxy
@@ -54,9 +58,18 @@ val API_ORIGIN: String = BuildConfig.API_BASE_URL.toHttpUrl().let { url ->
 // it reports its height.
 private const val FIRST_HEIGHT = 192
 // A view that has not shown by then is not coming.
-private const val SHOW_WITHIN_MS = 20_000L
+private const val DRAW_WITHIN_MS = 20_000L
+private const val COUNTED_EVERY_MS = 250L
 
-/** A tool's result as its MCP Apps view, sandboxed on the API's origin, as the web shows it. */
+/** What shows a view's page and tells the screen how it went. */
+internal typealias ViewFrame = @Composable (document: UiView, onDrawn: () -> Unit, onGone: () -> Unit) -> Unit
+
+/**
+ * A tool's result as its MCP Apps view, sandboxed on the API's origin, as the web shows it. [waiting] stands over
+ * the view until the view has drawn its result: until then the WebView shows nothing. A view that has not drawn
+ * after [DRAW_WITHIN_MS] of the app in the foreground could not be shown; time in the background does not count,
+ * since a view cannot draw there.
+ */
 @Composable
 fun AppView(
     card: ViewCard,
@@ -65,27 +78,64 @@ fun AppView(
     unavailable: String,
     modifier: Modifier = Modifier,
     events: ViewEvents = ViewEvents(),
+    waiting: @Composable () -> Unit = {},
+) = AppView(card, server, unavailable, modifier, waiting, listening = LISTENING) { document, onDrawn, onGone ->
+    HostedFrame(card, document, server, locale, events, onDrawn, onGone)
+}
+
+@Composable
+internal fun AppView(
+    card: ViewCard,
+    server: ViewServer,
+    unavailable: String,
+    modifier: Modifier,
+    waiting: @Composable () -> Unit,
+    listening: Boolean,
+    frame: ViewFrame,
 ) {
-    var failed by remember(card) { mutableStateOf(!LISTENING) }
-    var shown by remember(card) { mutableStateOf(false) }
+    var failed by remember(card) { mutableStateOf(!listening) }
+    var drawn by remember(card) { mutableStateOf(false) }
     val view by produceState<UiView?>(null, card.resourceUri) {
         value = runCatching { server.view(card.resourceUri) }.onFailure {
             Log.w(TAG, "The view ${card.resourceUri} could not be read", it)
             failed = true
         }.getOrNull()
     }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(card) {
-        delay(SHOW_WITHIN_MS)
-        if (!shown) failed = true
+        var left = DRAW_WITHIN_MS
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (left > 0 && !drawn) {
+                delay(COUNTED_EVERY_MS)
+                left -= COUNTED_EVERY_MS
+            }
+            if (!drawn) failed = true
+        }
     }
     if (failed) {
         Text(unavailable, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium, modifier = modifier)
         return
     }
-    val document = view ?: return
+    Box(modifier.fillMaxWidth()) {
+        view?.let { document -> frame(document, { drawn = true }, { failed = true }) }
+        if (!drawn) waiting()
+    }
+}
+
+@Composable
+private fun HostedFrame(
+    card: ViewCard,
+    document: UiView,
+    server: ViewServer,
+    locale: String,
+    events: ViewEvents,
+    onDrawn: () -> Unit,
+    onGone: () -> Unit,
+) {
     var viewHeight by remember(card) { mutableIntStateOf(FIRST_HEIGHT) }
     val uriHandler = LocalUriHandler.current
     val latestEvents by rememberUpdatedState(events)
+    val latestDrawn by rememberUpdatedState(onDrawn)
     val host = remember(card) {
         object : ViewHost {
             override suspend fun callTool(name: String, arguments: JsonObject) = server.call(name, arguments)
@@ -96,16 +146,14 @@ fun AppView(
             override fun resize(height: Int) {
                 if (height > 0) viewHeight = height
             }
-            override suspend fun shown(uri: String, view: UiView) {
-                shown = true
-                server.keepShown(uri, view)
-            }
+            override suspend fun shown(uri: String, view: UiView) = server.keepShown(uri, view)
+            override fun drawn() = latestDrawn()
         }
     }
     AndroidView(
-        factory = { context -> HostedView(context, card, document, HostContext(locale), host) { failed = true }.webView },
+        factory = { context -> HostedView(context, card, document, HostContext(locale), host, onGone).webView },
         onRelease = { webView -> (webView.tag as? HostedView)?.close() },
-        modifier = modifier.fillMaxWidth().height(viewHeight.dp),
+        modifier = Modifier.fillMaxWidth().height(viewHeight.dp),
     )
 }
 

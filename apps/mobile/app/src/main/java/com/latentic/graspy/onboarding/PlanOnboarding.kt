@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +37,7 @@ import com.latentic.graspy.plan.LearnerDetails
 import com.latentic.graspy.plan.LearnerPlan
 import com.latentic.graspy.plan.voiceOnly
 import com.latentic.graspy.ui.GraspyColor
+import com.latentic.graspy.ui.GraspyHeader
 import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.PageTitle
 import com.latentic.graspy.ui.PrimaryButton
@@ -110,13 +110,17 @@ fun PlanOnboarding(
     }
 }
 
+/** Each part of onboarding under the header the rest of the app has, as the web's onboarding frame shows it. */
 @Composable
 private fun Frame(content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier.fillMaxSize().background(GraspyColor.Canvas).statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal = space(6), vertical = space(6)),
-        verticalArrangement = Arrangement.spacedBy(space(6)),
-        content = content,
-    )
+    Column(Modifier.fillMaxSize().background(GraspyColor.Canvas)) {
+        GraspyHeader()
+        Column(
+            Modifier.weight(1f).navigationBarsPadding().imePadding().padding(horizontal = space(6), vertical = space(6)),
+            verticalArrangement = Arrangement.spacedBy(space(6)),
+            content = content,
+        )
+    }
 }
 
 @Composable

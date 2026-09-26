@@ -31,6 +31,9 @@ class LessonView(Wire):
     whole: bool
     attempt: int
     target: LessonTarget
+    # The record's id for the lesson, once it is kept: a copy on a device
+    # names the lesson it holds, so one made anew is copied again.
+    lesson_id: str | None = None
 
 
 async def _kept(
@@ -68,6 +71,7 @@ def _result(target: LessonTarget, making: Making, caller: Caller) -> dict:
         whole=making.whole,
         attempt=making.attempt,
         target=target,
+        lesson_id=making.lesson_id,
     )
     return {
         "content": [{"type": "text", "text": _told(making)}],
