@@ -11,7 +11,6 @@ import com.latentic.graspy.mcp.LearnerConnection
 import com.latentic.graspy.mcp.ViewCard
 import com.latentic.graspy.plan.LearnerRecord
 import com.latentic.graspy.plan.TopicMark
-import com.latentic.graspy.settleMain
 import com.latentic.graspy.ui.GraspyTheme
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
@@ -69,7 +68,7 @@ class TopicLessonTest {
                 )
             }
         }
-        settleMain { answered != null }
+        compose.waitUntil(TIMEOUT_MS) { answered != null }
 
         assertEquals(kept, shown)
         assertEquals(kept.toolResult, answered)
@@ -78,5 +77,6 @@ class TopicLessonTest {
 
     private companion object {
         const val ADA_KEY = "uid-1/aaaaaaaaaaaa"
+        const val TIMEOUT_MS = 10_000L
     }
 }
