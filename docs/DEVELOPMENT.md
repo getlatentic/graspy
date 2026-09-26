@@ -52,7 +52,7 @@ In development, `apps/web/.env.development` points sign-in at the emulator (`VIT
 npm test && npm run lint                                  # every npm package
 cd apps/web && npm run test:e2e                           # Cypress, with npm run dev and the Auth emulator running
 cd apps/mobile && ./gradlew testDebugUnitTest lintDebug   # Android, set up as apps/mobile/README.md says
-cd apps/teacher && npm run test:rust && npm run lint:rust # the teacher app's Rust and clippy; needs src-tauri/binaries/ (npm run sidecars, or empty files as CI uses)
+cd apps/teacher && npm run test:rust && npm run lint:rust # the teacher app's Rust and clippy, on Apple Silicon (graspy-teacher below)
 cd apps/server && uv run pytest -m integration            # real model calls, spends tokens
 cd apps/server && uv run mutmut run                       # finds tests that check nothing
 ```
@@ -63,7 +63,7 @@ cd apps/server && uv run mutmut run                       # finds tests that che
 - `tests/fixtures/slug-corpus.json` is read by both the server and the web app's tests. Both must spell a subject's slug the same way.
 - `apps/web/src/lib/csp.test.ts` fails with the new hash when the inline script in `index.html` changes. Put that hash in `public/_headers`.
 - A surviving mutant in `src/app/security/` or the calculator is a missing test.
-- Check dependencies with `npm run audit` in `apps/web` and `uv run pip-audit` in `apps/server`.
+- Check dependencies with `npm audit --omit=dev` from the repository root, which covers every app's npm packages, and `uv run pip-audit` in `apps/server`. Rust crates and Android's Gradle dependencies are not scanned.
 
 ## Run the Worker locally
 
