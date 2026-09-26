@@ -1,3 +1,4 @@
+import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, NetworkError, toNetworkError } from "@/lib/api/errors";
 import { isUnreachable } from "./unreachable";
@@ -21,6 +22,10 @@ describe("a failure while the device is online", () => {
       "a request whose fetch rejected",
       toNetworkError(new TypeError("Failed to fetch")),
     ],
+    [
+      "an MCP request nothing answered in time",
+      new SdkError(SdkErrorCode.RequestTimeout, "Request timed out"),
+    ],
   ])("is unreachable for %s", (_, error) => {
     expect(isUnreachable(error)).toBe(true);
   });
@@ -36,6 +41,10 @@ describe("a failure while the device is online", () => {
       toNetworkError(new ApiError("refused", 403)),
     ],
     ["a refusal from the MCP server", new Error("Resource not found")],
+    [
+      "an MCP result the client could not read",
+      new SdkError(SdkErrorCode.InvalidResult, "Invalid result"),
+    ],
   ])("is an answer for %s", (_, error) => {
     expect(isUnreachable(error)).toBe(false);
   });

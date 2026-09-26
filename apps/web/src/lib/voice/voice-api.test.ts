@@ -163,7 +163,7 @@ describe("the voice API client", () => {
     const error = (await api
       .evaluate("gvm_1")
       .catch((e: unknown) => e)) as InstanceType<typeof api.VoiceError>;
-    expect(error.unreachable).toBe(true);
+    expect(error.unanswered).toBe(true);
     expect(error.code).toBeNull();
   });
 });
@@ -196,16 +196,12 @@ describe("a child's answer when the session fails", () => {
     expect(kept.has(answer.key)).toBe(true);
   });
 
-  it("is settled when graspy refuses the session", async () => {
+  it("is kept when graspy refuses the session", async () => {
     fetchWithSession.mockImplementation(async () => {
       throw new ApiError("refused", 403);
     });
 
-    await expect(send()).resolves.toEqual({
-      kind: "refused",
-      code: null,
-      status: 403,
-    });
-    expect(kept.has(answer.key)).toBe(false);
+    await expect(send()).resolves.toEqual({ kind: "kept" });
+    expect(kept.has(answer.key)).toBe(true);
   });
 });

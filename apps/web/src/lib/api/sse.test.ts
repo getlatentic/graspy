@@ -5,7 +5,7 @@ const fetchWithSession = vi.hoisted(() => vi.fn());
 vi.mock("./session", () => ({ fetchWithSession }));
 
 import { createSSEStream } from "./sse";
-import { ApiError } from "./errors";
+import { ApiError, NetworkError } from "./errors";
 
 function bodyOf(slices: Uint8Array[]) {
   let i = 0;
@@ -79,6 +79,16 @@ it("cancels the body when the consumer stops early", async () => {
   for await (const _ of createSSEStream("/stream")) break;
 
   expect(reader.cancel).toHaveBeenCalled();
+});
+
+it("takes an OK answer with no stream as an answer a later try may read", async () => {
+  fetchWithSession.mockResolvedValue({ ok: true, status: 200, body: null });
+
+  const failure = await collect().catch((error: unknown) => error);
+
+  expect(failure).toBeInstanceOf(ApiError);
+  expect(failure).not.toBeInstanceOf(NetworkError);
+  expect((failure as ApiError).retryable).toBe(true);
 });
 
 it("reassembles events split at any byte boundary", async () => {

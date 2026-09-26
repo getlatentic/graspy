@@ -7,7 +7,12 @@ import {
 } from "@a2a-js/sdk/client";
 import type { AuthenticationHandler, Client } from "@a2a-js/sdk/client";
 import { A2A_BASE_URL } from "@/lib/env";
-import { ApiError, NetworkError, toNetworkError } from "@/lib/api/errors";
+import {
+  ApiError,
+  UNREADABLE_ANSWER,
+  toApiError,
+  toNetworkError,
+} from "@/lib/api/errors";
 import { getSessionToken, refreshSessionToken } from "@/lib/api/session";
 import {
   activityOf,
@@ -41,17 +46,34 @@ const authenticatingFetch = createAuthenticatingFetchWithRetry(
   authentication,
 );
 
+// The SDK reports an HTTP answer as a plain Error with the status only in its text: thrown
+// here, the answer keeps its status.
+async function answeredFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const response = await authenticatingFetch(input, init);
+  if (!response.ok) throw await toApiError(response);
+  return response;
+}
+
 const factoryOptions = ClientFactoryOptions.createFrom(
   ClientFactoryOptions.default,
   {
-    transports: [
-      new JsonRpcTransportFactory({ fetchImpl: authenticatingFetch }),
-    ],
-    cardResolver: new DefaultAgentCardResolver({
-      fetchImpl: authenticatingFetch,
-    }),
+    transports: [new JsonRpcTransportFactory({ fetchImpl: answeredFetch })],
+    cardResolver: new DefaultAgentCardResolver({ fetchImpl: answeredFetch }),
   },
 );
+
+/** A rejected fetch is a NetworkError and an HTTP answer an ApiError already; anything else
+ * the SDK threw is an answer it could not read. */
+function tutorFailure(cause: unknown): ApiError {
+  if (cause instanceof ApiError || cause instanceof TypeError) {
+    return toNetworkError(cause);
+  }
+  const message = cause instanceof Error ? cause.message : String(cause);
+  return new ApiError(message, UNREADABLE_ANSWER);
+}
 
 let client: Promise<Client> | null = null;
 
@@ -60,7 +82,7 @@ function getClient(): Promise<Client> {
     .createFromUrl(DISCOVERY_ORIGIN)
     .catch((cause) => {
       client = null;
-      throw toNetworkError(cause);
+      throw tutorFailure(cause);
     });
   return client;
 }
@@ -227,11 +249,11 @@ async function askOnce(
     }
   } catch (cause) {
     if (listener.signal?.aborted) throw new TurnStopped();
-    throw toNetworkError(cause);
+    throw tutorFailure(cause);
   }
 
   if (!heard.answer.trim() && !heard.finished) {
-    throw new NetworkError("The tutor stopped before answering");
+    throw new ApiError("The tutor stopped before answering", UNREADABLE_ANSWER);
   }
   return { text: heard.answer.trim(), contextId: heard.thread, ...heard.data };
 }

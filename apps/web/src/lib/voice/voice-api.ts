@@ -1,5 +1,4 @@
 import { audioFormat } from "./audio-format";
-import { toNetworkError } from "@/lib/api/errors";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
 import type {
@@ -35,8 +34,9 @@ export class VoiceError extends Error {
     this.code = code;
   }
 
-  /** The server was never reached: the request can be made again unchanged. */
-  get unreachable(): boolean {
+  /** The voice API gave no answer: the request did not get through, or no session could be
+   * had for it. It can be made again unchanged. */
+  get unanswered(): boolean {
     return this.status === 0;
   }
 }
@@ -60,8 +60,8 @@ async function send(url: string, init?: RequestInit): Promise<Response> {
   try {
     response = await fetchWithSession(url, init);
   } catch (cause) {
-    const { message, status } = toNetworkError(cause);
-    throw new VoiceError(message, status, null);
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new VoiceError(message, 0, null);
   }
   if (!response.ok) throw await refusalOf(response);
   return response;

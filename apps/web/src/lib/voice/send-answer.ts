@@ -1,3 +1,4 @@
+import { isRetryableStatus } from "@/lib/api/errors";
 import { VoiceError, type VoiceCode } from "./voice-api";
 import type { KeptAnswer } from "./answer-store";
 import type { CreatedSample, Evaluation, MarkedTurn } from "./voice-types";
@@ -26,12 +27,10 @@ const MARKING_POLLS = 20;
 const POLL_MS = 3_000;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Statuses a later try can pass: the server was busy or failed on its side.
-const TRANSIENT = new Set([0, 408, 425, 429, 500, 503, 504]);
-
-/** Whether the refusal leaves the answer worth sending again. */
+/** Whether the answer is worth sending again: the voice API gave no answer (status 0, which
+ * covers any failure to get a session), or was busy or failed on its side. */
 function transient(error: VoiceError): boolean {
-  return error.code === null && TRANSIENT.has(error.status);
+  return error.code === null && isRetryableStatus(error.status);
 }
 
 async function uploaded(

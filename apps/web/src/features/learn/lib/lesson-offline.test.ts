@@ -24,7 +24,8 @@ interface Transport {
   url: URL;
   fetch: (url: URL) => Promise<Response>;
 }
-vi.mock("@modelcontextprotocol/client", () => ({
+vi.mock("@modelcontextprotocol/client", async (actual) => ({
+  ...(await actual<typeof import("@modelcontextprotocol/client")>()),
   Client: class {
     connect = async (transport: Transport) => {
       graspy.connects += 1;

@@ -1,5 +1,13 @@
-// Gateway and rate-limit blips; 0 is a NetworkError, an answer that never arrived.
+// Gateway and rate-limit blips, and 0: a NetworkError, no answer at all.
 const RETRYABLE_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504]);
+
+/** Whether the same request may pass on a later try. */
+export const isRetryableStatus = (status: number): boolean =>
+  RETRYABLE_STATUSES.has(status);
+
+/** An answer the app cannot read: no body, or not what the protocol promises. Taken as a
+ * gateway's bad answer, which a later try may not repeat. */
+export const UNREADABLE_ANSWER = 502;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -13,7 +21,7 @@ export class ApiError extends Error {
   }
 
   get retryable(): boolean {
-    return RETRYABLE_STATUSES.has(this.status);
+    return isRetryableStatus(this.status);
   }
 }
 
@@ -29,8 +37,9 @@ export async function toApiError(response: Response): Promise<ApiError> {
   );
 }
 
-/** No answer reached the device (offline, DNS, CORS, a stream cut short), as opposed to one
- * graspy or Google gave. The only ApiError with status 0. */
+/** No answer from graspy or Google reached the device: a fetch rejected (offline, DNS, CORS),
+ * the connection was cut while an answer was read, or Firebase could not reach Google. The
+ * only ApiError with status 0. */
 export class NetworkError extends ApiError {
   constructor(message: string) {
     super(message, 0);

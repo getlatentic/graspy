@@ -1,3 +1,4 @@
+import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const LESSON_VIEW = {
@@ -12,7 +13,8 @@ const LESSON_VIEW = {
 
 const connect = vi.fn();
 const readResource = vi.fn();
-vi.mock("@modelcontextprotocol/client", () => ({
+vi.mock("@modelcontextprotocol/client", async (actual) => ({
+  ...(await actual<typeof import("@modelcontextprotocol/client")>()),
   Client: class {
     connect = connect;
     readResource = readResource;
@@ -85,6 +87,19 @@ describe("a view", () => {
     const offline = await (await fresh()).uiView("ui://graspy/lesson");
 
     expect(offline).toEqual(read);
+  });
+
+  it("opens from the copy kept when nothing answers the read before it times out", async () => {
+    const read = await readOnline();
+
+    readResource.mockRejectedValue(
+      new SdkError(SdkErrorCode.RequestTimeout, "Request timed out", {
+        timeout: 60_000,
+      }),
+    );
+    const timedOut = await (await fresh()).uiView("ui://graspy/lesson");
+
+    expect(timedOut).toEqual(read);
   });
 
   it("never read cannot open without a connection", async () => {

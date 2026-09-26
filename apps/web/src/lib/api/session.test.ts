@@ -398,6 +398,46 @@ describe("a session exchange", () => {
     expect(failure).not.toBeInstanceOf(NetworkError);
     expect((failure as { retryable: boolean }).retryable).toBe(false);
   });
+
+  it.each([
+    [
+      "graspy could not check the sign-in with Google",
+      () => {
+        signedIn = ACCOUNT;
+        googleIdToken.mockResolvedValue("id-token");
+        fetchMock.mockResolvedValue({
+          ok: false,
+          status: 503,
+          json: async () => ({ detail: { code: "sign_in_unchecked" } }),
+        });
+      },
+    ],
+    [
+      "Firebase is asked too often",
+      () => {
+        signedIn = ACCOUNT;
+        googleIdToken.mockRejectedValue(
+          firebaseError("auth/too-many-requests"),
+        );
+      },
+    ],
+    [
+      "Firebase fails on its side",
+      () => {
+        signedIn = ACCOUNT;
+        googleIdToken.mockRejectedValue(firebaseError("auth/internal-error"));
+      },
+    ],
+  ])("is a failure a later try may pass when %s", async (_, arrange) => {
+    arrange();
+    const { getSessionToken, ApiError, NetworkError } = await loadSession();
+
+    const failure = await getSessionToken().catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ApiError);
+    expect(failure).not.toBeInstanceOf(NetworkError);
+    expect((failure as { retryable: boolean }).retryable).toBe(true);
+  });
 });
 
 describe("signing in and out", () => {

@@ -109,19 +109,31 @@ async function deviceSession(device: string): Promise<Response> {
   return post({ deviceId: device, ...(hint ? { fingerprint: hint } : {}) });
 }
 
-// A module that failed to load is a TypeError; Firebase gives a failure to reach Google its own code.
-const couldNotReachGoogle = (cause: unknown) =>
-  cause instanceof TypeError ||
-  (cause as { code?: unknown } | null)?.code === "auth/network-request-failed";
+// Firebase's codes for a Google that was busy or failed, as the statuses a later try may pass.
+const GOOGLE_FAILED = new Map([
+  ["auth/too-many-requests", 429],
+  ["auth/internal-error", 503],
+]);
+
+// Not reached: the module failed to load (a TypeError), or Firebase could not reach Google.
+function googleFailure(cause: unknown): ApiError {
+  const code = (cause as { code?: unknown } | null)?.code;
+  if (cause instanceof TypeError || code === "auth/network-request-failed") {
+    return toNetworkError(cause);
+  }
+  const message = cause instanceof Error ? cause.message : String(cause);
+  const failed = typeof code === "string" ? GOOGLE_FAILED.get(code) : undefined;
+  return failed
+    ? new ApiError(`Google could not check the sign-in: ${message}`, failed)
+    : new ApiError(`Google refused the sign-in: ${message}`, 401);
+}
 
 async function idToken(fresh: boolean): Promise<string | null> {
   try {
     const { googleIdToken } = await import("@/lib/account/google-auth");
     return await googleIdToken(fresh);
   } catch (cause) {
-    if (couldNotReachGoogle(cause)) throw toNetworkError(cause);
-    const message = cause instanceof Error ? cause.message : String(cause);
-    throw new ApiError(`Google refused the sign-in: ${message}`, 401);
+    throw googleFailure(cause);
   }
 }
 
