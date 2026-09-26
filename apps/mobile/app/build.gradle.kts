@@ -21,9 +21,9 @@ val releaseSigningMissing = listOfNotNull(
 )
 val releasePackaging = setOf("packageRelease", "packageReleaseBundle", "signReleaseBundle")
 
-/** The Firebase project a google-services.json names. */
+/** The Firebase project a google-services.json names. Read as text so the configuration cache sees the file change. */
 fun firebaseProjectOf(config: File): String? = config.takeIf { it.isFile }
-    ?.let { (groovy.json.JsonSlurper().parse(it) as Map<*, *>)["project_info"] as? Map<*, *> }
+    ?.let { (groovy.json.JsonSlurper().parseText(it.readText()) as Map<*, *>)["project_info"] as? Map<*, *> }
     ?.get("project_id") as? String
 
 val firebaseProject = firebaseProjectOf(file("google-services.json"))
