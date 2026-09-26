@@ -32,7 +32,8 @@ class AccountEntrySignInTest {
     private val accounts = accountStore(null)
     private val sessions = heldSessions(accounts)
     private val deviceIds = DeviceIdStore(context.getSharedPreferences(PreferenceFiles.DEVICE, 0))
-    private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, LearnerProfileStore(context)) {}
+    private var wipes = 0
+    private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, LearnerProfileStore(context)) { wipes += 1 }
     private val google = GoogleAccountForgets(accounts)
     private val firebase = FakeFirebase(google)
 
@@ -341,13 +342,36 @@ class AccountEntrySignInTest {
             sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
         )
 
-        signingIn.signIn()
+        assertTrue(signingIn.signIn() is SignInOutcome.Failed)
+        assertNull(accounts.account.value)
         // Firebase's sign-out never reached the disk.
         firebase.uid = "uid-2"
         start()
 
         assertNull(accounts.account.value)
         assertNull(firebase.uid)
+    }
+
+    @Test
+    fun `a refusal of the account left behind leaves the next sign-in, and the device's learning, alone`() = runBlocking {
+        lateinit var signingIn: AccountEntry
+        signingIn = entry(
+            sessionApi = object : SessionApi {
+                override suspend fun session(request: SessionRequestDto): IssuedSessionDto {
+                    signingIn.signOut(of = UID)
+                    return issued("session-2", learner = null)
+                }
+            },
+            sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
+        )
+
+        assertTrue(signingIn.signIn() is SignInOutcome.Succeeded)
+        signingIn.signOut(of = UID)
+        start()
+
+        assertEquals("uid-2", accounts.account.value?.uid)
+        assertEquals("uid-2", firebase.uid)
+        assertEquals(0, wipes)
     }
 
     private fun entry(sessionApi: SessionApi = noSessionApi, sheet: GoogleAccountSheet = this.sheet) =
