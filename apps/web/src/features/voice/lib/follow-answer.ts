@@ -1,10 +1,24 @@
 import { sendKept, whenSettled } from "@/lib/voice/answer-outbox";
 import { forgetAnswer, settledOf } from "@/lib/voice/answer-store";
+import type { Sent } from "@/lib/voice/send-answer";
 import type { LessonEvent } from "./lesson-state";
 
 // A server that was busy may take it now; going online also sends it, without waiting for this.
 const RETRY_MS = 20_000;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * The answer as it stands: sent now, its outcome from the device, or null once it has left the
+ * device. A device that could not be read or written keeps it on screen for the next try.
+ */
+async function answerNow(key: string): Promise<Sent | null> {
+  try {
+    return (await sendKept(key)) ?? (await settledOf(key));
+  } catch (error) {
+    console.warn("Following a kept answer failed; it is tried again:", error);
+    return { kind: "kept" };
+  }
+}
 
 /**
  * Sees the answer on screen through: sent, shown as kept and tried again while the server cannot
@@ -19,23 +33,20 @@ export async function followAnswer(
   pause: (ms: number) => Promise<unknown> = wait,
 ): Promise<void> {
   const settled = whenSettled(key, signal);
-  let now = await sendKept(key);
+  let now = await answerNow(key);
   if (signal.aborted) return;
   if (now?.kind === "kept") emit({ type: "kept", key });
   while (now?.kind === "kept") {
     const again = pause(RETRY_MS).then(() =>
-      signal.aborted ? null : sendKept(key),
+      signal.aborted ? null : answerNow(key),
     );
     now = await Promise.race([settled, again]);
     if (signal.aborted) return;
   }
-  // The listener hears only this tab; the device holds what another tab settled.
-  const sent = now ?? (await settledOf(key));
-  if (signal.aborted) return;
-  if (!sent) {
+  if (!now) {
     emit({ type: "seenElsewhere", key });
     return;
   }
-  emit({ type: "settled", key, sent });
+  emit({ type: "settled", key, sent: now });
   await forgetAnswer(key);
 }

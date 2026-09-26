@@ -87,7 +87,10 @@ beforeEach(async () => {
   await before.keepAnswer(KEPT);
 });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.doUnmock("@/lib/voice/answer-store");
+});
 
 describe("a voice lesson reloaded with an answer kept", () => {
   it("shows the answer being checked, then its result, then the next question, asking nothing twice", async () => {
@@ -242,6 +245,39 @@ describe("a voice lesson reloaded with an answer kept", () => {
     expect(await app.unseenAnswer(LEARNER.key, ASKED.plan_id)).toEqual({
       key: "key-1",
       move: ASKED,
+    });
+  });
+});
+
+describe("an answer whose outcome the device could not store", () => {
+  it("stays on screen as kept, and shows its result on the next try", async () => {
+    vi.doMock("@/lib/voice/answer-store", async (actual) => {
+      const store = await actual<typeof import("@/lib/voice/answer-store")>();
+      let refused = false;
+      return {
+        ...store,
+        settleAnswer: (...args: Parameters<typeof store.settleAnswer>) => {
+          if (refused) return store.settleAnswer(...args);
+          refused = true;
+          return Promise.reject(
+            new DOMException("closed", "InvalidStateError"),
+          );
+        },
+      };
+    });
+    const page = lessonPage(await reload());
+    await page.open();
+    let due = () => {};
+    const retry = () => new Promise<void>((resolve) => (due = resolve));
+    const following = page.follow(retry);
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("kept"));
+
+    due();
+    await following;
+    expect(page.state.phase).toMatchObject({
+      name: "result",
+      move: ASKED,
+      turn: turnOf("gvm_key-1"),
     });
   });
 });
