@@ -50,10 +50,12 @@ class DeviceWipeTest {
     private var workCancelled = false
     private var wipes = 0
     private var accountWhenWiped: Account? = null
+    private var pendingWhenWiped: Map<String, *>? = null
     private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) {
         workCancelled = true
         wipes += 1
         accountWhenWiped = accounts.account.value
+        pendingWhenWiped = signOutPending
     }
     /** The account on the phone each time the Google account was forgotten. */
     private val forgotten = mutableListOf<Account?>()
@@ -254,6 +256,36 @@ class DeviceWipeTest {
         entry(wipe).signIn()
 
         assertEquals(listOf(false to 0), sheetAsked)
+    }
+
+    @Test
+    fun `a sign-out marks the Google account to forget before it wipes, so one killed after the wipe still forgets it`() = runBlocking {
+        entry(wipe).signOut()
+
+        assertEquals(setOf("google_account"), pendingWhenWiped?.keys)
+    }
+
+    @Test
+    fun `leaving for another account marks the Google account before the account goes`() = runBlocking {
+        var pendingWhenAccountWent: Map<String, *>? = null
+        val watching = CoroutineScope(Dispatchers.Unconfined).launch {
+            accounts.account.collect { if (it == null) pendingWhenAccountWent = signOutPending }
+        }
+
+        entry(wipe).leaveForAnotherAccount()
+        watching.cancel()
+
+        assertEquals(setOf("google_account"), pendingWhenAccountWent?.keys)
+    }
+
+    @Test
+    fun `a sign-in graspy does not take forgets the Google account it used`() = runBlocking {
+        val signedIn = AccountEntry(context, { SignInOutcome.Succeeded(UID) }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+
+        signedIn.signIn()
+
+        assertEquals(1, forgotten.size)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
     }
 
     @Test

@@ -53,7 +53,7 @@ class AccountEntry(
         // it, and then has nothing left to do.
         val signedOut = signingOut.withLock {
             if (accounts.account.value == null && firebase.userId == null) return@withLock false
-            forgetting.edit(commit = true) { putBoolean(GOOGLE_ACCOUNT, true) }
+            markGoogleAccountToForget()
             firebase.signOut()
             wipe.wipeDevice()
             true
@@ -66,6 +66,7 @@ class AccountEntry(
      * Firebase: cut short between them, the next start signs the account back in rather than wiping that learning.
      */
     suspend fun leaveForAnotherAccount() {
+        markGoogleAccountToForget()
         sessions.forget()
         accounts.set(null)
         firebase.signOut()
@@ -78,8 +79,11 @@ class AccountEntry(
         forgetting.edit(commit = true) { remove(GOOGLE_ACCOUNT) }
     }
 
+    /** Before anything the account leaves by, so a leave cut short at any point still has it forgotten. */
+    private fun markGoogleAccountToForget() = forgetting.edit(commit = true) { putBoolean(GOOGLE_ACCOUNT, true) }
+
     private suspend fun forgetGoogleAccountOrLeaveMarked() {
-        forgetting.edit(commit = true) { putBoolean(GOOGLE_ACCOUNT, true) }
+        markGoogleAccountToForget()
         try {
             forgetGoogleAccount()
         } catch (cancelled: CancellationException) {
