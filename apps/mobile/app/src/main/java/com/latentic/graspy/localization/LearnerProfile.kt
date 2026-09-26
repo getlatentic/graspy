@@ -32,7 +32,8 @@ data class LearnerProfile(
 )
 
 /**
- * Each learner's class and language, kept on this device under their learner key. They stay when
+ * Each learner's class and language, and whether they have seen the voice note, kept on this device
+ * under their learner key. They stay when
  * the device takes another learner, so switching back restores them; signing out removes them all.
  */
 class LearnerProfileStore(context: Context) {
@@ -54,10 +55,16 @@ class LearnerProfileStore(context: Context) {
 
     fun learnerClass(learnerKey: String): String? = preferences.getString(classKey(learnerKey), null)
 
+    /** Whether the learner has been told that graspy sends their voice to check their answers. */
+    fun voiceNoteSeen(learnerKey: String): Boolean = preferences.getBoolean(voiceNoteKey(learnerKey), false)
+
+    fun seeVoiceNote(learnerKey: String) = preferences.edit { putBoolean(voiceNoteKey(learnerKey), true) }
+
     fun forget(learnerKey: String) {
         preferences.edit {
             remove(classKey(learnerKey))
             remove(languageKey(learnerKey))
+            remove(voiceNoteKey(learnerKey))
         }
     }
 
@@ -84,9 +91,12 @@ class LearnerProfileStore(context: Context) {
 
     private fun languageKey(learnerKey: String) = "$learnerKey/$LANGUAGE"
 
+    private fun voiceNoteKey(learnerKey: String) = "$learnerKey/$VOICE_NOTE"
+
     private companion object {
         const val CLASS = "school_class"
         const val LANGUAGE = "language"
+        const val VOICE_NOTE = "voice_note_seen"
         const val DEVICE_CLASS = "school_class"
         const val DEVICE_LANGUAGE = "app_language"
     }

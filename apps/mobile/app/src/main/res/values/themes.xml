@@ -1,9 +1,9 @@
 <resources>
     <style name="Theme.Graspy" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">@color/graspy_blue</item>
-        <item name="android:navigationBarColor">@color/graspy_surface</item>
-        <item name="android:statusBarColor">@color/graspy_surface</item>
+        <item name="android:colorAccent">@color/graspy_accent</item>
+        <item name="android:navigationBarColor">@color/graspy_canvas</item>
+        <item name="android:statusBarColor">@color/graspy_canvas</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowBackground">@drawable/splash_window</item>
     </style>

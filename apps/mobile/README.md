@@ -53,6 +53,22 @@ Then build for the Android emulator, which reaches the computer at `10.0.2.2`:
 
 "Sign in with Google" then signs in as a made-up account, `parent@example.com`, with no Google account on the device.
 
+Lesson and practice views need the API to allow `https://graspy.getlatentic.com` as a host (its `CORS_ORIGINS`); without it they show "This card could not be shown."
+
+## Design tokens
+
+Colours, type, radii and spacing come from [content/design/tokens.json](../../content/design/tokens.json), shared with the web. After changing it, run `node content/design/build.mjs` from the repository root: it writes `ui/GraspyTokens.kt`, `res/values/graspy_tokens.xml` and the web's `src/design/tokens.css`. `GraspyTokensTest` fails while they are stale. Fonts are Poppins for headings and Inter for text, both under the SIL Open Font Licence (`assets/licenses/`).
+
+## Views (MCP Apps)
+
+A lesson, and a practice card from the tutor, are the server's MCP Apps views, shown as the web shows them. `mcp/HostPage.kt` serves a host page from the app at `https://graspy.getlatentic.com/app-host/`, refusing every other address on that origin; the page frames the API's sandbox proxy and passes its messages to the app, which answers them in `mcp/ViewSession.kt` and calls tools on `/mcp` as the learner. Only that page, in the main frame, relaying a frame on the API's origin, reaches the app (`mcp/HostGate.kt`).
+
+## Plans, Ask and the tutor's replies
+
+- A learner with no plan makes one first, as on the web: country, language and class, then subjects, then the plan streamed from `/api/curriculum/generate-stream` and kept with `PUT /api/learner/curriculum`. The plan decides the app's words and, for a Nigerian primary class, the voice lessons' class and language.
+- Ask keeps a conversation per topic, subject or general question in Room, as the web keeps them in IndexedDB. View calls made with no connection are kept and sent once there is one.
+- The tutor's replies are drawn by `assets/app-host/reply.html` with marked and KaTeX, copied from the repository's `node_modules` by `node apps/mobile/scripts/vendor-reply.mjs`.
+
 ## How accounts work on the phone
 
 - Signing in exchanges the Firebase ID token for a graspy session (`POST /api/session`). The session is kept in memory, sent on every call, and exchanged again on a `401`.

@@ -13,7 +13,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import com.latentic.graspy.localization.*
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 
 /**
  * What graspy heard, word for word, under the verdict: an adult beside the child can see why an answer
@@ -23,11 +23,11 @@ import com.latentic.graspy.ui.Graspy
 private fun HeardLine(label: String, transcript: String) {
     Text(
         buildAnnotatedString {
-            withStyle(SpanStyle(color = Graspy.TextCaption, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)) {
+            withStyle(SpanStyle(color = GraspyColor.Muted, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)) {
                 append(label.uppercase())
             }
             append("  ")
-            withStyle(SpanStyle(color = Graspy.TextMuted)) { append(transcript) }
+            withStyle(SpanStyle(color = GraspyColor.Muted)) { append(transcript) }
         },
         style = MaterialTheme.typography.bodyMedium,
         textAlign = TextAlign.Center,
@@ -53,7 +53,7 @@ internal fun LessonStage(state: ClassroomState, copy: AppCopy, language: AppLang
             // Shrinks rather than wraps: "12 × 12 = 144" stays one line on a small phone.
             BasicText(
                 it,
-                style = MaterialTheme.typography.displayLarge.copy(color = Graspy.Brand, textAlign = TextAlign.Center).leftToRight(),
+                style = MaterialTheme.typography.displayLarge.copy(color = GraspyColor.Accent, textAlign = TextAlign.Center).leftToRight(),
                 maxLines = 1,
                 autoSize = TextAutoSize.StepBased(minFontSize = 36.sp, maxFontSize = 64.sp),
             )
@@ -63,7 +63,7 @@ internal fun LessonStage(state: ClassroomState, copy: AppCopy, language: AppLang
         Text(
             outcome?.let { feedbackText(copy, turn, it.decision) } ?: unmarkedText(copy.lesson.forTable(turn.table), turn),
             style = MaterialTheme.typography.titleMedium,
-            color = if (outcome?.decision == PracticeDecision.CORRECT) Graspy.SuccessDeep else Graspy.TextMuted,
+            color = if (outcome?.decision == PracticeDecision.CORRECT) GraspyColor.Success else GraspyColor.Muted,
             textAlign = TextAlign.Center,
         )
         outcome?.transcript?.takeIf { it.isNotBlank() }?.let { HeardLine(copy.transcript, it) }
@@ -72,7 +72,7 @@ internal fun LessonStage(state: ClassroomState, copy: AppCopy, language: AppLang
     Text(
         move.text(language),
         style = MaterialTheme.typography.bodyLarge,
-        color = Graspy.TextMuted,
+        color = GraspyColor.Muted,
         textAlign = TextAlign.Center,
     )
 }

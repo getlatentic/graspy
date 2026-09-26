@@ -1,3 +1,6 @@
 apps/server/src/app/education/data/systems/KY.json:generic-api-key:187
 apps/server/src/app/api/routes.py:generic-api-key:78
 apps/web/src/design/tokens.css:generic-api-key:1
+apps/mobile/app/src/main/assets/app-host/tokens.css:generic-api-key:1
+apps/mobile/app/src/main/res/values/graspy_tokens.xml:generic-api-key:2
+apps/mobile/app/src/main/java/com/latentic/graspy/ui/GraspyTokens.kt:generic-api-key:1

@@ -48,6 +48,7 @@ const val LESSON_CONSENT = "voice_lesson"
 
 class CollectionViewModel(application: Application) : AndroidViewModel(application) {
     private val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
+    private val consent = VoiceConsent(AppGraph.account(application).profiles) { ownerId }
     private val recorder = Pcm16WavRecorder(viewModelScope)
     private val repository = AppGraph.submissionRepository(application)
     private val participantId = participantId(application)
@@ -81,6 +82,13 @@ class CollectionViewModel(application: Application) : AndroidViewModel(applicati
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording(exercise: PracticeExercise, planEvent: Pair<String, String>? = null) {
+        if (!consent.whenSeen { beginRecording(exercise, planEvent) }) {
+            Log.w(TAG, "Nothing is recorded before the learner has seen the voice note")
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+    private fun beginRecording(exercise: PracticeExercise, planEvent: Pair<String, String>?) {
         this.planEvent = planEvent
         val current = mutableState.value
         check(!current.isRecording) { "a recording is already active" }

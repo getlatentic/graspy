@@ -1,7 +1,9 @@
 package com.latentic.graspy.localization
 
 import com.latentic.graspy.practice.Teacher
-import com.latentic.graspy.ui.onboardingProfile
+import com.latentic.graspy.plan.LearnerPlan
+import com.latentic.graspy.plan.voiceClass
+import com.latentic.graspy.plan.voiceLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -15,13 +17,20 @@ class LearnerProfileTest {
     }
 
     @Test
-    fun `onboarding needs both answers before a profile exists`() {
-        assertNull(onboardingProfile(SchoolClass.PRIMARY_4, null))
-        assertNull(onboardingProfile(null, AppLanguageSelection.YORUBA))
-        assertEquals(
-            LearnerProfile(SchoolClass.PRIMARY_4, AppLanguageSelection.YORUBA),
-            onboardingProfile(SchoolClass.PRIMARY_4, AppLanguageSelection.YORUBA),
-        )
+    fun `a Nigerian primary class gets voice lessons in the teacher's nearest language`() {
+        val plan = LearnerPlan(planId = "plan-1", system = "NG", level = "primary-4", languageCode = "yo")
+
+        assertEquals(SchoolClass.PRIMARY_4, plan.voiceClass())
+        assertEquals(AppLanguageSelection.YORUBA, plan.voiceLanguage())
+        assertEquals(AppLanguageSelection.PIDGIN, plan.copy(languageCode = "pcm").voiceLanguage())
+        assertEquals(AppLanguageSelection.ENGLISH, plan.copy(languageCode = "ha").voiceLanguage())
+    }
+
+    @Test
+    fun `other classes and other countries have no voice lessons`() {
+        assertNull(LearnerPlan(planId = "plan-1", system = "NG", level = "jss-1").voiceClass())
+        assertNull(LearnerPlan(planId = "plan-1", system = "SK", level = "primary-4").voiceClass())
+        assertNull(LearnerPlan(planId = "plan-1", gradeLevel = "Primary 4").voiceClass())
     }
 
     @Test

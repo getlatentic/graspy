@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- graspy-tokens source=be2a6c31f90b885d96c8b48d81ded6626884a4f474c44e2c88f9e47502982224 content=49d709cb2af615e492b640c9dedf2e8fae329dd92d1fc56d08fa7b84f18fd71a -->
+<!-- Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
+    <color name="graspy_canvas">#f5f8fa</color>
+    <color name="graspy_surface">#ffffff</color>
+    <color name="graspy_raised">#f9fbfc</color>
+    <color name="graspy_ink">#12232e</color>
+    <color name="graspy_muted">#5a6672</color>
+    <color name="graspy_subtle">#6b7682</color>
+    <color name="graspy_faint">#8a95a0</color>
+    <color name="graspy_line">#e5e9ee</color>
+    <color name="graspy_track">#eef1f4</color>
+    <color name="graspy_accent">#2893c8</color>
+    <color name="graspy_accent_strong">#1f7099</color>
+    <color name="graspy_accent_ink">#1f6f9c</color>
+    <color name="graspy_accent_soft">#eaf4fa</color>
+    <color name="graspy_accent_line">#cfe7f3</color>
+    <color name="graspy_on_accent">#ffffff</color>
+    <color name="graspy_success">#0f7838</color>
+    <color name="graspy_success_soft">#eaf7e4</color>
+    <color name="graspy_warning">#8a6416</color>
+    <color name="graspy_warning_soft">#fdf3d6</color>
+    <color name="graspy_warning_line">#f3de9a</color>
+    <color name="graspy_danger">#c0392b</color>
+    <color name="graspy_danger_soft">#fbebe8</color>
+    <color name="graspy_tint_green">#2f9e6e</color>
+    <color name="graspy_tint_green_soft">#e6f6ee</color>
+    <color name="graspy_tint_orange">#d9772b</color>
+    <color name="graspy_tint_orange_soft">#fdf0e4</color>
+    <color name="graspy_tint_purple">#7057d1</color>
+    <color name="graspy_tint_purple_soft">#f0ecfc</color>
+</resources>

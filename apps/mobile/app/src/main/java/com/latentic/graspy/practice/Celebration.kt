@@ -29,7 +29,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.animationsAllowed
 
 /**
@@ -75,13 +75,13 @@ fun CorrectMark(turnId: String, label: String) {
                 .size(88.dp)
                 .scale(0.7f + 0.3f * pop.value)
                 .alpha((1f - pop.value).coerceIn(0f, 1f))
-                .border(2.dp, Graspy.SuccessBorder, CircleShape),
+                .border(2.dp, GraspyColor.Success, CircleShape),
         )
         Box(
-            Modifier.size(64.dp).scale(pop.value).background(Graspy.Success, CircleShape),
+            Modifier.size(64.dp).scale(pop.value).background(GraspyColor.Success, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.Check, contentDescription = label, tint = Graspy.OnAction, modifier = Modifier.size(36.dp))
+            Icon(Icons.Rounded.Check, contentDescription = label, tint = GraspyColor.OnAccent, modifier = Modifier.size(36.dp))
         }
     }
 }
@@ -89,4 +89,4 @@ fun CorrectMark(turnId: String, label: String) {
 private const val BURST_MS = 700
 private const val BURST_DOTS = 12
 private val BURST_SIZE = 150.dp
-private val BURST_COLOURS = listOf(Graspy.Brand, Graspy.Success, Graspy.AccentBorder)
+private val BURST_COLOURS = listOf(GraspyColor.Accent, GraspyColor.Success, GraspyColor.AccentLine)

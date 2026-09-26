@@ -49,15 +49,4 @@ internal val ENGLISH_COPY = AppCopy(
         almostThere = "Almost there",
         startHere = "START HERE",
     ),
-    onboarding = OnboardingCopy(
-        whatClass = "Your class",
-        whichLanguage = "Lesson language",
-        lessonLanguageNote = "The teacher speaks English, Yorùbá or Pidgin.",
-        whichInterface = "App language",
-        followLessons = "Same as the lessons",
-        next = "Continue",
-        classAndLanguage = "Class and language",
-        detectLanguage = "Let graspy listen",
-        classLabels = NIGERIAN_CLASS_LABELS,
-    ),
 )

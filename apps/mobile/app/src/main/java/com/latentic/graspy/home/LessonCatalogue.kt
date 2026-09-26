@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.HomeCopy
 import com.latentic.graspy.practice.spokenLanguage
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -80,8 +80,8 @@ data class StandingBadge(val label: String, val pill: Color, val text: Color)
 
 /** Standing as a quiet state in the app's own meaning: green is correct, grey is not done. */
 fun standingBadge(copy: HomeCopy, standing: LessonStanding): StandingBadge = when (standing) {
-    LessonStanding.MASTERED -> StandingBadge(copy.mastered, Graspy.SuccessSurface, Graspy.SuccessDeep)
-    LessonStanding.LEARNT -> StandingBadge(copy.learnt, Graspy.WarningSurface, Graspy.WarningText)
-    LessonStanding.STARTED -> StandingBadge(copy.started, Graspy.Surface, Graspy.AccentText)
-    LessonStanding.UNTOUCHED -> StandingBadge(copy.untouched, Graspy.Background, Graspy.TextCaption)
+    LessonStanding.MASTERED -> StandingBadge(copy.mastered, GraspyColor.SuccessSoft, GraspyColor.Success)
+    LessonStanding.LEARNT -> StandingBadge(copy.learnt, GraspyColor.WarningSoft, GraspyColor.Warning)
+    LessonStanding.STARTED -> StandingBadge(copy.started, GraspyColor.Surface, GraspyColor.AccentInk)
+    LessonStanding.UNTOUCHED -> StandingBadge(copy.untouched, GraspyColor.Canvas, GraspyColor.Muted)
 }

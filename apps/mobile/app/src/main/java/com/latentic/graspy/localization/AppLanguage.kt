@@ -3,10 +3,11 @@ package com.latentic.graspy.localization
 import com.latentic.graspy.practice.numberWords
 import java.util.Locale
 
-enum class AppLanguage(val displayName: String) {
-    ENGLISH("English"),
-    YORUBA("Yorùbá"),
-    PIDGIN("Pidgin"),
+/** The language the teacher speaks, and its code as the server reads it. */
+enum class AppLanguage(val displayName: String, val code: String) {
+    ENGLISH("English", "en"),
+    YORUBA("Yorùbá", "yo"),
+    PIDGIN("Pidgin", "pcm"),
 }
 
 enum class AppLanguageSelection(val storedValue: String) {
@@ -43,7 +44,6 @@ data class AppCopy(
     val recordingNotSaved: String,
     val lesson: LessonCopy,
     val home: HomeCopy,
-    val onboarding: OnboardingCopy,
 )
 
 /** The theme a lesson sits under, named as a learner would say it rather than as the file is filed. */
@@ -66,23 +66,6 @@ data class HomeCopy(
     val almostThere: String,
     val startHere: String,
 )
-
-data class OnboardingCopy(
-    val whatClass: String,
-    val whichLanguage: String,
-    /** Said where the lesson language is chosen: the teacher speaks only these, whatever the app's words. */
-    val lessonLanguageNote: String,
-    val whichInterface: String,
-    /** The app's words in the learner's lesson language, until other words are chosen. */
-    val followLessons: String,
-    val next: String,
-    val classAndLanguage: String,
-    val detectLanguage: String,
-    /** Each class as a school names it, keyed by its wire value. */
-    val classLabels: Map<String, String>,
-) {
-    fun classLabel(schoolClass: SchoolClass): String = classLabels.getValue(schoolClass.wireValue)
-}
 
 data class LessonCopy(
     val teacherSpeaking: String,

@@ -11,7 +11,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // The theme's window shows the splash mark while the app starts; once it draws, the plain surface.
-        window.setBackgroundDrawableResource(R.color.graspy_surface)
+        window.setBackgroundDrawableResource(R.color.graspy_canvas)
         setContent { GraspyApp() }
     }
 }

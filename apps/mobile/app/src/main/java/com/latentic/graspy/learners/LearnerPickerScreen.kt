@@ -26,10 +26,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.latentic.graspy.account.Account
 import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.localization.AccountCopy
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.ProblemNote
 import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.tapping
+import com.latentic.graspy.ui.space
 
 /** The most learners one account holds. */
 const val MAX_LEARNERS = 8
@@ -51,7 +53,7 @@ fun LearnerPickerScreen(
     AccountFrame {
         when {
             learners == null && state.loadFailed -> LoadFailed(copy, viewModel::load)
-            learners == null -> CircularProgressIndicator(color = Graspy.Brand, modifier = Modifier.size(28.dp))
+            learners == null -> CircularProgressIndicator(color = GraspyColor.Accent, modifier = Modifier.size(28.dp))
             state.adding -> AddLearnerForm(copy, state.busy, { viewModel.addAndChoose(it, onChosen) }, viewModel::stopAdding)
             else -> Choosing(copy, account, learners, state, onBack, { viewModel.choose(it, onChosen) }, viewModel::startAdding)
         }
@@ -73,8 +75,8 @@ private fun Choosing(
     onAdd: () -> Unit,
 ) {
     val full = learners.size >= MAX_LEARNERS
-    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(space(6))) {
+        Column(verticalArrangement = Arrangement.spacedBy(space(4))) {
             onBack?.let { BackLink(copy.back, it) }
             AccountHeading(copy.title)
         }
@@ -87,7 +89,7 @@ private fun Choosing(
                 PickerTile.Add -> AddLearnerTile(copy.addTile, !state.busy, onAdd)
             }
         }
-        if (full) Text(copy.full, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium)
+        if (full) Text(copy.full, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium)
         if (account.deviceJoins && state.deviceHoldsLearning) DevicePlanNote(copy.devicePlan)
     }
 }
@@ -101,9 +103,9 @@ private sealed interface PickerTile {
 /** Two tiles to a row: a name under each face stays readable on a phone. */
 @Composable
 private fun TileGrid(tiles: List<PickerTile>, tile: @Composable (PickerTile) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(space(2))) {
         tiles.chunked(TILES_PER_ROW).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(space(2))) {
                 row.forEach { Column(Modifier.weight(1f)) { tile(it) } }
                 repeat(TILES_PER_ROW - row.size) { Spacer(Modifier.weight(1f)) }
             }
@@ -115,18 +117,18 @@ private fun TileGrid(tiles: List<PickerTile>, tile: @Composable (PickerTile) -> 
 private fun DevicePlanNote(text: String) {
     Text(
         text,
-        color = Graspy.Text,
+        color = GraspyColor.Ink,
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier
             .fillMaxWidth()
-            .background(Graspy.AccentSurface, RoundedCornerShape(16.dp))
-            .padding(16.dp),
+            .background(GraspyColor.AccentSoft, RoundedCornerShape(GraspyRadius.Card))
+            .padding(space(4)),
     )
 }
 
 @Composable
 private fun LoadFailed(copy: AccountCopy, onRetry: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(space(3))) {
         ProblemNote(copy.loadFailed)
         SecondaryButton(copy.tryAgain, onClick = onRetry)
     }
@@ -135,9 +137,9 @@ private fun LoadFailed(copy: AccountCopy, onRetry: () -> Unit) {
 @Composable
 private fun Status(copy: AccountCopy, state: PickerState) {
     if (state.busy) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CircularProgressIndicator(color = Graspy.Brand, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
-            Text(copy.opening, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(space(2))) {
+            CircularProgressIndicator(color = GraspyColor.Accent, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+            Text(copy.opening, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium)
         }
         return
     }
@@ -154,15 +156,15 @@ private fun Status(copy: AccountCopy, state: PickerState) {
 /** The account signed in; before a learner is chosen, a wrong one can be left without losing anything. */
 @Composable
 private fun AccountLine(copy: AccountCopy, account: Account, onOtherAccount: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        HorizontalDivider(color = Graspy.Border)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            account.email?.let { Text(it, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium) }
+    Column(verticalArrangement = Arrangement.spacedBy(space(4))) {
+        HorizontalDivider(color = GraspyColor.Line)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(space(1.5)), verticalArrangement = Arrangement.spacedBy(space(1))) {
+            account.email?.let { Text(it, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium) }
             if (account.deviceJoins) {
-                if (account.email != null) Text("·", color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium)
+                if (account.email != null) Text("·", color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium)
                 Text(
                     copy.otherAccount,
-                    color = Graspy.AccentText,
+                    color = GraspyColor.AccentInk,
                     style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.clickable(onClick = tapping(onOtherAccount)),
                 )

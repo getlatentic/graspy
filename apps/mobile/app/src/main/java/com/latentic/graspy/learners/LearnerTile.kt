@@ -28,8 +28,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.latentic.graspy.account.LearnerDto
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.tapping
+import com.latentic.graspy.ui.space
 
 /** A learner's face on "Who's learning?": the first letter of their name. */
 internal fun initialOf(name: String): String {
@@ -44,11 +46,11 @@ fun LearnerTile(learner: LearnerDto, inUse: Boolean, inUseNote: String, enabled:
         Box(
             Modifier
                 .size(80.dp)
-                .background(Graspy.AccentSurface, CircleShape)
-                .border(2.dp, if (inUse) Graspy.Brand else Graspy.AccentSurface, CircleShape),
+                .background(GraspyColor.AccentSoft, CircleShape)
+                .border(2.dp, if (inUse) GraspyColor.Accent else GraspyColor.AccentSoft, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text(initialOf(learner.name), color = Graspy.AccentText, style = MaterialTheme.typography.headlineLarge)
+            Text(initialOf(learner.name), color = GraspyColor.AccentInk, style = MaterialTheme.typography.headlineLarge)
         }
     }
 }
@@ -59,41 +61,41 @@ fun AddLearnerTile(label: String, enabled: Boolean, onAdd: () -> Unit) {
         Box(
             Modifier.size(80.dp).drawBehind {
                 drawCircle(
-                    color = Graspy.AccentBorder,
+                    color = GraspyColor.AccentLine,
                     radius = size.minDimension / 2 - 1.dp.toPx(),
                     style = Stroke(width = 2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 10f))),
                 )
             },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.Add, contentDescription = null, tint = Graspy.AccentText, modifier = Modifier.size(32.dp))
+            Icon(Icons.Rounded.Add, contentDescription = null, tint = GraspyColor.AccentInk, modifier = Modifier.size(32.dp))
         }
     }
 }
 
 @Composable
 private fun Tile(label: String, note: String?, enabled: Boolean, onClick: () -> Unit, face: @Composable () -> Unit) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(GraspyRadius.Card)
     Column(
         Modifier
             .fillMaxWidth()
             .clip(shape)
             .clickable(enabled = enabled, onClick = tapping(onClick))
             .alpha(if (enabled) 1f else DISABLED_ALPHA)
-            .padding(12.dp),
+            .padding(space(3)),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(space(2.5)),
     ) {
         face()
         Text(
             label,
-            color = Graspy.Text,
+            color = GraspyColor.Ink,
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        note?.let { Text(it, color = Graspy.AccentText, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center) }
+        note?.let { Text(it, color = GraspyColor.AccentInk, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center) }
     }
 }
 

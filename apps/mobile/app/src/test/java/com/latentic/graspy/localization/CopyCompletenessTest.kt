@@ -10,6 +10,7 @@ class CopyCompletenessTest {
     private val books: Map<String, (InterfaceLanguage) -> Any> = mapOf(
         "app" to ::copyFor,
         "account" to ::accountCopyFor,
+        "learn" to ::learnCopyFor,
     )
 
     @Test
@@ -28,23 +29,11 @@ class CopyCompletenessTest {
     }
 
     @Test
-    fun `every school class is named in every language`() {
-        InterfaceLanguage.entries.forEach { language ->
-            SchoolClass.entries.forEach { assertTrue(copyFor(language).onboarding.classLabel(it).isNotBlank()) }
-        }
-    }
-
-    @Test
-    fun `school classes keep the names Nigerian schools give them, in every language`() {
-        InterfaceLanguage.entries.forEach { language ->
-            assertEquals(language.name, NIGERIAN_CLASS_LABELS, copyFor(language).onboarding.classLabels)
-        }
-    }
-
-    @Test
     fun `Arabic is written in Arabic, with the digits the web writes`() {
         books.forEach { (book, copy) ->
-            val arabic = strings(copy(InterfaceLanguage.ARABIC), book).filterKeys { ".classLabels[" !in it }
+            // A string of placeholders alone, such as "{subject} · {grade}", has no words to write in Arabic.
+            val arabic = strings(copy(InterfaceLanguage.ARABIC), book)
+                .filterValues { it.replace(PLACEHOLDER, "").any(Char::isLetter) }
             arabic.forEach { (path, text) ->
                 assertTrue("$path is not in Arabic: $text", ARABIC_LETTER.containsMatchIn(text))
                 assertTrue("$path writes Arabic-Indic digits: $text", !ARABIC_INDIC_DIGIT.containsMatchIn(text))

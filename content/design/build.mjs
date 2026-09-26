@@ -15,6 +15,7 @@ const TARGETS = {
   css: "apps/web/src/design/tokens.css",
   kotlin: `${ANDROID_SOURCE}/java/com/latentic/graspy/ui/GraspyTokens.kt`,
   xml: `${ANDROID_SOURCE}/res/values/graspy_tokens.xml`,
+  pageCss: `${ANDROID_SOURCE}/assets/app-host/tokens.css`,
 };
 const REGENERATE = "node content/design/build.mjs";
 
@@ -189,7 +190,22 @@ function renderXml(tokens) {
   return stamp('<?xml version="1.0" encoding="utf-8"?>\n<!-- ', body, " -->");
 }
 
-const RENDERERS = { css: renderCss, kotlin: renderKotlin, xml: renderXml };
+/** Plain CSS variables for the pages the Android app draws in a WebView, such as the tutor's replies. */
+function renderPageCss(tokens) {
+  const body = [
+    `/* Generated from content/design/tokens.json; do not edit. Regenerate: ${REGENERATE} */`,
+    ":root {",
+    ...Object.entries(tokens.color).map(([name, { value }]) => `  --color-${name}: ${value};`),
+    ...Object.entries(tokens.font).map(([name, font]) => `  --font-${name}: ${fontStack(font)};`),
+    ...Object.entries(tokens.radius).map(([name, { value }]) => `  --radius-${name}: ${value}px;`),
+    `  --spacing: ${rem(tokens.space.unit.value)};`,
+    "}",
+    "",
+  ].join("\n");
+  return stamp("/* ", body, " */");
+}
+
+const RENDERERS = { css: renderCss, kotlin: renderKotlin, xml: renderXml, pageCss: renderPageCss };
 
 function outputs() {
   const tokens = JSON.parse(readFileSync(SOURCE, "utf8"));

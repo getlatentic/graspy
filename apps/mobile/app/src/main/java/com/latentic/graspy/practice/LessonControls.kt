@@ -23,21 +23,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.tapping
+import com.latentic.graspy.ui.space
 
 /** Whose turn it is, named once under her portrait with the sign for it: her voice, or the child's. */
 @Composable
 internal fun StatusPill(label: String, icon: ImageVector) {
     Row(
         Modifier
-            .background(Graspy.AccentSurface, RoundedCornerShape(50))
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .background(GraspyColor.AccentSoft, RoundedCornerShape(GraspyRadius.Pill))
+            .padding(horizontal = space(4), vertical = space(2)),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(space(2)),
     ) {
-        Icon(icon, contentDescription = null, tint = Graspy.AccentText, modifier = Modifier.size(20.dp))
-        Text(label, style = MaterialTheme.typography.titleMedium, color = Graspy.AccentText, maxLines = 1)
+        Icon(icon, contentDescription = null, tint = GraspyColor.AccentInk, modifier = Modifier.size(20.dp))
+        Text(label, style = MaterialTheme.typography.titleMedium, color = GraspyColor.AccentInk, maxLines = 1)
     }
 }
 
@@ -65,8 +67,8 @@ internal fun RoundTurnButton(button: TurnButton, level: Float, description: Stri
             Canvas(Modifier.fillMaxSize()) {
                 val core = BUTTON_SIZE.toPx() / 2
                 val room = size.minDimension / 2 - core
-                drawCircle(Graspy.AccentBorder, radius = core + room * (0.35f + 0.65f * reach))
-                drawCircle(Graspy.AccentSurface, radius = core + room * 0.3f * (0.5f + reach))
+                drawCircle(GraspyColor.AccentLine, radius = core + room * (0.35f + 0.65f * reach))
+                drawCircle(GraspyColor.AccentSoft, radius = core + room * 0.3f * (0.5f + reach))
             }
         }
         FilledIconButton(
@@ -75,7 +77,7 @@ internal fun RoundTurnButton(button: TurnButton, level: Float, description: Stri
             // The same ring in every state, so a pale circle reads as the same size as a lit one.
             modifier = Modifier
                 .size(BUTTON_SIZE)
-                .border(2.dp, Graspy.AccentBorder, CircleShape)
+                .border(2.dp, GraspyColor.AccentLine, CircleShape)
                 .semantics { contentDescription = description },
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = container,
@@ -102,12 +104,12 @@ private fun iconOf(button: TurnButton): ImageVector = when (button) {
 
 /** Lit while she talks and on the child's turn; pale while she is quiet, while waiting, and to ask again. */
 private fun containerOf(button: TurnButton): Color = when (button) {
-    TurnButton.STOP_TEACHER -> Graspy.Brand
-    TurnButton.RECORD, TurnButton.FINISH -> Graspy.Action
-    TurnButton.HEAR_AGAIN, TurnButton.WAIT, TurnButton.RETRY -> Graspy.AccentSurface
+    TurnButton.STOP_TEACHER -> GraspyColor.Accent
+    TurnButton.RECORD, TurnButton.FINISH -> GraspyColor.Accent
+    TurnButton.HEAR_AGAIN, TurnButton.WAIT, TurnButton.RETRY -> GraspyColor.AccentSoft
 }
 
 private fun contentOf(button: TurnButton): Color = when (button) {
-    TurnButton.STOP_TEACHER, TurnButton.RECORD, TurnButton.FINISH -> Graspy.OnAction
-    TurnButton.HEAR_AGAIN, TurnButton.WAIT, TurnButton.RETRY -> Graspy.Brand
+    TurnButton.STOP_TEACHER, TurnButton.RECORD, TurnButton.FINISH -> GraspyColor.OnAccent
+    TurnButton.HEAR_AGAIN, TurnButton.WAIT, TurnButton.RETRY -> GraspyColor.Accent
 }

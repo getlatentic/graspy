@@ -49,15 +49,4 @@ internal val PIDGIN_COPY = AppCopy(
         almostThere = "You don near",
         startHere = "START HERE",
     ),
-    onboarding = OnboardingCopy(
-        whatClass = "Your class",
-        whichLanguage = "Lesson language",
-        lessonLanguageNote = "Teacher dey talk English, Yorùbá or Pidgin.",
-        whichInterface = "App language",
-        followLessons = "Same language as the lessons",
-        next = "Continue",
-        classAndLanguage = "Class and language",
-        detectLanguage = "Let graspy listen",
-        classLabels = NIGERIAN_CLASS_LABELS,
-    ),
 )

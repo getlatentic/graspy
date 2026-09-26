@@ -6,11 +6,13 @@ import androidx.room.Room
 import androidx.work.WorkManager
 import com.latentic.graspy.BuildConfig
 import com.latentic.graspy.account.AccountApi
+import com.latentic.graspy.ask.chatMigrations
 import com.latentic.graspy.account.AccountGraph
 import com.latentic.graspy.account.RequestLearner
 import com.latentic.graspy.account.SessionInterceptor
 import com.latentic.graspy.collection.SampleApi
 import com.latentic.graspy.network.HttpStack
+import com.latentic.graspy.network.ReadTimeoutInterceptor
 import com.latentic.graspy.sync.LessonRefreshScheduler
 import com.latentic.graspy.sync.WorkManagerLessonRefreshScheduler
 import com.latentic.graspy.sync.lessonCacheMigrations
@@ -36,7 +38,7 @@ object AppGraph {
             context.applicationContext,
             GraspyDatabase::class.java,
             "graspy.db",
-        ).addMigrations(*submissionMigrations, *lessonCacheMigrations).build().also { databaseInstance = it }
+        ).addMigrations(*submissionMigrations, *lessonCacheMigrations, *chatMigrations).build().also { databaseInstance = it }
     }
 
     fun account(context: Context): AccountGraph = accountInstance ?: synchronized(this) {
@@ -47,11 +49,13 @@ object AppGraph {
     fun sampleApi(context: Context): SampleApi = api(httpStack(context).callFactory)
 
     /** Calls for one learner only: made as any other learner, they fail instead. */
-    fun sampleApiFor(context: Context, learnerKey: String): SampleApi = api { request ->
+    fun callsFor(context: Context, learnerKey: String): Call.Factory = Call.Factory { request ->
         httpStack(context).callFactory.newCall(
             request.newBuilder().tag(RequestLearner::class.java, RequestLearner(learnerKey)).build(),
         )
     }
+
+    fun sampleApiFor(context: Context, learnerKey: String): SampleApi = api(callsFor(context, learnerKey))
 
     fun accountApi(context: Context): AccountApi = retrofit(httpStack(context).callFactory).create(AccountApi::class.java)
 
@@ -68,6 +72,7 @@ object AppGraph {
     private fun authorisedClient(context: Context): OkHttpClient {
         val account = account(context)
         return OkHttpClient.Builder()
+            .addInterceptor(ReadTimeoutInterceptor)
             .addInterceptor(SessionInterceptor(account.sessions, account::learnerInUse))
             .build()
     }

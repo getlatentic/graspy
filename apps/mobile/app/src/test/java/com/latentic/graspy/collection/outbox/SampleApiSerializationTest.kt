@@ -14,6 +14,7 @@ class SampleApiSerializationTest {
             speakerId = "speaker-1",
             languagePair = "yo-en",
             spokenLanguage = "en",
+            lessonLanguage = "yo",
             task = "reasoning",
             topic = "multiplication",
             promptId = "mul_7x8_explain",
@@ -26,6 +27,7 @@ class SampleApiSerializationTest {
 
         assertTrue(json.contains("\"device\":\"android\""))
         assertTrue(json.contains("\"spoken_language\":\"en\""))
+        assertTrue(json.contains("\"lesson_language\":\"yo\""))
         assertTrue(json.contains("\"granted\":true"))
         assertFalse(json.contains("noise_condition"))
     }

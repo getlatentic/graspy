@@ -47,7 +47,7 @@ class SubmissionUploadWorker(
             val api = AppGraph.sampleApiFor(applicationContext, ownerId)
             val created = api.createSample(
                 idempotencyKey = submission.idempotencyKey,
-                request = submission.toCreateRequest(learnerClass),
+                request = sampleRequest(submission, learnerClass, learnerLanguage(ownerId)),
             )
             dao.markCreated(localId, created.sampleId, created.uploadPath)
             if (created.state != "ready") {
@@ -170,23 +170,25 @@ class SubmissionUploadWorker(
         return Regex(""""code"\s*:\s*"([a-z_]+)"""").find(body)?.groupValues?.get(1)
     }
 
-    private fun SubmissionEntity.toCreateRequest(learnerClass: String?) = CreateSampleRequestDto(
-        speakerId = speakerId,
-        languagePair = languagePair,
-        spokenLanguage = spokenLanguage,
-        learnerClass = learnerClass,
-        task = task,
-        topic = topic,
-        promptId = promptId,
-        planId = planId,
-        eventId = eventId,
-        device = "android",
-        noiseCondition = null,
-        consent = ConsentDto(granted = true, scope = consentScope),
-    )
-
     companion object {
         const val LOCAL_ID = "local_id"
         private val WAV_MEDIA_TYPE = "audio/wav".toMediaType()
     }
 }
+
+/** What one recorded answer says about itself: the teacher marks it, and replies, in [lessonLanguage]. */
+internal fun sampleRequest(submission: SubmissionEntity, learnerClass: String?, lessonLanguage: AppLanguage) = CreateSampleRequestDto(
+    speakerId = submission.speakerId,
+    languagePair = submission.languagePair,
+    spokenLanguage = submission.spokenLanguage,
+    lessonLanguage = lessonLanguage.code,
+    learnerClass = learnerClass,
+    task = submission.task,
+    topic = submission.topic,
+    promptId = submission.promptId,
+    planId = submission.planId,
+    eventId = submission.eventId,
+    device = "android",
+    noiseCondition = null,
+    consent = ConsentDto(granted = true, scope = submission.consentScope),
+)

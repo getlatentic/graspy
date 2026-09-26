@@ -23,21 +23,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.tapping
+import com.latentic.graspy.ui.space
 
 /** Signing in, choosing a learner and managing learners, in the frame onboarding uses. */
 @Composable
 fun AccountFrame(content: @Composable ColumnScope.() -> Unit) {
-    Surface(Modifier.fillMaxSize(), color = Graspy.Background) {
+    Surface(Modifier.fillMaxSize(), color = GraspyColor.Canvas) {
         Column(
             Modifier
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+                .padding(horizontal = space(6), vertical = space(8)),
+            verticalArrangement = Arrangement.spacedBy(space(6)),
             content = content,
         )
     }
@@ -45,17 +46,17 @@ fun AccountFrame(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 fun AccountHeading(title: String) {
-    Text(title, color = Graspy.Text, style = MaterialTheme.typography.headlineLarge)
+    Text(title, color = GraspyColor.Ink, style = MaterialTheme.typography.headlineLarge)
 }
 
 @Composable
 fun BackLink(text: String, onBack: () -> Unit) {
     Row(
-        Modifier.clickable(onClick = tapping(onBack)).padding(vertical = 4.dp),
+        Modifier.clickable(onClick = tapping(onBack)).padding(vertical = space(1)),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(space(1.5)),
     ) {
-        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null, tint = Graspy.AccentText, modifier = Modifier.size(18.dp))
-        Text(text, color = Graspy.AccentText, style = MaterialTheme.typography.labelLarge)
+        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null, tint = GraspyColor.AccentInk, modifier = Modifier.size(18.dp))
+        Text(text, color = GraspyColor.AccentInk, style = MaterialTheme.typography.labelLarge)
     }
 }

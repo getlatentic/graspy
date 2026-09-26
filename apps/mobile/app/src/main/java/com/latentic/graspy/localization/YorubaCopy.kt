@@ -49,15 +49,4 @@ internal val YORUBA_COPY = AppCopy(
         almostThere = "Ó ku díẹ̀",
         startHere = "BẸ̀RẸ̀ NÍBÍ",
     ),
-    onboarding = OnboardingCopy(
-        whatClass = "Kíláàsì rẹ",
-        whichLanguage = "Èdè ẹ̀kọ́",
-        lessonLanguageNote = "Olùkọ́ ń sọ Gẹ̀ẹ́sì, Yorùbá tàbí Pidgin.",
-        whichInterface = "Èdè app",
-        followLessons = "Èdè kan náà pẹ̀lú ẹ̀kọ́",
-        next = "Tẹ̀síwájú",
-        classAndLanguage = "Kíláàsì àti èdè",
-        detectLanguage = "Jẹ́ kí graspy gbọ́",
-        classLabels = NIGERIAN_CLASS_LABELS,
-    ),
 )

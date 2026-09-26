@@ -117,6 +117,7 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.4")
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.work:work-runtime-ktx:2.11.2")
+    implementation("androidx.webkit:webkit:1.17.1")
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-kotlinx-serialization:3.0.0")
     implementation("com.squareup.okhttp3:okhttp:5.3.0")

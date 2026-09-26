@@ -27,6 +27,8 @@ data class CreateSampleRequestDto(
     @SerialName("speaker_id") val speakerId: String,
     @SerialName("language_pair") val languagePair: String,
     @SerialName("spoken_language") val spokenLanguage: String? = null,
+    /** The language the teacher marks the answer in and replies in; the server takes English without it. */
+    @SerialName("lesson_language") val lessonLanguage: String,
     @SerialName("learner_class") val learnerClass: String? = null,
     val task: String,
     val topic: String,

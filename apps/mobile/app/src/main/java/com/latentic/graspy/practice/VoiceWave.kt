@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.latentic.graspy.collection.recording.VOICE_WAVE_BARS
+import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.animationsAllowed
 
 private val WAVE_HEIGHT = 44.dp
@@ -50,7 +51,7 @@ fun VoiceWave(levels: List<Float>, color: Color, idleColor: Color, modifier: Mod
             Box(
                 Modifier
                     .size(width = 4.dp, height = height)
-                    .background(if (level == null) idleColor else color, RoundedCornerShape(2.dp)),
+                    .background(if (level == null) idleColor else color, RoundedCornerShape(GraspyRadius.Pill)),
             )
         }
     }

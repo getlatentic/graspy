@@ -5,7 +5,7 @@ import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.copyFor
 import com.latentic.graspy.sync.RefreshState
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
@@ -130,11 +130,11 @@ class LessonCatalogueTest {
     @Test
     fun `standing shows as green for correct and grey for not done`() {
         assertEquals("Known", standingBadge(copy.home, LessonStanding.MASTERED).label)
-        assertEquals(Graspy.SuccessSurface, standingBadge(copy.home, LessonStanding.MASTERED).pill)
-        assertEquals(Graspy.WarningSurface, standingBadge(copy.home, LessonStanding.LEARNT).pill)
-        assertEquals(Graspy.Surface, standingBadge(copy.home, LessonStanding.STARTED).pill)
-        assertEquals(Graspy.Background, standingBadge(copy.home, LessonStanding.UNTOUCHED).pill)
-        assertEquals(Graspy.TextCaption, standingBadge(copy.home, LessonStanding.UNTOUCHED).text)
+        assertEquals(GraspyColor.SuccessSoft, standingBadge(copy.home, LessonStanding.MASTERED).pill)
+        assertEquals(GraspyColor.WarningSoft, standingBadge(copy.home, LessonStanding.LEARNT).pill)
+        assertEquals(GraspyColor.Surface, standingBadge(copy.home, LessonStanding.STARTED).pill)
+        assertEquals(GraspyColor.Canvas, standingBadge(copy.home, LessonStanding.UNTOUCHED).pill)
+        assertEquals(GraspyColor.Muted, standingBadge(copy.home, LessonStanding.UNTOUCHED).text)
     }
 
     @Test

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Before Android 12 there is no platform splash: the window itself shows the same mark while the app starts. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/graspy_surface" />
+    <item android:drawable="@color/graspy_canvas" />
     <item
         android:width="240dp"
         android:height="240dp"

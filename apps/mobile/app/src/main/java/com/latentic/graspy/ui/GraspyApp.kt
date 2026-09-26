@@ -9,7 +9,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -58,7 +57,7 @@ fun GraspyApp() {
     val signOut: SignOutViewModel = viewModel()
     val signingOut by signOut.state.collectAsStateWithLifecycle()
 
-    GraspyTheme {
+    GraspyTheme(languages.words) {
         CompositionLocalProvider(LocalLayoutDirection provides languages.words.layoutDirection) {
             val signedIn = account
             if (signedIn == null) {
@@ -104,7 +103,6 @@ private fun SignedIn(
             learnerKey = learnerKey,
             profile = profile,
             languages = languages,
-            accountCopy = accountCopy,
             learnerViewModels = learnerViewModels,
             menu = AccountMenu(
                 onSwitchLearner = { screens.show(AccountScreen.PICKER) },
@@ -116,7 +114,7 @@ private fun SignedIn(
     }
 }
 
-/** A learner new to this device is asked their class first; one who learned here before keeps theirs. */
+/** The learner's plan comes first; the tabs, and voice lessons for a class that has them, follow it. */
 @Composable
 private fun Learning(
     graph: AccountGraph,
@@ -124,28 +122,17 @@ private fun Learning(
     learnerKey: String,
     profile: MutableState<LearnerProfile?>,
     languages: Languages,
-    accountCopy: AccountCopy,
     learnerViewModels: LearnerViewModels,
     menu: AccountMenu,
 ) {
     val context = LocalContext.current
-    var editingProfile by rememberSaveable { mutableStateOf(false) }
-    val copy = copyFor(languages.words)
     LaunchedEffect(learnerKey) {
         AppGraph.submissionRepository(context.applicationContext).recoverIncomplete(learnerKey)
     }
-    val current = profile.value
-    if (current == null || editingProfile) {
-        OnboardingScreen(copy, current, askLanguage = editingProfile, interfaceLanguage = languages.chosenWords.value) { chosen, words ->
-            graph.profiles.save(learnerKey, chosen)
-            profile.value = chosen
-            languages.chosenWords.value = words
-            editingProfile = false
-        }
-        return
-    }
     LearnerScope(learnerKey, learnerViewModels) {
-        GraspyRoot(copy, accountCopy, languages.lesson, languages.words, current, account, menu.copy(onEditProfile = { editingProfile = true }))
+        LearnerHome(copyFor(languages.words), languages.lesson, languages.words, account, learnerKey, profile, graph.profiles, menu) {
+            languages.chosenWords.value = it
+        }
     }
 }
 

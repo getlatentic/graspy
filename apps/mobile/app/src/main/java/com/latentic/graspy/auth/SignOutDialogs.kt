@@ -13,9 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.latentic.graspy.localization.AccountCopy
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.PrimaryButton
 import com.latentic.graspy.ui.SecondaryButton
+import com.latentic.graspy.ui.space
 
 /** While signing out, and when signing out now would lose what has not reached graspy. */
 @Composable
@@ -23,22 +24,22 @@ fun SignOutDialogs(copy: AccountCopy, state: SignOutState, onAnyway: () -> Unit,
     when {
         state.unsent -> AlertDialog(
             onDismissRequest = onCancel,
-            text = { Text(copy.signOutUnsent, color = Graspy.Danger, style = MaterialTheme.typography.bodyLarge) },
+            text = { Text(copy.signOutUnsent, color = GraspyColor.Danger, style = MaterialTheme.typography.bodyLarge) },
             confirmButton = { PrimaryButton(copy.signOut, onClick = onAnyway) },
             dismissButton = { SecondaryButton(copy.cancel, onClick = onCancel) },
-            containerColor = Graspy.Surface,
+            containerColor = GraspyColor.Surface,
         )
         state.busy -> AlertDialog(
             onDismissRequest = {},
             properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
             text = {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CircularProgressIndicator(color = Graspy.Brand, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
-                    Text(copy.signingOut, color = Graspy.Text, style = MaterialTheme.typography.bodyLarge)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(space(3))) {
+                    CircularProgressIndicator(color = GraspyColor.Accent, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                    Text(copy.signingOut, color = GraspyColor.Ink, style = MaterialTheme.typography.bodyLarge)
                 }
             },
             confirmButton = {},
-            containerColor = Graspy.Surface,
+            containerColor = GraspyColor.Surface,
         )
     }
 }

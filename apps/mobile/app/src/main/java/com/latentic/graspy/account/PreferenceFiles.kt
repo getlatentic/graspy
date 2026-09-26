@@ -14,6 +14,9 @@ object PreferenceFiles {
     const val CONSENT = "graspy_recording_consent"
     const val IDENTITY = "graspy_identity"
 
+    /** The learner's plan and record as last read, so their subjects show without a connection. */
+    const val PLAN = "graspy_plan"
+
     /** What the learner in use kept: gone when the device takes another learner. */
-    val learnerData: List<String> = listOf(PLAYBACK, CONSENT, IDENTITY)
+    val learnerData: List<String> = listOf(PLAYBACK, CONSENT, IDENTITY, PLAN)
 }

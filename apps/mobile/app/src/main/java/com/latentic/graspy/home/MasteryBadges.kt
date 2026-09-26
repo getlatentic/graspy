@@ -1,7 +1,6 @@
 package com.latentic.graspy.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +24,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.latentic.graspy.localization.AppCopy
 import com.latentic.graspy.localization.fillWith
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.GraspyColor
+import com.latentic.graspy.ui.space
 
 /**
  * What a learner has collected, and what is closest to being collected next. A count out of the
@@ -50,20 +51,20 @@ fun MasteryBadges(copy: AppCopy, shelf: MasteryShelf) {
         shelf.nearest?.let { NextBadgeLine(copy, it) }
         return
     }
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(space(2.5))) {
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(copy.home.badges, color = Graspy.Text, style = MaterialTheme.typography.titleMedium)
+            Text(copy.home.badges, color = GraspyColor.Ink, style = MaterialTheme.typography.titleMedium)
             if (shelf.nearest != null) {
-                Text(copy.home.almostThere, color = Graspy.SuccessDeep, style = MaterialTheme.typography.labelLarge)
+                Text(copy.home.almostThere, color = GraspyColor.Success, style = MaterialTheme.typography.labelLarge)
             }
         }
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(space(2)),
+            verticalArrangement = Arrangement.spacedBy(space(2)),
         ) {
             shelf.badges.forEach { MasteryBadge(it.title) }
         }
@@ -75,28 +76,27 @@ fun MasteryBadges(copy: AppCopy, shelf: MasteryShelf) {
 private fun NextBadgeLine(copy: AppCopy, nearest: CatalogueLesson) {
     Text(
         copy.home.oneMoreDay.fillWith(nearest.title),
-        color = Graspy.TextMuted,
+        color = GraspyColor.Muted,
         style = MaterialTheme.typography.bodyMedium,
     )
 }
 
 @Composable
 private fun MasteryBadge(title: String) {
-    val shape = RoundedCornerShape(999.dp)
+    val shape = RoundedCornerShape(GraspyRadius.Pill)
     Row(
         Modifier
-            .background(Graspy.SuccessSurface, shape)
-            .border(1.dp, Graspy.SuccessBorder, shape)
-            .padding(start = 6.dp, top = 6.dp, end = 14.dp, bottom = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .background(GraspyColor.SuccessSoft, shape)
+            .padding(start = space(1.5), top = space(1.5), end = space(3.5), bottom = space(1.5)),
+        horizontalArrangement = Arrangement.spacedBy(space(2)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(26.dp).background(Graspy.SuccessDeep, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.Check, contentDescription = null, tint = Graspy.OnAction, modifier = Modifier.size(17.dp))
+        Box(Modifier.size(26.dp).background(GraspyColor.Success, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = GraspyColor.OnAccent, modifier = Modifier.size(17.dp))
         }
         Text(
             title,
-            color = Graspy.SuccessText,
+            color = GraspyColor.Success,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

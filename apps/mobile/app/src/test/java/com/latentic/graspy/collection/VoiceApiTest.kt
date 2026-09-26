@@ -85,6 +85,7 @@ class VoiceApiTest {
         val SAMPLE = CreateSampleRequestDto(
             speakerId = "participant",
             languagePair = "yo-en",
+            lessonLanguage = "yo",
             task = "lesson",
             topic = "multiplication",
             consent = ConsentDto(granted = true, scope = "voice_lesson"),

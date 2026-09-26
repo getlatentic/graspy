@@ -1,12 +1,8 @@
 package com.latentic.graspy.localization
 
 import androidx.compose.ui.unit.LayoutDirection
-import com.latentic.graspy.ui.OnboardingStep
-import com.latentic.graspy.ui.interfaceOptions
-import com.latentic.graspy.ui.nextStep
 import java.util.Locale
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 class InterfaceLanguageTest {
@@ -36,17 +32,6 @@ class InterfaceLanguageTest {
     @Test
     fun `an Arabic phone keeps lessons in a language the teacher speaks`() {
         assertEquals(AppLanguage.ENGLISH, resolveAppLanguage(AppLanguageSelection.SYSTEM, "ar-EG"))
-    }
-
-    @Test
-    fun `the lesson language and the app's words are chosen one after the other, apart`() {
-        assertEquals(OnboardingStep.LANGUAGE, nextStep(OnboardingStep.CLASS, askLanguage = true))
-        assertEquals(OnboardingStep.INTERFACE, nextStep(OnboardingStep.LANGUAGE, askLanguage = true))
-        assertNull(nextStep(OnboardingStep.INTERFACE, askLanguage = true))
-        assertNull(nextStep(OnboardingStep.CLASS, askLanguage = false))
-        val offered = interfaceOptions(copyFor(InterfaceLanguage.ENGLISH))
-        assertEquals(listOf(null) + InterfaceLanguage.entries, offered.map { it.first })
-        assertEquals("العربية", offered.last().second)
     }
 
     @Test

@@ -31,7 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.animationsAllowed
 import com.latentic.graspy.ui.tapping
 
@@ -57,8 +57,8 @@ private const val PORTRAIT_SHARE = 0.72f
 fun TeacherFace(
     mood: TeacherMood,
     teacher: Teacher,
-    onTap: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    onTap: (() -> Unit)? = null,
 ) {
     val motion = animationsAllowed()
     val talking = mood == TeacherMood.TALKING && motion
@@ -71,9 +71,9 @@ fun TeacherFace(
     val ringAlpha = if (listening) looping(0.25f, 1f, PULSE_MS, RepeatMode.Reverse) else 1f
     val ring by animateColorAsState(
         targetValue = when (mood) {
-            TeacherMood.PLEASED -> Graspy.SuccessDeep
-            TeacherMood.THINKING -> Graspy.TextCaption
-            else -> Graspy.Brand
+            TeacherMood.PLEASED -> GraspyColor.Success
+            TeacherMood.THINKING -> GraspyColor.Faint
+            else -> GraspyColor.Accent
         },
         label = "ring",
     )
@@ -103,7 +103,7 @@ fun TeacherFace(
                     scaleY = nod
                 }
                 .clip(CircleShape)
-                .background(Graspy.AccentSurface)
+                .background(GraspyColor.AccentSoft)
                 .border(BorderStroke(3.dp, ring.copy(alpha = ringAlpha)), CircleShape),
         )
     }

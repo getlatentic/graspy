@@ -29,11 +29,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.unit.dp
 import com.latentic.graspy.localization.AccountCopy
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.PrimaryButton
 import com.latentic.graspy.ui.QuietButton
+import com.latentic.graspy.ui.space
 
 /** The longest name graspy keeps for a learner. */
 const val MAX_LEARNER_NAME = 40
@@ -43,11 +44,11 @@ const val MAX_LEARNER_NAME = 40
 fun AddLearnerForm(copy: AccountCopy, busy: Boolean, onAdd: (String) -> Unit, onCancel: () -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
     var guardian by rememberSaveable { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(space(5))) {
         AccountHeading(copy.addTitle)
         LearnerNameField(copy.nameLabel, name, autoFocus = true) { name = it }
         GuardianCheck(copy.guardian, guardian) { guardian = it }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(space(2)), verticalArrangement = Arrangement.spacedBy(space(2))) {
             PrimaryButton(copy.addButton, onClick = { onAdd(name.trim()) }, enabled = !busy && name.isNotBlank() && guardian)
             QuietButton(copy.cancel, onClick = onCancel, enabled = !busy)
         }
@@ -63,13 +64,13 @@ fun LearnerNameField(label: String, value: String, autoFocus: Boolean, modifier:
         label = { Text(label) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, autoCorrectEnabled = false),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(GraspyRadius.Control),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Graspy.Brand,
-            unfocusedBorderColor = Graspy.AccentBorder,
-            focusedLabelColor = Graspy.AccentText,
-            focusedContainerColor = Graspy.Surface,
-            unfocusedContainerColor = Graspy.Surface,
+            focusedBorderColor = GraspyColor.Accent,
+            unfocusedBorderColor = GraspyColor.AccentLine,
+            focusedLabelColor = GraspyColor.AccentInk,
+            focusedContainerColor = GraspyColor.Surface,
+            unfocusedContainerColor = GraspyColor.Surface,
         ),
         modifier = modifier.fillMaxWidth().focusRequester(focus),
     )
@@ -81,17 +82,17 @@ private fun GuardianCheck(text: String, checked: Boolean, onChange: (Boolean) ->
     Row(
         Modifier
             .fillMaxWidth()
-            .background(Graspy.AccentSurface, RoundedCornerShape(16.dp))
+            .background(GraspyColor.AccentSoft, RoundedCornerShape(GraspyRadius.Card))
             .toggleable(value = checked, role = Role.Checkbox, onValueChange = onChange)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = space(2), vertical = space(2)),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(space(1)),
     ) {
         Checkbox(
             checked = checked,
             onCheckedChange = null,
-            colors = CheckboxDefaults.colors(checkedColor = Graspy.Action, uncheckedColor = Graspy.NonText),
+            colors = CheckboxDefaults.colors(checkedColor = GraspyColor.Accent, uncheckedColor = GraspyColor.Faint),
         )
-        Text(text, color = Graspy.Text, style = MaterialTheme.typography.bodyMedium)
+        Text(text, color = GraspyColor.Ink, style = MaterialTheme.typography.bodyMedium)
     }
 }

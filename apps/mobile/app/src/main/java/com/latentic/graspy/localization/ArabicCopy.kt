@@ -54,15 +54,4 @@ internal val ARABIC_COPY = AppCopy(
         almostThere = "اقتربت",
         startHere = "ابدأ من هنا",
     ),
-    onboarding = OnboardingCopy(
-        whatClass = "صفّك",
-        whichLanguage = "لغة الدروس",
-        lessonLanguageNote = "تتكلّم المعلّمة الإنجليزية أو اليوروبا أو البيدجن.",
-        whichInterface = "لغة التطبيق",
-        followLessons = "لغة الدروس نفسها",
-        next = "تابع",
-        classAndLanguage = "الصف واللغة",
-        detectLanguage = "دع graspy يستمع",
-        classLabels = NIGERIAN_CLASS_LABELS,
-    ),
 )

@@ -36,8 +36,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.latentic.graspy.collection.CollectionViewModel
 import com.latentic.graspy.collection.text
 import com.latentic.graspy.localization.*
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.animationsAllowed
+import com.latentic.graspy.ui.space
 
 /** Layout passes to allow before scrolling to the foot: the thread and the card arrive over several. */
 private const val SETTLE_FRAMES = 3
@@ -129,7 +130,7 @@ fun PracticeLessonScreen(
     val rejected = recordingFailureMessage(copy, recording.failureReason)
         .takeIf { classroom.step != ClassroomStep.RESULT && !recording.isRecording }
 
-    Surface(Modifier.fillMaxSize(), color = Graspy.Surface) {
+    Surface(Modifier.fillMaxSize(), color = GraspyColor.Surface) {
         Column(Modifier.fillMaxSize()) {
             LessonHeader(classroom, onBack)
             Column(
@@ -137,9 +138,9 @@ fun PracticeLessonScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(conversation)
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = space(5), vertical = space(3)),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
+                verticalArrangement = Arrangement.spacedBy(space(4), Alignment.Top),
             ) {
                 // She stays on screen while an answer is checked, thinking, so the question does not jump
                 // up the screen the moment the child finishes speaking.
@@ -193,7 +194,7 @@ fun PracticeLessonScreen(
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(space(3.5)),
                     ) {
                         LessonStage(classroom, copy, appLanguage)
                     }
@@ -201,16 +202,16 @@ fun PracticeLessonScreen(
                 }
                 // Something went wrong: said under the lesson, so the button below never moves for it.
                 Settling(voice == TeacherVoiceState.FAILED, motion) {
-                    Text(copy.lesson.teacherAudioFailed, color = Graspy.Danger)
+                    Text(copy.lesson.teacherAudioFailed, color = GraspyColor.Danger)
                 }
                 Settling(recording.problem != null, motion) {
-                    Text(recording.problem?.text(copy).orEmpty(), color = Graspy.Danger)
+                    Text(recording.problem?.text(copy).orEmpty(), color = GraspyColor.Danger)
                 }
             }
             // The one button sits in a foot of fixed height outside the scrolling lesson, so however long
             // the lesson's words are, it stays in the same place for the whole lesson.
             Column(
-                Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                Modifier.fillMaxWidth().padding(bottom = space(3)),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 val button = turnButton(floor, classroom)
@@ -251,17 +252,17 @@ fun PracticeLessonScreen(
                 Column(
                     Modifier.fillMaxWidth().height(CAPTION_SLOT),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(space(1.5)),
                 ) {
                     caption?.let {
                         Text(
                             it,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (it == rejected) Graspy.Danger else Graspy.TextMuted,
+                            color = if (it == rejected) GraspyColor.Danger else GraspyColor.Muted,
                             textAlign = TextAlign.Center,
                         )
                     }
-                    if (button == TurnButton.FINISH) VoiceWave(voiceLevels, color = Graspy.Brand, idleColor = Graspy.Border)
+                    if (button == TurnButton.FINISH) VoiceWave(voiceLevels, color = GraspyColor.Accent, idleColor = GraspyColor.Line)
                 }
             }
         }

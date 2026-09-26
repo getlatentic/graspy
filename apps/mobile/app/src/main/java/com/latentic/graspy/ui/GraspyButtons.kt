@@ -1,6 +1,7 @@
 package com.latentic.graspy.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -16,7 +17,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
-private val ButtonShape = RoundedCornerShape(26.dp)
+private val ButtonShape = RoundedCornerShape(GraspyRadius.Control)
 
 /** The one thing a screen asks for. */
 @Composable
@@ -27,11 +28,24 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
         modifier = modifier.heightIn(min = 48.dp),
         shape = ButtonShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Graspy.Action,
-            contentColor = Graspy.OnAction,
-            disabledContainerColor = Graspy.AccentBorder,
-            disabledContentColor = Graspy.OnAction,
+            containerColor = GraspyColor.Accent,
+            contentColor = GraspyColor.OnAccent,
+            disabledContainerColor = GraspyColor.AccentLine,
+            disabledContentColor = GraspyColor.OnAccent,
         ),
+    ) {
+        Text(text, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+/** The web's small round button, as on the card that continues a topic. */
+@Composable
+fun PillButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = tapping(onClick),
+        shape = RoundedCornerShape(GraspyRadius.Pill),
+        contentPadding = PaddingValues(horizontal = space(4), vertical = space(2)),
+        colors = ButtonDefaults.buttonColors(containerColor = GraspyColor.Accent, contentColor = GraspyColor.OnAccent),
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge)
     }
@@ -44,8 +58,8 @@ fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
         enabled = enabled,
         modifier = modifier.heightIn(min = 48.dp),
         shape = ButtonShape,
-        border = BorderStroke(1.dp, Graspy.Border),
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = Graspy.Surface, contentColor = Graspy.Text),
+        border = BorderStroke(1.dp, GraspyColor.Line),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = GraspyColor.Surface, contentColor = GraspyColor.Ink),
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge)
     }
@@ -54,7 +68,7 @@ fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
 @Composable
 fun QuietButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     TextButton(onClick = tapping(onClick), enabled = enabled, modifier = modifier.heightIn(min = 48.dp)) {
-        Text(text, color = Graspy.AccentText, style = MaterialTheme.typography.labelLarge)
+        Text(text, color = GraspyColor.AccentInk, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -63,7 +77,7 @@ fun QuietButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
 fun ProblemNote(text: String, modifier: Modifier = Modifier) {
     Text(
         text,
-        color = Graspy.Danger,
+        color = GraspyColor.Danger,
         style = MaterialTheme.typography.labelLarge,
         modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
     )

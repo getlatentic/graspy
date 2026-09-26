@@ -17,16 +17,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,12 +33,15 @@ import androidx.compose.ui.unit.dp
 import com.latentic.graspy.localization.AppCopy
 import com.latentic.graspy.localization.HomeCopy
 import com.latentic.graspy.localization.topicName
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.GraspyColor
+import com.latentic.graspy.ui.SecondaryButton
+import com.latentic.graspy.ui.space
 import com.latentic.graspy.ui.tapping
 
-/** Home: the next lesson as the only action, then the class's lessons and how each one stands. */
+/** Voice lessons: who teaches, the class's lessons by topic and how each stands, then the badges earned. */
 @Composable
-fun HomeScreen(
+fun VoiceLessons(
     copy: AppCopy,
     state: CatalogueState,
     teacherName: String,
@@ -53,28 +51,20 @@ fun HomeScreen(
     onOpenLesson: (String) -> Unit,
     onRetry: () -> Unit,
 ) {
-    Surface(Modifier.fillMaxSize(), color = Graspy.Background) {
-        Column(
-            Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-        ) {
-            Text(copy.home.title, color = Graspy.Text, style = MaterialTheme.typography.headlineMedium)
-            when (state) {
-                CatalogueState.Loading ->
-                    Text(copy.home.loading, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyLarge)
-                CatalogueState.Failed -> RetryLine(copy.home, onRetry)
-                is CatalogueState.Ready -> {
-                    TeacherStrip(teacherName, teacherInitial, language)
-                    if (state.topics.isEmpty()) {
-                        Text(copy.home.noLessons, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyLarge)
-                    }
-                    state.topics.forEach { group ->
-                        TopicGroup(copy, group, state.current?.planId, onStartLesson, onOpenLesson)
-                    }
-                    MasteryBadges(copy, state.topics.flatMap { it.lessons }.masteryShelf())
+    Column(verticalArrangement = Arrangement.spacedBy(space(3))) {
+        when (state) {
+            CatalogueState.Loading ->
+                Text(copy.home.loading, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
+            CatalogueState.Failed -> RetryLine(copy.home, onRetry)
+            is CatalogueState.Ready -> {
+                TeacherStrip(teacherName, teacherInitial, language)
+                if (state.topics.isEmpty()) {
+                    Text(copy.home.noLessons, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
                 }
+                state.topics.forEach { group ->
+                    TopicGroup(copy, group, state.current?.planId, onStartLesson, onOpenLesson)
+                }
+                MasteryBadges(copy, state.topics.flatMap { it.lessons }.masteryShelf())
             }
         }
     }
@@ -82,39 +72,33 @@ fun HomeScreen(
 
 @Composable
 private fun RetryLine(copy: HomeCopy, onRetry: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(copy.loadFailed, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyLarge)
-        Button(
-            onClick = tapping(onRetry),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.height(52.dp),
-        ) {
-            Text(copy.retry, style = MaterialTheme.typography.labelLarge)
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(space(2.5))) {
+        Text(copy.loadFailed, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
+        SecondaryButton(copy.retry, onRetry)
     }
 }
 
 /** Who is teaching, said once, so no lesson row has to repeat it. */
 @Composable
 private fun TeacherStrip(name: String, initial: String, language: String) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(GraspyRadius.Card)
     Row(
         Modifier
             .fillMaxWidth()
-            .background(Graspy.Surface, shape)
-            .border(BorderStroke(1.dp, Graspy.Hairline), shape)
-            .padding(14.dp),
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
+            .background(GraspyColor.Surface, shape)
+            .border(BorderStroke(1.dp, GraspyColor.Line), shape)
+            .padding(space(3.5)),
+        horizontalArrangement = Arrangement.spacedBy(space(3)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(46.dp).background(Graspy.Brand, CircleShape), contentAlignment = Alignment.Center) {
-            Text(initial, color = Graspy.OnAction, style = MaterialTheme.typography.titleMedium)
+        Box(Modifier.size(46.dp).background(GraspyColor.Accent, CircleShape), contentAlignment = Alignment.Center) {
+            Text(initial, color = GraspyColor.OnAccent, style = MaterialTheme.typography.titleMedium)
         }
         Column {
-            Text(name, color = Graspy.Text, style = MaterialTheme.typography.titleMedium)
+            Text(name, color = GraspyColor.Ink, style = MaterialTheme.typography.titleMedium)
             Text(
                 language,
-                color = Graspy.TextMuted,
+                color = GraspyColor.Muted,
                 style = MaterialTheme.typography.labelMedium,
             )
         }
@@ -132,7 +116,7 @@ private fun TopicGroup(
     val holdsTonight = group.lessons.any { it.planId == currentPlanId }
     var open by rememberSaveable(group.topic) { mutableStateOf(holdsTonight) }
     val done = group.lessons.count { it.standing != LessonStanding.UNTOUCHED }
-    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(space(2))) {
         TopicRow(
             name = copy.topicName(group.topic),
             done = done,
@@ -163,27 +147,27 @@ private fun TopicRow(name: String, done: Int, total: Int, open: Boolean, onToggl
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(GraspyRadius.Card))
             .clickable(onClick = tapping(onToggle))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = space(4), vertical = space(3.5)),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(space(2.5)),
     ) {
         Text(
             name,
             style = MaterialTheme.typography.titleMedium,
-            color = Graspy.Text,
+            color = GraspyColor.Ink,
             modifier = Modifier.weight(1f),
         )
         Text(
             "$done / $total",
             style = MaterialTheme.typography.labelMedium,
-            color = Graspy.TextMuted,
+            color = GraspyColor.Muted,
         )
         Icon(
             if (open) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
             contentDescription = null,
-            tint = Graspy.Brand,
+            tint = GraspyColor.Accent,
         )
     }
 }
@@ -200,27 +184,27 @@ private fun LessonCard(
     current: Boolean,
     onOpen: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(GraspyRadius.Card)
     Row(
         Modifier
             .fillMaxWidth()
-            .background(if (current) Graspy.AccentSurface else Graspy.Surface, shape)
-            .border(BorderStroke(1.dp, if (current) Graspy.AccentBorder else Graspy.Hairline), shape)
+            .background(if (current) GraspyColor.AccentSoft else GraspyColor.Surface, shape)
+            .border(BorderStroke(1.dp, if (current) GraspyColor.AccentLine else GraspyColor.Line), shape)
             .clickable(onClick = tapping(onOpen))
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(space(4)),
+        horizontalArrangement = Arrangement.spacedBy(space(3)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(
                 title,
-                color = Graspy.Text,
+                color = GraspyColor.Ink,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             if (current) {
-                Text(copy.home.startHere, color = Graspy.Brand, style = MaterialTheme.typography.labelSmall)
+                Text(copy.home.startHere, color = GraspyColor.AccentInk, style = MaterialTheme.typography.labelSmall)
             }
         }
         Text(
@@ -228,8 +212,8 @@ private fun LessonCard(
             color = badge.text,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier
-                .background(badge.pill, RoundedCornerShape(999.dp))
-                .padding(horizontal = 10.dp, vertical = 5.dp),
+                .background(badge.pill, RoundedCornerShape(GraspyRadius.Pill))
+                .padding(horizontal = space(2.5), vertical = space(0.5)),
         )
     }
 }

@@ -1,0 +1,148 @@
+/* The tutor's reply, drawn as the web draws it (apps/web features/learn/components/chat-message.tsx). */
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  src: url(vendor/fonts/inter-latin-400-normal.woff2) format("woff2"), url(vendor/fonts/inter-latin-ext-400-normal.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 600;
+  src: url(vendor/fonts/inter-latin-600-normal.woff2) format("woff2"), url(vendor/fonts/inter-latin-ext-600-normal.woff2) format("woff2");
+}
+
+html,
+body {
+  margin: 0;
+  background: transparent;
+}
+
+#reply {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.75rem;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+#reply > * + * {
+  margin-top: 0.75rem;
+}
+
+#reply p,
+#reply ul,
+#reply ol {
+  margin: 0;
+}
+
+#reply .heading,
+#reply strong {
+  font-weight: 600;
+}
+
+#reply ul {
+  list-style: disc;
+  padding-inline-start: 1.25rem;
+}
+
+#reply ul > li + li {
+  margin-top: 0.25rem;
+}
+
+#reply a {
+  color: var(--color-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+#reply code {
+  border-radius: 0.25rem;
+  background: var(--color-raised);
+  padding: 0.125rem 0.25rem;
+  font-size: 0.875rem;
+}
+
+#reply pre code {
+  display: block;
+  overflow-x: auto;
+  border-radius: var(--radius-control);
+  padding: 0.75rem;
+}
+
+#reply pre {
+  margin: 0;
+}
+
+/* Scrolls in its own box rather than stretching the reply past a phone's screen. */
+#reply .table {
+  overflow-x: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+}
+
+#reply table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+#reply th,
+#reply td {
+  min-width: 8rem;
+  border-bottom: 1px solid var(--color-line);
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+}
+
+#reply th {
+  background: var(--color-raised);
+  font-weight: 600;
+  vertical-align: bottom;
+}
+
+#reply td {
+  vertical-align: top;
+}
+
+/* A long formula scrolls in place rather than widening the page. */
+#reply .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25rem;
+}
+
+/* The tutor's numbered steps, each in a circle like a worked example. */
+.reply-steps {
+  counter-reset: step;
+  padding: 0;
+  list-style: none;
+}
+
+.reply-steps > li {
+  position: relative;
+  counter-increment: step;
+  padding-inline-start: 2.25rem;
+}
+
+.reply-steps > li + li {
+  margin-top: 0.75rem;
+}
+
+.reply-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}

@@ -24,9 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.latentic.graspy.localization.AccountCopy
-import com.latentic.graspy.ui.Graspy
+import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.ProblemNote
 import com.latentic.graspy.ui.SecondaryButton
+import com.latentic.graspy.ui.space
 
 /** Renames and removes the account's learners, and deletes the account. */
 @Composable
@@ -41,7 +43,7 @@ fun LearnersScreen(
     LaunchedEffect(Unit) { viewModel.load() }
     BackHandler(onBack = onBack)
     AccountFrame {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(space(4))) {
             BackLink(copy.back, onBack)
             AccountHeading(copy.manageTitle)
         }
@@ -62,13 +64,13 @@ private fun LearnerList(
     val learners = state.learners
     if (learners == null) {
         if (state.failed) SecondaryButton(copy.tryAgain, onClick = viewModel::load)
-        else CircularProgressIndicator(color = Graspy.Brand, modifier = Modifier.size(28.dp))
+        else CircularProgressIndicator(color = GraspyColor.Accent, modifier = Modifier.size(28.dp))
         return
     }
     Card {
         learners.forEachIndexed { index, learner ->
-            if (index > 0) HorizontalDivider(color = Graspy.Hairline)
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            if (index > 0) HorizontalDivider(color = GraspyColor.Line)
+            Column(Modifier.padding(horizontal = space(4), vertical = space(3.5))) {
                 LearnerRow(
                     copy = copy,
                     learner = learner,
@@ -86,9 +88,9 @@ private fun LearnerList(
 private fun DeleteAccount(copy: AccountCopy, busy: Boolean, onDelete: () -> Unit) {
     var asking by rememberSaveable { mutableStateOf(false) }
     Card {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(copy.deleteAccount, color = Graspy.Text, style = MaterialTheme.typography.titleMedium)
-            Text(copy.deleteBody, color = Graspy.TextMuted, style = MaterialTheme.typography.bodyMedium)
+        Column(Modifier.padding(space(4)), verticalArrangement = Arrangement.spacedBy(space(3))) {
+            Text(copy.deleteAccount, color = GraspyColor.Ink, style = MaterialTheme.typography.titleMedium)
+            Text(copy.deleteBody, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium)
             if (asking) {
                 ConfirmCard(copy.deleteConfirm, copy.deleteYes, copy.cancel, busy, onDelete) { asking = false }
             } else {
@@ -100,12 +102,12 @@ private fun DeleteAccount(copy: AccountCopy, busy: Boolean, onDelete: () -> Unit
 
 @Composable
 private fun Card(content: @Composable () -> Unit) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(GraspyRadius.Card)
     Column(
         Modifier
             .fillMaxWidth()
-            .background(Graspy.Surface, shape)
-            .border(BorderStroke(1.dp, Graspy.Hairline), shape),
+            .background(GraspyColor.Surface, shape)
+            .border(BorderStroke(1.dp, GraspyColor.Line), shape),
     ) {
         content()
     }
