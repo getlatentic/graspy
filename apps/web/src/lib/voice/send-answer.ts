@@ -36,11 +36,12 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const SESSION_STATUSES = new Set([401, 403]);
 
 /** Whether the answer is worth sending again: the voice API gave no answer (status 0, which
- * covers any failure to get a session), was busy or failed on its side, whatever code it
- * named, or refused the session rather than the answer. */
+ * covers any failure to get a session), was busy or failed on its side (any 5xx), whatever
+ * code it named, or refused the session rather than the answer. */
 function transient(error: VoiceError): boolean {
   return (
     isRetryableStatus(error.status) ||
+    error.status >= 500 ||
     SESSION_STATUSES.has(error.status) ||
     error.code === "learner_required"
   );

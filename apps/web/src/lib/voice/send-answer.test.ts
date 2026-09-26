@@ -145,6 +145,8 @@ describe("sendAnswer", () => {
     [429, "rate_limited"],
     [502, "provider_failure"],
     [503, "voice_unavailable"],
+    [520, null],
+    [505, null],
     [401, null],
     [403, null],
     [409, "learner_required"],
