@@ -48,7 +48,10 @@ def test_a_preflight_from_an_allowed_origin_may_send_credentials_and_headers(
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == origin
     assert response.headers["access-control-allow-credentials"] == "true"
-    assert response.headers["access-control-allow-methods"] == "GET, POST, OPTIONS"
+    assert (
+        response.headers["access-control-allow-methods"]
+        == "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    )
     assert (
         response.headers["access-control-allow-headers"]
         == "authorization, content-type, x-a2a-extensions"
@@ -57,7 +60,7 @@ def test_a_preflight_from_an_allowed_origin_may_send_credentials_and_headers(
 
 @pytest.mark.parametrize(
     ("origin", "method", "refused"),
-    [("https://evil.example", "POST", "origin"), (ORIGIN, "DELETE", "method")],
+    [("https://evil.example", "POST", "origin"), (ORIGIN, "TRACE", "method")],
     ids=["other-origin", "other-method"],
 )
 def test_a_preflight_outside_the_policy_is_refused(client, origin, method, refused):
@@ -67,6 +70,31 @@ def test_a_preflight_outside_the_policy_is_refused(client, origin, method, refus
 
     assert response.status_code == 400
     assert response.text == f"Disallowed CORS {refused}"
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("PUT", "/api/learner/curriculum"),
+        ("PATCH", "/api/account/learners/a1b2c3"),
+        ("DELETE", "/api/account/learners/a1b2c3"),
+        ("DELETE", "/api/account"),
+    ],
+)
+def test_every_method_the_app_sends_passes_its_preflight(client, method, path):
+    """The shared plan is sent with PUT, and a
+    learner is renamed with PATCH and removed with DELETE."""
+    response = client.options(
+        path,
+        headers={
+            "Origin": ORIGIN,
+            "Access-Control-Request-Method": method,
+            "Access-Control-Request-Headers": "authorization, content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == ORIGIN
 
 
 def test_a_wildcard_origin_is_refused_at_startup():

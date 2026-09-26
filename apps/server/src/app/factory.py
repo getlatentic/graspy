@@ -183,7 +183,7 @@ def _add_middleware(
         allow_origins=exact_origins,
         allow_origin_regex=origin_regex,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         # Starlette echoes the requested headers rather than "*", which stays
         # valid with credentials; the A2A client's headers vary by version.
         allow_headers=["*"],
