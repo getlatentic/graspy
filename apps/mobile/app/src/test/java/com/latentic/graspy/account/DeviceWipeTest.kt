@@ -289,6 +289,23 @@ class DeviceWipeTest {
     }
 
     @Test
+    fun `a sign-in graspy does not take marks a Google account it could not forget, for the next sign-in`() = runBlocking {
+        forgettingFails = true
+
+        AccountEntry(context, { SignInOutcome.Succeeded(UID) }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+
+        assertEquals(setOf("google_account"), signOutPending.keys)
+    }
+
+    @Test
+    fun `a sign-in that fails after a Google account was chosen forgets it`() = runBlocking {
+        AccountEntry(context, { SignInOutcome.Failed("Firebase refused the credential") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+
+        assertEquals(1, forgotten.size)
+        assertEquals(emptyMap<String, Any?>(), signOutPending)
+    }
+
+    @Test
     fun `leaving for another account marks a Google account it could not forget, for the next sign-in`() = runBlocking {
         forgettingFails = true
 

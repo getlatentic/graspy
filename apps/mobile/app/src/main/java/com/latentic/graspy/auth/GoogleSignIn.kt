@@ -2,6 +2,7 @@ package com.latentic.graspy.auth
 
 import android.content.Context
 import androidx.credentials.CredentialManager
+import androidx.credentials.CredentialOption
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -32,20 +33,7 @@ class GoogleSignIn(
 ) : GoogleAccountSheet {
     override suspend fun signIn(askWhichAccount: Boolean): SignInOutcome {
         if (AuthEmulator.enabled) return emulatorSignIn()
-        val lastAccount = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(true)
-            .setServerClientId(serverClientId)
-            .setAutoSelectEnabled(true)
-            .build()
-        val options = listOfNotNull(
-            lastAccount.takeUnless { askWhichAccount },
-            GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(serverClientId)
-                .build(),
-            GetSignInWithGoogleOption.Builder(serverClientId).build(),
-        )
-        for (option in options) {
+        for (option in signInOptions(serverClientId, askWhichAccount)) {
             when (val outcome = attempt(option)) {
                 SignInOutcome.NoAccountAvailable -> Unit
                 else -> return outcome
@@ -54,7 +42,7 @@ class GoogleSignIn(
         return SignInOutcome.NoAccountAvailable
     }
 
-    private suspend fun attempt(option: androidx.credentials.CredentialOption): SignInOutcome = try {
+    private suspend fun attempt(option: CredentialOption): SignInOutcome = try {
         val response = CredentialManager.create(context).getCredential(
             context,
             GetCredentialRequest.Builder().addCredentialOption(option).build(),
@@ -90,3 +78,18 @@ class GoogleSignIn(
         return SignInOutcome.Succeeded(session.userId.orEmpty())
     }
 }
+
+/** The accounts the sheet offers, in turn: the last one, signed in unasked, only when [askWhichAccount] is false. */
+internal fun signInOptions(serverClientId: String, askWhichAccount: Boolean): List<CredentialOption> = listOfNotNull(
+    GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(true)
+        .setServerClientId(serverClientId)
+        .setAutoSelectEnabled(true)
+        .build()
+        .takeUnless { askWhichAccount },
+    GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(false)
+        .setServerClientId(serverClientId)
+        .build(),
+    GetSignInWithGoogleOption.Builder(serverClientId).build(),
+)
