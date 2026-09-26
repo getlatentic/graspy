@@ -78,6 +78,9 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
         return ViewCard(resourceUri, name, arguments, result)
     }
 
+    /** The views the server's tools are shown in. */
+    suspend fun viewUris(): Set<String> = catalogue().viewOf.values.toSet()
+
     /** Read once per process. */
     suspend fun view(uri: String): UiView = views[uri] ?: readView(uri).also { views[uri] = it }
 

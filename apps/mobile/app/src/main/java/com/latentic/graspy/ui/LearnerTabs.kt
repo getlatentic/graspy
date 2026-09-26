@@ -91,8 +91,7 @@ internal fun LearnerTabs(
     var askOpening by remember { mutableStateOf<AskOpening?>(null) }
     LaunchedEffect(tab) { planViewModel.refresh() }
     val views: LearnerViews = viewModel()
-    val recordRead by planViewModel.recordRead.collectAsStateWithLifecycle()
-    LaunchedEffect(recordRead) { recordRead?.let(views::copyReadyLessons) }
+    LaunchedEffect(planViewModel, views) { planViewModel.recordsRead.collect(views::copyReadyLessons) }
     BackHandler(enabled = place != null || editing || voicePage || tab != LearnTab.HOME) {
         val current = place
         when {

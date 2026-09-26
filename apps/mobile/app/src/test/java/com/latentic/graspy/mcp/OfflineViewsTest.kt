@@ -1,5 +1,6 @@
 package com.latentic.graspy.mcp
 
+import android.database.sqlite.SQLiteFullException
 import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
@@ -9,8 +10,11 @@ import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /** A view read once opens again with no connection, from the document last read. */
+@RunWith(RobolectricTestRunner::class)
 class OfflineViewsTest {
     private val dao = FakeDao()
     private var reachable = true
@@ -47,11 +51,32 @@ class OfflineViewsTest {
         assertEquals(1, dao.writes)
     }
 
+    @Test
+    fun `a copy that cannot be saved never fails the view, and is saved when it can be`() = runBlocking {
+        dao.full = true
+        assertEquals(lesson, views.view(LESSON))
+
+        dao.full = false
+        views.view(LESSON)
+        reachable = false
+        assertEquals(lesson, views.view(LESSON))
+    }
+
+    @Test
+    fun `keeping every view reads and keeps each, one failing stopping none`() = runBlocking {
+        views.keepAll(listOf("ui://graspy/refused", LESSON))
+
+        reachable = false
+        assertEquals(lesson, views.view(LESSON))
+    }
+
     private class FakeDao : KeptViewDao {
         private val rows = mutableMapOf<String, KeptViewEntity>()
         var writes = 0
+        var full = false
 
         override suspend fun keep(view: KeptViewEntity) {
+            if (full) throw SQLiteFullException("database or disk is full")
             rows[view.uri] = view
             writes += 1
         }
