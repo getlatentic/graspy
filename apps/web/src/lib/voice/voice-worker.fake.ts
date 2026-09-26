@@ -148,11 +148,13 @@ async function marking(
   return json(turnOf(sample));
 }
 
-/** Stands in for fetchWithSession. */
+/** Stands in for fetchWithSession, sending nothing once `still` says the session has moved on. */
 export async function respond(
   url: string,
   init?: RequestInit,
+  still?: () => boolean,
 ): Promise<Response> {
+  if (still && !still()) throw new Error("The session moved on");
   if (!server.reachable) throw new TypeError("Failed to fetch");
   const method = init?.method ?? "GET";
   server.asked.push(`${method} ${new URL(url).pathname}`);

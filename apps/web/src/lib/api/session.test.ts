@@ -225,6 +225,33 @@ describe("fetchWithSession", () => {
     );
   });
 
+  it("sends nothing once the session is no longer the one it was made for", async () => {
+    fetchMock.mockResolvedValueOnce(minted("token-1"));
+    const { fetchWithSession } = await loadSession();
+
+    await expect(
+      fetchWithSession("/api/voice/samples", {}, () => false),
+    ).rejects.toThrow("no longer the one");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends no retry once the session has moved on during the first try", async () => {
+    let same = true;
+    fetchMock
+      .mockResolvedValueOnce(minted("stale"))
+      .mockImplementationOnce(async () => {
+        same = false;
+        return { ok: false, status: 401 };
+      })
+      .mockResolvedValueOnce(minted("fresh"));
+    const { fetchWithSession } = await loadSession();
+
+    await expect(
+      fetchWithSession("/api/voice/samples", {}, () => same),
+    ).rejects.toThrow("no longer the one");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
   it("passes other failures straight back", async () => {
     fetchMock
       .mockResolvedValueOnce(minted("token-1"))

@@ -23,6 +23,11 @@ import {
 
 vi.mock("@/lib/api/session", () => ({ fetchWithSession: respond }));
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
+// Whom the device learns as; a test may switch it.
+const device = vi.hoisted(() => ({ learner: "device/abc" }));
+vi.mock("@/lib/voice/voice-learner-key", () => ({
+  voiceLearnerKey: () => device.learner,
+}));
 
 beforeEach(async () => {
   resetServer();

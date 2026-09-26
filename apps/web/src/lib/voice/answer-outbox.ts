@@ -6,10 +6,15 @@ import {
   settledOf,
   type Settled,
 } from "./answer-store";
-import { sendAnswer, type Sent } from "./send-answer";
+import { sendAnswer, type AnswerApi, type Sent } from "./send-answer";
 import { createSample, evaluate, uploadAudio } from "./voice-api";
 
-const api = { createSample, uploadAudio, evaluate };
+// A learner's answer goes under their session only, never under the next learner's.
+const apiFor = (learner: string): AnswerApi => ({
+  createSample: (key, metadata) => createSample(key, metadata, learner),
+  uploadAudio: (path, wav) => uploadAudio(path, wav, learner),
+  evaluate: (sample) => evaluate(sample, learner),
+});
 const keeping = { keep: keepProgress, settle: settleAnswer };
 
 type Listener = (key: string, sent: Settled) => void;
@@ -18,7 +23,7 @@ const listeners = new Set<Listener>();
 async function sendIfWaiting(key: string): Promise<Sent | null> {
   const answer = await keptAnswer(key);
   if (!answer) return null;
-  const sent = await sendAnswer(answer, api, keeping);
+  const sent = await sendAnswer(answer, apiFor(answer.learner), keeping);
   if (sent.kind !== "kept")
     for (const listener of listeners) listener(key, sent);
   return sent;

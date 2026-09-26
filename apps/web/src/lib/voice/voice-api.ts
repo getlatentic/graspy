@@ -1,5 +1,6 @@
 import { audioFormat } from "./audio-format";
 import { fetchWithSession } from "@/lib/api/session";
+import { voiceLearnerKey } from "./voice-learner-key";
 import { API_BASE_URL } from "@/lib/env";
 import type {
   Catalogue,
@@ -78,15 +79,24 @@ const givenUp = (signal: AbortSignal) =>
     else signal.addEventListener("abort", fail, { once: true });
   });
 
+// Made for this learner only: once the device learns as someone else, nothing more is sent.
+const whileLearning = (learner?: string) =>
+  learner === undefined ? undefined : () => voiceLearnerKey() === learner;
+
 async function send<T>(
   url: string,
   read: (response: Response) => Promise<T>,
   init: RequestInit = {},
   ms = REQUEST_MS,
+  learner?: string,
 ): Promise<T> {
   const signal = AbortSignal.timeout(ms);
   const answered = async () => {
-    const response = await fetchWithSession(url, { ...init, signal });
+    const response = await fetchWithSession(
+      url,
+      { ...init, signal },
+      whileLearning(learner),
+    );
     if (!response.ok) throw await refusalOf(response);
     return read(response);
   };
@@ -100,8 +110,13 @@ async function send<T>(
   }
 }
 
-const json = <T>(url: string, init?: RequestInit, ms?: number): Promise<T> =>
-  send(url, (response) => response.json() as Promise<T>, init, ms);
+const json = <T>(
+  url: string,
+  init?: RequestInit,
+  ms?: number,
+  learner?: string,
+): Promise<T> =>
+  send(url, (response) => response.json() as Promise<T>, init, ms, learner);
 
 const blob = (url: string) => send(url, (response) => response.blob());
 
@@ -154,31 +169,45 @@ export function teacherAudio(
   return blob(url);
 }
 
+// `learner`, when given, is whose answer this is: it is sent only while the device learns as them.
+
 export function createSample(
   idempotencyKey: string,
   metadata: SampleMetadata,
+  learner?: string,
 ): Promise<CreatedSample> {
   return json(
     `${VOICE}/samples`,
     post(metadata, { "Idempotency-Key": idempotencyKey }),
+    undefined,
+    learner,
   );
 }
 
 /** `uploadPath` is the path the server named for this sample's audio. */
-export function uploadAudio(uploadPath: string, wav: Blob): Promise<unknown> {
+export function uploadAudio(
+  uploadPath: string,
+  wav: Blob,
+  learner?: string,
+): Promise<unknown> {
   const url = new URL(uploadPath, API_BASE_URL).toString();
   return json(
     url,
     { method: "PUT", headers: { "Content-Type": "audio/wav" }, body: wav },
     uploadMs(wav),
+    learner,
   );
 }
 
-export function evaluate(sampleId: string): Promise<Evaluation> {
+export function evaluate(
+  sampleId: string,
+  learner?: string,
+): Promise<Evaluation> {
   return json(
     `${VOICE}/samples/${sampleId}/evaluation`,
     { method: "POST" },
     MARKING_MS,
+    learner,
   );
 }
 

@@ -294,12 +294,17 @@ export function endAccountSession(): void {
   keep(null);
 }
 
+/** Sent with the session in use. `still`, asked as each try is sent, may stop it: false, and
+ * the session is no longer the one the request was made for, so nothing is sent. */
 export async function fetchWithSession(
   input: string | URL,
   init: RequestInit = {},
+  still?: () => boolean,
 ): Promise<Response> {
   // A Headers instance spreads to nothing.
   const send = (token: string) => {
+    if (still && !still())
+      throw new Error("The session is no longer the one this was made for");
     const headers = new Headers(init.headers);
     headers.set("Authorization", `Bearer ${token}`);
     return fetch(input, { ...init, headers });
