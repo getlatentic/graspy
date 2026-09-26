@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -87,9 +88,11 @@ private class LearnerFactory(
     }
 }
 
-/** What the default factory can make: a view model taking nothing, or only the application. */
-fun madeWithoutALearner(modelClass: Class<*>): Boolean =
-    modelClass.constructors.any { it.parameterTypes.isEmpty() || it.parameterTypes.contentEquals(arrayOf(Application::class.java)) }
+/** What the default factory can make: a view model taking nothing, or an AndroidViewModel taking only the application. */
+fun madeWithoutALearner(modelClass: Class<*>): Boolean = modelClass.constructors.any {
+    it.parameterTypes.isEmpty() ||
+        (AndroidViewModel::class.java.isAssignableFrom(modelClass) && it.parameterTypes.contentEquals(arrayOf(Application::class.java)))
+}
 
 private class LearnerOwner(
     override val viewModelStore: ViewModelStore,

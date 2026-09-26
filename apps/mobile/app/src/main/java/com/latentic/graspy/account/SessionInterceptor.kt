@@ -24,8 +24,10 @@ class SessionInterceptor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        // Before the token, so none is fetched for a learner already gone; after it, so the token is theirs.
         requireLearner(request)
         val token = session { token() }
+        requireLearner(request)
         val response = chain.proceed(request.bearing(token))
         if (!needsNewSession(response)) return response
         response.close()

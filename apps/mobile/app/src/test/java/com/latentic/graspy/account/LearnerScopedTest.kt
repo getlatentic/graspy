@@ -116,12 +116,15 @@ class LearnerScopedTest {
         val plan = PlanViewModel(application, "u/ada")
         kept.edit(commit = true) { clear() }
 
-        // The read is refused on OkHttp's thread and settles on the main thread; nothing else signals it.
-        repeat(40) {
+        // Refused on OkHttp's thread, the read settles on the main thread.
+        val read = plan.refresh()
+        val deadline = System.currentTimeMillis() + 5_000
+        while (!read.isCompleted && System.currentTimeMillis() < deadline) {
             shadowOf(Looper.getMainLooper()).idle()
-            Thread.sleep(25)
+            Thread.sleep(10)
         }
 
+        assertTrue("the read never settled", read.isCompleted)
         assertTrue(plan.state.value is PlanState.Ready)
         assertEquals(emptyMap<String, Any?>(), kept.all)
     }

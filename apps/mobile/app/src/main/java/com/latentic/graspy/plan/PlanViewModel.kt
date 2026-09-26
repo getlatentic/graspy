@@ -63,17 +63,15 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
     }
 
     /** What is shown stays while the newer copy is read. */
-    fun refresh() {
-        viewModelScope.launch {
-            val read = runCatchingPlan { api.plan().plan?.let(LearnerPlan::of) }
-            shown.value = if (read.isFailure) {
-                shown.value.takeIf { it is PlanState.Ready } ?: PlanState.Failed
-            } else {
-                read.getOrNull()?.let { ready(it) } ?: PlanState.None
-            }
-            // A failed read keeps nothing: it may be the one that found the learner gone and wiped the phone.
-            if (read.isSuccess) keep(shown.value)
+    fun refresh(): Job = viewModelScope.launch {
+        val read = runCatchingPlan { api.plan().plan?.let(LearnerPlan::of) }
+        shown.value = if (read.isFailure) {
+            shown.value.takeIf { it is PlanState.Ready } ?: PlanState.Failed
+        } else {
+            read.getOrNull()?.let { ready(it) } ?: PlanState.None
         }
+        // A failed read keeps nothing: it may be the one that found the learner gone and wiped the phone.
+        if (read.isSuccess) keep(shown.value)
     }
 
     override val plan: LearnerPlan? get() = (shown.value as? PlanState.Ready)?.plan

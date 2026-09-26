@@ -20,6 +20,7 @@ class SessionInterceptorTest {
     private var exchanges = 0
     private var refuseExchange = false
     private var learnerHeld = true
+    private var switchDuringExchange: LearnerDto? = null
 
     private val sessions = SessionTokens(
         accounts = accounts,
@@ -28,6 +29,7 @@ class SessionInterceptorTest {
         exchange = {
             if (refuseExchange) throw httpError(503, """{"detail":{"code":"sign_in_off"}}""")
             exchanges += 1
+            switchDuringExchange?.let { accounts.setLearner(ChosenLearner(it.id, it.name)) }
             issued("session-$exchanges", ADA.takeIf { learnerHeld })
         },
         learnerGone = { accounts.setLearner(null) },
@@ -117,6 +119,14 @@ class SessionInterceptorTest {
     @Test
     fun `a request for a learner no longer in use is refused before it is sent`() {
         assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, BAYO.id))) }
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun `a request whose learner is switched while its session is fetched is refused, never sent as the next learner`() {
+        switchDuringExchange = BAYO
+
+        assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
         assertEquals(0, server.requestCount)
     }
 
