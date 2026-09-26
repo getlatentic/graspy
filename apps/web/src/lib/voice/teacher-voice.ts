@@ -17,9 +17,9 @@ function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
 }
 
 /**
- * The teacher's voice. Ogg Opus plays in an audio element where the browser can; where it
- * cannot (older Safari), Web Audio decodes it; where neither can, the line is reported failed
- * and the lesson goes on with her words on screen.
+ * The teacher's voice, in the format the browser plays (audio-format.ts). An audio element
+ * plays it; where that fails, Web Audio decodes it; where neither can, the line is reported
+ * failed and the lesson goes on with her words on screen.
  */
 export class TeacherVoice {
   private readonly element = new Audio();

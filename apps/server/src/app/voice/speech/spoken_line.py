@@ -12,7 +12,7 @@ for good, and a caller that cannot wait is expected to fall back to a catalogue 
 import hashlib
 import json
 
-from .teacher_audio_contract import TeacherUtterance, teacher_audio_route
+from .teacher_audio_contract import AudioFormat, TeacherUtterance, teacher_audio_route
 
 SAID_PREFIX = "teacher-audio/said/v1"
 SPEECH_TIMEOUT_MS = 8_000
@@ -35,10 +35,10 @@ def said_key(text: str, language: str, voice: str, extension: str) -> str:
     return f"{SAID_PREFIX}/{language}/{voice}/{hashlib.sha256(seed).hexdigest()[:32]}.{extension}"
 
 
-def speech_route(text: str, language: str):
+def speech_route(text: str, language: str, audio_format: AudioFormat = "ogg"):
     """The provider call for arbitrary words, in the same shape the catalogue is published with."""
     return teacher_audio_route(
-        TeacherUtterance(text=speakable(text), language=language)
+        TeacherUtterance(text=speakable(text), language=language), audio_format
     )
 
 
@@ -63,9 +63,11 @@ async def synthesise(route, api_key: str) -> bytes:
     return bytes(await response.bytes())
 
 
-async def speak(env, text: str, language: str, api_key: str) -> tuple[bytes, str, str]:
+async def speak(
+    env, text: str, language: str, api_key: str, audio_format: AudioFormat = "ogg"
+) -> tuple[bytes, str, str]:
     """The audio for these words, and whether it was already kept or had to be made."""
-    route = speech_route(text, language)
+    route = speech_route(text, language, audio_format)
     key = said_key(text, language, route.request["voice"], route.extension)
     stored = await env.AUDIO.get(key)
     if stored is not None:

@@ -134,7 +134,9 @@ export function voiceServer(
     headers: { "content-type": "audio/ogg" },
   };
   cy.intercept("GET", `${VOICE}/teacher-audio/*`, speak).as("teacherAudio");
-  cy.intercept("GET", `${VOICE}/samples/*/reply-audio`, speak).as("replyAudio");
+  cy.intercept("GET", `${VOICE}/samples/*/reply-audio*`, speak).as(
+    "replyAudio",
+  );
   cy.intercept("POST", `${VOICE}/samples`, (request) => {
     request.reply(201, {
       sample_id: MARKED.sample_id,

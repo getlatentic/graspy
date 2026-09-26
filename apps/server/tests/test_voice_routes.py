@@ -6,6 +6,7 @@ from signed_in import client, signed_in, use
 from voice_worker import voice_app, worker_env
 
 from app.voice.speech.teacher_audio_contract import (
+    audio_cache_key,
     audio_etag,
     audio_version,
     teacher_audio_route,
@@ -328,8 +329,9 @@ async def test_an_offered_step_is_marked_remembered_and_answered_aloud(
         assert (audio, language, api_key) == (WAV, "en", "intron-test")
         return "fourteen", 40
 
-    async def speak(_env, text, language, api_key):
+    async def speak(_env, text, language, api_key, audio_format):
         assert (text, language, api_key) == ("Well done.", "en", "spitch-test")
+        assert audio_format == "ogg"
         return b"OggS-reply", "audio/ogg", "made"
 
     monkeypatch.setattr(
@@ -384,6 +386,25 @@ async def test_a_phone_holding_the_current_line_hears_304(app, env):
     assert fresh.headers["etag"] == etag
     assert fresh.headers["cache-control"] == "private, no-cache"
     assert unknown.status_code == 404
+
+
+async def test_a_browser_that_cannot_play_opus_hears_the_line_as_mp3(app, env):
+    route = teacher_audio_route(teacher_utterance("prompt", "en"), "mp3")
+    await env.AUDIO.put(audio_cache_key("prompt", "en", route), b"ID3-line")
+    async with client(app) as http:
+        await as_device(http, ADA)
+        line = await http.get(
+            "/api/voice/teacher-audio/prompt",
+            params={"language": "en", "format": "mp3"},
+        )
+        refused = await http.get(
+            "/api/voice/teacher-audio/prompt",
+            params={"language": "en", "format": "wav"},
+        )
+
+    assert line.status_code == 200 and line.content == b"ID3-line"
+    assert line.headers["content-type"] == "audio/mpeg"
+    assert refused.status_code == 422
 
 
 async def test_a_malformed_sample_id_never_reaches_the_database(app):

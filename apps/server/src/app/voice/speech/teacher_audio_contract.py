@@ -1,6 +1,7 @@
 import hashlib
 import json
 from dataclasses import dataclass
+from typing import Literal
 
 from ..curriculum import load_plans, plan_event_for_utterance
 from ..spoken_numbers import number_words
@@ -259,13 +260,24 @@ def published_utterance_ids() -> list[str]:
     return ids
 
 
-def teacher_audio_route(utterance: TeacherUtterance) -> TeacherAudioRoute:
+# Ogg Opus by default; MP3 for a browser that cannot play Opus, such as an older Safari.
+AudioFormat = Literal["ogg", "mp3"]
+_FORMATS = {
+    "ogg": ("ogg_opus", "ogg", "audio/ogg"),
+    "mp3": ("mp3", "mp3", "audio/mpeg"),
+}
+
+
+def teacher_audio_route(
+    utterance: TeacherUtterance, audio_format: AudioFormat = "ogg"
+) -> TeacherAudioRoute:
     """Spitch, with one voice per language across the catalogue."""
     spitch_voice = {"en": "lucy", "yo": "sade", "pcm": "boma"}[utterance.language]
+    spitch_format, extension, content_type = _FORMATS[audio_format]
     spitch_request = {
         "text": utterance.text,
         "voice": spitch_voice,
-        "format": "ogg_opus",
+        "format": spitch_format,
     }
     if utterance.language != "pcm":
         spitch_request["language"] = utterance.language
@@ -273,8 +285,8 @@ def teacher_audio_route(utterance: TeacherUtterance) -> TeacherAudioRoute:
         provider="spitch",
         endpoint="https://api.spitch.app/v1/speech",
         request=spitch_request,
-        extension="ogg",
-        content_type="audio/ogg",
+        extension=extension,
+        content_type=content_type,
     )
 
 

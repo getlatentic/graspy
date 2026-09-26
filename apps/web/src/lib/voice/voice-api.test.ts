@@ -10,6 +10,7 @@ const wire = vi.hoisted(() => ({
     init?: RequestInit,
   ) => Promise<Response>,
 }));
+vi.mock("./audio-format", () => ({ audioFormat: () => "mp3" }));
 vi.mock("@/lib/api/session", () => ({
   fetchWithSession: (url: string, init?: RequestInit) => {
     wire.calls.push([url, init]);
@@ -109,11 +110,11 @@ describe("the voice API client", () => {
     );
     await api.replyAudio("gvm_1");
     expect(called()[0]).toBe(
-      "https://api.test/api/voice/samples/gvm_1/reply-audio",
+      "https://api.test/api/voice/samples/gvm_1/reply-audio?format=mp3",
     );
     await api.teacherAudio("no-speech", "pcm");
     expect(called()[0]).toBe(
-      "https://api.test/api/voice/teacher-audio/no-speech?language=pcm",
+      "https://api.test/api/voice/teacher-audio/no-speech?language=pcm&format=mp3",
     );
   });
 

@@ -13,18 +13,15 @@ const CLASSES_WITH_LESSONS = new Set([
   "primary_6",
 ]);
 
-// The catalogue's Nigerian levels are "primary-4", "jss-1"; the server's classes "primary_4".
-const NIGERIAN_LEVEL = /^(primary|jss)-([1-6])$/;
-
-/** The voice class of a learner in Nigeria's catalogue system; null when there are no voice lessons. */
+/** The voice class of a learner in Nigeria's catalogue system; null when there are no voice lessons.
+ * The catalogue names a class "nursery-1" or "primary-4", the server "nursery_1" or "primary_4". */
 export function voiceClassOf(details: {
   system?: string;
   level?: string;
 }): string | null {
   if (details.system !== "NG") return null;
-  const match = NIGERIAN_LEVEL.exec(details.level ?? "");
-  const found = match && `${match[1]}_${match[2]}`;
-  return found && CLASSES_WITH_LESSONS.has(found) ? found : null;
+  const found = (details.level ?? "").replaceAll("-", "_");
+  return CLASSES_WITH_LESSONS.has(found) ? found : null;
 }
 
 const SPOKEN = new Set<string>(["en", "yo", "pcm"]);

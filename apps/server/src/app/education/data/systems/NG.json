@@ -8,6 +8,12 @@
   },
   "stages": [
     {
+      "id": "early-childhood",
+      "name": {
+        "en": "Early childhood"
+      }
+    },
+    {
       "id": "primary",
       "name": {
         "en": "Primary"
@@ -27,6 +33,46 @@
     }
   ],
   "levels": [
+    {
+      "id": "nursery-1",
+      "stage": "early-childhood",
+      "year": -2,
+      "age": 3,
+      "name": {
+        "en": "Nursery 1"
+      },
+      "aliases": [
+        "Nursery One",
+        "N1"
+      ]
+    },
+    {
+      "id": "nursery-2",
+      "stage": "early-childhood",
+      "year": -1,
+      "age": 4,
+      "name": {
+        "en": "Nursery 2"
+      },
+      "aliases": [
+        "Nursery Two",
+        "N2"
+      ]
+    },
+    {
+      "id": "kindergarten",
+      "stage": "early-childhood",
+      "year": 0,
+      "age": 5,
+      "name": {
+        "en": "Kindergarten"
+      },
+      "aliases": [
+        "KG",
+        "Nursery 3",
+        "Pre-primary"
+      ]
+    },
     {
       "id": "primary-1",
       "stage": "primary",
@@ -208,7 +254,11 @@
     {
       "title": "NERDC Basic and Senior Secondary Education Curriculum Offerings",
       "url": "https://nerdc.gov.ng/content_manager/Basic%20and%20Senior%20Secondary%20Education%20Curriculum%20Offerings.pdf"
+    },
+    {
+      "title": "Nigeria Digest of Education Statistics",
+      "url": "https://education.gov.ng/wp-content/uploads/2019/03/Nigeria-DIGEST-.pdf"
     }
   ],
-  "notes": "Primary and JSS make up the nine years of Universal Basic Education. A 2025 proposal for twelve uninterrupted years of basic education, without the JSS/SSS split, had not been put in place: the curricula NERDC released in September 2025 still start at Primary 1, Primary 4, JSS 1 and SS 1. The Basic 7–9 names for JSS are common but not in the cited pages."
+  "notes": "Primary and JSS make up the nine years of Universal Basic Education. A 2025 proposal for twelve uninterrupted years of basic education, without the JSS/SSS split, had not been put in place: the curricula NERDC released in September 2025 still start at Primary 1, Primary 4, JSS 1 and SS 1. The Basic 7–9 names for JSS are common but not in the cited pages. Early childhood care and development education (ECCDE) is for children of 3 to 5 and is not compulsory; schools name its years Nursery 1, Nursery 2 and Kindergarten (also Nursery 3 or KG), the last being the one pre-primary year."
 }

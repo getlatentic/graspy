@@ -10,9 +10,10 @@ def _order_problems(system: System) -> list[str]:
     years = [level.year for level in system.levels]
     ages = [level.age for level in system.levels]
     found = []
-    if years != list(range(1, len(years) + 1)):
+    if years != list(range(years[0], years[0] + len(years))) or 1 not in years:
         found.append(
-            f"Levels must be school years 1, 2, 3 and on, in order; they are {years}."
+            "Levels must be school years in order, the first year of primary "
+            f"being 1; they are {years}."
         )
     if not 3 <= ages[0] <= 9:
         found.append(f"School starts at age {ages[0]}, outside 3 to 9.")

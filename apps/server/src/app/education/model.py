@@ -59,8 +59,8 @@ class Stage(Wire):
 class Level(Wire):
     id: Slug
     stage: Slug
-    # Counted from the first year of primary.
-    year: int = Field(ge=1, le=15)
+    # Counted from the first year of primary, so years before it are 0, -1 and on.
+    year: int = Field(ge=-4, le=15)
     age: int = Field(ge=3, le=21)
     name: Names
     aliases: list[Text] = Field(default_factory=list, max_length=8)

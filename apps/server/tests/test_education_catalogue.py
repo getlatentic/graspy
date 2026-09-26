@@ -117,7 +117,44 @@ def test_a_missing_year_is_refused():
     whole = system()
     gap = whole.model_copy(update={"levels": whole.levels[:3] + whole.levels[4:]})
 
-    assert "school years 1, 2, 3 and on" in problems(gap)[0]
+    assert "school years in order" in problems(gap)[0]
+
+
+def _years_before_primary(whole, count: int, first_age: int):
+    early = [
+        whole.levels[0].model_copy(
+            update={
+                "id": f"early-{n}",
+                "stage": "early",
+                "year": n - count + 1,
+                "age": first_age + n,
+                "name": whole.levels[0].name.model_copy(update={"en": f"Early {n}"}),
+            }
+        )
+        for n in range(count)
+    ]
+    stages = [whole.stages[0].model_copy(update={"id": "early"}), *whole.stages]
+    return whole.model_copy(update={"stages": stages, "levels": early + whole.levels})
+
+
+def test_years_before_primary_count_down_from_it():
+    whole = system()
+
+    assert problems(_years_before_primary(whole, 3, whole.levels[0].age - 3)) == []
+
+
+def test_a_system_must_reach_the_first_year_of_primary():
+    whole = system()
+    early_only = whole.model_copy(
+        update={
+            "levels": [
+                level.model_copy(update={"year": level.year - len(whole.levels)})
+                for level in whole.levels
+            ]
+        }
+    )
+
+    assert "the first year of primary being 1" in problems(early_only)[0]
 
 
 def test_a_stage_split_in_two_is_refused():

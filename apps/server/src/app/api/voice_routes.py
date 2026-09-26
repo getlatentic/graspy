@@ -24,7 +24,7 @@ from ..caller import Caller
 from ..voice.samples import SAMPLE_ID, create_sample, media_type, upload_audio
 from ..voice.speech.reply_audio import stream_reply_audio
 from ..voice.speech.teacher_audio import stream_teacher_audio
-from ..voice.speech.teacher_audio_contract import UTTERANCE_ID
+from ..voice.speech.teacher_audio_contract import UTTERANCE_ID, AudioFormat
 from ..voice.worker_evaluation import (
     evaluate_sample,
     lesson_catalogue,
@@ -53,6 +53,7 @@ CallerDep = Annotated[Caller, Depends(learner_caller)]
 EnvDep = Annotated[Any, Depends(voice_env)]
 SampleId = Annotated[str, Path(pattern=f"^{SAMPLE_ID}$", max_length=80)]
 LearnerClass = Annotated[str | None, Query(max_length=40)]
+Format = Annotated[AudioFormat, Query(alias="format")]
 Language = Annotated[str, Query(max_length=8)]
 
 
@@ -90,9 +91,12 @@ async def teacher_audio(
     env: EnvDep,
     utterance_id: Annotated[str, Path(pattern=f"^{UTTERANCE_ID}$", max_length=120)],
     language: Language = "",
+    audio_format: Format = "ogg",
     if_none_match: Annotated[str | None, Header()] = None,
 ) -> Response:
-    return await stream_teacher_audio(env, utterance_id, language, if_none_match)
+    return await stream_teacher_audio(
+        env, utterance_id, language, if_none_match, audio_format
+    )
 
 
 @voice_router.post("/samples", response_model=None)
@@ -127,5 +131,7 @@ async def evaluation(caller: CallerDep, env: EnvDep, sample_id: SampleId) -> Res
 
 
 @voice_router.get("/samples/{sample_id}/reply-audio", response_model=None)
-async def reply_audio(caller: CallerDep, env: EnvDep, sample_id: SampleId) -> Response:
-    return await stream_reply_audio(env, caller.learner, sample_id)
+async def reply_audio(
+    caller: CallerDep, env: EnvDep, sample_id: SampleId, audio_format: Format = "ogg"
+) -> Response:
+    return await stream_reply_audio(env, caller.learner, sample_id, audio_format)

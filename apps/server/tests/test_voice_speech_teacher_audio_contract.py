@@ -70,6 +70,17 @@ def test_cache_key_names_language_utterance_words_provider_and_container():
     )
 
 
+def test_an_mp3_recording_is_its_own_file_beside_the_ogg_one():
+    """For a browser that cannot play Opus; the Ogg recording keeps its key."""
+    utterance = teacher_utterance("feedback-correct", "pcm")
+    ogg, mp3 = teacher_audio_route(utterance), teacher_audio_route(utterance, "mp3")
+
+    assert (mp3.request["format"], mp3.content_type) == ("mp3", "audio/mpeg")
+    assert (ogg.request["format"], ogg.content_type) == ("ogg_opus", "audio/ogg")
+    assert audio_cache_key("feedback-correct", "pcm", mp3).endswith("/spitch.mp3")
+    assert audio_version(ogg) != audio_version(mp3)
+
+
 def test_new_words_for_a_line_are_a_new_recording():
     """A rewritten line must never be spoken with the recording of its old words."""
     old, new = (

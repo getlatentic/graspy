@@ -12,6 +12,18 @@ describe("voiceClassOf", () => {
     );
   });
 
+  it("names Nigeria's nursery and kindergarten classes as the voice curriculum keys them", () => {
+    expect(voiceClassOf({ system: "NG", level: "nursery-1" })).toBe(
+      "nursery_1",
+    );
+    expect(voiceClassOf({ system: "NG", level: "nursery-2" })).toBe(
+      "nursery_2",
+    );
+    expect(voiceClassOf({ system: "NG", level: "kindergarten" })).toBe(
+      "kindergarten",
+    );
+  });
+
   it("has no voice lessons past primary school", () => {
     expect(voiceClassOf({ system: "NG", level: "jss-1" })).toBeNull();
     expect(voiceClassOf({ system: "NG", level: "sss-2" })).toBeNull();

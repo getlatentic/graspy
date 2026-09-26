@@ -1,3 +1,4 @@
+import { audioFormat } from "./audio-format";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
 import type {
@@ -113,7 +114,7 @@ export async function teacherAudio(
   utterance: string,
   language: LessonLanguage,
 ): Promise<Blob> {
-  const url = `${VOICE}/teacher-audio/${encodeURIComponent(utterance)}?${query({ language })}`;
+  const url = `${VOICE}/teacher-audio/${encodeURIComponent(utterance)}?${query({ language, format: audioFormat() })}`;
   return (await send(url)).blob();
 }
 
@@ -142,5 +143,6 @@ export function evaluate(sampleId: string): Promise<Evaluation> {
 }
 
 export async function replyAudio(sampleId: string): Promise<Blob> {
-  return (await send(`${VOICE}/samples/${sampleId}/reply-audio`)).blob();
+  const url = `${VOICE}/samples/${sampleId}/reply-audio?${query({ format: audioFormat() })}`;
+  return (await send(url)).blob();
 }

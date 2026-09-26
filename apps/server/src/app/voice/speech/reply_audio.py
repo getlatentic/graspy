@@ -13,6 +13,7 @@ import json
 from starlette.responses import JSONResponse, Response
 
 from .spoken_line import speak
+from .teacher_audio_contract import AudioFormat
 
 # The words of a marked turn never change, so a phone that holds the clip need never ask again.
 _KEEP = "private, max-age=31536000, immutable"
@@ -30,7 +31,9 @@ async def _marked_turn(env, learner_key: str, sample_id: str):
     )
 
 
-async def stream_reply_audio(env, learner_key: str, sample_id: str):
+async def stream_reply_audio(
+    env, learner_key: str, sample_id: str, audio_format: AudioFormat = "ogg"
+):
     turn = await _marked_turn(env, learner_key, sample_id)
     if turn is None or not turn["feedback"]:
         return JSONResponse(
@@ -39,7 +42,11 @@ async def stream_reply_audio(env, learner_key: str, sample_id: str):
     language = json.loads(turn["metadata_json"]).get("lesson_language", "en")
     try:
         audio, content_type, source = await speak(
-            env, turn["feedback"], language, str(getattr(env, "SPITCH_API_KEY", ""))
+            env,
+            turn["feedback"],
+            language,
+            str(getattr(env, "SPITCH_API_KEY", "")),
+            audio_format,
         )
     except (ValueError, RuntimeError) as error:
         return JSONResponse(

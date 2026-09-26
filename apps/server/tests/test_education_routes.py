@@ -57,8 +57,10 @@ def test_a_country_not_covered_gets_numbered_grades(client):
 def test_a_system_is_served_whole(client):
     nigeria = client.get("/api/education/systems/NG").json()
 
-    assert nigeria["levels"][6]["name"]["en"] == "JSS 1"
-    assert nigeria["levels"][6]["age"] == 12
+    names = [level["name"]["en"] for level in nigeria["levels"]]
+    assert names[:4] == ["Nursery 1", "Nursery 2", "Kindergarten", "Primary 1"]
+    assert nigeria["levels"][9]["name"]["en"] == "JSS 1"
+    assert nigeria["levels"][9]["age"] == 12
 
 
 @pytest.mark.parametrize(

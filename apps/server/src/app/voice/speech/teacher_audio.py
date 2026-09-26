@@ -10,6 +10,7 @@ from starlette.responses import JSONResponse, Response
 
 from .spoken_line import synthesise
 from .teacher_audio_contract import (
+    AudioFormat,
     audio_cache_key,
     audio_etag,
     audio_version,
@@ -41,10 +42,16 @@ def _audio_response(body: bytes, provider: str, content_type: str, version: str)
 
 
 async def stream_teacher_audio(
-    env, utterance_id: str, language: str, if_none_match: str | None
+    env,
+    utterance_id: str,
+    language: str,
+    if_none_match: str | None,
+    audio_format: AudioFormat = "ogg",
 ):
     try:
-        route = teacher_audio_route(teacher_utterance(utterance_id, language))
+        route = teacher_audio_route(
+            teacher_utterance(utterance_id, language), audio_format
+        )
     except ValueError as error:
         return _problem(404, str(error))
 
@@ -55,7 +62,7 @@ async def stream_teacher_audio(
     key = audio_cache_key(utterance_id, language, route)
     stored = await env.AUDIO.get(key)
     if stored is not None:
-        # A line is a few seconds of Opus, so it is read whole rather than streamed.
+        # A line is a few seconds of audio, so it is read whole rather than streamed.
         audio = bytes(await stored.bytes())
         return _audio_response(audio, route.provider, route.content_type, version)
     try:

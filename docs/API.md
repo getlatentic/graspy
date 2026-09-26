@@ -81,11 +81,11 @@ Voice lessons for the learner the session names: an account's learner or a signe
 | `/api/voice/lesson` | GET | The teacher's next step (`move`), for `learner_class`, `language` (`en`, `yo`, `pcm`) and optionally `plan`, the lesson the learner opened. The step is recorded as offered |
 | `/api/voice/catalogue` | GET | Every lesson of `learner_class`, with where the learner stands on it |
 | `/api/voice/lesson/events` | POST | Records that the learner heard `plan_id` and `event_id`. `409` for a step never offered |
-| `/api/voice/teacher-audio/{utterance}` | GET | The teacher's voice for a lesson line, in `language`, with an `ETag`. `If-None-Match` with it answers `304` |
+| `/api/voice/teacher-audio/{utterance}` | GET | The teacher's voice for a lesson line, in `language`, with an `ETag`. `If-None-Match` with it answers `304`. Ogg Opus, or MP3 with `format=mp3` for a browser that cannot play Opus |
 | `/api/voice/samples` | POST | A new recording's metadata, with an `Idempotency-Key` header. `201` with `sample_id` and `upload_path`; the same key and metadata again answer `200` with the same sample, other metadata `409`. `lesson_language` (`en`, `yo` or `pcm`) is the language the teacher marks and replies in; English when it is missing |
 | `/api/voice/samples/{id}/audio` | PUT | The recording: WAV or Ogg (`415` otherwise), a positive `Content-Length` (`411`), at most 10 MiB (`413`) |
 | `/api/voice/samples/{id}/evaluation` | POST | Marks the recording and returns the turn: `decision` (`correct`, `try_again`, `not_understood`), `feedback`, `transcript`. `409` when it answers a step the learner was never offered; `502` when recognition failed, `422` when the audio held no speech |
-| `/api/voice/samples/{id}/reply-audio` | GET | The teacher's voice for the turn's `feedback` |
+| `/api/voice/samples/{id}/reply-audio` | GET | The teacher's voice for the turn's `feedback`, as Ogg Opus or with `format=mp3` |
 
 A recording's metadata needs `speaker_id`, `language_pair` (`yo-en` or `pcm-en`), `task`, `topic` and `consent: {"granted": true}`. With `plan_id` and `event_id` it answers that lesson step, and its `prompt_id` must be one that step asks; `400` otherwise. Another learner's sample is `404`. Marking a recording spends the generation budget; the rest spend the API's.
 
@@ -96,9 +96,9 @@ A recording's metadata needs `speaker_id`, `language_pair` (`yo-en` or `pcm-en`)
 | 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A refused sign-in is `sign_in_invalid` |
 | 403 | A device's session asked for the account's learners (`account_required`) |
 | 409 | An account session asked for a learner's record (`learner_required`), or the account holds 8 learners (`too_many_learners`) |
-
-Voice errors keep the shape the Android app was built against: `{"detail": text, "code": …}`, with the code on every `409` (`step_not_offered`, `audio_not_ready`, `unsupported_prompt`, `idempotency_conflict`) and on `no_speech` and `provider_failure`.
 | 422 | Invalid request. `detail` names the field, never the value |
 | 503 | Voice lessons outside the Worker (`voice_unavailable`) |
 | 429 | Rate limited. Wait `Retry-After` seconds |
 | 5xx | Server failure. The details are logged, not returned |
+
+Voice errors keep the shape the Android app was built against: `{"detail": text, "code": …}`, with the code on every `409` (`step_not_offered`, `audio_not_ready`, `unsupported_prompt`, `idempotency_conflict`) and on `no_speech` and `provider_failure`.
