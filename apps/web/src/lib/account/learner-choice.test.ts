@@ -205,6 +205,16 @@ describe("flushUnsent", () => {
     expect(sentEveryAnswer).toHaveBeenCalledWith(`uid-1/${ADA.id}`);
   });
 
+  it("is false, so the learner is asked, once sending has taken too long", async () => {
+    signedIn = { uid: "uid-1", learner: ADA, deviceJoins: false };
+    sentEveryAnswer.mockReturnValue(new Promise(() => {}));
+    let due = () => {};
+    const flushing = flushUnsent(() => new Promise<void>((r) => (due = r)));
+
+    due();
+    await expect(flushing).resolves.toBe(false);
+  });
+
   it("is false, so signing out asks first, while a spoken answer is still kept", async () => {
     signedIn = { uid: "uid-1", learner: ADA, deviceJoins: false };
     sentEveryAnswer.mockResolvedValue(false);

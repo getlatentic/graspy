@@ -43,10 +43,11 @@ export interface ChoiceOptions {
   loseUnsent?: boolean;
 }
 
-/** Whether everything the device holds for its learner has reached the server: the plan,
- * the views' calls and the spoken answers. */
-export async function flushUnsent(): Promise<boolean> {
-  if (!navigator.onLine) return false;
+// A spoken answer may take minutes to mark; past this the learner is asked instead of kept waiting.
+const FLUSH_MS = 20_000;
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function sentAll(): Promise<boolean> {
   try {
     await syncPlan();
     const learner = voiceLearnerKey();
@@ -58,6 +59,15 @@ export async function flushUnsent(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/** Whether everything the device holds for its learner has reached the server: the plan,
+ * the views' calls and the spoken answers. False once it has taken too long. */
+export async function flushUnsent(
+  pause: (ms: number) => Promise<unknown> = wait,
+): Promise<boolean> {
+  if (!navigator.onLine) return false;
+  return Promise.race([sentAll(), pause(FLUSH_MS).then(() => false)]);
 }
 
 /** The device keeps nothing of the learner in use, and has none chosen. */
