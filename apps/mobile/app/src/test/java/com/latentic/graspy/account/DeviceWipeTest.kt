@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -48,9 +49,11 @@ class DeviceWipeTest {
         signedOutElsewhere = {},
     )
     private var workCancelled = false
+    private var wipes = 0
     private var accountWhenWiped: Account? = null
     private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) {
         workCancelled = true
+        wipes += 1
         accountWhenWiped = accounts.account.value
     }
     private val firebase = FirebaseSession(FirebaseAuth.getInstance(demoFirebase()))
@@ -107,12 +110,43 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `signing out lets the account go last, once all of it is wiped`() = runBlocking {
+    fun `signing out lets the learner go first and the account last`() = runBlocking {
         wipe.wipeDevice()
 
         assertTrue(workCancelled)
-        assertEquals(signedIn(ADA, deviceJoins = false), accountWhenWiped)
+        assertEquals(signedIn(learner = null, deviceJoins = false), accountWhenWiped)
         assertNull(accounts.account.value)
+    }
+
+    @Test
+    fun `a sign-out cut short mid-wipe leaves the account, with no learner, for the next start`() = runBlocking {
+        val killed = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) { error("The app was killed") }
+
+        runCatching { killed.wipeDevice() }
+
+        assertEquals(signedIn(learner = null, deviceJoins = false), accounts.account.value)
+    }
+
+    @Test
+    fun `a sign-out asked for while one runs waits for it and wipes nothing more`() = runBlocking {
+        val entry = AccountEntry(context, GoogleSignIn(context, firebase, "demo-client"), firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+        val start = CoroutineScope(Dispatchers.IO + Job())
+
+        repeat(2) { start.launch { entry.signOut() } }
+        val deadline = System.currentTimeMillis() + 10_000
+        while ((accounts.account.value != null || wipes == 0) && System.currentTimeMillis() < deadline) {
+            shadowOf(Looper.getMainLooper()).idle()
+            Thread.sleep(10)
+        }
+        // Long enough for a second wipe to have begun, had the second sign-out not found nothing left to do.
+        repeat(20) {
+            shadowOf(Looper.getMainLooper()).idle()
+            Thread.sleep(10)
+        }
+        start.cancel()
+
+        assertNull(accounts.account.value)
+        assertEquals(1, wipes)
     }
 
     @Test
