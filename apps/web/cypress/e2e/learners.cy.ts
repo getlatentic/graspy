@@ -144,10 +144,8 @@ it("sends the laptop to the picker, wiped, once its learner is removed on the ph
     cy.contains("a", "Learners").click();
     cy.location("pathname").should("eq", "/app/learn/you/learners");
     cy.contains("li", "Grace").contains("button", "Remove").click();
-    cy.contains(
-      "Remove Grace? Their plan, progress, lessons and conversations are deleted from graspy. This can't be undone.",
-    );
-    cy.contains("button", "Remove Grace").click();
+    cy.contains("Remove Grace and all their progress? This can't be undone.");
+    cy.contains('[role="alertdialog"] button', /^Remove$/).click();
     cy.contains("li", "Grace").should("not.exist");
     learnerKept(signIn, grace).should("equal", false);
     learnersOf(signIn).should("deep.equal", [ada]);
@@ -177,7 +175,7 @@ it("renames a learner, and their other device learns the new name on its next st
 
   cy.visit("/app/learn/you/learners");
   cy.contains("li", "Ada").contains("button", "Rename").click();
-  cy.get('input[aria-label="Learner\'s name"]').clear().type("Ada L.");
+  cy.get('input[aria-label="Name"]').clear().type("Ada L.");
   cy.contains("button", "Save").click();
   cy.contains("li", "Ada L.");
   youShow("Ada L.", "JSS 1");
@@ -197,12 +195,12 @@ it("deletes the account with every learner, wiping and signing out the device", 
   });
 
   cy.visit("/app/learn/you/learners");
-  cy.contains("Your Google account itself stays with Google.");
-  cy.contains("button", "Delete my account").click();
+  cy.contains("Deletes every learner and signs you out.");
+  cy.contains("button", "Delete account").click();
   cy.contains(
-    "Delete this account? Every learner's plan, progress, lessons and conversations are deleted from graspy.",
+    "Delete every learner and all their progress? This can't be undone.",
   );
-  cy.contains("button", "Yes, delete my account").click();
+  cy.contains('[role="alertdialog"] button', /^Delete$/).click();
 
   cy.location("pathname").should("eq", "/");
   learnerOnDevice().should("equal", null);
@@ -245,10 +243,10 @@ it("refuses to switch until what is unsent reaches the server, losing nothing", 
 
     online(false);
     cy.contains("button", "Grace").click();
-    cy.contains('[role="alert"]', "Connect to the internet, then switch");
+    cy.contains('[role="alert"]', "Connect to the internet first");
     online(true);
     cy.contains("button", "Grace").click();
-    cy.contains('[role="alert"]', "Connect to the internet, then switch");
+    cy.contains('[role="alert"]', "Connect to the internet first");
     cy.location("pathname").should("eq", "/app/learners");
     learnerOnDevice().its("name").should("equal", "Ada");
     devicePlan().should("deep.include", {

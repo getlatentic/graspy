@@ -62,12 +62,9 @@ function SubjectsNotices({
   const error = formState.errors.selectedSubjects;
   return (
     <>
-      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted">
-        <span>{t("onboarding.subjects.heading")}</span>
-        <span className="rounded-full border border-line bg-accent-soft px-2 py-0.5 text-xs font-semibold normal-case tracking-normal text-accent-ink">
-          {t("onboarding.subjects.scroll")}
-        </span>
-      </div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+        {t("onboarding.subjects.heading")}
+      </p>
       {chosen >= SUBJECT_SELECTION_LIMIT && (
         <div className="rounded-lg border border-line bg-accent-soft px-3 py-2 text-xs font-semibold text-accent-ink">
           {t("onboarding.subjects.limit", { limit: SUBJECT_SELECTION_LIMIT })}

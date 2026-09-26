@@ -15,14 +15,12 @@ export function StepHeading({
   const percent = Math.round(((index + 1) / count) * 100);
   return (
     <>
-      <div key={step} className="space-y-2 motion-safe:animate-enter">
-        <h1 className="text-3xl font-bold text-ink sm:text-4xl">
-          {t(`onboarding.steps.${step}.title`)}
-        </h1>
-        <p className="text-base text-muted sm:text-lg">
-          {t(`onboarding.steps.${step}.description`)}
-        </p>
-      </div>
+      <h1
+        key={step}
+        className="text-3xl font-bold text-ink motion-safe:animate-enter sm:text-4xl"
+      >
+        {t(`onboarding.steps.${step}.title`)}
+      </h1>
 
       <div className="mt-8 space-y-3">
         <span className="text-sm font-semibold text-accent-ink">

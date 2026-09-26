@@ -359,7 +359,7 @@ it("asks before removing a subject, and removes it when confirmed", () => {
 
   ask("Remove English Studies from my subjects.");
   cy.get('[role="group"][aria-label="Confirm a change to your plan"]')
-    .should("contain", "Remove English Studies from your plan?")
+    .should("contain", "Remove English Studies? Their progress is cleared.")
     .contains("button", "Yes, go ahead")
     .click();
   cy.contains("Your subjects are updated.");
@@ -472,10 +472,7 @@ describe("when the connection drops", () => {
     const lost = unseen("What is 9 times 8?");
     cy.get("textarea").type(lost);
     cy.get(SEND).click();
-    cy.contains(
-      '[role="alert"]',
-      "That didn't get through. Ask again when you're ready.",
-    );
+    cy.contains('[role="alert"]', "That didn't get through. Try again.");
     cy.get('[role="log"]').should("contain", lost);
     cy.get(SEND).should("exist");
 

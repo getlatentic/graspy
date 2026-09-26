@@ -11,13 +11,12 @@ type Standing = "done" | "current" | "ahead";
 
 const STANDING: Record<
   Standing,
-  { box: string; icon: ReactNode; label: string; description: string }
+  { box: string; icon: ReactNode; label: string }
 > = {
   done: {
     box: "border-accent-line bg-accent-soft",
     icon: <CheckCircle className="h-5 w-5 text-accent-ink" />,
     label: "text-accent-ink",
-    description: "text-accent-ink",
   },
   current: {
     box: "border-accent bg-accent-soft",
@@ -25,13 +24,11 @@ const STANDING: Record<
       <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
     ),
     label: "text-ink",
-    description: "text-accent-ink",
   },
   ahead: {
     box: "border-line bg-raised",
     icon: <div className="h-5 w-5 rounded-full border-2 border-line" />,
     label: "text-ink",
-    description: "text-muted",
   },
 };
 
@@ -46,17 +43,12 @@ function TimelineStage({
   const look = STANDING[standing];
   return (
     <div
-      className={`flex items-start gap-3 rounded-xl border-2 p-3 transition-all sm:p-4 ${look.box}`}
+      className={`flex items-center gap-3 rounded-xl border-2 p-3 transition-all sm:p-4 ${look.box}`}
     >
-      <div className="mt-1">{look.icon}</div>
-      <div>
-        <p className={`font-semibold ${look.label}`}>
-          {t(`onboarding.generating.stages.${stage}.label`)}
-        </p>
-        <p className={`mt-1 text-sm ${look.description}`}>
-          {t(`onboarding.generating.stages.${stage}.description`)}
-        </p>
-      </div>
+      {look.icon}
+      <p className={`font-semibold ${look.label}`}>
+        {t(`onboarding.generating.stages.${stage}.label`)}
+      </p>
     </div>
   );
 }
@@ -120,9 +112,6 @@ export default function GenerationProgressView({
         <h2 className="text-balance text-2xl font-bold text-ink sm:text-3xl">
           {t("onboarding.generating.title")}
         </h2>
-        <p className="mt-2 text-base text-muted">
-          {t("onboarding.generating.body")}
-        </p>
       </div>
 
       <div className="mb-8">

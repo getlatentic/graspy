@@ -67,8 +67,8 @@ it("opens the emulator's sign-in window, and asks nothing of an account signed o
   cy.visit("/app/learn/you", {
     onBeforeLoad: (win) => cy.stub(win, "open").as("popup").returns(null),
   });
-  cy.contains("Sign in with Google to keep your learning on all your devices");
-  cy.contains("button", "Sign in with Google").click();
+  cy.contains("Keep your learning on every device.");
+  cy.contains("button", "Continue with Google").click();
 
   cy.get("@popup").should("have.been.calledOnce");
   cy.get("@popup")
@@ -90,8 +90,8 @@ it("offers sign-in from the landing page and onboarding, before any plan is made
 
   cy.location("pathname").should("eq", "/app/sign-in");
   cy.window().then((win) => cy.stub(win, "open").as("popup").returns(null));
-  cy.contains("h1", "Sign in to graspy");
-  cy.contains("button", "Sign in with Google").click();
+  cy.contains("h1", /^Sign in$/);
+  cy.contains("button", "Continue with Google").click();
 
   cy.get("@popup")
     .its("firstCall.args.0")
@@ -108,10 +108,7 @@ it("tells a device with a plan of its own that it goes to the learner chosen", (
   );
   cy.visit("/app");
   cy.contains("h1", "Who's learning?");
-  cy.contains("Add the first learner on this account");
-  cy.contains(
-    "The plan already on this device goes to the learner you choose, or to one you add.",
-  );
+  cy.contains("This device's plan goes to who you choose.");
 
   onDevice("tablet");
   signInToGoogle(googleAccount("Grace Hopper")).then((signIn) =>
@@ -119,7 +116,7 @@ it("tells a device with a plan of its own that it goes to the learner chosen", (
   );
   cy.visit("/app");
   cy.contains("h1", "Who's learning?");
-  cy.contains("The plan already on this device").should("not.exist");
+  cy.contains("This device's plan").should("not.exist");
 });
 
 it("adds a learner only once named and vouched for by them or their guardian", () => {
@@ -150,7 +147,7 @@ it("says when the account holds as many learners as it can", () => {
   cy.visit("/app");
 
   cy.contains("button", "Child 8");
-  cy.contains("This account has 8 learners, the most it can hold.");
+  cy.contains("This account is full: 8 learners.");
   cy.contains("button", "Add learner").should("not.exist");
 });
 

@@ -23,7 +23,6 @@ export function HomeRail({ current, onAsk }: HomeRailProps) {
       <HomeSection title={t("home.railAskTitle")}>
         <Action
           icon={MessageCircle}
-          prompt={t("home.railAskPrompt")}
           label={
             current
               ? t("home.railAskTopic", { topic: current.topic })
@@ -54,7 +53,6 @@ export function HomeRail({ current, onAsk }: HomeRailProps) {
       <HomeSection title={t("home.practiseTitle")}>
         <Action
           icon={Pencil}
-          prompt={t("home.railPractisePrompt")}
           label={t("home.railPractiseStart")}
           onClick={() => onAsk("practise")}
         />
@@ -69,24 +67,19 @@ export function HomeRail({ current, onAsk }: HomeRailProps) {
 
 function Action({
   icon: Icon,
-  prompt,
   label,
   onClick,
   children,
 }: {
   icon: LucideIcon;
-  prompt: string;
   label: string;
   onClick: () => void;
   children?: ReactNode;
 }) {
   return (
     <Card className="flex flex-col gap-3">
-      <p className="flex items-center gap-2.5 text-sm text-ink">
-        <Icon className="size-5 shrink-0 text-accent" aria-hidden="true" />
-        {prompt}
-      </p>
       <Button variant="secondary" onClick={onClick} className="w-full">
+        <Icon className="size-5 shrink-0 text-accent" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </Button>
       {children}

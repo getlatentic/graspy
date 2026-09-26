@@ -78,11 +78,6 @@ function LanguageField({ options }: { options: SelectOption[] }) {
         placeholder={t("onboarding.profile.languagePlaceholder")}
         disabled={!country}
       />
-      {!country && (
-        <p className="mt-2 text-sm text-muted">
-          {t("onboarding.profile.languageHint")}
-        </p>
-      )}
       <FieldError message={errors.language?.message} />
     </div>
   );

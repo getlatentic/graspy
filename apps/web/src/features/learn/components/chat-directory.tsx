@@ -149,9 +149,11 @@ function AnythingRow({ thread, onOpen }: AnythingRowProps) {
         <span className="block text-sm font-semibold text-ink">
           {t("ask.anything")}
         </span>
-        <span className="block truncate text-xs text-muted" dir="auto">
-          {thread?.preview ?? t("ask.anythingDetail")}
-        </span>
+        {thread?.preview && (
+          <span className="block truncate text-xs text-muted" dir="auto">
+            {thread.preview}
+          </span>
+        )}
       </span>
       {hasUnread && <UnreadDot className="size-2 shrink-0" />}
       <ChevronRight

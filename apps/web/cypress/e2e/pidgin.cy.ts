@@ -57,7 +57,7 @@ it("shows the landing page in Pidgin once a visitor picks it", () => {
   cy.contains("button", "Nigeria").click();
   learningIn("Naij")();
   inPidgin();
-  cy.contains("Which class you dey?");
+  cy.contains("button", "Continue");
 
   cy.visit("/");
   inPidgin();

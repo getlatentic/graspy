@@ -24,12 +24,9 @@ export function AddLearnerForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-ink">
-          {t("learners.addTitle")}
-        </h1>
-        <p className="mt-2 text-pretty text-muted">{t("learners.addBody")}</p>
-      </div>
+      <h1 className="font-display text-2xl font-bold text-ink">
+        {t("learners.addTitle")}
+      </h1>
       <div className="flex flex-col gap-2">
         <label htmlFor="learner-name" className="text-sm font-medium text-ink">
           {t("learners.nameLabel")}

@@ -28,7 +28,6 @@ export default function PlanPage() {
         <h1 className="mt-4 text-balance text-2xl font-semibold text-ink">
           {t("plan.title")}
         </h1>
-        <p className="mt-2 text-pretty text-muted">{t("plan.body")}</p>
       </div>
 
       {isGenerating && (

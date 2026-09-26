@@ -29,14 +29,6 @@ export default function CurriculumReadyView({
         <SubjectChips subjects={subjects} />
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4">
-        <Stat
-          value={stats.subjectCount}
-          label={t("onboarding.ready.subjects")}
-        />
-        <Stat value={stats.topicCount} label={t("onboarding.ready.topics")} />
-      </div>
-
       {/* Sticky on a short screen, where iOS Safari's toolbar would cover it. */}
       <div className="sticky bottom-0 -mx-6 mt-6 bg-white px-6 py-4 sm:static sm:mx-0 sm:mt-10 sm:p-0">
         <button
@@ -49,16 +41,5 @@ export default function CurriculumReadyView({
         </button>
       </div>
     </>
-  );
-}
-
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="rounded-2xl border border-accent-line bg-accent-soft p-4 sm:p-6">
-      <p className="text-3xl font-bold text-accent-ink">{value}</p>
-      <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-accent-ink sm:text-sm">
-        {label}
-      </p>
-    </div>
   );
 }

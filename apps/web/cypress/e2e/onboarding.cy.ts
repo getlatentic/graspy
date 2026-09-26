@@ -25,7 +25,7 @@ function chosenSubjects(): Cypress.Chainable<string[]> {
 
 function toThePlan(): void {
   cy.contains("button", "Start learning").click();
-  cy.contains("button", "See your learning plan", { timeout: 300_000 }).click();
+  cy.contains("button", /^Start$/, { timeout: 300_000 }).click();
   cy.location("pathname").should("eq", "/app/learn");
   cy.contains("Continue learning");
 }

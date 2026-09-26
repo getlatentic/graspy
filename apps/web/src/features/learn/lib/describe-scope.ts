@@ -32,7 +32,5 @@ export function scopeDetail(
     const first = scope.kind === "topic" ? subject : t("ask.wholeSubject");
     return [first, grade].filter(Boolean).join(" · ");
   }
-  return t(
-    scope.kind === "general" ? "ask.anythingDetail" : "ask.earlierDetail",
-  );
+  return "";
 }

@@ -42,7 +42,7 @@ export function ChatContextBar({
       <ScopeIcon kind={scope.kind} subject={subject} className="size-9" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-ink">{title}</p>
-        <p className="truncate text-xs text-muted">{detail}</p>
+        {detail && <p className="truncate text-xs text-muted">{detail}</p>}
       </div>
       {changeable && (
         <button

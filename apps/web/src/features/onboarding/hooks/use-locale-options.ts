@@ -9,6 +9,13 @@ import {
 } from "@/lib/locale";
 import type { SelectOption } from "../lib/select-options";
 
+/** "Français (French)"; a name the learner reads either way appears once. */
+function languageLabel(code: string, locale: string): string {
+  const native = getLanguageNativeName(code);
+  const known = getLanguageName(code, locale);
+  return native === known ? native : `${native} (${known})`;
+}
+
 /** Values stay codes: the API is sent English names built from them. */
 export function useLocaleOptions(
   allCountries: Country[],
@@ -36,7 +43,7 @@ export function useLocaleOptions(
   const languageOptions = useMemo<SelectOption[]>(() => {
     const option = (code: string, group: string) => ({
       value: code,
-      label: `${getLanguageNativeName(code)} (${getLanguageName(code, locale)})`,
+      label: languageLabel(code, locale),
       group,
     });
     const suggestedCodes =

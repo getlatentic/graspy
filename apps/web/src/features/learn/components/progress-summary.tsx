@@ -24,11 +24,6 @@ export function ProgressSummary() {
         percent={(completed / total) * 100}
         label={t("home.topicsCompleted", { completed, total })}
       />
-      <p className="text-xs text-muted">
-        {t(completed === 0 ? "home.progressStart" : "home.progressGoing", {
-          count: rows.length,
-        })}
-      </p>
     </Card>
   );
 }

@@ -127,7 +127,7 @@ it("warns before signing out with changes the server has not taken, and lets the
   signOut();
   cy.contains(
     '[role="alertdialog"]',
-    "Some changes have not reached graspy yet. If you sign out now, they are lost.",
+    "Some changes haven't been sent. Sign out anyway?",
   );
   cy.contains("button", "Cancel").click();
   cy.contains("button", "Sign out");
@@ -135,6 +135,6 @@ it("warns before signing out with changes the server has not taken, and lets the
   devicePlan().its("planId").should("equal", "plan-phone");
 
   cy.contains("button", "Sign out").click();
-  cy.contains("button", "Sign out anyway").click();
+  cy.contains('[role="alertdialog"] button', "Sign out").click();
   wiped();
 });

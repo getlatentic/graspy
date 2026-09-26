@@ -60,7 +60,6 @@ function SignedIn({ account }: { account: Account }) {
           {t("you.manageLearners")}
         </Link>
       </div>
-      <p className="text-xs text-muted">{t("you.signedIn")}</p>
       <SignOut />
     </>
   );

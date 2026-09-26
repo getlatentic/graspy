@@ -35,7 +35,7 @@ function Welcome() {
   const { t } = useI18n();
   return (
     <div className="hidden lg:sticky lg:top-8 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col lg:justify-center">
-      <div className="relative z-10 space-y-8">
+      <div className="relative z-10">
         <div
           className="absolute -start-20 top-1/2 -z-10 size-64 -translate-y-1/2 rounded-full bg-accent/20 blur-3xl"
           aria-hidden
@@ -47,9 +47,6 @@ function Welcome() {
             {t("onboarding.heroHighlight")}
           </span>
         </h2>
-        <p className="max-w-md text-lg font-medium leading-relaxed text-muted lg:text-xl">
-          {t("onboarding.heroBody")}
-        </p>
       </div>
     </div>
   );

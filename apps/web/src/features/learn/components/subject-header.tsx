@@ -25,7 +25,6 @@ export function SubjectHeader({ name, onBack }: SubjectHeaderProps) {
           {name}
         </h1>
       </div>
-      <p className="mt-3 text-muted">{t("subject.chooseTopic")}</p>
     </header>
   );
 }

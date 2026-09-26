@@ -54,7 +54,6 @@ export default function DetailsPage() {
         <h1 className="mt-4 text-balance text-2xl font-semibold text-ink">
           {t("details.title")}
         </h1>
-        <p className="mt-2 text-pretty text-muted">{t("details.body")}</p>
       </div>
       <FormProvider {...methods}>
         <ProfileStep suggestedCountry={profile.country} />

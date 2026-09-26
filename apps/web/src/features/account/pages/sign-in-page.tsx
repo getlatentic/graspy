@@ -21,15 +21,11 @@ function SignIn() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-balance font-display text-3xl font-bold text-ink">
-          {t("signIn.title")}
-        </h1>
-        <p className="mt-3 text-pretty text-muted">{t("signIn.body")}</p>
-      </div>
+      <h1 className="text-balance font-display text-3xl font-bold text-ink">
+        {t("signIn.title")}
+      </h1>
       <div className="flex flex-col gap-3">
         <GoogleSignInButton variant="primary" size="lg" className="w-full" />
-        <p className="text-sm text-muted">{t("signIn.noPassword")}</p>
       </div>
       <p className="border-t border-line pt-5 text-sm text-muted">
         {t("signIn.newHere")}{" "}

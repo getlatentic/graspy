@@ -135,7 +135,7 @@ it("rebuilds the plan, carrying the learner's path and dropping the rest", () =>
 
   cy.visit("/app/learn/plan");
   cy.contains("button", "Rebuild my plan").click();
-  cy.contains("button", "Yes, clear my progress and rebuild").click();
+  cy.contains("button", "Clear and rebuild").click();
 
   cy.contains("Continue learning", { timeout: 300_000 });
   eventually(

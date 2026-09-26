@@ -103,9 +103,6 @@ function Choosing({
         <h1 className="text-balance font-display text-3xl font-bold text-ink">
           {t("learners.title")}
         </h1>
-        <p className="mt-2 text-pretty text-muted">
-          {learners.length ? t("learners.body") : t("learners.bodyFirst")}
-        </p>
       </div>
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {learners.map((learner) => (
@@ -173,20 +170,21 @@ function AccountLine({ account }: { account: Account }) {
   const leave = () =>
     void leaveForAnotherAccount().finally(() => navigate(SIGN_IN_PAGE));
   return (
-    <p className="border-t border-line pt-5 text-sm text-muted" dir="auto">
-      {account.email && t("learners.signedInAs", { email: account.email })}
-      {account.deviceJoins && (
-        <>
-          {" · "}
-          <button
-            type="button"
-            onClick={leave}
-            className="font-semibold text-accent-ink hover:underline"
-          >
-            {t("learners.otherAccount")}
-          </button>
-        </>
+    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-line pt-5 text-sm text-muted">
+      {account.email && (
+        <span className="min-w-0 truncate" dir="ltr">
+          {account.email}
+        </span>
       )}
-    </p>
+      {account.deviceJoins && (
+        <button
+          type="button"
+          onClick={leave}
+          className="font-semibold text-accent-ink hover:underline"
+        >
+          {t("learners.otherAccount")}
+        </button>
+      )}
+    </div>
   );
 }

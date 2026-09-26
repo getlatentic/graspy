@@ -30,9 +30,6 @@ export default function LearnersPage() {
         <h1 className="mt-4 text-balance text-2xl font-semibold text-ink">
           {t("learners.manageTitle")}
         </h1>
-        <p className="mt-2 text-pretty text-muted">
-          {t("learners.manageBody")}
-        </p>
       </div>
       <LearnerList manage={manage} />
       {manage.failed && <ProblemNote>{t("learners.failed")}</ProblemNote>}
