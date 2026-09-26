@@ -82,13 +82,14 @@ private class LearnerFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val make = makers[modelClass]
         if (make != null) return modelClass.cast(make(application, learnerKey))
-        check(!takesLearner(modelClass)) { "${modelClass.simpleName} belongs to a learner: list it in LEARNER_VIEW_MODELS" }
+        check(madeWithoutALearner(modelClass)) { "${modelClass.simpleName} belongs to a learner: list it in LEARNER_VIEW_MODELS" }
         return plain.create(modelClass, extras)
     }
-
-    private fun takesLearner(modelClass: Class<*>) =
-        modelClass.constructors.any { it.parameterTypes.contentEquals(arrayOf(Application::class.java, String::class.java)) }
 }
+
+/** What the default factory can make: a view model taking nothing, or only the application. */
+fun madeWithoutALearner(modelClass: Class<*>): Boolean =
+    modelClass.constructors.any { it.parameterTypes.isEmpty() || it.parameterTypes.contentEquals(arrayOf(Application::class.java)) }
 
 private class LearnerOwner(
     override val viewModelStore: ViewModelStore,

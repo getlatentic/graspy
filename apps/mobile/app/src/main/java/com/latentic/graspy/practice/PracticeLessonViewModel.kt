@@ -70,7 +70,6 @@ class PracticeLessonViewModel(application: Application, private val ownerId: Str
     private var arrivingState: ClassroomState? = null
 
     fun prepare(language: AppLanguage, schoolClass: SchoolClass) {
-        if (!AppGraph.account(getApplication()).learnsAs(ownerId)) return
         val previous = learner
         learner = Learner(schoolClass, language)
         if (previous?.schoolClass == schoolClass) {

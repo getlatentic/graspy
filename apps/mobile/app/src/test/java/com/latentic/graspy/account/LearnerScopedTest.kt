@@ -1,8 +1,10 @@
 package com.latentic.graspy.account
 
 import android.app.Application
+import android.os.Looper
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.test.core.app.ApplicationProvider
@@ -14,6 +16,9 @@ import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.home.HomeCatalogueViewModel
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.SchoolClass
+import com.latentic.graspy.plan.LearnerPlan
+import com.latentic.graspy.plan.PlanState
+import com.latentic.graspy.plan.PlanViewModel
 import com.latentic.graspy.practice.PracticeLessonViewModel
 import com.latentic.graspy.sync.lessonRefreshWorkName
 import com.latentic.graspy.ui.LearnerScope
@@ -28,6 +33,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 /** A learner's view models belong to the learner of their scope, whoever the device learns as by then. */
 @RunWith(RobolectricTestRunner::class)
@@ -101,6 +107,23 @@ class LearnerScopedTest {
         HomeCatalogueViewModel(application, "u/ada").open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
 
         assertEquals(0, refreshesFor("u/ada"))
+    }
+
+    @Test
+    fun `a plan read refused once the device has left the learner keeps nothing`() {
+        val kept = application.getSharedPreferences(PreferenceFiles.PLAN, 0)
+        kept.edit(commit = true) { putString("plan", LearnerPlan(planId = "p").toJson().toString()) }
+        val plan = PlanViewModel(application, "u/ada")
+        kept.edit(commit = true) { clear() }
+
+        // The read is refused on OkHttp's thread and settles on the main thread; nothing else signals it.
+        repeat(40) {
+            shadowOf(Looper.getMainLooper()).idle()
+            Thread.sleep(25)
+        }
+
+        assertTrue(plan.state.value is PlanState.Ready)
+        assertEquals(emptyMap<String, Any?>(), kept.all)
     }
 
     private fun refreshesFor(learnerKey: String) = work.getWorkInfosForUniqueWork(lessonRefreshWorkName(learnerKey)).get().size
