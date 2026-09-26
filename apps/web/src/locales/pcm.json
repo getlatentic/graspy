@@ -364,6 +364,8 @@
       "notUnderstood": "Talk am again",
       "hearAgain": "Hear am again",
       "kept": "E don save. E go send when network dey.",
+      "keptOnline": "E don save. We go check am soon.",
+      "continue": "Continue",
       "rest": "E don finish for today."
     },
     "problem": {

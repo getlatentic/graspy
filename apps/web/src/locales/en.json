@@ -364,6 +364,8 @@
       "notUnderstood": "Say it again",
       "hearAgain": "Hear again",
       "kept": "Saved. It sends when you're online.",
+      "keptOnline": "Saved. It'll be checked soon.",
+      "continue": "Continue",
       "rest": "Done for today."
     },
     "problem": {

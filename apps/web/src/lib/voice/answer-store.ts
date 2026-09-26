@@ -63,37 +63,60 @@ export async function forgetAnswer(key: string): Promise<void> {
   await done;
 }
 
-/**
- * Writes to an answer only while it is still waiting to be sent, read and written in one
- * transaction: another tab sending the same answer may have settled it, or shown and let it go.
- */
-async function whileWaiting(
+/** Rewrites an answer as it is stored now, read and written in one transaction. */
+async function rewrite(
   key: string,
-  write: (answers: IDBObjectStore) => void,
+  write: (stored: StoredAnswer, answers: IDBObjectStore) => void,
 ): Promise<void> {
   const { tx, answers } = await store("readwrite");
   const done = committed(tx);
   const found = answers.get(key);
   found.onsuccess = () => {
     const stored = found.result as StoredAnswer | undefined;
-    if (stored && !isSettled(stored)) write(answers);
+    if (stored) write(stored, answers);
   };
   await done;
 }
 
+/**
+ * Writes to an answer only while it is still waiting to be sent: another tab sending the same
+ * answer may have settled it, or shown and let it go. Its step is the stored one, which the lesson
+ * may have dropped while this tab was sending.
+ */
+const whileWaiting = (
+  key: string,
+  write: (stored: KeptAnswer, answers: IDBObjectStore) => void,
+): Promise<void> =>
+  rewrite(key, (stored, answers) => {
+    if (!isSettled(stored)) write(stored, answers);
+  });
+
 /** How far sending has got, so a retry resumes there. */
 export const keepProgress = (answer: KeptAnswer): Promise<void> =>
-  whileWaiting(answer.key, (answers) => answers.put(answer));
+  whileWaiting(answer.key, ({ move }, answers) =>
+    answers.put({ ...answer, move }),
+  );
 
 /** The recording goes; what the lesson needs to show the outcome stays. */
-export function settleAnswer(answer: KeptAnswer, sent: Settled): Promise<void> {
-  const { key, learner, move, keptAt } = answer;
-  return whileWaiting(key, (answers) =>
+export const settleAnswer = (
+  answer: KeptAnswer,
+  sent: Settled,
+): Promise<void> =>
+  whileWaiting(answer.key, ({ key, learner, move, keptAt }, answers) =>
     move
       ? answers.put({ key, shownTo: learner, move, keptAt, sent })
       : answers.delete(key),
   );
-}
+
+/**
+ * The lesson carries on without showing this answer: it is still sent while it waits, and
+ * dropped once marked or refused; an outcome already given is dropped now.
+ */
+export const passOver = (key: string): Promise<void> =>
+  rewrite(key, (stored, answers) => {
+    if (isSettled(stored)) answers.delete(key);
+    else answers.put({ ...stored, move: undefined });
+  });
 
 async function learnersAnswers(learner: string): Promise<StoredAnswer[]> {
   const { answers } = await store("readonly");

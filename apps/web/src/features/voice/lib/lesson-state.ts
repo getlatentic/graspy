@@ -50,6 +50,8 @@ export type LessonEvent =
   | { type: "settled"; key: string; sent: Sent }
   /** The answer left the device with its outcome shown elsewhere. */
   | { type: "seenElsewhere"; key: string }
+  /** The child carried on past an answer still kept, without its outcome. */
+  | { type: "carriedOn"; key: string }
   | { type: "replied" };
 
 export const START: LessonState = { phase: { name: "idle" }, note: null };
@@ -103,7 +105,7 @@ function settled(
   };
 }
 
-function seenElsewhere(state: LessonState, key: string): LessonState {
+function passed(state: LessonState, key: string): LessonState {
   const { phase } = state;
   if (phase.name !== "checking" && phase.name !== "kept") return state;
   if (phase.key !== key) return state;
@@ -181,7 +183,8 @@ export function lessonReducer(
     case "settled":
       return settled(state, event);
     case "seenElsewhere":
-      return seenElsewhere(state, event.key);
+    case "carriedOn":
+      return passed(state, event.key);
     case "replied":
       return state.phase.name === "result"
         ? {

@@ -112,6 +112,48 @@ describe("the answers kept on the device", () => {
     expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
   });
 
+  it("keep no progress over an answer another tab let go while this one read it", async () => {
+    const tabA = await load();
+    const tabB = await load();
+    await tabA.keepAnswer(KEPT);
+    // Both tabs' connections open, so neither waits on opening while the other writes.
+    await Promise.all([
+      tabA.keptAnswers(LEARNER.key),
+      tabB.keptAnswers(LEARNER.key),
+    ]);
+    const progress = { ...KEPT, sampleId: "gvm_key-1" };
+
+    await Promise.all([
+      tabA.keepProgress(progress),
+      tabB.forgetAnswer("key-1"),
+    ]);
+    expect(await tabA.keptAnswers(LEARNER.key)).toEqual([]);
+  });
+
+  it("keep sending an answer passed over, but never offer it or its outcome to be shown", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    await app.passOver("key-1");
+    await app.keepProgress({ ...KEPT, sampleId: "gvm_key-1" });
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toBeNull();
+    expect(await app.keptAnswers(LEARNER.key)).toMatchObject([
+      { key: "key-1", sampleId: "gvm_key-1" },
+    ]);
+
+    await app.settleAnswer(KEPT, { kind: "refused", code: null, status: 400 });
+    expect(await app.settledOf("key-1")).toBeNull();
+    expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
+  });
+
+  it("drop an outcome already given when its answer is passed over", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    await app.sendKept("key-1");
+    await app.passOver("key-1");
+    expect(await app.settledOf("key-1")).toBeNull();
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toBeNull();
+  });
+
   it("belong to the learner who said them, sent or not", async () => {
     const app = await load();
     const theirs = (key: string, keptAt: number) => ({

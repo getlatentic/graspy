@@ -66,12 +66,23 @@ function lessonPage(app: App, plan?: string) {
         throw new Error(`no answer: ${phase.name}`);
       return app.followAnswer(phase.key, emit, leaving.signal, retry);
     },
-    /** Her reply said, the lesson moves on to what the server gives next. */
-    async moveOn() {
-      emit({ type: "replied" });
+    /** The child carries on past the answer kept on screen, which the page then stops following. */
+    async carryOn() {
+      const { phase } = state;
+      if (phase.name !== "kept") throw new Error(`nothing kept: ${phase.name}`);
+      await app.carryOn(phase.key, emit);
+      leaving.abort();
+    },
+    /** The lesson asks the server for its next step. */
+    async next() {
       const { phase } = state;
       if (phase.name !== "moving-on") throw new Error(`stuck: ${phase.name}`);
       emit(await app.nextStep(phase, LEARNER, plan, noPause));
+    },
+    /** Her reply said, the lesson moves on to what the server gives next. */
+    async moveOn() {
+      emit({ type: "replied" });
+      await this.next();
     },
   };
 }
@@ -88,6 +99,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.doUnmock("@/lib/voice/answer-store");
 });
@@ -246,6 +258,110 @@ describe("a voice lesson reloaded with an answer kept", () => {
       key: "key-1",
       move: ASKED,
     });
+  });
+});
+
+describe("a lesson on a device whose storage cannot be opened", () => {
+  it("opens on the teacher's step", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubGlobal("indexedDB", {
+      open: () => {
+        throw new DOMException("denied", "InvalidStateError");
+      },
+    });
+    const page = lessonPage(await reload());
+    await page.open();
+    expect(page.state.phase).toEqual({ name: "teaching", move: ASKED });
+    expect(warn).toHaveBeenCalled();
+  });
+});
+
+/** Every request's time limit, to be run out by the test rather than the clock. */
+function deadlines() {
+  const given: AbortController[] = [];
+  vi.spyOn(AbortSignal, "timeout").mockImplementation(() => {
+    const deadline = new AbortController();
+    given.push(deadline);
+    return deadline.signal;
+  });
+  return () =>
+    given.forEach((deadline) =>
+      deadline.abort(new DOMException("timed out", "TimeoutError")),
+    );
+}
+
+describe("an answer whose marking never answers", () => {
+  it("shows as kept once the request is given up, and is sent again on the next try", async () => {
+    server.hung = 1;
+    const runOut = deadlines();
+    const page = lessonPage(await reload());
+    await page.open();
+    let due = () => {};
+    const retry = () => new Promise<void>((resolve) => (due = resolve));
+    const following = page.follow(retry);
+    const marking = "POST /api/voice/samples/gvm_key-1/evaluation";
+    await vi.waitFor(() => expect(sent(marking)).toHaveLength(1));
+
+    runOut();
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("kept"));
+    due();
+    await following;
+    expect(page.state.phase).toMatchObject({
+      name: "result",
+      turn: turnOf("gvm_key-1"),
+    });
+    expect(sent(marking)).toHaveLength(2);
+  });
+});
+
+describe("an answer the child carries on past", () => {
+  async function keptOnScreen() {
+    server.busy = 1;
+    const app = await reload();
+    const page = lessonPage(app);
+    await page.open();
+    void page.follow();
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("kept"));
+    return { app, page };
+  }
+
+  it("moves on to the teacher's step, is still sent, and is never shown", async () => {
+    const { page } = await keptOnScreen();
+    await page.carryOn();
+    expect(page.state.phase).toEqual({
+      name: "moving-on",
+      move: ASKED,
+      heard: false,
+    });
+    await page.next();
+    expect(page.state.phase).toEqual({ name: "teaching", move: ASKED });
+
+    const app = await reload();
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toBeNull();
+    await app.sendKeptAnswers(LEARNER.key);
+    expect(sent("POST /api/voice/samples/gvm_key-1/evaluation")).toHaveLength(
+      2,
+    );
+    expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
+    expect(await app.settledOf("key-1")).toBeNull();
+  });
+
+  it("never shows the outcome of a send under way when it lands", async () => {
+    const { app, page } = await keptOnScreen();
+    const release = holdMarking();
+    const background = app.sendKeptAnswers(LEARNER.key);
+    await vi.waitFor(() =>
+      expect(sent("POST /api/voice/samples/gvm_key-1/evaluation")).toHaveLength(
+        2,
+      ),
+    );
+    await page.carryOn();
+    release();
+    await background;
+
+    expect(server.marked.has("gvm_key-1")).toBe(true);
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toBeNull();
+    expect(await app.settledOf("key-1")).toBeNull();
   });
 });
 

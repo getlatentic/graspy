@@ -163,4 +163,31 @@ describe("the voice API client", () => {
     expect(error.unreachable).toBe(true);
     expect(error.code).toBeNull();
   });
+
+  it("gives up on a request that never answers, as the network failing", async () => {
+    const deadlines: Array<[number, AbortController]> = [];
+    const timeout = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((ms) => {
+        const deadline = new AbortController();
+        deadlines.push([ms, deadline]);
+        return deadline.signal;
+      });
+    // Hung before fetch, as on a session token that never comes: its signal ends nothing.
+    fetchWithSession.mockImplementation(() => new Promise(() => {}));
+    const marking = api.evaluate("gvm_1").catch((e: unknown) => e);
+    const created = api
+      .createSample("key-1", {} as never)
+      .catch((e: unknown) => e);
+
+    expect(deadlines.map(([ms]) => ms)).toEqual([150_000, 30_000]);
+    for (const [, deadline] of deadlines)
+      deadline.abort(new DOMException("timed out", "TimeoutError"));
+    for (const error of await Promise.all([marking, created])) {
+      expect(error).toBeInstanceOf(api.VoiceError);
+      expect(error).toMatchObject({ status: 0, code: null });
+    }
+    expect(wire.calls.every(([, init]) => init?.signal?.aborted)).toBe(true);
+    timeout.mockRestore();
+  });
 });

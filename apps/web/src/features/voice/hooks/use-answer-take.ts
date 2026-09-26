@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch } from "react";
 import { keepAnswer } from "@/lib/voice/answer-store";
 import { startTake, type Take } from "@/lib/voice/recorder";
 import type { LessonMove } from "@/lib/voice/voice-types";
-import { followAnswer } from "../lib/follow-answer";
+import { carryOn, followAnswer } from "../lib/follow-answer";
 import { answerToKeep, keepTake } from "../lib/lesson-answer";
 import type { LessonEvent, Phase } from "../lib/lesson-state";
 import type { VoiceLearner } from "./use-voice-learner";
@@ -61,5 +61,10 @@ export function useAnswerTake(
     [dispatch, learner],
   );
 
-  return { record, stop: () => take.current?.stop(), levels };
+  return {
+    record,
+    stop: () => take.current?.stop(),
+    carryOn: () => phase.name === "kept" && void carryOn(phase.key, dispatch),
+    levels,
+  };
 }

@@ -43,6 +43,16 @@ async function teachersStep(
   return { type: "loaded", move };
 }
 
+// A device whose storage cannot be read still has a lesson: the teacher's step.
+async function readUnseen(learner: StepLearner, plan: string | undefined) {
+  try {
+    return await unseenAnswer(learner.key, plan);
+  } catch (error) {
+    console.warn("Reading unseen answers failed:", error);
+    return null;
+  }
+}
+
 /**
  * The step the lesson opens on: an answer the child has not seen the outcome of, else the
  * teacher's next. Until that answer is marked the server offers its question again, and once it
@@ -52,7 +62,7 @@ export async function openingStep(
   learner: StepLearner,
   plan: string | undefined,
 ): Promise<LessonEvent> {
-  const answer = await unseenAnswer(learner.key, plan);
+  const answer = await readUnseen(learner, plan);
   if (answer) return { type: "resumed", ...answer };
   return teachersStep(learner, plan);
 }

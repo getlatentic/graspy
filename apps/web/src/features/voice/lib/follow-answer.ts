@@ -1,9 +1,10 @@
 import { sendKept, whenSettled } from "@/lib/voice/answer-outbox";
-import { forgetAnswer, settledOf } from "@/lib/voice/answer-store";
+import { forgetAnswer, passOver, settledOf } from "@/lib/voice/answer-store";
 import type { Sent } from "@/lib/voice/send-answer";
 import type { LessonEvent } from "./lesson-state";
 
-// A server that was busy may take it now; going online also sends it, without waiting for this.
+// A server that was busy may take it now. Going online sends kept answers too, without
+// waiting for this.
 const RETRY_MS = 20_000;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -49,4 +50,20 @@ export async function followAnswer(
   }
   emit({ type: "settled", key, sent: now });
   await forgetAnswer(key);
+}
+
+/**
+ * Carries on past an answer that stays kept: it is still sent, but never shown, and the lesson
+ * asks the teacher for her step, which may be its question again.
+ */
+export async function carryOn(
+  key: string,
+  emit: (event: LessonEvent) => void,
+): Promise<void> {
+  try {
+    await passOver(key);
+  } catch (error) {
+    console.warn("Passing over a kept answer failed:", error);
+  }
+  emit({ type: "carriedOn", key });
 }

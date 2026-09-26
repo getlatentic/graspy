@@ -54,20 +54,51 @@ async function refusalOf(response: Response): Promise<VoiceError> {
   return new VoiceError(message, response.status, code);
 }
 
-async function send(url: string, init?: RequestInit): Promise<Response> {
-  let response: Response;
+// Past these a request is given up and counts as the network failing, so a retry sends it again.
+const REQUEST_MS = 30_000;
+// Marking holds the request while the server transcribes (up to 90 s) and the teacher decides (20 s).
+const MARKING_MS = 150_000;
+// A long answer on a slow connection: 8 KB a second, the slowest upload waited for.
+const uploadMs = (wav: Blob) => REQUEST_MS + Math.ceil(wav.size / 8);
+
+function deadline(ms: number, given?: AbortSignal | null): AbortSignal {
+  const timeout = AbortSignal.timeout(ms);
+  return given ? AbortSignal.any([given, timeout]) : timeout;
+}
+
+// Also covers the wait for a session token, which fetch's signal does not reach.
+const givenUp = (signal: AbortSignal) =>
+  new Promise<never>((_, reject) => {
+    const fail = () => reject(signal.reason);
+    if (signal.aborted) fail();
+    else signal.addEventListener("abort", fail, { once: true });
+  });
+
+async function send<T>(
+  url: string,
+  read: (response: Response) => Promise<T>,
+  init: RequestInit = {},
+  ms = REQUEST_MS,
+): Promise<T> {
+  const signal = deadline(ms, init.signal);
+  const answered = async () => {
+    const response = await fetchWithSession(url, { ...init, signal });
+    if (!response.ok) throw await refusalOf(response);
+    return read(response);
+  };
   try {
-    response = await fetchWithSession(url, init);
+    return await Promise.race([answered(), givenUp(signal)]);
   } catch (cause) {
+    if (cause instanceof VoiceError) throw cause;
     const message = cause instanceof Error ? cause.message : "Network failed";
     throw new VoiceError(message, 0, null);
   }
-  if (!response.ok) throw await refusalOf(response);
-  return response;
 }
 
-const json = async <T>(url: string, init?: RequestInit): Promise<T> =>
-  (await send(url, init)).json() as Promise<T>;
+const json = <T>(url: string, init?: RequestInit, ms?: number): Promise<T> =>
+  send(url, (response) => response.json() as Promise<T>, init, ms);
+
+const blob = (url: string) => send(url, (response) => response.blob());
 
 const post = (body: unknown, headers: Record<string, string> = {}) => ({
   method: "POST",
@@ -110,12 +141,12 @@ export function lessonEventHeard(event: {
   return json(`${VOICE}/lesson/events`, post(event));
 }
 
-export async function teacherAudio(
+export function teacherAudio(
   utterance: string,
   language: LessonLanguage,
 ): Promise<Blob> {
   const url = `${VOICE}/teacher-audio/${encodeURIComponent(utterance)}?${query({ language, format: audioFormat() })}`;
-  return (await send(url)).blob();
+  return blob(url);
 }
 
 export function createSample(
@@ -131,18 +162,22 @@ export function createSample(
 /** `uploadPath` is the path the server named for this sample's audio. */
 export function uploadAudio(uploadPath: string, wav: Blob): Promise<unknown> {
   const url = new URL(uploadPath, API_BASE_URL).toString();
-  return json(url, {
-    method: "PUT",
-    headers: { "Content-Type": "audio/wav" },
-    body: wav,
-  });
+  return json(
+    url,
+    { method: "PUT", headers: { "Content-Type": "audio/wav" }, body: wav },
+    uploadMs(wav),
+  );
 }
 
 export function evaluate(sampleId: string): Promise<Evaluation> {
-  return json(`${VOICE}/samples/${sampleId}/evaluation`, { method: "POST" });
+  return json(
+    `${VOICE}/samples/${sampleId}/evaluation`,
+    { method: "POST" },
+    MARKING_MS,
+  );
 }
 
-export async function replyAudio(sampleId: string): Promise<Blob> {
+export function replyAudio(sampleId: string): Promise<Blob> {
   const url = `${VOICE}/samples/${sampleId}/reply-audio?${query({ format: audioFormat() })}`;
-  return (await send(url)).blob();
+  return blob(url);
 }

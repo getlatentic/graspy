@@ -85,6 +85,8 @@ export const server = {
   busy: 0,
   /** Samples whose marking waits until released. */
   held: new Map<string, Promise<void>>(),
+  /** How many more markings never answer: only the request's signal ends them, as it ends fetch. */
+  hung: 0,
   asked: [] as string[],
 };
 
@@ -95,6 +97,7 @@ export function resetServer(): void {
     refusal: null,
     busy: 0,
     held: new Map(),
+    hung: 0,
     asked: [],
   });
 }
@@ -121,7 +124,19 @@ function created(init: RequestInit | undefined): Response {
   });
 }
 
-async function marking(sample: string): Promise<Response> {
+const never = (signal: AbortSignal | null | undefined) =>
+  new Promise<never>((_, reject) =>
+    signal?.addEventListener("abort", () => reject(signal.reason)),
+  );
+
+async function marking(
+  sample: string,
+  init: RequestInit | undefined,
+): Promise<Response> {
+  if (server.hung > 0) {
+    server.hung -= 1;
+    return never(init?.signal);
+  }
   await server.held.get(sample);
   if (server.busy > 0) {
     server.busy -= 1;
@@ -145,7 +160,7 @@ export async function respond(
   if (method === "POST" && url.endsWith("/voice/samples")) return created(init);
   if (method === "PUT")
     return json({ sample_id: sampleOf(url), state: "ready" });
-  return marking(sampleOf(url));
+  return marking(sampleOf(url), init);
 }
 
 export function holdMarking(sample = "gvm_key-1"): () => void {
