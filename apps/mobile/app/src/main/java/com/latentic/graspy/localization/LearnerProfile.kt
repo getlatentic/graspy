@@ -4,20 +4,23 @@ import android.content.Context
 import androidx.core.content.edit
 import com.latentic.graspy.account.PreferenceFiles
 
-/** Nigerian school classes graspy teaches; the wire value travels with every sample. */
-enum class SchoolClass(val wireValue: String, val primary: Boolean) {
-    NURSERY_1("nursery_1", true),
-    NURSERY_2("nursery_2", true),
-    KINDERGARTEN("kindergarten", true),
-    PRIMARY_1("primary_1", true),
-    PRIMARY_2("primary_2", true),
-    PRIMARY_3("primary_3", true),
-    PRIMARY_4("primary_4", true),
-    PRIMARY_5("primary_5", true),
-    PRIMARY_6("primary_6", true),
-    JSS_1("jss_1", false),
-    JSS_2("jss_2", false),
-    JSS_3("jss_3", false),
+/**
+ * Nigerian school classes graspy teaches; the wire value travels with every sample. [primary]: taught by one class
+ * teacher. [voiceLessons]: the voice lesson catalogue has lessons for it.
+ */
+enum class SchoolClass(val wireValue: String, val primary: Boolean, val voiceLessons: Boolean) {
+    NURSERY_1("nursery_1", primary = true, voiceLessons = true),
+    NURSERY_2("nursery_2", primary = true, voiceLessons = true),
+    KINDERGARTEN("kindergarten", primary = true, voiceLessons = true),
+    PRIMARY_1("primary_1", primary = true, voiceLessons = true),
+    PRIMARY_2("primary_2", primary = true, voiceLessons = true),
+    PRIMARY_3("primary_3", primary = true, voiceLessons = true),
+    PRIMARY_4("primary_4", primary = true, voiceLessons = true),
+    PRIMARY_5("primary_5", primary = true, voiceLessons = true),
+    PRIMARY_6("primary_6", primary = true, voiceLessons = true),
+    JSS_1("jss_1", primary = false, voiceLessons = false),
+    JSS_2("jss_2", primary = false, voiceLessons = false),
+    JSS_3("jss_3", primary = false, voiceLessons = false),
     ;
 
     companion object {
