@@ -1,13 +1,12 @@
 import { sendKept, whenSettled } from "@/lib/voice/answer-outbox";
 import { forgetAnswer, passOver, settledOf } from "@/lib/voice/answer-store";
 import type { Sent } from "@/lib/voice/send-answer";
-import { inTime } from "./in-time";
+import { inTime, wait } from "./in-time";
 import type { LessonEvent } from "./lesson-state";
 
 // A server that was busy may take it now. Going online sends kept answers too, without
 // waiting for this.
 const RETRY_MS = 20_000;
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * The answer as it stands: sent now, its outcome from the device, or null once it has left the

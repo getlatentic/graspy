@@ -46,14 +46,16 @@ async function sendAll(learner: string): Promise<void> {
   }
 }
 
-let sending: Promise<void> | null = null;
+const sending = new Map<string, Promise<void>>();
 
-/** Sends this learner's kept answers in the order they were said, one run at a time. */
+/** Sends this learner's kept answers in the order they were said, one run at a time for each learner. */
 export function sendKeptAnswers(learner: string): Promise<void> {
-  sending ??= sendAll(learner).finally(() => {
-    sending = null;
-  });
-  return sending;
+  let run = sending.get(learner);
+  if (!run) {
+    run = sendAll(learner).finally(() => sending.delete(learner));
+    sending.set(learner, run);
+  }
+  return run;
 }
 
 /** The answer's outcome once the server has given one, whoever sent it; never once aborted. */

@@ -171,6 +171,29 @@ describe("the answers kept on the device", () => {
     });
   });
 
+  it("send each learner's answers in their own run", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    await app.keepAnswer({
+      ...answerTo(OTHER, "key-2", 2),
+      learner: "device/other",
+    });
+    const release = holdMarking();
+    const first = app.sendKeptAnswers(LEARNER.key);
+    await vi.waitFor(() =>
+      expect(sent("POST /api/voice/samples/gvm_key-1/evaluation")).toHaveLength(
+        1,
+      ),
+    );
+
+    await app.sendKeptAnswers("device/other");
+    expect(sent("POST /api/voice/samples/gvm_key-2/evaluation")).toHaveLength(
+      1,
+    );
+    release();
+    await first;
+  });
+
   it("offer the oldest answer not yet shown, whatever its key", async () => {
     const app = await load();
     await app.keepAnswer(KEPT);

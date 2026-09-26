@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { LessonMove } from "@/lib/voice/voice-types";
 import { answerMetadata, answerToKeep, keepTake } from "./lesson-answer";
 import { lessonReducer, START, type LessonEvent } from "./lesson-state";
@@ -100,7 +100,7 @@ describe("keepTake", () => {
     let state = recording.reduce(lessonReducer, START);
     await keepTake(
       kept,
-      keep,
+      { keep, forget: async () => {} },
       (event) => {
         state = lessonReducer(state, event);
       },
@@ -108,6 +108,25 @@ describe("keepTake", () => {
     );
     return state;
   }
+
+  it("lets go a take that is saved only after the child was told it was not", async () => {
+    let landed = () => {};
+    const forgotten: string[] = [];
+    const emitted: LessonEvent[] = [];
+    await keepTake(
+      kept,
+      {
+        keep: () => new Promise<void>((resolve) => (landed = resolve)),
+        forget: async (key) => void forgotten.push(key),
+      },
+      (event) => emitted.push(event),
+      async () => {},
+    );
+    expect(emitted).toEqual([{ type: "recordFailed", note: "notSaved" }]);
+
+    landed();
+    await vi.waitFor(() => expect(forgotten).toEqual(["k1"]));
+  });
 
   it("gives the turn back, saying so, when the device never answers", async () => {
     const state = await lessonAfter(

@@ -67,13 +67,19 @@ export function answerToKeep(
 /** The take is checked only once it is kept, so nothing the child said is lost to the network. */
 export async function keepTake(
   answer: KeptAnswer,
-  keep: (answer: KeptAnswer) => Promise<void>,
+  store: {
+    keep: (answer: KeptAnswer) => Promise<void>;
+    forget: (key: string) => Promise<void>;
+  },
   emit: (event: LessonEvent) => void,
   pause?: (ms: number) => Promise<unknown>,
 ): Promise<void> {
+  const keeping = store.keep(answer);
   try {
-    await inTime(keep(answer), pause);
+    await inTime(keeping, pause);
   } catch {
+    // The child was told it was not saved, so a save that lands late is let go.
+    keeping.then(() => store.forget(answer.key)).catch(() => undefined);
     emit({ type: "recordFailed", note: "notSaved" });
     return;
   }
