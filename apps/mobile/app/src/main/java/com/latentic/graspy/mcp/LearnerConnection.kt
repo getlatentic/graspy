@@ -9,8 +9,8 @@ import okhttp3.Call
 import okhttp3.HttpUrl
 
 /**
- * One learner's MCP connection and what it keeps on the phone to work without one: the view calls made
- * offline, the views, and the lessons, each under [ownerId] where it is the learner's own.
+ * One learner's MCP connection and what it keeps on the phone to work without one: the view calls the server
+ * has yet to take, the views, and the lessons, each under [ownerId] where it is the learner's own.
  */
 class LearnerConnection(
     database: GraspyDatabase,
@@ -20,7 +20,7 @@ class LearnerConnection(
     stillLearning: () -> Boolean,
 ) : ViewServer {
     private val mcp = McpClient(calls, endpoint)
-    private val outbox = McpOutbox(database.keptCallDao(), ownerId, mcp::callTool)
+    private val outbox = McpOutbox(database.keptCallDao(), ownerId, mcp::callTool, stillLearning, { keep -> database.withTransaction { keep() } })
     private val views = OfflineViews(database.keptViewDao(), mcp::view)
 
     val lessons = OfflineLessons(
@@ -40,6 +40,9 @@ class LearnerConnection(
     )
 
     suspend fun sendKept(): Int = outbox.sendKept()
+
+    /** Sends the kept view calls; false while some are still on the phone. */
+    suspend fun sentEverything(): Boolean = outbox.sentEverything()
 
     override suspend fun view(uri: String): UiView = views.view(uri)
 

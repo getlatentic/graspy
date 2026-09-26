@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { LessonMove } from "@/lib/voice/voice-types";
 import { answerMetadata, answerToKeep, keepTake } from "./lesson-answer";
 import { lessonReducer, START, type LessonEvent } from "./lesson-state";
@@ -100,7 +100,12 @@ describe("keepTake", () => {
     let state = recording.reduce(lessonReducer, START);
     await keepTake(
       kept,
-      { keep, forget: async () => {} },
+      {
+        keep: async (_, wanted) => {
+          await keep();
+          wanted();
+        },
+      },
       (event) => {
         state = lessonReducer(state, event);
       },
@@ -109,23 +114,70 @@ describe("keepTake", () => {
     return state;
   }
 
-  it("lets go a take that is saved only after the child was told it was not", async () => {
-    let landed = () => {};
-    const forgotten: string[] = [];
+  it("never writes a take the child was told was not saved", async () => {
+    let begin = () => {};
+    const written: string[] = [];
     const emitted: LessonEvent[] = [];
     await keepTake(
       kept,
       {
-        keep: () => new Promise<void>((resolve) => (landed = resolve)),
-        forget: async (key) => void forgotten.push(key),
+        keep: async (answer, wanted) => {
+          await new Promise<void>((resolve) => (begin = resolve));
+          if (wanted()) written.push(answer.key);
+        },
       },
       (event) => emitted.push(event),
       async () => {},
     );
-    expect(emitted).toEqual([{ type: "recordFailed", note: "notSaved" }]);
+    expect(emitted).toEqual([
+      { type: "saving" },
+      { type: "recordFailed", note: "notSaved" },
+    ]);
 
-    landed();
-    await vi.waitFor(() => expect(forgotten).toEqual(["k1"]));
+    begin();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(written).toEqual([]);
+  });
+
+  it("waits for a write that began in time, however long it takes to land", async () => {
+    let land = () => {};
+    let state = recording.reduce(lessonReducer, START);
+    const taking = keepTake(
+      kept,
+      {
+        keep: async (_, wanted) => {
+          wanted();
+          await new Promise<void>((resolve) => (land = resolve));
+        },
+      },
+      (event) => {
+        state = lessonReducer(state, event);
+      },
+      async () => {},
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(state.phase.name).toBe("saving");
+
+    land();
+    await taking;
+    expect(state.phase).toEqual({ name: "checking", move: step, key: "k1" });
+  });
+
+  it("shows the take being saved, not the recording, until the save settles", async () => {
+    let state = recording.reduce(lessonReducer, START);
+    void keepTake(
+      kept,
+      { keep: () => new Promise(() => {}) },
+      (event) => {
+        state = lessonReducer(state, event);
+      },
+      () => new Promise(() => {}),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(state).toEqual({
+      phase: { name: "saving", move: step },
+      note: null,
+    });
   });
 
   it("gives the turn back, saying so, when the device never answers", async () => {

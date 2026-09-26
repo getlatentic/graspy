@@ -17,7 +17,7 @@ val KEPT_RESULT: JsonObject = buildJsonObject {
         buildJsonArray {
             add(buildJsonObject {
                 put("type", "text")
-                put("text", "There is no connection: this is kept, and sent once there is.")
+                put("text", "This is kept on the device and sent later.")
             })
         },
     )
@@ -29,32 +29,51 @@ fun interface ToolCaller {
 }
 
 /**
- * A view's tools/call made with no connection is kept and sent in order once there is one, as the web's MCP
- * outbox does (lib/mcp/outbox.ts). These calls record what the learner did, and the server takes each again
- * without harm; one the server refuses is dropped, since it would be refused every time. A refused session
- * is an answer too: nothing is kept for it, and what was kept waits, since it says nothing of the calls.
+ * A view's tools/call the server did not take is kept and sent in order later, as the web's MCP outbox does
+ * (lib/mcp/outbox.ts). These calls record what the learner did, and the server takes each again without harm.
+ * A call leaves the device only once the server takes it or refuses that very call ([refusesTheCall]); a lost
+ * connection, a server failing or a session refused keeps it. Nothing is kept once the device no longer learns
+ * as the learner ([stillLearning]), so a wipe leaves nothing of them.
  */
-class McpOutbox(private val dao: KeptCallDao, private val ownerId: String, private val server: ToolCaller, private val clock: () -> Long = System::currentTimeMillis) {
-    private val sending = Mutex()
-
-    suspend fun callOrKeep(name: String, arguments: JsonObject): JsonObject = try {
-        server.call(name, arguments)
-    } catch (failure: IOException) {
-        if (!failure.isUnreachable()) throw failure
-        dao.keep(KeptCallEntity(ownerId = ownerId, name = name, argumentsJson = arguments.toString(), keptAt = clock()))
-        KEPT_RESULT
+class McpOutbox(
+    private val dao: KeptCallDao,
+    private val ownerId: String,
+    private val server: ToolCaller,
+    private val stillLearning: () -> Boolean,
+    /** Runs the learner check and the write as one: a wipe waits for a write already checked, then takes it too. */
+    private val inOneTransaction: suspend (suspend () -> Unit) -> Unit = { it() },
+    private val clock: () -> Long = System::currentTimeMillis,
+) {
+    suspend fun callOrKeep(name: String, arguments: JsonObject): JsonObject {
+        val failure = try {
+            return server.call(name, arguments)
+        } catch (failure: IOException) {
+            failure
+        }
+        if (failure.refusesTheCall() || !keep(name, arguments)) throw failure
+        return KEPT_RESULT
     }
 
-    /** Sends what was kept, in order; stops at the first that cannot reach the server or has its session refused. How many went. */
+    private suspend fun keep(name: String, arguments: JsonObject): Boolean {
+        var kept = false
+        inOneTransaction {
+            if (stillLearning()) {
+                dao.keep(KeptCallEntity(ownerId = ownerId, name = name, argumentsJson = arguments.toString(), keptAt = clock()))
+                kept = true
+            }
+        }
+        return kept
+    }
+
+    /** Sends what was kept, in order; stops at the first the server neither took nor refused. How many went. */
     suspend fun sendKept(): Int = sending.withLock {
         var sent = 0
         for (call in dao.kept(ownerId)) {
             try {
                 server.call(call.name, mcpJson.parseToJsonElement(call.argumentsJson).jsonObject)
-            } catch (refused: McpRefusal) {
-                Log.w(TAG, "The server refused a kept ${call.name}", refused)
-            } catch (unreachableOrSessionRefused: IOException) {
-                break
+            } catch (failure: IOException) {
+                if (!failure.refusesTheCall()) break
+                Log.w(TAG, "The server refused a kept ${call.name}", failure)
             }
             dao.forget(call.id)
             sent += 1
@@ -62,7 +81,16 @@ class McpOutbox(private val dao: KeptCallDao, private val ownerId: String, priva
         sent
     }
 
+    /** Sends what was kept; false while some of it is still on the device. */
+    suspend fun sentEverything(): Boolean {
+        sendKept()
+        return dao.kept(ownerId).isEmpty()
+    }
+
     private companion object {
         const val TAG = "GraspyOutbox"
+
+        /** One run at a time on the device, whichever screen or leave started it, so no call goes twice at once. */
+        val sending = Mutex()
     }
 }

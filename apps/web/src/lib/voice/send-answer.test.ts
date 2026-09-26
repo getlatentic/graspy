@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { KeptAnswer, Settled } from "./answer-store";
 import { sendAnswer, type AnswerApi } from "./send-answer";
-import { VoiceError } from "./voice-api";
+import { VoiceError, type VoiceCode } from "./voice-api";
 import type { MarkedTurn } from "./voice-types";
 
 const answer: KeptAnswer = {
@@ -79,13 +79,47 @@ describe("sendAnswer", () => {
 
   it("keeps the answer when the server cannot be reached, and resumes after the upload", async () => {
     api.evaluate.mockRejectedValueOnce(new VoiceError("offline", 0, null));
-    await expect(send()).resolves.toEqual({ kind: "kept" });
+    await expect(send()).resolves.toEqual({
+      kind: "kept",
+      status: 0,
+      code: null,
+    });
     const resumed = kept.get("key-1")!;
     expect(resumed).toMatchObject({ sampleId: "gvm_1", uploaded: true });
 
     await expect(send(resumed)).resolves.toMatchObject({ kind: "marked" });
     expect(api.createSample).toHaveBeenCalledTimes(1);
     expect(api.uploadAudio).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the answer at once when the server names a wait longer than its polling", async () => {
+    api.evaluate.mockResolvedValue({
+      sample_id: "gvm_1",
+      state: "processing",
+      retry_after_ms: 100_000,
+    });
+    await expect(send()).resolves.toEqual({
+      kind: "kept",
+      status: 202,
+      code: null,
+      retryAfterMs: 100_000,
+    });
+    expect(api.evaluate).toHaveBeenCalledTimes(1);
+  });
+
+  it("waits out a short wait the server names, then asks again", async () => {
+    const pause = vi.fn(async () => {});
+    api.evaluate
+      .mockResolvedValueOnce({
+        sample_id: "gvm_1",
+        state: "processing",
+        retry_after_ms: 10_000,
+      })
+      .mockResolvedValueOnce(TURN);
+    await expect(
+      sendAnswer(answer, api as unknown as AnswerApi, keeping, pause),
+    ).resolves.toMatchObject({ kind: "marked" });
+    expect(pause).toHaveBeenCalledWith(10_000);
   });
 
   it("asks again while another request is marking it", async () => {
@@ -121,14 +155,14 @@ describe("sendAnswer", () => {
 
   it.each([
     [422, "no_speech"],
-    [502, "provider_failure"],
     [409, "step_not_offered"],
     [409, "unsupported_prompt"],
     [409, "idempotency_conflict"],
+    [404, null],
   ] as const)(
     "hands back a %i %s and keeps only the refusal",
     async (status, code) => {
-      api.evaluate.mockRejectedValueOnce(new VoiceError(code, status, code));
+      api.evaluate.mockRejectedValueOnce(new VoiceError("no", status, code));
       const refused = { kind: "refused", code, status };
       await expect(send()).resolves.toEqual(refused);
       expect(kept.size).toBe(0);
@@ -136,10 +170,25 @@ describe("sendAnswer", () => {
     },
   );
 
-  it("keeps the answer through a server failure that names no refusal", async () => {
-    api.createSample.mockRejectedValueOnce(new VoiceError("down", 503, null));
-    await expect(send()).resolves.toEqual({ kind: "kept" });
-    expect(kept.has("key-1")).toBe(true);
-    expect(settled.size).toBe(0);
-  });
+  it.each([
+    [503, null],
+    [429, "rate_limited"],
+    [502, "provider_failure"],
+    [503, "voice_unavailable"],
+    [520, null],
+    [505, null],
+    [401, null],
+    [403, null],
+    [409, "learner_required"],
+  ] as const)(
+    "keeps the answer through a %i %s, which may pass on a later try",
+    async (status, code) => {
+      api.evaluate.mockRejectedValueOnce(
+        new VoiceError("later", status, code as VoiceCode | null),
+      );
+      await expect(send()).resolves.toEqual({ kind: "kept", status, code });
+      expect(kept.has("key-1")).toBe(true);
+      expect(settled.size).toBe(0);
+    },
+  );
 });

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch } from "react";
-import { forgetAnswer, keepAnswer } from "@/lib/voice/answer-store";
+import { keepAnswer } from "@/lib/voice/answer-store";
 import { startTake, type Take } from "@/lib/voice/recorder";
 import type { LessonMove } from "@/lib/voice/voice-types";
 import { carryOn, followAnswer } from "../lib/follow-answer";
@@ -56,11 +56,7 @@ export function useAnswerTake(
       if (result.kind !== "answer") return;
       const key = crypto.randomUUID();
       const kept = answerToKeep(move, learner, result.wav, key, Date.now());
-      await keepTake(
-        kept,
-        { keep: keepAnswer, forget: forgetAnswer },
-        dispatch,
-      );
+      await keepTake(kept, { keep: keepAnswer }, dispatch);
     },
     [dispatch, learner],
   );
@@ -68,7 +64,8 @@ export function useAnswerTake(
   return {
     record,
     stop: () => take.current?.stop(),
-    carryOn: () => phase.name === "kept" && void carryOn(phase.key, dispatch),
+    carryOn: () =>
+      phase.name === "kept" && void carryOn(phase.key, learner.key, dispatch),
     levels,
   };
 }

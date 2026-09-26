@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 
-/** A view's tools/call made with no connection, kept to send in order once there is one. */
+/** A view's tools/call the server did not take, kept to send in order later. */
 @Entity(tableName = "kept_view_calls")
 data class KeptCallEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

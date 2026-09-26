@@ -5,7 +5,8 @@ import org.robolectric.Shadows.shadowOf
 
 /**
  * Runs Robolectric's main thread until [done], failing after [timeoutMs] rather than hanging. View models
- * resume on the main thread, which runs only when a test lets it.
+ * resume on the main thread, which runs only when a test lets it. Compose's test clock does not move here, so
+ * what waits on a screen recomposing waits with the compose rule's waitUntil.
  */
 fun settleMain(timeoutMs: Long = 5_000, done: () -> Boolean) {
     val until = System.currentTimeMillis() + timeoutMs

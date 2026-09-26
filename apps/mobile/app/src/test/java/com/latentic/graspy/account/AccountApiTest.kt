@@ -101,7 +101,8 @@ class AccountApiTest {
 
         assertEquals("too_many_learners", refusalCode(refused))
         assertEquals(ChoiceProblem.FULL, choiceProblem(refused))
-        assertEquals(ChoiceProblem.UNSENT, choiceProblem(UnsentChanges()))
+        assertEquals(ChoiceProblem.OFFLINE, choiceProblem(UnsentChanges(offline = true)))
+        assertEquals(ChoiceProblem.UNSENT, choiceProblem(UnsentChanges(offline = false)))
         assertEquals(ChoiceProblem.FAILED, choiceProblem(java.io.IOException("offline")))
     }
 

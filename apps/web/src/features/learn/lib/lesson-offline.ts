@@ -13,8 +13,8 @@ import {
   type TopicMark,
   type TopicRef,
 } from "@/lib/learner-record";
-import { isUnreachable } from "@/lib/mcp/outbox";
 import { callAppTool } from "@/lib/mcp/server";
+import { isUnreachable } from "@/lib/mcp/unreachable";
 import {
   keptLesson,
   lessonStateOf,

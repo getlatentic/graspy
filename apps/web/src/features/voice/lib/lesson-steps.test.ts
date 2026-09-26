@@ -20,6 +20,11 @@ import { lessonPage, names, noPause, notYet, reload } from "./lesson-page.fake";
 
 vi.mock("@/lib/api/session", () => ({ fetchWithSession: respond }));
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
+// Whom the device learns as; a test may switch it.
+const device = vi.hoisted(() => ({ learner: "device/abc" }));
+vi.mock("@/lib/voice/voice-learner-key", () => ({
+  voiceLearnerKey: () => device.learner,
+}));
 
 beforeEach(async () => {
   resetServer();
@@ -108,6 +113,22 @@ describe("a voice lesson reloaded with an answer kept", () => {
     expect(page.state).toEqual({
       phase: { name: "your-turn", move: ASKED },
       note: "noSpeech",
+    });
+  });
+
+  it("keeps an answer the session names no learner for, and says to choose who is learning", async () => {
+    server.refusal = { status: 409, code: "learner_required" };
+    const app = await reload();
+    const page = lessonPage(app);
+
+    await page.open();
+    void page.follow();
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("failed"));
+    page.leave();
+    expect(page.state.note).toBe("learnerRequired");
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toEqual({
+      key: "key-1",
+      move: ASKED,
     });
   });
 

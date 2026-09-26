@@ -85,6 +85,8 @@ export interface MarkedTurn {
   spoken_language?: string;
 }
 
-/** The evaluation's answer: marked, or still being marked by another request. */
+/** The evaluation's answer: marked, or still being marked by another request. `retry_after_ms`
+ * names how long until a failed marking is tried again. */
 export type Evaluation =
-  MarkedTurn | { sample_id: string; state: "processing" };
+  | MarkedTurn
+  | { sample_id: string; state: "processing"; retry_after_ms?: number };

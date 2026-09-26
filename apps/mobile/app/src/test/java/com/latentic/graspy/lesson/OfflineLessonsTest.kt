@@ -189,6 +189,18 @@ class OfflineLessonsTest {
     }
 
     @Test
+    fun `a lesson the server no longer had is forgotten once the record leaves it out, so it is asked for when named again`() = runBlocking {
+        server.answers = lessonResult("failed", whole = false)
+        copying(until = { server.called.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
+        copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(2 to "Decimals")) }
+        server.called.clear()
+
+        copying(until = { server.viewsKept == 3 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(listOf("lesson_progress"), server.called)
+    }
+
+    @Test
     fun `a copy is fetched again once the record names a new lesson for its topic`() = runBlocking {
         server.answers = lessonResult("ready")
         copying(until = { copies.topics("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }

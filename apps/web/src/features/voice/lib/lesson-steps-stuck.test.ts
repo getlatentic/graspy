@@ -13,10 +13,21 @@ import {
 } from "@/lib/voice/voice-worker.fake";
 import { type LessonEvent } from "./lesson-state";
 
-import { deadlines, lessonPage, noPause, reload } from "./lesson-page.fake";
+import {
+  deadlines,
+  lessonPage,
+  noPause,
+  notYet,
+  reload,
+} from "./lesson-page.fake";
 
 vi.mock("@/lib/api/session", () => ({ fetchWithSession: respond }));
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
+// Whom the device learns as; a test may switch it.
+const device = vi.hoisted(() => ({ learner: "device/abc" }));
+vi.mock("@/lib/voice/voice-learner-key", () => ({
+  voiceLearnerKey: () => device.learner,
+}));
 
 beforeEach(async () => {
   resetServer();
@@ -99,6 +110,21 @@ describe("an answer whose marking never answers", () => {
   });
 });
 
+describe("an answer whose failed marking waits for its next attempt", () => {
+  it("is asked about again only once the wait the server named is over", async () => {
+    server.retryAt = 30 * 60 * 1000;
+    const page = lessonPage(await reload());
+    await page.open();
+    const later = async (ms: number) => void (server.now += ms);
+
+    await page.follow(later);
+    expect(page.state.phase).toMatchObject({ name: "result" });
+    expect(
+      sent("POST /api/voice/samples/gvm_key-1/evaluation").length,
+    ).toBeLessThanOrEqual(3);
+  });
+});
+
 describe("an answer the child carries on past", () => {
   async function keptOnScreen() {
     server.busy = 1;
@@ -131,6 +157,15 @@ describe("an answer the child carries on past", () => {
     expect(await app.settledOf("key-1")).toBeNull();
   });
 
+  it("is sent again once the retry is due, while the device stays online", async () => {
+    const { page } = await keptOnScreen();
+    await page.carryOn(async () => {});
+    await vi.waitFor(() => expect(server.marked.has("gvm_key-1")).toBe(true));
+    expect(sent("POST /api/voice/samples/gvm_key-1/evaluation")).toHaveLength(
+      2,
+    );
+  });
+
   it("never shows the outcome of a send under way when it lands", async () => {
     const { app, page } = await keptOnScreen();
     const release = holdMarking();
@@ -158,7 +193,13 @@ describe("carrying on while storage never answers", () => {
     }));
     const events: LessonEvent[] = [];
     const app = await reload();
-    await app.carryOn("key-1", (event) => events.push(event), noPause);
+    await app.carryOn(
+      "key-1",
+      LEARNER.key,
+      (event) => events.push(event),
+      noPause,
+      notYet,
+    );
     expect(events).toEqual([{ type: "carriedOn", key: "key-1" }]);
   });
 });

@@ -12,7 +12,13 @@ from ..caller import Caller
 from ..config.generation import DEFAULT_GRADE_LEVEL
 from ..learner.record import Seen
 from ..learner.time import now_ms
-from ..security.firebase import InvalidSignIn, SignedIn, lookup_url, verified
+from ..security.firebase import (
+    InvalidSignIn,
+    SignedIn,
+    SignInUnchecked,
+    lookup_url,
+    verified,
+)
 from ..security.guard import require_session
 from ..security.session import issue
 from .sse import sse_response
@@ -165,6 +171,11 @@ async def _signed_in(request: Request, id_token: str) -> SignedIn:
         raise HTTPException(
             status_code=401, detail={"error": str(refused), "code": "sign_in_invalid"}
         ) from refused
+    except SignInUnchecked as unchecked:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": str(unchecked), "code": "sign_in_unchecked"},
+        ) from unchecked
 
 
 @api_router.get(

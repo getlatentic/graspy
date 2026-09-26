@@ -4,6 +4,7 @@ import android.app.Application
 import com.latentic.graspy.account.PreferenceFiles
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.latentic.graspy.account.Outbox
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.lesson.OfflineLessons
 import com.latentic.graspy.plan.RecordRead
@@ -15,7 +16,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 
 /**
  * The learner's MCP connection, kept while they learn here so the server's catalogue is read once. The
- * view calls kept while there was no connection are sent whenever there is one, and the plan's ready
+ * view calls the server has yet to take are sent whenever there is a connection, and the plan's ready
  * lessons are copied here each time the server gives the learner's record.
  */
 class LearnerViews internal constructor(
@@ -47,6 +48,9 @@ class LearnerViews internal constructor(
         const val TAG = "GraspyViews"
     }
 }
+
+/** A learner's kept view calls, sent before the device leaves them: whether none is left on the phone. */
+fun keptViewCalls(application: Application): Outbox = Outbox { learnerKey -> connectionFor(application, learnerKey).sentEverything() }
 
 private fun connectionFor(application: Application, ownerId: String) = LearnerConnection(
     database = AppGraph.database(application),

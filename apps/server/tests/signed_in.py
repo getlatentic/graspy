@@ -14,6 +14,8 @@ UID = "uid123"
 
 def signed_in_app(monkeypatch, name: str = "Ada Lovelace"):
     async def verified(id_token, _api_key, **_):
+        if id_token == "unchecked":
+            raise firebase.SignInUnchecked("Sign-in could not be checked. Try again.")
         if id_token != "good":
             raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
         return firebase.SignedIn(uid=UID, name=name)

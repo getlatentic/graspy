@@ -12,6 +12,8 @@ import {
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
+import { NotForViews } from "./refusal";
+import { isUnreachable } from "./unreachable";
 
 // The app is an MCP Apps host; graspy's server serves the views and runs their tools.
 const API_ORIGIN = new URL(API_BASE_URL).origin;
@@ -108,19 +110,20 @@ async function readOnce(uri: string): Promise<UiView> {
   if (!view) {
     view = readView(client, uri, titles.get(uri) ?? uri);
     views.set(uri, view);
-    view.then(
-      (read) => keepView(uri, read),
-      () => views.delete(uri),
-    );
+    view.catch(() => views.delete(uri));
   }
   return view;
 }
 
 // Kept so a view still opens after a reload without a connection. The document is small:
-// its scripts and styles are files the sandbox's worker keeps.
+// its scripts and styles are hashed files the sandbox's worker caches as the page loads them.
+// A shown view's page replaces its copy only once the view has initialized in the sandbox, so
+// the files it loaded are cached. The background read keeps a page only for a view with no
+// copy: a view never shown may have a copy whose files the sandbox has not cached.
 const keptKey = (uri: string) => `graspy.view.${uri}`;
 
-function keepView(uri: string, view: UiView): void {
+/** Keeps a view's page, to open without a connection. */
+export function keepView(uri: string, view: UiView): void {
   try {
     window.localStorage.setItem(keptKey(uri), JSON.stringify(view));
   } catch {
@@ -137,15 +140,20 @@ function keptView(uri: string): UiView | null {
   }
 }
 
-/** Read once per visit; without a connection, the copy last read. */
+/** The view to show, read once per visit; with no server to reach, the copy kept. A refusal is its answer. */
 export async function uiView(uri: string): Promise<UiView> {
   try {
     return await readOnce(uri);
   } catch (error) {
-    const kept = keptView(uri);
+    const kept = isUnreachable(error) ? keptView(uri) : null;
     if (kept) return kept;
     throw error;
   }
+}
+
+/** Connects, or rejects with why it could not. */
+export async function reachServer(): Promise<void> {
+  await server();
 }
 
 export async function callAppTool(
@@ -153,9 +161,7 @@ export async function callAppTool(
   args: Record<string, unknown>,
 ): Promise<CallToolResult> {
   const { client, appTools } = await server();
-  if (!appTools.has(name)) {
-    throw new Error(`${name} cannot be called from a view`);
-  }
+  if (!appTools.has(name)) throw new NotForViews(name);
   return (await client.callTool({ name, arguments: args })) as CallToolResult;
 }
 
@@ -176,7 +182,12 @@ export async function openToolView(
   return { resourceUri, toolName: name, toolInput: args, toolResult };
 }
 
+/** Keeps each view that has no copy yet; a copy is left as it is. */
 export async function readAllViews(): Promise<void> {
   const { titles } = await server();
-  await Promise.all([...titles.keys()].map(uiView));
+  await Promise.all(
+    [...titles.keys()]
+      .filter((uri) => !keptView(uri))
+      .map(async (uri) => keepView(uri, await readOnce(uri))),
+  );
 }

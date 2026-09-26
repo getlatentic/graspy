@@ -1,4 +1,9 @@
-import { ApiError, toApiError, toNetworkError } from "./errors";
+import {
+  ApiError,
+  UNREADABLE_ANSWER,
+  toApiError,
+  toNetworkError,
+} from "./errors";
 import { fetchWithSession } from "./session";
 
 const HEARTBEAT_EVENT = "ping";
@@ -17,7 +22,10 @@ async function openStream(
   }
   if (!response.ok) throw await toApiError(response);
   if (!response.body) {
-    throw new ApiError("Stream closed before any data arrived", 0);
+    throw new ApiError(
+      "Stream closed before any data arrived",
+      UNREADABLE_ANSWER,
+    );
   }
   return response.body.getReader();
 }

@@ -58,7 +58,7 @@ fun LearnerPickerScreen(
             else -> Choosing(copy, account, learners, state, onBack, { viewModel.choose(it, onChosen) }, viewModel::startAdding)
         }
         if (learners != null) {
-            Status(copy, state)
+            ChoiceStatus(copy, state, { viewModel.anyway(onChosen) }, viewModel::cancel)
             AccountLine(copy, account, viewModel::leaveForAnotherAccount)
         }
     }
@@ -134,8 +134,9 @@ private fun LoadFailed(copy: AccountCopy, onRetry: () -> Unit) {
     }
 }
 
+/** Opening the learner, or why not; a switch that would lose what is unsent asks first, as sign-out does. */
 @Composable
-private fun Status(copy: AccountCopy, state: PickerState) {
+internal fun ChoiceStatus(copy: AccountCopy, state: PickerState, onAnyway: () -> Unit, onCancel: () -> Unit) {
     if (state.busy) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(space(2))) {
             CircularProgressIndicator(color = GraspyColor.Accent, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
@@ -143,14 +144,12 @@ private fun Status(copy: AccountCopy, state: PickerState) {
         }
         return
     }
-    val problem = state.problem ?: return
-    ProblemNote(
-        when (problem) {
-            ChoiceProblem.UNSENT -> copy.unsent
-            ChoiceProblem.FULL -> copy.full
-            ChoiceProblem.FAILED -> copy.failed
-        },
-    )
+    when (state.problem ?: return) {
+        ChoiceProblem.UNSENT -> ConfirmCard(copy.unsent, copy.switchAnyway, copy.cancel, busy = false, onAnyway, onCancel)
+        ChoiceProblem.OFFLINE -> ProblemNote(copy.offline)
+        ChoiceProblem.FULL -> ProblemNote(copy.full)
+        ChoiceProblem.FAILED -> ProblemNote(copy.failed)
+    }
 }
 
 /** The account signed in; before a learner is chosen, a wrong one can be left without losing anything. */

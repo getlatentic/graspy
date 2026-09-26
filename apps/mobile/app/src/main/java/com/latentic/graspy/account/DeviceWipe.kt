@@ -36,8 +36,8 @@ class DeviceWipe(
 
     /**
      * Signed out: nothing of the account or any learner stays, and the device takes a new id. The learner goes
-     * first, as in [leaveLearner]; the account goes last, so a sign-out cut short leaves it here with Firebase
-     * signed out, and the next start finishes it.
+     * first, as in [leaveLearner]; the account goes last, so a sign-out cut short leaves it here, with the sign-out's
+     * note, and the next start finishes it.
      */
     suspend fun wipeDevice() = withContext(Dispatchers.IO) {
         accounts.setLearner(null)

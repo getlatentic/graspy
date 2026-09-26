@@ -49,10 +49,14 @@ async function store(mode: IDBTransactionMode) {
   return { tx, answers: tx.objectStore(VOICE_ANSWER_STORE) };
 }
 
-export async function keepAnswer(answer: KeptAnswer): Promise<void> {
+/** Keeps a new answer, unless `wanted` says no once its write can begin. */
+export async function keepAnswer(
+  answer: KeptAnswer,
+  wanted: () => boolean = () => true,
+): Promise<void> {
   const { tx, answers } = await store("readwrite");
   const done = committed(tx);
-  answers.put(answer);
+  if (wanted()) answers.put(answer);
   await done;
 }
 

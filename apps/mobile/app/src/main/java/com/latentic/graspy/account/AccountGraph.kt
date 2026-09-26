@@ -7,7 +7,11 @@ import com.latentic.graspy.auth.GoogleSignIn
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
 import com.latentic.graspy.localization.LearnerProfileStore
+import com.latentic.graspy.mcp.keptViewCalls
 import com.latentic.graspy.sync.networkReach
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 
@@ -34,7 +38,7 @@ class AccountGraph(private val context: Application) {
             idToken = firebase::idToken,
             exchange = sessionApi::session,
             learnerGone = { wipe.leaveLearner() },
-            signedOutElsewhere = { entry.signOut() },
+            signedOutElsewhere = { uid -> entry.signOut(of = uid) },
         )
     }
 
@@ -46,11 +50,16 @@ class AccountGraph(private val context: Application) {
 
     val deviceLearning by lazy { DeviceLearning(AppGraph.database(context), profiles) }
 
+    private suspend fun online(): Boolean = networkReach(context).first()
+
     val outbox: Outbox by lazy {
-        RecordingOutbox(
-            dao = AppGraph.database(context).submissionDao(),
-            repository = AppGraph.submissionRepository(context),
-            online = { networkReach(context).first() },
+        UnsentWork(
+            online = ::online,
+            outboxes = listOf(
+                RecordingOutbox(AppGraph.database(context).submissionDao(), AppGraph.submissionRepository(context)),
+                keptViewCalls(context),
+            ),
+            sending = CoroutineScope(SupervisorJob() + Dispatchers.IO),
         )
     }
 
@@ -61,6 +70,7 @@ class AccountGraph(private val context: Application) {
             sessions = sessions,
             deviceId = deviceIds::current,
             outbox = outbox,
+            online = ::online,
             leaveLearner = wipe::leaveLearner,
             claimDeviceLearning = deviceLearning::claim,
         )
