@@ -13,6 +13,11 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.latentic.graspy.R
 import kotlinx.coroutines.CancellationException
 
+/** The Google account sheet: [askWhichAccount] leaves out signing the last account in without asking. */
+fun interface GoogleAccountSheet {
+    suspend fun signIn(askWhichAccount: Boolean): SignInOutcome
+}
+
 sealed interface SignInOutcome {
     data class Succeeded(val userId: String) : SignInOutcome
     data object Cancelled : SignInOutcome
@@ -24,15 +29,16 @@ class GoogleSignIn(
     private val context: Context,
     private val session: FirebaseSession,
     private val serverClientId: String = context.getString(R.string.default_web_client_id),
-) {
-    suspend fun signIn(): SignInOutcome {
+) : GoogleAccountSheet {
+    override suspend fun signIn(askWhichAccount: Boolean): SignInOutcome {
         if (AuthEmulator.enabled) return emulatorSignIn()
-        val options = listOf(
-            GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(true)
-                .setServerClientId(serverClientId)
-                .setAutoSelectEnabled(true)
-                .build(),
+        val lastAccount = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(true)
+            .setServerClientId(serverClientId)
+            .setAutoSelectEnabled(true)
+            .build()
+        val options = listOfNotNull(
+            lastAccount.takeUnless { askWhichAccount },
             GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(serverClientId)

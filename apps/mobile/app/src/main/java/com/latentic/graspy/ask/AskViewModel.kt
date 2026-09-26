@@ -50,8 +50,7 @@ data class TurnState(
  * subject or general question, its messages on the phone, the tutor's memory of it on the server. What a
  * view did waits, deduplicated, for the next message, which carries it to the tutor.
  */
-class AskViewModel(application: Application) : AndroidViewModel(application) {
-    private val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
+class AskViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
     private val tutor = TutorClient(AppGraph.callsFor(application, ownerId), "$API_ORIGIN/a2a".toHttpUrl())
     private val store = ChatStore(AppGraph.database(application).chatDao(), ownerId)
     private val openScope = MutableStateFlow<ThreadScope?>(null)

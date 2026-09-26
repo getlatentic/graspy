@@ -1,6 +1,8 @@
 package com.latentic.graspy.account
 
 import android.content.Context
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.robolectric.RuntimeEnvironment
@@ -71,3 +73,7 @@ class FakeAccountApi(learners: List<LearnerDto> = listOf(ADA, BAYO)) : AccountAp
         calls += "delete"
     }
 }
+
+/** Firebase for the Auth emulator's demo project, which holds no one: no call leaves the test. */
+fun demoFirebase(): FirebaseApp = FirebaseApp.getApps(context()).firstOrNull()
+    ?: FirebaseApp.initializeApp(context(), FirebaseOptions.Builder().setProjectId("demo-graspy").setApplicationId("1:0:android:0").setApiKey("demo-key").build())
