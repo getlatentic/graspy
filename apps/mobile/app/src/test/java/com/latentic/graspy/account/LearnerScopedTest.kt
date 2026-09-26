@@ -127,7 +127,7 @@ class LearnerScopedTest {
     @Test
     fun `a plan read refused once the device has left the learner keeps nothing`() {
         val kept = application.getSharedPreferences(PreferenceFiles.PLAN, 0)
-        kept.edit(commit = true) { putString("plan", LearnerPlan(planId = "p").toJson().toString()) }
+        kept.edit(commit = true) { putString("plan:u/ada", LearnerPlan(planId = "p").toJson().toString()) }
         val plan = PlanViewModel(application, "u/ada")
         kept.edit(commit = true) { clear() }
 

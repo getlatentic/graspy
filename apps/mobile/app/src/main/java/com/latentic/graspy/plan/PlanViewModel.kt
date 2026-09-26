@@ -2,7 +2,6 @@ package com.latentic.graspy.plan
 
 import android.app.Application
 import android.util.Log
-import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.BuildConfig
@@ -20,7 +19,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
@@ -48,8 +46,8 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
     private val calls = AppGraph.callsFor(application, ownerId)
     private val api = retrofit(calls).create(PlanApi::class.java)
     private val maker = PlanMaker(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::curriculum)
-    private val kept = application.getSharedPreferences(PreferenceFiles.PLAN, 0)
-    private val shown = MutableStateFlow(keptState())
+    private val kept = KeptPlan(application.getSharedPreferences(PreferenceFiles.PLAN, 0), ownerId) { AppGraph.account(application).learnsAs(ownerId) }
+    private val shown = MutableStateFlow<PlanState>(kept.read() ?: PlanState.Loading)
     private val making = MutableStateFlow<Making?>(null)
     private var makingJob: Job? = null
     private var lastOrder: (suspend () -> LearnerPlan)? = null
@@ -166,20 +164,8 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
         return PlanState.Ready(plan, record)
     }
 
-    private fun keptState(): PlanState {
-        val plan = kept.getString(PLAN_KEY, null) ?: return PlanState.Loading
-        return runCatching {
-            val record = kept.getString(RECORD_KEY, null)?.let { planJson.decodeFromString<LearnerRecord>(it) } ?: LearnerRecord()
-            PlanState.Ready(LearnerPlan.of(planJson.parseToJsonElement(plan).jsonObject), record)
-        }.getOrDefault(PlanState.Loading)
-    }
-
     private fun keep(state: PlanState) {
-        val ready = state as? PlanState.Ready ?: return
-        kept.edit {
-            putString(PLAN_KEY, ready.plan.toJson().toString())
-            putString(RECORD_KEY, planJson.encodeToString(LearnerRecord.serializer(), ready.record))
-        }
+        (state as? PlanState.Ready)?.let(kept::keep)
     }
 
     private suspend fun <T> runCatchingPlan(block: suspend () -> T): Result<T> = try {
@@ -193,7 +179,5 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
 
     private companion object {
         const val TAG = "GraspyPlan"
-        const val PLAN_KEY = "plan"
-        const val RECORD_KEY = "record"
     }
 }

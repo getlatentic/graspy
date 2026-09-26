@@ -82,7 +82,7 @@ private class LearnerFactory(
 
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         val make = makers[modelClass]
-        if (make != null) return modelClass.cast(make(application, learnerKey))
+        if (make != null) return requireNotNull(modelClass.cast(make(application, learnerKey)))
         check(madeWithoutALearner(modelClass)) { "${modelClass.simpleName} belongs to a learner: list it in LEARNER_VIEW_MODELS" }
         return plain.create(modelClass, extras)
     }
