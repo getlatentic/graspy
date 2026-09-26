@@ -52,12 +52,12 @@ In development, `apps/web/.env.development` points sign-in at the emulator (`VIT
 npm test && npm run lint                                  # every npm package
 cd apps/web && npm run test:e2e                           # Cypress, with npm run dev and the Auth emulator running
 cd apps/mobile && ./gradlew testDebugUnitTest lintDebug   # Android, set up as apps/mobile/README.md says
-cd apps/teacher && npm run test:rust && npm run lint:rust # the teacher app's Rust and clippy, after npm run sidecars (macOS arm64)
+cd apps/teacher && npm run test:rust && npm run lint:rust # the teacher app's Rust and clippy; needs src-tauri/binaries/ (npm run sidecars, or empty files as CI uses)
 cd apps/server && uv run pytest -m integration            # real model calls, spends tokens
 cd apps/server && uv run mutmut run                       # finds tests that check nothing
 ```
 
-- Changes reach `main` through a pull request. CI (`.github/workflows/ci.yml`) runs the server, web, Android and teacher suites and the teacher's clippy, and a failing job blocks the merge.
+- Changes reach `main` through a pull request. CI (`.github/workflows/ci.yml`) runs the server, web, tutor, admin UI, Android and teacher suites and the teacher's clippy, and a failing job blocks the merge.
 - The server's unit tests never call a model. A stand-in model (`tests/stand_in.py`) answers through the real DSPy adapter, and each test reads back what every stage asked.
 - The e2e specs stub nothing: a real browser, server and model, and Google's sign-in is the Auth emulator. A full run takes about five minutes.
 - `tests/fixtures/slug-corpus.json` is read by both the server and the web app's tests. Both must spell a subject's slug the same way.
