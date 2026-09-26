@@ -50,7 +50,7 @@ function LessonBody({
   const navigate = useNavigate();
   const { isLoaded } = usePlan();
   const progress = useProgress();
-  const { key, card, unreachable, retry } = useLessonCard(target);
+  const { key, card, failure, retry } = useLessonCard(target);
   const [finished, setFinished] = useState("");
   const [objectives, setObjectives] = useState<string[]>([]);
 
@@ -58,7 +58,7 @@ function LessonBody({
     loaded: isLoaded,
     hasSubject: subject !== null,
     hasTarget: target !== null,
-    unreachable,
+    failure,
     online: navigator.onLine,
   });
   if (problem) {

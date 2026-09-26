@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError, NetworkError } from "@/lib/api/errors";
+import type { KeptAnswer } from "./answer-store";
+import { sendAnswer } from "./send-answer";
 
 type Respond = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -162,5 +165,47 @@ describe("the voice API client", () => {
       .catch((e: unknown) => e)) as InstanceType<typeof api.VoiceError>;
     expect(error.unreachable).toBe(true);
     expect(error.code).toBeNull();
+  });
+});
+
+describe("a child's answer when the session fails", () => {
+  const answer: KeptAnswer = {
+    key: "key-1",
+    learner: "device/abc",
+    metadata: {} as KeptAnswer["metadata"],
+    wav: new Blob(["RIFF"], { type: "audio/wav" }),
+    keptAt: 1,
+  };
+  let kept: Map<string, KeptAnswer>;
+  const keeping = {
+    keep: async (a: KeptAnswer) => void kept.set(a.key, a),
+    forget: async (key: string) => void kept.delete(key),
+  };
+  const send = () => sendAnswer(answer, api, keeping, async () => {});
+
+  beforeEach(() => {
+    kept = new Map([[answer.key, answer]]);
+  });
+
+  it("is kept while the session cannot reach graspy", async () => {
+    fetchWithSession.mockImplementation(async () => {
+      throw new NetworkError("Failed to fetch");
+    });
+
+    await expect(send()).resolves.toEqual({ kind: "kept" });
+    expect(kept.has(answer.key)).toBe(true);
+  });
+
+  it("is settled when graspy refuses the session", async () => {
+    fetchWithSession.mockImplementation(async () => {
+      throw new ApiError("refused", 403);
+    });
+
+    await expect(send()).resolves.toEqual({
+      kind: "refused",
+      code: null,
+      status: 403,
+    });
+    expect(kept.has(answer.key)).toBe(false);
   });
 });

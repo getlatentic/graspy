@@ -369,6 +369,17 @@ describe("a session exchange", () => {
       () => fetchMock.mockResolvedValue(minted("")),
     ],
     [
+      "graspy's answer is not a session",
+      () =>
+        fetchMock.mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => {
+            throw new SyntaxError("Unexpected token '<'");
+          },
+        }),
+    ],
+    [
       "Google refuses the sign-in",
       () => {
         signedIn = ACCOUNT;
@@ -385,6 +396,7 @@ describe("a session exchange", () => {
 
     expect(failure).toBeInstanceOf(ApiError);
     expect(failure).not.toBeInstanceOf(NetworkError);
+    expect((failure as { retryable: boolean }).retryable).toBe(false);
   });
 });
 

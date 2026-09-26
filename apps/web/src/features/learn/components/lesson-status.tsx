@@ -23,7 +23,9 @@ export function LessonProblemCard({
       <h2 className="text-lg font-semibold text-ink">
         {t("lesson.loadFailed")}
       </h2>
-      <p className="mt-2 leading-7 text-muted">{t(problem.key)}</p>
+      {problem.key && (
+        <p className="mt-2 leading-7 text-muted">{t(problem.key)}</p>
+      )}
       <div className="mt-5 flex flex-wrap gap-3">
         {problem.retryable && (
           <Button onClick={onRetry}>{t("lesson.tryAgain")}</Button>

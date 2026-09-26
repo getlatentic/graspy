@@ -7,7 +7,7 @@ import {
 } from "@a2a-js/sdk/client";
 import type { AuthenticationHandler, Client } from "@a2a-js/sdk/client";
 import { A2A_BASE_URL } from "@/lib/env";
-import { ApiError, toNetworkError } from "@/lib/api/errors";
+import { ApiError, NetworkError, toNetworkError } from "@/lib/api/errors";
 import { getSessionToken, refreshSessionToken } from "@/lib/api/session";
 import {
   activityOf,
@@ -231,7 +231,7 @@ async function askOnce(
   }
 
   if (!heard.answer.trim() && !heard.finished) {
-    throw new ApiError("The tutor stopped before answering", 0);
+    throw new NetworkError("The tutor stopped before answering");
   }
   return { text: heard.answer.trim(), contextId: heard.thread, ...heard.data };
 }

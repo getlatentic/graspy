@@ -1,4 +1,5 @@
 import { audioFormat } from "./audio-format";
+import { toNetworkError } from "@/lib/api/errors";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
 import type {
@@ -59,8 +60,8 @@ async function send(url: string, init?: RequestInit): Promise<Response> {
   try {
     response = await fetchWithSession(url, init);
   } catch (cause) {
-    const message = cause instanceof Error ? cause.message : "Network failed";
-    throw new VoiceError(message, 0, null);
+    const { message, status } = toNetworkError(cause);
+    throw new VoiceError(message, status, null);
   }
   if (!response.ok) throw await refusalOf(response);
   return response;

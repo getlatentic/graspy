@@ -93,9 +93,15 @@ async function post(body: Record<string, string>): Promise<Response> {
 
 async function issued(response: Response): Promise<Issued> {
   if (!response.ok) throw await toApiError(response);
-  const { token, expiresIn, learner } = (await response.json()) as Issued;
-  if (!token) throw new ApiError("The server issued an empty session", 0);
-  return { token, expiresIn, learner };
+  const body = (await response.json().catch(() => null)) as Issued | null;
+  if (!body?.token) {
+    throw new ApiError("The server issued an empty session", response.status);
+  }
+  return {
+    token: body.token,
+    expiresIn: body.expiresIn,
+    learner: body.learner,
+  };
 }
 
 async function deviceSession(device: string): Promise<Response> {
@@ -115,7 +121,7 @@ async function idToken(fresh: boolean): Promise<string | null> {
   } catch (cause) {
     if (couldNotReachGoogle(cause)) throw toNetworkError(cause);
     const message = cause instanceof Error ? cause.message : String(cause);
-    throw new ApiError(`Google refused the sign-in: ${message}`, 0);
+    throw new ApiError(`Google refused the sign-in: ${message}`, 401);
   }
 }
 
@@ -227,7 +233,7 @@ export function keepLearnerSession({
   learner,
 }: Issued): void {
   const account = currentAccount();
-  if (!account || !learner) throw new ApiError("No learner was chosen", 0);
+  if (!account || !learner) throw new Error("No learner was chosen");
   pending = null;
   setLearner({ id: learner.id, name: learner.name });
   keep({

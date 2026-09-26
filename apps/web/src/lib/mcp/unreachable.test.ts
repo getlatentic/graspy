@@ -27,7 +27,10 @@ describe("a failure while the device is online", () => {
 
   it.each([
     ["a refused session", new ApiError("refused", 403)],
-    ["an empty session", new ApiError("The server issued an empty session", 0)],
+    [
+      "an empty session",
+      new ApiError("The server issued an empty session", 200),
+    ],
     [
       "a refused session relayed by a request",
       toNetworkError(new ApiError("refused", 403)),

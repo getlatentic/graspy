@@ -1,0 +1,65 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError, NetworkError } from "@/lib/api/errors";
+import { lessonFailure, lessonProblem } from "./lesson-problem";
+
+let online = true;
+
+beforeEach(() => {
+  online = true;
+  vi.stubGlobal("navigator", {
+    get onLine() {
+      return online;
+    },
+  });
+});
+
+function problemAfter(error: unknown) {
+  return lessonProblem({
+    loaded: true,
+    hasSubject: true,
+    hasTarget: true,
+    failure: lessonFailure(error),
+    online,
+  });
+}
+
+describe("a lesson that did not open", () => {
+  it("says graspy cannot be reached when it could not be", () => {
+    expect(problemAfter(new NetworkError("Failed to fetch"))).toEqual({
+      key: "lesson.problem.unreachable",
+      retryable: true,
+    });
+  });
+
+  it("says the device is offline when it is", () => {
+    online = false;
+
+    expect(problemAfter(new TypeError("Failed to fetch"))).toEqual({
+      key: "lesson.problem.offline",
+      retryable: true,
+    });
+  });
+
+  it.each([
+    ["graspy refused the session", new ApiError("refused", 403)],
+    [
+      "graspy issued an empty session",
+      new ApiError("The server issued an empty session", 200),
+    ],
+    ["graspy refused the lesson", new Error("give_lesson was refused")],
+  ])("says only that it did not load when %s", (_, error) => {
+    expect(problemAfter(error)).toEqual({ key: null, retryable: true });
+  });
+});
+
+it("is no problem while the lesson opens", () => {
+  expect(
+    lessonProblem({
+      loaded: true,
+      hasSubject: true,
+      hasTarget: true,
+      failure: null,
+      online,
+    }),
+  ).toBeNull();
+});

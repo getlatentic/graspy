@@ -1,4 +1,4 @@
-// Gateway and rate-limit blips; 0 is a fetch that rejected (offline, DNS, CORS).
+// Gateway and rate-limit blips; 0 is a NetworkError, an answer that never arrived.
 const RETRYABLE_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504]);
 
 export class ApiError extends Error {
@@ -29,7 +29,8 @@ export async function toApiError(response: Response): Promise<ApiError> {
   );
 }
 
-/** A request that never reached graspy or Google, as opposed to one they answered. */
+/** No answer reached the device (offline, DNS, CORS, a stream cut short), as opposed to one
+ * graspy or Google gave. The only ApiError with status 0. */
 export class NetworkError extends ApiError {
   constructor(message: string) {
     super(message, 0);
