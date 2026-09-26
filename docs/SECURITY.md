@@ -10,7 +10,7 @@ Signing in is optional and goes through Google by Firebase, so graspy keeps no p
 | A02 | Cryptography | HMAC-SHA256 with a fixed algorithm; TLS at Cloudflare | `test_session.py` |
 | A03 | Injection | The calculator evaluates an AST allowlist with size and depth bounds; no `eval` | `test_sandbox.py` |
 | A05 | Misconfiguration | CORS allowlist, docs off in production, security headers, CSP by hash | `test_cors.py`, `test_security_headers.py`, `csp.test.ts` |
-| A06 | Vulnerable components | `npm audit` and `pip-audit`, run by hand; Rust crates, Android's Gradle dependencies, the teacher's llama.cpp build and its data script are not scanned | |
+| A06 | Vulnerable components | `npm audit` and `pip-audit`, run by hand; Rust crates, Android's Gradle dependencies, the teacher's llama.cpp build and data script, firebase-tools (run with `npx`) and CI's actions are not scanned | |
 | A08 | Data integrity | Server and client spell slugs the same way | `test_slug_parity.py`, `slug.test.ts` |
 | A09 | Logging | Full errors in the server log; a generic message to the client | `test_sse.py`, `test_agent_tools.py` |
 | A10 | SSRF | Not applicable: the server fetches no URL a client gives | |
@@ -60,4 +60,4 @@ A refusal is `429` with `Retry-After: 60` and CORS headers, so the browser can r
 - **A device id is a claim.** Whoever knows one can read that device's record. Signing in closes this for the account: its id comes from a Firebase token Google verifies, never from the client.
 - **DSPy 3.4 is a beta, pinned exactly.** The httpx transport imports a private DSPy path, and a test imports it first.
 - **`diskcache` has PYSEC-2026-2447 and no fixed release.** DSPy depends on it. The app replaces DSPy's disk cache with a memory-only one before serving.
-- **Scanning is manual, and partial.** CI runs the tests on every pull request. `npm audit` from the repository root covers every app's npm packages, dev tooling included. In `apps/server`, `uv run pip-audit --locked .` covers what the Worker ships (`pylock.toml`) and `uv run pip-audit` the development environment. The teacher app's Rust crates, the llama.cpp release it builds into `llama-server`, its data script's `pdfplumber`, and Android's Gradle dependencies are not scanned.
+- **Scanning is manual, and partial.** CI runs the tests on every pull request. `npm audit` from the repository root covers every app's npm packages in `package-lock.json`, dev tooling included. In `apps/server`, `uv run pip-audit --locked .` covers what the Worker ships (`pylock.toml`) and `uv run pip-audit` the development environment. The teacher app's Rust crates, the llama.cpp release it builds into `llama-server`, its data script's `pdfplumber`, Android's Gradle dependencies, firebase-tools (run with `npx`, outside the lockfile) and the actions CI uses are not scanned.
