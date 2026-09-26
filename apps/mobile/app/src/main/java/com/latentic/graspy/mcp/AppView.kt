@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +57,10 @@ private const val FIRST_HEIGHT = 192
 // A view that has not shown by then is not coming.
 private const val SHOW_WITHIN_MS = 20_000L
 
-/** A tool's result as its MCP Apps view, sandboxed on the API's origin, as the web shows it. */
+/**
+ * A tool's result as its MCP Apps view, sandboxed on the API's origin, as the web shows it. [waiting] stands over
+ * the view until the view has drawn its result: until then the WebView shows nothing.
+ */
 @Composable
 fun AppView(
     card: ViewCard,
@@ -65,9 +69,10 @@ fun AppView(
     unavailable: String,
     modifier: Modifier = Modifier,
     events: ViewEvents = ViewEvents(),
+    waiting: @Composable () -> Unit = {},
 ) {
     var failed by remember(card) { mutableStateOf(!LISTENING) }
-    var shown by remember(card) { mutableStateOf(false) }
+    var drawn by remember(card) { mutableStateOf(false) }
     val view by produceState<UiView?>(null, card.resourceUri) {
         value = runCatching { server.view(card.resourceUri) }.onFailure {
             Log.w(TAG, "The view ${card.resourceUri} could not be read", it)
@@ -76,16 +81,24 @@ fun AppView(
     }
     LaunchedEffect(card) {
         delay(SHOW_WITHIN_MS)
-        if (!shown) failed = true
+        if (!drawn) failed = true
     }
     if (failed) {
         Text(unavailable, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium, modifier = modifier)
         return
     }
-    val document = view ?: return
+    Box(modifier.fillMaxWidth()) {
+        view?.let { document -> HostedFrame(card, document, server, locale, events, onDrawn = { drawn = true }, onGone = { failed = true }) }
+        if (!drawn) waiting()
+    }
+}
+
+@Composable
+private fun HostedFrame(card: ViewCard, document: UiView, server: ViewServer, locale: String, events: ViewEvents, onDrawn: () -> Unit, onGone: () -> Unit) {
     var viewHeight by remember(card) { mutableIntStateOf(FIRST_HEIGHT) }
     val uriHandler = LocalUriHandler.current
     val latestEvents by rememberUpdatedState(events)
+    val latestDrawn by rememberUpdatedState(onDrawn)
     val host = remember(card) {
         object : ViewHost {
             override suspend fun callTool(name: String, arguments: JsonObject) = server.call(name, arguments)
@@ -96,15 +109,13 @@ fun AppView(
             override fun resize(height: Int) {
                 if (height > 0) viewHeight = height
             }
-            override fun shown() {
-                shown = true
-            }
+            override fun shown() = latestDrawn()
         }
     }
     AndroidView(
-        factory = { context -> HostedView(context, card, document, HostContext(locale), host) { failed = true }.webView },
+        factory = { context -> HostedView(context, card, document, HostContext(locale), host, onGone).webView },
         onRelease = { webView -> (webView.tag as? HostedView)?.close() },
-        modifier = modifier.fillMaxWidth().height(viewHeight.dp),
+        modifier = Modifier.fillMaxWidth().height(viewHeight.dp),
     )
 }
 

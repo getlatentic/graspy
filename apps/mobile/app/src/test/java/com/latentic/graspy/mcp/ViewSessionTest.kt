@@ -9,6 +9,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -58,6 +59,16 @@ class ViewSessionTest {
         assertEquals(listOf(ViewSession.TOOL_INPUT, ViewSession.TOOL_RESULT), sent.map { it.method() })
         assertEquals(card.toolInput, sent[0].params()["arguments"])
         assertEquals(card.toolResult, sent[1].params())
+    }
+
+    @Test
+    fun `a view is shown only once it has drawn its result, not when it is told it`() = runBlocking {
+        session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 40) }))
+        session.receive(notification(ViewSession.INITIALIZED))
+        session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 0) }))
+        assertFalse(host.shown)
+
+        session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 420) }))
         assertTrue(host.shown)
     }
 

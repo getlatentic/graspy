@@ -29,7 +29,7 @@ interface ViewHost {
 
     fun resize(height: Int)
 
-    /** The view has its tool's input and result. */
+    /** The view has drawn its tool's result. */
     fun shown() = Unit
 }
 
@@ -61,6 +61,8 @@ class ViewSession(
     private val send: (JsonObject) -> Unit,
 ) {
     private var documentSent = false
+    private var resultSent = false
+    private var drawn = false
     private val waiting = ConcurrentHashMap<Long, CompletableDeferred<JsonObject>>()
     private val ids = AtomicLong()
 
@@ -111,11 +113,18 @@ class ViewSession(
             INITIALIZED -> {
                 send(notification(TOOL_INPUT, buildJsonObject { put("arguments", card.toolInput) }))
                 send(notification(TOOL_RESULT, card.toolResult))
-                host.shown()
+                resultSent = true
             }
-            SIZE_CHANGED -> (params["height"] as? JsonPrimitive)?.doubleOrNull?.let {
-                host.resize(ceil(it).toInt().coerceIn(0, VIEW_MAX_HEIGHT))
-            }
+            SIZE_CHANGED -> (params["height"] as? JsonPrimitive)?.doubleOrNull?.let { resized(ceil(it).toInt().coerceIn(0, VIEW_MAX_HEIGHT)) }
+        }
+    }
+
+    // A view measures itself empty until it has drawn its result: its first height after the result is the drawing.
+    private fun resized(height: Int) {
+        host.resize(height)
+        if (resultSent && height > 0 && !drawn) {
+            drawn = true
+            host.shown()
         }
     }
 
