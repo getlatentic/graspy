@@ -1,6 +1,6 @@
-"""The sandbox proxy's page, and the Content-Security-Policy a view runs under
-in it: built from the domains the view's resource declared, and nothing
-else."""
+"""The sandbox proxy's page and the page it writes each view into, and their
+Content-Security-Policies: the view's is built from the domains the view's
+resource declared, and nothing else."""
 
 from __future__ import annotations
 
@@ -25,6 +25,11 @@ WORKER_PATH = "/ui-sandbox-sw.js"
 WORKER_FILE = "ui-sandbox-sw.js"
 WORKER_POLICY = "default-src 'none'; connect-src 'self'"
 
+FRAME_PATH = "/ui-sandbox-frame"
+# Loaded, then written over with the view, so that the view's frame is a page
+# of this origin the worker controls: the worker then serves its files.
+FRAME_PAGE = '<!doctype html><html><head><meta charset="utf-8" /></head></html>'
+
 
 @cache
 def page() -> str:
@@ -48,7 +53,27 @@ def _origins(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str) and _ORIGIN.match(item)]
 
 
-def policy(csp: Mapping[str, list[str]], host: str) -> str:
+def proxy_policy(host: str) -> str:
+    """The proxy runs its own script and frames only the view's page."""
+    return "; ".join(
+        (
+            "default-src 'none'",
+            "script-src 'unsafe-inline'",
+            "style-src 'unsafe-inline'",
+            "frame-src 'self'",
+            # The origin's service worker opens the view offline.
+            "worker-src 'self'",
+            "base-uri 'none'",
+            "object-src 'none'",
+            "form-action 'none'",
+            f"frame-ancestors {host}",
+        )
+    )
+
+
+def view_policy(csp: Mapping[str, list[str]], host: str) -> str:
+    """Framed by the proxy, on this origin, in the host's frame."""
+
     def sources(kind: str, fallback: str = "'none'") -> str:
         return " ".join(csp.get(kind, [])) or fallback
 
@@ -65,10 +90,8 @@ def policy(csp: Mapping[str, list[str]], host: str) -> str:
             f"connect-src {sources('connectDomains')}",
             f"frame-src {sources('frameDomains')}",
             f"base-uri {sources('baseUriDomains')}",
-            # The origin's service worker opens the view offline.
-            "worker-src 'self'",
             "object-src 'none'",
             "form-action 'none'",
-            f"frame-ancestors {host}",
+            f"frame-ancestors 'self' {host}",
         )
     )

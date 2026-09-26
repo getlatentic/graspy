@@ -1,4 +1,5 @@
-"""The sandbox proxy page the app frames each MCP Apps view in."""
+"""The sandbox proxy page the app frames each MCP Apps view in, and the page
+the proxy writes the view into."""
 
 import json
 from pathlib import Path
@@ -7,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.factory import create_app
-from app.mcp.sandbox import policy, requested_csp
+from app.mcp.sandbox import requested_csp, view_policy
 from app.mcp.views import LocalViews
 from app.settings import Settings
 
@@ -27,8 +28,16 @@ def client():
     return TestClient(create_app(settings))
 
 
+PAGES = ["/ui-sandbox", "/ui-sandbox-frame"]
+
+
 def directives(header: str) -> dict[str, str]:
     return dict(part.split(" ", 1) for part in header.split("; "))
+
+
+def view_csp(client, **params) -> dict[str, str]:
+    response = client.get("/ui-sandbox-frame", params={"host": APP, **params})
+    return directives(response.headers["content-security-policy"])
 
 
 @pytest.mark.parametrize("host", [APP, PREVIEW], ids=["listed", "preview"])
@@ -44,16 +53,64 @@ def test_only_the_app_may_frame_the_sandbox(client, host):
     assert "sandbox-proxy-ready" in response.text
 
 
+@pytest.mark.parametrize("path", PAGES)
 @pytest.mark.parametrize(
     "host", ["https://evil.example", "", f"{APP} https://evil.example"]
 )
-def test_any_other_host_is_refused(client, host):
-    response = client.get("/ui-sandbox", params={"host": host})
+def test_any_other_host_is_refused(client, path, host):
+    response = client.get(path, params={"host": host})
 
     assert response.status_code == 400
 
 
-def test_a_host_on_the_sandboxs_own_origin_is_refused():
+def test_the_proxy_runs_its_own_script_and_frames_only_this_origin(client):
+    """The view runs in the frame's page, under its own policy: the proxy's
+    grants it nothing."""
+    declared = {"resourceDomains": [API], "frameDomains": ["https://cdn.example"]}
+    response = client.get(
+        "/ui-sandbox", params={"host": APP, "csp": json.dumps(declared)}
+    )
+
+    assert directives(response.headers["content-security-policy"]) == {
+        "default-src": "'none'",
+        "script-src": "'unsafe-inline'",
+        "style-src": "'unsafe-inline'",
+        "frame-src": "'self'",
+        "worker-src": "'self'",
+        "base-uri": "'none'",
+        "object-src": "'none'",
+        "form-action": "'none'",
+        "frame-ancestors": APP,
+    }
+
+
+def test_the_proxy_writes_the_view_into_a_page_of_its_origin(client):
+    """So the view's frame is one the origin's service worker controls."""
+    proxy = client.get("/ui-sandbox", params={"host": APP}).text
+
+    assert "new URL(`/ui-sandbox-frame${location.search}`, own)" in proxy
+    assert "inner.src = page;" in proxy
+    assert 'doc.addEventListener("DOMContentLoaded", kept' in proxy
+
+
+@pytest.mark.parametrize("host", [APP, PREVIEW], ids=["listed", "preview"])
+def test_the_views_page_is_framed_only_by_the_proxy_in_the_app(client, host):
+    response = client.get("/ui-sandbox-frame", params={"host": host})
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.text.startswith("<!doctype html>")
+    assert "<script" not in response.text
+    assert response.headers["content-security-policy"] == view_policy({}, host)
+    assert (
+        directives(response.headers["content-security-policy"])["frame-ancestors"]
+        == f"'self' {host}"
+    )
+
+
+@pytest.mark.parametrize("path", PAGES)
+def test_a_host_on_the_sandboxs_own_origin_is_refused(path):
     """MCP Apps requires the proxy on another origin than its host."""
     settings = Settings(
         aws_bearer_token_bedrock="bedrock-test",
@@ -64,15 +121,11 @@ def test_a_host_on_the_sandboxs_own_origin_is_refused():
     )
     client = TestClient(create_app(settings))
 
-    assert client.get("/ui-sandbox", params={"host": API}).status_code == 400
+    assert client.get(path, params={"host": API}).status_code == 400
 
 
 def test_a_view_that_declares_nothing_may_load_and_reach_nothing(client):
-    csp = directives(
-        client.get("/ui-sandbox", params={"host": APP}).headers[
-            "content-security-policy"
-        ]
-    )
+    csp = view_csp(client)
 
     assert csp["default-src"] == "'none'"
     assert csp["script-src"] == "'unsafe-inline'"
@@ -80,14 +133,12 @@ def test_a_view_that_declares_nothing_may_load_and_reach_nothing(client):
     assert csp["frame-src"] == "'none'"
     assert csp["base-uri"] == "'none'"
     assert csp["object-src"] == "'none'"
+    assert "worker-src" not in csp
 
 
 def test_a_view_loads_from_the_domains_it_declared(client):
     declared = {"resourceDomains": [API], "baseUriDomains": [API]}
-    response = client.get(
-        "/ui-sandbox", params={"host": APP, "csp": json.dumps(declared)}
-    )
-    csp = directives(response.headers["content-security-policy"])
+    csp = view_csp(client, csp=json.dumps(declared))
 
     assert csp["script-src"] == f"'unsafe-inline' {API}"
     assert csp["font-src"] == f"data: {API}"
@@ -121,7 +172,7 @@ def test_this_machine_may_serve_views_over_http_in_development():
     "raw", [None, "", "not json", "[1]", '{"resourceDomains": "x"}']
 )
 def test_an_unreadable_declaration_declares_nothing(raw):
-    assert policy(requested_csp(raw), APP) == policy({}, APP)
+    assert view_policy(requested_csp(raw), APP) == view_policy({}, APP)
 
 
 WORKER_SOURCE = Path(__file__).resolve().parents[1] / "ui/public/views/ui-sandbox-sw.js"
@@ -153,7 +204,7 @@ def test_the_sandbox_registers_its_origins_service_worker(tmp_path):
         worker.headers["content-security-policy"]
         == "default-src 'none'; connect-src 'self'"
     )
-    assert 'url.pathname === "/ui-sandbox"' in worker.text
+    assert 'new Set(["/ui-sandbox", "/ui-sandbox-frame"])' in worker.text
 
 
 def test_a_worker_not_built_is_not_found(tmp_path):

@@ -53,36 +53,54 @@
 
         // The first visit loads before the worker controls it, so the
         // worker is told what this page and its view loaded, to keep.
-        function keepForOffline() {
+        function keepForOffline(page) {
           const files = inner.contentWindow.performance
             .getEntriesByType("resource")
             .map((entry) => entry.name);
           worker.then((registration) =>
             registration?.active?.postMessage({
               type: "keep",
-              urls: [location.href, ...files],
+              urls: [location.href, page, ...files],
             }),
           );
         }
         const own = location.origin;
-        const inner = document.createElement("iframe");
-        inner.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms");
-        document.body.appendChild(inner);
-        let loaded = false;
+        let inner = null;
 
+        // The view's frame loads a page of this origin, which the worker
+        // controls and serves offline, with the policy the view declared;
+        // the view is then written into it, so the worker serves its files.
+        // The sandbox and permissions apply as that page loads.
         function load({ html, sandbox, permissions }) {
-          if (loaded || typeof html !== "string") return;
-          loaded = true;
-          if (typeof sandbox === "string") inner.setAttribute("sandbox", sandbox);
+          if (inner || typeof html !== "string") return;
+          inner = document.createElement("iframe");
+          inner.setAttribute(
+            "sandbox",
+            typeof sandbox === "string"
+              ? sandbox
+              : "allow-scripts allow-same-origin allow-forms",
+          );
           const allow = Object.keys(permissions || {})
             .filter((key) => key in FEATURES)
             .map((key) => FEATURES[key]);
           if (allow.length) inner.setAttribute("allow", allow.join("; "));
-          const doc = inner.contentDocument;
-          inner.addEventListener("load", keepForOffline, { once: true });
-          doc.open();
-          doc.write(html);
-          doc.close();
+          const page = new URL(`/ui-sandbox-frame${location.search}`, own).href;
+          inner.addEventListener(
+            "load",
+            () => {
+              const doc = inner.contentDocument;
+              doc.open();
+              // Opening the document drops its listeners, and Chrome fires
+              // no load for a written one: it is kept once its scripts ran.
+              const kept = () => keepForOffline(page);
+              doc.addEventListener("DOMContentLoaded", kept, { once: true });
+              doc.write(html);
+              doc.close();
+            },
+            { once: true },
+          );
+          inner.src = page;
+          document.body.appendChild(inner);
         }
 
         window.addEventListener("message", (event) => {
@@ -90,10 +108,10 @@
             if (event.origin !== host) return;
             if (event.data && event.data.method === RESOURCE_READY) {
               load(event.data.params || {});
-            } else if (inner.contentWindow) {
+            } else if (inner?.contentWindow) {
               inner.contentWindow.postMessage(event.data, own);
             }
-          } else if (event.source === inner.contentWindow) {
+          } else if (inner && event.source === inner.contentWindow) {
             if (event.origin !== own) return;
             window.parent.postMessage(event.data, host);
           }

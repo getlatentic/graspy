@@ -190,6 +190,44 @@ describe("the sandbox's service worker", () => {
     expect(worker.assets()).not.toContain("/views/assets/past-1.js");
   });
 
+  it.each(["/ui-sandbox?host=x", "/ui-sandbox-frame?host=x"])(
+    "opens %s from its last copy when there is no connection",
+    async (path) => {
+      const worker = new SandboxWorker();
+      worker.serve(path, path);
+      await worker.request(`${ORIGIN}${path}`);
+      worker.online = false;
+
+      const response = await worker.request(`${ORIGIN}${path}`);
+
+      expect(await response?.text()).toBe(path);
+    },
+  );
+
+  it("keeps the pages the sandbox loaded before it controlled them", async () => {
+    const worker = deployed();
+    const pages = ["/ui-sandbox?host=x", "/ui-sandbox-frame?host=x"];
+    for (const path of pages) worker.serve(path, path);
+
+    await worker.keep(...pages.map((path) => `${ORIGIN}${path}`));
+
+    expect(worker.pages()).toEqual(pages);
+  });
+
+  it("serves a cached file though storing its use fails", async () => {
+    const worker = deployed();
+    await worker.keep();
+    worker.online = false;
+    worker.cache("graspy-view-assets-v1").refusal = new DOMException(
+      "The quota has been exceeded.",
+      "QuotaExceededError",
+    );
+
+    const response = await worker.request(`${ORIGIN}${LESSON[0]}`);
+
+    expect(await response?.text()).toBe(LESSON[0]);
+  });
+
   it("still keeps what the sandbox page loaded when there is no list", async () => {
     const worker = new SandboxWorker();
     worker.serve(LESSON[0], "lesson");

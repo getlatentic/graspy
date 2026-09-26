@@ -14,7 +14,8 @@ _NAMES = frozenset(name for name, _ in _HEADERS)
 _CSP = (b"content-security-policy", b"default-src 'none'; frame-ancestors 'none'")
 
 # The docs load from a CDN, outside production only; the sandbox that frames
-# MCP Apps views sets the policy each view declared.
+# MCP Apps views, and the page it writes each view into, set their own:
+# /ui-sandbox covers /ui-sandbox-frame.
 OWN_POLICY_PATHS = ("/api/docs", "/api/redoc", "/ui-sandbox")
 
 

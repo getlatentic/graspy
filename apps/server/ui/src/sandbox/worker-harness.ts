@@ -14,12 +14,15 @@ type Handler = (event: object) => void;
 class MemoryCache {
   // Insertion order, as a browser's cache keeps it.
   readonly entries = new Map<string, Response>();
+  // What storing fails with, such as a full quota.
+  refusal: Error | null = null;
 
   async match(key: Request | string) {
     return this.entries.get(url(key))?.clone();
   }
 
   async put(key: Request | string, response: Response) {
+    if (this.refusal) throw this.refusal;
     this.entries.delete(url(key));
     this.entries.set(url(key), response);
   }
@@ -73,6 +76,12 @@ export class SandboxWorker {
     );
   }
 
+  pages(): string[] {
+    return [...this.cache("graspy-sandbox-pages-v1").entries.keys()].map(
+      (address) => address.slice(ORIGIN.length),
+    );
+  }
+
   serve(path: string, body: string) {
     this.network.set(`${ORIGIN}${path}`, () => new Response(body));
   }
@@ -89,20 +98,37 @@ export class SandboxWorker {
   // What the view's page asks for, and what it is answered.
   async request(address: string): Promise<Response | undefined> {
     let answer: Promise<Response> | undefined;
-    await this.dispatch("fetch", {
-      request: new Request(address),
-      respondWith: (response: Promise<Response>) => (answer = response),
-    });
+    await this.dispatch(
+      "fetch",
+      { request: new Request(address) },
+      (response) => {
+        answer = response;
+      },
+    );
     return answer;
   }
 
-  async dispatch(type: string, fields: object) {
+  // Settles once all the event's work has, as a browser keeps the worker
+  // alive: its answer, and whatever it waits on, added until then.
+  async dispatch(
+    type: string,
+    fields: object,
+    answered?: (response: Promise<Response>) => void,
+  ) {
     const waits: Promise<unknown>[] = [];
     this.handlers.get(type)?.({
       ...fields,
       waitUntil: (promise: Promise<unknown>) => waits.push(promise),
+      respondWith: (response: Promise<Response>) => {
+        waits.push(response);
+        answered?.(response);
+      },
     });
-    await Promise.allSettled(waits);
+    for (let settled = 0; settled < waits.length;) {
+      const pending = waits.slice(settled);
+      settled = waits.length;
+      await Promise.allSettled(pending);
+    }
   }
 
   private fetch = async (input: Request | string, init?: RequestInit) => {

@@ -16,12 +16,15 @@ from .protocol import (
     answer,
 )
 from .sandbox import (
+    FRAME_PAGE,
+    FRAME_PATH,
     WORKER_FILE,
     WORKER_PATH,
     WORKER_POLICY,
     page,
-    policy,
+    proxy_policy,
     requested_csp,
+    view_policy,
 )
 from .views import ViewsMissing
 
@@ -29,6 +32,7 @@ MCP_PATH = "/mcp"
 PARSE_ERROR = -32700
 # A tool's arguments are a question and its options: kilobytes, not more.
 MAX_BODY = 64 * 1024
+NOT_A_HOST = "This page frames views for graspy only."
 
 
 def _refused(
@@ -76,20 +80,34 @@ async def mcp(request: Request) -> Response:
     return JSONResponse(response)
 
 
-async def ui_sandbox(request: Request) -> Response:
-    """The proxy a web host frames each view in, on this origin so it is
-    never the host's. The view gets the policy its resource declared."""
+def _framing_host(request: Request) -> str | None:
+    """The host named in ?host=, if it may frame views: never one on this
+    origin, so the view is always isolated from it."""
     host = request.query_params.get("host", "")
     own = request.app.state.mcp.origin
     if host == own or not request.app.state.origin_allowed(host):
-        return PlainTextResponse("This page frames views for graspy only.", 400)
+        return None
+    return host
+
+
+async def ui_sandbox(request: Request) -> Response:
+    """The proxy a web host frames each view in, on this origin so it is
+    never the host's."""
+    host = _framing_host(request)
+    if host is None:
+        return PlainTextResponse(NOT_A_HOST, 400)
+    return HTMLResponse(page(), headers={"content-security-policy": proxy_policy(host)})
+
+
+async def ui_sandbox_frame(request: Request) -> Response:
+    """The page the proxy writes the view into, with the policy the view's
+    resource declared."""
+    host = _framing_host(request)
+    if host is None:
+        return PlainTextResponse(NOT_A_HOST, 400)
+    csp = requested_csp(request.query_params.get("csp"))
     return HTMLResponse(
-        page(),
-        headers={
-            "content-security-policy": policy(
-                requested_csp(request.query_params.get("csp")), host
-            )
-        },
+        FRAME_PAGE, headers={"content-security-policy": view_policy(csp, host)}
     )
 
 
@@ -114,5 +132,6 @@ def mcp_routes() -> list[Route]:
     return [
         Route(MCP_PATH, mcp, methods=["GET", "POST", "DELETE"]),
         Route("/ui-sandbox", ui_sandbox, methods=["GET"]),
+        Route(FRAME_PATH, ui_sandbox_frame, methods=["GET"]),
         Route(WORKER_PATH, ui_sandbox_worker, methods=["GET"]),
     ]
