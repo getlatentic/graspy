@@ -39,7 +39,11 @@ class DeviceWipeTest {
         signedOutElsewhere = {},
     )
     private var workCancelled = false
-    private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) { workCancelled = true }
+    private var accountWhenWiped: Account? = null
+    private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) {
+        workCancelled = true
+        accountWhenWiped = accounts.account.value
+    }
     private val ada = learnerKey(UID, ADA.id)
     private val bayo = learnerKey(UID, BAYO.id)
     private val adaProfile = LearnerProfile(SchoolClass.PRIMARY_3, AppLanguageSelection.YORUBA)
@@ -79,6 +83,22 @@ class DeviceWipeTest {
         assertEquals(signedIn(learner = null, deviceJoins = false), accounts.account.value)
         assertEquals(deviceId, deviceIds.current())
         assertSessionForgotten()
+    }
+
+    @Test
+    fun `the device lets the learner go before it wipes what they kept, so nothing still running writes after`() = runBlocking {
+        wipe.leaveLearner()
+
+        assertTrue(workCancelled)
+        assertEquals(signedIn(null, deviceJoins = false), accountWhenWiped)
+    }
+
+    @Test
+    fun `signing out lets the account go before the wipe`() = runBlocking {
+        wipe.wipeDevice()
+
+        assertTrue(workCancelled)
+        assertNull(accountWhenWiped)
     }
 
     @Test

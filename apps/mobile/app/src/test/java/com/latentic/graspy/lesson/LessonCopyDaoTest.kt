@@ -1,10 +1,15 @@
 package com.latentic.graspy.lesson
 
+import androidx.room.withTransaction
 import com.latentic.graspy.account.inMemoryDatabase
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -19,6 +24,35 @@ class LessonCopyDaoTest {
 
     @After
     fun close() = database.close()
+
+    @Test
+    fun `a wipe waits for a copy whose learner was already checked, and takes it too`() {
+        val checked = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val server = FakeLessonServer().apply { gives = lessonCard("ready") }
+        val lessons = OfflineLessons(
+            dao,
+            "uid/ada",
+            server,
+            stillLearning = {
+                checked.countDown()
+                release.await(5, TimeUnit.SECONDS)
+                true
+            },
+            inOneTransaction = { keep -> database.withTransaction { keep() } },
+        )
+
+        val opening = thread { runBlocking { lessons.openOrCopy(topic(0)) } }
+        assertTrue(checked.await(5, TimeUnit.SECONDS))
+        val wiping = thread { database.clearAllTables() }
+        // Long enough for the wipe to reach the lock the copy's transaction holds.
+        Thread.sleep(200)
+        release.countDown()
+        opening.join(5_000)
+        wiping.join(5_000)
+
+        assertEquals(emptyList<CopiedTopic>(), runBlocking { dao.copied("uid/ada") })
+    }
 
     @Test
     fun `a learner reads only their own copy of a topic`() = runBlocking {

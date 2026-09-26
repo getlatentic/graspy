@@ -46,6 +46,8 @@ class OfflineLessons(
     private val ownerId: String,
     private val server: LessonServer,
     private val stillLearning: () -> Boolean,
+    /** Runs the learner check and the write as one: a wipe waits for a write already checked, then takes it too. */
+    private val inOneTransaction: suspend (suspend () -> Unit) -> Unit = { it() },
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val asked = Channel<Pair<LearnerPlan, LearnerRecord>>(Channel.CONFLATED)
@@ -109,19 +111,17 @@ class OfflineLessons(
         (if (failure.isUnreachable()) copyOf(target) else null) ?: throw failure
 
     private suspend fun keep(target: LessonTarget, card: ViewCard) {
-        if (!stillLearning()) return
+        val copy = LessonCopyEntity(
+            ownerId = ownerId,
+            planId = target.planId,
+            subjectSlug = target.subjectSlug,
+            topicIndex = target.topicIndex,
+            topic = target.topic,
+            cardJson = apiJson.encodeToString(ViewCard.serializer(), card),
+            savedAt = clock(),
+        )
         bestEffort(TAG, "Keeping a copy of the lesson on ${target.topic}") {
-            copies.keep(
-                LessonCopyEntity(
-                    ownerId = ownerId,
-                    planId = target.planId,
-                    subjectSlug = target.subjectSlug,
-                    topicIndex = target.topicIndex,
-                    topic = target.topic,
-                    cardJson = apiJson.encodeToString(ViewCard.serializer(), card),
-                    savedAt = clock(),
-                ),
-            )
+            inOneTransaction { if (stillLearning()) copies.keep(copy) }
         }
     }
 

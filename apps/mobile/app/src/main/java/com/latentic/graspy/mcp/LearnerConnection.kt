@@ -1,5 +1,6 @@
 package com.latentic.graspy.mcp
 
+import androidx.room.withTransaction
 import com.latentic.graspy.collection.outbox.GraspyDatabase
 import com.latentic.graspy.lesson.LessonServer
 import com.latentic.graspy.lesson.OfflineLessons
@@ -33,6 +34,7 @@ class LearnerConnection(
             override suspend fun keepViews() = views.keepAll(mcp.viewUris())
         },
         stillLearning,
+        { keep -> database.withTransaction { keep() } },
     )
 
     suspend fun sendKept(): Int = outbox.sendKept()
