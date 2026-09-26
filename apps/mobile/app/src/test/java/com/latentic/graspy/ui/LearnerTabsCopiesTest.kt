@@ -6,6 +6,7 @@ import com.latentic.graspy.account.UID
 import com.latentic.graspy.account.inMemoryDatabase
 import com.latentic.graspy.account.learnerKey
 import com.latentic.graspy.account.signedIn
+import com.latentic.graspy.lesson.CopiedLesson
 import com.latentic.graspy.lesson.CopiedTopic
 import com.latentic.graspy.lesson.PLAN
 import com.latentic.graspy.localization.AppLanguage
@@ -81,7 +82,7 @@ class LearnerTabsCopiesTest {
 
         settleMain(TIMEOUT_MS) { copied().isNotEmpty() }
 
-        assertEquals(listOf(CopiedTopic(PLAN.planId, "mathematics", 1, "Fractions")), copied())
+        assertEquals(listOf(CopiedLesson(CopiedTopic(PLAN.planId, "mathematics", 1, "Fractions"), "lesson-9")), copied())
     }
 
     private fun copied() = runBlocking { database.lessonCopyDao().copied(ada) }

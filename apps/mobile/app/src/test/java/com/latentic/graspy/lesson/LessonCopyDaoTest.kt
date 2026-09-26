@@ -35,8 +35,8 @@ class LessonCopyDaoTest {
         keep("uid/ada", fractions, "ada's")
         keep("uid/bayo", decimals, "bayo's")
 
-        assertEquals(listOf(fractions), dao.copied("uid/ada"))
-        assertEquals(listOf(decimals), dao.copied("uid/bayo"))
+        assertEquals(listOf(fractions), dao.topics("uid/ada"))
+        assertEquals(listOf(decimals), dao.topics("uid/bayo"))
     }
 
     @Test
@@ -47,7 +47,7 @@ class LessonCopyDaoTest {
 
         dao.dropAll("uid/ada", listOf(fractions), savedBefore = 2)
 
-        assertEquals(listOf(decimals), dao.copied("uid/ada"))
+        assertEquals(listOf(decimals), dao.topics("uid/ada"))
         assertEquals("bayo's", card("uid/bayo", fractions))
     }
 
@@ -58,7 +58,7 @@ class LessonCopyDaoTest {
 
         dao.dropAll("uid/ada", listOf(fractions, decimals), savedBefore = 5)
 
-        assertEquals(listOf(decimals), dao.copied("uid/ada"))
+        assertEquals(listOf(decimals), dao.topics("uid/ada"))
     }
 
     @Test
@@ -67,11 +67,19 @@ class LessonCopyDaoTest {
         keep("uid/ada", fractions, "second")
 
         assertEquals("second", card("uid/ada", fractions))
-        assertEquals(listOf(fractions), dao.copied("uid/ada"))
+        assertEquals(listOf(fractions), dao.topics("uid/ada"))
     }
 
-    private suspend fun keep(ownerId: String, topic: CopiedTopic, card: String, savedAt: Long = 1) =
-        dao.keep(LessonCopyEntity(ownerId, topic.planId, topic.subjectSlug, topic.topicIndex, topic.topic, card, savedAt))
+    @Test
+    fun `a copy names the lesson it holds, when known`() = runBlocking {
+        keep("uid/ada", fractions, "copied", lessonId = "lesson-1")
+        keep("uid/ada", decimals, "opened")
+
+        assertEquals(setOf(CopiedLesson(fractions, "lesson-1"), CopiedLesson(decimals, null)), dao.copied("uid/ada").toSet())
+    }
+
+    private suspend fun keep(ownerId: String, topic: CopiedTopic, card: String, savedAt: Long = 1, lessonId: String? = null) =
+        dao.keep(LessonCopyEntity(ownerId, topic.planId, topic.subjectSlug, topic.topicIndex, topic.topic, card, savedAt, lessonId))
 
     private suspend fun card(ownerId: String, topic: CopiedTopic) =
         dao.card(ownerId, topic.planId, topic.subjectSlug, topic.topicIndex, topic.topic)
