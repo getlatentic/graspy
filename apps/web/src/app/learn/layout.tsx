@@ -11,6 +11,7 @@ import { AppTabBar } from "@/features/learn/components/app-tab-bar";
 import { useOpenChat } from "@/features/learn/hooks/use-open-chat";
 import { useLearnerChosen } from "@/features/learn/hooks/use-learner-chosen";
 import { useLearnerStart } from "@/features/learn/hooks/use-learner-start";
+import { useKeptAnswers } from "@/features/voice/hooks/use-kept-answers";
 import {
   isChatPath,
   lessonChatTarget,
@@ -25,6 +26,7 @@ const WIDE_SCREEN = "(min-width: 64rem)";
 function DashboardLayoutContent() {
   const { pathname } = useLocation();
   const userProfile = useLearnerStart();
+  useKeptAnswers();
   const chat = isChatPath(pathname);
   const lesson = lessonChatTarget(pathname);
   // iOS keeps dvh at full height while the keyboard is open.

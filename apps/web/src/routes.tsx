@@ -32,6 +32,8 @@ export const router = createBrowserRouter([
               { path: "ask/subject/:subjectSlug", lazy: lazyPage("chat") },
               { path: "ask/:subject/:topicIndex", lazy: lazyPage("chat") },
               { path: "plan", lazy: lazyPage("plan") },
+              { path: "voice", lazy: lazyPage("voice") },
+              { path: "voice/lesson", lazy: lazyPage("voiceLesson") },
               { path: ":subject", lazy: lazyPage("subject") },
               { path: ":subject/lesson/:topicIndex", lazy: lazyPage("lesson") },
             ],

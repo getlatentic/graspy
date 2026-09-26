@@ -82,7 +82,7 @@ Voice lessons for the learner the session names: an account's learner or a signe
 | `/api/voice/catalogue` | GET | Every lesson of `learner_class`, with where the learner stands on it |
 | `/api/voice/lesson/events` | POST | Records that the learner heard `plan_id` and `event_id`. `409` for a step never offered |
 | `/api/voice/teacher-audio/{utterance}` | GET | The teacher's voice for a lesson line, in `language`, with an `ETag`. `If-None-Match` with it answers `304` |
-| `/api/voice/samples` | POST | A new recording's metadata, with an `Idempotency-Key` header. `201` with `sample_id` and `upload_path`; the same key and metadata again answer `200` with the same sample, other metadata `409` |
+| `/api/voice/samples` | POST | A new recording's metadata, with an `Idempotency-Key` header. `201` with `sample_id` and `upload_path`; the same key and metadata again answer `200` with the same sample, other metadata `409`. `lesson_language` (`en`, `yo` or `pcm`) is the language the teacher marks and replies in; English when it is missing |
 | `/api/voice/samples/{id}/audio` | PUT | The recording: WAV or Ogg (`415` otherwise), a positive `Content-Length` (`411`), at most 10 MiB (`413`) |
 | `/api/voice/samples/{id}/evaluation` | POST | Marks the recording and returns the turn: `decision` (`correct`, `try_again`, `not_understood`), `feedback`, `transcript`. `409` when it answers a step the learner was never offered; `502` when recognition failed, `422` when the audio held no speech |
 | `/api/voice/samples/{id}/reply-audio` | GET | The teacher's voice for the turn's `feedback` |

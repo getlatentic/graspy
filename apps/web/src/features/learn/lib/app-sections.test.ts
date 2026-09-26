@@ -4,6 +4,8 @@ import { sectionOf } from "./app-sections";
 describe("sectionOf", () => {
   it.each([
     ["/app/learn", "home"],
+    ["/app/learn/voice", "home"],
+    ["/app/learn/voice/lesson", "home"],
     ["/app/learn/you", "you"],
     ["/app/learn/you/details", "you"],
     ["/app/learn/you/learners", "you"],

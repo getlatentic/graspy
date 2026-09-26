@@ -322,5 +322,62 @@
     "title": "Sign in",
     "newHere": "New to graspy?",
     "start": "Start learning"
+  },
+  "voice": {
+    "title": "Voice lessons",
+    "start": "Start",
+    "startHere": "Start here",
+    "ok": "OK",
+    "note": "graspy sends your voice to check your answers.",
+    "loading": "Getting your lessons…",
+    "loadFailed": "Your lessons didn't load.",
+    "retry": "Try again",
+    "noLessons": "No lessons for your class yet.",
+    "standing": {
+      "mastered": "Known",
+      "learnt": "Learnt",
+      "started": "Started",
+      "untouched": "Not yet"
+    },
+    "topics": {
+      "multiplication": "Times tables",
+      "number": "Numbers and counting",
+      "operations": "Adding and sharing",
+      "time": "Telling the time",
+      "money": "Naira and kobo",
+      "shapes": "Shapes",
+      "fractions": "Fractions",
+      "alphabet": "Letters and sounds"
+    },
+    "lesson": {
+      "loading": "Getting your lesson…",
+      "loadFailed": "Your lesson didn't load.",
+      "speaking": "Speaking",
+      "yourTurn": "Your turn",
+      "record": "Record your answer",
+      "speakNow": "Speak now…",
+      "done": "I'm done",
+      "checking": "Checking your answer…",
+      "heard": "graspy heard",
+      "correct": "Correct!",
+      "tryAgain": "Good try",
+      "notUnderstood": "Say it again",
+      "hearAgain": "Hear again",
+      "kept": "Saved. It sends when you're online.",
+      "rest": "Done for today."
+    },
+    "problem": {
+      "noSpeech": "I couldn't hear you. Say it again.",
+      "couldNotCheck": "I couldn't check that. Say it again.",
+      "stepMoved": "Your teacher has moved on.",
+      "notArrived": "Your answer didn't arrive. Say it again.",
+      "unsupported": "graspy can't check this one.",
+      "alreadySent": "That answer was already sent.",
+      "learnerRequired": "Choose who is learning first.",
+      "voiceFailed": "The teacher's voice didn't load.",
+      "micDenied": "Allow the microphone to record your answer.",
+      "micFailed": "The microphone didn't start. Try again.",
+      "notSaved": "Your answer wasn't saved. Try again."
+    }
   }
 }

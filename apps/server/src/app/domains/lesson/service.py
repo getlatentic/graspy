@@ -296,7 +296,7 @@ def _finished(request: LessonRequest, lesson: _Draft) -> FinishedLesson:
     return FinishedLesson(
         success=lesson.complete,
         lesson=Lesson(
-            title=f"{request.topic} - {request.grade_level}",
+            title=request.topic,
             content=f"Lesson plan for {request.topic}",
             key_points=lesson.shown_plan.key_points,
             objectives=lesson.shown_plan.learning_objectives,

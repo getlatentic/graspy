@@ -322,5 +322,62 @@
     "title": "Sign in",
     "newHere": "You new for graspy?",
     "start": "Start to learn"
+  },
+  "voice": {
+    "title": "Voice lessons",
+    "start": "Start",
+    "startHere": "Start here",
+    "ok": "OK",
+    "note": "graspy dey send your voice make e check your answers.",
+    "loading": "Dey bring your lessons…",
+    "loadFailed": "Your lessons no load.",
+    "retry": "Try again",
+    "noLessons": "No lesson dey for your class yet.",
+    "standing": {
+      "mastered": "You sabi am",
+      "learnt": "Don learn am",
+      "started": "Don start",
+      "untouched": "Never start"
+    },
+    "topics": {
+      "multiplication": "Times tables",
+      "number": "Numbers and counting",
+      "operations": "Adding and sharing",
+      "time": "Telling the time",
+      "money": "Naira and kobo",
+      "shapes": "Shapes",
+      "fractions": "Fractions",
+      "alphabet": "Letters and sounds"
+    },
+    "lesson": {
+      "loading": "We dey bring your lesson…",
+      "loadFailed": "Your lesson no load.",
+      "speaking": "E dey talk",
+      "yourTurn": "Your turn",
+      "record": "Record your answer",
+      "speakNow": "Talk now…",
+      "done": "I'm done",
+      "checking": "Dey check your answer…",
+      "heard": "Wetin graspy hear",
+      "correct": "Correct!",
+      "tryAgain": "Good try",
+      "notUnderstood": "Talk am again",
+      "hearAgain": "Hear am again",
+      "kept": "E don save. E go send when network dey.",
+      "rest": "E don finish for today."
+    },
+    "problem": {
+      "noSpeech": "I no hear you. Talk am again.",
+      "couldNotCheck": "I no fit check that one. Talk am again.",
+      "stepMoved": "Your teacher don move go front.",
+      "notArrived": "Your answer no reach. Talk am again.",
+      "unsupported": "graspy no fit check this one.",
+      "alreadySent": "That answer don send before.",
+      "learnerRequired": "Choose who dey learn first.",
+      "voiceFailed": "Teacher voice no load.",
+      "micDenied": "Allow the microphone make e record your answer.",
+      "micFailed": "Microphone no start. Try again.",
+      "notSaved": "Your answer no save. Try again."
+    }
   }
 }

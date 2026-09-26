@@ -44,7 +44,7 @@ __pycache__/
 htmlcov/
 
 # Design references, kept locally.
-design/
+/design/
 
 # Tools' own working files
 .claude/

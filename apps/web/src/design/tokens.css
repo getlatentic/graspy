@@ -1,0 +1,92 @@
+/* graspy-tokens source=b49029b99d30564d7463735620e42eb529a72f25ace0b33ccae1019b5a7f409a content=bb4f651ec0401fd92138b0eea580c9848cf3e0466732999a4c633efd1cd24e88 */
+/* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
+@theme {
+  /* Page ground behind cards. */
+  --color-canvas: #f5f8fa;
+  /* Cards, sheets, the tab bar. */
+  --color-surface: #ffffff;
+  /* A quiet band inside a card. */
+  --color-raised: #f9fbfc;
+  /* Any text. 16.1:1; 15.1:1 on canvas. */
+  --color-ink: #12232e;
+  /* Secondary text. 5.9:1; 5.5:1 on canvas. */
+  --color-muted: #5a6672;
+  /* Small print that still reads as text: 4.6:1 on white, 4.3:1 on canvas, so on canvas use muted. */
+  --color-subtle: #6b7682;
+  /* Only for icons beside a label and other non-text: 3.05:1. */
+  --color-faint: #8a95a0;
+  /* Card borders and dividers. */
+  --color-line: #e5e9ee;
+  /* The empty part of a progress bar. */
+  --color-track: #eef1f4;
+  /* The brand blue. 3.4:1: fills, borders, focus rings and button labels, never body text. */
+  --color-accent: #2893c8;
+  /* A pressed or hovered accent fill. 5.5:1. */
+  --color-accent-strong: #1f7099;
+  /* Blue text and links. 5.5:1; 4.9:1 on accent-soft. */
+  --color-accent-ink: #1f6f9c;
+  /* A selected row, the selected tab's pill, the tutor's ground. */
+  --color-accent-soft: #eaf4fa;
+  /* The border of an accent-soft area. */
+  --color-accent-line: #cfe7f3;
+  /* Text and icons on an accent fill. */
+  --color-on-accent: #ffffff;
+  /* Right or finished, and nothing else. 5.6:1; 5.0:1 on success-soft. */
+  --color-success: #0f7838;
+  /* The ground of a right answer or a finished topic. */
+  --color-success-soft: #eaf7e4;
+  /* Dark enough for small text: 5.4:1; 4.8:1 on warning-soft. */
+  --color-warning: #8a6416;
+  /* The ground of a caution. */
+  --color-warning-soft: #fdf3d6;
+  /* The border of a warning-soft area. */
+  --color-warning-line: #f3de9a;
+  /* Errors and destructive actions. 5.4:1; 4.7:1 on danger-soft. */
+  --color-danger: #c0392b;
+  /* The ground of an error. */
+  --color-danger-soft: #fbebe8;
+  /* Subject tiles only; never for text. */
+  --color-tint-green: #2f9e6e;
+  /* Subject tiles only. */
+  --color-tint-green-soft: #e6f6ee;
+  /* Subject tiles only; never for text. */
+  --color-tint-orange: #d9772b;
+  /* Subject tiles only. */
+  --color-tint-orange-soft: #fdf0e4;
+  /* Subject tiles only; never for text. */
+  --color-tint-purple: #7057d1;
+  /* Subject tiles only. */
+  --color-tint-purple-soft: #f0ecfc;
+
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(16 / 12);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(20 / 14);
+  --text-base: 1rem;
+  --text-base--line-height: calc(24 / 16);
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(28 / 18);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(28 / 20);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(32 / 24);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: calc(36 / 30);
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(40 / 36);
+  --text-hero: 2.5rem;
+  --text-hero--line-height: calc(42 / 40);
+  --text-hero--letter-spacing: -0.035em;
+  --text-numeral: 4rem;
+  --text-numeral--line-height: calc(72 / 64);
+  --text-numeral--letter-spacing: -0.015em;
+
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-pill: 9999px;
+
+  --spacing: 0.25rem;
+}

@@ -16,6 +16,8 @@ const pages = {
   details: () => import("@/app/learn/details-page"),
   ask: () => import("@/app/learn/ask-page"),
   chat: () => import("@/app/learn/chat-page"),
+  voice: () => import("@/app/learn/voice-page"),
+  voiceLesson: () => import("@/app/learn/voice-lesson-page"),
 };
 
 const RELOADED_AT_KEY = "graspy.reloaded-for-stale-chunk";

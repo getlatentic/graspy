@@ -17,9 +17,10 @@ const DB_NAME = "graspy-db";
 // 6: a card is the tool call and result its view is sent.
 // 7: practice comes in sets; the practice record is kept per question.
 // 8: lesson copies for offline, and an outbox for the views' offline calls.
+// 9: spoken answers to voice lessons, kept until the server has them.
 // A shipped upgrade is never changed: a new rewrite, or a new lesson format
 // (which must clear the lesson store), is a new version.
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 
 export const CURRICULUM_STORE = "curriculum";
 export const CHAT_STORE = "chat-history";
@@ -30,6 +31,7 @@ export const PRACTICE_STORE = "practice";
 const PRACTICE_KEY = ["messageId", "question"];
 export const LESSON_COPY_STORE = "lesson-copies";
 export const OUTBOX_STORE = "outbox";
+export const VOICE_ANSWER_STORE = "voice-answers";
 
 // Title included: a position whose topic changed is a different topic.
 const TOPIC_KEY = ["planId", "subjectSlug", "topicIndex", "topic"];
@@ -119,6 +121,7 @@ const UPGRADES: [version: number, step: Upgrade][] = [
   [5, (db) => keepPracticeRecord(db)],
   [7, (db, tx, from) => rewriteMessages(db, tx, from)],
   [8, (db) => keepForOffline(db)],
+  [9, (db) => db.createObjectStore(VOICE_ANSWER_STORE, { keyPath: "key" })],
 ];
 
 function keepForOffline(db: IDBDatabase): void {

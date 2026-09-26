@@ -47,7 +47,7 @@ it("takes a school learner from their class to a saved plan", () => {
   chosenSubjects().then((names) => {
     toThePlan();
     stored().then((device) => {
-      expect(device.version).to.equal(8);
+      expect(device.version).to.equal(9);
       expect(device.plan.planId).to.match(/^plan-\d+$/);
       const subjects = device.plan.subjects as { name: string; slug: string }[];
       expect(subjects.map((subject) => subject.name)).to.have.members(names);

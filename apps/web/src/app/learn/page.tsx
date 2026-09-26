@@ -18,6 +18,7 @@ import { ResumeCard } from "@/features/learn/components/resume-card";
 import { SubjectTiles } from "@/features/learn/components/subject-tiles";
 import { TrySomethingNew } from "@/features/learn/components/try-something-new";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
+import { VoiceCard } from "@/features/voice/components/voice-card";
 
 export default function HomePage() {
   const { t } = useI18n();
@@ -57,6 +58,8 @@ export default function HomePage() {
       <div className="hidden lg:block">
         <HomeRail current={current} onAsk={ask} />
       </div>
+
+      <VoiceCard className="lg:col-span-2" />
 
       {subjects.length > 0 && <SubjectsSection subjects={subjects} />}
 

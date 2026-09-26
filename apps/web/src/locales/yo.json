@@ -322,5 +322,62 @@
     "title": "Wọlé",
     "newHere": "Ṣé o jẹ́ tuntun sí graspy?",
     "start": "Bẹ̀rẹ̀ ẹ̀kọ́"
+  },
+  "voice": {
+    "title": "Ẹ̀kọ́ ohùn",
+    "start": "Bẹ̀rẹ̀",
+    "startHere": "Bẹ̀rẹ̀ níbí",
+    "ok": "Ó dáa",
+    "note": "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò.",
+    "loading": "Ń mú àwọn ẹ̀kọ́ rẹ wá…",
+    "loadFailed": "Àwọn ẹ̀kọ́ rẹ kò ṣí.",
+    "retry": "Tún gbìyànjú",
+    "noLessons": "Kò sí ẹ̀kọ́ fún kíláàsì rẹ síbẹ̀.",
+    "standing": {
+      "mastered": "Ti mọ̀",
+      "learnt": "Ti kọ́",
+      "started": "Ti bẹ̀rẹ̀",
+      "untouched": "Kò tíì"
+    },
+    "topics": {
+      "multiplication": "Àwọn tábìlì ìsọdipúpọ̀",
+      "number": "Nọ́mbà àti kíka",
+      "operations": "Ìlàpọ̀ àti pínpín",
+      "time": "Kíka aago",
+      "money": "Náírà àti kọ̀bọ̀",
+      "shapes": "Àwọn ìrísí",
+      "fractions": "Ìdá",
+      "alphabet": "Lẹ́tà àti ohùn"
+    },
+    "lesson": {
+      "loading": "À ń mú ẹ̀kọ́ rẹ bọ̀…",
+      "loadFailed": "Ẹ̀kọ́ rẹ kò ṣí.",
+      "speaking": "Ó ń sọ̀rọ̀",
+      "yourTurn": "Àkókò rẹ",
+      "record": "Gba ìdáhùn rẹ sílẹ̀",
+      "speakNow": "Sọ̀rọ̀ báyìí…",
+      "done": "Mo ti parí",
+      "checking": "Ń yẹ ìdáhùn rẹ wò…",
+      "heard": "Ohun tí graspy gbọ́",
+      "correct": "Ó tọ́!",
+      "tryAgain": "Ìgbìyànjú dára",
+      "notUnderstood": "Tún un sọ",
+      "hearAgain": "Tún gbọ́",
+      "kept": "A ti fi pamọ́. Yóò lọ nígbà tí o bá wà lórí ayélujára.",
+      "rest": "Ó parí fún òní."
+    },
+    "problem": {
+      "noSpeech": "Mi ò gbọ́ ọ. Tún un sọ.",
+      "couldNotCheck": "Mi ò lè ṣàyẹ̀wò rẹ̀. Tún un sọ.",
+      "stepMoved": "Olùkọ́ rẹ ti tẹ̀síwájú.",
+      "notArrived": "Ìdáhùn rẹ kò dé. Tún un sọ.",
+      "unsupported": "graspy kò lè ṣàyẹ̀wò èyí.",
+      "alreadySent": "A ti fi ìdáhùn yẹn ránṣẹ́.",
+      "learnerRequired": "Kọ́kọ́ yan ẹni tó ń kẹ́kọ̀ọ́.",
+      "voiceFailed": "Ohùn olùkọ́ kò ṣí.",
+      "micDenied": "Gba gbohùngbohùn láàyè láti gba ìdáhùn rẹ sílẹ̀.",
+      "micFailed": "Gbohùngbohùn kò bẹ̀rẹ̀. Tún gbìyànjú.",
+      "notSaved": "A kò tọ́jú ìdáhùn rẹ. Tún gbìyànjú."
+    }
   }
 }

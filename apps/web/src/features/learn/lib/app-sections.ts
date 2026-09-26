@@ -34,7 +34,10 @@ export const LEARNERS_PAGE = `${LEARN}/you/learners`;
 
 export function sectionOf(pathname: string): AppSection {
   const path = pathname.replace(/\/+$/, "");
-  if (path === LEARN) return "home";
+  // Voice lessons open from Home.
+  const voice = `${LEARN}/voice`;
+  if (path === LEARN || path === voice || path.startsWith(`${voice}/`))
+    return "home";
   if (path === `${LEARN}/you` || path.startsWith(`${LEARN}/you/`)) return "you";
   if (path === ASK_HUB || path.startsWith(`${ASK_HUB}/`)) return "ask";
   return "subjects";

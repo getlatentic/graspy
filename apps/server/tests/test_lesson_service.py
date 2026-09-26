@@ -312,7 +312,7 @@ async def test_the_finished_lesson_is_everything_the_client_shows():
     assert events[-1]["payload"] == {
         "success": True,
         "lesson": {
-            "title": "Algebra - JSS 1",
+            "title": "Algebra",
             "content": "Lesson plan for Algebra",
             "keyPoints": KEY_POINTS,
             "objectives": OBJECTIVES,

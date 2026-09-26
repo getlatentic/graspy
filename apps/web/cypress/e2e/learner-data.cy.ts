@@ -46,7 +46,7 @@ it("moves an earlier version's data into the plan and the record, once", () => {
   cy.contains("1 of 3 learnt");
   expectStandings(["Learnt", "Ready", "Not started"]);
   eventually((device) => {
-    expect(device.version).to.equal(8);
+    expect(device.version).to.equal(9);
     expect(device.plan).to.deep.include({
       planId: OLD_PLAN_ID,
       subjects: [
@@ -181,7 +181,7 @@ it("rewrites the plan on a device already past version 3, so Ask opens", () => {
   cy.location("pathname").should("match", /^\/app\/learn\/ask\/.+/);
   cy.get("textarea").should("be.visible");
   eventually((device) => {
-    expect(device.version).to.equal(8);
+    expect(device.version).to.equal(9);
     expect(device.plan).to.deep.include({
       planId: OLD_PLAN_ID,
       assessment: { nextSubject: MATHS },
