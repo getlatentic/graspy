@@ -109,7 +109,10 @@ export async function keptAnswers(learner: string): Promise<KeptAnswer[]> {
   return all.filter((answer): answer is KeptAnswer => !isSettled(answer));
 }
 
-/** The oldest answer to this lesson the child has not seen the outcome of, sent or not. */
+/**
+ * The oldest answer the child has not seen the outcome of, sent or not: to this plan, or with no
+ * plan chosen, to any, so none waits unseen for a lesson the child may not open again.
+ */
 export async function unseenAnswer(
   learner: string,
   plan: string | undefined,

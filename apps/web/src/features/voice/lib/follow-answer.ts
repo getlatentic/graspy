@@ -1,5 +1,5 @@
 import { sendKept, whenSettled } from "@/lib/voice/answer-outbox";
-import { forgetAnswer } from "@/lib/voice/answer-store";
+import { forgetAnswer, settledOf } from "@/lib/voice/answer-store";
 import type { LessonEvent } from "./lesson-state";
 
 // A server that was busy may take it now; going online also sends it, without waiting for this.
@@ -8,7 +8,9 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Sees the answer on screen through: sent, shown as kept and tried again while the server cannot
- * take it, then marked or refused. Once its outcome is shown it leaves the device.
+ * take it, then marked or refused. Once its outcome is shown it leaves the device. Another tab may
+ * see it through first: its outcome is then read from the device, and once that tab has let it go
+ * the lesson moves on.
  */
 export async function followAnswer(
   key: string,
@@ -27,7 +29,13 @@ export async function followAnswer(
     now = await Promise.race([settled, again]);
     if (signal.aborted) return;
   }
-  const sent = now ?? (await settled);
+  // The listener hears only this tab; the device holds what another tab settled.
+  const sent = now ?? (await settledOf(key));
+  if (signal.aborted) return;
+  if (!sent) {
+    emit({ type: "seenElsewhere", key });
+    return;
+  }
   emit({ type: "settled", key, sent });
   await forgetAnswer(key);
 }

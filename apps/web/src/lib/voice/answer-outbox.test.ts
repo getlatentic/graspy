@@ -112,6 +112,23 @@ describe("the answers kept on the device", () => {
     expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
   });
 
+  it("belong to the learner who said them, sent or not", async () => {
+    const app = await load();
+    const theirs = (key: string, keptAt: number) => ({
+      ...answerTo(OTHER, key, keptAt),
+      learner: "device/other",
+    });
+    await app.keepAnswer(theirs("key-0", 0));
+    await app.keepAnswer(theirs("key-2", 2));
+    await app.sendKept("key-2");
+
+    expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toBeNull();
+    expect(await app.unseenAnswer("device/other", undefined)).toMatchObject({
+      key: "key-0",
+    });
+  });
+
   it("offer the oldest answer not yet shown, whatever its key", async () => {
     const app = await load();
     await app.keepAnswer(KEPT);

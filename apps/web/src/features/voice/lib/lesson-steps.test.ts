@@ -221,6 +221,19 @@ describe("a voice lesson reloaded with an answer kept", () => {
     expect(server.asked).toEqual([]);
   });
 
+  it("opens with no lesson chosen on an unseen answer to any lesson", async () => {
+    const app = await reload();
+    await app.forgetAnswer("key-1");
+    await app.keepAnswer(answerTo(OTHER, "key-2", 2));
+    const page = lessonPage(app);
+    await page.open();
+    expect(page.state.phase).toEqual({
+      name: "checking",
+      move: OTHER,
+      key: "key-2",
+    });
+  });
+
   it("opens another lesson at its own step, leaving the answer to its lesson", async () => {
     const app = await reload();
     const page = lessonPage(app, OTHER.plan_id);
@@ -230,6 +243,46 @@ describe("a voice lesson reloaded with an answer kept", () => {
       key: "key-1",
       move: ASKED,
     });
+  });
+});
+
+describe("an answer kept on screen while another tab sends it", () => {
+  async function keptOnScreen() {
+    server.reachable = false;
+    const page = lessonPage(await reload());
+    await page.open();
+    let due = () => {};
+    const retry = () => new Promise<void>((resolve) => (due = resolve));
+    const following = page.follow(retry);
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("kept"));
+    server.reachable = true;
+    const otherTab = await reload();
+    await otherTab.sendKeptAnswers(LEARNER.key);
+    return { page, otherTab, retryNow: () => (due(), following) };
+  }
+
+  it("shows the result that tab got, from the device", async () => {
+    const { page, retryNow } = await keptOnScreen();
+    await retryNow();
+    expect(page.state.phase).toMatchObject({
+      name: "result",
+      move: ASKED,
+      turn: turnOf("gvm_key-1"),
+    });
+    expect(sent("POST /api/voice/samples")).toHaveLength(1);
+  });
+
+  it("moves on once that tab has shown it and let it go", async () => {
+    const { page, otherTab, retryNow } = await keptOnScreen();
+    await otherTab.forgetAnswer("key-1");
+    await retryNow();
+    expect(page.state.phase).toEqual({
+      name: "moving-on",
+      move: ASKED,
+      heard: false,
+    });
+    await page.moveOn();
+    expect(page.state.phase).toEqual({ name: "teaching", move: NEXT });
   });
 });
 
