@@ -117,9 +117,10 @@ class SessionInterceptorTest {
     }
 
     @Test
-    fun `a request for a learner no longer in use is refused before it is sent`() {
+    fun `a request for a learner no longer in use is refused before it is sent, with no session fetched for it`() {
         assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, BAYO.id))) }
         assertEquals(0, server.requestCount)
+        assertEquals(0, exchanges)
     }
 
     @Test

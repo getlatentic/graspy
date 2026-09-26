@@ -1,11 +1,14 @@
 package com.latentic.graspy.ui
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import com.latentic.graspy.ask.AskViewModel
 import java.io.File
 import java.lang.reflect.Modifier
 import java.util.jar.JarFile
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -25,6 +28,20 @@ class LearnerViewModelsListTest {
 
     private val viewModels by lazy {
         appClasses.filter { ViewModel::class.java.isAssignableFrom(it) && !Modifier.isAbstract(it.modifiers) }
+    }
+
+    class TakesNothing : ViewModel()
+
+    class TakesTheApplication(application: Application) : AndroidViewModel(application)
+
+    class PlainTakingTheApplication(@Suppress("unused") val application: Application) : ViewModel()
+
+    @Test
+    fun `the default factory makes a view model taking nothing, or an AndroidViewModel taking the application`() {
+        assertTrue(madeWithoutALearner(TakesNothing::class.java))
+        assertTrue(madeWithoutALearner(TakesTheApplication::class.java))
+        assertFalse(madeWithoutALearner(PlainTakingTheApplication::class.java))
+        assertFalse(madeWithoutALearner(AskViewModel::class.java))
     }
 
     @Test
