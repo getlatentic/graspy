@@ -1,6 +1,7 @@
 package com.latentic.graspy.mcp
 
 import android.util.Base64
+import com.latentic.graspy.account.SessionRefusal
 import com.latentic.graspy.network.readTimeout
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
@@ -42,8 +43,8 @@ data class ViewCard(
 
 class McpRefusal(message: String) : IOException(message)
 
-/** The server gave no answer at all, as opposed to refusing. */
-fun Throwable.isUnreachable(): Boolean = this is IOException && this !is McpRefusal
+/** No answer came, as the web's failed fetch: neither the server nor the session in front of it refused. */
+fun Throwable.isUnreachable(): Boolean = this is IOException && this !is McpRefusal && this !is SessionRefusal
 
 fun JsonObject.isToolError(): Boolean = (this["isError"] as? JsonPrimitive)?.booleanOrNull == true
 
@@ -148,10 +149,10 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
             text.lineSequence().filter { it.startsWith("data:") }.lastOrNull()?.removePrefix("data:")?.trim()
         } else {
             text
-        } ?: throw IOException("$method returned nothing")
+        } ?: throw McpRefusal("$method returned nothing")
         val reply = mcpJson.parseToJsonElement(message).jsonObject
         reply["error"]?.let { throw McpRefusal("$method refused: $it") }
-        return reply["result"] as? JsonObject ?: throw IOException("$method returned no result")
+        return reply["result"] as? JsonObject ?: throw McpRefusal("$method returned no result")
     }
 
     companion object {

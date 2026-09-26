@@ -41,12 +41,14 @@ interface LessonCopyDao {
 
     @Query(
         """DELETE FROM lesson_copies WHERE ownerId = :ownerId AND planId = :planId
-           AND subjectSlug = :subjectSlug AND topicIndex = :topicIndex AND topic = :topic""",
+           AND subjectSlug = :subjectSlug AND topicIndex = :topicIndex AND topic = :topic
+           AND savedAt < :savedBefore""",
     )
-    suspend fun drop(ownerId: String, planId: String, subjectSlug: String, topicIndex: Int, topic: String)
+    suspend fun drop(ownerId: String, planId: String, subjectSlug: String, topicIndex: Int, topic: String, savedBefore: Long)
 
+    /** Only copies kept before [savedBefore]: one kept since is newer than whatever said to drop it. */
     @Transaction
-    suspend fun dropAll(ownerId: String, topics: List<CopiedTopic>) {
-        topics.forEach { drop(ownerId, it.planId, it.subjectSlug, it.topicIndex, it.topic) }
+    suspend fun dropAll(ownerId: String, topics: List<CopiedTopic>, savedBefore: Long) {
+        topics.forEach { drop(ownerId, it.planId, it.subjectSlug, it.topicIndex, it.topic, savedBefore) }
     }
 }

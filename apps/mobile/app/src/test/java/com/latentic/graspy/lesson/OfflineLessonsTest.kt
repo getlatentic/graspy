@@ -1,7 +1,9 @@
 package com.latentic.graspy.lesson
 
+import com.latentic.graspy.account.SessionRefusal
 import com.latentic.graspy.mcp.McpRefusal
 import com.latentic.graspy.plan.LearnerRecord
+import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.plan.TopicMark
 import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
@@ -25,7 +27,8 @@ class OfflineLessonsTest {
     private val copies = FakeLessonCopies()
     private val server = FakeLessonServer()
     private var learning = true
-    private val lessons = OfflineLessons(copies, "uid/ada", server, { learning }) { 1L }
+    private var now = 1L
+    private val lessons = OfflineLessons(copies, "uid/ada", server, { learning }) { now }
 
     @Test
     fun `offline, a lesson opens from the copy kept when it last opened whole`() = runBlocking {
@@ -78,6 +81,27 @@ class OfflineLessonsTest {
     }
 
     @Test
+    fun `a session refused is an answer, never stood in for`() {
+        server.gives = lessonCard("ready")
+        runBlocking { lessons.openOrCopy(fractions) }
+
+        server.sessionRefused = true
+        assertThrows(SessionRefusal::class.java) { runBlocking { lessons.openOrCopy(fractions) } }
+        assertThrows(SessionRefusal::class.java) { runBlocking { lessons.toolOrCopy(fractions, lessonCard("ready"), "lesson_progress", JsonObject(emptyMap())) } }
+    }
+
+    @Test
+    fun `a lesson the view watches is not kept while it is not whole`() {
+        server.gives = lessonCard("making")
+        val making = runBlocking { lessons.openOrCopy(fractions) }
+        server.answers = lessonResult("ready", whole = false)
+        runBlocking { lessons.toolOrCopy(fractions, making, "lesson_progress", JsonObject(emptyMap())) }
+
+        server.reachable = false
+        assertThrows(IOException::class.java) { runBlocking { lessons.toolOrCopy(fractions, making, "lesson_progress", JsonObject(emptyMap())) } }
+    }
+
+    @Test
     fun `a copy that cannot be saved never fails the lesson the server gave`() = runBlocking {
         copies.full = true
         server.gives = lessonCard("ready")
@@ -102,9 +126,10 @@ class OfflineLessonsTest {
         server.gives = lessonCard("ready")
         lessons.openOrCopy(fractions.copy(planId = "plan-0"))
         server.opened.clear()
+        now = 2
 
         copying(until = { server.viewsKept == 1 && copies.copied("uid/ada") == listOf(fractions.copied) }) {
-            lessons.copyReady(PLAN, ready(1 to "Fractions", 1 to "Renamed"))
+            lessons.copyReady(ready(1 to "Fractions", 1 to "Renamed"))
         }
 
         assertEquals(listOf(fractions.copied), copies.copied("uid/ada"))
@@ -113,11 +138,45 @@ class OfflineLessonsTest {
     }
 
     @Test
+    fun `the copy run keeps no lesson that is not whole`() = runBlocking {
+        server.gives = lessonCard("ready", whole = false)
+
+        copying(until = { server.opened.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
+
+        assertEquals(emptyList<CopiedTopic>(), copies.copied("uid/ada"))
+    }
+
+    @Test
+    fun `a record read before a lesson was kept never drops it, even told again with no connection`() = runBlocking {
+        now = 100
+        val beforeFractionsWasMade = ready(2 to "Decimals")
+        now = 200
+        server.gives = lessonCard("ready")
+        lessons.openOrCopy(fractions)
+        server.reachable = false
+
+        copying(until = { server.opened.size == 1 }) { lessons.copyReady(beforeFractionsWasMade) }
+
+        assertEquals(lessonCard("ready").toolResult, lessons.openOrCopy(fractions).toolResult)
+    }
+
+    @Test
+    fun `a record read after a lesson was kept, without it, drops it`() = runBlocking {
+        server.gives = lessonCard("ready")
+        lessons.openOrCopy(fractions)
+        now = 300
+
+        copying(until = { copies.copied("uid/ada") == listOf(decimals.copied) }) { lessons.copyReady(ready(2 to "Decimals")) }
+
+        assertEquals(listOf(decimals.copied), copies.copied("uid/ada"))
+    }
+
+    @Test
     fun `one lesson failing stops none after it`() = runBlocking {
         server.gives = lessonCard("ready")
         server.failsFor += "Fractions"
 
-        copying(until = { server.opened.size == 2 }) { lessons.copyReady(PLAN, ready(1 to "Fractions", 2 to "Decimals")) }
+        copying(until = { server.opened.size == 2 }) { lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals")) }
 
         assertEquals(listOf(decimals.copied), copies.copied("uid/ada"))
     }
@@ -129,21 +188,25 @@ class OfflineLessonsTest {
         server.holdUntil = release
 
         copying(until = { server.viewsKept == 3 }) {
-            lessons.copyReady(PLAN, ready(1 to "Fractions"))
+            lessons.copyReady(ready(1 to "Fractions"))
             eventually { server.mostAtOnce == 1 }
-            lessons.copyReady(PLAN, ready(1 to "Fractions", 2 to "Decimals"))
+            lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals"))
             delay(SETTLE_MS)
             release.complete(Unit)
             eventually { copies.copied("uid/ada").size == 2 }
-            lessons.copyReady(PLAN, ready(1 to "Fractions", 2 to "Decimals"))
+            lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals"))
         }
 
         assertEquals(1, server.mostAtOnce)
         assertEquals(setOf(fractions.copied, decimals.copied), copies.copied("uid/ada").toSet())
     }
 
-    private fun ready(vararg topics: Pair<Int, String>) =
-        LearnerRecord(topics = topics.map { (index, name) -> TopicMark("mathematics", index, name, lessonId = "lesson-$index-$name") })
+    /** The record as the server gives it now, with a lesson made for each of [topics]. */
+    private fun ready(vararg topics: Pair<Int, String>) = RecordRead(
+        PLAN,
+        LearnerRecord(topics = topics.map { (index, name) -> TopicMark("mathematics", index, name, lessonId = "lesson-$index-$name") }),
+        askedAt = now,
+    )
 
     /** Runs [asks] with the copier going, waits (within a timeout) [until] it has done what they asked, then stops it. */
     private suspend fun CoroutineScope.copying(until: suspend () -> Boolean, asks: suspend () -> Unit) {

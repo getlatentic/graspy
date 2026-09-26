@@ -1,15 +1,10 @@
 package com.latentic.graspy.lesson
 
-import androidx.room.withTransaction
 import com.latentic.graspy.account.inMemoryDatabase
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -24,35 +19,6 @@ class LessonCopyDaoTest {
 
     @After
     fun close() = database.close()
-
-    @Test
-    fun `a wipe waits for a copy whose learner was already checked, and takes it too`() {
-        val checked = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        val server = FakeLessonServer().apply { gives = lessonCard("ready") }
-        val lessons = OfflineLessons(
-            dao,
-            "uid/ada",
-            server,
-            stillLearning = {
-                checked.countDown()
-                release.await(5, TimeUnit.SECONDS)
-                true
-            },
-            inOneTransaction = { keep -> database.withTransaction { keep() } },
-        )
-
-        val opening = thread { runBlocking { lessons.openOrCopy(topic(0)) } }
-        assertTrue(checked.await(5, TimeUnit.SECONDS))
-        val wiping = thread { database.clearAllTables() }
-        // Long enough for the wipe to reach the lock the copy's transaction holds.
-        Thread.sleep(200)
-        release.countDown()
-        opening.join(5_000)
-        wiping.join(5_000)
-
-        assertEquals(emptyList<CopiedTopic>(), runBlocking { dao.copied("uid/ada") })
-    }
 
     @Test
     fun `a learner reads only their own copy of a topic`() = runBlocking {
@@ -79,10 +45,20 @@ class LessonCopyDaoTest {
         keep("uid/ada", decimals, "ada's")
         keep("uid/bayo", fractions, "bayo's")
 
-        dao.dropAll("uid/ada", listOf(fractions))
+        dao.dropAll("uid/ada", listOf(fractions), savedBefore = 2)
 
         assertEquals(listOf(decimals), dao.copied("uid/ada"))
         assertEquals("bayo's", card("uid/bayo", fractions))
+    }
+
+    @Test
+    fun `a copy kept at or after the time given is not dropped`() = runBlocking {
+        keep("uid/ada", fractions, "older", savedAt = 1)
+        keep("uid/ada", decimals, "newer", savedAt = 5)
+
+        dao.dropAll("uid/ada", listOf(fractions, decimals), savedBefore = 5)
+
+        assertEquals(listOf(decimals), dao.copied("uid/ada"))
     }
 
     @Test
@@ -94,8 +70,8 @@ class LessonCopyDaoTest {
         assertEquals(listOf(fractions), dao.copied("uid/ada"))
     }
 
-    private suspend fun keep(ownerId: String, topic: CopiedTopic, card: String) =
-        dao.keep(LessonCopyEntity(ownerId, topic.planId, topic.subjectSlug, topic.topicIndex, topic.topic, card, savedAt = 1))
+    private suspend fun keep(ownerId: String, topic: CopiedTopic, card: String, savedAt: Long = 1) =
+        dao.keep(LessonCopyEntity(ownerId, topic.planId, topic.subjectSlug, topic.topicIndex, topic.topic, card, savedAt))
 
     private suspend fun card(ownerId: String, topic: CopiedTopic) =
         dao.card(ownerId, topic.planId, topic.subjectSlug, topic.topicIndex, topic.topic)

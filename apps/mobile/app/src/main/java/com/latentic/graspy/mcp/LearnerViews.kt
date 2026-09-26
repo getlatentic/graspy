@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.lesson.OfflineLessons
-import com.latentic.graspy.plan.PlanState
+import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.sync.networkReach
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -17,15 +17,11 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
  * view calls kept while there was no connection are sent whenever there is one, and the plan's ready
  * lessons are copied here each time the server gives the learner's record.
  */
-class LearnerViews(application: Application) : AndroidViewModel(application), ViewServer {
-    private val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
-    private val connection = LearnerConnection(
-        database = AppGraph.database(application),
-        ownerId = ownerId,
-        calls = AppGraph.callsFor(application, ownerId),
-        endpoint = "$API_ORIGIN/mcp".toHttpUrl(),
-        stillLearning = { AppGraph.account(application).learnerInUse() == ownerId },
-    )
+class LearnerViews internal constructor(
+    application: Application,
+    private val connection: LearnerConnection,
+) : AndroidViewModel(application), ViewServer {
+    constructor(application: Application) : this(application, connectionOf(application))
 
     val lessons: OfflineLessons = connection.lessons
 
@@ -34,7 +30,7 @@ class LearnerViews(application: Application) : AndroidViewModel(application), Vi
         viewModelScope.launch { lessons.copyWhenAsked() }
     }
 
-    fun copyReadyLessons(read: PlanState.Ready) = lessons.copyReady(read.plan, read.record)
+    fun copyReadyLessons(read: RecordRead) = lessons.copyReady(read)
 
     override suspend fun view(uri: String): UiView = connection.view(uri)
 
@@ -45,4 +41,15 @@ class LearnerViews(application: Application) : AndroidViewModel(application), Vi
     private companion object {
         const val TAG = "GraspyViews"
     }
+}
+
+private fun connectionOf(application: Application): LearnerConnection {
+    val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
+    return LearnerConnection(
+        database = AppGraph.database(application),
+        ownerId = ownerId,
+        calls = AppGraph.callsFor(application, ownerId),
+        endpoint = "$API_ORIGIN/mcp".toHttpUrl(),
+        stillLearning = { AppGraph.account(application).learnerInUse() == ownerId },
+    )
 }

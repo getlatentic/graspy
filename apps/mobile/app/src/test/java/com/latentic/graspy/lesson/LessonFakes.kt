@@ -1,6 +1,7 @@
 package com.latentic.graspy.lesson
 
 import android.database.sqlite.SQLiteFullException
+import com.latentic.graspy.account.SessionRefusal
 import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.mcp.McpRefusal
 import com.latentic.graspy.mcp.ViewCard
@@ -54,6 +55,7 @@ suspend fun eventually(condition: suspend () -> Boolean) = withTimeout(5_000) {
 class FakeLessonServer : LessonServer {
     var reachable = true
     var refuses = false
+    var sessionRefused = false
     var gives: ViewCard? = null
     var answers: JsonObject = JsonObject(emptyMap())
     var holdUntil: CompletableDeferred<Unit>? = null
@@ -90,6 +92,7 @@ class FakeLessonServer : LessonServer {
 
     private fun answerable() {
         if (refuses) throw McpRefusal("refused")
+        if (sessionRefused) throw SessionRefusal("graspy did not issue a session")
         if (!reachable) throw IOException("no connection")
     }
 }
@@ -108,7 +111,8 @@ class FakeLessonCopies : LessonCopyDao {
 
     override suspend fun copied(ownerId: String) = rows.keys.filter { it.first == ownerId }.map { it.second }
 
-    override suspend fun drop(ownerId: String, planId: String, subjectSlug: String, topicIndex: Int, topic: String) {
-        rows.remove(ownerId to CopiedTopic(planId, subjectSlug, topicIndex, topic))
+    override suspend fun drop(ownerId: String, planId: String, subjectSlug: String, topicIndex: Int, topic: String, savedBefore: Long) {
+        val key = ownerId to CopiedTopic(planId, subjectSlug, topicIndex, topic)
+        if ((rows[key]?.savedAt ?: return) < savedBefore) rows.remove(key)
     }
 }

@@ -5,9 +5,8 @@ import com.latentic.graspy.mcp.ViewCard
 import com.latentic.graspy.mcp.bestEffort
 import com.latentic.graspy.mcp.isUnreachable
 import com.latentic.graspy.mcp.string
-import com.latentic.graspy.plan.LearnerPlan
-import com.latentic.graspy.plan.LearnerRecord
 import com.latentic.graspy.plan.LessonTarget
+import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.plan.TopicMarks
 import com.latentic.graspy.plan.lessonTarget
 import kotlinx.coroutines.CancellationException
@@ -50,7 +49,7 @@ class OfflineLessons(
     private val inOneTransaction: suspend (suspend () -> Unit) -> Unit = { it() },
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
-    private val asked = Channel<Pair<LearnerPlan, LearnerRecord>>(Channel.CONFLATED)
+    private val asked = Channel<RecordRead>(Channel.CONFLATED)
 
     /** [attempt] goes up only when the learner retries after a failure. */
     suspend fun openOrCopy(target: LessonTarget, attempt: Int = 0): ViewCard {
@@ -82,21 +81,25 @@ class OfflineLessons(
      * Asks for exactly the plan's ready lessons to be on the phone, including ones made on another device.
      * Every record the server gives asks; one arriving while a run goes is run next, the latest only.
      */
-    fun copyReady(plan: LearnerPlan, record: LearnerRecord) {
-        asked.trySend(plan to record)
+    fun copyReady(read: RecordRead) {
+        asked.trySend(read)
     }
 
     /** Runs what [copyReady] asks for, one run at a time, for as long as the calling scope lives. */
     suspend fun copyWhenAsked() {
-        for ((plan, record) in asked) copyAll(plan, record)
+        for (read in asked) copyAll(read)
     }
 
-    /** Copies no longer ready go and missing ones are opened and kept, each on its own: one failing stops none. */
-    private suspend fun copyAll(plan: LearnerPlan, record: LearnerRecord) {
+    /**
+     * Copies no longer ready go and missing ones are opened and kept, each on its own: one failing stops none.
+     * A copy kept since the record was asked for stays, since the record cannot know of it.
+     */
+    private suspend fun copyAll(read: RecordRead) {
+        val (plan, record) = read
         bestEffort(TAG, "Keeping the lesson views") { server.keepViews() }
         val wanted = record.topics.filter { it.lessonId != null }.map { CopiedTopic(plan.planId, it.subjectSlug, it.topicIndex, it.topic) }
         val copied = bestEffort(TAG, "Reading the lesson copies") { copies.copied(ownerId) } ?: return
-        bestEffort(TAG, "Dropping lessons no longer ready") { copies.dropAll(ownerId, copied - wanted.toSet()) }
+        bestEffort(TAG, "Dropping lessons no longer ready") { copies.dropAll(ownerId, copied - wanted.toSet(), read.askedAt) }
         val marks = TopicMarks(record)
         for (topic in wanted - copied.toSet()) {
             val subject = plan.subject(topic.subjectSlug) ?: continue

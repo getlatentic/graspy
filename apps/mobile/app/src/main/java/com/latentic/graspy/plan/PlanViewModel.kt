@@ -23,6 +23,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 sealed interface PlanState {
@@ -45,8 +46,12 @@ data class Making(val plan: LearnerPlan?, val failed: Boolean = false)
  * The learner's shared plan and their record on it, as the web keeps them: read from the account, kept on
  * the phone for when there is no connection, and changed here the way the web changes it.
  */
-class PlanViewModel(application: Application) : AndroidViewModel(application), PlanChanges {
-    private val calls = AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse()))
+class PlanViewModel internal constructor(application: Application, calls: Call.Factory) : AndroidViewModel(application), PlanChanges {
+    constructor(application: Application) : this(
+        application,
+        AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse())),
+    )
+
     private val api = retrofit(calls).create(PlanApi::class.java)
     private val maker = PlanMaker(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::curriculum)
     private val kept = application.getSharedPreferences(PreferenceFiles.PLAN, 0)
@@ -61,7 +66,7 @@ class PlanViewModel(application: Application) : AndroidViewModel(application), P
     val makingState: StateFlow<Making?> = making.asStateFlow()
 
     /** Each plan with a record the server gave for it, never one kept on the phone or assumed. */
-    val recordsRead: SharedFlow<PlanState.Ready> = records.read
+    val recordsRead: SharedFlow<RecordRead> = records.read
 
     init {
         refresh()
