@@ -9,6 +9,7 @@ import com.latentic.graspy.lesson.topic
 import com.latentic.graspy.plan.LearnerRecord
 import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.plan.TopicMark
+import java.io.IOException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -28,7 +29,8 @@ import org.robolectric.RobolectricTestRunner
 
 /**
  * The learner's connection wired as the app wires it, against a server that answers MCP and then goes
- * away: what was copied while it answered opens, view and lesson, on a phone that never showed either.
+ * away: what was copied while it answered is there offline, the lesson and its view's page, on a phone
+ * that never showed either. The page's own scripts are cached only once that view has loaded online.
  */
 @RunWith(RobolectricTestRunner::class)
 class LearnerConnectionTest {
@@ -64,10 +66,47 @@ class LearnerConnectionTest {
 
     @Test
     fun `a view shown once opens with no connection after the app starts again`() = runBlocking {
-        assertEquals(LESSON_HTML, connection().view(LESSON_VIEW).html)
+        val online = connection()
+        online.keepShown(LESSON_VIEW, online.view(LESSON_VIEW))
         server.web.shutdown()
 
         assertEquals(LESSON_HTML, connection().view(LESSON_VIEW).html)
+    }
+
+    @Test
+    fun `a view read but never loaded keeps no page`() {
+        runBlocking { connection().view(LESSON_VIEW) }
+        server.web.shutdown()
+
+        assertThrows(IOException::class.java) { runBlocking { connection().view(LESSON_VIEW) } }
+    }
+
+    @Test
+    fun `a kept call answered with an empty reply is dropped, and the next goes`() = runBlocking {
+        assertKeptCallAnsweredWithDropped("")
+    }
+
+    @Test
+    fun `a kept call answered with a reply that is not JSON is dropped, and the next goes`() = runBlocking {
+        assertKeptCallAnsweredWithDropped("<html>Bad gateway</html>")
+    }
+
+    private suspend fun assertKeptCallAnsweredWithDropped(reply: String) {
+        var online = false
+        val flaky = OkHttpClient.Builder().addInterceptor { chain ->
+            if (!online) throw IOException("no connection")
+            chain.proceed(chain.request())
+        }.build()
+        val connection = LearnerConnection(database, ADA_KEY, flaky, endpoint) { true }
+        connection.call("give_lesson", JsonObject(emptyMap()))
+        connection.call("lesson_progress", JsonObject(emptyMap()))
+
+        online = true
+        server.toolReplies = mapOf("give_lesson" to reply)
+
+        assertEquals(2, connection.sendKept())
+        assertEquals(listOf("give_lesson", "lesson_progress"), server.toolsCalled)
+        assertEquals(emptyList<KeptCallEntity>(), database.keptCallDao().kept(ADA_KEY))
     }
 
     @Test

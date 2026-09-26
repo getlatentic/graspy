@@ -38,35 +38,32 @@ interface KeptViewDao {
 
 /**
  * Views as the web reads them (lib/mcp/server.ts uiView): from the server, else, when it could not be
- * reached, the copy last shown. A refusal is its answer, as it is for lessons. Only a view being shown
- * replaces its copy: the page it replaces had its files cached by showing, and a newer page's files may
- * not be until it is shown too.
+ * reached, the page kept. A refusal is its answer, as it is for lessons. Only a view that has loaded in
+ * the sandbox replaces its page: the sandbox cached the kept page's files by loading it, and a newer
+ * page's files may not be cached until it loads too.
  */
 class OfflineViews(private val dao: KeptViewDao, private val read: suspend (String) -> UiView) {
-    private val keptThisRun = ConcurrentHashMap.newKeySet<String>()
+    private val keptThisRun = ConcurrentHashMap<String, UiView>()
 
-    /** The view to show now; read from the server, it replaces the copy. */
-    suspend fun view(uri: String): UiView {
-        val view = try {
-            read(uri)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (failure: Exception) {
-            return (if (failure.isUnreachable()) kept(uri) else null) ?: throw failure
-        }
-        keep(uri, view)
-        return view
+    /** The view to show now. */
+    suspend fun view(uri: String): UiView = try {
+        read(uri)
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (failure: Exception) {
+        (if (failure.isUnreachable()) kept(uri) else null) ?: throw failure
     }
 
-    /** Keeps each view that has no copy yet, while there is a connection, as readAllViews does; a copy is left as it is. */
+    /** Keeps the page [view] loaded from in the sandbox, which has cached its files; each page once a run. */
+    suspend fun keepShown(uri: String, view: UiView) {
+        if (keptThisRun[uri] == view) return
+        bestEffort(TAG, "Keeping the view $uri") { dao.keep(view.keptAs(uri)) } ?: return
+        keptThisRun[uri] = view
+    }
+
+    /** Keeps each view that has no page kept yet, while there is a connection, as readAllViews does; a kept page is left as it is. */
     suspend fun keepAll(uris: Collection<String>) {
         uris.forEach { uri -> bestEffort(TAG, "Keeping the view $uri") { dao.keepIfNone(read(uri).keptAs(uri)) } }
-    }
-
-    private suspend fun keep(uri: String, view: UiView) {
-        if (uri in keptThisRun) return
-        bestEffort(TAG, "Keeping the view $uri") { dao.keep(view.keptAs(uri)) } ?: return
-        keptThisRun += uri
     }
 
     private suspend fun kept(uri: String): UiView? = bestEffort(TAG, "Reading the kept view $uri") { dao.kept(uri)?.toView() }

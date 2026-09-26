@@ -22,11 +22,13 @@ const val LESSON_HTML = "<!doctype html><script src=\"/views/assets/lesson.js\">
 
 /**
  * graspy's server as far as offline lessons reach it: the learner's plan and record, and MCP for one
- * lesson view and its tools. Answering with nothing turns every MCP answer into an empty 200.
+ * lesson view and its tools. Answering with nothing turns every MCP answer into an empty 200; a tool in
+ * [toolReplies] is answered 200 as JSON with that body, whatever it is.
  */
 class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispatcher() {
     var recordFails = false
     var answersWithNothing = false
+    var toolReplies: Map<String, String> = emptyMap()
     val toolsCalled: MutableList<String> = CopyOnWriteArrayList()
     val web = MockWebServer().also { it.dispatcher = this }
 
@@ -52,7 +54,8 @@ class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispa
         if (answersWithNothing) return MockResponse().setHeader("Content-Type", "text/event-stream").setBody("")
         val body = mcpJson.parseToJsonElement(request.body.readUtf8()).jsonObject
         val method = body.string("method").orEmpty()
-        if (method == "tools/call") body.getValue("params").jsonObject.string("name")?.let(toolsCalled::add)
+        val tool = if (method == "tools/call") body.getValue("params").jsonObject.string("name")?.also(toolsCalled::add) else null
+        tool?.let(toolReplies::get)?.let { return MockResponse().setHeader("Content-Type", "application/json").setBody(it) }
         return json(
             buildJsonObject {
                 put("jsonrpc", "2.0")

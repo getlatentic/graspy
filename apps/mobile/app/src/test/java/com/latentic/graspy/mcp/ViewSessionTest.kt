@@ -9,6 +9,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -58,7 +59,16 @@ class ViewSessionTest {
         assertEquals(listOf(ViewSession.TOOL_INPUT, ViewSession.TOOL_RESULT), sent.map { it.method() })
         assertEquals(card.toolInput, sent[0].params()["arguments"])
         assertEquals(card.toolResult, sent[1].params())
-        assertTrue(host.shown)
+    }
+
+    @Test
+    fun `the page is the host's to keep only once the view has initialised in the sandbox`() = runBlocking {
+        session.receive(notification(ViewSession.PROXY_READY))
+        session.receive(request(1, ViewSession.INITIALIZE))
+        assertNull(host.shown)
+
+        session.receive(notification(ViewSession.INITIALIZED))
+        assertEquals(card.resourceUri to view, host.shown)
     }
 
     @Test
@@ -121,7 +131,7 @@ class ViewSessionTest {
         val links = mutableListOf<String>()
         val heights = mutableListOf<Int>()
         val messages = mutableListOf<String>()
-        var shown = false
+        var shown: Pair<String, UiView>? = null
         var takesMessages = true
 
         override suspend fun callTool(name: String, arguments: JsonObject): JsonObject {
@@ -147,8 +157,8 @@ class ViewSessionTest {
             heights += height
         }
 
-        override fun shown() {
-            shown = true
+        override suspend fun shown(uri: String, view: UiView) {
+            shown = uri to view
         }
 
         companion object {

@@ -14,7 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** A view read once opens again with no connection, from the document last read. */
+/** A view shown once opens again with no connection, from the page it last loaded in the sandbox. */
 @RunWith(RobolectricTestRunner::class)
 class OfflineViewsTest {
     private val dao = FakeDao()
@@ -35,16 +35,16 @@ class OfflineViewsTest {
     }
 
     @Test
-    fun `offline, a view read before opens from its copy`() = runBlocking {
-        views.view(LESSON)
+    fun `offline, a view shown before opens from its page`() = runBlocking {
+        views.keepShown(LESSON, views.view(LESSON))
 
         reachable = false
         assertEquals(lesson, views.view(LESSON))
     }
 
     @Test
-    fun `a refusal is the server's answer, never stood in for by the copy`() {
-        runBlocking { views.view(LESSON) }
+    fun `a refusal is the server's answer, never stood in for by the kept page`() {
+        runBlocking { views.keepShown(LESSON, views.view(LESSON)) }
 
         refusal = McpRefusal("resources/read failed: HTTP 500")
         assertThrows(McpRefusal::class.java) { runBlocking { views.view(LESSON) } }
@@ -53,9 +53,22 @@ class OfflineViewsTest {
     }
 
     @Test
-    fun `a background run keeps a view with no copy, and never replaces one kept by showing`() = runBlocking {
+    fun `reading a view keeps nothing, and only a page loaded in the sandbox replaces the kept one`() = runBlocking {
         views.keepAll(listOf(LESSON))
-        views.view(LESSON)
+        page = DEPLOYED_PAGE
+
+        val deployed = views.view(LESSON)
+        reachable = false
+        assertEquals(LESSON_PAGE, views.view(LESSON).html)
+
+        views.keepShown(LESSON, deployed)
+        assertEquals(DEPLOYED_PAGE, views.view(LESSON).html)
+    }
+
+    @Test
+    fun `a background run keeps a view with no page, and never replaces one kept by showing`() = runBlocking {
+        views.keepAll(listOf(LESSON))
+        views.keepShown(LESSON, views.view(LESSON))
         page = DEPLOYED_PAGE
 
         views.keepAll(listOf(LESSON))
@@ -65,36 +78,29 @@ class OfflineViewsTest {
     }
 
     @Test
-    fun `showing a view online replaces its copy`() = runBlocking {
-        views.keepAll(listOf(LESSON))
-        page = DEPLOYED_PAGE
+    fun `a view never kept has no page to open`() {
+        runBlocking { views.view(LESSON) }
 
-        views.view(LESSON)
-
-        reachable = false
-        assertEquals(DEPLOYED_PAGE, views.view(LESSON).html)
-    }
-
-    @Test
-    fun `a view never read has no copy to open`() {
         reachable = false
         assertThrows(IOException::class.java) { runBlocking { views.view(LESSON) } }
     }
 
     @Test
-    fun `a view is kept once a run, however often it opens`() = runBlocking {
-        repeat(3) { views.view(LESSON) }
-
+    fun `a page is kept once a run, however often it is shown, and a newer page shown is kept too`() = runBlocking {
+        repeat(3) { views.keepShown(LESSON, lesson) }
         assertEquals(1, dao.writes)
+
+        views.keepShown(LESSON, lesson.copy(html = DEPLOYED_PAGE))
+        assertEquals(2, dao.writes)
     }
 
     @Test
-    fun `a copy that cannot be saved never fails the view, and is saved when it can be`() = runBlocking {
+    fun `a page that cannot be saved never fails the view, and is saved when it can be`() = runBlocking {
         dao.full = true
-        assertEquals(lesson, views.view(LESSON))
+        views.keepShown(LESSON, lesson)
 
         dao.full = false
-        views.view(LESSON)
+        views.keepShown(LESSON, lesson)
         reachable = false
         assertEquals(lesson, views.view(LESSON))
     }

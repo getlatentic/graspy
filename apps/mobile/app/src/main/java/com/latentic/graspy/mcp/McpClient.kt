@@ -11,6 +11,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -152,10 +153,16 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
             text.lineSequence().filter { it.startsWith("data:") }.lastOrNull()?.removePrefix("data:")?.trim()
         } else {
             text
-        } ?: throw McpRefusal("$method returned nothing")
-        val reply = mcpJson.parseToJsonElement(message).jsonObject
+        }
+        val reply = message?.let(::replyOf) ?: throw McpRefusal("$method returned no JSON-RPC message")
         reply["error"]?.let { throw McpRefusal("$method refused: $it") }
         return reply["result"] as? JsonObject ?: throw McpRefusal("$method returned no result")
+    }
+
+    private fun replyOf(message: String): JsonObject? = try {
+        mcpJson.parseToJsonElement(message) as? JsonObject
+    } catch (undecodable: SerializationException) {
+        null
     }
 
     companion object {

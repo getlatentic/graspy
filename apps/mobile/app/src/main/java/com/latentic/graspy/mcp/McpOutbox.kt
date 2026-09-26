@@ -1,7 +1,6 @@
 package com.latentic.graspy.mcp
 
 import android.util.Log
-import com.latentic.graspy.account.SessionRefusal
 import java.io.IOException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -54,10 +53,7 @@ class McpOutbox(private val dao: KeptCallDao, private val ownerId: String, priva
                 server.call(call.name, mcpJson.parseToJsonElement(call.argumentsJson).jsonObject)
             } catch (refused: McpRefusal) {
                 Log.w(TAG, "The server refused a kept ${call.name}", refused)
-            } catch (sessionRefused: SessionRefusal) {
-                Log.w(TAG, "The session was refused; what was kept waits", sessionRefused)
-                break
-            } catch (unreachable: IOException) {
+            } catch (unreachableOrSessionRefused: IOException) {
                 break
             }
             dao.forget(call.id)

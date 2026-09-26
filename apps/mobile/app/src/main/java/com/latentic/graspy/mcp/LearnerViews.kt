@@ -34,6 +34,8 @@ class LearnerViews internal constructor(
 
     override suspend fun view(uri: String): UiView = connection.view(uri)
 
+    override suspend fun keepShown(uri: String, view: UiView) = connection.keepShown(uri, view)
+
     override suspend fun call(name: String, arguments: JsonObject): JsonObject = connection.call(name, arguments)
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = connection.openToolView(name, arguments)
