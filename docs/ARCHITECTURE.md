@@ -21,7 +21,7 @@ flowchart LR
 - **Pipelines** write something on request: the subjects for a class, a subject's topics, a path to a goal, a lesson. Their steps are fixed and their output shape is declared, so a malformed answer is a validation error, not a broken page.
 - **The tutor** is a DSPy ReAct agent that talks to the learner. At each step it calls a tool or answers. Its tools do what writing cannot: calculate, open or change the learner's plan, and set practice or a passage as a card the learner taps.
 
-Both use one model, built in one place, for every language. Yoruba, Hausa and Igbo lessons are written in English and translated stage by stage, because the model writes better English.
+Both use one model, built in one place, for every language. Yoruba, Hausa, Igbo and Nigerian Pidgin lessons are written in English and translated stage by stage, because the model writes better English.
 
 A lesson is staged: a plan, then each slide with the earlier slides as context, then a practice question. A failed slide costs one slide, not the lesson.
 

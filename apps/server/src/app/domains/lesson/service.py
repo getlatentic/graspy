@@ -1,9 +1,10 @@
 """Lessons, written one slide at a time: a plan, then each slide with the
 earlier ones as context, then a practice question.
 
-A Yoruba, Hausa or Igbo lesson is written in English and translated a stage at
-a time. A translation that fails leaves that part in English and marks the
-lesson incomplete, rather than taking away what the learner already has.
+A Yoruba, Hausa, Igbo or Nigerian Pidgin lesson is written in English and
+translated a stage at a time. A translation that fails leaves that part in
+English and marks the lesson incomplete, rather than taking away what the
+learner already has.
 """
 
 from __future__ import annotations

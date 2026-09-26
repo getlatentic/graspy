@@ -45,6 +45,7 @@ export const STRONG_LANGUAGE_SIGNALS: Record<string, string> = {
   yo: "NG",
   ig: "NG",
   ha: "NG", // Also Niger's, but most of its speakers are in Nigeria.
+  pcm: "NG",
   af: "ZA",
   zu: "ZA",
   xh: "ZA",

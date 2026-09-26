@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import ar from "./ar.json";
 import en from "./en.json";
+import pcm from "./pcm.json";
 import yo from "./yo.json";
 
-const LOCALES = { en, yo, ar } as Record<string, Record<string, unknown>>;
+const LOCALES = { en, yo, ar, pcm } as Record<string, Record<string, unknown>>;
+const TRANSLATIONS = Object.keys(LOCALES).filter((lang) => lang !== "en");
 
 const SOURCES = import.meta.glob<string>(
   ["../**/*.{ts,tsx}", "!../**/*.test.ts"],
@@ -25,13 +27,22 @@ function keysOf(value: unknown, prefix = ""): string[] {
   );
 }
 
-const has = (locale: Record<string, unknown>, key: string) =>
-  typeof key
+const messageOf = (locale: Record<string, unknown>, key: string) =>
+  key
     .split(".")
     .reduce<unknown>(
       (value, part) => (value as Record<string, unknown> | undefined)?.[part],
       locale,
-    ) === "string";
+    );
+
+const has = (locale: Record<string, unknown>, key: string) =>
+  typeof messageOf(locale, key) === "string";
+
+const placeholdersOf = (message: unknown) =>
+  [...String(message).matchAll(/\{(\w+)\}/g)]
+    .map((match) => match[1])
+    .sort()
+    .join(",");
 
 describe("translations", () => {
   it("finds the keys the code uses", () => {
@@ -42,9 +53,17 @@ describe("translations", () => {
     expect(usedKeys.filter((key) => !has(LOCALES[lang], key))).toEqual([]);
   });
 
-  it("every language has the same keys", () => {
-    const english = keysOf(en).sort();
-    expect(keysOf(yo).sort()).toEqual(english);
-    expect(keysOf(ar).sort()).toEqual(english);
+  it.each(TRANSLATIONS)("%s has the same keys as English", (lang) => {
+    expect(keysOf(LOCALES[lang]).sort()).toEqual(keysOf(en).sort());
+  });
+
+  it.each(TRANSLATIONS)("%s keeps every placeholder English has", (lang) => {
+    const differing = keysOf(en).filter(
+      (key) =>
+        has(LOCALES[lang], key) &&
+        placeholdersOf(messageOf(en, key)) !==
+          placeholdersOf(messageOf(LOCALES[lang], key)),
+    );
+    expect(differing).toEqual([]);
   });
 });

@@ -1,7 +1,11 @@
-"""The models write markedly better English than Yoruba, Hausa or Igbo, so
-those are generated in English and translated."""
+"""The models write markedly better English than Yoruba, Hausa, Igbo or
+Nigerian Pidgin, so those are generated in English and translated.
 
-TRANSLATED_LANGUAGES = frozenset({"yoruba", "hausa", "igbo"})
+Asked for Nigerian Pidgin directly, gpt-oss-120b wrote a fifth to a half of a
+lesson's passages in it and the quizzes in English; translated, three quarters
+and more, quizzes included (two Nigerian primary lessons each way)."""
+
+TRANSLATED_LANGUAGES = frozenset({"yoruba", "hausa", "igbo", "nigerian pidgin"})
 
 GENERATION_LANGUAGE = "English"
 

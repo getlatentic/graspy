@@ -29,7 +29,9 @@ function getLocaleCookie(): string | null {
 // Must match the pre-paint script in index.html, which sets lang/dir before
 // React mounts. If they disagree the page keeps RTL while rendering English.
 function initialLocale(): string {
-  const browserLocale = (navigator.language || "en").slice(0, 2);
+  const browserLocale = (navigator.language || "en")
+    .split("-")[0]
+    .toLowerCase();
   return getLocaleCookie() || getUserProfile()?.language || browserLocale;
 }
 

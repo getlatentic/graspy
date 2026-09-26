@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getAllCountries,
   getCountryName,
@@ -6,6 +6,8 @@ import {
   getLanguageNativeName,
   isSupportedLanguage,
 } from "./locale";
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe("locale", () => {
   it("lists every country by English name, with its languages", () => {
@@ -16,7 +18,7 @@ describe("locale", () => {
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
     expect(countries.find((country) => country.code === "NG")).toEqual({
       code: "NG",
-      languages: ["en", "yo", "ha", "ig"],
+      languages: ["en", "pcm", "yo", "ha", "ig"],
     });
   });
 
@@ -31,8 +33,24 @@ describe("locale", () => {
     expect(getLanguageNativeName("fr")).toBe("français");
   });
 
+  it("names Nigerian Pidgin where Intl has no name for it", () => {
+    vi.stubGlobal(
+      "Intl",
+      Object.assign(Object.create(Intl), {
+        DisplayNames: class {
+          of = (code: string) => code;
+        },
+      }),
+    );
+
+    expect(getLanguageName("pcm")).toBe("Nigerian Pidgin");
+    expect(getLanguageNativeName("pcm")).toBe("Naijá");
+    expect(getLanguageName("fr")).toBe("fr");
+  });
+
   it("knows the languages graspy teaches in", () => {
     expect(isSupportedLanguage("yo")).toBe(true);
+    expect(isSupportedLanguage("pcm")).toBe(true);
     expect(isSupportedLanguage("sk")).toBe(false);
   });
 });

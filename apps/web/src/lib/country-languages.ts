@@ -164,7 +164,7 @@ export const COUNTRY_LANGUAGES: Record<string, string[]> = {
   NC: ["fr"],
   NE: ["fr", "en"],
   NF: ["en"],
-  NG: ["en", "yo", "ha", "ig"],
+  NG: ["en", "pcm", "yo", "ha", "ig"],
   NI: ["es", "en"],
   NL: ["nl", "en"],
   NO: ["no", "en"],

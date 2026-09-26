@@ -21,7 +21,7 @@
       // flash left-to-right while the app loads.
       (function () {
         var m = document.cookie.match(/(?:^|; )graspy_locale=([^;]*)/);
-        var locale = m ? decodeURIComponent(m[1]) : (navigator.language || 'en').slice(0, 2);
+        var locale = m ? decodeURIComponent(m[1]) : (navigator.language || 'en').split('-')[0].toLowerCase();
         var rtl = ['ar', 'he', 'fa', 'ur', 'ps', 'ku'];
         document.documentElement.lang = locale;
         document.documentElement.dir = rtl.indexOf(locale) !== -1 ? 'rtl' : 'ltr';

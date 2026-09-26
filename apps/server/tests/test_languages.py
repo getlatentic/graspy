@@ -27,3 +27,9 @@ def test_the_match_ignores_case_and_padding(spelling):
     """The locale reaches this from a cookie and a request body, spelled
     differently by each."""
     assert needs_translation(spelling)
+
+
+@pytest.mark.parametrize("spelling", ["Nigerian Pidgin", "nigerian pidgin"])
+def test_nigerian_pidgin_is_generated_in_english_as_the_web_names_it(spelling):
+    """The web sends a language's English name: Nigerian Pidgin for pcm."""
+    assert generation_language_for(spelling) == GENERATION_LANGUAGE

@@ -11,6 +11,7 @@ export const SUPPORTED_LANGUAGES = [
   "fr",
   "es",
   "yo",
+  "pcm",
   "ha",
   "ig",
   "ps",
@@ -59,12 +60,20 @@ function displayName(
   }
 }
 
-export const getLanguageName = (languageCode: string, displayLang = "en") =>
-  displayName("language", languageCode, displayLang);
+// Chrome ships without CLDR data for these: Intl names them by code.
+const ENGLISH_NAMES: Record<string, string> = {
+  pcm: "Nigerian Pidgin",
+};
 
-// Chrome ships without CLDR data for these, so Intl names them in English.
+export function getLanguageName(languageCode: string, displayLang = "en") {
+  const name = displayName("language", languageCode, displayLang);
+  return name === languageCode ? (ENGLISH_NAMES[languageCode] ?? name) : name;
+}
+
+// Chrome ships without CLDR data for these, so Intl names them in English or by code.
 const NATIVE_NAMES: Record<string, string> = {
   yo: "Èdè Yorùbá",
+  pcm: "Naijá",
 };
 
 export const getLanguageNativeName = (languageCode: string) =>
