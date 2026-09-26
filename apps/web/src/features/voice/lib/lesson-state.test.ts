@@ -113,6 +113,23 @@ describe("a voice lesson", () => {
     expect(later.phase.name).toBe("result");
   });
 
+  it("opens on an answer from before a reload, checking it, then shows its result", () => {
+    const resumed = run(
+      { type: "start" },
+      { type: "resumed", move: ASKED, key: "k1" },
+    );
+    expect(resumed).toEqual({
+      phase: { name: "checking", move: ASKED, key: "k1" },
+      note: null,
+    });
+    const marked = lessonReducer(resumed, {
+      type: "settled",
+      key: "k1",
+      sent: { kind: "marked", turn: TURN },
+    });
+    expect(marked.phase).toEqual({ name: "result", move: ASKED, turn: TURN });
+  });
+
   it("ignores another answer's result", () => {
     const checking = run(
       ...toYourTurn,

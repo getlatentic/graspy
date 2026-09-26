@@ -1,5 +1,5 @@
-import { VoiceError, type VoiceCode } from "./voice-api";
-import type { KeptAnswer } from "./answer-store";
+import { VoiceError } from "./voice-api";
+import type { KeptAnswer, Settled } from "./answer-store";
 import type { CreatedSample, Evaluation, MarkedTurn } from "./voice-types";
 
 export interface AnswerApi {
@@ -13,14 +13,13 @@ export interface AnswerApi {
 
 export interface AnswerKeeping {
   keep(answer: KeptAnswer): Promise<void>;
-  forget(key: string): Promise<void>;
+  settle(answer: KeptAnswer, sent: Settled): Promise<void>;
 }
 
 export type Sent =
-  | { kind: "marked"; turn: MarkedTurn }
+  | Settled
   /** Not reached, or not marked yet: the answer stays on the device and goes again. */
-  | { kind: "kept" }
-  | { kind: "refused"; code: VoiceCode | null; status: number };
+  | { kind: "kept" };
 
 const MARKING_POLLS = 20;
 const POLL_MS = 3_000;
@@ -72,9 +71,18 @@ async function marked(
   return null;
 }
 
+async function settled(
+  answer: KeptAnswer,
+  sent: Settled,
+  keeping: AnswerKeeping,
+): Promise<Sent> {
+  await keeping.settle(answer, sent);
+  return sent;
+}
+
 /**
  * Creates the recording, uploads its audio and has it marked, keeping each step on the device
- * so a retry resumes where the last one stopped. The answer leaves the device only once the
+ * so a retry resumes where the last one stopped. The recording leaves the device only once the
  * server has marked or refused it.
  */
 export async function sendAnswer(
@@ -96,15 +104,18 @@ export async function sendAnswer(
       turn = await marked(sent.sampleId!, api, pause);
     }
     if (!turn) return { kind: "kept" };
-    await keeping.forget(answer.key);
-    return { kind: "marked", turn };
+    return settled(answer, { kind: "marked", turn }, keeping);
   } catch (error) {
     if (!(error instanceof VoiceError) || transient(error)) {
       if (!(error instanceof VoiceError))
         console.warn("Sending an answer failed:", error);
       return { kind: "kept" };
     }
-    await keeping.forget(answer.key);
-    return { kind: "refused", code: error.code, status: error.status };
+    const refused: Settled = {
+      kind: "refused",
+      code: error.code,
+      status: error.status,
+    };
+    return settled(answer, refused, keeping);
   }
 }

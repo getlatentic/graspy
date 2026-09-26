@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LessonMove } from "@/lib/voice/voice-types";
-import { answerMetadata } from "./lesson-answer";
+import { answerMetadata, answerToKeep } from "./lesson-answer";
 
 const move = (kind: string, prompt: string): LessonMove => ({
   kind: "event",
@@ -55,6 +55,23 @@ describe("answerMetadata", () => {
       event_id: "e3",
       device: "web",
       consent: { granted: true, scope: "voice_lesson" },
+    });
+  });
+});
+
+describe("answerToKeep", () => {
+  it("keeps the step the answer was given for with its recording, so a reload can show it", () => {
+    const step = move("answer", "plan.x.e3");
+    const wav = new Blob(["RIFF"], { type: "audio/wav" });
+    expect(
+      answerToKeep(step, { ...learner, key: "device/dev-1" }, wav, "k1", 7),
+    ).toEqual({
+      key: "k1",
+      learner: "device/dev-1",
+      move: step,
+      metadata: answerMetadata(step, learner),
+      wav,
+      keptAt: 7,
     });
   });
 });

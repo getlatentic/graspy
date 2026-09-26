@@ -3,6 +3,7 @@ import type {
   LessonMove,
   SampleMetadata,
 } from "@/lib/voice/voice-types";
+import type { KeptAnswer } from "@/lib/voice/answer-store";
 import { languagePairOf } from "@/lib/voice/voice-learner";
 
 // What the server's markers are filed under: a times-table prompt is reasoning about
@@ -17,10 +18,16 @@ function taskAndTopic(move: LessonMove) {
     : { task: "reasoning", topic };
 }
 
+interface AnswerLearner {
+  speaker: string;
+  learnerClass: string;
+  language: LessonLanguage;
+}
+
 /** What one spoken answer to this step says about itself. */
 export function answerMetadata(
   move: LessonMove,
-  learner: { speaker: string; learnerClass: string; language: LessonLanguage },
+  learner: AnswerLearner,
 ): SampleMetadata {
   return {
     speaker_id: learner.speaker,
@@ -34,5 +41,23 @@ export function answerMetadata(
     event_id: move.event_id,
     device: "web",
     consent: { granted: true, scope: "voice_lesson" },
+  };
+}
+
+/** One spoken answer as the device keeps it, with the step it answers. */
+export function answerToKeep(
+  move: LessonMove,
+  learner: AnswerLearner & { key: string },
+  wav: Blob,
+  key: string,
+  keptAt: number,
+): KeptAnswer {
+  return {
+    key,
+    learner: learner.key,
+    move,
+    metadata: answerMetadata(move, learner),
+    wav,
+    keptAt,
   };
 }

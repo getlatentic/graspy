@@ -44,6 +44,8 @@ export type LessonEvent =
   | { type: "recordFailed"; note: "micDenied" | "micFailed" | "notSaved" }
   | { type: "nothingHeard" }
   | { type: "recorded"; key: string }
+  /** An answer from before the page was reloaded, still to be shown. */
+  | { type: "resumed"; move: LessonMove; key: string }
   | { type: "kept"; key: string }
   | { type: "settled"; key: string; sent: Sent }
   | { type: "replied" };
@@ -153,6 +155,11 @@ export function lessonReducer(
         phase: { name: "checking", move, key: event.key },
         note: null,
       }));
+    case "resumed":
+      return {
+        phase: { name: "checking", move: event.move, key: event.key },
+        note: null,
+      };
     case "kept":
       return settled(state, {
         type: "settled",

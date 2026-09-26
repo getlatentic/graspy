@@ -1,11 +1,19 @@
 import { committed, openDB, promisify, VOICE_ANSWER_STORE } from "@/lib/idb";
-import type { SampleMetadata } from "./voice-types";
+import type { VoiceCode } from "./voice-api";
+import type { LessonMove, MarkedTurn, SampleMetadata } from "./voice-types";
 
-/** A spoken answer on the device, from the moment it is recorded until the server has marked it. */
+/** What the server made of an answer: marked, or refused with what it named. */
+export type Settled =
+  | { kind: "marked"; turn: MarkedTurn }
+  | { kind: "refused"; code: VoiceCode | null; status: number };
+
+/** A spoken answer on the device, from the moment it is recorded until the server has marked or refused it. */
 export interface KeptAnswer {
   /** Its Idempotency-Key: sent again, it names the same recording. */
   key: string;
   learner: string;
+  /** The step it answers, so a reloaded lesson shows it again; one kept without it is only sent. */
+  move?: LessonMove;
   metadata: SampleMetadata;
   wav: Blob;
   keptAt: number;
@@ -14,18 +22,34 @@ export interface KeptAnswer {
   uploaded?: boolean;
 }
 
+/** A marked or refused answer, kept until the lesson has shown it. */
+export interface SettledAnswer {
+  key: string;
+  learner: string;
+  move: LessonMove;
+  keptAt: number;
+  sent: Settled;
+}
+
+type StoredAnswer = KeptAnswer | SettledAnswer;
+
+const isSettled = (answer: StoredAnswer): answer is SettledAnswer =>
+  "sent" in answer;
+
 async function store(mode: IDBTransactionMode) {
   const db = await openDB();
   const tx = db.transaction(VOICE_ANSWER_STORE, mode);
   return { tx, answers: tx.objectStore(VOICE_ANSWER_STORE) };
 }
 
-export async function keepAnswer(answer: KeptAnswer): Promise<void> {
+async function put(answer: StoredAnswer): Promise<void> {
   const { tx, answers } = await store("readwrite");
   const done = committed(tx);
   answers.put(answer);
   await done;
 }
+
+export const keepAnswer = (answer: KeptAnswer): Promise<void> => put(answer);
 
 export async function forgetAnswer(key: string): Promise<void> {
   const { tx, answers } = await store("readwrite");
@@ -34,10 +58,52 @@ export async function forgetAnswer(key: string): Promise<void> {
   await done;
 }
 
-export async function keptAnswers(learner: string): Promise<KeptAnswer[]> {
+/** The recording goes; what the lesson needs to show the outcome stays. */
+export function settleAnswer(answer: KeptAnswer, sent: Settled): Promise<void> {
+  const { key, learner, move, keptAt } = answer;
+  if (!move) return forgetAnswer(key);
+  return put({ key, learner, move, keptAt, sent });
+}
+
+async function learnersAnswers(learner: string): Promise<StoredAnswer[]> {
   const { answers } = await store("readonly");
-  const all = await promisify<KeptAnswer[]>(answers.getAll());
+  const all = await promisify<StoredAnswer[]>(answers.getAll());
   return all
     .filter((answer) => answer.learner === learner)
     .sort((a, b) => a.keptAt - b.keptAt);
+}
+
+/** This learner's answers still to be sent, in the order they were said. */
+export async function keptAnswers(learner: string): Promise<KeptAnswer[]> {
+  const all = await learnersAnswers(learner);
+  return all.filter((answer): answer is KeptAnswer => !isSettled(answer));
+}
+
+/** The oldest answer to this lesson the child has not seen the outcome of, sent or not. */
+export async function unseenAnswer(
+  learner: string,
+  plan: string | undefined,
+): Promise<{ key: string; move: LessonMove } | null> {
+  const all = await learnersAnswers(learner);
+  const found = all.find(
+    (answer) => answer.move && (!plan || answer.move.plan_id === plan),
+  );
+  return found?.move ? { key: found.key, move: found.move } : null;
+}
+
+async function storedAnswer(key: string): Promise<StoredAnswer | null> {
+  const { answers } = await store("readonly");
+  return (await promisify<StoredAnswer | undefined>(answers.get(key))) ?? null;
+}
+
+/** This answer while it is still to be sent. */
+export async function keptAnswer(key: string): Promise<KeptAnswer | null> {
+  const found = await storedAnswer(key);
+  return found && !isSettled(found) ? found : null;
+}
+
+/** The outcome of this answer when the server has given one. */
+export async function settledOf(key: string): Promise<Settled | null> {
+  const found = await storedAnswer(key);
+  return found && isSettled(found) ? found.sent : null;
 }
