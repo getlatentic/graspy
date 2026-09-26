@@ -193,3 +193,50 @@ def test_the_turn_table_accepts_every_provider_the_worker_records():
             "VALUES ('s', 'complete', 't', 'correct', 'f', ?, 1, 0)",
             (provider,),
         )
+
+
+def test_turns_whose_attempts_were_spent_before_the_waits_are_tried_again():
+    import sqlite3
+    from pathlib import Path
+
+    from app.voice.exercises import claimable, given_up
+
+    migrations = sorted((Path(__file__).parent.parent / "migrations").glob("*.sql"))
+    restart = next(m for m in migrations if m.name.startswith("0015_"))
+    db = sqlite3.connect(":memory:")
+    db.row_factory = sqlite3.Row
+    for migration in migrations[: migrations.index(restart)]:
+        db.executescript(migration.read_text())
+    for sample, state, attempts in (
+        ("spent", "failed", 5),
+        ("fresh", "failed", 0),
+        ("abandoned", "processing", 3),
+    ):
+        db.execute(
+            "INSERT INTO tutoring_turns (sample_id, state, attempts, updated_at) "
+            "VALUES (?, ?, ?, 0)",
+            (sample, state, attempts),
+        )
+    db.execute(
+        "INSERT INTO tutoring_turns (sample_id, state, transcript, decision, feedback, "
+        "provider, latency_ms, attempts, updated_at) "
+        "VALUES ('marked', 'complete', 't', 'correct', 'f', 'sahara', 1, 4, 0)"
+    )
+
+    db.executescript(restart.read_text())
+
+    rows = {
+        row["sample_id"]: dict(row)
+        for row in db.execute(
+            "SELECT sample_id, state, attempts, updated_at FROM tutoring_turns"
+        )
+    }
+    assert {sample: row["attempts"] for sample, row in rows.items()} == {
+        "spent": 1,
+        "fresh": 0,
+        "abandoned": 1,
+        "marked": 4,
+    }
+    now = 10 * 60 * 1000
+    for sample in ("spent", "abandoned"):
+        assert claimable(rows[sample], now) and not given_up(rows[sample], now)
