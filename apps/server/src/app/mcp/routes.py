@@ -18,12 +18,14 @@ from .protocol import (
 from .sandbox import (
     FRAME_PAGE,
     FRAME_PATH,
+    PROXY_PATH,
     WORKER_FILE,
     WORKER_PATH,
     WORKER_POLICY,
     declared_csp,
     page,
     proxy_policy,
+    served_worker,
     view_policy,
 )
 from .views import ViewsMissing
@@ -96,7 +98,7 @@ async def ui_sandbox(request: Request) -> Response:
     host = _framing_host(request)
     if host is None:
         return PlainTextResponse(NOT_A_HOST, 400)
-    own = f"{request.url.scheme}://{request.url.netloc}"
+    own = request.app.state.mcp.origin
     return HTMLResponse(
         page(), headers={"content-security-policy": proxy_policy(host, own)}
     )
@@ -121,8 +123,9 @@ async def ui_sandbox_worker(request: Request) -> Response:
         source = await request.app.state.mcp.views.read(WORKER_FILE)
     except ViewsMissing as error:
         return PlainTextResponse(str(error), 404)
+    state = request.app.state
     return Response(
-        source,
+        served_worker(source, state.mcp.origin, state.framing_hosts),
         media_type="text/javascript",
         headers={
             "cache-control": "no-cache",
@@ -134,7 +137,7 @@ async def ui_sandbox_worker(request: Request) -> Response:
 def mcp_routes() -> list[Route]:
     return [
         Route(MCP_PATH, mcp, methods=["GET", "POST", "DELETE"]),
-        Route("/ui-sandbox", ui_sandbox, methods=["GET"]),
+        Route(PROXY_PATH, ui_sandbox, methods=["GET"]),
         Route(FRAME_PATH, ui_sandbox_frame, methods=["GET"]),
         Route(WORKER_PATH, ui_sandbox_worker, methods=["GET"]),
     ]

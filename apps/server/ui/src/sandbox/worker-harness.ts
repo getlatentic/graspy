@@ -1,22 +1,35 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 // The sandbox's service worker, run against a cache and a network kept in
-// memory.
+// memory, with the digests its build writes and the pages its server writes.
 const SOURCE = readFileSync(
-  new URL("../../public/views/ui-sandbox-sw.js", import.meta.url),
+  new URL("./ui-sandbox-sw.js", import.meta.url),
   "utf-8",
 );
 
 export const ORIGIN = "https://api.graspy.test";
+export const HOST = "https://graspy.test";
+export const ASSETS = "graspy-view-assets-v2";
+export const SERVER = {
+  origin: ORIGIN,
+  hosts: [HOST, "https://*.graspy.pages.dev"],
+  hostMark: "{host}",
+  pages: {
+    "/ui-sandbox": { body: "proxy page", policy: "frame-ancestors {host}" },
+    "/ui-sandbox-frame": {
+      body: "frame page",
+      policy: "frame-ancestors 'self' {host}",
+    },
+  },
+};
 
 type Handler = (event: object) => void;
 
 class MemoryCache {
-  // Insertion order, as a browser's cache keeps it.
   readonly entries = new Map<string, Response>();
   // What storing fails with, such as a full quota.
   refusal: Error | null = null;
-  readonly writes: string[] = [];
 
   async match(key: Request | string) {
     return this.entries.get(url(key))?.clone();
@@ -24,8 +37,6 @@ class MemoryCache {
 
   async put(key: Request | string, response: Response) {
     if (this.refusal) throw this.refusal;
-    this.writes.push(url(key));
-    this.entries.delete(url(key));
     this.entries.set(url(key), response);
   }
 
@@ -42,15 +53,27 @@ function url(key: Request | string): string {
   return new URL(typeof key === "string" ? key : key.url, ORIGIN).href;
 }
 
+const digest = (body: string) =>
+  createHash("sha256").update(body).digest("base64");
+
 export class SandboxWorker {
   readonly caches = new Map<string, MemoryCache>();
-  readonly fetched: { url: string; cache?: RequestCache }[] = [];
+  readonly fetched: string[] = [];
   // What the network answers; a path it has no answer for is a 404.
   readonly network = new Map<string, () => Response>();
   online = true;
   private readonly handlers = new Map<string, Handler>();
 
-  constructor() {
+  // `files`: each listed path and the body its build wrote.
+  constructor(files: Record<string, string>) {
+    const listed = Object.fromEntries(
+      Object.entries(files).map(([path, body]) => [path, digest(body)]),
+    );
+    for (const [path, body] of Object.entries(files)) this.serve(path, body);
+    const source = SOURCE.replace("__FILES__", JSON.stringify(listed)).replace(
+      "__SERVER__",
+      JSON.stringify(SERVER),
+    );
     const self = {
       location: new URL(`${ORIGIN}/ui-sandbox-sw.js`),
       addEventListener: (type: string, handler: Handler) =>
@@ -63,7 +86,7 @@ export class SandboxWorker {
       keys: async () => [...this.caches.keys()],
       delete: async (name: string) => this.caches.delete(name),
     };
-    new Function("self", "caches", "fetch", SOURCE)(self, caches, this.fetch);
+    new Function("self", "caches", "fetch", source)(self, caches, this.fetch);
   }
 
   cache(name: string): MemoryCache {
@@ -73,31 +96,31 @@ export class SandboxWorker {
   }
 
   assets(): string[] {
-    return [...this.cache("graspy-view-assets-v1").entries.keys()].map(
+    return [...this.cache(ASSETS).entries.keys()].map(
       (address) => new URL(address).pathname,
     );
   }
 
-  pages(): string[] {
-    return [...this.cache("graspy-sandbox-pages-v1").entries.keys()].map(
-      (address) => address.slice(ORIGIN.length),
-    );
+  // What a view on this origin can do: write the worker's caches.
+  async plant(name: string, path: string, body: string) {
+    await this.cache(name).put(path, new Response(body));
   }
 
   serve(path: string, body: string) {
     this.network.set(`${ORIGIN}${path}`, () => new Response(body));
   }
 
-  list(paths: unknown) {
-    this.serve("/views/precache.json", JSON.stringify(paths));
+  // What the sandbox page posts once the worker is ready.
+  async precache() {
+    await this.dispatch("message", { data: { type: "precache" } });
   }
 
-  // What the sandbox page posts once its view has loaded.
-  async keep(...urls: string[]) {
-    await this.dispatch("message", { data: { type: "keep", urls } });
+  async activate() {
+    await this.dispatch("activate", {});
   }
 
-  // What the view's page asks for, and what it is answered.
+  // What a page asks for, and what it is answered; undefined when the
+  // worker leaves it to the network.
   async request(address: string): Promise<Response | undefined> {
     let answer: Promise<Response> | undefined;
     await this.dispatch(
@@ -133,9 +156,9 @@ export class SandboxWorker {
     }
   }
 
-  private fetch = async (input: Request | string, init?: RequestInit) => {
+  private fetch = async (input: Request | string) => {
     const address = url(input);
-    this.fetched.push({ url: address, cache: init?.cache });
+    this.fetched.push(address);
     if (!this.online) throw new TypeError("Failed to fetch");
     const answer = this.network.get(address);
     return answer ? answer() : new Response("", { status: 404 });

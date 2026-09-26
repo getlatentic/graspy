@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.factory import create_app
-from app.mcp.sandbox import declared_csp, view_policy
+from app.mcp.sandbox import declared_csp, page, proxy_policy, view_policy
 from app.mcp.views import LocalViews
 from app.settings import Settings
 
@@ -77,7 +77,7 @@ def test_the_proxy_runs_its_own_script_and_frames_only_the_views_page(client):
         "default-src": "'none'",
         "script-src": "'unsafe-inline'",
         "style-src": "'unsafe-inline'",
-        "frame-src": "http://testserver/ui-sandbox-frame",
+        "frame-src": f"{API}/ui-sandbox-frame",
         "worker-src": "'self'",
         "base-uri": "'none'",
         "object-src": "'none'",
@@ -95,7 +95,6 @@ def test_the_proxy_writes_the_view_into_a_page_of_its_origin(client):
     assert "function load({ html, permissions })" in proxy
     assert 'VIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms"' in proxy
     assert 'inner.setAttribute("sandbox", VIEW_SANDBOX)' in proxy
-    assert 'doc.addEventListener("DOMContentLoaded", kept' in proxy
 
 
 @pytest.mark.parametrize("host", [APP, PREVIEW], ids=["listed", "preview"])
@@ -160,12 +159,11 @@ def test_the_views_page_grants_nothing_a_request_asks_for(client, asked):
     assert view_csp(client, csp=raw) == view_csp(client)
 
 
-WORKER_SOURCE = Path(__file__).resolve().parents[1] / "ui/public/views/ui-sandbox-sw.js"
+WORKER_SOURCE = Path(__file__).resolve().parents[1] / "ui/src/sandbox/ui-sandbox-sw.js"
 
 
-def test_the_sandbox_registers_its_origins_service_worker(tmp_path):
-    """So a view opens offline once it has opened online. The worker is
-    built with the views, and read the way they are."""
+def worker_client(tmp_path) -> TestClient:
+    """The worker is built with the views, and read the way they are."""
     (tmp_path / "views").mkdir()
     (tmp_path / "views" / "ui-sandbox-sw.js").write_text(
         WORKER_SOURCE.read_text(encoding="utf-8"), encoding="utf-8"
@@ -173,15 +171,22 @@ def test_the_sandbox_registers_its_origins_service_worker(tmp_path):
     settings = Settings(
         aws_bearer_token_bedrock="bedrock-test",
         session_secret="s",
-        cors_origins=APP,
+        cors_origins=f"{APP},https://*.graspy.pages.dev",
+        public_base_url=API,
         _env_file=None,
     )
-    client = TestClient(create_app(settings, views=LocalViews(tmp_path)))
+    return TestClient(create_app(settings, views=LocalViews(tmp_path)))
+
+
+def test_the_sandbox_registers_its_origins_service_worker(tmp_path):
+    """So a view opens offline once it has opened online."""
+    client = worker_client(tmp_path)
     page = client.get("/ui-sandbox", params={"host": APP})
     worker = client.get("/ui-sandbox-sw.js")
 
     assert directives(page.headers["content-security-policy"])["worker-src"] == "'self'"
     assert 'register("/ui-sandbox-sw.js", { scope: "/ui-sandbox" })' in page.text
+    assert 'postMessage({ type: "precache" })' in page.text
     assert worker.status_code == 200
     assert worker.headers["content-type"].startswith("text/javascript")
     assert worker.headers["cache-control"] == "no-cache"
@@ -189,7 +194,42 @@ def test_the_sandbox_registers_its_origins_service_worker(tmp_path):
         worker.headers["content-security-policy"]
         == "default-src 'none'; connect-src 'self'"
     )
-    assert 'const FRAME_PATH = "/ui-sandbox-frame";' in worker.text
+
+
+def served_config(worker: str) -> dict:
+    line = next(line for line in worker.splitlines() if "const SERVER = " in line)
+    return json.loads(line.removeprefix("const SERVER = ").removesuffix(";"))
+
+
+def test_the_worker_carries_the_pages_it_builds_offline(tmp_path):
+    """In its script, which no page can write: a view can write the origin's
+    caches, so the worker builds both pages from this alone."""
+    config = served_config(worker_client(tmp_path).get("/ui-sandbox-sw.js").text)
+
+    assert config == {
+        "origin": API,
+        "hosts": [APP, "https://*.graspy.pages.dev"],
+        "hostMark": "{host}",
+        "pages": {
+            "/ui-sandbox": {"body": page(), "policy": proxy_policy("{host}", API)},
+            "/ui-sandbox-frame": {
+                "body": '<!doctype html><html><head><meta charset="utf-8" /></head></html>',
+                "policy": view_policy(declared_csp(API), "{host}"),
+            },
+        },
+    }
+
+
+def test_the_worker_builds_the_pages_the_server_serves(tmp_path):
+    client = worker_client(tmp_path)
+    config = served_config(client.get("/ui-sandbox-sw.js").text)
+
+    for path, built in config["pages"].items():
+        served = client.get(path, params={"host": APP})
+        assert served.text == built["body"]
+        assert served.headers["content-security-policy"] == built["policy"].replace(
+            "{host}", APP
+        )
 
 
 def test_a_worker_not_built_is_not_found(tmp_path):

@@ -41,29 +41,16 @@
         };
         const host = new URLSearchParams(location.search).get("host");
         if (window.self === window.top || !host) return;
-        // Once installed, the worker serves this page and the view's files
-        // when there is no connection. A browser that refuses it, such as
-        // one blocking storage, still shows the view online.
-        const worker =
-          "serviceWorker" in navigator
-            ? navigator.serviceWorker
-                .register("/ui-sandbox-sw.js", { scope: "/ui-sandbox" })
-                .then(() => navigator.serviceWorker.ready)
-                .catch(() => null)
-            : Promise.resolve(null);
-
-        // The first visit loads before the worker controls it, so the
-        // worker is told what this page and its view loaded, to keep.
-        function keepForOffline(page) {
-          const files = inner.contentWindow.performance
-            .getEntriesByType("resource")
-            .map((entry) => entry.name);
-          worker.then((registration) =>
-            registration?.active?.postMessage({
-              type: "keep",
-              urls: [location.href, page, ...files],
-            }),
-          );
+        // Once installed, the worker serves this page, the view's page and
+        // the view's files when there is no connection; it is asked to cache
+        // every view's files now. A browser that refuses it, such as one
+        // blocking storage, still shows the view online.
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("/ui-sandbox-sw.js", { scope: "/ui-sandbox" })
+            .then(() => navigator.serviceWorker.ready)
+            .then(({ active }) => active?.postMessage({ type: "precache" }))
+            .catch(() => undefined);
         }
         const own = location.origin;
         let inner = null;
@@ -87,10 +74,6 @@
             () => {
               const doc = inner.contentDocument;
               doc.open();
-              // Opening the document drops its listeners, and Chrome fires
-              // no load for a written one: it is kept once its scripts ran.
-              const kept = () => keepForOffline(page);
-              doc.addEventListener("DOMContentLoaded", kept, { once: true });
               doc.write(html);
               doc.close();
             },
