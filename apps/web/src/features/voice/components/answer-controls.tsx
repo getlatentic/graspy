@@ -1,6 +1,7 @@
 import { Mic, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useOnline } from "@/hooks/use-online";
 import { useI18n } from "@/lib/i18n-context";
 import type { Phase } from "../lib/lesson-state";
 import { VoiceWave } from "./voice-wave";
@@ -11,15 +12,33 @@ interface AnswerControlsProps {
   onRecord: () => void;
   onStop: () => void;
   onHearAgain: () => void;
+  onCarryOn: () => void;
 }
 
-/** What the child can do now: record, finish speaking, or wait while it is checked. */
+/** An answer kept on the device, and a way on while it waits. */
+function KeptAnswer({ onCarryOn }: { onCarryOn: () => void }) {
+  const { t } = useI18n();
+  const online = useOnline();
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <p role="status" className="text-muted">
+        {online ? t("voice.lesson.keptOnline") : t("voice.lesson.kept")}
+      </p>
+      <Button variant="secondary" onClick={onCarryOn}>
+        {t("voice.lesson.continue")}
+      </Button>
+    </div>
+  );
+}
+
+/** What the child can do now: record, finish speaking, wait while it is checked, or carry on. */
 export function AnswerControls({
   phase,
   levels,
   onRecord,
   onStop,
   onHearAgain,
+  onCarryOn,
 }: AnswerControlsProps) {
   const { t } = useI18n();
   if (phase.name === "your-turn") {
@@ -62,12 +81,6 @@ export function AnswerControls({
       </p>
     );
   }
-  if (phase.name === "kept") {
-    return (
-      <p role="status" className="text-muted">
-        {t("voice.lesson.kept")}
-      </p>
-    );
-  }
+  if (phase.name === "kept") return <KeptAnswer onCarryOn={onCarryOn} />;
   return null;
 }

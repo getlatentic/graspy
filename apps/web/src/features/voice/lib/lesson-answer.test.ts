@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { LessonMove } from "@/lib/voice/voice-types";
-import { answerMetadata } from "./lesson-answer";
+import { answerMetadata, answerToKeep, keepTake } from "./lesson-answer";
+import { lessonReducer, START, type LessonEvent } from "./lesson-state";
 
 const move = (kind: string, prompt: string): LessonMove => ({
   kind: "event",
@@ -55,6 +56,101 @@ describe("answerMetadata", () => {
       event_id: "e3",
       device: "web",
       consent: { granted: true, scope: "voice_lesson" },
+    });
+  });
+});
+
+describe("answerToKeep", () => {
+  it("keeps the step the answer was given for with its recording, so a reload can show it", () => {
+    const step = move("answer", "plan.x.e3");
+    const wav = new Blob(["RIFF"], { type: "audio/wav" });
+    expect(
+      answerToKeep(step, { ...learner, key: "device/dev-1" }, wav, "k1", 7),
+    ).toEqual({
+      key: "k1",
+      learner: "device/dev-1",
+      move: step,
+      metadata: answerMetadata(step, learner),
+      wav,
+      keptAt: 7,
+    });
+  });
+});
+
+describe("keepTake", () => {
+  const step = move("answer", "plan.x.e3");
+  const kept = answerToKeep(
+    step,
+    { ...learner, key: "device/dev-1" },
+    new Blob(["RIFF"], { type: "audio/wav" }),
+    "k1",
+    7,
+  );
+  const recording = [
+    { type: "start" },
+    { type: "loaded", move: step },
+    { type: "taught", spoken: "heard" },
+    { type: "recordStarted" },
+  ] satisfies LessonEvent[];
+
+  async function lessonAfter(
+    keep: () => Promise<void>,
+    pause?: () => Promise<unknown>,
+  ) {
+    let state = recording.reduce(lessonReducer, START);
+    await keepTake(
+      kept,
+      { keep, forget: async () => {} },
+      (event) => {
+        state = lessonReducer(state, event);
+      },
+      pause,
+    );
+    return state;
+  }
+
+  it("lets go a take that is saved only after the child was told it was not", async () => {
+    let landed = () => {};
+    const forgotten: string[] = [];
+    const emitted: LessonEvent[] = [];
+    await keepTake(
+      kept,
+      {
+        keep: () => new Promise<void>((resolve) => (landed = resolve)),
+        forget: async (key) => void forgotten.push(key),
+      },
+      (event) => emitted.push(event),
+      async () => {},
+    );
+    expect(emitted).toEqual([{ type: "recordFailed", note: "notSaved" }]);
+
+    landed();
+    await vi.waitFor(() => expect(forgotten).toEqual(["k1"]));
+  });
+
+  it("gives the turn back, saying so, when the device never answers", async () => {
+    const state = await lessonAfter(
+      () => new Promise(() => {}),
+      async () => {},
+    );
+    expect(state).toEqual({
+      phase: { name: "your-turn", move: step },
+      note: "notSaved",
+    });
+  });
+
+  it("checks the take once it is kept", async () => {
+    const state = await lessonAfter(async () => {});
+    expect(state.phase).toEqual({ name: "checking", move: step, key: "k1" });
+  });
+
+  it("gives the turn back, saying so, when the device cannot keep the take", async () => {
+    const state = await lessonAfter(async () => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+    expect(state).toEqual({
+      phase: { name: "your-turn", move: step },
+      note: "notSaved",
     });
   });
 });
