@@ -59,7 +59,9 @@ private const val SHOW_WITHIN_MS = 20_000L
 
 /**
  * A tool's result as its MCP Apps view, sandboxed on the API's origin, as the web shows it. [waiting] stands over
- * the view until the view has drawn its result: until then the WebView shows nothing.
+ * the view until the view has drawn its result: until then the WebView shows nothing. A view that has not
+ * initialised in time could not be shown, as on the web; drawing is not timed, since a view in the background
+ * cannot draw.
  */
 @Composable
 fun AppView(
@@ -72,6 +74,7 @@ fun AppView(
     waiting: @Composable () -> Unit = {},
 ) {
     var failed by remember(card) { mutableStateOf(!LISTENING) }
+    var initialised by remember(card) { mutableStateOf(false) }
     var drawn by remember(card) { mutableStateOf(false) }
     val view by produceState<UiView?>(null, card.resourceUri) {
         value = runCatching { server.view(card.resourceUri) }.onFailure {
@@ -81,23 +84,44 @@ fun AppView(
     }
     LaunchedEffect(card) {
         delay(SHOW_WITHIN_MS)
-        if (!drawn) failed = true
+        if (!initialised) failed = true
     }
     if (failed) {
         Text(unavailable, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium, modifier = modifier)
         return
     }
     Box(modifier.fillMaxWidth()) {
-        view?.let { document -> HostedFrame(card, document, server, locale, events, onDrawn = { drawn = true }, onGone = { failed = true }) }
+        view?.let { document ->
+            HostedFrame(
+                card,
+                document,
+                server,
+                locale,
+                events,
+                onInitialised = { initialised = true },
+                onDrawn = { drawn = true },
+                onGone = { failed = true },
+            )
+        }
         if (!drawn) waiting()
     }
 }
 
 @Composable
-private fun HostedFrame(card: ViewCard, document: UiView, server: ViewServer, locale: String, events: ViewEvents, onDrawn: () -> Unit, onGone: () -> Unit) {
+private fun HostedFrame(
+    card: ViewCard,
+    document: UiView,
+    server: ViewServer,
+    locale: String,
+    events: ViewEvents,
+    onInitialised: () -> Unit,
+    onDrawn: () -> Unit,
+    onGone: () -> Unit,
+) {
     var viewHeight by remember(card) { mutableIntStateOf(FIRST_HEIGHT) }
     val uriHandler = LocalUriHandler.current
     val latestEvents by rememberUpdatedState(events)
+    val latestInitialised by rememberUpdatedState(onInitialised)
     val latestDrawn by rememberUpdatedState(onDrawn)
     val host = remember(card) {
         object : ViewHost {
@@ -109,7 +133,10 @@ private fun HostedFrame(card: ViewCard, document: UiView, server: ViewServer, lo
             override fun resize(height: Int) {
                 if (height > 0) viewHeight = height
             }
-            override suspend fun shown(uri: String, view: UiView) = server.keepShown(uri, view)
+            override suspend fun shown(uri: String, view: UiView) {
+                latestInitialised()
+                server.keepShown(uri, view)
+            }
             override fun drawn() = latestDrawn()
         }
     }
