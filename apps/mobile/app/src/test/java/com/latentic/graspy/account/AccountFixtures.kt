@@ -3,6 +3,9 @@ package com.latentic.graspy.account
 import android.content.Context
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.latentic.graspy.auth.FirebaseSession
+import java.io.IOException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.robolectric.RuntimeEnvironment
@@ -77,3 +80,33 @@ class FakeAccountApi(learners: List<LearnerDto> = listOf(ADA, BAYO)) : AccountAp
 /** Firebase for the Auth emulator's demo project, which holds no one: no call leaves the test. */
 fun demoFirebase(): FirebaseApp = FirebaseApp.getApps(context()).firstOrNull()
     ?: FirebaseApp.initializeApp(context(), FirebaseOptions.Builder().setProjectId("demo-graspy").setApplicationId("1:0:android:0").setApiKey("demo-key").build())
+
+/** Each Google account forgotten, with the account on the phone then; [failing] as Play services not answering. */
+class GoogleAccountForgets(private val accounts: AccountStore) {
+    val forgotten = mutableListOf<Account?>()
+    var failing = false
+
+    fun forget() {
+        if (failing) throw IOException("Play services did not answer")
+        forgotten += accounts.account.value
+    }
+}
+
+/** Firebase holding [uid]: the demo app never signs anyone in of its own. */
+class FakeFirebase(google: GoogleAccountForgets) :
+    FirebaseSession(FirebaseAuth.getInstance(demoFirebase()), { google.forget() }) {
+    var uid: String? = null
+
+    override val userId get() = uid
+
+    override fun signOut() {
+        uid = null
+    }
+}
+
+val noSessionApi = object : SessionApi {
+    override suspend fun session(request: SessionRequestDto): IssuedSessionDto = error("No session is asked for")
+}
+
+/** What a sign-out has yet to forget and a sign-in has yet to undo, as the next start would find it. */
+fun signOutPending(): Map<String, *> = context().getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).all
