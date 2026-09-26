@@ -2,7 +2,6 @@ import { useReducer, useRef, useState, type Dispatch } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n-context";
 import { saveUserProfile } from "@/lib/user-storage";
-import { voiceOnly } from "@/lib/voice/voice-learner";
 import { learnerDetails } from "../lib/details";
 import {
   generatePlan,
@@ -13,8 +12,10 @@ import {
 import {
   FORM_SHOWN,
   GENERATION_STEP_SEQUENCE,
+  keepAtOnce,
   planRequest,
   planSetupReducer,
+  startSetup,
   type PlanSetupEvent,
 } from "../lib/plan-setup-state";
 import type { OnboardingSchema } from "../schemas/onboarding-schema";
@@ -109,20 +110,14 @@ export function usePlanSetup() {
 
   const keep = async (data: OnboardingSchema) => {
     setKeeping(true);
-    try {
-      await keepVoiceOnly(data, setLocale);
-      dispatch({ type: "kept" });
-    } catch (e) {
-      console.error("Keeping the plan failed:", e);
-      setKeeping(false);
-    }
+    await keepAtOnce(() => keepVoiceOnly(data, setLocale), dispatch);
+    setKeeping(false);
   };
 
-  const start = async (
+  const make = async (
     data: OnboardingSchema,
     available: GeneratedSubject[],
   ) => {
-    if (voiceOnly(learnerDetails(data))) return keep(data);
     const request = planRequest(data, available);
     const order = { request, learner: learnerDetails(data) };
     setSubjectNames(request.subjects);
@@ -130,6 +125,12 @@ export function usePlanSetup() {
     await keepLearner(data, request.subjects, setLocale);
     await makePlan(() => generate(order), current, dispatch);
   };
+
+  const start = (data: OnboardingSchema, available: GeneratedSubject[]) =>
+    startSetup(data, {
+      keep: () => keep(data),
+      make: () => make(data, available),
+    });
 
   const retry = () => {
     const order = orderRef.current;

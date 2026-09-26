@@ -83,7 +83,7 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
     navigate("/app/onboarding", { state: { replan: values } });
 
   const save = () => {
-    const choice = detailsSave(profile, values);
+    const choice = detailsSave(values, Boolean(curriculum?.subjects.length));
     if (choice === "keep") void keepPlan();
     else if (choice === "new") newPlan();
     else setAsking(true);

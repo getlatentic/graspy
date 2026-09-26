@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
-import type { StepKey } from "../hooks/use-onboarding-steps";
+import type { StepKey } from "../lib/onboarding-steps";
 
 export function StepHeading({
   step,
@@ -43,18 +43,54 @@ export function StepFooter({
   nextLabel,
   canNext,
   busy,
+  problem,
 }: {
   onBack?: () => void;
   onNext: () => void;
   nextLabel: string;
   canNext: boolean;
   busy: boolean;
+  /** Why the last try stopped, beside the button that tries again. */
+  problem?: string;
 }) {
-  const { t } = useI18n();
   const enabled = canNext && !busy;
   return (
     // Sticky on a short screen, where iOS Safari's toolbar would cover it.
-    <div className="sticky bottom-0 -mx-8 mt-6 flex items-center justify-between gap-3 bg-white/95 px-8 py-4 backdrop-blur sm:-mx-10 sm:px-10 lg:static lg:mx-0 lg:mt-10 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+    <div className="sticky bottom-0 -mx-8 mt-6 flex flex-col gap-3 bg-white/95 px-8 py-4 backdrop-blur sm:-mx-10 sm:px-10 lg:static lg:mx-0 lg:mt-10 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+      {problem && (
+        <p role="alert" className="text-sm text-danger">
+          {problem}
+        </p>
+      )}
+      <div className="flex items-center justify-between gap-3">
+        <StepButtons
+          onBack={onBack}
+          onNext={onNext}
+          nextLabel={nextLabel}
+          enabled={enabled}
+          busy={busy}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StepButtons({
+  onBack,
+  onNext,
+  nextLabel,
+  enabled,
+  busy,
+}: {
+  onBack?: () => void;
+  onNext: () => void;
+  nextLabel: string;
+  enabled: boolean;
+  busy: boolean;
+}) {
+  const { t } = useI18n();
+  return (
+    <>
       {onBack ? (
         <button
           type="button"
@@ -82,6 +118,6 @@ export function StepFooter({
         {nextLabel}
         <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
       </button>
-    </div>
+    </>
   );
 }

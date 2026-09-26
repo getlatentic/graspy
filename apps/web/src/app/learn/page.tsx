@@ -20,6 +20,7 @@ import { TrySomethingNew } from "@/features/learn/components/try-something-new";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
 import { VoiceCard } from "@/features/voice/components/voice-card";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
+import { homeParts } from "@/features/learn/lib/home-parts";
 
 export default function HomePage() {
   const { t } = useI18n();
@@ -33,15 +34,11 @@ export default function HomePage() {
     subjects.length > 0 && !isGenerating && !voiceOnly,
   );
 
-  if (!userProfile) return null;
+  const parts = new Set(
+    homeParts(voiceOnly, current !== null, subjects.length),
+  );
 
-  if (voiceOnly) {
-    return (
-      <div className="mx-auto max-w-3xl">
-        <VoiceCard />
-      </div>
-    );
-  }
+  if (!userProfile) return null;
 
   const errorAlert = error ? (
     <PlanErrorCard
@@ -66,21 +63,27 @@ export default function HomePage() {
     <div className="mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-12">
       {errorAlert && <div className="lg:col-span-2">{errorAlert}</div>}
 
-      {current && <ContinueSection current={current} />}
+      {current && parts.has("continue") && (
+        <ContinueSection current={current} />
+      )}
 
-      <div className="hidden lg:block">
-        <HomeRail current={current} onAsk={ask} />
-      </div>
+      {parts.has("rail") && (
+        <div className="hidden lg:block">
+          <HomeRail current={current} onAsk={ask} />
+        </div>
+      )}
 
-      <VoiceCard className="lg:col-span-2" />
+      {parts.has("voice") && <VoiceCard className="lg:col-span-2" />}
 
-      {subjects.length > 0 && <SubjectsSection subjects={subjects} />}
+      {parts.has("subjects") && <SubjectsSection subjects={subjects} />}
 
-      <div className="lg:hidden">
-        <HomeSection title={t("home.tryTitle")}>
-          <TrySomethingNew onPick={ask} />
-        </HomeSection>
-      </div>
+      {parts.has("try") && (
+        <div className="lg:hidden">
+          <HomeSection title={t("home.tryTitle")}>
+            <TrySomethingNew onPick={ask} />
+          </HomeSection>
+        </div>
+      )}
     </div>
   );
 }

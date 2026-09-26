@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { pageShown, sectionOf, sectionsFor } from "./app-sections";
+import {
+  pageRedirect,
+  pageShown,
+  sectionOf,
+  sectionsFor,
+} from "./app-sections";
+
+describe("pageRedirect", () => {
+  it("leads a page a class that learns by voice alone does not have to its voice lessons", () => {
+    expect(pageRedirect("/app/learn/subjects", true)).toBe("/app/learn/voice");
+    expect(pageRedirect("/app/learn/mathematics/lesson/2", true)).toBe(
+      "/app/learn/voice",
+    );
+  });
+
+  it("leaves the pages a learner has where they are", () => {
+    expect(pageRedirect("/app/learn/voice", true)).toBeNull();
+    expect(pageRedirect("/app/learn/you", true)).toBeNull();
+    expect(pageRedirect("/app/learn/subjects", false)).toBeNull();
+  });
+});
 
 describe("sectionOf", () => {
   it.each([

@@ -32,13 +32,13 @@ import java.util.Locale
 enum class DetailsSave { KEEP, NEW, ASK }
 
 /**
- * A class that learns by voice alone shows no subjects, so its plan only takes the details, and it has none worth
- * keeping for another class; otherwise the learner chooses.
+ * A class that learns by voice alone shows no subjects, so its plan only takes the details, subjects and all. A plan
+ * with no subjects has nothing to keep for another class; otherwise the learner chooses.
  */
-fun detailsSave(current: LearnerDetails, next: LearnerDetails): DetailsSave = when {
+fun detailsSave(next: LearnerDetails, planHasSubjects: Boolean): DetailsSave = when {
     next.voiceOnly -> DetailsSave.KEEP
-    current.voiceOnly -> DetailsSave.NEW
-    else -> DetailsSave.ASK
+    planHasSubjects -> DetailsSave.ASK
+    else -> DetailsSave.NEW
 }
 
 /**
@@ -50,6 +50,7 @@ fun DetailsScreen(
     learn: LearnCopy,
     form: DetailsFormViewModel,
     current: LearnerDetails,
+    planHasSubjects: Boolean,
     display: Locale,
     onBack: () -> Unit,
     onNewPlan: (LearnerDetails) -> Unit,
@@ -66,7 +67,7 @@ fun DetailsScreen(
         if (!asking) {
             PrimaryButton(learn.details.save, {
                 val next = values.details()
-                when (detailsSave(current, next)) {
+                when (detailsSave(next, planHasSubjects)) {
                     DetailsSave.KEEP -> onKeepPlan(next)
                     DetailsSave.NEW -> onNewPlan(next)
                     DetailsSave.ASK -> asking = true

@@ -61,6 +61,7 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
     private val setupShown = MutableStateFlow<Setup?>(null)
     private val activeShown = MutableStateFlow(false)
     private val keepingShown = MutableStateFlow(false)
+    private val notKeptShown = MutableStateFlow(false)
     private var subjectsFor: LearnerDetails? = null
     private var reading: Job? = null
     private var making: Job? = null
@@ -76,6 +77,9 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
 
     /** While the plan of a class that learns by voice alone is being kept. */
     val keeping: StateFlow<Boolean> = keepingShown.asStateFlow()
+
+    /** The last try to keep such a plan stopped. */
+    val notKept: StateFlow<Boolean> = notKeptShown.asStateFlow()
 
     /** A learner replanning from their details goes straight to the subjects taught at [replanFor]. */
     fun begin(replanFor: LearnerDetails?) {
@@ -140,11 +144,12 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
 
     /**
      * A class that learns by voice alone has no subjects to choose and no plan to wait for: its plan is made
-     * with no subjects and handed to [onKept] at once. A failure shows as the plan not made.
+     * with no subjects and handed to [onKept] at once. One not kept leaves the learner on their details, to try again.
      */
     fun keep(details: LearnerDetails, make: suspend (LearnerDetails, List<String>) -> LearnerPlan, onKept: (LearnerPlan) -> Unit) {
         if (keepingShown.value) return
         keepingShown.value = true
+        notKeptShown.value = false
         setupShown.value = null
         making = viewModelScope.launch {
             try {
@@ -153,7 +158,7 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
                 throw cancelled
             } catch (error: Exception) {
                 Log.w(TAG, "The plan was not kept", error)
-                setupShown.value = Setup(failed = true)
+                notKeptShown.value = true
             } finally {
                 keepingShown.value = false
             }

@@ -91,15 +91,16 @@ internal fun LearnerTabs(
     var editing by rememberSaveable { mutableStateOf(false) }
     var voicePage by rememberSaveable { mutableStateOf(false) }
     var askOpening by remember { mutableStateOf<AskOpening?>(null) }
-    // The plan's class, or the device's while the plan cannot be read.
-    val voiceOnly = (plan as? PlanState.Ready)?.plan?.voiceOnly() ?: (voice?.schoolClass?.voiceOnly == true)
+    val voiceOnly = learnsByVoiceAlone((plan as? PlanState.Ready)?.plan, voice)
     val tabs = learnTabs(voiceOnly)
     val shownTab = tab.takeIf { it in tabs } ?: LearnTab.HOME
+    val shownPlace = place.takeUnless { voiceOnly }
     LaunchedEffect(tab) { planViewModel.refresh() }
     val views: LearnerViews = viewModel()
     LaunchedEffect(planViewModel, views) { planViewModel.recordsRead.collect(views::copyReadyLessons) }
-    BackHandler(enabled = place != null || editing || voicePage || shownTab != LearnTab.HOME) {
-        val current = place
+    // What is shown decides what back does: a page hidden from a class that learns by voice alone is not left.
+    BackHandler(enabled = shownPlace != null || editing || voicePage || shownTab != LearnTab.HOME) {
+        val current = shownPlace
         when {
             current != null -> place = current.back()
             editing -> editing = false
@@ -121,10 +122,9 @@ internal fun LearnerTabs(
     Column(Modifier.fillMaxSize().background(GraspyColor.Canvas).navigationBarsPadding().imePadding()) {
         GraspyHeader()
         Box(Modifier.weight(1f)) {
-            val shown = place.takeUnless { voiceOnly }
             val ready = plan as? PlanState.Ready
             when {
-                shown != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shown, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
+                shownPlace != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shownPlace, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
                 editing && ready != null -> Page { Details(learn, ready.plan, interfaceLanguage, planViewModel, onBack = { editing = false }, onReplan = onReplan) }
                 voicePage && voice != null && shownTab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
                 shownTab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
@@ -153,6 +153,13 @@ internal fun LearnerTabs(
         }
     }
 }
+
+/**
+ * Whether the learner's class learns by voice alone, as the web's classOf reads it: the plan's class, or the device's
+ * for a plan made before plans kept one, and while the plan cannot be read.
+ */
+internal fun learnsByVoiceAlone(plan: LearnerPlan?, device: LearnerProfile?): Boolean =
+    plan?.takeUnless { it.level.isNullOrEmpty() }?.voiceOnly() ?: (device?.schoolClass?.voiceOnly == true)
 
 @Composable
 private fun Page(content: @Composable () -> Unit) {
@@ -218,6 +225,7 @@ private fun Details(learn: LearnCopy, plan: LearnerPlan, interfaceLanguage: Inte
         learn = learn,
         form = form,
         current = current,
+        planHasSubjects = plan.subjects.isNotEmpty(),
         display = Locale.forLanguageTag(interfaceLanguage.tag),
         onBack = onBack,
         onNewPlan = { onReplan() },

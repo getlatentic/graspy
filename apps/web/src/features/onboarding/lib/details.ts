@@ -51,14 +51,14 @@ export function detailsOf(profile: UserProfile): DetailsSchema {
 }
 
 /** What saving new details does to the plan. A class that learns by voice alone shows no
- * subjects, so its plan only takes the details, and it has none worth keeping for another
- * class; otherwise the learner chooses. */
+ * subjects, so its plan only takes the details, subjects and all. A plan with no subjects
+ * has nothing to keep for another class; otherwise the learner chooses. */
 export function detailsSave(
-  profile: UserProfile,
   details: DetailsSchema,
+  planHasSubjects: boolean,
 ): "keep" | "new" | "ask" {
   if (voiceOnly(learnerDetails(details))) return "keep";
-  return voiceOnly(profile) ? "new" : "ask";
+  return planHasSubjects ? "ask" : "new";
 }
 
 export function detailsChanged(

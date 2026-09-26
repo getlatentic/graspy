@@ -13,11 +13,10 @@ import { useLearnerChosen } from "@/features/learn/hooks/use-learner-chosen";
 import { useLearnerStart } from "@/features/learn/hooks/use-learner-start";
 import { useKeptAnswers } from "@/features/voice/hooks/use-kept-answers";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
-import { VOICE_PAGE } from "@/features/voice/lib/voice-paths";
 import {
   isChatPath,
   lessonChatTarget,
-  pageShown,
+  pageRedirect,
   sectionsFor,
   type Section,
 } from "@/features/learn/lib/app-sections";
@@ -33,10 +32,10 @@ function DashboardLayoutContent() {
   const userProfile = useLearnerStart();
   useKeptAnswers();
   const voiceOnly = useVoiceOnly();
-  const shown = pageShown(pathname, voiceOnly);
+  const redirect = pageRedirect(pathname, voiceOnly);
   const sections = sectionsFor(voiceOnly);
   const chat = isChatPath(pathname);
-  const lesson = shown ? lessonChatTarget(pathname) : null;
+  const lesson = redirect ? null : lessonChatTarget(pathname);
   // iOS keeps dvh at full height while the keyboard is open.
   const visible = useVisualViewport(chat);
 
@@ -61,7 +60,7 @@ function DashboardLayoutContent() {
     >
       <TopMenu sections={sections} />
       <div className="flex min-h-0 flex-1">
-        <PageArea chat={chat} shown={shown} />
+        <PageArea chat={chat} redirect={redirect} />
         {lesson && <LessonChat lesson={lesson} />}
       </div>
       <ShellFooter lesson={lesson} chat={chat} sections={sections} />
@@ -73,7 +72,13 @@ function DashboardLayoutContent() {
 // than stretching the document below the app. A page the learner's sections do
 // not hold, such as a slide lesson for a class that learns by voice alone, leads
 // to voice lessons.
-function PageArea({ chat, shown }: { chat: boolean; shown: boolean }) {
+function PageArea({
+  chat,
+  redirect,
+}: {
+  chat: boolean;
+  redirect: string | null;
+}) {
   const pageRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
   // Drawn before the saved plan is read, a page would flash its placeholder.
@@ -96,7 +101,7 @@ function PageArea({ chat, shown }: { chat: boolean; shown: boolean }) {
           : "overflow-y-auto overscroll-contain p-4 sm:p-6",
       )}
     >
-      {isLoaded && (shown ? <Outlet /> : <Navigate to={VOICE_PAGE} replace />)}
+      {isLoaded && (redirect ? <Navigate to={redirect} replace /> : <Outlet />)}
     </main>
   );
 }

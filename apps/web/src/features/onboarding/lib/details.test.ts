@@ -90,18 +90,16 @@ describe("saving new details", () => {
   const nursery = inClass("nursery-1", "Nursery 1, Nigeria, age 3");
   const primary = inClass("primary-1", "Primary 1, Nigeria, age 6");
 
-  it("lets a learner choose between a new plan and keeping theirs", () => {
-    expect(detailsSave(profile(school), primary)).toBe("ask");
+  it("keeps the plan, subjects and all, for a class that learns by voice alone", () => {
+    expect(detailsSave(nursery, true)).toBe("keep");
+    expect(detailsSave({ ...nursery, language: "en" }, false)).toBe("keep");
   });
 
-  it("keeps the plan for a class that learns by voice alone, with no subjects to make", () => {
-    expect(detailsSave(profile(primary), nursery)).toBe("keep");
-    expect(detailsSave(profile(nursery), { ...nursery, language: "en" })).toBe(
-      "keep",
-    );
+  it("makes a new plan in place of one with no subjects to keep", () => {
+    expect(detailsSave(primary, false)).toBe("new");
   });
 
-  it("makes a new plan for a learner leaving such a class, whose plan has no subjects", () => {
-    expect(detailsSave(profile(nursery), primary)).toBe("new");
+  it("lets a learner with subjects choose, even leaving a class that learns by voice alone (Primary 2 to Nursery 2 and back)", () => {
+    expect(detailsSave(primary, true)).toBe("ask");
   });
 });

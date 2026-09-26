@@ -6,6 +6,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { matchPath } from "react-router";
+import { VOICE_PAGE } from "@/features/voice/lib/voice-paths";
 import { ASK_HUB, type ChatTarget } from "./chat-targets";
 
 export type AppSection = "home" | "subjects" | "ask" | "you";
@@ -41,6 +42,13 @@ export const sectionsFor = (voiceOnly: boolean) =>
  * that learns by voice alone. */
 export const pageShown = (pathname: string, voiceOnly: boolean): boolean =>
   sectionsFor(voiceOnly).some(({ id }) => id === sectionOf(pathname));
+
+/** Where a page the learner does not have leads: to their voice lessons. Null for a page
+ * they have. */
+export const pageRedirect = (
+  pathname: string,
+  voiceOnly: boolean,
+): string | null => (pageShown(pathname, voiceOnly) ? null : VOICE_PAGE);
 
 const LEARN = "/app/learn";
 

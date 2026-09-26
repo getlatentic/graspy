@@ -24,6 +24,7 @@ import com.latentic.graspy.plan.SchoolStage
 import com.latentic.graspy.plan.SchoolSystem
 import com.latentic.graspy.plan.voiceClass
 import com.latentic.graspy.ui.GraspyTheme
+import java.io.IOException
 import java.time.Duration
 import java.util.Locale
 import org.junit.Assert.assertEquals
@@ -120,6 +121,32 @@ class PlanOnboardingFlowTest {
         assertTrue(plan.subjects.isEmpty())
         assertEquals(false, streamed)
         assertTrue(subjectsAsked.isEmpty())
+    }
+
+    @Test
+    fun `a nursery plan not kept leaves the learner on their details, saying so, to try again`() {
+        var tries = 0
+        onboarding { details, subjects ->
+            tries += 1
+            if (tries == 1) throw IOException("offline")
+            PlanMaker(CurriculumSource { _, _ -> null }).make(details, subjects)
+        }
+
+        chooseClass("Nursery 1")
+        compose.onNodeWithText(words.start).performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText(words.generating.failed).assertExists()
+        compose.onNodeWithText(words.generating.title).assertDoesNotExist()
+        compose.onNodeWithText(words.generating.adjust).assertDoesNotExist()
+        compose.onNodeWithText(words.steps.profile.title).assertExists()
+        assertEquals(null, done)
+
+        compose.onNodeWithText(words.generating.tryAgain).assertIsEnabled().performClick()
+        compose.waitForIdle()
+
+        assertEquals(2, tries)
+        assertEquals("nursery-1", requireNotNull(done).level)
     }
 
     private fun onboarding(make: suspend (LearnerDetails, List<String>) -> LearnerPlan) {

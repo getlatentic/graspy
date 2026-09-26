@@ -2,20 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { FieldPath, UseFormReturn } from "react-hook-form";
 import { DETAILS_PAGE } from "@/features/learn/lib/app-sections";
-import { voiceOnly } from "@/lib/voice/voice-learner";
-import { detailsComplete, learnerDetails } from "../lib/details";
+import { detailsComplete } from "../lib/details";
+import { stepsFor, type StepKey } from "../lib/onboarding-steps";
 import type {
   DetailsSchema,
   OnboardingSchema,
 } from "../schemas/onboarding-schema";
 import type { GeneratedSubject } from "../types";
 import { useSubjectChoices } from "./use-subject-choices";
-
-export const STEPS = ["profile", "subjects"] as const;
-export type StepKey = (typeof STEPS)[number];
-
-// A class that learns by voice alone has no subjects to choose.
-const VOICE_ONLY_STEPS: readonly StepKey[] = ["profile"];
 
 const STEP_FIELDS: Record<StepKey, FieldPath<OnboardingSchema>[]> = {
   profile: ["country", "language", "system", "level", "course"],
@@ -31,7 +25,7 @@ export function useOnboardingSteps(
   const navigate = useNavigate();
   const [chosen, setIndex] = useState(replan ? 1 : 0);
   const values = form.watch();
-  const steps = voiceOnly(learnerDetails(values)) ? VOICE_ONLY_STEPS : STEPS;
+  const steps = stepsFor(values);
   const index = Math.min(chosen, steps.length - 1);
   const step = steps[index];
   const isLast = index === steps.length - 1;

@@ -41,6 +41,7 @@ import com.latentic.graspy.ui.GraspyHeader
 import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.PageTitle
 import com.latentic.graspy.ui.PrimaryButton
+import com.latentic.graspy.ui.ProblemNote
 import com.latentic.graspy.ui.QuietButton
 import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.space
@@ -70,8 +71,10 @@ fun PlanOnboarding(
     val choices by setup.subjects.collectAsStateWithLifecycle()
     val building by setup.setup.collectAsStateWithLifecycle()
     val keeping by setup.keeping.collectAsStateWithLifecycle()
+    val notKeptYet by setup.notKept.collectAsStateWithLifecycle()
     val words = learn.onboarding
     val voiceOnly = values.details().voiceOnly
+    val notKept = notKeptYet && voiceOnly
     val finish = { if (voiceOnly) setup.keep(values.details(), make, onDone) else setup.make(values.details(), make) }
     Frame {
         val made = building
@@ -90,6 +93,7 @@ fun PlanOnboarding(
                 SetupStep.PROFILE -> ProfileStep(learn, form, suggestedCountry, display)
                 SetupStep.SUBJECTS -> SubjectsStep(words.subjects, choices, setup::toggle) { setup.readSubjects(values.details()) }
             }
+            if (notKept) ProblemNote(words.generating.failed)
         }
         val canNext = if (step == SetupStep.PROFILE) values.complete else choices.chosen.isNotEmpty() && !choices.loading && !choices.failed
         val last = step == SetupStep.SUBJECTS || voiceOnly
@@ -97,6 +101,7 @@ fun PlanOnboarding(
             words,
             label = when {
                 keeping -> words.settingUp
+                notKept -> words.generating.tryAgain
                 last -> words.start
                 else -> words.next
             },

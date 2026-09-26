@@ -12,12 +12,8 @@ import SubjectsStep from "../components/steps/subjects-step";
 import { useOnboardingForm } from "../hooks/use-onboarding-form";
 import { useOnboardingSteps } from "../hooks/use-onboarding-steps";
 import { usePlanSetup } from "../hooks/use-plan-setup";
+import { nextLabelKey } from "../lib/onboarding-steps";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
-
-function nextLabelKey(busy: boolean, isLast: boolean): string {
-  if (busy) return "onboarding.settingUp";
-  return isLast ? "onboarding.start" : "onboarding.next";
-}
 
 type Replan = { replan?: DetailsSchema } | null;
 
@@ -46,6 +42,9 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
       <PlanSetupView setup={setup} onContinue={() => navigate("/app/learn")} />
     );
   }
+  // On the form, only a plan kept at once can have stopped: a class that
+  // learns by voice alone, whose details are the last step.
+  const notKept = setup.error !== null && steps.isLast;
 
   return (
     <OnboardingLayout>
@@ -67,9 +66,10 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
       <StepFooter
         onBack={steps.index > 0 ? steps.back : undefined}
         onNext={() => void steps.next()}
-        nextLabel={t(nextLabelKey(setup.busy, steps.isLast))}
+        nextLabel={t(nextLabelKey(setup.busy, steps.isLast, notKept))}
         canNext={steps.canNext}
         busy={setup.busy}
+        problem={notKept ? t("onboarding.generating.failed") : undefined}
       />
     </OnboardingLayout>
   );

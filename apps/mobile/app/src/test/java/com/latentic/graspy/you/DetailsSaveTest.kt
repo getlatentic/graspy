@@ -10,23 +10,22 @@ class DetailsSaveTest {
     private fun inClass(level: String, name: String) =
         LearnerDetails("NG", "en", "NG", level, Names(name), "", "$name, Nigeria")
 
-    private val nursery = inClass("nursery-1", "Nursery 1")
-    private val primary = inClass("primary-1", "Primary 1")
-    private val jss = inClass("jss-1", "JSS 1")
+    private val nursery = inClass("nursery-2", "Nursery 2")
+    private val primary = inClass("primary-2", "Primary 2")
 
     @Test
-    fun `a learner between classes that learn from slides chooses a new plan or theirs`() {
-        assertEquals(DetailsSave.ASK, detailsSave(jss, primary))
+    fun `a class that learns by voice alone keeps the plan, subjects and all`() {
+        assertEquals(DetailsSave.KEEP, detailsSave(nursery, planHasSubjects = true))
+        assertEquals(DetailsSave.KEEP, detailsSave(nursery.copy(language = "yo"), planHasSubjects = false))
     }
 
     @Test
-    fun `a class that learns by voice alone keeps the plan, with no subjects to make`() {
-        assertEquals(DetailsSave.KEEP, detailsSave(primary, nursery))
-        assertEquals(DetailsSave.KEEP, detailsSave(nursery, nursery.copy(language = "yo")))
+    fun `a plan with no subjects to keep is made anew`() {
+        assertEquals(DetailsSave.NEW, detailsSave(primary, planHasSubjects = false))
     }
 
     @Test
-    fun `a learner leaving such a class gets a new plan, theirs having no subjects`() {
-        assertEquals(DetailsSave.NEW, detailsSave(nursery, primary))
+    fun `a learner with subjects chooses, even leaving a class that learns by voice alone (Primary 2 to Nursery 2 and back)`() {
+        assertEquals(DetailsSave.ASK, detailsSave(primary, planHasSubjects = true))
     }
 }

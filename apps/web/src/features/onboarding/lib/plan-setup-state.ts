@@ -1,3 +1,5 @@
+import type { Dispatch } from "react";
+import { voiceOnly } from "@/lib/voice/voice-learner";
 import type { GeneratedSubject } from "../types";
 import type { OnboardingSchema } from "../schemas/onboarding-schema";
 import { learnerDetails } from "./details";
@@ -57,6 +59,33 @@ export function planSetupReducer(
       return { ...FORM_SHOWN, phase: "kept" };
     case "reset":
       return FORM_SHOWN;
+  }
+}
+
+/** A class that learns by voice alone keeps its plan at once; any other has one made
+ * from its subjects. */
+export function startSetup<T>(
+  data: OnboardingSchema,
+  run: { keep: () => T; make: () => T },
+): T {
+  return voiceOnly(learnerDetails(data)) ? run.keep() : run.make();
+}
+
+/** A plan kept at once leaves the form once kept, and stays on it, saying so, when not. */
+export async function keepAtOnce(
+  keep: () => Promise<void>,
+  dispatch: Dispatch<PlanSetupEvent>,
+): Promise<void> {
+  dispatch({ type: "reset" });
+  try {
+    await keep();
+    dispatch({ type: "kept" });
+  } catch (e) {
+    console.error("Keeping the plan failed:", e);
+    dispatch({
+      type: "failed",
+      error: e instanceof Error ? e.message : "Error",
+    });
   }
 }
 
