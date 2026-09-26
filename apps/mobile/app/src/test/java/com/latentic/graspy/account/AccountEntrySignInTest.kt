@@ -19,7 +19,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -57,7 +56,7 @@ class AccountEntrySignInTest {
         entry().signIn()
 
         assertEquals(listOf(false to 1), sheetAsked)
-        assertEquals(emptyMap<String, Any?>(), signOutPending())
+        assertEquals(setOf("signing_in"), signOutPending().keys)
     }
 
     @Test
@@ -69,7 +68,7 @@ class AccountEntrySignInTest {
         entry().signIn()
 
         assertEquals(listOf(true to 0), sheetAsked)
-        assertEquals(setOf("google_account"), signOutPending().keys)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
     }
 
     @Test
@@ -84,7 +83,7 @@ class AccountEntrySignInTest {
         entry { SignInOutcome.Succeeded(UID) }.signIn()
 
         assertEquals(1, google.forgotten.size)
-        assertEquals(emptyMap<String, Any?>(), signOutPending())
+        assertEquals(setOf("signing_in"), signOutPending().keys)
     }
 
     @Test
@@ -93,7 +92,18 @@ class AccountEntrySignInTest {
 
         entry { SignInOutcome.Succeeded(UID) }.signIn()
 
-        assertEquals(setOf("google_account"), signOutPending().keys)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
+    }
+
+    @Test
+    fun `a sign-in graspy does not take is undone at the next start, though Firebase's sign-out never reached the disk`() = runBlocking {
+        entry { firebase.uid = UID; SignInOutcome.Succeeded(UID) }.signIn()
+        firebase.uid = UID
+
+        start()
+
+        assertNull(accounts.account.value)
+        assertNull(firebase.uid)
     }
 
     @Test
@@ -101,7 +111,7 @@ class AccountEntrySignInTest {
         entry { SignInOutcome.Failed("Firebase refused the credential") }.signIn()
 
         assertEquals(1, google.forgotten.size)
-        assertEquals(emptyMap<String, Any?>(), signOutPending())
+        assertEquals(setOf("signing_in"), signOutPending().keys)
     }
 
     @Test
@@ -110,7 +120,7 @@ class AccountEntrySignInTest {
 
         entry { SignInOutcome.Failed("Firebase refused the credential") }.signIn()
 
-        assertEquals(setOf("google_account"), signOutPending().keys)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
     }
 
     @Test
@@ -171,7 +181,7 @@ class AccountEntrySignInTest {
 
         assertTrue(outcome.toString(), outcome is SignInOutcome.Failed)
         assertEquals(listOf<Account?>(null), google.forgotten)
-        assertEquals(emptyMap<String, Any?>(), signOutPending())
+        assertEquals(setOf("signing_in"), signOutPending().keys)
     }
 
     @Test
@@ -184,11 +194,16 @@ class AccountEntrySignInTest {
     }
 
     @Test
-    fun `a sign-in that ends clears its note, whether it failed or was closed`() = runBlocking {
+    fun `a sign-in that ends without an account leaves its note, for a start that finds Firebase empty to drop`() = runBlocking {
         for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
             entry { outcome }.signIn()
-            assertFalse(outcome.toString(), "signing_in" in signOutPending())
+            assertTrue(outcome.toString(), "signing_in" in signOutPending())
         }
+
+        start()
+
+        assertNull(accounts.account.value)
+        assertEquals(emptyMap<String, Any?>(), signOutPending())
     }
 
     @Test
@@ -235,6 +250,32 @@ class AccountEntrySignInTest {
         assertNull(accounts.account.value)
         assertNull(firebase.uid)
         assertEquals(listOf<Account?>(null), google.forgotten)
+        assertEquals(setOf("signing_in"), signOutPending().keys)
+    }
+
+    @Test
+    fun `a sign-in undone keeps its note until a start finds Firebase holding no one`() = runBlocking {
+        firebase.uid = UID
+        leftSigningIn()
+        start()
+
+        firebase.uid = UID
+        start()
+        assertNull("Firebase's sign-out never reached the disk, and the account was adopted", accounts.account.value)
+
+        start()
+        assertNull(accounts.account.value)
+        assertEquals(emptyMap<String, Any?>(), signOutPending())
+    }
+
+    @Test
+    fun `a sign-in from before accounts, Firebase holding it with no note, is kept and its learning joins the first learner`() = runBlocking {
+        firebase.uid = UID
+
+        start()
+
+        assertEquals(Account(UID, email = null, learner = null, deviceJoins = true), accounts.account.value)
+        assertEquals(UID, firebase.uid)
         assertEquals(emptyMap<String, Any?>(), signOutPending())
     }
 

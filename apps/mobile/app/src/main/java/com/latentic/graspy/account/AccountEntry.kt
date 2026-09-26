@@ -34,7 +34,8 @@ class AccountEntry(
     suspend fun signIn(): SignInOutcome = signingIn.withLock { signInAlone() }
 
     private suspend fun signInAlone(): SignInOutcome {
-        // Cleared only when the sign-in ends; one cut short leaves it for [reconcile] to undo rather than adopt.
+        // Cleared once the account is stored, or by a start that finds Firebase holding no one: until then
+        // [reconcile] undoes the sign-in rather than adopting it.
         forgetting.edit(commit = true) { putBoolean(SIGNING_IN, true) }
         val outcome = try {
             signInThroughGoogle()
@@ -45,8 +46,13 @@ class AccountEntry(
             currentCoroutineContext().ensureActive()
             failedByCancelledTask()
         }
-        if (outcome !is SignInOutcome.Succeeded) firebase.signOut()
-        forgetting.edit(commit = true) { remove(SIGNING_IN) }
+        if (outcome is SignInOutcome.Succeeded) {
+            forgetting.edit(commit = true) { remove(SIGNING_IN) }
+        } else {
+            // Firebase writes its sign-out to disk in the background, so the note stays: a kill before that write
+            // leaves Firebase's user for the next start to find, with the note to undo it by.
+            firebase.signOut()
+        }
         return outcome
     }
 
@@ -147,10 +153,10 @@ class AccountEntry(
     }
 
     /**
-     * At start. A sign-in cut short is undone, never adopted. Otherwise an account signed in before
-     * accounts held learners is kept, and its learning here joins the first learner chosen; an account
-     * Firebase no longer holds is signed out; and a sign-out that had yet to forget its Google account
-     * forgets it.
+     * At start. A sign-in that ended without an account, or was cut short, is undone, never adopted. Otherwise
+     * an account signed in before accounts held learners is kept, and its learning here joins the first learner
+     * chosen; an account Firebase no longer holds is signed out; and a sign-out that had yet to forget its Google
+     * account forgets it.
      */
     fun reconcile(scope: CoroutineScope) {
         val uid = firebase.userId
@@ -158,7 +164,7 @@ class AccountEntry(
         // A sign-in that stored its account got as far as it needed to.
         if (account != null) forgetting.edit(commit = true) { remove(SIGNING_IN) }
         when {
-            account == null && forgetting.getBoolean(SIGNING_IN, false) -> undoSignInCutShort(scope)
+            account == null && forgetting.getBoolean(SIGNING_IN, false) -> undoSignIn(uid, scope)
             uid != null && account == null -> accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
             account != null && account.uid != uid -> scope.finish("Finishing a sign-out") { signOut() }
             account == null && forgetting.getBoolean(GOOGLE_ACCOUNT, false) ->
@@ -167,11 +173,13 @@ class AccountEntry(
     }
 
     /** At once, before a new sign-in can begin; only forgetting the Google account waits on Play services. */
-    private fun undoSignInCutShort(scope: CoroutineScope) {
+    private fun undoSignIn(uid: String?, scope: CoroutineScope) {
         markGoogleAccountToForget()
         firebase.signOut()
-        forgetting.edit(commit = true) { remove(SIGNING_IN) }
-        scope.finish("Forgetting the Google account of a sign-in cut short") {
+        // Firebase read its user from disk at this start. One it still held is signed out in the background, so
+        // the note goes only at a start that finds no one.
+        if (uid == null) forgetting.edit(commit = true) { remove(SIGNING_IN) }
+        scope.finish("Forgetting the Google account of a sign-in undone") {
             // A sign-in begun meanwhile may have forgotten it already.
             signingOut.withLock { if (forgetting.getBoolean(GOOGLE_ACCOUNT, false)) forgetGoogleAccount() }
         }
