@@ -11,6 +11,7 @@ import type { TopicRef } from "@/lib/learner-record";
 import { isUnreachable } from "@/lib/mcp/outbox";
 import { callAppTool } from "@/lib/mcp/server";
 import {
+  keptLesson,
   lessonStateOf,
   lessonTarget,
   openLesson,
@@ -80,7 +81,7 @@ async function copyAll(plan: CurriculumData, ready: TopicRef[]) {
     const subject = plan.subjects.find((s) => s.slug === mark.subjectSlug);
     const target = subject && lessonTarget(plan, subject, mark.topicIndex);
     if (!target || target.topic !== mark.topic) continue;
-    await keepIfWhole(target, await openLesson(target));
+    await keepIfWhole(target, await keptLesson(target));
   }
 }
 

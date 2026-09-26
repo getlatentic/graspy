@@ -5,7 +5,7 @@ import {
   type CurriculumData,
   type CurriculumSubject,
 } from "@/lib/curriculum-record";
-import { callAppTool, openToolView } from "@/lib/mcp/server";
+import { callAppTool, openToolView, viewOf } from "@/lib/mcp/server";
 import { goalIndex, topicLevel } from "./curriculum-edit";
 
 const GIVE_LESSON = "give_lesson";
@@ -93,6 +93,17 @@ export function openLesson(
   attempt = 0,
 ): Promise<TutorCard> {
   return openToolView(GIVE_LESSON, { target, attempt });
+}
+
+/**
+ * The lesson as `openLesson` would open it, asked with lesson_progress, which never starts one:
+ * give_lesson would pay to make a lesson the learner has not opened.
+ */
+export async function keptLesson(target: LessonTarget): Promise<TutorCard> {
+  const toolInput = { target, attempt: 0 };
+  const resourceUri = await viewOf(GIVE_LESSON);
+  const toolResult = await callAppTool(LESSON_PROGRESS, toolInput);
+  return { resourceUri, toolName: GIVE_LESSON, toolInput, toolResult };
 }
 
 export function lessonStateOf(result: CallToolResult): LessonState | null {
