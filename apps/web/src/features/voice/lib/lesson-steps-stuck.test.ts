@@ -110,6 +110,21 @@ describe("an answer whose marking never answers", () => {
   });
 });
 
+describe("an answer whose failed marking waits for its next attempt", () => {
+  it("is asked about again only once the wait the server named is over", async () => {
+    server.retryAt = 30 * 60 * 1000;
+    const page = lessonPage(await reload());
+    await page.open();
+    const later = async (ms: number) => void (server.now += ms);
+
+    await page.follow(later);
+    expect(page.state.phase).toMatchObject({ name: "result" });
+    expect(
+      sent("POST /api/voice/samples/gvm_key-1/evaluation").length,
+    ).toBeLessThanOrEqual(3);
+  });
+});
+
 describe("an answer the child carries on past", () => {
   async function keptOnScreen() {
     server.busy = 1;

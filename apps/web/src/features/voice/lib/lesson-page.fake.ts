@@ -45,7 +45,7 @@ export function lessonPage(app: App, plan?: string) {
       emit(await app.openingStep(LEARNER, plan));
     },
     /** What the page does while an answer is on screen: follows it to its outcome. */
-    follow(retry: () => Promise<unknown> = notYet) {
+    follow(retry: (ms: number) => Promise<unknown> = notYet) {
       const { phase } = state;
       if (phase.name !== "checking")
         throw new Error(`no answer: ${phase.name}`);

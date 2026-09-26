@@ -218,10 +218,15 @@ def given_up(row: dict, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS) -> boo
     return _unfinished(row, now_ms, lease_ms) and attempts >= MAX_TURN_ATTEMPTS
 
 
+def wait_left_ms(row: dict, now_ms: int) -> int:
+    """How long until the turn's next attempt is due; 0 once it is."""
+    attempts = min(int(row.get("attempts") or 0), MAX_TURN_ATTEMPTS - 1)
+    return max(0, int(row["updated_at"]) + RETRY_AFTER_MS[attempts] - now_ms)
+
+
 def waiting(row: dict, now_ms: int) -> bool:
     """A turn whose next attempt is not due yet."""
-    attempts = min(int(row.get("attempts") or 0), MAX_TURN_ATTEMPTS - 1)
-    return now_ms - int(row["updated_at"]) < RETRY_AFTER_MS[attempts]
+    return wait_left_ms(row, now_ms) > 0
 
 
 def claimable(

@@ -87,6 +87,9 @@ export const server = {
   held: new Map<string, Promise<void>>(),
   /** How many more markings never answer: only the request's signal ends them, as it ends fetch. */
   hung: 0,
+  /** The server's clock, and when a failed marking is next tried: until then it answers 202. */
+  now: 0,
+  retryAt: 0,
   asked: [] as string[],
 };
 
@@ -98,6 +101,8 @@ export function resetServer(): void {
     busy: 0,
     held: new Map(),
     hung: 0,
+    now: 0,
+    retryAt: 0,
     asked: [],
   });
 }
@@ -141,6 +146,13 @@ async function marking(
   if (server.busy > 0) {
     server.busy -= 1;
     return json({ detail: "busy" }, 503);
+  }
+  if (server.now < server.retryAt) {
+    const retry_after_ms = server.retryAt - server.now;
+    return json(
+      { sample_id: sample, state: "processing", retry_after_ms },
+      202,
+    );
   }
   const { refusal } = server;
   if (refusal) return json({ detail: "refused", ...refusal }, refusal.status);

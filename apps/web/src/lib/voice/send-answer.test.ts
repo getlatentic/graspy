@@ -92,6 +92,36 @@ describe("sendAnswer", () => {
     expect(api.uploadAudio).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps the answer at once when the server names a wait longer than its polling", async () => {
+    api.evaluate.mockResolvedValue({
+      sample_id: "gvm_1",
+      state: "processing",
+      retry_after_ms: 100_000,
+    });
+    await expect(send()).resolves.toEqual({
+      kind: "kept",
+      status: 202,
+      code: null,
+      retryAfterMs: 100_000,
+    });
+    expect(api.evaluate).toHaveBeenCalledTimes(1);
+  });
+
+  it("waits out a short wait the server names, then asks again", async () => {
+    const pause = vi.fn(async () => {});
+    api.evaluate
+      .mockResolvedValueOnce({
+        sample_id: "gvm_1",
+        state: "processing",
+        retry_after_ms: 10_000,
+      })
+      .mockResolvedValueOnce(TURN);
+    await expect(
+      sendAnswer(answer, api as unknown as AnswerApi, keeping, pause),
+    ).resolves.toMatchObject({ kind: "marked" });
+    expect(pause).toHaveBeenCalledWith(10_000);
+  });
+
   it("asks again while another request is marking it", async () => {
     api.evaluate
       .mockResolvedValueOnce({ sample_id: "gvm_1", state: "processing" })

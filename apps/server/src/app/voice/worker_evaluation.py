@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import time
 
 from starlette.responses import JSONResponse
@@ -17,6 +18,7 @@ from .exercises import (
     given_up,
     new_claim_token,
     turn_payload,
+    wait_left_ms,
     waiting,
     write_won,
 )
@@ -61,10 +63,21 @@ def _turn_response(row, now_ms: int):
             status=409,
         )
     state = row["state"]
+    if state == "processing":
+        return _json({"sample_id": row["sample_id"], "state": state}, status=202)
     # A failed turn whose next attempt is not due answers as one still being marked, so the app
-    # keeps the answer and asks again, and no attempt is spent.
-    if state == "processing" or (state == "failed" and waiting(row, now_ms)):
-        return _json({"sample_id": row["sample_id"], "state": "processing"}, status=202)
+    # keeps the answer and no attempt is spent; it names the wait, so the app need not ask sooner.
+    if state == "failed" and waiting(row, now_ms):
+        left = wait_left_ms(row, now_ms)
+        return JSONResponse(
+            {
+                "sample_id": row["sample_id"],
+                "state": "processing",
+                "retry_after_ms": left,
+            },
+            status_code=202,
+            headers={"Retry-After": str(math.ceil(left / 1000))},
+        )
     if state == "failed":
         return _json(
             {"detail": row.get("error_detail") or "transcription failed"}, status=502

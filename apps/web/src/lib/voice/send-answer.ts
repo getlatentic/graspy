@@ -20,8 +20,14 @@ export interface AnswerKeeping {
 /**
  * Not marked yet: the answer stays on the device and goes again. `status` is what the voice API
  * answered, 202 while it is still marking; 0 when it gave no answer or the device failed.
+ * `retryAfterMs`: how long the voice API said to wait before asking again.
  */
-export type Kept = { kind: "kept"; status: number; code: VoiceCode | null };
+export type Kept = {
+  kind: "kept";
+  status: number;
+  code: VoiceCode | null;
+  retryAfterMs?: number;
+};
 
 export type Sent = Settled | Kept;
 
@@ -72,17 +78,22 @@ async function uploaded(
   return next;
 }
 
+/** The marked turn, or the answer kept: not marked within the polls, or not to be asked again
+ * before the polls would end. */
 async function marked(
   sampleId: string,
   api: AnswerApi,
   pause: (ms: number) => Promise<unknown>,
-): Promise<MarkedTurn | null> {
-  for (let poll = 0; poll < MARKING_POLLS; poll += 1) {
+): Promise<MarkedTurn | Kept> {
+  for (let poll = 1; poll <= MARKING_POLLS; poll += 1) {
     const evaluation = await api.evaluate(sampleId);
     if (evaluation.state === "complete") return evaluation;
-    await pause(POLL_MS);
+    const retryAfterMs = evaluation.retry_after_ms ?? 0;
+    if (retryAfterMs > (MARKING_POLLS - poll) * POLL_MS)
+      return { kind: "kept", status: 202, code: null, retryAfterMs };
+    await pause(Math.max(POLL_MS, retryAfterMs));
   }
-  return null;
+  return { kind: "kept", status: 202, code: null };
 }
 
 async function settled(
@@ -107,7 +118,7 @@ export async function sendAnswer(
 ): Promise<Sent> {
   try {
     let sent = await uploaded(answer, api, keeping);
-    let turn: MarkedTurn | null;
+    let turn: MarkedTurn | Kept;
     try {
       turn = await marked(sent.sampleId!, api, pause);
     } catch (error) {
@@ -117,7 +128,7 @@ export async function sendAnswer(
       sent = await uploaded({ ...sent, uploaded: false }, api, keeping);
       turn = await marked(sent.sampleId!, api, pause);
     }
-    if (!turn) return { kind: "kept", status: 202, code: null };
+    if ("kind" in turn) return turn;
     return settled(answer, { kind: "marked", turn }, keeping);
   } catch (error) {
     if (!(error instanceof VoiceError)) {

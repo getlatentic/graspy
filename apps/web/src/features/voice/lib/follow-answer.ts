@@ -46,7 +46,8 @@ export async function followAnswer(
   if (signal.aborted) return;
   if (now?.kind === "kept") emit({ type: "kept", key, code: now.code });
   while (now?.kind === "kept") {
-    const again = pause(RETRY_MS).then(() =>
+    const due = Math.max(RETRY_MS, now.retryAfterMs ?? 0);
+    const again = pause(due).then(() =>
       signal.aborted ? null : answerNow(key),
     );
     now = await Promise.race([settled, again]);

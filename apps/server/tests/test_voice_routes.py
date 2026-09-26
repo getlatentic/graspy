@@ -431,6 +431,36 @@ async def test_a_turn_that_keeps_failing_is_tried_three_times_spaced_out_then_re
     assert len(heard) == 3
 
 
+async def test_a_failed_turn_waiting_for_its_next_attempt_names_the_wait(
+    app, env, monkeypatch
+):
+    async def transcribe(*args):
+        raise RuntimeError("the recognizer failed")
+
+    clock = Clock()
+    monkeypatch.setattr("app.voice.worker_evaluation.time", clock)
+    monkeypatch.setattr(
+        "app.voice.worker_evaluation.transcribe_intron_sync", transcribe
+    )
+    offered(env, ADA)
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http)
+        await uploaded(http, sample)
+        path = f"/api/voice/samples/{sample['sample_id']}/evaluation"
+        await http.post(path)
+        clock.now += 20
+        waiting = await http.post(path)
+
+    assert waiting.status_code == 202
+    assert waiting.json() == {
+        "sample_id": sample["sample_id"],
+        "state": "processing",
+        "retry_after_ms": 100_000,
+    }
+    assert waiting.headers["retry-after"] == "100"
+
+
 async def test_a_claim_read_before_the_last_attempt_was_spent_is_refused(env):
     from app.voice.exercises import MAX_TURN_ATTEMPTS
     from app.voice.worker_evaluation import _claim_turn
