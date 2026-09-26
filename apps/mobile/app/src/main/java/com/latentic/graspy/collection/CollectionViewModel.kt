@@ -46,8 +46,7 @@ const val RECORDINGS_DIRECTORY = "recordings"
  */
 const val LESSON_CONSENT = "voice_lesson"
 
-class CollectionViewModel(application: Application) : AndroidViewModel(application) {
-    private val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
+class CollectionViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
     private val consent = VoiceConsent(AppGraph.account(application).profiles) { ownerId }
     private val recorder = Pcm16WavRecorder(viewModelScope)
     private val repository = AppGraph.submissionRepository(application)

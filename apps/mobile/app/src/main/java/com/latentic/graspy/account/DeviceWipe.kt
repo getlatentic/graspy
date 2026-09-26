@@ -27,19 +27,26 @@ class DeviceWipe(
      * learner's class and language stay for when they learn here again.
      */
     suspend fun leaveLearner() = withContext(Dispatchers.IO) {
-        forgetLearnerData()
-        sessions.forget()
+        // The learner goes first, so what checks for them before it writes (the kept plan, a request's session)
+        // finds them gone.
         accounts.setLearner(null)
+        sessions.forget()
+        forgetLearnerData()
     }
 
-    /** Signed out: nothing of the account or any learner stays, and the device takes a new id. */
+    /**
+     * Signed out: nothing of the account or any learner stays, and the device takes a new id. The learner goes
+     * first, as in [leaveLearner]; the account goes last, so a sign-out cut short leaves it here with Firebase
+     * signed out, and the next start finishes it.
+     */
     suspend fun wipeDevice() = withContext(Dispatchers.IO) {
+        accounts.setLearner(null)
         forgetLearnerData()
         profiles.forgetAll()
         File(context.cacheDir, TEACHER_AUDIO_DIRECTORY).deleteRecursively()
         sessions.forget()
-        accounts.set(null)
         deviceIds.renew()
+        accounts.set(null)
     }
 
     private fun forgetLearnerData() {

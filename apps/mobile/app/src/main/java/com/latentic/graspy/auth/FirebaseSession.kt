@@ -10,7 +10,10 @@ import com.google.firebase.auth.GoogleAuthProvider
 import java.io.IOException
 import kotlinx.coroutines.tasks.await
 
-class FirebaseSession(private val auth: FirebaseAuth = FirebaseAuth.getInstance()) {
+class FirebaseSession(
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val clearCredentials: suspend (Context) -> Unit = ::clearCredentialState,
+) {
     val userId: String? get() = auth.currentUser?.uid
     val email: String? get() = auth.currentUser?.email
 
@@ -18,10 +21,11 @@ class FirebaseSession(private val auth: FirebaseAuth = FirebaseAuth.getInstance(
         auth.signInWithCredential(GoogleAuthProvider.getCredential(googleIdToken, null)).await()
     }
 
-    suspend fun signOut(context: Context) {
-        auth.signOut()
-        CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())
-    }
+    /** At once; the Google account the sign-in used is forgotten apart from it, by [forgetGoogleAccount]. */
+    fun signOut() = auth.signOut()
+
+    /** So the next sign-in asks which Google account rather than taking the last one. It can wait on Play services. */
+    suspend fun forgetGoogleAccount(context: Context) = clearCredentials(context)
 
     /** Null when Firebase no longer holds [uid]'s sign-in: signed out, disabled or deleted. */
     suspend fun idToken(uid: String, fresh: Boolean): String? {
@@ -34,4 +38,8 @@ class FirebaseSession(private val auth: FirebaseAuth = FirebaseAuth.getInstance(
             throw IOException("Google could not be reached to confirm the sign-in", offline)
         }
     }
+}
+
+private suspend fun clearCredentialState(context: Context) {
+    CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())
 }

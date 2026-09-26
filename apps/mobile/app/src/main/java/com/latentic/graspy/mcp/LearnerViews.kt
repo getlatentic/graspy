@@ -14,8 +14,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
  * The learner's MCP connection, kept while they learn here so the server's catalogue is read once, and the
  * view calls kept while there was no connection, sent whenever there is one.
  */
-class LearnerViews(application: Application) : AndroidViewModel(application), ViewServer {
-    private val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
+class LearnerViews(application: Application, private val ownerId: String) : AndroidViewModel(application), ViewServer {
     private val mcp = McpClient(AppGraph.callsFor(application, ownerId), "$API_ORIGIN/mcp".toHttpUrl())
     private val outbox = McpOutbox(AppGraph.database(application).keptCallDao(), ownerId, mcp::callTool)
 

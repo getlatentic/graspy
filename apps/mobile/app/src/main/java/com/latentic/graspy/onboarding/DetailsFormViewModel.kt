@@ -1,12 +1,9 @@
 package com.latentic.graspy.onboarding
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
 import com.latentic.graspy.plan.COUNTRY_LANGUAGES
@@ -112,13 +109,8 @@ class DetailsFormViewModel(private val schoolSystems: suspend (country: String) 
     companion object {
         private const val TAG = "GraspyDetails"
 
-        /** The school systems as the server lists them, for the learner the device learns as. */
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application = requireNotNull(this[APPLICATION_KEY])
-                val calls = AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse()))
-                DetailsFormViewModel(retrofit(calls).create(PlanApi::class.java)::schoolSystems)
-            }
-        }
+        /** The school systems as the server lists them, asked as [learnerKey]. */
+        fun forLearner(application: Application, learnerKey: String) =
+            DetailsFormViewModel(retrofit(AppGraph.callsFor(application, learnerKey)).create(PlanApi::class.java)::schoolSystems)
     }
 }
