@@ -14,13 +14,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,14 +37,11 @@ import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.space
 import com.latentic.graspy.ui.tapping
 
-/** Voice lessons: who teaches, the class's lessons by topic and how each stands, then the badges earned. */
+/** The class's voice lessons by topic and how each stands, then the badges earned. */
 @Composable
 fun VoiceLessons(
     copy: AppCopy,
     state: CatalogueState,
-    teacherName: String,
-    teacherInitial: String,
-    language: String,
     onStartLesson: () -> Unit,
     onOpenLesson: (String) -> Unit,
     onRetry: () -> Unit,
@@ -57,7 +52,6 @@ fun VoiceLessons(
                 Text(copy.home.loading, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
             CatalogueState.Failed -> RetryLine(copy.home, onRetry)
             is CatalogueState.Ready -> {
-                TeacherStrip(teacherName, teacherInitial, language)
                 if (state.topics.isEmpty()) {
                     Text(copy.home.noLessons, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
                 }
@@ -75,33 +69,6 @@ private fun RetryLine(copy: HomeCopy, onRetry: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(space(2.5))) {
         Text(copy.loadFailed, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
         SecondaryButton(copy.retry, onRetry)
-    }
-}
-
-/** Who is teaching, said once, so no lesson row has to repeat it. */
-@Composable
-private fun TeacherStrip(name: String, initial: String, language: String) {
-    val shape = RoundedCornerShape(GraspyRadius.Card)
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(GraspyColor.Surface, shape)
-            .border(BorderStroke(1.dp, GraspyColor.Line), shape)
-            .padding(space(3.5)),
-        horizontalArrangement = Arrangement.spacedBy(space(3)),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(46.dp).background(GraspyColor.Accent, CircleShape), contentAlignment = Alignment.Center) {
-            Text(initial, color = GraspyColor.OnAccent, style = MaterialTheme.typography.titleMedium)
-        }
-        Column {
-            Text(name, color = GraspyColor.Ink, style = MaterialTheme.typography.titleMedium)
-            Text(
-                language,
-                color = GraspyColor.Muted,
-                style = MaterialTheme.typography.labelMedium,
-            )
-        }
     }
 }
 

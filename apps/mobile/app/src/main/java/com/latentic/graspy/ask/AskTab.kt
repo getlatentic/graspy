@@ -47,9 +47,26 @@ import com.latentic.graspy.ui.space
  * way to change to another topic, a subject, or anything at all.
  */
 @Composable
-fun AskTab(learn: LearnCopy, locale: String, server: ViewServer, ask: AskViewModel, ready: PlanState.Ready, plan: PlanChanges, onLink: (LinkTarget) -> Unit) {
+fun AskTab(
+    learn: LearnCopy,
+    locale: String,
+    server: ViewServer,
+    ask: AskViewModel,
+    ready: PlanState.Ready,
+    plan: PlanChanges,
+    onLink: (LinkTarget) -> Unit,
+    opening: AskOpening? = null,
+    onOpened: () -> Unit = {},
+) {
     val threads = ask.threads.collectAsStateWithLifecycle().value ?: return
     var chosen by rememberSaveable(stateSaver = targetSaver) { mutableStateOf<ChatTarget?>(null) }
+    var draft by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(opening) {
+        opening ?: return@LaunchedEffect
+        chosen = opening.target
+        draft = opening.draft
+        onOpened()
+    }
     // Chosen once, so the conversation stays put while its thread and others change under it.
     val target = chosen?.takeIf { scopeOf(it, ready.plan) != null } ?: latestChat(threads, ready.plan, currentTopic(ready.plan)).also { chosen = it }
     val scope = scopeOf(target, ready.plan) ?: return
@@ -60,11 +77,12 @@ fun AskTab(learn: LearnCopy, locale: String, server: ViewServer, ask: AskViewMod
     Column(Modifier.fillMaxSize().background(GraspyColor.Surface)) {
         ContextBar(learn, ready.plan, scope) { choosing = true }
         HorizontalDivider(color = GraspyColor.Line)
-        Conversation(learn, locale, server, ask, scope, context, onLink, Modifier.weight(1f))
+        Conversation(learn, locale, server, ask, scope, context, onLink, draft, Modifier.weight(1f))
     }
     if (choosing) {
         TopicSheet(learn, threads, ready.plan, scope, onClose = { choosing = false }) {
             chosen = it
+            draft = null
             choosing = false
         }
     }

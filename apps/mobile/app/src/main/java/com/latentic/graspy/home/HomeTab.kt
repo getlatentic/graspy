@@ -2,16 +2,14 @@ package com.latentic.graspy.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import com.latentic.graspy.ask.AskOpening
 import com.latentic.graspy.localization.LearnCopy
 import com.latentic.graspy.localization.filled
 import com.latentic.graspy.plan.CurrentTopic
@@ -34,6 +33,7 @@ import com.latentic.graspy.subjects.SubjectBadge
 import com.latentic.graspy.subjects.subjectIcon
 import com.latentic.graspy.subjects.subjectTint
 import com.latentic.graspy.ui.GraspyCard
+import com.latentic.graspy.ui.EdgeToEdgeRow
 import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.PillButton
@@ -44,8 +44,8 @@ import com.latentic.graspy.ui.space
 import com.latentic.graspy.ui.tapping
 
 /**
- * Home, laid out as the web's: the topic to continue, when the learner has a plan; voice lessons; then
- * the plan's subjects. Voice lessons stay in full here, where the web shows a card that opens them.
+ * Home, laid out as the web's on a phone: the topic to continue, voice lessons for a class that has them,
+ * the plan's subjects, then ideas for what to ask.
  */
 @Composable
 fun HomeTab(
@@ -56,18 +56,22 @@ fun HomeTab(
     onOpenTopic: (PlanSubject, Int) -> Unit,
     onOpenSubject: (PlanSubject) -> Unit,
     onSeeAllSubjects: () -> Unit,
-    voiceLessons: (@Composable () -> Unit)?,
+    onAsk: (AskOpening) -> Unit,
+    voiceCard: (@Composable () -> Unit)?,
 ) {
     val ready = (plan as? PlanState.Ready)?.takeIf { making == null }
     Column(verticalArrangement = Arrangement.spacedBy(space(8))) {
         making?.let { PlanBuilding(learn, it, onRetryMaking) }
         val current = ready?.let { currentTopic(it.plan) }
         if (ready != null && current != null) ContinueSection(learn, ready, current, onOpenTopic)
-        voiceLessons?.let { Section(learn.voice.title) { it() } }
+        voiceCard?.invoke()
         ready?.plan?.subjects?.takeIf { it.isNotEmpty() }?.let { subjects ->
             Section(learn.home.subjectsTitle, more = learn.home.seeAll to onSeeAllSubjects) {
                 SubjectTiles(subjects, onOpenSubject)
             }
+        }
+        if (ready != null) {
+            Section(learn.home.tryTitle) { TrySomethingNew(learn.home) { onAsk(it.opening(learn.home, current)) } }
         }
     }
 }
@@ -81,7 +85,7 @@ private fun ContinueSection(learn: LearnCopy, ready: PlanState.Ready, current: C
     Section(learn.home.continueTitle) {
         GraspyCard(contentPadding = space(3)) {
             Row(horizontalArrangement = Arrangement.spacedBy(space(3)), verticalAlignment = Alignment.CenterVertically) {
-                SubjectBadge(current.subject.name, size = space(14))
+                SubjectBadge(current.subject.name, size = space(14), shape = RoundedCornerShape(space(4)))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space(0.5))) {
                     Text(current.topic, style = MaterialTheme.typography.labelLarge, color = GraspyColor.Ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(
@@ -121,8 +125,8 @@ private fun PlanBuilding(learn: LearnCopy, making: Making, onRetry: () -> Unit) 
 /** On a phone the next tile shows half in view, so the row reads as scrollable. */
 @Composable
 private fun SubjectTiles(subjects: List<PlanSubject>, onOpenSubject: (PlanSubject) -> Unit) {
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(space(2))) {
-        subjects.forEach { subject ->
+    EdgeToEdgeRow {
+        items(subjects, key = { it.slug }) { subject ->
             val tint = subjectTint(subject.name)
             Column(
                 Modifier

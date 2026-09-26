@@ -97,3 +97,6 @@ fun chatDirectory(threads: List<ChatThread>, plan: LearnerPlan, current: Current
         offerTopics = plan.subjects.isNotEmpty(),
     )
 }
+
+/** Ask opened from elsewhere: on a conversation, with words already in the box for the learner to send. */
+data class AskOpening(val target: ChatTarget, val draft: String?)

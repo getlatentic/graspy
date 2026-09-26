@@ -63,6 +63,7 @@ internal fun Conversation(
     scope: ThreadScope,
     context: TurnContext,
     onLink: (LinkTarget) -> Unit,
+    seed: String?,
     modifier: Modifier,
 ) {
     val (threadId, messages) = ask.messages.collectAsStateWithLifecycle().value
@@ -76,7 +77,7 @@ internal fun Conversation(
         }
         val last = messages.lastOrNull()
         if (!answering && last?.kind == MessageKind.TUTOR && last.metadata.followUps.isNotEmpty()) FollowUps(last.metadata.followUps, send)
-        Composer(learn, context.plan.plan, scope, answering, send, ask::stop)
+        Composer(learn, context.plan.plan, scope, seed, answering, send, ask::stop)
     }
 }
 
@@ -210,8 +211,10 @@ private fun FollowUps(followUps: List<String>, ask: (String) -> Boolean) {
 }
 
 @Composable
-private fun Composer(learn: LearnCopy, plan: LearnerPlan?, scope: ThreadScope, answering: Boolean, send: (String) -> Boolean, stop: () -> Unit) {
+private fun Composer(learn: LearnCopy, plan: LearnerPlan?, scope: ThreadScope, seed: String?, answering: Boolean, send: (String) -> Boolean, stop: () -> Unit) {
     var draft by rememberSaveable(scope.key) { mutableStateOf("") }
+    // Words put in the box from elsewhere, for the learner to finish or send; nothing is sent for them.
+    LaunchedEffect(seed, scope.key) { seed?.let { draft = it } }
     val placeholder = plan?.let { placeholderFor(learn, it, scope) } ?: learn.chat.openTutor
     val shape = RoundedCornerShape(space(4))
     Row(

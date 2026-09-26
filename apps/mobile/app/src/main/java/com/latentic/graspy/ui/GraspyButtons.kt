@@ -2,10 +2,14 @@ package com.latentic.graspy.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -16,12 +20,14 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.latentic.graspy.ui.icons.Lucide
+import com.latentic.graspy.ui.icons.rememberLucide
 
 private val ButtonShape = RoundedCornerShape(GraspyRadius.Control)
 
 /** The one thing a screen asks for. */
 @Composable
-fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, icon: Lucide? = null) {
     Button(
         onClick = tapping(onClick),
         enabled = enabled,
@@ -34,6 +40,10 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
             disabledContentColor = GraspyColor.OnAccent,
         ),
     ) {
+        icon?.let {
+            Icon(rememberLucide(it), contentDescription = null, modifier = Modifier.size(space(4)))
+            Spacer(Modifier.width(space(2)))
+        }
         Text(text, style = MaterialTheme.typography.labelLarge)
     }
 }

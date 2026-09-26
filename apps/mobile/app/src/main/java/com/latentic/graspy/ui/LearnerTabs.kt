@@ -8,13 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,12 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.latentic.graspy.account.Account
+import com.latentic.graspy.ask.AskOpening
 import com.latentic.graspy.ask.AskTab
 import com.latentic.graspy.ask.AskViewModel
 import com.latentic.graspy.ask.LinkTarget
 import com.latentic.graspy.home.HomeCatalogueViewModel
 import com.latentic.graspy.home.HomeTab
-import com.latentic.graspy.home.VoiceLessons
+import com.latentic.graspy.home.VoiceCard
+import com.latentic.graspy.home.VoicePage
 import com.latentic.graspy.lesson.TopicLesson
 import com.latentic.graspy.localization.AppCopy
 import com.latentic.graspy.localization.AppLanguage
@@ -43,6 +45,7 @@ import com.latentic.graspy.plan.PlanViewModel
 import com.latentic.graspy.plan.countryName
 import com.latentic.graspy.plan.details
 import com.latentic.graspy.plan.languageName
+import com.latentic.graspy.plan.languageNativeName
 import com.latentic.graspy.plan.lessonTarget
 import com.latentic.graspy.plan.levelLabel
 import com.latentic.graspy.plan.withDetails
@@ -80,12 +83,15 @@ internal fun LearnerTabs(
     var tab by rememberSaveable { mutableStateOf(LearnTab.HOME) }
     var place by rememberSaveable(stateSaver = placeSaver) { mutableStateOf<Place?>(null) }
     var editing by rememberSaveable { mutableStateOf(false) }
+    var voicePage by rememberSaveable { mutableStateOf(false) }
+    var askOpening by remember { mutableStateOf<AskOpening?>(null) }
     LaunchedEffect(tab) { planViewModel.refresh() }
-    BackHandler(enabled = place != null || editing || tab != LearnTab.HOME) {
+    BackHandler(enabled = place != null || editing || voicePage || tab != LearnTab.HOME) {
         val current = place
         when {
             current != null -> place = current.back()
             editing -> editing = false
+            voicePage -> voicePage = false
             else -> tab = LearnTab.HOME
         }
     }
@@ -100,7 +106,7 @@ internal fun LearnerTabs(
         }
     }
 
-    Column(Modifier.fillMaxSize().background(GraspyColor.Canvas).statusBarsPadding().navigationBarsPadding().imePadding()) {
+    Column(Modifier.fillMaxSize().background(GraspyColor.Canvas).navigationBarsPadding().imePadding()) {
         GraspyHeader()
         Box(Modifier.weight(1f)) {
             val shown = place
@@ -108,10 +114,19 @@ internal fun LearnerTabs(
             when {
                 shown != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shown, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
                 editing && ready != null -> Page { Details(learn, ready.plan, interfaceLanguage, planViewModel, onBack = { editing = false }, onReplan = onReplan) }
-                tab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, follow) { tab = LearnTab.HOME }
+                voicePage && voice != null && tab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
+                tab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
                 else -> Page {
                     when (tab) {
-                        LearnTab.HOME -> Home(copy, learn, appLanguage, voice, plan, planViewModel, openVoiceLesson, onPlace = { place = it }) { tab = LearnTab.SUBJECTS }
+                        LearnTab.HOME -> Home(
+                            learn, voice, plan, planViewModel,
+                            onVoice = { voicePage = true },
+                            onAsk = {
+                                askOpening = it
+                                tab = LearnTab.ASK
+                            },
+                            onPlace = { place = it },
+                        ) { tab = LearnTab.SUBJECTS }
                         LearnTab.SUBJECTS -> SubjectsTab(learn, plan, onOpenSubject = { place = Place(it.slug) }, onRetry = planViewModel::refresh)
                         else -> YouTab(learn, plan, learnerDetails(learn, plan, interfaceLanguage), account, menu.copy(onEditProfile = { editing = true }))
                     }
@@ -122,26 +137,26 @@ internal fun LearnerTabs(
             tab = it
             place = null
             editing = false
+            voicePage = false
         }
     }
 }
 
 @Composable
 private fun Page(content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = space(4), vertical = space(6))) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(space(4))) {
         content()
     }
 }
 
 @Composable
 private fun Home(
-    copy: AppCopy,
     learn: LearnCopy,
-    appLanguage: AppLanguage,
     voice: LearnerProfile?,
     plan: PlanState,
     planViewModel: PlanViewModel,
-    openVoiceLesson: (String?) -> Unit,
+    onVoice: () -> Unit,
+    onAsk: (AskOpening) -> Unit,
     onPlace: (Place) -> Unit,
     onSeeAllSubjects: () -> Unit,
 ) {
@@ -154,7 +169,8 @@ private fun Home(
         onOpenTopic = { subject, index -> onPlace(Place(subject.slug, index)) },
         onOpenSubject = { onPlace(Place(it.slug)) },
         onSeeAllSubjects = onSeeAllSubjects,
-        voiceLessons = voice?.let { profile -> { VoiceLessonsSection(copy, appLanguage, profile, openVoiceLesson) } },
+        onAsk = onAsk,
+        voiceCard = voice?.let { profile -> { VoiceCard(learn.voice, Teacher.forClass(profile.schoolClass).first(), onVoice) } },
     )
 }
 
@@ -197,7 +213,16 @@ private fun Details(learn: LearnCopy, plan: LearnerPlan, interfaceLanguage: Inte
 }
 
 @Composable
-private fun AskPane(learn: LearnCopy, interfaceLanguage: InterfaceLanguage, plan: PlanState, planViewModel: PlanViewModel, follow: (LinkTarget) -> Unit, onRebuilt: () -> Unit) {
+private fun AskPane(
+    learn: LearnCopy,
+    interfaceLanguage: InterfaceLanguage,
+    plan: PlanState,
+    planViewModel: PlanViewModel,
+    follow: (LinkTarget) -> Unit,
+    opening: AskOpening?,
+    onOpened: () -> Unit,
+    onRebuilt: () -> Unit,
+) {
     val ready = plan as? PlanState.Ready
     if (ready == null) {
         Page { PlanUnread(learn, planViewModel::refresh) }
@@ -207,21 +232,20 @@ private fun AskPane(learn: LearnCopy, interfaceLanguage: InterfaceLanguage, plan
     val views: LearnerViews = viewModel()
     val turn by ask.turnState.collectAsStateWithLifecycle()
     LaunchedEffect(turn.rebuilt) { if (turn.rebuilt != null) onRebuilt() }
-    AskTab(learn, interfaceLanguage.tag, views, ask, ready, planViewModel, follow)
+    AskTab(learn, interfaceLanguage.tag, views, ask, ready, planViewModel, follow, opening, onOpened)
 }
 
 @Composable
-private fun VoiceLessonsSection(copy: AppCopy, appLanguage: AppLanguage, profile: LearnerProfile, openVoiceLesson: (String?) -> Unit) {
+private fun VoiceSection(copy: AppCopy, learn: LearnCopy, appLanguage: AppLanguage, profile: LearnerProfile, openVoiceLesson: (String?) -> Unit) {
     val homeViewModel: HomeCatalogueViewModel = viewModel(key = "home-catalogue")
     val catalogue by homeViewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(appLanguage, profile.schoolClass) { homeViewModel.open(appLanguage, profile.schoolClass) }
-    val teacher = Teacher.forClass(profile.schoolClass).first()
-    VoiceLessons(
+    VoicePage(
+        words = learn.voice,
         copy = copy,
+        teacher = Teacher.forClass(profile.schoolClass).first(),
+        language = languageNativeName(appLanguage.code),
         state = catalogue,
-        teacherName = teacher.name,
-        teacherInitial = teacher.initial,
-        language = appLanguage.displayName,
         onStartLesson = { openVoiceLesson(null) },
         onOpenLesson = { planId -> openVoiceLesson(planId) },
         onRetry = { homeViewModel.open(appLanguage, profile.schoolClass) },

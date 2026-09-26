@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,15 +27,18 @@ data class AccountMenu(
     val onSignOut: () -> Unit,
 )
 
-/** graspy's mark and name, over every tab. */
+/** graspy's mark and name over every tab, as the web's top bar shows them on a phone. */
 @Composable
 fun GraspyHeader() {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = space(4), vertical = space(2.5)),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(space(2)),
-    ) {
-        Icon(painterResource(R.drawable.ic_sprout), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(space(6)))
-        Text(text = "graspy", style = MaterialTheme.typography.headlineSmall, color = GraspyColor.Accent)
+    Column(Modifier.fillMaxWidth().background(GraspyColor.Surface).statusBarsPadding()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = space(4), vertical = space(3)),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(space(2)),
+        ) {
+            Icon(painterResource(R.drawable.ic_sprout), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(space(7)))
+            Image(painterResource(R.drawable.wordmark), contentDescription = "graspy", modifier = Modifier.height(space(5)))
+        }
+        HorizontalDivider(color = GraspyColor.Line)
     }
 }
