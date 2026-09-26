@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,23 +23,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.latentic.graspy.ui.GraspyColor
+import com.latentic.graspy.ui.GraspyHeader
 import com.latentic.graspy.ui.tapping
 import com.latentic.graspy.ui.space
 
-/** Signing in, choosing a learner and managing learners, in the frame onboarding uses. */
+/** Choosing a learner and managing learners, under the header onboarding and the rest of the app have. */
 @Composable
 fun AccountFrame(content: @Composable ColumnScope.() -> Unit) {
     Surface(Modifier.fillMaxSize(), color = GraspyColor.Canvas) {
-        Column(
-            Modifier
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = space(6), vertical = space(8)),
-            verticalArrangement = Arrangement.spacedBy(space(6)),
-            content = content,
-        )
+        Column {
+            GraspyHeader()
+            Column(
+                Modifier
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = space(6), vertical = space(8)),
+                verticalArrangement = Arrangement.spacedBy(space(6)),
+                content = content,
+            )
+        }
     }
 }
 
