@@ -2,7 +2,7 @@
 
 ## Set up
 
-Needs Node 24.13.0, as CI uses, and [uv](https://docs.astral.sh/uv/). Its npm, 11.6.2 (`packageManager` in package.json), leaves `package-lock.json` as it is; other npm versions rewrite it. uv installs Python 3.14, the Workers runtime's version.
+Needs Node 24, as CI uses, and [uv](https://docs.astral.sh/uv/). uv installs Python 3.14, the Workers runtime's version.
 
 ```bash
 npm install
