@@ -120,7 +120,7 @@ class OfflineLessonsTest {
 
         lessons.openOrCopy(fractions)
 
-        assertEquals(emptyList<CopiedTopic>(), copies.copied("uid/ada"))
+        assertEquals(emptyList<CopiedTopic>(), copies.topics("uid/ada"))
     }
 
     @Test
@@ -131,11 +131,11 @@ class OfflineLessonsTest {
         server.opened.clear()
         now = 2
 
-        copying(until = { server.viewsKept == 1 && copies.copied("uid/ada") == listOf(fractions.copied) }) {
+        copying(until = { server.viewsKept == 1 && copies.topics("uid/ada") == listOf(fractions.copied) }) {
             lessons.copyReady(ready(1 to "Fractions", 1 to "Renamed"))
         }
 
-        assertEquals(listOf(fractions.copied), copies.copied("uid/ada"))
+        assertEquals(listOf(fractions.copied), copies.topics("uid/ada"))
         assertEquals(listOf("Fractions"), server.opened.map { it.topic })
         assertEquals(1, server.viewsKept)
     }
@@ -144,7 +144,7 @@ class OfflineLessonsTest {
     fun `the copy run asks only for lessons already kept, never starting one, and keeps what comes back whole`() = runBlocking {
         server.answers = lessonResult("ready")
 
-        copying(until = { copies.copied("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
+        copying(until = { copies.topics("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
 
         assertEquals(listOf("lesson_progress"), server.called)
         server.reachable = false
@@ -158,7 +158,7 @@ class OfflineLessonsTest {
     @Test
     fun `a run with the same record asks nothing of lessons already copied`() = runBlocking {
         server.answers = lessonResult("ready")
-        copying(until = { copies.copied("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
+        copying(until = { copies.topics("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
         server.called.clear()
 
         copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions")) }
@@ -175,6 +175,29 @@ class OfflineLessonsTest {
         copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions")) }
 
         assertEquals(emptyList<String>(), server.called)
+    }
+
+    @Test
+    fun `a topic whose lesson the server no longer had is asked for again once the record names a new one`() = runBlocking {
+        server.answers = lessonResult("failed", whole = false)
+        copying(until = { server.called.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
+        server.called.clear()
+
+        copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions", made = 2)) }
+
+        assertEquals(listOf("lesson_progress"), server.called)
+    }
+
+    @Test
+    fun `a copy is fetched again once the record names a new lesson for its topic`() = runBlocking {
+        server.answers = lessonResult("ready")
+        copying(until = { copies.topics("uid/ada") == listOf(fractions.copied) }) { lessons.copyReady(ready(1 to "Fractions")) }
+        server.answers = lessonResult("ready", title = "Fractions, made again")
+
+        copying(until = { server.viewsKept == 2 }) { lessons.copyReady(ready(1 to "Fractions", made = 2)) }
+
+        server.reachable = false
+        assertEquals(lessonResult("ready", title = "Fractions, made again"), lessons.openOrCopy(fractions).toolResult)
     }
 
     @Test
@@ -208,7 +231,7 @@ class OfflineLessonsTest {
         copying(until = { server.viewsKept == 1 }) { lessons.copyReady(learntWithoutALesson) }
 
         assertEquals(emptyList<String>(), server.called)
-        assertEquals(emptyList<CopiedTopic>(), copies.copied("uid/ada"))
+        assertEquals(emptyList<CopiedTopic>(), copies.topics("uid/ada"))
     }
 
     @Test
@@ -217,7 +240,7 @@ class OfflineLessonsTest {
 
         copying(until = { server.opened.size == 1 }) { lessons.copyReady(ready(1 to "Fractions")) }
 
-        assertEquals(emptyList<CopiedTopic>(), copies.copied("uid/ada"))
+        assertEquals(emptyList<CopiedTopic>(), copies.topics("uid/ada"))
     }
 
     @Test
@@ -241,9 +264,9 @@ class OfflineLessonsTest {
         lessons.openOrCopy(fractions)
         now = 300
 
-        copying(until = { copies.copied("uid/ada") == listOf(decimals.copied) }) { lessons.copyReady(ready(2 to "Decimals")) }
+        copying(until = { copies.topics("uid/ada") == listOf(decimals.copied) }) { lessons.copyReady(ready(2 to "Decimals")) }
 
-        assertEquals(listOf(decimals.copied), copies.copied("uid/ada"))
+        assertEquals(listOf(decimals.copied), copies.topics("uid/ada"))
     }
 
     @Test
@@ -253,7 +276,17 @@ class OfflineLessonsTest {
 
         copying(until = { server.opened.size == 2 }) { lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals")) }
 
-        assertEquals(listOf(decimals.copied), copies.copied("uid/ada"))
+        assertEquals(listOf(decimals.copied), copies.topics("uid/ada"))
+    }
+
+    @Test
+    fun `a connection lost mid-run ends the run`() = runBlocking {
+        server.answers = lessonResult("ready")
+        server.lostAt += "Fractions"
+
+        copying(until = { server.opened.size == 1 }) { lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals")) }
+
+        assertEquals(listOf("Fractions"), server.opened.map { it.topic })
     }
 
     @Test
@@ -268,18 +301,18 @@ class OfflineLessonsTest {
             lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals"))
             delay(SETTLE_MS)
             release.complete(Unit)
-            eventually { copies.copied("uid/ada").size == 2 }
+            eventually { copies.topics("uid/ada").size == 2 }
             lessons.copyReady(ready(1 to "Fractions", 2 to "Decimals"))
         }
 
         assertEquals(1, server.mostAtOnce)
-        assertEquals(setOf(fractions.copied, decimals.copied), copies.copied("uid/ada").toSet())
+        assertEquals(setOf(fractions.copied, decimals.copied), copies.topics("uid/ada").toSet())
     }
 
-    /** The record as the server gives it now, with a lesson made for each of [topics]. */
-    private fun ready(vararg topics: Pair<Int, String>) = RecordRead(
+    /** The record as the server gives it now, with a lesson made for each of [topics], the [made]th for it. */
+    private fun ready(vararg topics: Pair<Int, String>, made: Int = 1) = RecordRead(
         PLAN,
-        LearnerRecord(topics = topics.map { (index, name) -> TopicMark("mathematics", index, name, lessonId = "lesson-$index-$name") }),
+        LearnerRecord(topics = topics.map { (index, name) -> TopicMark("mathematics", index, name, lessonId = "lesson-$index-$name-$made") }),
         askedAt = now,
     )
 

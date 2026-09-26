@@ -1,17 +1,21 @@
 package com.latentic.graspy.lesson
 
+import android.util.Log
 import com.latentic.graspy.collection.outbox.apiJson
 import com.latentic.graspy.mcp.ViewCard
 import com.latentic.graspy.mcp.bestEffort
 import com.latentic.graspy.mcp.isUnreachable
 import com.latentic.graspy.mcp.string
+import com.latentic.graspy.plan.LearnerPlan
 import com.latentic.graspy.plan.LessonTarget
 import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.plan.TopicMarks
 import com.latentic.graspy.plan.lessonTarget
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -60,10 +64,11 @@ class OfflineLessons(
     private val asked = Channel<RecordRead>(Channel.CONFLATED)
 
     /**
-     * Topics whose lesson the server no longer has though the record names it (lessons are kept for a time),
-     * with nothing making it: it answers the same until the learner opens the topic, so it is not asked again.
+     * Lessons the server no longer has though the record names them (lessons are kept for a time), with nothing
+     * making them: it answers the same until the learner opens the topic or the record names a new lesson, so
+     * they are not asked for again.
      */
-    private val gone = ConcurrentHashMap.newKeySet<CopiedTopic>()
+    private val gone = ConcurrentHashMap.newKeySet<CopiedLesson>()
 
     /** [attempt] goes up only when the learner retries after a failure. */
     suspend fun openOrCopy(target: LessonTarget, attempt: Int = 0): ViewCard {
@@ -74,7 +79,7 @@ class OfflineLessons(
         } catch (failure: Exception) {
             return standIn(target, failure)
         }
-        gone -= target.copied
+        gone.removeAll { it.topic == target.copied }
         if (card.toolResult.isWhole()) keep(target, card)
         return card
     }
@@ -102,28 +107,43 @@ class OfflineLessons(
 
     /** Runs what [copyReady] asks for, one run at a time, for as long as the calling scope lives. */
     suspend fun copyWhenAsked() {
-        for (read in asked) copyAll(read)
+        for (read in asked) bestEffort(TAG, "Copying the ready lessons") { copyAll(read) }
     }
 
     /**
-     * Copies no longer ready go and missing ones are opened and kept, each on its own: one failing stops none.
-     * A copy kept since the record was asked for stays, since the record cannot know of it.
+     * Copies no longer ready go, and missing ones or ones holding another lesson than the record names are
+     * opened and kept. A copy kept since the record was asked for stays, since the record cannot know of it.
      */
     private suspend fun copyAll(read: RecordRead) {
         val (plan, record) = read
         bestEffort(TAG, "Keeping the lesson views") { server.keepViews() }
-        val wanted = record.topics.filter { it.lessonId != null }.map { CopiedTopic(plan.planId, it.subjectSlug, it.topicIndex, it.topic) }
+        val wanted = record.topics.mapNotNull { mark ->
+            mark.lessonId?.let { CopiedLesson(CopiedTopic(plan.planId, mark.subjectSlug, mark.topicIndex, mark.topic), it) }
+        }
         val copied = bestEffort(TAG, "Reading the lesson copies") { copies.copied(ownerId) } ?: return
-        bestEffort(TAG, "Dropping lessons no longer ready") { copies.dropAll(ownerId, copied - wanted.toSet(), read.askedAt) }
+        val stale = copied.map { it.topic } - wanted.map { it.topic }.toSet()
+        bestEffort(TAG, "Dropping lessons no longer ready") { copies.dropAll(ownerId, stale, read.askedAt) }
         val marks = TopicMarks(record)
-        for (topic in wanted - copied.toSet() - gone) {
-            val subject = plan.subject(topic.subjectSlug) ?: continue
-            val target = lessonTarget(plan, subject, topic.topicIndex, marks)?.takeIf { it.topic == topic.topic } ?: continue
-            val card = bestEffort(TAG, "Copying the lesson on ${target.topic}") { keptLesson(target) } ?: continue
-            when {
-                card.toolResult.isWhole() -> keep(target, card)
-                card.toolResult.status() == FAILED -> gone += topic
-            }
+        for (lesson in wanted - copied.toSet() - gone) copyOne(plan, marks, lesson)
+    }
+
+    /** A lesson that fails is skipped; a server that cannot be reached ends the run, as on the web. */
+    private suspend fun copyOne(plan: LearnerPlan, marks: TopicMarks, lesson: CopiedLesson) {
+        val topic = lesson.topic
+        val subject = plan.subject(topic.subjectSlug) ?: return
+        val target = lessonTarget(plan, subject, topic.topicIndex, marks)?.takeIf { it.topic == topic.topic } ?: return
+        val card = try {
+            keptLesson(target)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            if (failure.isUnreachable()) throw failure
+            Log.w(TAG, "Copying the lesson on ${target.topic} failed", failure)
+            return
+        }
+        when {
+            card.toolResult.isWhole() -> keep(target, card, lesson.lessonId)
+            card.toolResult.status() == FAILED -> gone += lesson
         }
     }
 
@@ -140,15 +160,17 @@ class OfflineLessons(
     private suspend fun standIn(target: LessonTarget, failure: Exception): ViewCard =
         (if (failure.isUnreachable()) copyOf(target) else null) ?: throw failure
 
-    private suspend fun keep(target: LessonTarget, card: ViewCard) {
+    private suspend fun keep(target: LessonTarget, card: ViewCard, lessonId: String? = null) {
+        val cardJson = withContext(Dispatchers.Default) { apiJson.encodeToString(ViewCard.serializer(), card) }
         val copy = LessonCopyEntity(
             ownerId = ownerId,
             planId = target.planId,
             subjectSlug = target.subjectSlug,
             topicIndex = target.topicIndex,
             topic = target.topic,
-            cardJson = apiJson.encodeToString(ViewCard.serializer(), card),
+            cardJson = cardJson,
             savedAt = clock(),
+            lessonId = lessonId,
         )
         bestEffort(TAG, "Keeping a copy of the lesson on ${target.topic}") {
             inOneTransaction { if (stillLearning()) copies.keep(copy) }
@@ -157,7 +179,7 @@ class OfflineLessons(
 
     private suspend fun copyOf(target: LessonTarget): ViewCard? = bestEffort(TAG, "Reading the copy of the lesson on ${target.topic}") {
         with(target.copied) { copies.card(ownerId, planId, subjectSlug, topicIndex, topic) }
-            ?.let { apiJson.decodeFromString(ViewCard.serializer(), it) }
+            ?.let { withContext(Dispatchers.Default) { apiJson.decodeFromString(ViewCard.serializer(), it) } }
     }
 }
 

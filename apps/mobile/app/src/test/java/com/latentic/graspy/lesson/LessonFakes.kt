@@ -35,12 +35,12 @@ val PLAN = LearnerPlan(
 
 fun topic(index: Int): LessonTarget = requireNotNull(lessonTarget(PLAN, MATHS, index, TopicMarks(LearnerRecord())))
 
-fun lessonResult(status: String, whole: Boolean = status == "ready") = buildJsonObject {
+fun lessonResult(status: String, whole: Boolean = status == "ready", title: String = "Fractions") = buildJsonObject {
     put("content", JsonArray(emptyList()))
     putJsonObject("structuredContent") {
         put("status", status)
         put("whole", whole)
-        putJsonObject("lesson") { put("title", "Fractions") }
+        putJsonObject("lesson") { put("title", title) }
     }
 }
 
@@ -52,7 +52,7 @@ suspend fun eventually(condition: suspend () -> Boolean) = withTimeout(5_000) {
     while (!condition()) delay(5)
 }
 
-/** A lesson server that records the tools asked of it, and can be held, refuse, or be out of reach. */
+/** A lesson server that records the tools asked of it, and can be held, refuse, or be out of reach, or lost mid-run. */
 class FakeLessonServer : LessonServer {
     var reachable = true
     var refuses = false
@@ -61,6 +61,7 @@ class FakeLessonServer : LessonServer {
     var answers: JsonObject = JsonObject(emptyMap())
     var holdUntil: CompletableDeferred<Unit>? = null
     val failsFor = mutableSetOf<String>()
+    val lostAt = mutableSetOf<String>()
     val called = mutableListOf<String>()
     val opened = mutableListOf<LessonTarget>()
     var viewsKept = 0
@@ -87,7 +88,10 @@ class FakeLessonServer : LessonServer {
         viewsKept += 1
     }
 
-    /** A lesson asked for: counted, held while [holdUntil] is open, and refused for a topic in [failsFor]. */
+    /**
+     * A lesson asked for: counted, held while [holdUntil] is open, refused for a topic in [failsFor], and out of
+     * reach for one in [lostAt].
+     */
     private suspend fun asked(name: String, arguments: JsonObject) {
         answerable()
         called += name
@@ -101,6 +105,7 @@ class FakeLessonServer : LessonServer {
         }
         opened += target
         if (target.topic in failsFor) throw McpRefusal("${target.topic} was refused")
+        if (target.topic in lostAt) throw IOException("the connection dropped")
     }
 
     private fun answerable() {
@@ -122,10 +127,12 @@ class FakeLessonCopies : LessonCopyDao {
     override suspend fun card(ownerId: String, planId: String, subjectSlug: String, topicIndex: Int, topic: String) =
         rows[ownerId to CopiedTopic(planId, subjectSlug, topicIndex, topic)]?.cardJson
 
-    override suspend fun copied(ownerId: String) = rows.keys.filter { it.first == ownerId }.map { it.second }
+    override suspend fun copied(ownerId: String) = rows.filterKeys { it.first == ownerId }.map { (key, row) -> CopiedLesson(key.second, row.lessonId) }
 
     override suspend fun drop(ownerId: String, planId: String, subjectSlug: String, topicIndex: Int, topic: String, savedBefore: Long) {
         val key = ownerId to CopiedTopic(planId, subjectSlug, topicIndex, topic)
         if ((rows[key]?.savedAt ?: return) < savedBefore) rows.remove(key)
     }
 }
+
+suspend fun LessonCopyDao.topics(ownerId: String): List<CopiedTopic> = copied(ownerId).map { it.topic }

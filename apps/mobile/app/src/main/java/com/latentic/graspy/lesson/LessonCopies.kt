@@ -1,6 +1,7 @@
 package com.latentic.graspy.lesson
 
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -13,7 +14,13 @@ data class CopiedTopic(val planId: String, val subjectSlug: String, val topicInd
 
 val LessonTarget.copied: CopiedTopic get() = CopiedTopic(planId, subjectSlug, topicIndex, topic)
 
-/** The lesson's view card as the server last gave it whole, to open with no connection. */
+/** The lesson a topic's copy holds, by the record's lessonId; null when it is not known. */
+data class CopiedLesson(@Embedded val topic: CopiedTopic, val lessonId: String?)
+
+/**
+ * The lesson's view card as the server last gave it whole, to open with no connection. The view's result
+ * does not name its lesson, so [lessonId] is known only for a copy the copy run made from the record.
+ */
 @Entity(tableName = "lesson_copies", primaryKeys = ["ownerId", "planId", "subjectSlug", "topicIndex", "topic"])
 data class LessonCopyEntity(
     val ownerId: String,
@@ -23,6 +30,7 @@ data class LessonCopyEntity(
     val topic: String,
     val cardJson: String,
     val savedAt: Long,
+    val lessonId: String? = null,
 )
 
 @Dao
@@ -36,8 +44,8 @@ interface LessonCopyDao {
     )
     suspend fun card(ownerId: String, planId: String, subjectSlug: String, topicIndex: Int, topic: String): String?
 
-    @Query("SELECT planId, subjectSlug, topicIndex, topic FROM lesson_copies WHERE ownerId = :ownerId")
-    suspend fun copied(ownerId: String): List<CopiedTopic>
+    @Query("SELECT planId, subjectSlug, topicIndex, topic, lessonId FROM lesson_copies WHERE ownerId = :ownerId")
+    suspend fun copied(ownerId: String): List<CopiedLesson>
 
     @Query(
         """DELETE FROM lesson_copies WHERE ownerId = :ownerId AND planId = :planId
