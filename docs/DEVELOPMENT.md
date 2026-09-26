@@ -49,11 +49,12 @@ In development, `apps/web/.env.development` points sign-in at the emulator (`VIT
 ## Test
 
 ```bash
-npm test && npm run lint                                # every npm package
-cd apps/web && npm run test:e2e                         # Cypress, with npm run dev and the Auth emulator running
-cd apps/mobile && ./gradlew testDebugUnitTest lintDebug # Android, set up as apps/mobile/README.md says
-cd apps/server && uv run pytest -m integration          # real model calls, spends tokens
-cd apps/server && uv run mutmut run                     # finds tests that check nothing
+npm test && npm run lint                                  # every npm package
+cd apps/web && npm run test:e2e                           # Cypress, with npm run dev and the Auth emulator running
+cd apps/mobile && ./gradlew testDebugUnitTest lintDebug   # Android, set up as apps/mobile/README.md says
+cd apps/teacher && npm run test:rust && npm run lint:rust # the teacher app's Rust, and clippy
+cd apps/server && uv run pytest -m integration            # real model calls, spends tokens
+cd apps/server && uv run mutmut run                       # finds tests that check nothing
 ```
 
 - Changes reach `main` through a pull request. CI (`.github/workflows/ci.yml`) runs the server, web, Android and teacher suites and the teacher's clippy, and a failing job blocks the merge.
