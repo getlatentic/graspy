@@ -54,8 +54,8 @@ fun PracticeLessonScreen(
     languageSelection: AppLanguageSelection,
     schoolClass: SchoolClass,
     teacher: Teacher = Teacher.AUNTY_CHIOMA,
-    collectionViewModel: CollectionViewModel = viewModel(key = "practice"),
-    lessonViewModel: PracticeLessonViewModel = viewModel(key = "practice-lesson"),
+    collectionViewModel: CollectionViewModel = viewModel(key = "practice", factory = CollectionViewModel.Factory),
+    lessonViewModel: PracticeLessonViewModel = viewModel(key = "practice-lesson", factory = PracticeLessonViewModel.Factory),
     onBack: (() -> Unit)? = null,
 ) {
     val classroom by lessonViewModel.classroom.collectAsStateWithLifecycle()

@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import com.latentic.graspy.account.LEARNER_KEY
 
 /**
  * The learner in use's view models: their lesson, their home screen, their recordings. They outlive
@@ -41,17 +42,21 @@ class LearnerViewModels : ViewModel() {
 @Composable
 fun LearnerScope(learnerKey: String, viewModels: LearnerViewModels, content: @Composable () -> Unit) {
     val application = LocalContext.current.applicationContext as Application
-    val owner = remember(learnerKey) { LearnerOwner(viewModels.storeFor(learnerKey), application) }
+    val owner = remember(learnerKey) { LearnerOwner(viewModels.storeFor(learnerKey), application, learnerKey) }
     CompositionLocalProvider(LocalViewModelStoreOwner provides owner, content = content)
 }
 
 private class LearnerOwner(
     override val viewModelStore: ViewModelStore,
     application: Application,
+    learnerKey: String,
 ) : ViewModelStoreOwner, HasDefaultViewModelProviderFactory {
     override val defaultViewModelProviderFactory: ViewModelProvider.Factory =
         ViewModelProvider.AndroidViewModelFactory.getInstance(application)
 
     override val defaultViewModelCreationExtras: CreationExtras =
-        MutableCreationExtras().apply { set(ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY, application) }
+        MutableCreationExtras().apply {
+            set(ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY, application)
+            set(LEARNER_KEY, learnerKey)
+        }
 }

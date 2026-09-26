@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
+import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.SchoolClass
@@ -59,7 +60,7 @@ private data class OpenCatalogue(
 )
 
 /** Home reads the learner's stored catalogue and asks WorkManager to bring a newer one. */
-class HomeCatalogueViewModel(application: Application) : AndroidViewModel(application) {
+class HomeCatalogueViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
     private val dao = AppGraph.database(application).lessonCacheDao()
     private val scheduler = AppGraph.lessonRefreshScheduler(application)
     private val workManager = WorkManager.getInstance(application)
@@ -71,7 +72,6 @@ class HomeCatalogueViewModel(application: Application) : AndroidViewModel(applic
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(KEEP_ALIVE_MILLIS), CatalogueState.Loading)
 
     fun open(language: AppLanguage, schoolClass: SchoolClass) {
-        val ownerId = requireNotNull(AppGraph.account(getApplication()).learnerInUse())
         opened.value = OpenCatalogue(ownerId, schoolClass.wireValue, language)
         scheduler.refresh(LessonRefreshRequest(ownerId, schoolClass.wireValue, language))
     }
@@ -88,7 +88,9 @@ class HomeCatalogueViewModel(application: Application) : AndroidViewModel(applic
         )
     }
 
-    private companion object {
-        const val KEEP_ALIVE_MILLIS = 5_000L
+    companion object {
+        val Factory = learnerViewModelFactory(::HomeCatalogueViewModel)
+
+        private const val KEEP_ALIVE_MILLIS = 5_000L
     }
 }

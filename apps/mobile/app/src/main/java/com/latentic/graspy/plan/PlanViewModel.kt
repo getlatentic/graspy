@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.BuildConfig
 import com.latentic.graspy.account.PreferenceFiles
+import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.ask.PlanChanges
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
@@ -44,8 +45,8 @@ data class Making(val plan: LearnerPlan?, val failed: Boolean = false)
  * The learner's shared plan and their record on it, as the web keeps them: read from the account, kept on
  * the phone for when there is no connection, and changed here the way the web changes it.
  */
-class PlanViewModel(application: Application) : AndroidViewModel(application), PlanChanges {
-    private val calls = AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse()))
+class PlanViewModel(application: Application, ownerId: String) : AndroidViewModel(application), PlanChanges {
+    private val calls = AppGraph.callsFor(application, ownerId)
     private val api = retrofit(calls).create(PlanApi::class.java)
     private val maker = PlanMaker(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::curriculum)
     private val kept = application.getSharedPreferences(PreferenceFiles.PLAN, 0)
@@ -192,9 +193,11 @@ class PlanViewModel(application: Application) : AndroidViewModel(application), P
         Result.failure(error)
     }
 
-    private companion object {
-        const val TAG = "GraspyPlan"
-        const val PLAN_KEY = "plan"
-        const val RECORD_KEY = "record"
+    companion object {
+        val Factory = learnerViewModelFactory(::PlanViewModel)
+
+        private const val TAG = "GraspyPlan"
+        private const val PLAN_KEY = "plan"
+        private const val RECORD_KEY = "record"
     }
 }

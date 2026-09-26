@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.latentic.graspy.account.PreferenceFiles
+import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.LessonEventDto
 import com.latentic.graspy.collection.VoiceRefusal
 import com.latentic.graspy.collection.outbox.AppGraph
@@ -21,9 +22,9 @@ import com.latentic.graspy.sync.refreshState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -41,7 +42,7 @@ private data class Learner(
 )
 
 /** The classroom reads the step stored on the phone; WorkManager brings a newer one behind it. */
-class PracticeLessonViewModel(application: Application) : AndroidViewModel(application) {
+class PracticeLessonViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
     val teacherVoice = TeacherVoice(application)
     private val mutableClassroom = MutableStateFlow(ClassroomState())
     val classroom = mutableClassroom.asStateFlow()
@@ -71,7 +72,6 @@ class PracticeLessonViewModel(application: Application) : AndroidViewModel(appli
     private var arrivingState: ClassroomState? = null
 
     fun prepare(language: AppLanguage, schoolClass: SchoolClass) {
-        val ownerId = requireNotNull(AppGraph.account(getApplication()).learnerInUse())
         val previous = learner
         learner = Learner(ownerId, schoolClass, language)
         if (previous?.ownerId == ownerId && previous.schoolClass == schoolClass) {
@@ -409,7 +409,9 @@ class PracticeLessonViewModel(application: Application) : AndroidViewModel(appli
         super.onCleared()
     }
 
-    private companion object {
-        const val TAG = "GraspyLesson"
+    companion object {
+        val Factory = learnerViewModelFactory(::PracticeLessonViewModel)
+
+        private const val TAG = "GraspyLesson"
     }
 }

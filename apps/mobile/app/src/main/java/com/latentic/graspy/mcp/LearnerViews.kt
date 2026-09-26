@@ -3,6 +3,7 @@ package com.latentic.graspy.mcp
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.latentic.graspy.account.learnerViewModelFactory
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.sync.networkReach
 import kotlinx.coroutines.flow.filter
@@ -14,8 +15,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
  * The learner's MCP connection, kept while they learn here so the server's catalogue is read once, and the
  * view calls kept while there was no connection, sent whenever there is one.
  */
-class LearnerViews(application: Application) : AndroidViewModel(application), ViewServer {
-    private val ownerId = requireNotNull(AppGraph.account(application).learnerInUse())
+class LearnerViews(application: Application, private val ownerId: String) : AndroidViewModel(application), ViewServer {
     private val mcp = McpClient(AppGraph.callsFor(application, ownerId), "$API_ORIGIN/mcp".toHttpUrl())
     private val outbox = McpOutbox(AppGraph.database(application).keptCallDao(), ownerId, mcp::callTool)
 
@@ -28,4 +28,8 @@ class LearnerViews(application: Application) : AndroidViewModel(application), Vi
     override suspend fun call(name: String, arguments: JsonObject): JsonObject = outbox.callOrKeep(name, arguments)
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = mcp.openToolView(name, arguments)
+
+    companion object {
+        val Factory = learnerViewModelFactory(::LearnerViews)
+    }
 }

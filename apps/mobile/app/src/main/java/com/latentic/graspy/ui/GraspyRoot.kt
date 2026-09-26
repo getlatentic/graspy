@@ -42,7 +42,7 @@ fun GraspyRoot(
     menu: AccountMenu,
     onReplan: () -> Unit,
 ) {
-    val lessonViewModel: PracticeLessonViewModel = viewModel(key = "practice-lesson")
+    val lessonViewModel: PracticeLessonViewModel = viewModel(key = "practice-lesson", factory = PracticeLessonViewModel.Factory)
     val chatOpen by lessonViewModel.chatOpen.collectAsStateWithLifecycle()
     LaunchedEffect(appLanguage, voice?.schoolClass) { voice?.let { lessonViewModel.prepare(appLanguage, it.schoolClass) } }
     val voiceNote = rememberVoiceNote(account)

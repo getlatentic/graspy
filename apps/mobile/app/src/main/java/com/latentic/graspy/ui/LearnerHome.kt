@@ -49,7 +49,7 @@ fun LearnerHome(
     menu: AccountMenu,
     onWords: (InterfaceLanguage) -> Unit,
 ) {
-    val planViewModel: PlanViewModel = viewModel()
+    val planViewModel: PlanViewModel = viewModel(factory = PlanViewModel.Factory)
     val plan by planViewModel.state.collectAsStateWithLifecycle()
     val form: DetailsFormViewModel = viewModel(factory = DetailsFormViewModel.Factory)
     val setup: PlanSetupViewModel = viewModel(factory = PlanSetupViewModel.Factory)

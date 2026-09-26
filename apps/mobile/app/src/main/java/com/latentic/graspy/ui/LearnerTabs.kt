@@ -79,9 +79,9 @@ internal fun LearnerTabs(
     onReplan: () -> Unit,
     openVoiceLesson: (String?) -> Unit,
 ) {
-    val planViewModel: PlanViewModel = viewModel()
+    val planViewModel: PlanViewModel = viewModel(factory = PlanViewModel.Factory)
     val plan by planViewModel.state.collectAsStateWithLifecycle()
-    val ask: AskViewModel = viewModel()
+    val ask: AskViewModel = viewModel(factory = AskViewModel.Factory)
     val turn by ask.turnState.collectAsStateWithLifecycle()
     val unread by ask.unread.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(LearnTab.HOME) }
@@ -189,7 +189,7 @@ private fun OpenPlace(learn: LearnCopy, interfaceLanguage: InterfaceLanguage, re
     if (target == null) {
         SubjectTopics(learn, ready, subject, onBack = { onPlace(null) }, onOpenTopic = { onPlace(place.copy(topicIndex = it)) })
     } else {
-        val views: LearnerViews = viewModel()
+        val views: LearnerViews = viewModel(factory = LearnerViews.Factory)
         TopicLesson(learn, interfaceLanguage.tag, views, target, onBack = { onPlace(place.back()) }, onLearnt = onLearnt)
     }
 }
@@ -233,7 +233,7 @@ private fun AskPane(
         Page { PlanUnread(learn, planViewModel::refresh) }
         return
     }
-    val views: LearnerViews = viewModel()
+    val views: LearnerViews = viewModel(factory = LearnerViews.Factory)
     val turn by ask.turnState.collectAsStateWithLifecycle()
     LaunchedEffect(turn.rebuilt) { if (turn.rebuilt != null) onRebuilt() }
     AskTab(learn, interfaceLanguage.tag, views, ask, ready, planViewModel, follow, opening, onOpened)
@@ -241,7 +241,7 @@ private fun AskPane(
 
 @Composable
 private fun VoiceSection(copy: AppCopy, learn: LearnCopy, appLanguage: AppLanguage, profile: LearnerProfile, openVoiceLesson: (String?) -> Unit) {
-    val homeViewModel: HomeCatalogueViewModel = viewModel(key = "home-catalogue")
+    val homeViewModel: HomeCatalogueViewModel = viewModel(key = "home-catalogue", factory = HomeCatalogueViewModel.Factory)
     val catalogue by homeViewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(appLanguage, profile.schoolClass) { homeViewModel.open(appLanguage, profile.schoolClass) }
     VoicePage(
