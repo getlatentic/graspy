@@ -8,7 +8,11 @@ import {
   lessonCopy,
   type CopiedLesson,
 } from "@/lib/lesson-copies";
-import type { TopicMark, TopicRef } from "@/lib/learner-record";
+import {
+  ON_THIS_DEVICE,
+  type TopicMark,
+  type TopicRef,
+} from "@/lib/learner-record";
 import { isUnreachable } from "@/lib/mcp/outbox";
 import { callAppTool } from "@/lib/mcp/server";
 import {
@@ -45,6 +49,7 @@ export async function openLessonOrCopy(
 ): Promise<TutorCard> {
   try {
     const card = await openLesson(target, attempt);
+    gone.delete(topicKey(target));
     await keepIfWhole(target, card);
     return card;
   } catch (error) {
@@ -74,10 +79,31 @@ const sameTopic = (a: TopicRef, b: TopicRef) =>
   a.topicIndex === b.topicIndex &&
   a.topic === b.topic;
 
+const topicKey = (ref: TopicRef) =>
+  JSON.stringify([ref.planId, ref.subjectSlug, ref.topicIndex, ref.topic]);
+
+// Topics whose lesson the server no longer has though the record names it, by the lessonId named, with
+// nothing making it: it answers the same until the learner opens the topic, so this tab does not ask again.
+const gone = new Map<string, string | null>();
+
+function needsCopy(mark: TopicMark, copied: CopiedLesson[]): boolean {
+  // A mark made on this device names no lesson to compare: the copy was kept as the lesson opened here,
+  // and the server's record names the lesson once read.
+  if (mark.lessonId === ON_THIS_DEVICE) return false;
+  const lessonId = mark.lessonId ?? null;
+  if (gone.get(topicKey(mark)) === lessonId) return false;
+  return !copied.some(
+    (copy) => sameTopic(copy, mark) && copy.lessonId === lessonId,
+  );
+}
+
 // A lesson the server refuses is skipped; a server that cannot be reached ends the run.
 async function copyOne(target: LessonTarget, lessonId: string | null) {
   try {
-    await keepIfWhole(target, await keptLesson(target), lessonId);
+    const card = await keptLesson(target);
+    if (lessonStateOf(card.toolResult)?.status === "failed")
+      gone.set(topicKey(target), lessonId);
+    await keepIfWhole(target, card, lessonId);
   } catch (error) {
     if (isUnreachable(error)) throw error;
     console.warn(`Copying the lesson on ${target.topic} failed:`, error);
@@ -91,14 +117,11 @@ async function copyAll(plan: CurriculumData, ready: TopicMark[]) {
     copied.filter((copy) => !wanted.some((mark) => sameTopic(mark, copy))),
   );
   for (const mark of wanted) {
-    const lessonId = mark.lessonId ?? null;
-    const held = (copy: CopiedLesson) =>
-      sameTopic(copy, mark) && copy.lessonId === lessonId;
-    if (copied.some(held)) continue;
+    if (!needsCopy(mark, copied)) continue;
     const subject = plan.subjects.find((s) => s.slug === mark.subjectSlug);
     const target = subject && lessonTarget(plan, subject, mark.topicIndex);
     if (!target || target.topic !== mark.topic) continue;
-    await copyOne(target, lessonId);
+    await copyOne(target, mark.lessonId ?? null);
   }
 }
 
