@@ -24,7 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
@@ -73,10 +76,10 @@ internal typealias ViewFrame = @Composable (document: UiView, onShown: () -> Uni
 
 /**
  * A tool's result as its MCP Apps view, sandboxed on the API's origin, as the web shows it. [waiting] stands over
- * the view until the view has drawn its result: until then the WebView shows nothing. A view not initialised
- * after [SHOW_WITHIN_MS] of the app in the foreground, or not drawn [DRAW_WITHIN_MS] after that, could not be
- * shown, and [retry] stands under the notice. Time in the background does not count, since a view cannot draw
- * there.
+ * the view until the view has drawn its result: until then the WebView shows nothing, takes no touch, and has
+ * nothing TalkBack reads. A view not initialised after [SHOW_WITHIN_MS] of the app in the foreground, or not drawn
+ * [DRAW_WITHIN_MS] after that, could not be shown, and [retry] stands under the notice. Time in the background
+ * does not count, since a view cannot draw there.
  */
 @Composable
 fun AppView(
@@ -127,12 +130,14 @@ internal fun AppView(
     val drawn = progress == ViewProgress.Drawn
     Box(modifier.fillMaxWidth()) {
         view?.let { document ->
-            frame(
-                document,
-                { progress = maxOf(progress, ViewProgress.Shown) },
-                { progress = ViewProgress.Drawn },
-                { failed = true },
-            )
+            Box(if (drawn) Modifier else Unreachable) {
+                frame(
+                    document,
+                    { progress = maxOf(progress, ViewProgress.Shown) },
+                    { progress = ViewProgress.Drawn },
+                    { failed = true },
+                )
+            }
         }
         if (!drawn) waiting()
     }
@@ -149,6 +154,15 @@ private suspend fun Lifecycle.inFrontWithin(ms: Long, done: () -> Boolean): Bool
     }
     return true
 }
+
+// The waiting card lets touches through, and the view must go on loading under it: the frame refuses them.
+private val Unreachable = Modifier
+    .clearAndSetSemantics {}
+    .pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+        }
+    }
 
 @Composable
 private fun HostedFrame(

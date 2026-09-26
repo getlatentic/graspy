@@ -1,16 +1,27 @@
 package com.latentic.graspy.mcp
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.serialization.json.JsonObject
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -18,7 +29,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * A view stands behind its waiting card until it has drawn. It has twenty seconds the app is in
+ * A view stands behind its waiting card, out of reach, until it has drawn. It has twenty seconds the app is in
  * front to initialise, then twenty more to draw.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -33,6 +44,8 @@ class AppViewTest {
     }
     private var shown: (() -> Unit)? = null
     private var drawn: (() -> Unit)? = null
+    private var framesMade = 0
+    private var taps = 0
 
     @Before
     fun open() {
@@ -41,8 +54,10 @@ class AppViewTest {
         compose.setContent {
             CompositionLocalProvider(LocalLifecycleOwner provides app) {
                 AppView(card, Server, UNAVAILABLE, Modifier, waiting = { Text(WAITING) }, retry = { Text(RETRY) }, listening = true) { _, onShown, onDrawn, _ ->
+                    LaunchedEffect(Unit) { framesMade += 1 }
                     shown = onShown
                     drawn = onDrawn
+                    Box(Modifier.fillMaxWidth().height(192.dp).pointerInput(Unit) { detectTapGestures { taps += 1 } }) { Text(FRAME) }
                 }
             }
         }
@@ -62,6 +77,26 @@ class AppViewTest {
 
         compose.onNodeWithText(WAITING).assertDoesNotExist()
         compose.onNodeWithText(UNAVAILABLE).assertDoesNotExist()
+    }
+
+    @Test
+    fun `a view not yet drawn takes no touch and is hidden from TalkBack, and loads on in the same frame`() {
+        compose.onNodeWithText(FRAME).assertDoesNotExist()
+        compose.onRoot().performTouchInput { click() }
+        compose.mainClock.advanceTimeBy(1_000)
+        assertEquals(0, taps)
+
+        compose.runOnIdle {
+            shown!!()
+            drawn!!()
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+
+        compose.onNodeWithText(FRAME).assertExists()
+        compose.onRoot().performTouchInput { click() }
+        compose.mainClock.advanceTimeBy(1_000)
+        assertEquals(1, taps)
+        assertEquals(1, framesMade)
     }
 
     @Test
@@ -127,5 +162,6 @@ class AppViewTest {
         const val WAITING = "Preparing your lesson"
         const val UNAVAILABLE = "This card could not be shown."
         const val RETRY = "Try again"
+        const val FRAME = "The lesson"
     }
 }
