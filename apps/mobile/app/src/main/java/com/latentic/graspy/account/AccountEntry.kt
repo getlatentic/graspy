@@ -2,6 +2,7 @@ package com.latentic.graspy.account
 
 import android.content.Context
 import android.util.Log
+import androidx.core.content.edit
 import com.latentic.graspy.auth.FirebaseSession
 import com.latentic.graspy.auth.GoogleSignIn
 import com.latentic.graspy.auth.SignInOutcome
@@ -23,6 +24,7 @@ class AccountEntry(
     private val wipe: DeviceWipe,
 ) {
     private val signingOut = Mutex()
+    private val forgetting = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0)
 
     /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
     suspend fun signIn(): SignInOutcome {
@@ -51,11 +53,18 @@ class AccountEntry(
         // it, and then has nothing left to do.
         val signedOut = signingOut.withLock {
             if (accounts.account.value == null && firebase.userId == null) return@withLock false
+            forgetting.edit(commit = true) { putBoolean(GOOGLE_ACCOUNT, true) }
             firebase.signOut()
             wipe.wipeDevice()
             true
         }
-        if (signedOut) firebase.forgetGoogleAccount(context)
+        if (signedOut) forgetGoogleAccount()
+    }
+
+    /** Cleared only once done, so a sign-out cut short while it waits on Play services is finished at the next start. */
+    private suspend fun forgetGoogleAccount() {
+        firebase.forgetGoogleAccount(context)
+        forgetting.edit(commit = true) { remove(GOOGLE_ACCOUNT) }
     }
 
     /** Before a learner is chosen the device holds only its own learning, which stays. */
@@ -68,23 +77,28 @@ class AccountEntry(
 
     /**
      * At start. An account signed in before accounts held learners is kept, and its learning here
-     * joins the first learner chosen; an account Firebase no longer holds is signed out.
+     * joins the first learner chosen; an account Firebase no longer holds is signed out; and a
+     * sign-out that had yet to forget its Google account forgets it.
      */
     fun reconcile(scope: CoroutineScope) {
         val uid = firebase.userId
         val account = accounts.account.value
-        if (uid != null && account == null) {
-            accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
-        } else if (account != null && account.uid != uid) {
-            scope.launch {
-                try {
-                    signOut()
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (error: Exception) {
-                    Log.w(TAG, "Finishing a sign-out failed", error)
-                }
-            }
+        when {
+            uid != null && account == null -> accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
+            account != null && account.uid != uid -> scope.finish("Finishing a sign-out") { signOut() }
+            account == null && forgetting.getBoolean(GOOGLE_ACCOUNT, false) ->
+                scope.finish("Forgetting the signed-out Google account") { forgetGoogleAccount() }
+        }
+    }
+
+    /** Work at start fails into the log: the app's scope has no handler, so an error there would end the app. */
+    private fun CoroutineScope.finish(what: String, work: suspend () -> Unit) = launch {
+        try {
+            work()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Log.w(TAG, "$what failed", error)
         }
     }
 
@@ -97,5 +111,6 @@ class AccountEntry(
 
     private companion object {
         const val TAG = "GraspyAccount"
+        const val GOOGLE_ACCOUNT = "google_account"
     }
 }
