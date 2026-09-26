@@ -116,6 +116,7 @@ async def test_a_new_learner_is_offered_the_first_step_and_hears_only_that(app, 
     assert move["event_id"] == "attention"
     assert heard.status_code == 200
     assert skipped.status_code == 409
+    assert skipped.json()["code"] == "step_not_offered"
     assert env.DB.rows("SELECT owner_id, event_id FROM lesson_events") == [
         {"owner_id": ADA, "event_id": "attention"}
     ]
@@ -141,6 +142,7 @@ async def test_a_create_is_idempotent_on_its_key(app, env):
     assert first["upload_path"] == f"/api/voice/samples/{first['sample_id']}/audio"
     assert again.status_code == 200 and again.json() == first
     assert changed.status_code == 409
+    assert changed.json()["code"] == "idempotency_conflict"
     assert keyless.status_code == 400
     assert keyless.json() == {"detail": "Idempotency-Key is required"}
     assert len(env.DB.rows("SELECT id FROM samples")) == 1
@@ -311,7 +313,10 @@ async def test_a_recording_may_answer_only_a_step_the_learner_was_offered(
         )
 
     assert refused.status_code == 409
-    assert refused.json() == {"detail": "that step was not offered to this learner"}
+    assert refused.json() == {
+        "detail": "that step was not offered to this learner",
+        "code": "step_not_offered",
+    }
     assert heard == [] and env.TUTOR.calls == []
     assert env.DB.rows("SELECT * FROM tutoring_turns") == []
 

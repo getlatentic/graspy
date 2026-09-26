@@ -40,8 +40,9 @@ UPLOADED_SQL = (
 )
 
 
-def _problem(status: int, detail: str) -> JSONResponse:
-    return JSONResponse({"detail": detail}, status_code=status)
+def _problem(status: int, detail: str, code: str | None = None) -> JSONResponse:
+    body = {"detail": detail} if code is None else {"detail": detail, "code": code}
+    return JSONResponse(body, status_code=status)
 
 
 def _require_owning_event(payload) -> None:
@@ -90,7 +91,11 @@ def _created(sample_id: str, state: str) -> dict:
 
 def _again(existing: dict, fingerprint: str) -> JSONResponse:
     if existing["metadata_fingerprint"] != fingerprint:
-        return _problem(409, "idempotency key was already used with different metadata")
+        return _problem(
+            409,
+            "idempotency key was already used with different metadata",
+            "idempotency_conflict",
+        )
     return JSONResponse(_created(existing["id"], existing["state"]), status_code=200)
 
 

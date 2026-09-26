@@ -96,6 +96,8 @@ A recording's metadata needs `speaker_id`, `language_pair` (`yo-en` or `pcm-en`)
 | 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A refused sign-in is `sign_in_invalid` |
 | 403 | A device's session asked for the account's learners (`account_required`) |
 | 409 | An account session asked for a learner's record (`learner_required`), or the account holds 8 learners (`too_many_learners`) |
+
+Voice errors keep the shape the Android app was built against: `{"detail": text, "code": …}`, with the code on every `409` (`step_not_offered`, `audio_not_ready`, `unsupported_prompt`, `idempotency_conflict`) and on `no_speech` and `provider_failure`.
 | 422 | Invalid request. `detail` names the field, never the value |
 | 503 | Voice lessons outside the Worker (`voice_unavailable`) |
 | 429 | Rate limited. Wait `Retry-After` seconds |

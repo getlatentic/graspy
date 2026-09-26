@@ -42,6 +42,9 @@ from .teacher import TeacherChoiceError, TeacherModel
 
 logger = logging.getLogger(__name__)
 
+# A 409 names what it refused in `code`, since several refusals share the status.
+NOT_OFFERED = "that step was not offered to this learner"
+
 
 def _json(data, status=200):
     return JSONResponse(data, status_code=status)
@@ -167,9 +170,7 @@ async def lesson_event_heard(env, learner: str, payload: dict):
     if plan is None or not any(event.id == event_id for event in plan.events):
         return _json({"detail": "unknown plan event"}, status=400)
     if not await was_offered(env.DB, learner, plan_id, event_id):
-        return _json(
-            {"detail": "that step was not offered to this learner"}, status=409
-        )
+        return _json({"detail": NOT_OFFERED, "code": "step_not_offered"}, status=409)
     await record_event(env.DB, learner, plan.id, event_id, round(time.time() * 1000))
     return _json({"plan_id": plan.id, "event_id": event_id})
 
@@ -346,12 +347,19 @@ async def evaluate_sample(env, learner: str, sample_id: str):
     if sample is None:
         return _json({"detail": "sample was not found"}, status=404)
     if sample["state"] != "ready" or not sample.get("audio_key"):
-        return _json({"detail": "sample audio is not ready"}, status=409)
+        return _json(
+            {"detail": "sample audio is not ready", "code": "audio_not_ready"},
+            status=409,
+        )
     metadata = json.loads(sample["metadata_json"])
     activity = activity_for(metadata)
     if activity is None:
         return _json(
-            {"detail": "sample is not a supported practice prompt"}, status=409
+            {
+                "detail": "sample is not a supported practice prompt",
+                "code": "unsupported_prompt",
+            },
+            status=409,
         )
     existing = (
         await env.DB.prepare("SELECT * FROM tutoring_turns WHERE sample_id = ?1")
@@ -365,9 +373,7 @@ async def evaluate_sample(env, learner: str, sample_id: str):
             )
         return _turn_response(existing)
     if not await _answers_a_taught_step(env, learner, metadata):
-        return _json(
-            {"detail": "that step was not offered to this learner"}, status=409
-        )
+        return _json({"detail": NOT_OFFERED, "code": "step_not_offered"}, status=409)
     token = await _claim_turn(env, sample_id)
     if token is None:
         return await _current_turn(env, sample_id)
