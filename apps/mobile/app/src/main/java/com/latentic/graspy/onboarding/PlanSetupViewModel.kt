@@ -1,12 +1,9 @@
 package com.latentic.graspy.onboarding
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.latentic.graspy.BuildConfig
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.plan.GeneratedSubject
@@ -164,13 +161,8 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
         private const val STAGES = 3
         private const val STEP_MS = 1_500L
 
-        /** The subjects as the server streams them, for the learner the device learns as. */
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application = requireNotNull(this[APPLICATION_KEY])
-                val calls = AppGraph.callsFor(application, requireNotNull(AppGraph.account(application).learnerInUse()))
-                PlanSetupViewModel(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::subjects)
-            }
-        }
+        /** The subjects as the server streams them, asked as [learnerKey]. */
+        fun forLearner(application: Application, learnerKey: String) =
+            PlanSetupViewModel(PlanStreams(AppGraph.callsFor(application, learnerKey), BuildConfig.API_BASE_URL.toHttpUrl())::subjects)
     }
 }

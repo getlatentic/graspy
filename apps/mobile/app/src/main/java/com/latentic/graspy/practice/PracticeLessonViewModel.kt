@@ -21,9 +21,9 @@ import com.latentic.graspy.sync.refreshState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -35,14 +35,13 @@ private const val TURN_PAUSE_MS = 1_500L
 private const val SYNC_WAIT_MS = 4_000L
 
 private data class Learner(
-    val ownerId: String,
     val schoolClass: SchoolClass,
     val language: AppLanguage,
 )
 
 /** The classroom reads the step stored on the phone; WorkManager brings a newer one behind it. */
-class PracticeLessonViewModel(application: Application) : AndroidViewModel(application) {
-    val teacherVoice = TeacherVoice(application)
+class PracticeLessonViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
+    val teacherVoice = TeacherVoice(TeacherAudioRepository(application, AppGraph.sampleApiFor(application, ownerId)))
     private val mutableClassroom = MutableStateFlow(ClassroomState())
     val classroom = mutableClassroom.asStateFlow()
     private val mutableChatOpen = MutableStateFlow(false)
@@ -71,10 +70,9 @@ class PracticeLessonViewModel(application: Application) : AndroidViewModel(appli
     private var arrivingState: ClassroomState? = null
 
     fun prepare(language: AppLanguage, schoolClass: SchoolClass) {
-        val ownerId = requireNotNull(AppGraph.account(getApplication()).learnerInUse())
         val previous = learner
-        learner = Learner(ownerId, schoolClass, language)
-        if (previous?.ownerId == ownerId && previous.schoolClass == schoolClass) {
+        learner = Learner(schoolClass, language)
+        if (previous?.schoolClass == schoolClass) {
             render()
             return
         }
@@ -106,10 +104,10 @@ class PracticeLessonViewModel(application: Application) : AndroidViewModel(appli
 
     /** Ask WorkManager for a newer step. Repeated asks coalesce; nothing on screen waits for the answer. */
     fun refresh() {
-        val learner = learner ?: return
+        val learner = learner?.takeIf { AppGraph.account(getApplication()).learnsAs(ownerId) } ?: return
         refreshRequestedAtEpochMillis = System.currentTimeMillis()
         scheduler.refresh(
-            LessonRefreshRequest(learner.ownerId, learner.schoolClass.wireValue, learner.language, openedPlanId),
+            LessonRefreshRequest(ownerId, learner.schoolClass.wireValue, learner.language, openedPlanId),
         )
         render()
     }
@@ -273,7 +271,7 @@ class PracticeLessonViewModel(application: Application) : AndroidViewModel(appli
     private suspend fun markStepHeard(move: LessonMove) {
         val learner = requireNotNull(learner)
         try {
-            AppGraph.sampleApiFor(getApplication(), learner.ownerId)
+            AppGraph.sampleApiFor(getApplication(), ownerId)
                 .lessonEventHeard(LessonEventDto(move.planId, move.eventId, learner.schoolClass.wireValue))
             continueRequested = true
         } catch (error: HttpException) {

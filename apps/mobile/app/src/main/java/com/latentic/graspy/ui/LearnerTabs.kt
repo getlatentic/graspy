@@ -196,7 +196,7 @@ private fun OpenPlace(learn: LearnCopy, interfaceLanguage: InterfaceLanguage, re
 
 @Composable
 private fun Details(learn: LearnCopy, plan: LearnerPlan, interfaceLanguage: InterfaceLanguage, planViewModel: PlanViewModel, onBack: () -> Unit, onReplan: () -> Unit) {
-    val form: DetailsFormViewModel = viewModel(factory = DetailsFormViewModel.Factory)
+    val form: DetailsFormViewModel = viewModel()
     val current = plan.details()
     LaunchedEffect(plan.planId) { form.load(current) }
     val scope = rememberCoroutineScope()

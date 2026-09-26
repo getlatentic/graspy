@@ -34,8 +34,8 @@ import java.util.Locale
 
 /**
  * A learner's app once chosen: a plan made first if they have none, as the web's onboarding makes it, then the
- * tabs. The plan decides the rest: the app's words follow its language, and a learner in a Nigerian primary
- * class gets voice lessons in their class and the teacher's nearest language.
+ * tabs. The plan decides the rest: the app's words follow its language, and a learner in a Nigerian nursery or
+ * primary class gets voice lessons in their class and the teacher's nearest language.
  */
 @Composable
 fun LearnerHome(
@@ -51,8 +51,8 @@ fun LearnerHome(
 ) {
     val planViewModel: PlanViewModel = viewModel()
     val plan by planViewModel.state.collectAsStateWithLifecycle()
-    val form: DetailsFormViewModel = viewModel(factory = DetailsFormViewModel.Factory)
-    val setup: PlanSetupViewModel = viewModel(factory = PlanSetupViewModel.Factory)
+    val form: DetailsFormViewModel = viewModel()
+    val setup: PlanSetupViewModel = viewModel()
     val setupActive by setup.active.collectAsStateWithLifecycle()
     val ready = (plan as? PlanState.Ready)?.plan
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }
