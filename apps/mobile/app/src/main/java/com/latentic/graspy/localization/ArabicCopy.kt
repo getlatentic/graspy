@@ -9,7 +9,7 @@ internal val ARABIC_COPY = AppCopy(
     subjects = mapOf("mathematics" to "الرياضيات", "everyday" to "الحياة اليومية", "english" to "الإنجليزية", "yoruba" to "اليوروبا"),
     topics = mapOf(
         "multiplication" to "جداول الضرب", "number" to "الأعداد والعدّ",
-        "operations" to "الجمع والقسمة", "time" to "قراءة الساعة",
+        "operations" to "الجمع والتقسيم", "time" to "قراءة الساعة",
         "money" to "النايرا والكوبو", "shapes" to "الأشكال", "fractions" to "الكسور",
         "alphabet" to "الحروف والأصوات",
     ),
@@ -136,10 +136,10 @@ internal val ARABIC_COPY = AppCopy(
         lessonLanguageNote = "تتكلّم المعلّمة الإنجليزية أو اليوروبا أو البيدجن. تُختار لغة كلمات التطبيق بعد ذلك، على حدة.",
         whichInterface = "بأي لغة تكون كلمات التطبيق؟",
         interfaceNote = "يغيّر هذا كلمات التطبيق على هذا الهاتف، لكل من يتعلّم عليه. تبقى الدروس باللغة التي اخترتها قبل ذلك.",
-        followPhone = "لغة الهاتف",
+        followLessons = "لغة الدروس نفسها",
         next = "تابع",
         classAndLanguage = "الصف واللغة",
         detectLanguage = "دع graspy يستمع",
-        classLabels = ARABIC_CLASS_LABELS,
+        classLabels = NIGERIAN_CLASS_LABELS,
     ),
 )

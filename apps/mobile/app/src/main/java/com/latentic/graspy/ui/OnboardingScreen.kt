@@ -131,7 +131,7 @@ internal fun languageOptions(copy: AppCopy): List<Pair<AppLanguageSelection, Str
 
 /** The languages of the app's words, each named in itself; none follows the phone. */
 internal fun interfaceOptions(copy: AppCopy): List<Pair<InterfaceLanguage?, String>> =
-    listOf<Pair<InterfaceLanguage?, String>>(null to copy.onboarding.followPhone) +
+    listOf<Pair<InterfaceLanguage?, String>>(null to copy.onboarding.followLessons) +
         InterfaceLanguage.entries.map { it to it.nativeName }
 
 @Composable

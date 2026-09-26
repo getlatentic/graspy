@@ -12,19 +12,25 @@ import org.junit.Test
 class InterfaceLanguageTest {
     @Test
     fun `the layout reads right to left in Arabic, and left to right in every other language`() {
-        assertEquals(LayoutDirection.Rtl, resolveInterfaceLanguage(InterfaceLanguage.ARABIC, "en-NG").layoutDirection)
-        assertEquals(LayoutDirection.Rtl, resolveInterfaceLanguage(null, "ar-EG").layoutDirection)
+        assertEquals(LayoutDirection.Rtl, resolveInterfaceLanguage(InterfaceLanguage.ARABIC, AppLanguage.YORUBA, "en-NG").layoutDirection)
+        assertEquals(LayoutDirection.Rtl, resolveInterfaceLanguage(null, null, "ar-EG").layoutDirection)
         InterfaceLanguage.entries.filter { it != InterfaceLanguage.ARABIC }.forEach {
             assertEquals(it.name, LayoutDirection.Ltr, it.layoutDirection)
         }
     }
 
     @Test
-    fun `the app's words follow the phone until they are chosen`() {
-        assertEquals(InterfaceLanguage.ARABIC, resolveInterfaceLanguage(null, "ar-EG"))
-        assertEquals(InterfaceLanguage.YORUBA, resolveInterfaceLanguage(null, "yo-NG"))
-        assertEquals(InterfaceLanguage.ENGLISH, resolveInterfaceLanguage(null, "fr-FR"))
-        assertEquals(InterfaceLanguage.PIDGIN, resolveInterfaceLanguage(InterfaceLanguage.PIDGIN, "ar-EG"))
+    fun `the app's words follow the learner's lessons until other words are chosen`() {
+        assertEquals(InterfaceLanguage.YORUBA, resolveInterfaceLanguage(null, AppLanguage.YORUBA, "en-NG"))
+        assertEquals(InterfaceLanguage.PIDGIN, resolveInterfaceLanguage(null, AppLanguage.PIDGIN, "ar-EG"))
+        assertEquals(InterfaceLanguage.ARABIC, resolveInterfaceLanguage(InterfaceLanguage.ARABIC, AppLanguage.YORUBA, "en-NG"))
+    }
+
+    @Test
+    fun `before there is a learner the app's words follow the phone`() {
+        assertEquals(InterfaceLanguage.ARABIC, resolveInterfaceLanguage(null, null, "ar-EG"))
+        assertEquals(InterfaceLanguage.YORUBA, resolveInterfaceLanguage(null, null, "yo-NG"))
+        assertEquals(InterfaceLanguage.ENGLISH, resolveInterfaceLanguage(null, null, "fr-FR"))
     }
 
     @Test

@@ -23,9 +23,24 @@ enum class InterfaceLanguage(val tag: String, val nativeName: String, val layout
     }
 }
 
-/** The language chosen on this phone, or else the phone's own when graspy has it, or else English. */
-fun resolveInterfaceLanguage(chosen: InterfaceLanguage?, phoneLanguageTag: String): InterfaceLanguage =
-    chosen ?: InterfaceLanguage.fromTag(Locale.forLanguageTag(phoneLanguageTag).language) ?: InterfaceLanguage.ENGLISH
+/**
+ * The language chosen for the app's words; else the learner's lesson language, as the web's words follow
+ * the learner's; else, before there is a learner, the phone's own when graspy has it; else English.
+ */
+fun resolveInterfaceLanguage(
+    chosen: InterfaceLanguage?,
+    lessons: AppLanguage?,
+    phoneLanguageTag: String,
+): InterfaceLanguage =
+    chosen ?: lessons?.let(::wordsFor)
+        ?: InterfaceLanguage.fromTag(Locale.forLanguageTag(phoneLanguageTag).language)
+        ?: InterfaceLanguage.ENGLISH
+
+private fun wordsFor(lessons: AppLanguage): InterfaceLanguage = when (lessons) {
+    AppLanguage.ENGLISH -> InterfaceLanguage.ENGLISH
+    AppLanguage.YORUBA -> InterfaceLanguage.YORUBA
+    AppLanguage.PIDGIN -> InterfaceLanguage.PIDGIN
+}
 
 /** Chosen for the phone rather than for a learner, as the web keeps it for the browser: signing out keeps it. */
 class InterfaceLanguageStore(context: Context) {

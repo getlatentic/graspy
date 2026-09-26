@@ -51,7 +51,9 @@ fun GraspyApp() {
     SideEffect { learnerViewModels.keepOnly(account?.learnerKey) }
     val profile = rememberProfile(graph.profiles, account?.learnerKey)
     val words = rememberInterfaceLanguage()
-    val languages = Languages(lessonLanguage(profile.value), resolveInterfaceLanguage(words.value, phoneLanguageTag()), words)
+    val lessons = lessonLanguage(profile.value)
+    val shown = resolveInterfaceLanguage(words.value, lessons.takeIf { profile.value != null }, phoneLanguageTag())
+    val languages = Languages(lessons, shown, words)
     val accountCopy = accountCopyFor(languages.words)
     val signOut: SignOutViewModel = viewModel()
     val signingOut by signOut.state.collectAsStateWithLifecycle()

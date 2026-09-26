@@ -58,7 +58,7 @@ class LessonRefreshWorker(
     /** Android 11 and below run expedited work in the foreground, and ask what to show while it does. */
     override suspend fun getForegroundInfo(): ForegroundInfo {
         val copy = copyFor(
-            resolveInterfaceLanguage(InterfaceLanguageStore(applicationContext).chosen(), Locale.getDefault().toLanguageTag()),
+            resolveInterfaceLanguage(InterfaceLanguageStore(applicationContext).chosen(), null, Locale.getDefault().toLanguageTag()),
         )
         val notifications = requireNotNull(applicationContext.getSystemService(NotificationManager::class.java))
         notifications.createNotificationChannel(

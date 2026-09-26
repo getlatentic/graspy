@@ -121,7 +121,8 @@ data class OnboardingCopy(
     val lessonLanguageNote: String,
     val whichInterface: String,
     val interfaceNote: String,
-    val followPhone: String,
+    /** The app's words in the learner's lesson language, until other words are chosen. */
+    val followLessons: String,
     val next: String,
     val classAndLanguage: String,
     val detectLanguage: String,

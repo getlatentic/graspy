@@ -37,9 +37,17 @@ class CopyCompletenessTest {
     }
 
     @Test
+    fun `school classes keep the names Nigerian schools give them, in every language`() {
+        InterfaceLanguage.entries.forEach { language ->
+            assertEquals(language.name, NIGERIAN_CLASS_LABELS, copyFor(language).onboarding.classLabels)
+        }
+    }
+
+    @Test
     fun `Arabic is written in Arabic, with the digits the web writes`() {
         books.forEach { (book, copy) ->
-            strings(copy(InterfaceLanguage.ARABIC), book).forEach { (path, text) ->
+            val arabic = strings(copy(InterfaceLanguage.ARABIC), book).filterKeys { ".classLabels[" !in it }
+            arabic.forEach { (path, text) ->
                 assertTrue("$path is not in Arabic: $text", ARABIC_LETTER.containsMatchIn(text))
                 assertTrue("$path writes Arabic-Indic digits: $text", !ARABIC_INDIC_DIGIT.containsMatchIn(text))
             }
