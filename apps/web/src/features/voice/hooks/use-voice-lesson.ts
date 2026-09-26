@@ -13,7 +13,7 @@ export function useVoiceLesson(
   const [state, dispatch] = useReducer(lessonReducer, START);
   useLessonSteps(state, dispatch, learner, plan);
   const lines = useTeacherLines(state, dispatch, learner.language);
-  const take = useAnswerTake(dispatch, learner);
+  const take = useAnswerTake(state.phase, dispatch, learner);
 
   const start = () => {
     lines.unlock();

@@ -96,8 +96,9 @@ fun AppView(
             override fun resize(height: Int) {
                 if (height > 0) viewHeight = height
             }
-            override fun shown() {
+            override suspend fun shown(uri: String, view: UiView) {
                 shown = true
+                server.keepShown(uri, view)
             }
         }
     }

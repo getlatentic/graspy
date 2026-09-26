@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { KeptAnswer } from "./answer-store";
+import type { KeptAnswer, Settled } from "./answer-store";
 import { sendAnswer, type AnswerApi } from "./send-answer";
 import { VoiceError, type VoiceCode } from "./voice-api";
 import type { MarkedTurn } from "./voice-types";
@@ -35,14 +35,19 @@ const TURN: MarkedTurn = {
 
 let api: { [K in keyof AnswerApi]: ReturnType<typeof vi.fn> };
 let kept: Map<string, KeptAnswer>;
+let settled: Map<string, Settled>;
 const keeping = {
   keep: async (a: KeptAnswer) => void kept.set(a.key, a),
-  forget: async (key: string) => void kept.delete(key),
+  settle: async (a: KeptAnswer, sent: Settled) => {
+    kept.delete(a.key);
+    settled.set(a.key, sent);
+  },
 };
 const noPause = async () => {};
 
 beforeEach(() => {
   kept = new Map([[answer.key, answer]]);
+  settled = new Map();
   api = {
     createSample: vi.fn().mockResolvedValue({
       sample_id: "gvm_1",
@@ -60,7 +65,7 @@ const send = (a = answer) =>
   sendAnswer(a, api as unknown as AnswerApi, keeping, noPause);
 
 describe("sendAnswer", () => {
-  it("creates, uploads and marks the answer, then lets it go", async () => {
+  it("creates, uploads and marks the answer, then keeps only its outcome", async () => {
     await expect(send()).resolves.toEqual({ kind: "marked", turn: TURN });
     expect(api.createSample).toHaveBeenCalledWith("key-1", answer.metadata);
     expect(api.uploadAudio).toHaveBeenCalledWith(
@@ -69,6 +74,7 @@ describe("sendAnswer", () => {
     );
     expect(api.evaluate).toHaveBeenCalledWith("gvm_1");
     expect(kept.size).toBe(0);
+    expect(settled.get("key-1")).toEqual({ kind: "marked", turn: TURN });
   });
 
   it("keeps the answer when the server cannot be reached, and resumes after the upload", async () => {
@@ -120,11 +126,13 @@ describe("sendAnswer", () => {
     [409, "idempotency_conflict"],
     [404, null],
   ] as const)(
-    "hands back a %i %s and lets the answer go",
+    "hands back a %i %s and keeps only the refusal",
     async (status, code) => {
       api.evaluate.mockRejectedValueOnce(new VoiceError("no", status, code));
-      await expect(send()).resolves.toEqual({ kind: "refused", code, status });
+      const refused = { kind: "refused", code, status };
+      await expect(send()).resolves.toEqual(refused);
       expect(kept.size).toBe(0);
+      expect(settled.get("key-1")).toEqual(refused);
     },
   );
 
@@ -144,6 +152,7 @@ describe("sendAnswer", () => {
       );
       await expect(send()).resolves.toEqual({ kind: "kept" });
       expect(kept.has("key-1")).toBe(true);
+      expect(settled.size).toBe(0);
     },
   );
 });

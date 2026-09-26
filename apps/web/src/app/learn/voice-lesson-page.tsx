@@ -60,6 +60,7 @@ function Lesson({ learner, plan }: { learner: VoiceLearner; plan?: string }) {
         onRecord={() => "move" in phase && void lesson.record(phase.move)}
         onStop={lesson.stop}
         onHearAgain={lesson.hearAgain}
+        onCarryOn={lesson.carryOn}
       />
     </>
   );

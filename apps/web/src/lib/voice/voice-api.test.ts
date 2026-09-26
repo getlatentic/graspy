@@ -155,6 +155,58 @@ describe("the voice API client", () => {
       code: "voice_unavailable",
     });
   });
+
+  it("gives an upload time for its size, as on the slowest connection waited for", async () => {
+    const times: number[] = [];
+    const timeout = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((ms) => {
+        times.push(ms);
+        return new AbortController().signal;
+      });
+    fetchWithSession.mockResolvedValue(json({ state: "ready" }));
+    const wav = new Blob([new Uint8Array(800_000)], { type: "audio/wav" });
+    await api.uploadAudio("/api/voice/samples/gvm_1/audio", wav);
+    expect(times).toEqual([30_000 + 100_000]);
+    timeout.mockRestore();
+  });
+
+  it("counts an answer it cannot read as the network failing", async () => {
+    fetchWithSession.mockResolvedValue(
+      new Response("<html>gateway</html>", { status: 200 }),
+    );
+    await expect(api.evaluate("gvm_1")).rejects.toMatchObject({
+      status: 0,
+      code: null,
+    });
+  });
+
+  it("gives up on a request that never answers, as the network failing", async () => {
+    const deadlines: Array<[number, AbortController]> = [];
+    const timeout = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((ms) => {
+        const deadline = new AbortController();
+        deadlines.push([ms, deadline]);
+        return deadline.signal;
+      });
+    // Hung before fetch, as on a session token that never comes: its signal ends nothing.
+    fetchWithSession.mockImplementation(() => new Promise(() => {}));
+    const marking = api.evaluate("gvm_1").catch((e: unknown) => e);
+    const created = api
+      .createSample("key-1", {} as never)
+      .catch((e: unknown) => e);
+
+    expect(deadlines.map(([ms]) => ms)).toEqual([150_000, 30_000]);
+    for (const [, deadline] of deadlines)
+      deadline.abort(new DOMException("timed out", "TimeoutError"));
+    for (const error of await Promise.all([marking, created])) {
+      expect(error).toBeInstanceOf(api.VoiceError);
+      expect(error).toMatchObject({ status: 0, code: null });
+    }
+    expect(wire.calls.every(([, init]) => init?.signal?.aborted)).toBe(true);
+    timeout.mockRestore();
+  });
 });
 
 describe("a child's answer when the session fails", () => {
@@ -168,7 +220,7 @@ describe("a child's answer when the session fails", () => {
   let kept: Map<string, KeptAnswer>;
   const keeping = {
     keep: async (a: KeptAnswer) => void kept.set(a.key, a),
-    forget: async (key: string) => void kept.delete(key),
+    settle: async (a: KeptAnswer) => void kept.delete(a.key),
   };
   const send = () => sendAnswer(answer, api, keeping, async () => {});
 

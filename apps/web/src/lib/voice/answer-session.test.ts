@@ -103,7 +103,7 @@ const answer: KeptAnswer = {
 let kept: Map<string, KeptAnswer>;
 const keeping = {
   keep: async (a: KeptAnswer) => void kept.set(a.key, a),
-  forget: async (key: string) => void kept.delete(key),
+  settle: async (a: KeptAnswer) => void kept.delete(a.key),
 };
 
 async function sent() {

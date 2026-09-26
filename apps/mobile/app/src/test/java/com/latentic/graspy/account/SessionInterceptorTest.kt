@@ -10,6 +10,7 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,13 +22,17 @@ class SessionInterceptorTest {
     private val accounts = accountStore(signedIn(ADA, deviceJoins = false))
     private var exchanges = 0
     private var refuseExchange = false
+    private var googleUnreachable = false
     private var learnerHeld = true
     private var switchDuringExchange: LearnerDto? = null
 
     private val sessions = SessionTokens(
         accounts = accounts,
         deviceId = { DEVICE },
-        idToken = { _, _ -> "google-id-token" },
+        idToken = { _, _ ->
+            if (googleUnreachable) throw IOException("Google could not be reached to confirm the sign-in")
+            "google-id-token"
+        },
         exchange = {
             if (refuseExchange) throw httpError(503, """{"detail":{"code":"sign_in_off"}}""")
             exchanges += 1
@@ -120,7 +125,7 @@ class SessionInterceptorTest {
 
     @Test
     fun `a request for a learner no longer in use is refused before it is sent, with no session fetched for it`() {
-        assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, BAYO.id))) }
+        assertThrows(SessionRefusal::class.java) { call(request(learner = learnerKey(UID, BAYO.id))) }
         assertEquals(0, server.requestCount)
         assertEquals(0, exchanges)
     }
@@ -129,7 +134,7 @@ class SessionInterceptorTest {
     fun `a request whose learner is switched while its session is fetched is refused, never sent as the next learner`() {
         switchDuringExchange = BAYO
 
-        assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
+        assertThrows(SessionRefusal::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
         assertEquals(0, server.requestCount)
     }
 
@@ -142,15 +147,24 @@ class SessionInterceptorTest {
             }
         }
 
-        assertThrows(IOException::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
+        assertThrows(SessionRefusal::class.java) { call(request(learner = learnerKey(UID, ADA.id))) }
         assertEquals(1, exchanges)
     }
 
     @Test
-    fun `an exchange refused over HTTP fails the call the way a lost connection does`() {
+    fun `an exchange refused over HTTP fails the call as OkHttp needs, and says it was refused`() {
         refuseExchange = true
 
-        assertThrows(IOException::class.java) { call(request()) }
+        assertThrows(SessionRefusal::class.java) { call(request()) }
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun `an exchange that cannot reach Google fails as a lost connection, never as a refusal`() {
+        googleUnreachable = true
+
+        val failure = assertThrows(IOException::class.java) { call(request()) }
+        assertFalse(failure is SessionRefusal)
         assertEquals(0, server.requestCount)
     }
 
