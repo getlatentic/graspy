@@ -8,8 +8,8 @@ import {
   lessonCopy,
 } from "@/lib/lesson-copies";
 import type { TopicRef } from "@/lib/learner-record";
-import { isUnreachable } from "@/lib/mcp/outbox";
 import { callAppTool } from "@/lib/mcp/server";
+import { isUnreachable } from "@/lib/mcp/unreachable";
 import {
   keptLesson,
   lessonStateOf,

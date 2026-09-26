@@ -1,6 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/client";
 import { committed, openDB, OUTBOX_STORE, promisify } from "@/lib/idb";
 import { callAppTool } from "./server";
+import { isUnreachable } from "./unreachable";
 
 // A view's tools/call made offline is kept and sent in order once back. These calls record
 // what the learner did, and the server takes each again without harm.
@@ -19,11 +20,6 @@ const KEPT: CallToolResult = {
     },
   ],
 };
-
-/** As opposed to the server refusing. */
-export function isUnreachable(error: unknown): boolean {
-  return !navigator.onLine || error instanceof TypeError;
-}
 
 async function keep(name: string, args: Record<string, unknown>) {
   const db = await openDB();

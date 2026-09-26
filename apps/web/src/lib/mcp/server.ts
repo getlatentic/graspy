@@ -12,6 +12,7 @@ import {
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
+import { isUnreachable } from "./unreachable";
 
 // The app is an MCP Apps host; graspy's server serves the views and runs their tools.
 const API_ORIGIN = new URL(API_BASE_URL).origin;
@@ -137,12 +138,12 @@ function keptView(uri: string): UiView | null {
   }
 }
 
-/** Read once per visit; without a connection, the copy last read. */
+/** Read once per visit; with no server to reach, the copy last read. A refusal is its answer. */
 export async function uiView(uri: string): Promise<UiView> {
   try {
     return await readOnce(uri);
   } catch (error) {
-    const kept = keptView(uri);
+    const kept = isUnreachable(error) ? keptView(uri) : null;
     if (kept) return kept;
     throw error;
   }
