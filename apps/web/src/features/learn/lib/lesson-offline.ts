@@ -70,10 +70,12 @@ const sameTopic = (a: TopicRef, b: TopicRef) =>
   a.topicIndex === b.topicIndex &&
   a.topic === b.topic;
 
+// A lesson the server refuses is skipped; a server that cannot be reached ends the run.
 async function copyOne(target: LessonTarget) {
   try {
     await keepIfWhole(target, await keptLesson(target));
   } catch (error) {
+    if (isUnreachable(error)) throw error;
     console.warn(`Copying the lesson on ${target.topic} failed:`, error);
   }
 }

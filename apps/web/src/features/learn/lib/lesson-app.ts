@@ -103,6 +103,8 @@ export async function keptLesson(target: LessonTarget): Promise<TutorCard> {
   const toolInput = { target, attempt: 0 };
   const resourceUri = await viewOf(GIVE_LESSON);
   const toolResult = await callAppTool(LESSON_PROGRESS, toolInput);
+  if (toolResult.isError)
+    throw new Error(`The lesson on ${target.topic} was refused`);
   return { resourceUri, toolName: GIVE_LESSON, toolInput, toolResult };
 }
 

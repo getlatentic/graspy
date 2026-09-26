@@ -11,13 +11,19 @@ const graspy = {
   called: [] as string[],
   /** Topics whose lesson the server fails to give. */
   failing: new Set<string>(),
+  /** Topics whose lesson the server answers with a refusal. */
+  refusing: new Set<string>(),
+  connects: 0,
 };
 function reach() {
   if (!graspy.reachable) throw new TypeError("Failed to fetch");
 }
 vi.mock("@modelcontextprotocol/client", () => ({
   Client: class {
-    connect = async () => reach();
+    connect = async () => {
+      graspy.connects += 1;
+      reach();
+    };
     listTools = async () => ({
       tools: [
         { name: "give_lesson", _meta: { ui: { resourceUri: VIEW } } },
@@ -35,6 +41,8 @@ vi.mock("@modelcontextprotocol/client", () => ({
       reach();
       graspy.called.push(name);
       if (graspy.failing.has(args.target.topic)) throw new Error("502");
+      if (graspy.refusing.has(args.target.topic))
+        return { isError: true, content: [] };
       return graspy.answers[name];
     };
   },
@@ -98,6 +106,8 @@ beforeEach(() => {
   graspy.reachable = true;
   graspy.called = [];
   graspy.failing = new Set();
+  graspy.refusing = new Set();
+  graspy.connects = 0;
   graspy.answers = {
     give_lesson: result("ready"),
     lesson_progress: result("ready"),
@@ -190,6 +200,31 @@ describe("the copies", () => {
 
     expect(await copiedTopics()).toEqual([FRACTIONS]);
     expect(console.warn).toHaveBeenCalledOnce();
+  });
+
+  it("go on past a lesson the server refuses, and say so", async () => {
+    const { copiedTopics, copyReadyLessons } = await fresh();
+    graspy.refusing.add("Number Systems");
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await copyReadyLessons(PLAN, [NUMBER_SYSTEMS, FRACTIONS]);
+
+    expect(await copiedTopics()).toEqual([FRACTIONS]);
+    expect(console.warn).toHaveBeenCalledOnce();
+  });
+
+  it("stop at a server that cannot be reached, trying it once", async () => {
+    const { copiedTopics, copyReadyLessons } = await fresh();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    goOffline();
+
+    await expect(
+      copyReadyLessons(PLAN, [NUMBER_SYSTEMS, FRACTIONS]),
+    ).rejects.toThrow();
+
+    expect(graspy.connects).toBe(1);
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(await copiedTopics()).toEqual([]);
   });
 
   it("keep only a lesson the server has whole", async () => {
