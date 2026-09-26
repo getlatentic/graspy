@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check src tests scripts
+      - run: uv run ruff format --check src tests scripts
+      - run: uv run pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Web
+        working-directory: apps/web
+        run: |
+          npx oxlint
+          npx tsc -b
+          npx vitest run
+      - name: Tutor
+        working-directory: apps/tutor
+        run: |
+          npx tsc --noEmit
+          npx vitest run
+      - name: Server admin UI
+        working-directory: apps/server/ui
+        run: |
+          npx tsc --noEmit
+          npx vitest run
+      - name: Teacher
+        working-directory: apps/teacher
+        run: |
+          npx oxlint
+          npx tsgo --noEmit -p tsconfig.json
+          npx vitest run
+          python3 -m unittest discover -s scripts/tests -t .
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+      # The real file stays out of git. The unit tests never reach Firebase, so a
+      # stand-in for the emulator's demo project is enough to build.
+      - name: Stand-in google-services.json
+        run: |
+          cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {"project_number": "000000000000", "project_id": "demo-graspy", "storage_bucket": "demo-graspy.appspot.com"},
+            "client": [{
+              "client_info": {"mobilesdk_app_id": "1:000000000000:android:0000000000000000", "android_client_info": {"package_name": "com.latentic.graspy"}},
+              "oauth_client": [{"client_id": "000000000000-demo.apps.googleusercontent.com", "client_type": 3}],
+              "api_key": [{"current_key": "demo-key"}],
+              "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+            }],
+            "configuration_version": "1"
+          }
+          EOF
+      - run: ./gradlew testDebugUnitTest lintDebug
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-reports
+          path: apps/mobile/app/build/reports
+
+  teacher-rust:
+    # The sidecars target macOS arm64, and Tauri's build checks they exist.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/teacher/src-tauri
+      - run: npm ci --ignore-scripts
+      - name: Frontend the app embeds
+        working-directory: apps/teacher
+        run: npx vite build
+      # The tests that run a sidecar are ignored; the binaries only need to exist.
+      - name: Stand-in sidecars
+        working-directory: apps/teacher/src-tauri/binaries
+        run: touch llama-server-aarch64-apple-darwin graspy-inference-runner-aarch64-apple-darwin
+      - run: cargo test --manifest-path apps/teacher/src-tauri/Cargo.toml
