@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, NetworkError } from "@/lib/api/errors";
 import type { KeptAnswer } from "./answer-store";
-import { sendAnswer } from "./send-answer";
+import { sendAnswer, UNANSWERED } from "./send-answer";
 
 type Respond = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -233,7 +233,7 @@ describe("a child's answer when the session fails", () => {
       throw new NetworkError("Failed to fetch");
     });
 
-    await expect(send()).resolves.toEqual({ kind: "kept" });
+    await expect(send()).resolves.toEqual(UNANSWERED);
     expect(kept.has(answer.key)).toBe(true);
   });
 
@@ -242,7 +242,7 @@ describe("a child's answer when the session fails", () => {
       throw new ApiError("refused", 403);
     });
 
-    await expect(send()).resolves.toEqual({ kind: "kept" });
+    await expect(send()).resolves.toEqual(UNANSWERED);
     expect(kept.has(answer.key)).toBe(true);
   });
 });

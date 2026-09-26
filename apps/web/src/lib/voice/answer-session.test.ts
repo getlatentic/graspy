@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { KeptAnswer } from "./answer-store";
+import { UNANSWERED } from "./send-answer";
 
 // A signed-in child's answer sent through the app's own session.ts and voice-api.ts, with
 // graspy's server answering as scripted.
@@ -134,7 +135,7 @@ describe("a child's answer", () => {
   ] as const)("stays on the device when %s", async (_, session) => {
     graspy.session = session;
 
-    await expect(sent()).resolves.toEqual({ kind: "kept" });
+    await expect(sent()).resolves.toEqual(UNANSWERED);
     expect(kept.has(answer.key)).toBe(true);
   });
 
@@ -154,7 +155,7 @@ describe("a child's answer", () => {
   ])("stays on the device when %s", async (_, failure) => {
     googleIdToken.mockRejectedValue(failure);
 
-    await expect(sent()).resolves.toEqual({ kind: "kept" });
+    await expect(sent()).resolves.toEqual(UNANSWERED);
     expect(kept.has(answer.key)).toBe(true);
   });
 
@@ -164,7 +165,10 @@ describe("a child's answer", () => {
   ] as const)("stays on the device when the voice API %s", async (_, voice) => {
     graspy.voice = voice;
 
-    await expect(sent()).resolves.toEqual({ kind: "kept" });
+    await expect(sent()).resolves.toMatchObject({
+      kind: "kept",
+      status: voice === "fails" ? 502 : 429,
+    });
     expect(kept.has(answer.key)).toBe(true);
   });
 

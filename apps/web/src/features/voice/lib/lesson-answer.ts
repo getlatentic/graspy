@@ -64,22 +64,32 @@ export function answerToKeep(
   };
 }
 
-/** The take is checked only once it is kept, so nothing the child said is lost to the network. */
+/**
+ * The take is checked only once it is kept, so nothing the child said is lost to the network.
+ * Storage that has not begun to write it in time never writes it, so a take the child was told was
+ * not saved is never sent. Once the write has begun it is waited for.
+ */
 export async function keepTake(
   answer: KeptAnswer,
   store: {
-    keep: (answer: KeptAnswer) => Promise<void>;
-    forget: (key: string) => Promise<void>;
+    keep: (answer: KeptAnswer, wanted: () => boolean) => Promise<void>;
   },
   emit: (event: LessonEvent) => void,
   pause?: (ms: number) => Promise<unknown>,
 ): Promise<void> {
-  const keeping = store.keep(answer);
+  emit({ type: "saving" });
+  let givenUp = false;
+  let begun = () => {};
+  const beginning = new Promise<void>((resolve) => (begun = resolve));
+  const keeping = store.keep(answer, () => {
+    begun();
+    return !givenUp;
+  });
   try {
-    await inTime(keeping, pause);
+    await inTime(Promise.race([beginning, keeping]), pause);
+    await keeping;
   } catch {
-    // The child was told it was not saved, so a save that lands late is let go.
-    keeping.then(() => store.forget(answer.key)).catch(() => undefined);
+    givenUp = true;
     emit({ type: "recordFailed", note: "notSaved" });
     return;
   }

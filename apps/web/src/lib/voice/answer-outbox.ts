@@ -39,10 +39,11 @@ export function sendKept(key: string): Promise<Sent | null> {
   return sending;
 }
 
+// An answer the voice API answered but kept holds back none after it; with no answer, none would go.
 async function sendAll(learner: string): Promise<void> {
   for (const { key } of await keptAnswers(learner)) {
     const sent = await sendKept(key);
-    if (sent?.kind === "kept") return;
+    if (sent?.kind === "kept" && sent.status === 0) return;
   }
 }
 

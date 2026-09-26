@@ -52,10 +52,10 @@ export function lessonPage(app: App, plan?: string) {
       return app.followAnswer(phase.key, emit, leaving.signal, retry);
     },
     /** The child carries on past the answer kept on screen, which the page then stops following. */
-    async carryOn() {
+    async carryOn(due: () => Promise<unknown> = notYet) {
       const { phase } = state;
       if (phase.name !== "kept") throw new Error(`nothing kept: ${phase.name}`);
-      await app.carryOn(phase.key, emit);
+      await app.carryOn(phase.key, LEARNER.key, emit, undefined, due);
       leaving.abort();
     },
     /** The lesson asks the server for its next step. */

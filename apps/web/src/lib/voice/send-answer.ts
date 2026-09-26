@@ -1,5 +1,5 @@
 import { isRetryableStatus } from "@/lib/api/errors";
-import { VoiceError } from "./voice-api";
+import { VoiceError, type VoiceCode } from "./voice-api";
 import type { KeptAnswer, Settled } from "./answer-store";
 import type { CreatedSample, Evaluation, MarkedTurn } from "./voice-types";
 
@@ -17,10 +17,16 @@ export interface AnswerKeeping {
   settle(answer: KeptAnswer, sent: Settled): Promise<void>;
 }
 
-export type Sent =
-  | Settled
-  /** Not reached, or not marked yet: the answer stays on the device and goes again. */
-  | { kind: "kept" };
+/**
+ * Not marked yet: the answer stays on the device and goes again. `status` is what the voice API
+ * answered, 202 while it is still marking; 0 when it gave no answer or the device failed.
+ */
+export type Kept = { kind: "kept"; status: number; code: VoiceCode | null };
+
+export type Sent = Settled | Kept;
+
+/** Kept with no answer from the voice API. */
+export const UNANSWERED: Kept = { kind: "kept", status: 0, code: null };
 
 const MARKING_POLLS = 20;
 const POLL_MS = 3_000;
@@ -110,14 +116,15 @@ export async function sendAnswer(
       sent = await uploaded({ ...sent, uploaded: false }, api, keeping);
       turn = await marked(sent.sampleId!, api, pause);
     }
-    if (!turn) return { kind: "kept" };
+    if (!turn) return { kind: "kept", status: 202, code: null };
     return settled(answer, { kind: "marked", turn }, keeping);
   } catch (error) {
-    if (!(error instanceof VoiceError) || transient(error)) {
-      if (!(error instanceof VoiceError))
-        console.warn("Sending an answer failed:", error);
-      return { kind: "kept" };
+    if (!(error instanceof VoiceError)) {
+      console.warn("Sending an answer failed:", error);
+      return UNANSWERED;
     }
+    if (transient(error))
+      return { kind: "kept", status: error.status, code: error.code };
     const refused: Settled = {
       kind: "refused",
       code: error.code,

@@ -194,6 +194,46 @@ describe("the answers kept on the device", () => {
     await first;
   });
 
+  it("keep no answer its keeper no longer wants once the write begins", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT, () => false);
+    expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
+  });
+
+  it("send the next answer past one the voice API answered but did not mark", async () => {
+    const app = await load();
+    await app.keepAnswer(answerTo(OTHER, "key-0", 0));
+    await app.keepAnswer(KEPT);
+    server.busy = 1;
+
+    await app.sendKeptAnswers(LEARNER.key);
+    expect(await app.keptAnswers(LEARNER.key)).toMatchObject([
+      { key: "key-0" },
+    ]);
+    expect(await app.settledOf("key-1")).toMatchObject({ kind: "marked" });
+  });
+
+  it("stop at the first answer the voice API gave no answer to", async () => {
+    const app = await load();
+    await app.keepAnswer(answerTo(OTHER, "key-0", 0));
+    await app.keepAnswer(KEPT);
+    server.hung = 1;
+    const deadline = new AbortController();
+    vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
+
+    const run = app.sendKeptAnswers(LEARNER.key);
+    await vi.waitFor(() =>
+      expect(sent("POST /api/voice/samples/gvm_key-0/evaluation")).toHaveLength(
+        1,
+      ),
+    );
+    deadline.abort(new DOMException("timed out", "TimeoutError"));
+    await run;
+    vi.restoreAllMocks();
+    expect(await app.keptAnswers(LEARNER.key)).toHaveLength(2);
+    expect(sent("POST /api/voice/samples")).toHaveLength(1);
+  });
+
   it("offer the oldest answer not yet shown, whatever its key", async () => {
     const app = await load();
     await app.keepAnswer(KEPT);

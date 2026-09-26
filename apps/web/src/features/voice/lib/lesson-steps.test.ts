@@ -111,6 +111,22 @@ describe("a voice lesson reloaded with an answer kept", () => {
     });
   });
 
+  it("keeps an answer the session names no learner for, and says to choose who is learning", async () => {
+    server.refusal = { status: 409, code: "learner_required" };
+    const app = await reload();
+    const page = lessonPage(app);
+
+    await page.open();
+    void page.follow();
+    await vi.waitFor(() => expect(page.state.phase.name).toBe("failed"));
+    page.leave();
+    expect(page.state.note).toBe("learnerRequired");
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toEqual({
+      key: "key-1",
+      move: ASKED,
+    });
+  });
+
   it("lets the answer go once its outcome is shown, so the next start is the teacher's step", async () => {
     const page = lessonPage(await reload());
     await page.open();

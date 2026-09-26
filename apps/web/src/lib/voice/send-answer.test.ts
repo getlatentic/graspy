@@ -79,7 +79,11 @@ describe("sendAnswer", () => {
 
   it("keeps the answer when the server cannot be reached, and resumes after the upload", async () => {
     api.evaluate.mockRejectedValueOnce(new VoiceError("offline", 0, null));
-    await expect(send()).resolves.toEqual({ kind: "kept" });
+    await expect(send()).resolves.toEqual({
+      kind: "kept",
+      status: 0,
+      code: null,
+    });
     const resumed = kept.get("key-1")!;
     expect(resumed).toMatchObject({ sampleId: "gvm_1", uploaded: true });
 
@@ -150,7 +154,7 @@ describe("sendAnswer", () => {
       api.evaluate.mockRejectedValueOnce(
         new VoiceError("later", status, code as VoiceCode | null),
       );
-      await expect(send()).resolves.toEqual({ kind: "kept" });
+      await expect(send()).resolves.toEqual({ kind: "kept", status, code });
       expect(kept.has("key-1")).toBe(true);
       expect(settled.size).toBe(0);
     },
