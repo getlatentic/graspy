@@ -12,6 +12,7 @@ import com.latentic.graspy.collection.outbox.retrofit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,6 +21,7 @@ import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 sealed interface PlanState {
@@ -42,19 +44,28 @@ data class Making(val plan: LearnerPlan?, val failed: Boolean = false)
  * The learner's shared plan and their record on it, as the web keeps them: read from the account, kept on
  * the phone for when there is no connection, and changed here the way the web changes it.
  */
-class PlanViewModel(application: Application, ownerId: String) : AndroidViewModel(application), PlanChanges {
-    private val calls = AppGraph.callsFor(application, ownerId)
+class PlanViewModel internal constructor(
+    application: Application,
+    ownerId: String,
+    calls: Call.Factory,
+) : AndroidViewModel(application), PlanChanges {
+    constructor(application: Application, ownerId: String) : this(application, ownerId, AppGraph.callsFor(application, ownerId))
+
     private val api = retrofit(calls).create(PlanApi::class.java)
     private val maker = PlanMaker(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::curriculum)
     private val kept = KeptPlan(application.getSharedPreferences(PreferenceFiles.PLAN, 0), ownerId) { AppGraph.account(application).learnsAs(ownerId) }
     private val shown = MutableStateFlow<PlanState>(kept.read() ?: PlanState.Loading)
     private val making = MutableStateFlow<Making?>(null)
+    private val records = ServerRecords { planId -> runCatchingPlan { api.record(planId) }.getOrNull() }
     private var makingJob: Job? = null
     private var lastOrder: (suspend () -> LearnerPlan)? = null
 
     val state: StateFlow<PlanState> = shown.asStateFlow()
 
     val makingState: StateFlow<Making?> = making.asStateFlow()
+
+    /** Each plan with a record the server gave for it, never one kept on the phone or assumed. */
+    val recordsRead: SharedFlow<RecordRead> = records.read
 
     init {
         refresh()
@@ -66,7 +77,7 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
         shown.value = if (read.isFailure) {
             shown.value.takeIf { it is PlanState.Ready } ?: PlanState.Failed
         } else {
-            read.getOrNull()?.let { ready(it) } ?: PlanState.None
+            read.getOrNull()?.let { records.ready(it) } ?: PlanState.None
         }
         keep(shown.value)
     }
@@ -79,7 +90,7 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
         val record = (shown.value as? PlanState.Ready)?.takeIf { it.plan.planId == stamped.planId }?.record ?: LearnerRecord()
         shown.value = PlanState.Ready(stamped, record)
         val answered = api.keep(stamped.toJson()).plan?.let(LearnerPlan::of) ?: stamped
-        shown.value = ready(answered, record)
+        shown.value = records.ready(answered, record)
         keep(shown.value)
         return answered
     }
@@ -156,11 +167,6 @@ class PlanViewModel(application: Application, ownerId: String) : AndroidViewMode
     private suspend fun recordChange(kind: String, fields: JsonObjectBuilder.() -> Unit) {
         runCatchingPlan { api.changeRecord(buildJsonObject { put("kind", kind); fields() }) }
             .onFailure { Log.w(TAG, "The record did not take the change $kind", it) }
-    }
-
-    private suspend fun ready(plan: LearnerPlan, known: LearnerRecord? = null): PlanState.Ready {
-        val record = runCatchingPlan { api.record(plan.planId) }.getOrNull() ?: known ?: LearnerRecord()
-        return PlanState.Ready(plan, record)
     }
 
     private fun keep(state: PlanState) {

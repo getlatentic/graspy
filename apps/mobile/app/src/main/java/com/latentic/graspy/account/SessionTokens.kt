@@ -1,6 +1,5 @@
 package com.latentic.graspy.account
 
-import java.io.IOException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import retrofit2.HttpException
@@ -57,11 +56,11 @@ class SessionTokens(
     }
 
     private suspend fun mint(): String {
-        val account = accounts.account.value ?: throw IOException("Nobody is signed in on this device")
+        val account = accounts.account.value ?: throw SessionRefusal("Nobody is signed in on this device")
         val issued = exchangeFor(account)
         if (issued == null) {
             signedOutElsewhere()
-            throw IOException("Google no longer holds this sign-in")
+            throw SessionRefusal("Google no longer holds this sign-in")
         }
         follow(account.learner, issued.learner)
         if (accounts.account.value?.uid == account.uid) keep(account.uid, issued)
