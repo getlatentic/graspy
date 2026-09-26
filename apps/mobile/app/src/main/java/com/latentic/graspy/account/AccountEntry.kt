@@ -49,7 +49,11 @@ class AccountEntry(
 
     /** A Play services task cancelled while the sign-in still runs fails it, rather than ending it unanswered. */
     private suspend fun failedByCancelledTask(): SignInOutcome {
-        forgetGoogleAccountOrLeaveMarked()
+        try {
+            forgetGoogleAccountOrLeaveMarked()
+        } catch (cancelled: CancellationException) {
+            currentCoroutineContext().ensureActive()
+        }
         return SignInOutcome.Failed("A Google task was cancelled")
     }
 
@@ -151,19 +155,20 @@ class AccountEntry(
         // A sign-in that stored its account got as far as it needed to.
         if (account != null) forgetting.edit(commit = true) { remove(SIGNING_IN) }
         when {
-            account == null && forgetting.getBoolean(SIGNING_IN, false) -> scope.finish("Undoing a sign-in cut short") {
-                signingOut.withLock {
-                    markGoogleAccountToForget()
-                    firebase.signOut()
-                    forgetting.edit(commit = true) { remove(SIGNING_IN) }
-                    forgetGoogleAccount()
-                }
-            }
+            account == null && forgetting.getBoolean(SIGNING_IN, false) -> undoSignInCutShort(scope)
             uid != null && account == null -> accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
             account != null && account.uid != uid -> scope.finish("Finishing a sign-out") { signOut() }
             account == null && forgetting.getBoolean(GOOGLE_ACCOUNT, false) ->
                 scope.finish("Forgetting the signed-out Google account") { forgetGoogleAccount() }
         }
+    }
+
+    /** At once, before a new sign-in can begin; only forgetting the Google account waits on Play services. */
+    private fun undoSignInCutShort(scope: CoroutineScope) {
+        markGoogleAccountToForget()
+        firebase.signOut()
+        forgetting.edit(commit = true) { remove(SIGNING_IN) }
+        scope.finish("Forgetting the Google account of a sign-in cut short") { signingOut.withLock { forgetGoogleAccount() } }
     }
 
     /** Work at start fails into the log: the app's scope has no handler, so an error there would end the app. */

@@ -12,6 +12,8 @@ import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.practice.TEACHER_AUDIO_DIRECTORY
 import java.io.File
 import java.io.IOException
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -355,6 +357,28 @@ class DeviceWipeTest {
     }
 
     @Test
+    fun `a sign-in begun before the start's work runs is left alone by the undoing of one cut short`() = runBlocking {
+        accounts.set(null)
+        firebaseUid = UID
+        val prefs = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0)
+        prefs.edit().putBoolean("signing_in", true).commit()
+        val held = mutableListOf<Runnable>()
+        val start = CoroutineScope(Job() + object : CoroutineDispatcher() {
+            override fun dispatch(context: CoroutineContext, block: Runnable) {
+                held += block
+            }
+        })
+
+        entry(wipe).reconcile(start)
+        prefs.edit().putBoolean("signing_in", true).commit()
+        firebaseUid = "uid-2"
+        held.forEach { it.run() }
+
+        assertEquals("uid-2", firebaseUid)
+        assertTrue("signing_in" in signOutPending)
+    }
+
+    @Test
     fun `a sign-in that stored its account before it was cut short is kept, its note gone`() = runBlocking {
         firebaseUid = UID
         context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()
@@ -367,7 +391,7 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `a sign-in that ends clears its note, whether it succeeded, failed or was closed`() = runBlocking {
+    fun `a sign-in that ends clears its note, whether it failed or was closed`() = runBlocking {
         for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
             AccountEntry(context, { outcome }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
             assertFalse(outcome.toString(), "signing_in" in signOutPending)
