@@ -4,9 +4,9 @@ import android.util.Log
 import com.latentic.graspy.collection.outbox.SubmissionDao
 import com.latentic.graspy.collection.outbox.SubmissionRepository
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -18,12 +18,20 @@ fun interface Outbox {
 /**
  * Everything a learner did here that graspy has yet to take, as the web's flushUnsent reads it: their voice
  * answers and their views' calls, each sent first. The plan is not among them: the phone sends each change to
- * it at once. Offline, or when any of it fails, not everything has reached graspy.
+ * it at once. Offline, when any of it fails, or once [patienceMillis] have passed, not everything has reached
+ * graspy.
  */
-class UnsentWork(private val online: suspend () -> Boolean, private val outboxes: List<Outbox>) : Outbox {
+class UnsentWork(
+    private val online: suspend () -> Boolean,
+    private val outboxes: List<Outbox>,
+    /** Where the sending goes on after the leave stops waiting for it, so what is under way still reaches graspy. */
+    private val sending: CoroutineScope,
+    private val patienceMillis: Long = FLUSH_PATIENCE_MILLIS,
+) : Outbox {
     override suspend fun flush(learnerKey: String): Boolean {
         if (!online()) return false
-        return coroutineScope { outboxes.map { async { flushed(it, learnerKey) } }.awaitAll() }.all { it }
+        val sent = sending.async { outboxes.map { async { flushed(it, learnerKey) } }.awaitAll().all { it } }
+        return withTimeoutOrNull(patienceMillis) { sent.await() } ?: false
     }
 
     private suspend fun flushed(outbox: Outbox, learnerKey: String): Boolean = try {
@@ -37,6 +45,9 @@ class UnsentWork(private val online: suspend () -> Boolean, private val outboxes
 
     private companion object {
         const val TAG = "GraspyUnsent"
+
+        /** A spoken answer may take minutes to mark; past this the learner is asked instead of kept waiting, as on the web. */
+        const val FLUSH_PATIENCE_MILLIS = 20_000L
     }
 }
 

@@ -9,6 +9,9 @@ import com.latentic.graspy.collection.outbox.retrofit
 import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.mcp.keptViewCalls
 import com.latentic.graspy.sync.networkReach
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 
@@ -56,6 +59,7 @@ class AccountGraph(private val context: Application) {
                 RecordingOutbox(AppGraph.database(context).submissionDao(), AppGraph.submissionRepository(context)),
                 keptViewCalls(context),
             ),
+            sending = CoroutineScope(SupervisorJob() + Dispatchers.IO),
         )
     }
 

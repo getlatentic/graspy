@@ -9,7 +9,13 @@ import com.latentic.graspy.mcp.KEPT_RESULT
 import com.latentic.graspy.mcp.LearnerConnection
 import com.latentic.graspy.plan.LearnerRecord
 import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonObject
 import okhttp3.OkHttpClient
 import org.junit.After
@@ -42,10 +48,12 @@ class UnsentWorkTest {
     private val connection = LearnerConnection(database, ADA_KEY, calls, server.web.url("/mcp")) { true }
     private val viewCalls = Outbox { learnerKey -> LearnerConnection(database, learnerKey, calls, server.web.url("/mcp")) { true }.sentEverything() }
     private var online = true
-    private val unsent = UnsentWork({ online }, listOf(recordings, viewCalls))
+    private val sending = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val unsent = UnsentWork({ online }, listOf(recordings, viewCalls), sending)
 
     @After
     fun close() {
+        sending.cancel()
         database.close()
         runCatching { server.web.shutdown() }
     }
@@ -89,8 +97,22 @@ class UnsentWorkTest {
         online = false
         var flushed = false
 
-        assertFalse(UnsentWork({ online }, listOf(Outbox { flushed = true; true })).flush(ADA_KEY))
+        assertFalse(UnsentWork({ online }, listOf(Outbox { flushed = true; true }), sending).flush(ADA_KEY))
         assertFalse(flushed)
+    }
+
+    @Test
+    fun `past its patience, what is still being sent counts as unsent, and goes on being sent`() = runBlocking {
+        val marking = CompletableDeferred<Unit>()
+        val sent = CompletableDeferred<Unit>()
+        val slow = Outbox { marking.await(); sent.complete(Unit); true }
+
+        val asked = System.nanoTime()
+        assertFalse(UnsentWork({ true }, listOf(slow), sending, patienceMillis = 50).flush(ADA_KEY))
+        assertTrue("answered past its patience", System.nanoTime() - asked < 5_000_000_000L)
+
+        marking.complete(Unit)
+        withTimeout(5_000) { sent.await() }
     }
 
     @Test
@@ -98,7 +120,7 @@ class UnsentWorkTest {
         var sent = false
         val failing = Outbox { throw IllegalStateException("the outbox could not be read") }
 
-        assertFalse(UnsentWork({ true }, listOf(failing, Outbox { sent = true; true })).flush(ADA_KEY))
+        assertFalse(UnsentWork({ true }, listOf(failing, Outbox { sent = true; true }), sending).flush(ADA_KEY))
         assertTrue(sent)
     }
 
