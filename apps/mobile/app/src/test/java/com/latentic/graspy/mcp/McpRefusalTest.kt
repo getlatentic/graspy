@@ -50,17 +50,32 @@ class McpRefusalTest {
     }
 
     @Test
-    fun `a 4xx about the call is a refusal of it`() {
+    fun `a 4xx about the call, with graspy's JSON-RPC error, is a refusal of it`() {
         listOf(400, 404, 409, 413, 422).forEach { status ->
-            toolAnswer = { MockResponse().setResponseCode(status) }
+            toolAnswer = { id -> refused(id, status) }
             assertTrue("HTTP $status", callFailure().refusesTheCall())
         }
     }
 
     @Test
-    fun `a server failing, a timeout, a rate limit or a session refused over HTTP is not`() {
+    fun `a 4xx without graspy's JSON-RPC error came from something in the way, and is not`() {
+        listOf(
+            MockResponse().setResponseCode(404).setHeader("Content-Type", "text/html").setBody("<html>Not Found</html>"),
+            MockResponse().setResponseCode(410),
+            MockResponse().setResponseCode(451).setHeader("Content-Type", "application/json").setBody("""{"error":"Unavailable For Legal Reasons"}"""),
+            MockResponse().setResponseCode(413).setHeader("Content-Type", "application/json").setBody("""{"detail":"Not Found"}"""),
+        ).forEach { reply ->
+            toolAnswer = { reply }
+            val failure = callFailure()
+            assertFalse("HTTP ${reply.status}", failure.refusesTheCall())
+            assertFalse("HTTP ${reply.status} is an answer, not a lost connection", failure.isUnreachable())
+        }
+    }
+
+    @Test
+    fun `a server failing, a timeout, a rate limit or a session refused over HTTP is not, whatever its body`() {
         listOf(401, 403, 408, 425, 429, 500, 502, 503, 504, 520).forEach { status ->
-            toolAnswer = { MockResponse().setResponseCode(status) }
+            toolAnswer = { id -> refused(id, status) }
             val failure = callFailure()
             assertFalse("HTTP $status", failure.refusesTheCall())
             assertFalse("HTTP $status is an answer, not a lost connection", failure.isUnreachable())
@@ -103,7 +118,7 @@ class McpRefusalTest {
     @Test
     fun `a live call on a 503, 429, 401 or 403 is kept, the view told so, and the run sends it once the server takes it`() = runBlocking {
         listOf(503, 429, 401, 403).forEach { status ->
-            toolAnswer = { MockResponse().setResponseCode(status) }
+            toolAnswer = { id -> refused(id, status) }
             assertEquals("HTTP $status", KEPT_RESULT, outbox.callOrKeep(ANSWER_CHECK, JsonObject(emptyMap())))
         }
         assertEquals(0, outbox.sendKept())
@@ -116,7 +131,7 @@ class McpRefusalTest {
 
     @Test
     fun `a live call the server refuses is not kept, and a kept one it refuses is dropped`() = runBlocking {
-        toolAnswer = { MockResponse().setResponseCode(413) }
+        toolAnswer = { id -> refused(id, 413) }
         try {
             outbox.callOrKeep(ANSWER_CHECK, JsonObject(emptyMap()))
             fail("A refused call is the server's answer")
@@ -125,7 +140,7 @@ class McpRefusalTest {
         }
         assertTrue(database.keptCallDao().kept(OWNER).isEmpty())
 
-        toolAnswer = { MockResponse().setResponseCode(503) }
+        toolAnswer = { id -> refused(id, 503) }
         outbox.callOrKeep(ANSWER_CHECK, JsonObject(emptyMap()))
         toolAnswer = { id -> rpc(id) { putJsonObject("error") { put("code", -32602); put("message", "Invalid arguments") } } }
         assertEquals(1, outbox.sendKept())
@@ -154,7 +169,7 @@ class McpRefusalTest {
     private fun answer(body: JsonObject): MockResponse {
         val id = body.getValue("id")
         return when (body.string("method")) {
-            "tools/list", "resources/list" -> catalogueStatus?.let { MockResponse().setResponseCode(it) } ?: rpc(id) {
+            "tools/list", "resources/list" -> catalogueStatus?.let { refused(id, it) } ?: rpc(id) {
                 putJsonObject("result") {
                     put("tools", buildJsonArray { add(buildJsonObject { put("name", ANSWER_CHECK) }) })
                     put("resources", buildJsonArray {})
@@ -173,6 +188,10 @@ class McpRefusalTest {
         }
         return MockResponse().setHeader("Content-Type", "application/json").setBody(body.toString())
     }
+
+    /** Refused over HTTP as graspy's /mcp refuses: with a JSON-RPC error. */
+    private fun refused(id: JsonElement, status: Int): MockResponse =
+        rpc(id) { putJsonObject("error") { put("code", -32600); put("message", "Refused with $status") } }.setResponseCode(status)
 
     private companion object {
         const val OWNER = "uid-1/aaaaaaaaaaaa"

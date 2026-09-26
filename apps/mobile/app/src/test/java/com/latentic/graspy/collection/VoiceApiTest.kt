@@ -1,6 +1,7 @@
 package com.latentic.graspy.collection
 
 import com.latentic.graspy.collection.outbox.apiJson
+import com.latentic.graspy.network.fromGraspy
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -9,7 +10,9 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
+import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
@@ -75,6 +78,26 @@ class VoiceApiTest {
 
         val request = server.takeRequest()
         assertEquals("/api/voice/teacher-audio/prompt?language=en \"v3\"", "${request.path} ${request.getHeader("If-None-Match")}")
+    }
+
+    @Test
+    fun `a refusal is the voice API's only with its own body, and reading it leaves the body for the reason`() {
+        listOf(
+            Triple(409, """{"detail":"that step was not offered to this learner","code":"step_not_offered"}""", true),
+            Triple(409, """{"detail":{"error":"Choose a learner first","code":"learner_required"}}""", true),
+            Triple(413, """{"detail":"Request body too large"}""", true),
+            Triple(405, """{"detail":"Method Not Allowed"}""", true),
+            Triple(404, """{"detail":"Not Found"}""", false),
+            Triple(404, "<html>Not Found</html>", false),
+            Triple(410, "", false),
+            Triple(451, """{"error":"Unavailable For Legal Reasons"}""", false),
+        ).forEach { (status, body, graspys) ->
+            server.enqueue(json(body).setResponseCode(status))
+            val refused = assertThrows(HttpException::class.java) { runBlocking { api.createSample("key-1", SAMPLE) } }
+
+            assertEquals("$status $body", graspys, fromGraspy(refused))
+            assertEquals(body, refused.response()?.errorBody()?.string())
+        }
     }
 
     private fun sent() = server.takeRequest().let { "${it.method} ${it.path}" }

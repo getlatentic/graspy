@@ -144,9 +144,9 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
     }
 
     private fun resultOf(response: Response, method: String): JsonObject {
-        // The server answered: not a lost connection, so no copy stands in for it.
-        if (!response.isSuccessful) throw McpRefusal("$method failed: HTTP ${response.code}", refusedOverHttp(response.code))
         val text = response.body.string()
+        // The server answered: not a lost connection, so no copy stands in for it.
+        if (!response.isSuccessful) throw McpRefusal("$method failed: HTTP ${response.code}", refusedOverHttp(response.code, text))
         val message = if (response.header("Content-Type").orEmpty().startsWith("text/event-stream")) {
             text.lineSequence().filter { it.startsWith("data:") }.lastOrNull()?.removePrefix("data:")?.trim()
         } else {

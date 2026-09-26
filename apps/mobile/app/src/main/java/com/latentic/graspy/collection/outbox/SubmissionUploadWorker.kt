@@ -10,6 +10,7 @@ import com.latentic.graspy.collection.isCompleteFor
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.resolveAppLanguage
+import com.latentic.graspy.network.fromGraspy
 import com.latentic.graspy.practice.fromSpoken
 import com.latentic.graspy.sync.LessonRefreshRequest
 import java.io.File
@@ -99,7 +100,7 @@ class SubmissionUploadWorker(
             handleFailure(
                 localId,
                 failureCode(error) ?: "sample API returned HTTP ${error.code()}",
-                UploadFailurePolicy.forHttp(error.code(), runAttemptCount, refusal),
+                UploadFailurePolicy.forHttp(error.code(), runAttemptCount, fromGraspy(error), refusal),
                 dao,
             )
         } catch (error: IOException) {
