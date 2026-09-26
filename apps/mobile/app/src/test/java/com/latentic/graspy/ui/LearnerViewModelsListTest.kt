@@ -16,7 +16,7 @@ import org.junit.Test
 class LearnerViewModelsListTest {
     /** The app's compiled classes, from the jar or folder the build puts them in for unit tests. */
     private val appClasses: List<Class<*>> by lazy {
-        val location = File(AskViewModel::class.java.protectionDomain.codeSource.location.toURI())
+        val location = File(requireNotNull(AskViewModel::class.java.protectionDomain).codeSource.location.toURI())
         val paths = if (location.isDirectory) {
             location.walk().filter { it.isFile }.map { it.relativeTo(location).invariantSeparatorsPath }.toList()
         } else {

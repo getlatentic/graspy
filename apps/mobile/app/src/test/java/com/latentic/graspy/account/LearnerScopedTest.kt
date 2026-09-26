@@ -59,9 +59,13 @@ class LearnerScopedTest {
     @After
     fun signOut() = AppGraph.account(application).accounts.set(null)
 
+    private fun deviceLearnsAs(learnerId: String) =
+        AppGraph.account(application).accounts.set(Account("u", null, ChosenLearner(learnerId, learnerId), deviceJoins = false))
+
     @Test
-    fun `a view model is made for the learner of its scope, and anew for the next learner`() {
-        val learner = mutableStateOf("account:u/ada")
+    fun `a view model is made for the learner of its scope, not the device's, and anew for the next learner`() {
+        deviceLearnsAs("tunde")
+        val learner = mutableStateOf("u/ada")
         val made = mutableListOf<Probe>()
         val viewModels = LearnerViewModels(mapOf(Probe::class.java to ::Probe))
         compose.setContent {
@@ -71,10 +75,10 @@ class LearnerScopedTest {
             }
         }
         compose.waitForIdle()
-        learner.value = "account:u/tunde"
+        learner.value = "u/bayo"
         compose.waitForIdle()
 
-        assertEquals(listOf("account:u/ada", "account:u/tunde"), made.map { it.learnerKey })
+        assertEquals(listOf("u/ada", "u/bayo"), made.map { it.learnerKey })
         assertNotSame(made[0], made[1])
     }
 
@@ -82,7 +86,7 @@ class LearnerScopedTest {
     fun `a learner's view model left off the list fails, naming itself`() {
         val failure = runCatching {
             compose.setContent {
-                LearnerScope("account:u/ada", LearnerViewModels(emptyMap())) { viewModel<Probe>() }
+                LearnerScope("u/ada", LearnerViewModels(emptyMap())) { viewModel<Probe>() }
             }
             compose.waitForIdle()
         }.exceptionOrNull() ?: error("A learner's view model was made without its learner")
@@ -91,7 +95,7 @@ class LearnerScopedTest {
 
     @Test
     fun `voice lessons ask for newer lessons for their own learner`() {
-        AppGraph.account(application).accounts.set(Account("u", null, ChosenLearner("ada", "Ada"), deviceJoins = false))
+        deviceLearnsAs("ada")
 
         PracticeLessonViewModel(application, "u/ada").prepare(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
         assertEquals(1, refreshesFor("u/ada"))
@@ -107,6 +111,17 @@ class LearnerScopedTest {
         HomeCatalogueViewModel(application, "u/ada").open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
 
         assertEquals(0, refreshesFor("u/ada"))
+    }
+
+    @Test
+    fun `nothing starts for a learner the device has left for another`() {
+        deviceLearnsAs("tunde")
+
+        PracticeLessonViewModel(application, "u/ada").prepare(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+        HomeCatalogueViewModel(application, "u/ada").open(AppLanguage.ENGLISH, SchoolClass.PRIMARY_4)
+
+        assertEquals(0, refreshesFor("u/ada"))
+        assertEquals(0, refreshesFor("u/tunde"))
     }
 
     @Test
