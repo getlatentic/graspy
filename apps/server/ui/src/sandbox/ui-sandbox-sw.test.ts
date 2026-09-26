@@ -214,6 +214,61 @@ describe("the sandbox's service worker", () => {
     expect(worker.pages()).toEqual(pages);
   });
 
+  it("opens the view's page from its copy at once, fetching the next", async () => {
+    const worker = new SandboxWorker();
+    const page = "/ui-sandbox-frame?host=x";
+    worker.serve(page, "first");
+    await worker.request(`${ORIGIN}${page}`);
+    worker.serve(page, "second");
+
+    const now = await worker.request(`${ORIGIN}${page}`);
+    const next = await worker.request(`${ORIGIN}${page}`);
+
+    expect(await now?.text()).toBe("first");
+    expect(await next?.text()).toBe("second");
+  });
+
+  it("opens the proxy page from the network while there is one", async () => {
+    const worker = new SandboxWorker();
+    const page = "/ui-sandbox?host=x";
+    worker.serve(page, "first");
+    await worker.request(`${ORIGIN}${page}`);
+    worker.serve(page, "second");
+
+    const response = await worker.request(`${ORIGIN}${page}`);
+
+    expect(await response?.text()).toBe("second");
+  });
+
+  it.each([LESSON[0], "/ui-sandbox?host=x", "/ui-sandbox-frame?host=x"])(
+    "answers %s from the network though storing it fails",
+    async (path) => {
+      const worker = new SandboxWorker();
+      worker.serve(path, path);
+      for (const name of ["graspy-view-assets-v1", "graspy-sandbox-pages-v1"])
+        worker.cache(name).refusal = new DOMException(
+          "The quota has been exceeded.",
+          "QuotaExceededError",
+        );
+
+      const response = await worker.request(`${ORIGIN}${path}`);
+
+      expect(await response?.text()).toBe(path);
+    },
+  );
+
+  it("stores a file's use once while it runs, not on every view", async () => {
+    const worker = deployed();
+    await worker.keep();
+    const cache = worker.cache("graspy-view-assets-v1");
+    const before = cache.writes.length;
+
+    for (let view = 0; view < 3; view++)
+      await worker.request(`${ORIGIN}${LESSON[0]}`);
+
+    expect(cache.writes.slice(before)).toEqual([`${ORIGIN}${LESSON[0]}`]);
+  });
+
   it("serves a cached file though storing its use fails", async () => {
     const worker = deployed();
     await worker.keep();

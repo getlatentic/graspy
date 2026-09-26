@@ -1,15 +1,19 @@
 // The sandbox origin's service worker, so every view opens without a
 // connection once any view has opened with one. It controls the sandbox
-// proxy page and the page the proxy writes each view into, and answers two
-// kinds of request: those pages, from the network while there is one and
-// from their last copy when not; and the views' scripts, styles and fonts,
-// which are hashed and never change, from its cache first.
+// proxy page and the page the proxy writes each view into, and answers
+// three kinds of request: the proxy page, from the network while there is
+// one and from its last copy when not; the view's page, from its last copy
+// at once, fetched again for the next view; and the views' scripts, styles
+// and fonts, which are hashed and never change, from its cache first. What
+// it stores is best effort: a full quota never fails a response it has.
 "use strict";
 
 const PAGES = "graspy-sandbox-pages-v1";
 const ASSETS = "graspy-view-assets-v1";
 const KEPT = new Set([PAGES, ASSETS]);
-const PAGE_PATHS = new Set(["/ui-sandbox", "/ui-sandbox-frame"]);
+const PROXY_PATH = "/ui-sandbox";
+const FRAME_PATH = "/ui-sandbox-frame";
+const PAGE_PATHS = new Set([PROXY_PATH, FRAME_PATH]);
 const ASSET_PATH = "/views/assets/";
 // Every view's files in the current build, written by the views' build.
 const LIST = "/views/precache.json";
@@ -52,11 +56,17 @@ async function trimmed(cache, current) {
   );
 }
 
-async function page(request) {
+function store(event, cache, request, response) {
+  event.waitUntil(cache.put(request, response).catch(() => undefined));
+}
+
+// The proxy's script must match the server it talks to.
+async function proxyPage(event) {
+  const { request } = event;
   const cache = await caches.open(PAGES);
   try {
     const response = await fetch(request);
-    if (response.ok) await cache.put(request, response.clone());
+    if (response.ok) store(event, cache, request, response.clone());
     return response;
   } catch (error) {
     const kept = await cache.match(request);
@@ -65,18 +75,41 @@ async function page(request) {
   }
 }
 
+// The view's page is the same for the same address until the server
+// changes, so a view never waits on the network for it.
+async function framePage(event) {
+  const { request } = event;
+  const cache = await caches.open(PAGES);
+  const kept = await cache.match(request);
+  const fresh = fetch(request).then((response) => {
+    if (response.ok) store(event, cache, request, response.clone());
+    return response;
+  });
+  if (!kept) return fresh;
+  event.waitUntil(fresh.catch(() => undefined));
+  return kept;
+}
+
+// Put again, a file goes last in the cache's order, so the longest unused go
+// first. A put writes the whole file: once per file while this worker runs.
+const used = new Set();
+
 async function asset(event) {
   const { request } = event;
   const cache = await caches.open(ASSETS);
   const kept = await cache.match(request);
   if (kept) {
-    // Put again, it goes last in the cache's order: the longest unused go
-    // first. The view has its file whether or not that is stored.
-    event.waitUntil(cache.put(request, kept.clone()).catch(() => undefined));
+    if (!used.has(request.url)) {
+      used.add(request.url);
+      store(event, cache, request, kept.clone());
+    }
     return kept;
   }
   const response = await fetch(request);
-  if (response.ok) await cache.put(request, response.clone());
+  if (response.ok) {
+    used.add(request.url);
+    store(event, cache, request, response.clone());
+  }
   return response;
 }
 
@@ -153,6 +186,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== self.location.origin)
     return;
-  if (PAGE_PATHS.has(url.pathname)) event.respondWith(page(event.request));
+  if (url.pathname === PROXY_PATH) event.respondWith(proxyPage(event));
+  else if (url.pathname === FRAME_PATH) event.respondWith(framePage(event));
   else if (isAsset(url)) event.respondWith(asset(event));
 });

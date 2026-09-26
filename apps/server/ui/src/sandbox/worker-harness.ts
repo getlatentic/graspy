@@ -16,6 +16,7 @@ class MemoryCache {
   readonly entries = new Map<string, Response>();
   // What storing fails with, such as a full quota.
   refusal: Error | null = null;
+  readonly writes: string[] = [];
 
   async match(key: Request | string) {
     return this.entries.get(url(key))?.clone();
@@ -23,6 +24,7 @@ class MemoryCache {
 
   async put(key: Request | string, response: Response) {
     if (this.refusal) throw this.refusal;
+    this.writes.push(url(key));
     this.entries.delete(url(key));
     this.entries.set(url(key), response);
   }
