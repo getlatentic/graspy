@@ -1,0 +1,22 @@
+{
+  "name": "@graspy/tutor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "agents": "^0.22.0",
+    "ts-fsrs": "^5.4.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260903.1",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^4.129.0"
+  }
+}

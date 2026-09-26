@@ -1,0 +1,31 @@
+{
+  "_about": "Measured rules of docs/design/child-language.md, read by the lesson check and the tutor's reply guard.",
+  "grown_up_words": [
+    "recite",
+    "voice note",
+    "objective",
+    "quick check",
+    "by the end",
+    "fact",
+    "facts",
+    "correct",
+    "incorrect",
+    "attempt",
+    "recording",
+    "system",
+    "verdict",
+    "final number"
+  ],
+  "words_per_sentence": {
+    "early": 8,
+    "lower": 10,
+    "upper": 14
+  },
+  "words_per_line": {
+    "early": 20,
+    "lower": 30,
+    "upper": 40
+  },
+  "words_when_upper_is_taught": 60,
+  "reply_sentences": 2
+}

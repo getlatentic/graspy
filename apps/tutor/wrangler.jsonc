@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "graspy-tutor",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-05",
+  "compatibility_flags": ["nodejs_compat"],
+  // Reached only through the API Worker's service binding: a public address would let anyone
+  // write to any learner's memory and spend the account's model budget.
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  "ai": { "binding": "AI" },
+  "durable_objects": {
+    "bindings": [{ "name": "Learner", "class_name": "Learner" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Learner"] }]
+}

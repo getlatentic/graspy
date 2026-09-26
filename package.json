@@ -5,7 +5,7 @@
   "packageManager": "npm@10.9.2",
   "private": true,
   "scripts": {
-    "dev": "turbo run dev --filter=!@graspy/teacher",
+    "dev": "turbo run dev --filter=!@graspy/teacher --filter=!@graspy/tutor",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint"
