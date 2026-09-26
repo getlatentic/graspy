@@ -306,6 +306,15 @@ class DeviceWipeTest {
     }
 
     @Test
+    fun `a failed sign-in marks a Google account it could not forget, for the next sign-in`() = runBlocking {
+        forgettingFails = true
+
+        AccountEntry(context, { SignInOutcome.Failed("Firebase refused the credential") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
+
+        assertEquals(setOf("google_account"), signOutPending.keys)
+    }
+
+    @Test
     fun `leaving for another account marks a Google account it could not forget, for the next sign-in`() = runBlocking {
         forgettingFails = true
 

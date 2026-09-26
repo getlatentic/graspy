@@ -57,6 +57,8 @@ class GoogleSignIn(
         }
     } catch (_: GetCredentialCancellationException) {
         SignInOutcome.Cancelled
+    } catch (cancelled: CancellationException) {
+        throw cancelled
     } catch (_: NoCredentialException) {
         SignInOutcome.NoAccountAvailable
     } catch (failure: GetCredentialException) {

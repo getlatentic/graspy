@@ -29,8 +29,8 @@ class AccountEntry(
     /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
     suspend fun signIn(): SignInOutcome {
         val outcome = google.signIn(askWhichAccount = !lastGoogleAccountForgotten())
-        // A sign-in that failed may have got as far as a Google account (Firebase refusing its credential):
-        // forgotten, the next sign-in does not take it unasked.
+        // A failed sign-in may have got as far as a Google account (Firebase refusing its credential); forgetting
+        // it on any failure keeps the next sign-in from taking it unasked, at worst asking once more than needed.
         if (outcome is SignInOutcome.Failed) forgetGoogleAccountOrLeaveMarked()
         if (outcome !is SignInOutcome.Succeeded) return outcome
         return try {
