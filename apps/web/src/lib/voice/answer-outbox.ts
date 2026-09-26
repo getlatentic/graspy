@@ -6,10 +6,15 @@ import {
   settledOf,
   type Settled,
 } from "./answer-store";
-import { sendAnswer, type Sent } from "./send-answer";
+import { sendAnswer, type AnswerApi, type Sent } from "./send-answer";
 import { createSample, evaluate, uploadAudio } from "./voice-api";
 
-const api = { createSample, uploadAudio, evaluate };
+// A learner's answer goes under their session only, never under the next learner's.
+const apiFor = (learner: string): AnswerApi => ({
+  createSample: (key, metadata) => createSample(key, metadata, learner),
+  uploadAudio: (path, wav) => uploadAudio(path, wav, learner),
+  evaluate: (sample) => evaluate(sample, learner),
+});
 const keeping = { keep: keepProgress, settle: settleAnswer };
 
 type Listener = (key: string, sent: Settled) => void;
@@ -18,7 +23,7 @@ const listeners = new Set<Listener>();
 async function sendIfWaiting(key: string): Promise<Sent | null> {
   const answer = await keptAnswer(key);
   if (!answer) return null;
-  const sent = await sendAnswer(answer, api, keeping);
+  const sent = await sendAnswer(answer, apiFor(answer.learner), keeping);
   if (sent.kind !== "kept")
     for (const listener of listeners) listener(key, sent);
   return sent;
@@ -39,10 +44,11 @@ export function sendKept(key: string): Promise<Sent | null> {
   return sending;
 }
 
+// An answer the voice API answered but kept holds back none after it; with no answer, none would go.
 async function sendAll(learner: string): Promise<void> {
   for (const { key } of await keptAnswers(learner)) {
     const sent = await sendKept(key);
-    if (sent?.kind === "kept") return;
+    if (sent?.kind === "kept" && sent.status === 0) return;
   }
 }
 
@@ -56,6 +62,13 @@ export function sendKeptAnswers(learner: string): Promise<void> {
     sending.set(learner, run);
   }
   return run;
+}
+
+/** Sends this learner's kept answers; false while some are still to be sent. An answer marked or
+ * refused and waiting to be shown has reached the server. */
+export async function sentEveryAnswer(learner: string): Promise<boolean> {
+  await sendKeptAnswers(learner);
+  return (await keptAnswers(learner)).length === 0;
 }
 
 /** The answer's outcome once the server has given one, whoever sent it; never once aborted. */

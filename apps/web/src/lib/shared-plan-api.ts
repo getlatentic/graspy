@@ -1,4 +1,3 @@
-import { ApiError } from "@/lib/api/errors";
 import { getJson, sendJson } from "@/lib/api/request";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { API_BASE_URL } from "@/lib/env";
@@ -12,7 +11,7 @@ interface Held {
 const PLAN_URL = `${API_BASE_URL}/learner/curriculum`;
 
 function held({ plan }: Held): CurriculumData {
-  if (!plan) throw new ApiError("The server returned no plan", 0);
+  if (!plan) throw new Error("The server returned no plan");
   return plan;
 }
 

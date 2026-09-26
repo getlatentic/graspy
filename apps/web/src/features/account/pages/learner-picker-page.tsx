@@ -22,8 +22,8 @@ import { useLearners } from "../hooks/use-learners";
 
 const MAX_LEARNERS = 8;
 
-const PROBLEMS: Record<ChoiceProblem, string> = {
-  unsent: "learners.unsent",
+const PROBLEMS: Record<Exclude<ChoiceProblem, "unsent">, string> = {
+  offline: "learners.offline",
   full: "learners.full",
   failed: "learners.failed",
 };
@@ -74,7 +74,7 @@ function Picker({ account }: { account: Account }) {
           onAdd={() => setAdding(true)}
         />
       )}
-      <Status busy={choice.busy} problem={choice.problem} />
+      <Status choice={choice} />
       <AccountLine account={account} />
     </div>
   );
@@ -144,15 +144,9 @@ function BackToYou() {
   );
 }
 
-function Status({
-  busy,
-  problem,
-}: {
-  busy: boolean;
-  problem: ChoiceProblem | null;
-}) {
+function Status({ choice }: { choice: ReturnType<typeof useLearnerChoice> }) {
   const { t } = useI18n();
-  if (busy) {
+  if (choice.busy) {
     return (
       <p className="flex items-center gap-2 text-sm text-muted">
         <Spinner />
@@ -160,7 +154,35 @@ function Status({
       </p>
     );
   }
-  return problem ? <ProblemNote>{t(PROBLEMS[problem])}</ProblemNote> : null;
+  if (choice.problem === "unsent") {
+    return <SwitchAnyway onAnyway={choice.anyway} onCancel={choice.cancel} />;
+  }
+  return choice.problem ? (
+    <ProblemNote>{t(PROBLEMS[choice.problem])}</ProblemNote>
+  ) : null;
+}
+
+function SwitchAnyway({
+  onAnyway,
+  onCancel,
+}: {
+  onAnyway: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div role="alertdialog" className="flex flex-col gap-2">
+      <p className="text-sm font-medium text-danger">{t("learners.unsent")}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={onAnyway}>
+          {t("learners.switchAnyway")}
+        </Button>
+        <Button variant="secondary" size="sm" onClick={onCancel}>
+          {t("learners.cancel")}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 /** Who is signed in; before a learner is chosen, a wrong account can be left. */

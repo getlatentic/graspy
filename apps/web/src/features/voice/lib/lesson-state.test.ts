@@ -102,7 +102,7 @@ describe("a voice lesson", () => {
       ...toYourTurn,
       { type: "recordStarted" },
       { type: "recorded", key: "k1" },
-      { type: "kept", key: "k1" },
+      { type: "kept", key: "k1", code: null },
     );
     expect(kept.phase.name).toBe("kept");
     const later = lessonReducer(kept, {
@@ -149,7 +149,7 @@ describe("a voice lesson", () => {
       ...toYourTurn,
       { type: "recordStarted" },
       { type: "recorded", key: "k1" },
-      { type: "kept", key: "k1" },
+      { type: "kept", key: "k1", code: null },
     );
     expect(lessonReducer(kept, { type: "carriedOn", key: "k0" })).toBe(kept);
     expect(lessonReducer(kept, { type: "seenElsewhere", key: "k0" })).toBe(

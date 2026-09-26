@@ -20,6 +20,16 @@ class InvalidSignIn(Exception):
     """The message is sent to the client."""
 
 
+class SignInUnchecked(Exception):
+    """Google could not be asked, or failed to answer: the same token may pass on
+    a later try. The message is sent to the client."""
+
+
+def _google_failed(status: int) -> bool:
+    """Identity Toolkit's own failures; any other status is its verdict on the token."""
+    return status == 429 or status >= 500
+
+
 @dataclass(frozen=True)
 class SignedIn:
     uid: str
@@ -53,11 +63,18 @@ async def verified(
         )
     except httpx.HTTPError as error:
         logger.error("Identity Toolkit unreachable: %s", error)
-        raise InvalidSignIn("Sign-in could not be checked. Try again.") from error
+        raise SignInUnchecked("Sign-in could not be checked. Try again.") from error
     finally:
         if own:
             await client.aclose()
 
+    if _google_failed(response.status_code):
+        logger.error(
+            "Identity Toolkit failed (%s): %s",
+            response.status_code,
+            response.text[:200],
+        )
+        raise SignInUnchecked("Sign-in could not be checked. Try again.")
     if response.status_code != 200:
         logger.info("Identity Toolkit refused a token: %s", response.text[:200])
         raise InvalidSignIn("The sign-in is not valid. Sign in again.")

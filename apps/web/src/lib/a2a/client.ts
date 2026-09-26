@@ -7,7 +7,12 @@ import {
 } from "@a2a-js/sdk/client";
 import type { AuthenticationHandler, Client } from "@a2a-js/sdk/client";
 import { A2A_BASE_URL } from "@/lib/env";
-import { ApiError, toNetworkError } from "@/lib/api/errors";
+import {
+  ApiError,
+  UNREADABLE_ANSWER,
+  toApiError,
+  toNetworkError,
+} from "@/lib/api/errors";
 import { getSessionToken, refreshSessionToken } from "@/lib/api/session";
 import {
   activityOf,
@@ -18,6 +23,7 @@ import {
   type ReplyData,
 } from "./reply-data";
 import { messageParts, type AppCallRequest } from "./request-data";
+import { rpcFailureIn, sdkFailure } from "./rpc-errors";
 
 // The wire format is protobuf-derived (numeric roles, `{content: {$case, value}}`
 // parts); this folder is the only place that shape is known.
@@ -41,17 +47,43 @@ const authenticatingFetch = createAuthenticatingFetchWithRetry(
   authentication,
 );
 
+// The SDK reports an HTTP answer as a plain Error with the status only in its text, and drops
+// a JSON-RPC error's code: thrown here, each keeps what it says.
+async function answeredFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const response = await authenticatingFetch(input, init);
+  if (!response.ok) throw await toApiError(response);
+  if (response.headers.get("Content-Type")?.includes("json")) {
+    const body: unknown = await response
+      .clone()
+      .json()
+      .catch(() => null);
+    const failure = rpcFailureIn(body);
+    if (failure) throw failure;
+  }
+  return response;
+}
+
 const factoryOptions = ClientFactoryOptions.createFrom(
   ClientFactoryOptions.default,
   {
-    transports: [
-      new JsonRpcTransportFactory({ fetchImpl: authenticatingFetch }),
-    ],
-    cardResolver: new DefaultAgentCardResolver({
-      fetchImpl: authenticatingFetch,
-    }),
+    transports: [new JsonRpcTransportFactory({ fetchImpl: answeredFetch })],
+    cardResolver: new DefaultAgentCardResolver({ fetchImpl: answeredFetch }),
   },
 );
+
+/** A rejected fetch is a NetworkError and an HTTP answer an ApiError already; anything else
+ * the SDK threw is a JSON-RPC error or an answer it could not read. */
+function tutorFailure(cause: unknown): ApiError {
+  if (cause instanceof ApiError || cause instanceof TypeError) {
+    return toNetworkError(cause);
+  }
+  return cause instanceof Error
+    ? sdkFailure(cause)
+    : new ApiError(String(cause), UNREADABLE_ANSWER);
+}
 
 let client: Promise<Client> | null = null;
 
@@ -60,7 +92,7 @@ function getClient(): Promise<Client> {
     .createFromUrl(DISCOVERY_ORIGIN)
     .catch((cause) => {
       client = null;
-      throw toNetworkError(cause);
+      throw tutorFailure(cause);
     });
   return client;
 }
@@ -227,12 +259,11 @@ async function askOnce(
     }
   } catch (cause) {
     if (listener.signal?.aborted) throw new TurnStopped();
-    if (cause instanceof ApiError) throw cause;
-    throw toNetworkError(cause);
+    throw tutorFailure(cause);
   }
 
   if (!heard.answer.trim() && !heard.finished) {
-    throw new ApiError("The tutor stopped before answering", 0);
+    throw new ApiError("The tutor stopped before answering", UNREADABLE_ANSWER);
   }
   return { text: heard.answer.trim(), contextId: heard.thread, ...heard.data };
 }

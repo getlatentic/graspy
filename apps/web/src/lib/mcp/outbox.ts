@@ -1,9 +1,10 @@
 import type { CallToolResult } from "@modelcontextprotocol/client";
 import { committed, openDB, OUTBOX_STORE, promisify } from "@/lib/idb";
-import { callAppTool } from "./server";
+import { callAppTool, reachServer } from "./server";
+import { refusesTheCall } from "./refusal";
 
-// A view's tools/call made offline is kept and sent in order once back. These calls record
-// what the learner did, and the server takes each again without harm.
+// A view's tools/call the server did not take is kept and sent in order later. These calls
+// record what the learner did, and the server takes each again without harm.
 interface KeptCall {
   id?: number;
   name: string;
@@ -15,15 +16,10 @@ const KEPT: CallToolResult = {
   content: [
     {
       type: "text",
-      text: "There is no connection: this is kept, and sent once there is.",
+      text: "This is kept on the device and sent later.",
     },
   ],
 };
-
-/** As opposed to the server refusing. */
-export function isUnreachable(error: unknown): boolean {
-  return !navigator.onLine || error instanceof TypeError;
-}
 
 async function keep(name: string, args: Record<string, unknown>) {
   const db = await openDB();
@@ -34,16 +30,30 @@ async function keep(name: string, args: Record<string, unknown>) {
   await promisify(store.add(call));
 }
 
+async function kept(
+  name: string,
+  args: Record<string, unknown>,
+): Promise<CallToolResult> {
+  await keep(name, args);
+  return KEPT;
+}
+
 export async function callOrKeep(
   name: string,
   args: Record<string, unknown>,
 ): Promise<CallToolResult> {
+  // As the run does: a connection refused, whatever its status, is not the server refusing a call.
+  try {
+    await reachServer();
+  } catch {
+    return kept(name, args);
+  }
   try {
     return await callAppTool(name, args);
   } catch (error) {
-    if (!isUnreachable(error)) throw error;
-    await keep(name, args);
-    return KEPT;
+    // Kept as the outbox's run keeps it: until the server refuses this very call.
+    if (refusesTheCall(error)) throw error;
+    return kept(name, args);
   }
 }
 
@@ -64,13 +74,21 @@ async function forget(id: number): Promise<void> {
 }
 
 async function sendAll(): Promise<number> {
+  const calls = await keptCalls();
+  if (calls.length === 0) return 0;
+  // A connection refused, whatever its status, is not the server refusing a call.
+  try {
+    await reachServer();
+  } catch {
+    return 0;
+  }
   let sent = 0;
-  for (const call of await keptCalls()) {
+  for (const call of calls) {
     try {
       await callAppTool(call.name, call.args);
     } catch (error) {
-      if (isUnreachable(error)) break;
-      // Refused now, it would be refused every time.
+      // What the learner did stays on the device until the server refuses this very call.
+      if (!refusesTheCall(error)) break;
       console.warn(`The server refused a kept ${call.name}:`, error);
     }
     await forget(call.id!);
@@ -88,7 +106,7 @@ export function sendKept(): Promise<number> {
   return sending;
 }
 
-/** Sends what was kept; false while some of it cannot reach the server. */
+/** Sends what was kept; false while some of it is still on the device. */
 export async function sentEverything(): Promise<boolean> {
   await sendKept();
   return (await keptCalls()).length === 0;

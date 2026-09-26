@@ -184,6 +184,11 @@ def activity_for(metadata: dict):
 
 
 PROCESSING_LEASE_MS = 3 * 60 * 1000
+# The wait before each attempt at marking a turn, from the end of the one before. Every attempt pays
+# for transcription and marking, so a turn that keeps failing stops being tried; the waits let a
+# provider's short outage pass without spending the attempts.
+RETRY_AFTER_MS = (0, 2 * 60 * 1000, 30 * 60 * 1000)
+MAX_TURN_ATTEMPTS = len(RETRY_AFTER_MS)
 
 
 def new_claim_token() -> str:
@@ -196,17 +201,45 @@ def write_won(result) -> bool:
     return int(result.meta.changes) > 0
 
 
-def claimable(
-    row: dict | None, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS
-) -> bool:
-    """A turn may be (re)claimed when it failed, or when a worker that claimed it never finished.
+def _unfinished(row: dict, now_ms: int, lease_ms: int) -> bool:
+    """Failed, or claimed by a worker that never finished.
 
     A crash after the claim leaves the row in `processing` forever; past the lease that row is
     treated as abandoned so the next request evaluates it instead of answering 202 for good.
     """
-    if row is None or row["state"] == "failed":
+    if row["state"] == "failed":
         return True
     return row["state"] == "processing" and now_ms - int(row["updated_at"]) > lease_ms
+
+
+def given_up(row: dict, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS) -> bool:
+    """A turn left unfinished on its last allowed attempt, which is never tried again."""
+    attempts = int(row.get("attempts") or 0)
+    return _unfinished(row, now_ms, lease_ms) and attempts >= MAX_TURN_ATTEMPTS
+
+
+def wait_left_ms(row: dict, now_ms: int) -> int:
+    """How long until the turn's next attempt is due; 0 once it is."""
+    attempts = min(int(row.get("attempts") or 0), MAX_TURN_ATTEMPTS - 1)
+    return max(0, int(row["updated_at"]) + RETRY_AFTER_MS[attempts] - now_ms)
+
+
+def waiting(row: dict, now_ms: int) -> bool:
+    """A turn whose next attempt is not due yet."""
+    return wait_left_ms(row, now_ms) > 0
+
+
+def claimable(
+    row: dict | None, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS
+) -> bool:
+    """A turn may be (re)claimed when it is unfinished, has attempts left and the next is due."""
+    if row is None:
+        return True
+    return (
+        _unfinished(row, now_ms, lease_ms)
+        and not given_up(row, now_ms, lease_ms)
+        and not waiting(row, now_ms)
+    )
 
 
 def turn_payload(row: dict) -> dict:

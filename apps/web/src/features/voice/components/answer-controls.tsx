@@ -73,7 +73,7 @@ export function AnswerControls({
       </div>
     );
   }
-  if (phase.name === "checking") {
+  if (phase.name === "saving" || phase.name === "checking") {
     return (
       <p role="status" className="flex items-center gap-2 text-muted">
         <Spinner className="text-accent-ink" />

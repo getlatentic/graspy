@@ -26,12 +26,8 @@ function stubStorage(entries: Record<string, string> = {}) {
   return store;
 }
 
-const answer = (body: unknown, ok = true) => ({
-  ok,
-  status: ok ? 200 : 503,
-  json: async () => body,
-  headers: new Headers(),
-});
+const answer = (body: unknown, ok = true) =>
+  Response.json(body, { status: ok ? 200 : 503 });
 
 function serve(importOk = true) {
   fetchWithSession.mockImplementation(async (url: string) =>

@@ -15,6 +15,11 @@ import {
 
 vi.mock("@/lib/api/session", () => ({ fetchWithSession: respond }));
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
+// Whom the device learns as; a test may switch it.
+const device = vi.hoisted(() => ({ learner: "device/abc" }));
+vi.mock("@/lib/voice/voice-learner-key", () => ({
+  voiceLearnerKey: () => device.learner,
+}));
 
 // A fresh module per load: the app keeps one IndexedDB connection for the tab's lifetime.
 async function load() {
@@ -28,6 +33,7 @@ async function load() {
 
 beforeEach(() => {
   resetServer();
+  device.learner = LEARNER.key;
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("IDBKeyRange", IDBKeyRange);
 });
@@ -186,12 +192,78 @@ describe("the answers kept on the device", () => {
       ),
     );
 
+    device.learner = "device/other";
     await app.sendKeptAnswers("device/other");
     expect(sent("POST /api/voice/samples/gvm_key-2/evaluation")).toHaveLength(
       1,
     );
     release();
     await first;
+  });
+
+  it("keep no answer its keeper no longer wants once the write begins", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT, () => false);
+    expect(await app.keptAnswers(LEARNER.key)).toEqual([]);
+  });
+
+  it("send the next answer past one the voice API answered but did not mark", async () => {
+    const app = await load();
+    await app.keepAnswer(answerTo(OTHER, "key-0", 0));
+    await app.keepAnswer(KEPT);
+    server.busy = 1;
+
+    await app.sendKeptAnswers(LEARNER.key);
+    expect(await app.keptAnswers(LEARNER.key)).toMatchObject([
+      { key: "key-0" },
+    ]);
+    expect(await app.settledOf("key-1")).toMatchObject({ kind: "marked" });
+  });
+
+  it("never send a learner's answer once the device learns as someone else", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    device.learner = "uid-1/grace0000001";
+
+    await expect(app.sendKept("key-1")).resolves.toMatchObject({
+      kind: "kept",
+      status: 0,
+    });
+    expect(server.asked).toEqual([]);
+    expect(await app.keptAnswers(LEARNER.key)).toHaveLength(1);
+  });
+
+  it("stop at the first answer the voice API gave no answer to", async () => {
+    const app = await load();
+    await app.keepAnswer(answerTo(OTHER, "key-0", 0));
+    await app.keepAnswer(KEPT);
+    server.hung = 1;
+    const deadline = new AbortController();
+    vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
+
+    const run = app.sendKeptAnswers(LEARNER.key);
+    await vi.waitFor(() =>
+      expect(sent("POST /api/voice/samples/gvm_key-0/evaluation")).toHaveLength(
+        1,
+      ),
+    );
+    deadline.abort(new DOMException("timed out", "TimeoutError"));
+    await run;
+    vi.restoreAllMocks();
+    expect(await app.keptAnswers(LEARNER.key)).toHaveLength(2);
+    expect(sent("POST /api/voice/samples")).toHaveLength(1);
+  });
+
+  it("count an answer as unsent while it is kept, and as sent once marked, shown or not", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    server.busy = 1;
+
+    await expect(app.sentEveryAnswer(LEARNER.key)).resolves.toBe(false);
+    await expect(app.sentEveryAnswer(LEARNER.key)).resolves.toBe(true);
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toMatchObject({
+      key: "key-1",
+    });
   });
 
   it("offer the oldest answer not yet shown, whatever its key", async () => {

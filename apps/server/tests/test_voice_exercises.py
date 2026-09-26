@@ -125,12 +125,49 @@ def test_a_processing_turn_is_claimable_only_after_its_lease_expires():
     )
 
 
+def test_a_turn_is_given_up_once_its_last_attempt_is_left_unfinished():
+    from app.voice.exercises import (
+        MAX_TURN_ATTEMPTS,
+        PROCESSING_LEASE_MS,
+        claimable,
+        given_up,
+    )
+
+    now = 10_000_000
+    last = {"attempts": MAX_TURN_ATTEMPTS, "updated_at": now}
+    abandoned = last | {"state": "processing", "updated_at": 0}
+    for row in (last | {"state": "failed"}, abandoned):
+        assert given_up(row, now) and not claimable(row, now)
+    running = last | {"state": "processing", "updated_at": now - PROCESSING_LEASE_MS}
+    for row in (last | {"state": "complete"}, running):
+        assert not given_up(row, now)
+    retry = {"state": "failed", "attempts": MAX_TURN_ATTEMPTS - 1, "updated_at": 0}
+    assert claimable(retry, now) and not given_up(retry, now)
+
+
+def test_each_further_attempt_waits_longer_after_the_one_before():
+    from app.voice.exercises import RETRY_AFTER_MS, claimable, waiting
+
+    now = 10_000_000_000
+    for attempts in (1, 2):
+        wait = RETRY_AFTER_MS[attempts]
+        ended = {"state": "failed", "attempts": attempts}
+        early = ended | {"updated_at": now - wait + 1}
+        due = ended | {"updated_at": now - wait}
+        assert waiting(early, now) and not claimable(early, now)
+        assert claimable(due, now) and not waiting(due, now)
+    assert RETRY_AFTER_MS[1] == 2 * 60 * 1000 and RETRY_AFTER_MS[2] == 30 * 60 * 1000
+
+
 def test_a_worker_past_its_lease_cannot_win_the_write():
 
     from app.voice.exercises import PROCESSING_LEASE_MS, new_claim_token, write_won
+    from app.voice.learner_memory import TEACH_TIMEOUT_SECONDS
     from app.voice.speech.intron_sync import SYNC_TIMEOUT_MS
+    from app.voice.speech.language_detect import CLASSIFIER_TIMEOUT_SECONDS
 
-    assert SYNC_TIMEOUT_MS < PROCESSING_LEASE_MS
+    limits = CLASSIFIER_TIMEOUT_SECONDS + TEACH_TIMEOUT_SECONDS
+    assert SYNC_TIMEOUT_MS + limits * 1000 < PROCESSING_LEASE_MS
     assert new_claim_token() != new_claim_token()
     assert write_won(SimpleNamespace(meta=SimpleNamespace(changes=1)))
     assert not write_won(SimpleNamespace(meta=SimpleNamespace(changes=0)))
@@ -156,3 +193,50 @@ def test_the_turn_table_accepts_every_provider_the_worker_records():
             "VALUES ('s', 'complete', 't', 'correct', 'f', ?, 1, 0)",
             (provider,),
         )
+
+
+def test_turns_whose_attempts_were_spent_before_the_waits_are_tried_again():
+    import sqlite3
+    from pathlib import Path
+
+    from app.voice.exercises import claimable, given_up
+
+    migrations = sorted((Path(__file__).parent.parent / "migrations").glob("*.sql"))
+    restart = next(m for m in migrations if m.name.startswith("0015_"))
+    db = sqlite3.connect(":memory:")
+    db.row_factory = sqlite3.Row
+    for migration in migrations[: migrations.index(restart)]:
+        db.executescript(migration.read_text())
+    for sample, state, attempts in (
+        ("spent", "failed", 5),
+        ("fresh", "failed", 0),
+        ("abandoned", "processing", 3),
+    ):
+        db.execute(
+            "INSERT INTO tutoring_turns (sample_id, state, attempts, updated_at) "
+            "VALUES (?, ?, ?, 0)",
+            (sample, state, attempts),
+        )
+    db.execute(
+        "INSERT INTO tutoring_turns (sample_id, state, transcript, decision, feedback, "
+        "provider, latency_ms, attempts, updated_at) "
+        "VALUES ('marked', 'complete', 't', 'correct', 'f', 'sahara', 1, 4, 0)"
+    )
+
+    db.executescript(restart.read_text())
+
+    rows = {
+        row["sample_id"]: dict(row)
+        for row in db.execute(
+            "SELECT sample_id, state, attempts, updated_at FROM tutoring_turns"
+        )
+    }
+    assert {sample: row["attempts"] for sample, row in rows.items()} == {
+        "spent": 1,
+        "fresh": 0,
+        "abandoned": 1,
+        "marked": 4,
+    }
+    now = 10 * 60 * 1000
+    for sample in ("spent", "abandoned"):
+        assert claimable(rows[sample], now) and not given_up(rows[sample], now)

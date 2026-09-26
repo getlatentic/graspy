@@ -1,6 +1,10 @@
-import { sendKept, whenSettled } from "@/lib/voice/answer-outbox";
+import {
+  sendKept,
+  sendKeptAnswers,
+  whenSettled,
+} from "@/lib/voice/answer-outbox";
 import { forgetAnswer, passOver, settledOf } from "@/lib/voice/answer-store";
-import type { Sent } from "@/lib/voice/send-answer";
+import { UNANSWERED, type Sent } from "@/lib/voice/send-answer";
 import { inTime, wait } from "./in-time";
 import type { LessonEvent } from "./lesson-state";
 
@@ -17,7 +21,7 @@ async function answerNow(key: string): Promise<Sent | null> {
     return (await sendKept(key)) ?? (await settledOf(key));
   } catch (error) {
     console.warn("Following a kept answer failed; it is tried again:", error);
-    return { kind: "kept" };
+    return UNANSWERED;
   }
 }
 
@@ -37,12 +41,13 @@ export async function followAnswer(
   // A first try that hangs shows the answer kept, and the way on, when the retry comes due.
   let now = await Promise.race([
     answerNow(key),
-    pause(RETRY_MS).then((): Sent => ({ kind: "kept" })),
+    pause(RETRY_MS).then((): Sent => UNANSWERED),
   ]);
   if (signal.aborted) return;
-  if (now?.kind === "kept") emit({ type: "kept", key });
+  if (now?.kind === "kept") emit({ type: "kept", key, code: now.code });
   while (now?.kind === "kept") {
-    const again = pause(RETRY_MS).then(() =>
+    const due = Math.max(RETRY_MS, now.retryAfterMs ?? 0);
+    const again = pause(due).then(() =>
       signal.aborted ? null : answerNow(key),
     );
     now = await Promise.race([settled, again]);
@@ -58,12 +63,15 @@ export async function followAnswer(
 
 /**
  * Carries on past an answer that stays kept: it is still sent, but never shown, and the lesson
- * asks the teacher for her step, which may be its question again.
+ * asks the teacher for her step, which may be its question again. Once the retry is due the
+ * learner's kept answers go again, as the lesson no longer tries this one.
  */
 export async function carryOn(
   key: string,
+  learner: string,
   emit: (event: LessonEvent) => void,
   pause?: (ms: number) => Promise<unknown>,
+  due: () => Promise<unknown> = () => wait(RETRY_MS),
 ): Promise<void> {
   // Storage that never answers still lets the child on; the answer may then be shown at the next Start.
   try {
@@ -72,4 +80,7 @@ export async function carryOn(
     console.warn("Passing over a kept answer failed:", error);
   }
   emit({ type: "carriedOn", key });
+  void due()
+    .then(() => sendKeptAnswers(learner))
+    .catch(() => undefined);
 }

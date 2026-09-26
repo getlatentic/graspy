@@ -176,6 +176,28 @@ async def test_a_token_google_does_not_vouch_for_is_refused(status, body):
         await firebase.verified("token", "key", google(status, body))
 
 
+def unreachable_google() -> httpx.AsyncClient:
+    def fail(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("no route to Google", request=request)
+
+    return httpx.AsyncClient(transport=httpx.MockTransport(fail))
+
+
+@pytest.mark.parametrize(
+    "google_client",
+    [
+        unreachable_google,
+        lambda: google(500, {}),
+        lambda: google(503, {}),
+        lambda: google(429, {"error": {"message": "QUOTA_EXCEEDED"}}),
+    ],
+    ids=["unreachable", "failed", "unavailable", "too-many-requests"],
+)
+async def test_a_token_google_could_not_check_may_pass_later(google_client):
+    with pytest.raises(firebase.SignInUnchecked):
+        await firebase.verified("token", "key", google_client())
+
+
 async def test_the_auth_emulator_is_asked_in_place_of_google():
     asked = []
 
@@ -247,6 +269,16 @@ async def test_a_sign_in_that_cannot_be_trusted_is_refused(app, key, status, cod
 
     assert response.status_code == status
     assert response.json()["detail"]["code"] == code
+
+
+async def test_a_sign_in_google_could_not_check_is_a_temporary_failure(app):
+    async with client(app) as http:
+        response = await http.post(
+            "/api/session", json={"deviceId": DEVICE, "firebaseIdToken": "unchecked"}
+        )
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["code"] == "sign_in_unchecked"
 
 
 async def test_devices_share_the_newer_plan_and_a_stale_one_gets_it_back(app):

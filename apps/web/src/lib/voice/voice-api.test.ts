@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError, NetworkError } from "@/lib/api/errors";
+import type { KeptAnswer } from "./answer-store";
+import { sendAnswer, UNANSWERED } from "./send-answer";
 
 type Respond = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -153,15 +156,26 @@ describe("the voice API client", () => {
     });
   });
 
-  it("tells a network failure from a refusal", async () => {
-    fetchWithSession.mockImplementation(async () => {
-      throw new TypeError("Failed to fetch");
+  it.each([
+    ["a proxy's page", new Response("<html>Not found</html>", { status: 404 })],
+    ["a 410 with no body", new Response(null, { status: 410 })],
+    ["a route missing mid-deploy", json({ detail: "Not Found" }, 404)],
+  ])("counts a 4xx graspy did not give as no answer: %s", async (_, answer) => {
+    fetchWithSession.mockResolvedValue(answer);
+    await expect(api.evaluate("gvm_1")).rejects.toMatchObject({
+      status: 0,
+      code: null,
     });
-    const error = (await api
-      .evaluate("gvm_1")
-      .catch((e: unknown) => e)) as InstanceType<typeof api.VoiceError>;
-    expect(error.unreachable).toBe(true);
-    expect(error.code).toBeNull();
+  });
+
+  it("reads a 4xx graspy gave as its refusal, with or without a code", async () => {
+    fetchWithSession.mockResolvedValue(
+      json({ detail: "sample was not found" }, 404),
+    );
+    await expect(api.evaluate("gvm_1")).rejects.toMatchObject({
+      status: 404,
+      code: null,
+    });
   });
 
   it("gives an upload time for its size, as on the slowest connection waited for", async () => {
@@ -214,5 +228,43 @@ describe("the voice API client", () => {
     }
     expect(wire.calls.every(([, init]) => init?.signal?.aborted)).toBe(true);
     timeout.mockRestore();
+  });
+});
+
+describe("a child's answer when the session fails", () => {
+  const answer: KeptAnswer = {
+    key: "key-1",
+    learner: "device/abc",
+    metadata: {} as KeptAnswer["metadata"],
+    wav: new Blob(["RIFF"], { type: "audio/wav" }),
+    keptAt: 1,
+  };
+  let kept: Map<string, KeptAnswer>;
+  const keeping = {
+    keep: async (a: KeptAnswer) => void kept.set(a.key, a),
+    settle: async (a: KeptAnswer) => void kept.delete(a.key),
+  };
+  const send = () => sendAnswer(answer, api, keeping, async () => {});
+
+  beforeEach(() => {
+    kept = new Map([[answer.key, answer]]);
+  });
+
+  it("is kept while the session cannot reach graspy", async () => {
+    fetchWithSession.mockImplementation(async () => {
+      throw new NetworkError("Failed to fetch");
+    });
+
+    await expect(send()).resolves.toEqual(UNANSWERED);
+    expect(kept.has(answer.key)).toBe(true);
+  });
+
+  it("is kept when graspy refuses the session", async () => {
+    fetchWithSession.mockImplementation(async () => {
+      throw new ApiError("refused", 403);
+    });
+
+    await expect(send()).resolves.toEqual(UNANSWERED);
+    expect(kept.has(answer.key)).toBe(true);
   });
 });

@@ -3,10 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CurriculumData } from "@/lib/curriculum-record";
 
 // graspy's server as the MCP client reaches it, so the cards are the ones the app's own
-// server.ts builds.
+// server.ts builds. The client connects through the app's own session.ts.
 const VIEW = "ui://graspy/lesson";
+type SessionExchange =
+  "issued" | "unreachable" | "unchecked" | "unavailable" | "refused" | "empty";
 const graspy = {
   reachable: true,
+  session: "issued" as SessionExchange,
   answers: {} as Record<string, unknown>,
   called: [] as string[],
   /** Topics whose lesson the server fails to give. */
@@ -18,11 +21,17 @@ const graspy = {
 function reach() {
   if (!graspy.reachable) throw new TypeError("Failed to fetch");
 }
-vi.mock("@modelcontextprotocol/client", () => ({
+interface Transport {
+  url: URL;
+  fetch: (url: URL) => Promise<Response>;
+}
+vi.mock("@modelcontextprotocol/client", async (actual) => ({
+  ...(await actual<typeof import("@modelcontextprotocol/client")>()),
   Client: class {
-    connect = async () => {
+    connect = async (transport: Transport) => {
       graspy.connects += 1;
       reach();
+      await transport.fetch(transport.url);
     };
     listTools = async () => ({
       tools: [
@@ -46,9 +55,43 @@ vi.mock("@modelcontextprotocol/client", () => ({
       return graspy.answers[name];
     };
   },
-  StreamableHTTPClientTransport: class {},
+  StreamableHTTPClientTransport: class implements Transport {
+    url: URL;
+    fetch: Transport["fetch"];
+    constructor(url: URL, opts: { fetch: Transport["fetch"] }) {
+      this.url = url;
+      this.fetch = opts.fetch;
+    }
+  },
 }));
-vi.mock("@/lib/api/session", () => ({ fetchWithSession: vi.fn() }));
+const { googleIdToken } = vi.hoisted(() => ({
+  googleIdToken: vi.fn<(fresh: boolean) => Promise<string | null>>(),
+}));
+vi.mock("@/lib/account/google-auth", () => ({ googleIdToken }));
+vi.mock("@/lib/device-id", async (actual) => ({
+  ...(await actual<typeof import("@/lib/device-id")>()),
+  fingerprint: async () => null,
+}));
+
+async function graspyFetch(input: string | URL): Promise<Response> {
+  if (!String(input).endsWith("/session")) return new Response(null);
+  if (graspy.session === "unreachable") throw new TypeError("Failed to fetch");
+  if (graspy.session === "refused") {
+    return Response.json({ error: "refused" }, { status: 403 });
+  }
+  if (graspy.session === "unchecked") {
+    const detail = {
+      error: "Sign-in could not be checked. Try again.",
+      code: "sign_in_unchecked",
+    };
+    return Response.json({ detail }, { status: 503 });
+  }
+  if (graspy.session === "unavailable") {
+    return Response.json({ error: "unavailable" }, { status: 503 });
+  }
+  const token = graspy.session === "empty" ? "" : "session-token";
+  return Response.json({ token, expiresIn: 3600 });
+}
 
 const PLAN: CurriculumData = {
   id: "c1",
@@ -119,6 +162,7 @@ async function fresh() {
 beforeEach(() => {
   online = true;
   graspy.reachable = true;
+  graspy.session = "issued";
   graspy.called = [];
   graspy.failing = new Set();
   graspy.refusing = new Set();
@@ -129,6 +173,7 @@ beforeEach(() => {
   };
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("IDBKeyRange", IDBKeyRange);
+  vi.stubGlobal("fetch", graspyFetch);
   vi.stubGlobal("navigator", {
     get onLine() {
       return online;
@@ -169,6 +214,102 @@ describe("a lesson without a connection", () => {
     await expect(
       lessonToolOrCopy(target, "lesson_progress", { target }),
     ).resolves.toEqual(result("ready"));
+  });
+
+  it("does not answer the view from the copy when the server answered with an error", async () => {
+    const { keepIfWhole, lessonTarget, lessonToolOrCopy } = await fresh();
+    const target = lessonTarget(PLAN, MATHS, 1)!;
+    await keepIfWhole(target, card("ready"));
+    graspy.failing.add(target.topic);
+
+    await expect(
+      lessonToolOrCopy(target, "lesson_progress", { target }),
+    ).rejects.toThrow("502");
+  });
+});
+
+describe("a lesson whose session must be renewed", () => {
+  async function openedWhole() {
+    const { lessonTarget, openLessonOrCopy } = await fresh();
+    const target = lessonTarget(PLAN, MATHS, 1)!;
+    return { target, whole: await openLessonOrCopy(target) };
+  }
+
+  it.each([
+    ["graspy cannot be reached to renew it", "unreachable"],
+    ["graspy cannot reach Google to check the sign-in", "unchecked"],
+  ] as const)("opens from the copy kept when %s", async (_, exchange) => {
+    const { target, whole } = await openedWhole();
+
+    graspy.session = exchange;
+    const { openLessonOrCopy } = await fresh();
+
+    await expect(openLessonOrCopy(target)).resolves.toEqual(whole);
+  });
+
+  it.each([
+    ["refuses it", "refused", "refused"],
+    ["issues it empty", "empty", "The server issued an empty session"],
+    ["answers 503 for another reason", "unavailable", "unavailable"],
+  ] as const)(
+    "is not stood in for when graspy %s",
+    async (_, exchange, answer) => {
+      const { target } = await openedWhole();
+
+      graspy.session = exchange;
+      const { openLessonOrCopy } = await fresh();
+
+      await expect(openLessonOrCopy(target)).rejects.toThrow(answer);
+    },
+  );
+});
+
+describe("a signed-in lesson whose ID token Firebase cannot give", () => {
+  const firebaseError = (code: string) =>
+    Object.assign(new Error(`Firebase: Error (${code}).`), { code });
+
+  // The account is read from storage as the module loads, so it is set before fresh().
+  function signedIn() {
+    const account = { uid: "uid1", learner: { id: "l1", name: "Ada" } };
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (k: string) =>
+          k === "graspy.account" ? JSON.stringify(account) : null,
+        setItem: () => {},
+        removeItem: () => {},
+      },
+    });
+  }
+
+  async function openedWhole() {
+    const { lessonTarget, openLessonOrCopy } = await fresh();
+    const target = lessonTarget(PLAN, MATHS, 1)!;
+    return { target, whole: await openLessonOrCopy(target) };
+  }
+
+  it.each(["auth/too-many-requests", "auth/internal-error"])(
+    "opens from the copy kept when Firebase answers %s",
+    async (code) => {
+      const { target, whole } = await openedWhole();
+
+      signedIn();
+      googleIdToken.mockRejectedValue(firebaseError(code));
+      const { openLessonOrCopy } = await fresh();
+
+      await expect(openLessonOrCopy(target)).resolves.toEqual(whole);
+    },
+  );
+
+  it("is not stood in for when Google refuses the sign-in", async () => {
+    const { target } = await openedWhole();
+
+    signedIn();
+    googleIdToken.mockRejectedValue(firebaseError("auth/user-token-expired"));
+    const { openLessonOrCopy } = await fresh();
+
+    await expect(openLessonOrCopy(target)).rejects.toThrow(
+      "Google refused the sign-in",
+    );
   });
 });
 

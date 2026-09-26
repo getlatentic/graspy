@@ -10,7 +10,13 @@ import { deviceId, fingerprint } from "@/lib/device-id";
 import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import { API_BASE_URL } from "@/lib/env";
-import { ApiError, toApiError, toNetworkError } from "./errors";
+import { readJson } from "./body";
+import {
+  ApiError,
+  SignInUnchecked,
+  toApiError,
+  toNetworkError,
+} from "./errors";
 
 // A token naming this device, or once the learner signs in with Google their account, and
 // the account's learner the device learns as.
@@ -91,11 +97,31 @@ async function post(body: Record<string, string>): Promise<Response> {
   }
 }
 
+// graspy answers 503 sign_in_unchecked when it could not reach Google to check the sign-in.
+async function notIssued(response: Response): Promise<ApiError> {
+  const refused = await toApiError(response);
+  const { detail } = (refused.data ?? {}) as {
+    detail?: { error?: unknown; code?: unknown };
+  };
+  if (detail?.code !== "sign_in_unchecked") return refused;
+  return new SignInUnchecked(
+    String(detail.error),
+    refused.status,
+    refused.data,
+  );
+}
+
 async function issued(response: Response): Promise<Issued> {
-  if (!response.ok) throw await toApiError(response);
-  const { token, expiresIn, learner } = (await response.json()) as Issued;
-  if (!token) throw new ApiError("The server issued an empty session", 0);
-  return { token, expiresIn, learner };
+  if (!response.ok) throw await notIssued(response);
+  const body = await readJson<Issued | null>(response);
+  if (!body?.token) {
+    throw new ApiError("The server issued an empty session", response.status);
+  }
+  return {
+    token: body.token,
+    expiresIn: body.expiresIn,
+    learner: body.learner,
+  };
 }
 
 async function deviceSession(device: string): Promise<Response> {
@@ -103,12 +129,34 @@ async function deviceSession(device: string): Promise<Response> {
   return post({ deviceId: device, ...(hint ? { fingerprint: hint } : {}) });
 }
 
+// Firebase's codes for a Google that was busy or failed, as the statuses a later try may pass.
+const GOOGLE_FAILED = new Map([
+  ["auth/too-many-requests", 429],
+  ["auth/internal-error", 503],
+]);
+
+// Not reached: the module failed to load (a TypeError), or Firebase could not reach Google.
+function googleFailure(cause: unknown): ApiError {
+  const code = (cause as { code?: unknown } | null)?.code;
+  if (cause instanceof TypeError || code === "auth/network-request-failed") {
+    return toNetworkError(cause);
+  }
+  const message = cause instanceof Error ? cause.message : String(cause);
+  const failed = typeof code === "string" ? GOOGLE_FAILED.get(code) : undefined;
+  return failed
+    ? new SignInUnchecked(
+        `Google could not check the sign-in: ${message}`,
+        failed,
+      )
+    : new ApiError(`Google refused the sign-in: ${message}`, 401);
+}
+
 async function idToken(fresh: boolean): Promise<string | null> {
   try {
     const { googleIdToken } = await import("@/lib/account/google-auth");
     return await googleIdToken(fresh);
   } catch (cause) {
-    throw toNetworkError(cause);
+    throw googleFailure(cause);
   }
 }
 
@@ -220,7 +268,7 @@ export function keepLearnerSession({
   learner,
 }: Issued): void {
   const account = currentAccount();
-  if (!account || !learner) throw new ApiError("No learner was chosen", 0);
+  if (!account || !learner) throw new Error("No learner was chosen");
   pending = null;
   setLearner({ id: learner.id, name: learner.name });
   keep({
@@ -246,12 +294,17 @@ export function endAccountSession(): void {
   keep(null);
 }
 
+/** Sent with the session in use. `still`, asked as each try is sent, may stop it: false, and
+ * the session is no longer the one the request was made for, so nothing is sent. */
 export async function fetchWithSession(
   input: string | URL,
   init: RequestInit = {},
+  still?: () => boolean,
 ): Promise<Response> {
   // A Headers instance spreads to nothing.
   const send = (token: string) => {
+    if (still && !still())
+      throw new Error("The session is no longer the one this was made for");
     const headers = new Headers(init.headers);
     headers.set("Authorization", `Bearer ${token}`);
     return fetch(input, { ...init, headers });

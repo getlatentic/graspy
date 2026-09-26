@@ -45,17 +45,17 @@ export function lessonPage(app: App, plan?: string) {
       emit(await app.openingStep(LEARNER, plan));
     },
     /** What the page does while an answer is on screen: follows it to its outcome. */
-    follow(retry: () => Promise<unknown> = notYet) {
+    follow(retry: (ms: number) => Promise<unknown> = notYet) {
       const { phase } = state;
       if (phase.name !== "checking")
         throw new Error(`no answer: ${phase.name}`);
       return app.followAnswer(phase.key, emit, leaving.signal, retry);
     },
     /** The child carries on past the answer kept on screen, which the page then stops following. */
-    async carryOn() {
+    async carryOn(due: () => Promise<unknown> = notYet) {
       const { phase } = state;
       if (phase.name !== "kept") throw new Error(`nothing kept: ${phase.name}`);
-      await app.carryOn(phase.key, emit);
+      await app.carryOn(phase.key, LEARNER.key, emit, undefined, due);
       leaving.abort();
     },
     /** The lesson asks the server for its next step. */
