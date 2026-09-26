@@ -39,7 +39,7 @@ open class FirebaseSession(
     suspend fun forgetGoogleAccount(context: Context) = clearCredentials(context)
 
     /** Null when Firebase no longer holds [uid]'s sign-in: signed out, disabled or deleted. */
-    suspend fun idToken(uid: String, fresh: Boolean): String? {
+    open suspend fun idToken(uid: String, fresh: Boolean): String? {
         val user = auth.currentUser?.takeIf { it.uid == uid } ?: return null
         return try {
             user.getIdToken(fresh).await().token

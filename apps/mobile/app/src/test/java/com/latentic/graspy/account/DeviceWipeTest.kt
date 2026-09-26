@@ -1,9 +1,5 @@
 package com.latentic.graspy.account
 
-import com.google.firebase.auth.FirebaseAuth
-import com.latentic.graspy.auth.FirebaseSession
-import com.latentic.graspy.auth.GoogleAccountSheet
-import com.latentic.graspy.auth.SignInOutcome
 import com.latentic.graspy.collection.RECORDINGS_DIRECTORY
 import com.latentic.graspy.lesson.CopiedLesson
 import com.latentic.graspy.lesson.LessonCopyEntity
@@ -13,23 +9,14 @@ import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.practice.TEACHER_AUDIO_DIRECTORY
 import java.io.File
-import java.io.IOException
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,34 +52,10 @@ class DeviceWipeTest {
         workCancelled = true
         wipes += 1
         accountWhenWiped = accounts.account.value
-        pendingWhenWiped = signOutPending
+        pendingWhenWiped = signOutPending()
     }
-    /** The account on the phone each time the Google account was forgotten. */
-    private val forgotten = mutableListOf<Account?>()
-    private var forgettingFails = false
-    /** Who Firebase holds signed in: the demo app never signs anyone in of its own. */
-    private var firebaseUid: String? = null
-    private val firebase = object : FirebaseSession(FirebaseAuth.getInstance(demoFirebase()), {
-        if (forgettingFails) throw IOException("Play services did not answer")
-        forgotten += accounts.account.value
-    }) {
-        override val userId get() = firebaseUid
-
-        override fun signOut() {
-            firebaseUid = null
-        }
-    }
-    private val signOutPending get() = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).all
-
-    /** For each sign-in, whether the sheet was told to ask which account, and how many forgets came before it. */
-    private val sheetAsked = mutableListOf<Pair<Boolean, Int>>()
-    private val sheet = GoogleAccountSheet { askWhichAccount ->
-        sheetAsked += askWhichAccount to forgotten.size
-        SignInOutcome.Cancelled
-    }
-    private val unusedSessionApi = object : SessionApi {
-        override suspend fun session(request: SessionRequestDto): IssuedSessionDto = error("No session is asked for")
-    }
+    private val google = GoogleAccountForgets(accounts)
+    private val firebase = FakeFirebase(google)
     private val ada = learnerKey(UID, ADA.id)
     private val bayo = learnerKey(UID, BAYO.id)
     private val adaProfile = LearnerProfile(SchoolClass.PRIMARY_3, AppLanguageSelection.YORUBA)
@@ -213,26 +176,26 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `signing out forgets the Google account once the device is wiped, and leaves nothing pending`() = runBlocking {
+    fun `signing out forgets the Google account once the device is wiped, and leaves only its note`() = runBlocking {
         entry(wipe).signOut()
 
-        assertEquals(listOf<Account?>(null), forgotten)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
+        assertEquals(listOf<Account?>(null), google.forgotten)
+        assertEquals(setOf("signing_out"), signOutPending().keys)
     }
 
     @Test
     fun `a Google account a sign-out could not forget is forgotten at the next start`() = runBlocking {
-        forgettingFails = true
+        google.failing = true
         entry(wipe).signOut()
-        assertEquals(emptyList<Account?>(), forgotten)
+        assertEquals(emptyList<Account?>(), google.forgotten)
 
-        forgettingFails = false
+        google.failing = false
         val start = CoroutineScope(Dispatchers.IO + Job())
         entry(wipe).reconcile(start)
         start.coroutineContext[Job]!!.children.forEach { it.join() }
 
-        assertEquals(listOf<Account?>(null), forgotten)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
+        assertEquals(listOf<Account?>(null), google.forgotten)
+        assertEquals(emptyMap<String, Any?>(), signOutPending())
     }
 
     @Test
@@ -248,235 +211,92 @@ class DeviceWipeTest {
     }
 
     @Test
-    fun `a sign-in after a sign-out that could not forget the Google account forgets it first`() = runBlocking {
-        forgettingFails = true
-        entry(wipe).signOut()
-        forgettingFails = false
-
-        entry(wipe).signIn()
-
-        assertEquals(listOf(false to 1), sheetAsked)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
-    }
-
-    @Test
-    fun `a sign-in that still cannot forget the last Google account asks which account`() = runBlocking {
-        forgettingFails = true
-        entry(wipe).signOut()
-
-        entry(wipe).signIn()
-
-        assertEquals(listOf(true to 0), sheetAsked)
-        assertEquals(setOf("google_account"), signOutPending.keys)
-    }
-
-    @Test
-    fun `a sign-in with nothing left to forget lets Google offer the last account`() = runBlocking {
-        entry(wipe).signIn()
-
-        assertEquals(listOf(false to 0), sheetAsked)
-    }
-
-    @Test
     fun `a sign-out marks the Google account to forget before it wipes, so one killed after the wipe still forgets it`() = runBlocking {
         entry(wipe).signOut()
 
-        assertEquals(setOf("google_account"), pendingWhenWiped?.keys)
+        assertEquals(setOf("google_account", "signing_out"), pendingWhenWiped?.keys)
     }
 
     @Test
     fun `leaving for another account marks the Google account before the account goes`() = runBlocking {
         var pendingWhenAccountWent: Map<String, *>? = null
         val watching = CoroutineScope(Dispatchers.Unconfined).launch {
-            accounts.account.collect { if (it == null) pendingWhenAccountWent = signOutPending }
+            accounts.account.collect { if (it == null) pendingWhenAccountWent = signOutPending() }
         }
 
         entry(wipe).leaveForAnotherAccount()
         watching.cancel()
 
-        assertEquals(setOf("google_account"), pendingWhenAccountWent?.keys)
-    }
-
-    @Test
-    fun `a sign-in graspy does not take forgets the Google account it used`() = runBlocking {
-        val signedIn = AccountEntry(context, { SignInOutcome.Succeeded(UID) }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
-
-        signedIn.signIn()
-
-        assertEquals(1, forgotten.size)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
-    }
-
-    @Test
-    fun `a sign-in graspy does not take marks a Google account it could not forget, for the next sign-in`() = runBlocking {
-        forgettingFails = true
-
-        AccountEntry(context, { SignInOutcome.Succeeded(UID) }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
-
-        assertEquals(setOf("google_account"), signOutPending.keys)
-    }
-
-    @Test
-    fun `a sign-in that fails after a Google account was chosen forgets it`() = runBlocking {
-        AccountEntry(context, { SignInOutcome.Failed("Firebase refused the credential") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
-
-        assertEquals(1, forgotten.size)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
-    }
-
-    @Test
-    fun `a sign-in left part-way signs Firebase out, marks the Google account and leaves itself for the next start to undo`() = runBlocking {
-        accounts.set(null)
-        firebaseUid = UID
-        val atSheet = CompletableDeferred<Unit>()
-        val left = AccountEntry(context, { atSheet.complete(Unit); awaitCancellation() }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
-
-        val signingIn = launch { left.signIn() }
-        atSheet.await()
-        signingIn.cancelAndJoin()
-
-        assertNull(firebaseUid)
-        assertEquals(setOf("google_account", "signing_in"), signOutPending.keys)
-    }
-
-    @Test
-    fun `a sign-in waits for one left while Firebase finishes, which then cannot sign it out`() = runBlocking {
-        accounts.set(null)
-        val atFirstSheet = CompletableDeferred<Unit>()
-        val firebaseFinishes = CompletableDeferred<Unit>()
-        val secondAsked = CompletableDeferred<Pair<Boolean, Int>>()
-        var sheets = 0
-        val sheet = GoogleAccountSheet { askWhichAccount ->
-            sheets += 1
-            if (sheets == 1) {
-                atFirstSheet.complete(Unit)
-                // As FirebaseSession waits out Firebase's sign-in.
-                withContext(NonCancellable) {
-                    firebaseFinishes.await()
-                    firebaseUid = "uid-first"
-                }
-                SignInOutcome.Succeeded("uid-first")
-            } else {
-                secondAsked.complete(askWhichAccount to forgotten.size)
-                firebaseUid = "uid-second"
-                awaitCancellation()
-            }
-        }
-        val entry = AccountEntry(context, sheet, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
-        val first = launch(Dispatchers.Default) { entry.signIn() }
-        atFirstSheet.await()
-        first.cancel()
-        val second = launch(Dispatchers.Default) { entry.signIn() }
-
-        firebaseFinishes.complete(Unit)
-        val (_, forgetsBefore) = secondAsked.await()
-        first.join()
-
-        assertEquals(1, forgetsBefore)
-        assertEquals("uid-second", firebaseUid)
-        second.cancelAndJoin()
-    }
-
-    @Test
-    fun `a Google task cancelled while the sign-in runs fails it, and the Google account is forgotten`() = runBlocking {
-        accounts.set(null)
-        val entry = AccountEntry(context, { throw CancellationException("A Play services task was cancelled") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
-
-        val outcome = entry.signIn()
-
-        assertTrue(outcome.toString(), outcome is SignInOutcome.Failed)
-        assertEquals(listOf<Account?>(null), forgotten)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
-    }
-
-    @Test
-    fun `a sign-in that ends without an account leaves Firebase signed out, even one Firebase finished late`() = runBlocking {
-        accounts.set(null)
-        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
-            firebaseUid = UID
-            AccountEntry(context, { outcome }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
-            assertNull(outcome.toString(), firebaseUid)
-        }
-    }
-
-    @Test
-    fun `a sign-in begun before the start's work runs is left alone by the undoing of one cut short`() = runBlocking {
-        accounts.set(null)
-        firebaseUid = UID
-        val prefs = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0)
-        prefs.edit().putBoolean("signing_in", true).commit()
-        val held = mutableListOf<Runnable>()
-        val start = CoroutineScope(Job() + object : CoroutineDispatcher() {
-            override fun dispatch(context: CoroutineContext, block: Runnable) {
-                held += block
-            }
-        })
-
-        entry(wipe).reconcile(start)
-        prefs.edit().putBoolean("signing_in", true).commit()
-        firebaseUid = "uid-2"
-        held.forEach { it.run() }
-
-        assertEquals("uid-2", firebaseUid)
-        assertTrue("signing_in" in signOutPending)
-    }
-
-    @Test
-    fun `a sign-in that stored its account before it was cut short is kept, its note gone`() = runBlocking {
-        firebaseUid = UID
-        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()
-
-        entry(wipe).reconcile(CoroutineScope(Dispatchers.IO + Job()))
-
-        assertEquals(UID, accounts.account.value?.uid)
-        assertEquals(UID, firebaseUid)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
-    }
-
-    @Test
-    fun `a sign-in that ends clears its note, whether it failed or was closed`() = runBlocking {
-        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
-            AccountEntry(context, { outcome }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
-            assertFalse(outcome.toString(), "signing_in" in signOutPending)
-        }
-    }
-
-    @Test
-    fun `a sign-in cut short is undone at the next start, its Google account forgotten, never adopted`() = runBlocking {
-        accounts.set(null)
-        firebaseUid = UID
-        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_in", true).commit()
-        val start = CoroutineScope(Dispatchers.IO + Job())
-
-        entry(wipe).reconcile(start)
-        start.coroutineContext[Job]!!.children.forEach { it.join() }
-
-        assertNull(accounts.account.value)
-        assertNull(firebaseUid)
-        assertEquals(listOf<Account?>(null), forgotten)
-        assertEquals(emptyMap<String, Any?>(), signOutPending)
-    }
-
-    @Test
-    fun `a failed sign-in marks a Google account it could not forget, for the next sign-in`() = runBlocking {
-        forgettingFails = true
-
-        AccountEntry(context, { SignInOutcome.Failed("Firebase refused the credential") }, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe).signIn()
-
-        assertEquals(setOf("google_account"), signOutPending.keys)
+        assertEquals(setOf("google_account", "signing_in"), pendingWhenAccountWent?.keys)
     }
 
     @Test
     fun `leaving for another account marks a Google account it could not forget, for the next sign-in`() = runBlocking {
-        forgettingFails = true
+        google.failing = true
 
         entry(wipe).leaveForAnotherAccount()
 
-        assertEquals(setOf("google_account"), signOutPending.keys)
+        assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
+    }
+
+    @Test
+    fun `a sign-out whose Firebase sign-out never reached the disk is not adopted, and keeps its note until Firebase is empty`() = runBlocking {
+        firebase.uid = UID
+        entry(wipe).signOut()
+
+        firebase.uid = UID
+        start()
+        assertNull("the signed-out account was adopted", accounts.account.value)
+        assertNull(firebase.uid)
+
+        firebase.uid = UID
+        start()
+        assertNull("the signed-out account was adopted", accounts.account.value)
+
+        start()
+        assertNull(accounts.account.value)
+        assertEquals(emptyMap<String, Any?>(), signOutPending())
+    }
+
+    @Test
+    fun `a sign-out cut short mid-wipe, its Firebase sign-out never on disk, is finished at the next start`() = runBlocking {
+        firebase.uid = UID
+        val killed = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) { error("The app was killed") }
+        runCatching { entry(killed).signOut() }
+
+        firebase.uid = UID
+        start()
+
+        assertLearnerDataGone()
+        assertNull(profiles.load(ada))
+        assertNull(accounts.account.value)
+        assertNull(firebase.uid)
+    }
+
+    @Test
+    fun `leaving for another account, its Firebase sign-out never on disk, is not adopted and keeps the learning`() = runBlocking {
+        accounts.set(signedIn(learner = null, deviceJoins = true))
+        firebase.uid = UID
+        entry(wipe).leaveForAnotherAccount()
+
+        firebase.uid = UID
+        start()
+
+        assertNull("the account left was adopted", accounts.account.value)
+        assertNull(firebase.uid)
+        assertEquals(0, wipes)
+        assertEquals(adaProfile, profiles.load(ada))
     }
 
     private fun entry(wipe: DeviceWipe) =
-        AccountEntry(context, sheet, firebase, accounts, sessions, unusedSessionApi, deviceIds, wipe)
+        AccountEntry(context, { error("No sign-in is asked for") }, firebase, accounts, sessions, noSessionApi, deviceIds, wipe)
+
+    /** The app's start, its work waited for. */
+    private suspend fun start() {
+        val scope = CoroutineScope(Dispatchers.IO + Job())
+        entry(wipe).reconcile(scope)
+        scope.coroutineContext[Job]!!.children.forEach { it.join() }
+    }
 
     private suspend fun assertLearnerDataGone() {
         assertTrue(workCancelled)
