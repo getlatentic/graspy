@@ -32,7 +32,8 @@ class AccountEntrySignInTest {
     private val accounts = accountStore(null)
     private val sessions = heldSessions(accounts)
     private val deviceIds = DeviceIdStore(context.getSharedPreferences(PreferenceFiles.DEVICE, 0))
-    private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, LearnerProfileStore(context)) {}
+    private var wipes = 0
+    private val wipe = DeviceWipe(context, database, accounts, sessions, deviceIds, LearnerProfileStore(context)) { wipes += 1 }
     private val google = GoogleAccountForgets(accounts)
     private val firebase = FakeFirebase(google)
 
@@ -305,6 +306,72 @@ class AccountEntrySignInTest {
         assertEquals("uid-2", accounts.account.value?.uid)
         assertEquals("uid-2", firebase.uid)
         assertEquals(emptyMap<String, Any?>(), signOutPending())
+    }
+
+    @Test
+    fun `an account a sign-in stores is kept at the next start, though a sign-out ran while it signed in`() = runBlocking {
+        lateinit var signingIn: AccountEntry
+        signingIn = entry(
+            sessionApi = object : SessionApi {
+                override suspend fun session(request: SessionRequestDto) = issued("session-2", learner = null)
+            },
+            sheet = {
+                firebase.uid = "uid-2"
+                signingIn.signOut()
+                firebase.uid = "uid-2"
+                SignInOutcome.Succeeded("uid-2")
+            },
+        )
+
+        signingIn.signIn()
+        start()
+
+        assertEquals("uid-2", accounts.account.value?.uid)
+    }
+
+    @Test
+    fun `a sign-in a sign-out overtook stores nothing, and the next start undoes it though Firebase's sign-out was lost`() = runBlocking {
+        lateinit var signingIn: AccountEntry
+        signingIn = entry(
+            sessionApi = object : SessionApi {
+                override suspend fun session(request: SessionRequestDto): IssuedSessionDto {
+                    signingIn.signOut()
+                    return issued("session-2", learner = null)
+                }
+            },
+            sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
+        )
+
+        assertTrue(signingIn.signIn() is SignInOutcome.Failed)
+        assertNull(accounts.account.value)
+        // Firebase's sign-out never reached the disk.
+        firebase.uid = "uid-2"
+        start()
+
+        assertNull(accounts.account.value)
+        assertNull(firebase.uid)
+    }
+
+    @Test
+    fun `a refusal of the account left behind leaves the next sign-in, and the device's learning, alone`() = runBlocking {
+        lateinit var signingIn: AccountEntry
+        signingIn = entry(
+            sessionApi = object : SessionApi {
+                override suspend fun session(request: SessionRequestDto): IssuedSessionDto {
+                    signingIn.signOut(of = UID)
+                    return issued("session-2", learner = null)
+                }
+            },
+            sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
+        )
+
+        assertTrue(signingIn.signIn() is SignInOutcome.Succeeded)
+        signingIn.signOut(of = UID)
+        start()
+
+        assertEquals("uid-2", accounts.account.value?.uid)
+        assertEquals("uid-2", firebase.uid)
+        assertEquals(0, wipes)
     }
 
     private fun entry(sessionApi: SessionApi = noSessionApi, sheet: GoogleAccountSheet = this.sheet) =
