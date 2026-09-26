@@ -60,4 +60,4 @@ A refusal is `429` with `Retry-After: 60` and CORS headers, so the browser can r
 - **A device id is a claim.** Whoever knows one can read that device's record. Signing in closes this for the account: its id comes from a Firebase token Google verifies, never from the client.
 - **DSPy 3.4 is a beta, pinned exactly.** The httpx transport imports a private DSPy path, and a test imports it first.
 - **`diskcache` has PYSEC-2026-2447 and no fixed release.** DSPy depends on it. The app replaces DSPy's disk cache with a memory-only one before serving.
-- **Scanning is manual.** There is no CI.
+- **Scanning is manual.** CI runs the tests on every pull request; `npm run audit` and `uv run pip-audit` are run by hand.
