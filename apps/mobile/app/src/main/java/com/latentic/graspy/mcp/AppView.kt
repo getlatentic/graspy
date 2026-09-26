@@ -155,12 +155,15 @@ private suspend fun Lifecycle.inFrontWithin(ms: Long, done: () -> Boolean): Bool
     return true
 }
 
-// The waiting card lets touches through, and the view must go on loading under it: the frame refuses them.
+// The waiting card lets touches through, and the view must go on loading under it: the frame refuses presses, so
+// the view never starts a touch, but not drags, so the page around it still scrolls.
 private val Unreachable = Modifier
     .clearAndSetSemantics {}
     .pointerInput(Unit) {
         awaitPointerEventScope {
-            while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+            while (true) {
+                awaitPointerEvent(PointerEventPass.Initial).changes.forEach { if (it.pressed && !it.previousPressed) it.consume() }
+            }
         }
     }
 
