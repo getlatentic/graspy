@@ -91,7 +91,11 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - uses: dtolnay/rust-toolchain@stable
+      # Pinned, so a new Rust's clippy warnings arrive with a deliberate upgrade, not on an unrelated PR.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.98.1
+          components: clippy
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/teacher/src-tauri

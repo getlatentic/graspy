@@ -14,7 +14,7 @@ cp ~/.config/graspy/google-services.json apps/mobile/app/
 
 It is the Android app of the Firebase project `graspy-f482e`, the project the API accepts sign-ins from. Git ignores `app/google-services.json`.
 
-Without it, copy the stand-in for the Auth emulator's `demo-graspy` project instead. It builds the app and runs the tests, as CI does; signing in against the live API needs the real file.
+Without it, copy the stand-in for the Auth emulator's `demo-graspy` project instead. It builds the app and runs the tests, as CI does; signing in against the live API needs the real file, and a release build refuses the stand-in.
 
 ```bash
 cp apps/mobile/google-services.stand-in.json apps/mobile/app/google-services.json

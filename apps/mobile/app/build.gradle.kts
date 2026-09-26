@@ -21,6 +21,11 @@ val releaseSigningMissing = listOfNotNull(
 )
 val releasePackaging = setOf("packageRelease", "packageReleaseBundle", "signReleaseBundle")
 
+/** The Firebase project app/google-services.json names; the stand-in's is the Auth emulator's. */
+val firebaseProject: String? = file("google-services.json").takeIf { it.isFile }
+    ?.let { (groovy.json.JsonSlurper().parse(it) as Map<*, *>)["project_info"] as? Map<*, *> }
+    ?.get("project_id") as? String
+
 kapt {
     correctErrorTypes = true
     arguments {
@@ -91,6 +96,12 @@ gradle.taskGraph.whenReady {
             "A release build needs graspy's release key. Not set, or naming no file: " +
                 "${releaseSigningMissing.joinToString()}. Run scripts/release.sh, which reads the password " +
                 "from the Keychain, or set them as Gradle properties or environment variables (README.md).",
+        )
+    }
+    if (packagesRelease && firebaseProject == "demo-graspy") {
+        throw GradleException(
+            "A release signs in with graspy's Firebase project, and app/google-services.json is the stand-in " +
+                "for the Auth emulator. Copy the real one in first (README.md).",
         )
     }
 }
