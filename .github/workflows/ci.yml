@@ -73,22 +73,8 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v6
-      # The real file stays out of git. The unit tests never reach Firebase, so a
-      # stand-in for the emulator's demo project is enough to build.
-      - name: Stand-in google-services.json
-        run: |
-          cat > app/google-services.json <<'EOF'
-          {
-            "project_info": {"project_number": "000000000000", "project_id": "demo-graspy", "storage_bucket": "demo-graspy.appspot.com"},
-            "client": [{
-              "client_info": {"mobilesdk_app_id": "1:000000000000:android:0000000000000000", "android_client_info": {"package_name": "com.latentic.graspy"}},
-              "oauth_client": [{"client_id": "000000000000-demo.apps.googleusercontent.com", "client_type": 3}],
-              "api_key": [{"current_key": "demo-key"}],
-              "services": {"appinvite_service": {"other_platform_oauth_client": []}}
-            }],
-            "configuration_version": "1"
-          }
-          EOF
+      # The real file stays out of git; the unit tests never reach Firebase.
+      - run: cp google-services.stand-in.json app/google-services.json
       - run: ./gradlew testDebugUnitTest lintDebug
       - if: failure()
         uses: actions/upload-artifact@v7
@@ -117,4 +103,5 @@ jobs:
       - name: Stand-in sidecars
         working-directory: apps/teacher/src-tauri/binaries
         run: touch llama-server-aarch64-apple-darwin graspy-inference-runner-aarch64-apple-darwin
+      - run: cargo clippy --manifest-path apps/teacher/src-tauri/Cargo.toml --all-targets -- -D warnings
       - run: cargo test --manifest-path apps/teacher/src-tauri/Cargo.toml
