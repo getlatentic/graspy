@@ -67,8 +67,12 @@ class FakeAccountApi(learners: List<LearnerDto> = listOf(ADA, BAYO)) : AccountAp
         return LearnersDto(kept.toList())
     }
 
+    /** The status graspy refuses a learner's session with, if it does. */
+    var sessionRefusedWith: Int? = null
+
     override suspend fun session(id: String, chosen: ChosenLearnerDto): IssuedSessionDto {
         calls += "session:$id:${chosen.deviceId}"
+        sessionRefusedWith?.let { throw httpError(it) }
         return issued("learner-token-$id", kept.first { it.id == id })
     }
 

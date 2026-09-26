@@ -78,6 +78,6 @@ A lesson, and a practice card from the tutor, are the server's MCP Apps views, s
 ## How accounts work on the phone
 
 - Signing in exchanges the Firebase ID token for a graspy session (`POST /api/session`). The session is kept in memory, sent on every call, and exchanged again on a `401`.
-- The account's learners are chosen on "Who's learning?". The first choice after signing in takes what the phone learned before; a later choice sends the unsent recordings, wipes the learner's data and takes up the new learner.
+- The account's learners are chosen on "Who's learning?". The first choice after signing in takes what the phone learned before; a later choice sends the kept voice answers and view calls, gets the new learner's session, then wipes the learner's data and takes up the new learner. Offline the switch is refused; online, when some could not be sent, it asks first, as sign-out does.
 - Everything a learner keeps on the phone is keyed by their learner key, `<uid>/<learner id>`. Their class and language stay on the phone when another learner is chosen, so switching back restores them.
 - Signing out wipes the phone and gives it a new device id.

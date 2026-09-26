@@ -66,6 +66,7 @@ class AccountGraph(private val context: Application) {
             sessions = sessions,
             deviceId = deviceIds::current,
             outbox = outbox,
+            online = ::online,
             leaveLearner = wipe::leaveLearner,
             claimDeviceLearning = deviceLearning::claim,
         )
