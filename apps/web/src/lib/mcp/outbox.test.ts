@@ -114,6 +114,21 @@ describe("a view's call", () => {
     expect(callAppTool).toHaveBeenCalledWith("answer_check", ANSWER);
   });
 
+  it("is kept when connecting is refused, whatever the status", async () => {
+    const refused = refusedByGraspy(400, "Unsupported protocol version");
+    reachServer.mockRejectedValue(refused);
+    callAppTool.mockRejectedValue(refused);
+    const { callOrKeep, sentEverything } = await fresh();
+
+    await expect(callOrKeep("answer_check", ANSWER)).resolves.toMatchObject({
+      content: [{ type: "text" }],
+    });
+    reachServer.mockResolvedValue(undefined);
+    callAppTool.mockReset().mockResolvedValue(DONE);
+    expect(await sentEverything()).toBe(true);
+    expect(callAppTool).toHaveBeenCalledWith("answer_check", ANSWER);
+  });
+
   it("is not kept when the server refuses it, and a kept one it refuses is dropped", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     const { callOrKeep, sendKept } = await fresh();

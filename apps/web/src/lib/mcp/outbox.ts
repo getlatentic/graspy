@@ -30,17 +30,30 @@ async function keep(name: string, args: Record<string, unknown>) {
   await promisify(store.add(call));
 }
 
+async function kept(
+  name: string,
+  args: Record<string, unknown>,
+): Promise<CallToolResult> {
+  await keep(name, args);
+  return KEPT;
+}
+
 export async function callOrKeep(
   name: string,
   args: Record<string, unknown>,
 ): Promise<CallToolResult> {
+  // As the run does: a connection refused, whatever its status, is not the server refusing a call.
+  try {
+    await reachServer();
+  } catch {
+    return kept(name, args);
+  }
   try {
     return await callAppTool(name, args);
   } catch (error) {
     // Kept as the outbox's run keeps it: until the server refuses this very call.
     if (refusesTheCall(error)) throw error;
-    await keep(name, args);
-    return KEPT;
+    return kept(name, args);
   }
 }
 
