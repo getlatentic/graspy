@@ -52,7 +52,7 @@ In development, `apps/web/.env.development` points sign-in at the emulator (`VIT
 npm test && npm run lint                                  # every npm package
 cd apps/web && npm run test:e2e                           # Cypress, with npm run dev and the Auth emulator running
 cd apps/mobile && ./gradlew testDebugUnitTest lintDebug   # Android, set up as apps/mobile/README.md says
-cd apps/teacher && npm run test:rust && npm run lint:rust # the teacher app's Rust, and clippy
+cd apps/teacher && npm run test:rust && npm run lint:rust # the teacher app's Rust and clippy, after npm run sidecars (macOS arm64)
 cd apps/server && uv run pytest -m integration            # real model calls, spends tokens
 cd apps/server && uv run mutmut run                       # finds tests that check nothing
 ```
