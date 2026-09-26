@@ -12,6 +12,7 @@ would make a lesson look solid because the learner drilled it, not because they 
 One agent instance holds one child, so a shared phone never mixes two children's memories.
 """
 
+import asyncio
 import json
 from urllib.parse import quote
 
@@ -19,6 +20,8 @@ from .curriculum import load_plans
 
 LEARNER_ORIGIN = "https://tutor/agents/learner"
 ASSESSMENT = "assess_performance"
+# Transcription (90 s) and language detection come first, and the app gives up on marking at 150 s.
+TEACH_TIMEOUT_SECONDS = 30
 
 VERDICT_OF = {"correct": "correct", "try_again": "wrong", "not_understood": "unheard"}
 DECISION_OF = {
@@ -93,9 +96,15 @@ async def teach_turn(env, learner: str, sample_id: str, lesson: str, ask: dict) 
     The lesson is the plan, so what the learner remembers of each fact is filed under the lesson it
     belongs to; how solid the lesson itself is stays a separate record under their class.
     """
-    reply = await _ask(
-        env, learner, "teach", {"lesson": lesson, "ask": ask, "turn": sample_id}
-    )
+    try:
+        reply = await asyncio.wait_for(
+            _ask(
+                env, learner, "teach", {"lesson": lesson, "ask": ask, "turn": sample_id}
+            ),
+            timeout=TEACH_TIMEOUT_SECONDS,
+        )
+    except TimeoutError as error:
+        raise LearnerMemoryError("the tutor agent did not answer in time") from error
     return reply | {"decision": DECISION_OF[reply["verdict"]]}
 
 

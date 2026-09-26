@@ -1,6 +1,8 @@
 """The voice routes over stand-ins for the Worker's bindings: who may call
 them, a recording from create to reply, and each learner's data kept apart."""
 
+import asyncio
+
 import pytest
 from signed_in import client, signed_in, use
 from voice_worker import voice_app, worker_env
@@ -366,6 +368,81 @@ async def test_an_offered_step_is_marked_remembered_and_answered_aloud(
     }
     assert reply.status_code == 200 and reply.content == b"OggS-reply"
     assert reply.headers["cache-control"] == "private, max-age=31536000, immutable"
+
+
+async def test_a_turn_that_keeps_failing_is_refused_once_its_attempts_are_spent(
+    app, env, monkeypatch
+):
+    heard = []
+
+    async def transcribe(*args):
+        heard.append(args)
+        raise RuntimeError("the recognizer failed")
+
+    monkeypatch.setattr(
+        "app.voice.worker_evaluation.transcribe_intron_sync", transcribe
+    )
+    offered(env, ADA)
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http)
+        await uploaded(http, sample)
+        path = f"/api/voice/samples/{sample['sample_id']}/evaluation"
+        answers = [await http.post(path) for _ in range(5)]
+
+    assert [answer.status_code for answer in answers] == [502, 502, 502, 409, 409]
+    assert answers[0].json()["code"] == "provider_failure"
+    assert answers[-1].json() == {
+        "detail": "this recording could not be marked",
+        "code": "marking_failed",
+    }
+    assert len(heard) == 3
+
+
+async def test_a_claim_read_before_the_last_attempt_was_spent_is_refused(env):
+    from app.voice.exercises import MAX_TURN_ATTEMPTS
+    from app.voice.worker_evaluation import _claim_turn
+
+    env.DB.db.execute(
+        "INSERT INTO tutoring_turns (sample_id, state, attempts, updated_at) "
+        "VALUES ('gvm_spent', 'failed', ?, 0)",
+        (MAX_TURN_ATTEMPTS,),
+    )
+
+    assert await _claim_turn(env, "gvm_spent") is None
+
+
+async def test_a_tutor_that_answers_too_late_fails_the_turn_for_a_later_try(
+    app, env, monkeypatch
+):
+    async def transcribe(*args):
+        return "fourteen", 40
+
+    answer = env.TUTOR.fetch
+
+    async def slow(*args, **kwargs):
+        await asyncio.sleep(1)
+        return await answer(*args, **kwargs)
+
+    monkeypatch.setattr(
+        "app.voice.worker_evaluation.transcribe_intron_sync", transcribe
+    )
+    monkeypatch.setattr("app.voice.learner_memory.TEACH_TIMEOUT_SECONDS", 0.01)
+    monkeypatch.setattr(env.TUTOR, "fetch", slow)
+    offered(env, ADA)
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http)
+        await uploaded(http, sample)
+        failed = await http.post(f"/api/voice/samples/{sample['sample_id']}/evaluation")
+
+    assert failed.status_code == 502
+    assert failed.json() == {
+        "detail": "the tutor agent did not answer in time",
+        "code": "provider_failure",
+    }
+    [turn] = env.DB.rows("SELECT state, attempts FROM tutoring_turns")
+    assert turn == {"state": "failed", "attempts": 1}
 
 
 async def test_a_phone_holding_the_current_line_hears_304(app, env):

@@ -125,12 +125,35 @@ def test_a_processing_turn_is_claimable_only_after_its_lease_expires():
     )
 
 
+def test_a_turn_is_given_up_once_its_last_attempt_is_left_unfinished():
+    from app.voice.exercises import (
+        MAX_TURN_ATTEMPTS,
+        PROCESSING_LEASE_MS,
+        claimable,
+        given_up,
+    )
+
+    now = 10_000_000
+    last = {"attempts": MAX_TURN_ATTEMPTS, "updated_at": now}
+    abandoned = last | {"state": "processing", "updated_at": 0}
+    for row in (last | {"state": "failed"}, abandoned):
+        assert given_up(row, now) and not claimable(row, now)
+    running = last | {"state": "processing", "updated_at": now - PROCESSING_LEASE_MS}
+    for row in (last | {"state": "complete"}, running):
+        assert not given_up(row, now)
+    retry = {"state": "failed", "attempts": MAX_TURN_ATTEMPTS - 1, "updated_at": now}
+    assert claimable(retry, now) and not given_up(retry, now)
+
+
 def test_a_worker_past_its_lease_cannot_win_the_write():
 
     from app.voice.exercises import PROCESSING_LEASE_MS, new_claim_token, write_won
+    from app.voice.learner_memory import TEACH_TIMEOUT_SECONDS
     from app.voice.speech.intron_sync import SYNC_TIMEOUT_MS
+    from app.voice.speech.language_detect import CLASSIFIER_TIMEOUT_SECONDS
 
-    assert SYNC_TIMEOUT_MS < PROCESSING_LEASE_MS
+    limits = CLASSIFIER_TIMEOUT_SECONDS + TEACH_TIMEOUT_SECONDS
+    assert SYNC_TIMEOUT_MS + limits * 1000 < PROCESSING_LEASE_MS
     assert new_claim_token() != new_claim_token()
     assert write_won(SimpleNamespace(meta=SimpleNamespace(changes=1)))
     assert not write_won(SimpleNamespace(meta=SimpleNamespace(changes=0)))

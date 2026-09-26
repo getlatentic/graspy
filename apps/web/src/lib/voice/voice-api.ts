@@ -20,6 +20,7 @@ export type VoiceCode =
   | "idempotency_conflict"
   | "no_speech"
   | "provider_failure"
+  | "marking_failed"
   | "learner_required"
   | "voice_unavailable";
 
@@ -51,8 +52,8 @@ async function refusalOf(response: Response): Promise<VoiceError> {
 
 // Past these a request is given up and counts as the network failing, so a retry sends it again.
 const REQUEST_MS = 30_000;
-// Marking holds the request: transcription alone may take about 95 s, and the tutor's marking has no
-// limit of its own. A marking given up here is kept and asked for again.
+// Marking holds the request: transcription alone may take about 95 s, and the tutor's marking 30 s.
+// A marking given up here is kept and asked for again.
 const MARKING_MS = 150_000;
 // A long answer on a slow connection: 8 KB a second, the slowest upload waited for.
 const uploadMs = (wav: Blob) => REQUEST_MS + Math.ceil(wav.size / 8);

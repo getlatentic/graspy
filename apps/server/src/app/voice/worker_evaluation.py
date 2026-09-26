@@ -6,12 +6,14 @@ from starlette.responses import JSONResponse
 
 from .curriculum import SCHOOL_CLASSES, load_plans
 from .exercises import (
+    MAX_TURN_ATTEMPTS,
     PROCESSING_LEASE_MS,
     FactAnswerExercise,
     Transport,
     TurnEvaluation,
     activity_for,
     claimable,
+    given_up,
     new_claim_token,
     turn_payload,
     write_won,
@@ -50,7 +52,12 @@ def _json(data, status=200):
     return JSONResponse(data, status_code=status)
 
 
-def _turn_response(row):
+def _turn_response(row, now_ms: int):
+    if given_up(row, now_ms):
+        return _json(
+            {"detail": "this recording could not be marked", "code": "marking_failed"},
+            status=409,
+        )
     state = row["state"]
     if state == "processing":
         return _json({"sample_id": row["sample_id"], "state": state}, status=202)
@@ -76,11 +83,11 @@ async def _claim_turn(env, sample_id: str) -> str | None:
         await env.DB.prepare(
             "UPDATE tutoring_turns SET state = 'processing', attempts = attempts + 1, "
             "error_detail = NULL, updated_at = ?2, claim_token = ?4 "
-            "WHERE sample_id = ?1 AND (state = 'failed' OR "
+            "WHERE sample_id = ?1 AND attempts < ?5 AND (state = 'failed' OR "
             "(state = 'processing' AND updated_at < ?3)) "
             "RETURNING sample_id"
         )
-        .bind(sample_id, now, now - PROCESSING_LEASE_MS, token)
+        .bind(sample_id, now, now - PROCESSING_LEASE_MS, token, MAX_TURN_ATTEMPTS)
         .first()
     )
     return token if claimed is not None else None
@@ -92,7 +99,7 @@ async def _current_turn(env, sample_id: str):
         .bind(sample_id)
         .first()
     )
-    return _turn_response(row)
+    return _turn_response(row, round(time.time() * 1000))
 
 
 async def _transcribe(
@@ -366,12 +373,13 @@ async def evaluate_sample(env, learner: str, sample_id: str):
         .bind(sample_id)
         .first()
     )
-    if existing is not None and not claimable(existing, round(time.time() * 1000)):
+    now = round(time.time() * 1000)
+    if existing is not None and not claimable(existing, now):
         if existing["state"] == "complete":
             await remember_assessment(
                 env, learner, sample_id, metadata, existing["decision"]
             )
-        return _turn_response(existing)
+        return _turn_response(existing, now)
     if not await _answers_a_taught_step(env, learner, metadata):
         return _json({"detail": NOT_OFFERED, "code": "step_not_offered"}, status=409)
     token = await _claim_turn(env, sample_id)
