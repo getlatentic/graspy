@@ -1,6 +1,7 @@
 package com.latentic.graspy.onboarding
 
 import android.os.Looper
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -35,7 +36,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
-/** A new learner makes their plan from start to finish: details, subjects, the plan being made, then ready. */
+/** A new learner makes their plan from start to finish, under graspy's header: details, subjects, the plan being made, then ready. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w412dp-h915dp-xxhdpi")
 class PlanOnboardingFlowTest {
@@ -117,18 +118,27 @@ class PlanOnboardingFlowTest {
         }
 
         compose.onNodeWithText(words.stepOf.filled("current" to 1, "total" to 2)).assertExists()
+        header()
         compose.onNodeWithText(words.next).assertIsNotEnabled()
         compose.onNodeWithContentDescription(words.profile.gradeLabel, substring = true).performScrollTo().performClick()
         compose.onNodeWithText(className).performClick()
         compose.onNodeWithText(words.next).assertIsEnabled().performClick()
 
         compose.onNodeWithText(words.steps.subjects.title).assertExists()
+        header()
         compose.onNodeWithText(words.start).assertIsEnabled().performClick()
 
         compose.onNodeWithText(words.generating.title).assertExists()
+        header()
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(5))
         compose.onNodeWithText(words.ready.title).assertExists()
+        header()
         compose.onNodeWithText(words.ready.`continue`).performClick()
         return done
+    }
+
+    /** graspy's header, over every part of onboarding as over the rest of the app. */
+    private fun header() {
+        compose.onNodeWithContentDescription("graspy").assertIsDisplayed()
     }
 }

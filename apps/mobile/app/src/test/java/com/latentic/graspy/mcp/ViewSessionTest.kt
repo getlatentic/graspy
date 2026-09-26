@@ -9,6 +9,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -59,6 +60,17 @@ class ViewSessionTest {
         assertEquals(listOf(ViewSession.TOOL_INPUT, ViewSession.TOOL_RESULT), sent.map { it.method() })
         assertEquals(card.toolInput, sent[0].params()["arguments"])
         assertEquals(card.toolResult, sent[1].params())
+    }
+
+    @Test
+    fun `a view has drawn only once it measures its result, not when it is told it`() = runBlocking {
+        session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 40) }))
+        session.receive(notification(ViewSession.INITIALIZED))
+        session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 0) }))
+        assertFalse(host.drawn)
+
+        session.receive(notification(ViewSession.SIZE_CHANGED, buildJsonObject { put("height", 420) }))
+        assertTrue(host.drawn)
     }
 
     @Test
@@ -132,6 +144,7 @@ class ViewSessionTest {
         val heights = mutableListOf<Int>()
         val messages = mutableListOf<String>()
         var shown: Pair<String, UiView>? = null
+        var drawn = false
         var takesMessages = true
 
         override suspend fun callTool(name: String, arguments: JsonObject): JsonObject {
@@ -159,6 +172,10 @@ class ViewSessionTest {
 
         override suspend fun shown(uri: String, view: UiView) {
             shown = uri to view
+        }
+
+        override fun drawn() {
+            drawn = true
         }
 
         companion object {

@@ -3,6 +3,9 @@ package com.latentic.graspy.lesson
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,6 +15,15 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.latentic.graspy.learners.BackLink
 import com.latentic.graspy.localization.LearnCopy
 import com.latentic.graspy.localization.filled
@@ -20,7 +32,9 @@ import com.latentic.graspy.mcp.ViewCard
 import com.latentic.graspy.mcp.ViewServer
 import com.latentic.graspy.mcp.ViewEvents
 import com.latentic.graspy.plan.LessonTarget
+import com.latentic.graspy.ui.GraspyCard
 import com.latentic.graspy.ui.GraspyColor
+import com.latentic.graspy.ui.GraspyText
 import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.space
 import kotlinx.coroutines.CancellationException
@@ -51,7 +65,14 @@ fun TopicLesson(
     onLearnt: () -> Unit,
     /** Shows the lesson's view: its card, what its calls go to, and what its events mean. */
     showView: @Composable (ViewCard, ViewServer, ViewEvents) -> Unit = { card, calls, events ->
-        AppView(card = card, server = calls, locale = locale, unavailable = learn.chat.viewUnavailable, events = events)
+        AppView(
+            card = card,
+            server = calls,
+            locale = locale,
+            unavailable = learn.chat.viewUnavailable,
+            events = events,
+            waiting = { LessonLoading(learn.lesson.loading, target.topic, announced = false) },
+        )
     },
 ) {
     // Goes up only when the learner retries after a failure.
@@ -70,7 +91,7 @@ fun TopicLesson(
     Column(verticalArrangement = Arrangement.spacedBy(space(4))) {
         BackLink(learn.lesson.backTo.filled("subject" to target.subject), onBack)
         when (val shown = opened) {
-            Opened.Waiting -> Text(learn.lesson.loading, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
+            Opened.Waiting -> LessonLoading(learn.lesson.loading, target.topic, announced = true)
             Opened.Failed -> {
                 Text(learn.lesson.loadFailed, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge)
                 SecondaryButton(learn.lesson.tryAgain, { attempt += 1 })
@@ -80,6 +101,28 @@ fun TopicLesson(
                 remember(shown.card) { LessonViewServer(server, lessons, target, shown.card) },
                 ViewEvents(toolCalled = { name, _, _ -> if (name == FINISH_LESSON) onLearnt() }),
             )
+        }
+    }
+}
+
+/**
+ * The web's LessonLoading, which the lesson view's own making card repeats. [announced] only where it first
+ * appears: shown again over the loading view, it is the same card, not news.
+ */
+@Composable
+private fun LessonLoading(title: String, topic: String, announced: Boolean) {
+    val announcing = if (announced) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier
+    GraspyCard(announcing, contentPadding = space(10)) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(space(3)), horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(Modifier.size(space(5)), color = GraspyColor.Accent, strokeWidth = 2.dp)
+            Text(
+                title,
+                color = GraspyColor.Ink,
+                style = GraspyText.Lg.copy(fontWeight = FontWeight.SemiBold),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(topic, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
         }
     }
 }

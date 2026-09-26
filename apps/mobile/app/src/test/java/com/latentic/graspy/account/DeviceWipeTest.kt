@@ -5,7 +5,7 @@ import com.latentic.graspy.auth.FirebaseSession
 import com.latentic.graspy.auth.GoogleAccountSheet
 import com.latentic.graspy.auth.SignInOutcome
 import com.latentic.graspy.collection.RECORDINGS_DIRECTORY
-import com.latentic.graspy.lesson.CopiedTopic
+import com.latentic.graspy.lesson.CopiedLesson
 import com.latentic.graspy.lesson.LessonCopyEntity
 import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.LearnerProfile
@@ -483,7 +483,7 @@ class DeviceWipeTest {
         assertEquals(emptyList<String>(), database.submissionDao().observeLessonTurns(ada).first().map { it.localId })
         assertEquals(emptyList<String>(), database.lessonCacheDao().observeCatalogue(ada, "primary_3").first().map { it.planId })
         assertNull(database.lessonCacheDao().observeLessonMove(ada, "primary_3").first())
-        assertEquals(emptyList<CopiedTopic>(), database.lessonCopyDao().copied(ada))
+        assertEquals(emptyList<CopiedLesson>(), database.lessonCopyDao().copied(ada))
         PreferenceFiles.learnerData.forEach { assertEquals(it, emptyMap<String, Any>(), context.getSharedPreferences(it, 0).all) }
         assertFalse(recordings.exists())
     }

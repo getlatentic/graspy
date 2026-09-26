@@ -19,4 +19,11 @@ private val MIGRATION_13_14 = object : Migration(13, 14) {
     }
 }
 
-val lessonCopyMigrations: Array<Migration> = arrayOf(MIGRATION_13_14)
+/** Names the lesson each copy holds, so a topic's lesson made anew is copied again. */
+private val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `lesson_copies` ADD COLUMN `lessonId` TEXT")
+    }
+}
+
+val lessonCopyMigrations: Array<Migration> = arrayOf(MIGRATION_13_14, MIGRATION_14_15)

@@ -5,6 +5,8 @@ import androidx.room.Room
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import com.latentic.graspy.lesson.CopiedLesson
+import com.latentic.graspy.lesson.CopiedTopic
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -32,17 +34,14 @@ class GraspyMigrationTest {
     }
 
     @Test
-    fun `version 13 moves to 14 with its kept calls, and lessons and views to copy`() = runBlocking {
+    fun `version 13 moves on with its kept calls, and lessons and views to copy`() = runBlocking {
         createAt(13) { db ->
             db.execSQL(
                 "INSERT INTO kept_view_calls (ownerId, name, argumentsJson, keptAt) VALUES ('uid/ada', 'answer_practice', '{}', 1)",
             )
         }
 
-        val database = Room.databaseBuilder(context, GraspyDatabase::class.java, NAME)
-            .addMigrations(*graspyMigrations)
-            .allowMainThreadQueries()
-            .build()
+        val database = migrated()
         try {
             assertEquals(listOf("answer_practice"), database.keptCallDao().kept("uid/ada").map { it.name })
             assertEquals(emptyList<Any>(), database.lessonCopyDao().copied("uid/ada"))
@@ -51,6 +50,30 @@ class GraspyMigrationTest {
             database.close()
         }
     }
+
+    @Test
+    fun `version 14 moves to 15 with its lesson copies, the lesson each holds not known`() = runBlocking {
+        createAt(14) { db ->
+            db.execSQL(
+                """INSERT INTO lesson_copies (ownerId, planId, subjectSlug, topicIndex, topic, cardJson, savedAt)
+                   VALUES ('uid/ada', 'plan-1', 'mathematics', 1, 'Fractions', '{}', 1)""",
+            )
+        }
+
+        val database = migrated()
+        try {
+            val fractions = CopiedTopic("plan-1", "mathematics", 1, "Fractions")
+            assertEquals(listOf(CopiedLesson(fractions, null)), database.lessonCopyDao().copied("uid/ada"))
+            assertEquals("{}", database.lessonCopyDao().card("uid/ada", "plan-1", "mathematics", 1, "Fractions"))
+        } finally {
+            database.close()
+        }
+    }
+
+    private fun migrated(): GraspyDatabase = Room.databaseBuilder(context, GraspyDatabase::class.java, NAME)
+        .addMigrations(*graspyMigrations)
+        .allowMainThreadQueries()
+        .build()
 
     /** The database as Room wrote it at [version], from the schema it exported then. */
     private fun createAt(version: Int, fill: (SupportSQLiteDatabase) -> Unit) {

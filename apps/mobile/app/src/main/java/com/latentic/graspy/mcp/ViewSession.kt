@@ -31,6 +31,9 @@ interface ViewHost {
 
     /** The view, loaded in the sandbox from [view]'s page, has initialised and has its tool's input and result. */
     suspend fun shown(uri: String, view: UiView)
+
+    /** The view has drawn its tool's result. */
+    fun drawn() = Unit
 }
 
 /** Told to a view when it initialises, as the web tells it: light, inline, at most [VIEW_MAX_HEIGHT] tall. */
@@ -61,6 +64,8 @@ class ViewSession(
     private val send: (JsonObject) -> Unit,
 ) {
     private var documentSent = false
+    private var resultSent = false
+    private var drawn = false
     private val waiting = ConcurrentHashMap<Long, CompletableDeferred<JsonObject>>()
     private val ids = AtomicLong()
 
@@ -111,11 +116,19 @@ class ViewSession(
             INITIALIZED -> {
                 send(notification(TOOL_INPUT, buildJsonObject { put("arguments", card.toolInput) }))
                 send(notification(TOOL_RESULT, card.toolResult))
+                resultSent = true
                 host.shown(card.resourceUri, view)
             }
-            SIZE_CHANGED -> (params["height"] as? JsonPrimitive)?.doubleOrNull?.let {
-                host.resize(ceil(it).toInt().coerceIn(0, VIEW_MAX_HEIGHT))
-            }
+            SIZE_CHANGED -> (params["height"] as? JsonPrimitive)?.doubleOrNull?.let { resized(ceil(it).toInt().coerceIn(0, VIEW_MAX_HEIGHT)) }
+        }
+    }
+
+    // A view measures itself empty until it has drawn its result: its first height after the result is the drawing.
+    private fun resized(height: Int) {
+        host.resize(height)
+        if (resultSent && height > 0 && !drawn) {
+            drawn = true
+            host.drawn()
         }
     }
 
