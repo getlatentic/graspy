@@ -1,6 +1,7 @@
 import { Agent, callable } from "agents";
 import type { Card } from "ts-fsrs";
 import type { Verdict } from "./mark";
+import { TurnReplies } from "./replies";
 import { takeTurn, type Ask, type Reply } from "./turn";
 import {
   chooseSitting,
@@ -19,6 +20,17 @@ import {
  */
 export class Learner extends Agent<Env> {
   private ready = false;
+  private readonly replies = new TurnReplies({
+    get: (turn) => {
+      this.ensure();
+      const [row] = this.sql<{ reply: string }>`SELECT reply FROM replies WHERE turn = ${turn}`;
+      return row ? (JSON.parse(row.reply) as Reply) : null;
+    },
+    put: (turn, reply) => {
+      this.ensure();
+      this.sql`INSERT OR REPLACE INTO replies (turn, reply) VALUES (${turn}, ${JSON.stringify(reply)})`;
+    },
+  });
 
   private ensure(): void {
     if (this.ready) return;
@@ -32,6 +44,7 @@ export class Learner extends Agent<Env> {
       )
     `;
     this.sql`CREATE TABLE IF NOT EXISTS applied (turn TEXT PRIMARY KEY)`;
+    this.sql`CREATE TABLE IF NOT EXISTS replies (turn TEXT PRIMARY KEY, reply TEXT NOT NULL)`;
     this.ready = true;
   }
 
@@ -103,9 +116,11 @@ export class Learner extends Agent<Env> {
    */
   @callable()
   async teach(lesson: string, ask: Ask, turn?: string, at?: string): Promise<Reply> {
-    const reply = await takeTurn(this.env, ask);
-    this.record(lesson, ask.expect.item, reply.verdict, at, turn);
-    return reply;
+    return this.replies.reply(turn, async () => {
+      const reply = await takeTurn(this.env, ask);
+      this.record(lesson, ask.expect.item, reply.verdict, at, turn);
+      return reply;
+    });
   }
 
   /**
