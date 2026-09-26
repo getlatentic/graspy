@@ -93,11 +93,11 @@ A recording's metadata needs `speaker_id`, `language_pair` (`yo-en` or `pcm-en`)
 
 | Status | Meaning |
 |---|---|
-| 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A refused sign-in is `sign_in_invalid` |
+| 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A sign-in Google refused is `sign_in_invalid` |
 | 403 | A device's session asked for the account's learners (`account_required`) |
 | 409 | An account session asked for a learner's record (`learner_required`), or the account holds 8 learners (`too_many_learners`) |
 | 422 | Invalid request. `detail` names the field, never the value |
-| 503 | Voice lessons outside the Worker (`voice_unavailable`) |
+| 503 | Voice lessons outside the Worker (`voice_unavailable`), sign-in not set up (`sign_in_off`), or Google could not check a sign-in and a later try may pass (`sign_in_unchecked`) |
 | 429 | Rate limited. Wait `Retry-After` seconds |
 | 5xx | Server failure. The details are logged, not returned |
 
