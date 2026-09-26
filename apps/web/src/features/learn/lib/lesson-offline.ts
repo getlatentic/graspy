@@ -11,6 +11,7 @@ import type { TopicRef } from "@/lib/learner-record";
 import { isUnreachable } from "@/lib/mcp/outbox";
 import { callAppTool } from "@/lib/mcp/server";
 import {
+  keptLesson,
   lessonStateOf,
   lessonTarget,
   openLesson,
@@ -69,6 +70,16 @@ const sameTopic = (a: TopicRef, b: TopicRef) =>
   a.topicIndex === b.topicIndex &&
   a.topic === b.topic;
 
+// A lesson the server refuses is skipped; a server that cannot be reached ends the run.
+async function copyOne(target: LessonTarget) {
+  try {
+    await keepIfWhole(target, await keptLesson(target));
+  } catch (error) {
+    if (isUnreachable(error)) throw error;
+    console.warn(`Copying the lesson on ${target.topic} failed:`, error);
+  }
+}
+
 async function copyAll(plan: CurriculumData, ready: TopicRef[]) {
   const wanted = ready.filter((mark) => mark.planId === plan.planId);
   const copied = await copiedTopics();
@@ -80,7 +91,7 @@ async function copyAll(plan: CurriculumData, ready: TopicRef[]) {
     const subject = plan.subjects.find((s) => s.slug === mark.subjectSlug);
     const target = subject && lessonTarget(plan, subject, mark.topicIndex);
     if (!target || target.topic !== mark.topic) continue;
-    await keepIfWhole(target, await openLesson(target));
+    await copyOne(target);
   }
 }
 
