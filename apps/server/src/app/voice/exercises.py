@@ -184,8 +184,11 @@ def activity_for(metadata: dict):
 
 
 PROCESSING_LEASE_MS = 3 * 60 * 1000
-# Every attempt pays for transcription and marking, so a turn that keeps failing stops being tried.
-MAX_TURN_ATTEMPTS = 3
+# The wait before each attempt at marking a turn, from the end of the one before. Every attempt pays
+# for transcription and marking, so a turn that keeps failing stops being tried; the waits let a
+# provider's short outage pass without spending the attempts.
+RETRY_AFTER_MS = (0, 2 * 60 * 1000, 30 * 60 * 1000)
+MAX_TURN_ATTEMPTS = len(RETRY_AFTER_MS)
 
 
 def new_claim_token() -> str:
@@ -215,13 +218,23 @@ def given_up(row: dict, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS) -> boo
     return _unfinished(row, now_ms, lease_ms) and attempts >= MAX_TURN_ATTEMPTS
 
 
+def waiting(row: dict, now_ms: int) -> bool:
+    """A turn whose next attempt is not due yet."""
+    attempts = min(int(row.get("attempts") or 0), MAX_TURN_ATTEMPTS - 1)
+    return now_ms - int(row["updated_at"]) < RETRY_AFTER_MS[attempts]
+
+
 def claimable(
     row: dict | None, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS
 ) -> bool:
-    """A turn may be (re)claimed when it is unfinished and has attempts left."""
+    """A turn may be (re)claimed when it is unfinished, has attempts left and the next is due."""
     if row is None:
         return True
-    return _unfinished(row, now_ms, lease_ms) and not given_up(row, now_ms, lease_ms)
+    return (
+        _unfinished(row, now_ms, lease_ms)
+        and not given_up(row, now_ms, lease_ms)
+        and not waiting(row, now_ms)
+    )
 
 
 def turn_payload(row: dict) -> dict:

@@ -141,8 +141,22 @@ def test_a_turn_is_given_up_once_its_last_attempt_is_left_unfinished():
     running = last | {"state": "processing", "updated_at": now - PROCESSING_LEASE_MS}
     for row in (last | {"state": "complete"}, running):
         assert not given_up(row, now)
-    retry = {"state": "failed", "attempts": MAX_TURN_ATTEMPTS - 1, "updated_at": now}
+    retry = {"state": "failed", "attempts": MAX_TURN_ATTEMPTS - 1, "updated_at": 0}
     assert claimable(retry, now) and not given_up(retry, now)
+
+
+def test_each_further_attempt_waits_longer_after_the_one_before():
+    from app.voice.exercises import RETRY_AFTER_MS, claimable, waiting
+
+    now = 10_000_000_000
+    for attempts in (1, 2):
+        wait = RETRY_AFTER_MS[attempts]
+        ended = {"state": "failed", "attempts": attempts}
+        early = ended | {"updated_at": now - wait + 1}
+        due = ended | {"updated_at": now - wait}
+        assert waiting(early, now) and not claimable(early, now)
+        assert claimable(due, now) and not waiting(due, now)
+    assert RETRY_AFTER_MS[1] == 2 * 60 * 1000 and RETRY_AFTER_MS[2] == 30 * 60 * 1000
 
 
 def test_a_worker_past_its_lease_cannot_win_the_write():

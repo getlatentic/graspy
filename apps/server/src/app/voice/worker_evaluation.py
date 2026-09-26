@@ -8,6 +8,7 @@ from .curriculum import SCHOOL_CLASSES, load_plans
 from .exercises import (
     MAX_TURN_ATTEMPTS,
     PROCESSING_LEASE_MS,
+    RETRY_AFTER_MS,
     FactAnswerExercise,
     Transport,
     TurnEvaluation,
@@ -16,6 +17,7 @@ from .exercises import (
     given_up,
     new_claim_token,
     turn_payload,
+    waiting,
     write_won,
 )
 from .expectation import expectation
@@ -59,8 +61,10 @@ def _turn_response(row, now_ms: int):
             status=409,
         )
     state = row["state"]
-    if state == "processing":
-        return _json({"sample_id": row["sample_id"], "state": state}, status=202)
+    # A failed turn whose next attempt is not due answers as one still being marked, so the app
+    # keeps the answer and asks again, and no attempt is spent.
+    if state == "processing" or (state == "failed" and waiting(row, now_ms)):
+        return _json({"sample_id": row["sample_id"], "state": "processing"}, status=202)
     if state == "failed":
         return _json(
             {"detail": row.get("error_detail") or "transcription failed"}, status=502
@@ -83,11 +87,21 @@ async def _claim_turn(env, sample_id: str) -> str | None:
         await env.DB.prepare(
             "UPDATE tutoring_turns SET state = 'processing', attempts = attempts + 1, "
             "error_detail = NULL, updated_at = ?2, claim_token = ?4 "
-            "WHERE sample_id = ?1 AND attempts < ?5 AND (state = 'failed' OR "
-            "(state = 'processing' AND updated_at < ?3)) "
+            "WHERE sample_id = ?1 AND attempts < ?5 "
+            "AND updated_at <= ?2 - (CASE WHEN attempts >= 2 THEN ?7 "
+            "WHEN attempts = 1 THEN ?6 ELSE 0 END) "
+            "AND (state = 'failed' OR (state = 'processing' AND updated_at < ?3)) "
             "RETURNING sample_id"
         )
-        .bind(sample_id, now, now - PROCESSING_LEASE_MS, token, MAX_TURN_ATTEMPTS)
+        .bind(
+            sample_id,
+            now,
+            now - PROCESSING_LEASE_MS,
+            token,
+            MAX_TURN_ATTEMPTS,
+            RETRY_AFTER_MS[1],
+            RETRY_AFTER_MS[2],
+        )
         .first()
     )
     return token if claimed is not None else None
