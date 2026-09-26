@@ -44,8 +44,14 @@ export type LessonEvent =
   | { type: "recordFailed"; note: "micDenied" | "micFailed" | "notSaved" }
   | { type: "nothingHeard" }
   | { type: "recorded"; key: string }
+  /** An answer from before the page was reloaded, still to be shown. */
+  | { type: "resumed"; move: LessonMove; key: string }
   | { type: "kept"; key: string }
   | { type: "settled"; key: string; sent: Sent }
+  /** The answer left the device with its outcome shown elsewhere. */
+  | { type: "seenElsewhere"; key: string }
+  /** The child carried on past an answer still kept, without its outcome. */
+  | { type: "carriedOn"; key: string }
   | { type: "replied" };
 
 export const START: LessonState = { phase: { name: "idle" }, note: null };
@@ -95,6 +101,16 @@ function settled(
     return refused(phase.move, event.sent.code);
   return {
     phase: { name: "result", move: phase.move, turn: event.sent.turn },
+    note: null,
+  };
+}
+
+function passed(state: LessonState, key: string): LessonState {
+  const { phase } = state;
+  if (phase.name !== "checking" && phase.name !== "kept") return state;
+  if (phase.key !== key) return state;
+  return {
+    phase: { name: "moving-on", move: phase.move, heard: false },
     note: null,
   };
 }
@@ -153,6 +169,11 @@ export function lessonReducer(
         phase: { name: "checking", move, key: event.key },
         note: null,
       }));
+    case "resumed":
+      return {
+        phase: { name: "checking", move: event.move, key: event.key },
+        note: null,
+      };
     case "kept":
       return settled(state, {
         type: "settled",
@@ -161,6 +182,9 @@ export function lessonReducer(
       });
     case "settled":
       return settled(state, event);
+    case "seenElsewhere":
+    case "carriedOn":
+      return passed(state, event.key);
     case "replied":
       return state.phase.name === "result"
         ? {
