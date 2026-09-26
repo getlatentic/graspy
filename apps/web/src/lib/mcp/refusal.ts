@@ -22,13 +22,26 @@ const ABOUT_THE_CALL = new Set<number>([
 
 const ABOUT_THE_SESSION = new Set([401, 403]);
 
-// A 4xx the SDK could not read as JSON-RPC, such as 413 for a body over the server's limit.
+/** Whether an answer's body is a JSON-RPC error, as graspy's /mcp gives every refusal. */
+function jsonRpcError(text: unknown): boolean {
+  if (typeof text !== "string") return false;
+  try {
+    const { error } = JSON.parse(text) as { error?: { code?: unknown } };
+    return typeof error?.code === "number";
+  } catch {
+    return false;
+  }
+}
+
+// A 4xx the SDK did not read as JSON-RPC, such as 413 for a body over the server's limit. One
+// without graspy's JSON-RPC body came from something in the way: a proxy, a CDN, a route mid-deploy.
 const refusedOverHttp = (error: unknown) =>
   error instanceof SdkHttpError &&
   error.status >= 400 &&
   error.status < 500 &&
   !isRetryableStatus(error.status) &&
-  !ABOUT_THE_SESSION.has(error.status);
+  !ABOUT_THE_SESSION.has(error.status) &&
+  jsonRpcError(error.data?.text);
 
 /** The server's final word on this very call, as opposed to anything temporary or about the
  * session: those pass, or not, on a later try. */

@@ -35,12 +35,22 @@ beforeEach(() => {
   reachServer.mockReset().mockResolvedValue(undefined);
 });
 
-// As the SDK throws a non-OK answer to a POST it cannot read as JSON-RPC.
-const httpError = (status: number) =>
+// As the SDK throws a non-OK answer to a POST it did not read as JSON-RPC, with its body.
+const httpError = (status: number, text = "") =>
   new SdkHttpError(
     SdkErrorCode.ClientHttpNotImplemented,
-    `Error POSTing to endpoint: ${status}`,
-    { status },
+    `Error POSTing to endpoint: ${text}`,
+    { status, text },
+  );
+// As graspy's /mcp refuses a request, whatever the status.
+const refusedByGraspy = (status: number, message: string) =>
+  httpError(
+    status,
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: null,
+      error: { code: -32600, message },
+    }),
   );
 
 afterEach(() => vi.unstubAllGlobals());
@@ -133,8 +143,11 @@ describe("a view's call", () => {
       () =>
         new ProtocolError(ProtocolErrorCode.InvalidParams, "Invalid arguments"),
     ],
-    ["too large for the server", () => httpError(413)],
-    ["answered 400 over HTTP", () => httpError(400)],
+    [
+      "too large for the server",
+      () => refusedByGraspy(413, "Request too large"),
+    ],
+    ["answered 400 over HTTP", () => refusedByGraspy(400, "Parse error")],
   ])(
     "kept, is dropped when the server refuses it as %s",
     async (_, refusal) => {
@@ -148,6 +161,22 @@ describe("a view's call", () => {
       expect(await sentEverything()).toBe(true);
     },
   );
+
+  it.each([
+    ["a proxy's 404 page", () => httpError(404, "<html>Not found</html>")],
+    ["a CDN's 451", () => httpError(451, "Unavailable")],
+    ["a 410 with no body", () => httpError(410)],
+    [
+      "a route missing mid-deploy",
+      () => httpError(404, JSON.stringify({ detail: "Not Found" })),
+    ],
+  ])("stays kept on a 4xx graspy did not give: %s", async (_, answer) => {
+    const outbox = await keptOffline();
+    callAppTool.mockReset().mockRejectedValue(answer());
+
+    expect(await outbox.sendKept()).toBe(0);
+    expect(await outbox.sentEverything()).toBe(false);
+  });
 
   it("stays kept when the server cannot be connected to, whatever the status", async () => {
     const { sendKept } = await keptOffline();

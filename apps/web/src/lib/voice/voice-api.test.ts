@@ -156,6 +156,28 @@ describe("the voice API client", () => {
     });
   });
 
+  it.each([
+    ["a proxy's page", new Response("<html>Not found</html>", { status: 404 })],
+    ["a 410 with no body", new Response(null, { status: 410 })],
+    ["a route missing mid-deploy", json({ detail: "Not Found" }, 404)],
+  ])("counts a 4xx graspy did not give as no answer: %s", async (_, answer) => {
+    fetchWithSession.mockResolvedValue(answer);
+    await expect(api.evaluate("gvm_1")).rejects.toMatchObject({
+      status: 0,
+      code: null,
+    });
+  });
+
+  it("reads a 4xx graspy gave as its refusal, with or without a code", async () => {
+    fetchWithSession.mockResolvedValue(
+      json({ detail: "sample was not found" }, 404),
+    );
+    await expect(api.evaluate("gvm_1")).rejects.toMatchObject({
+      status: 404,
+      code: null,
+    });
+  });
+
   it("gives an upload time for its size, as on the slowest connection waited for", async () => {
     const times: number[] = [];
     const timeout = vi

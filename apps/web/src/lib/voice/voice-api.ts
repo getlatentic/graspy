@@ -38,9 +38,21 @@ export class VoiceError extends Error {
 
 type Body = { detail?: unknown; code?: unknown; error?: unknown };
 
+// The body a route of graspy's own refuses with; FastAPI answers a path it has no route for, such
+// as one mid-deploy, with {"detail": "Not Found"}.
+const graspys = (body: Body | null, status: number): body is Body =>
+  typeof body === "object" &&
+  body !== null &&
+  ("detail" in body || "code" in body) &&
+  !(status === 404 && body.detail === "Not Found");
+
 // A voice refusal is {"detail", "code"}; one raised before the route, {"detail": {"error", "code"}}.
+// A 4xx without graspy's body came from something in the way, so the voice API gave no answer.
 async function refusalOf(response: Response): Promise<VoiceError> {
-  const body = (await response.json().catch(() => ({}))) as Body;
+  const found = (await response.json().catch(() => null)) as Body | null;
+  if (response.status < 500 && !graspys(found, response.status))
+    return new VoiceError(`Voice request answered ${response.status}`, 0, null);
+  const body = found ?? {};
   const inner = (typeof body.detail === "object" ? body.detail : {}) as Body;
   const code = (body.code ?? inner.code ?? null) as VoiceCode | null;
   const message = String(
