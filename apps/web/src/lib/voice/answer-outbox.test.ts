@@ -234,6 +234,18 @@ describe("the answers kept on the device", () => {
     expect(sent("POST /api/voice/samples")).toHaveLength(1);
   });
 
+  it("count an answer as unsent while it is kept, and as sent once marked, shown or not", async () => {
+    const app = await load();
+    await app.keepAnswer(KEPT);
+    server.busy = 1;
+
+    await expect(app.sentEveryAnswer(LEARNER.key)).resolves.toBe(false);
+    await expect(app.sentEveryAnswer(LEARNER.key)).resolves.toBe(true);
+    expect(await app.unseenAnswer(LEARNER.key, undefined)).toMatchObject({
+      key: "key-1",
+    });
+  });
+
   it("offer the oldest answer not yet shown, whatever its key", async () => {
     const app = await load();
     await app.keepAnswer(KEPT);

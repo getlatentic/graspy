@@ -32,6 +32,12 @@ const wipeLearnerData = vi.fn(async () => void steps.push("wipe"));
 vi.mock("@/lib/device-wipe", () => ({ wipeLearnerData }));
 const sentEverything = vi.fn(async () => true);
 vi.mock("@/lib/mcp/outbox", () => ({ sentEverything }));
+const sentEveryAnswer = vi.fn(async (_: string) => true);
+vi.mock("@/lib/voice/answer-outbox", () => ({ sentEveryAnswer }));
+vi.mock("@/lib/voice/voice-learner-key", () => ({
+  voiceLearnerKey: () =>
+    signedIn?.learner ? `${signedIn.uid}/${signedIn.learner.id}` : null,
+}));
 const syncPlan = vi.fn(async () => {
   steps.push("sync");
   return null;
@@ -59,6 +65,7 @@ beforeEach(() => {
   steps.length = 0;
   plan = { planId: "plan-1" };
   sentEverything.mockResolvedValue(true);
+  sentEveryAnswer.mockResolvedValue(true);
   vi.stubGlobal("navigator", { onLine: true });
 });
 
@@ -119,6 +126,11 @@ describe("switching to another learner", () => {
       "a kept call cannot be sent",
       false,
       () => sentEverything.mockResolvedValue(false),
+    ],
+    [
+      "a kept spoken answer cannot be sent",
+      false,
+      () => sentEveryAnswer.mockResolvedValue(false),
     ],
   ])("is refused, wiping nothing, when %s", async (_, offline, arrange) => {
     arrange();
@@ -190,6 +202,14 @@ describe("flushUnsent", () => {
     await expect(flushUnsent()).resolves.toBe(true);
     expect(syncPlan).toHaveBeenCalled();
     expect(sentEverything).toHaveBeenCalled();
+    expect(sentEveryAnswer).toHaveBeenCalledWith(`uid-1/${ADA.id}`);
+  });
+
+  it("is false, so signing out asks first, while a spoken answer is still kept", async () => {
+    signedIn = { uid: "uid-1", learner: ADA, deviceJoins: false };
+    sentEveryAnswer.mockResolvedValue(false);
+
+    await expect(flushUnsent()).resolves.toBe(false);
   });
 });
 

@@ -15,6 +15,8 @@ import { sentEverything } from "@/lib/mcp/outbox";
 import { syncPlan } from "@/lib/plan-sync";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import { saveUserProfile } from "@/lib/user-storage";
+import { sentEveryAnswer } from "@/lib/voice/answer-outbox";
+import { voiceLearnerKey } from "@/lib/voice/voice-learner-key";
 import { learnerSession, removeLearner } from "./learners-api";
 
 // Which of the account's learners the device learns as. The first chosen after signing in
@@ -41,12 +43,18 @@ export interface ChoiceOptions {
   loseUnsent?: boolean;
 }
 
-/** Whether everything the device holds for its learner has reached the server. */
+/** Whether everything the device holds for its learner has reached the server: the plan,
+ * the views' calls and the spoken answers. */
 export async function flushUnsent(): Promise<boolean> {
   if (!navigator.onLine) return false;
   try {
     await syncPlan();
-    return await sentEverything();
+    const learner = voiceLearnerKey();
+    const sent = await Promise.all([
+      sentEverything(),
+      !learner || sentEveryAnswer(learner),
+    ]);
+    return sent.every(Boolean);
   } catch {
     return false;
   }

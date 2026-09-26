@@ -59,6 +59,13 @@ export function sendKeptAnswers(learner: string): Promise<void> {
   return run;
 }
 
+/** Sends this learner's kept answers; false while some are still to be sent. An answer marked or
+ * refused and waiting to be shown has reached the server. */
+export async function sentEveryAnswer(learner: string): Promise<boolean> {
+  await sendKeptAnswers(learner);
+  return (await keptAnswers(learner)).length === 0;
+}
+
 /** The answer's outcome once the server has given one, whoever sent it; never once aborted. */
 export function whenSettled(
   key: string,
