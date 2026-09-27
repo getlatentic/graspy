@@ -32,6 +32,8 @@ cd apps/mobile
 | `GRASPY_API_BASE_URL` | `https://graspy-api.getlatentic.com/` | The API. Keep the trailing slash |
 | `GRASPY_AUTH_EMULATOR` | empty | Debug builds only: `host:port` of Firebase's Auth emulator |
 
+The `staging` build type talks to staging's API and web origin ([Deploying](../../docs/DEPLOYING.md)). `./gradlew installStaging` installs it as "graspy staging" (`com.latentic.graspy.staging`) beside the Play app, signed with the debug key; `google-services.json` must hold both packages.
+
 Unit tests run on the JVM. Tests that need Android (Room, preferences, files) run under Robolectric, which downloads its Android jars on the first run.
 
 ## Release
