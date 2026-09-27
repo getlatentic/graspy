@@ -1,5 +1,7 @@
 """The tutor's ReAct loop, driven by DummyLM: each step, then the answer."""
 
+from pathlib import Path
+
 import pytest
 from dspy.utils.exceptions import AdapterParseError
 from stand_in import inputs, stand_in
@@ -19,6 +21,7 @@ from app.agent.tutor import (
     TutorReply,
     TutorTurn,
     clean_follow_ups,
+    signature_for,
 )
 from app.agent.unanswered import NO_ANSWER
 
@@ -504,16 +507,25 @@ async def test_practice_and_passages_are_aimed_at_the_learners_stage():
     assert "a passage is 60 to 120 words" in told
 
 
+# The tutor's instructions exactly as they were before it knew the stage.
+WITHOUT_STAGE = (
+    Path(__file__).parent / "tutor_instructions_without_stage.txt"
+).read_text()
+
+
+def test_the_tutor_without_a_stage_is_word_for_word_the_tutor_before_stages():
+    assert TutorTurn.instructions == WITHOUT_STAGE
+
+
 @pytest.mark.parametrize("grade_level", ["JSS 1", "Standard", None])
 async def test_a_class_the_catalogue_cannot_place_meets_the_tutor_as_before(
     grade_level,
 ):
     lm = await turn_for(grade_level)
 
-    assert TutorTurn.instructions.startswith(
-        "You are graspy, a study assistant for secondary school learners who may\n"
-        "be studying alone.\n\nReply in the learner's language"
+    assert signature_for(MATHS.model_copy(update={"grade_level": grade_level})) is (
+        TutorTurn
     )
-    assert " ".join(TutorTurn.instructions.split()) in instructions(lm)
+    assert " ".join(WITHOUT_STAGE.split()) in instructions(lm)
     assert "This learner is in" not in instructions(lm)
     assert "; stage:" not in inputs(lm, 0)["learner"]
