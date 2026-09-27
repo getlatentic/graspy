@@ -206,7 +206,7 @@ def _fact_text(utterance_id: str, language: str) -> str | None:
         A=NUMBER_WORDS[table],
         B=NUMBER_WORDS[multiplier],
         AB=number_words(table * multiplier),
-        # "Four times three" is three groups of four (docs/design/child-language.md): B counts them.
+        # "Four times three" is three groups of four (content/child-language.md): B counts them.
         groups="group" if multiplier == 1 else "groups",
     )
 

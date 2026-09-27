@@ -1,6 +1,7 @@
 """The lesson pipeline, with what each stage was asked read back."""
 
 import json
+from pathlib import Path
 from unittest.mock import ANY
 
 import pytest
@@ -19,6 +20,16 @@ COUNTRY = "Nigeria"
 SUBJECT = "Mathematics"
 TOPIC = "Algebra"
 GRADE = "JSS 1"
+
+# Classes as the apps name them.
+PRIMARY_2 = "Primary 2 (Primary), Nigeria, age 7"
+PRIMARY_5 = "Primary 5 (Primary), Nigeria, age 10"
+JSS_1 = "JSS 1 (Junior Secondary School), Nigeria, age 12"
+SS_2 = "SS 2 (Senior Secondary School), Nigeria, age 16"
+# Each lesson call's system prompt exactly as it was before stages.
+WITHOUT_STAGE = json.loads(
+    (Path(__file__).parent / "lesson_prompts_without_stage.json").read_text()
+)
 
 # LessonPlan requires between three and six slide specs, so three is the
 # smallest lesson the schema allows.
@@ -133,10 +144,10 @@ def _answers(slide_count=MIN_SLIDES, *, slide=None, practice=None, translated=Fa
     return out
 
 
-async def _stream(answers, language="English"):
+async def _stream(answers, language="English", grade=GRADE):
     """The events as the app receives them."""
     lm, context = stand_in(answers)
-    request = LessonRequest(COUNTRY, language, SUBJECT, TOPIC, GRADE)
+    request = LessonRequest(COUNTRY, language, SUBJECT, TOPIC, grade)
     with context:
         events = [event async for event in LessonService().events(request)]
     return lm, json.loads(json.dumps(events, default=wire))
@@ -244,6 +255,8 @@ def _summary_of(*titles):
 
 
 async def test_each_stage_is_asked_about_the_learners_lesson():
+    """A class the catalogue cannot place, such as "JSS 1" alone, is written
+    for by its grade, as before stages were known."""
     lm, _ = await _stream(_answers())
     lesson = {
         "subject": SUBJECT,
@@ -275,6 +288,60 @@ async def test_each_stage_is_asked_about_the_learners_lesson():
         **lesson,
         "lesson_summary": _summary_of("Slide 0", "Slide 1", "Slide 2"),
     }
+
+
+@pytest.mark.parametrize(
+    ("grade", "stage", "age", "guided"),
+    [
+        (PRIMARY_2, "lower primary", "7", "Sentences of at most 10 words."),
+        (PRIMARY_5, "upper primary", "10", "Sentences of at most 14 words."),
+        (JSS_1, "junior secondary", "12", "the subject's proper terms"),
+        (SS_2, "senior secondary", "16", "and no more: no calculation"),
+    ],
+)
+async def test_the_plan_each_slide_and_the_practice_are_told_the_stage_and_age(
+    grade, stage, age, guided
+):
+    lm, _ = await _stream(_answers(), grade=grade)
+
+    for call in range(MIN_SLIDES + 2):
+        asked = inputs(lm, call)
+        assert asked["grade_level"] == grade
+        assert (asked["stage"], asked["age"]) == (stage, age)
+        assert guided in asked["stage_guidance"]
+
+
+@pytest.mark.parametrize("grade", [GRADE, "Standard", "Primary 2"])
+async def test_a_class_the_catalogue_cannot_place_is_asked_word_for_word_as_before(
+    grade,
+):
+    """Measured: even inputs saying the stage was not known took local
+    examples out of its lessons."""
+    lm, _ = await _stream(_answers(), grade=grade)
+
+    asked = [lm.history[call]["messages"][0]["content"] for call in range(5)]
+    assert asked == [
+        WITHOUT_STAGE["GenerateLessonPlan"],
+        *[WITHOUT_STAGE["GenerateSlide"]] * MIN_SLIDES,
+        WITHOUT_STAGE["GeneratePracticeQuestion"],
+    ]
+
+
+async def test_a_placed_class_is_asked_with_the_stage_added_to_the_same_prompt():
+    lm, _ = await _stream(_answers(), grade=PRIMARY_2)
+
+    plan = lm.history[0]["messages"][0]["content"]
+    assert plan != WITHOUT_STAGE["GenerateLessonPlan"]
+    assert "`stage_guidance`" in plan
+    assert "Create a pedagogical lesson plan." in plan
+
+
+async def test_an_undergraduate_lesson_is_written_for_an_adult():
+    lm, _ = await _stream(_answers(), grade="Undergraduate student, studying Law")
+
+    asked = inputs(lm, 0)
+    assert (asked["stage"], asked["age"]) == ("after school", "an adult")
+    assert "academic language" in asked["stage_guidance"]
 
 
 async def test_a_translated_lesson_is_written_in_english_and_read_back_in_english():
@@ -608,3 +675,18 @@ async def test_a_slide_that_comes_back_unusable_is_written_again():
     assert events[-1]["payload"]["success"] is True
     assert _warnings(events) == []
     assert lm.history[3]["kwargs"]["temperature"] == 0.7
+
+
+async def test_an_upper_primary_lesson_keeps_its_sentence_limit():
+    """Only the tutor writes for upper primary without one."""
+    lm, _ = await _stream(_answers(), grade=PRIMARY_5)
+
+    for call in range(MIN_SLIDES + 2):
+        assert "Sentences of at most 14 words." in inputs(lm, call)["stage_guidance"]
+
+
+async def test_a_lower_primary_lesson_is_not_given_the_tutors_answer_rule():
+    lm, _ = await _stream(_answers(), grade=PRIMARY_2)
+
+    for call in range(MIN_SLIDES + 2):
+        assert "short numbered steps" not in inputs(lm, call)["stage_guidance"]

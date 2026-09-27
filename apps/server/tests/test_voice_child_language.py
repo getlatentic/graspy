@@ -1,4 +1,4 @@
-"""Every spoken lesson line follows docs/design/child-language.md, where a rule can be measured."""
+"""Every spoken lesson line follows content/child-language.md, where a rule can be measured."""
 
 import json
 import re

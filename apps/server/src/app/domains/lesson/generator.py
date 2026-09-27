@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import dspy
 
+from ...education.stage import stage_of
 from .lesson import LessonPractice, LessonSlide, LessonSlideAssessment
 from .options import as_option_lines, checked_answer, option_lines
 from .prompts import (
@@ -18,11 +19,27 @@ from .prompts import (
     TranslateLessonSlide,
     TranslatePlanSummary,
 )
+from .staged import (
+    StagedLessonPlan,
+    StagedPracticeQuestion,
+    StagedSlide,
+    stage_inputs,
+)
 
 NO_NOTES = "None: plan for a typical learner at this grade."
 # A slide written again is written with some sampling, or the model would
 # write the same unusable slide, and a cache would return it.
 RETRY_TEMPERATURE = 0.7
+
+
+def _asked(
+    plain: dspy.Module, staged: dspy.Module, grade_level: str
+) -> tuple[dspy.Module, dict[str, str]]:
+    """The predictor for the learner, and the stage's inputs it needs."""
+    learner = stage_of(grade_level)
+    if learner is None:
+        return plain, {}
+    return staged, stage_inputs(learner)
 
 
 class StagedLessonGenerator(dspy.Module):
@@ -31,6 +48,9 @@ class StagedLessonGenerator(dspy.Module):
         self.plan_generator = dspy.ChainOfThought(GenerateLessonPlan)
         self.slide_generator = dspy.ChainOfThought(GenerateSlide)
         self.practice_generator = dspy.ChainOfThought(GeneratePracticeQuestion)
+        self.staged_plan_generator = dspy.ChainOfThought(StagedLessonPlan)
+        self.staged_slide_generator = dspy.ChainOfThought(StagedSlide)
+        self.staged_practice_generator = dspy.ChainOfThought(StagedPracticeQuestion)
         self.translate_summary = dspy.ChainOfThought(TranslatePlanSummary)
         self.translate_slide = dspy.ChainOfThought(TranslateLessonSlide)
         self.translate_practice = dspy.ChainOfThought(TranslateLessonPractice)
@@ -44,12 +64,16 @@ class StagedLessonGenerator(dspy.Module):
         grade_level: str,
         learner_notes: str = "",
     ) -> LessonPlan:
-        prediction = await self.plan_generator.acall(
+        planner, stage = _asked(
+            self.plan_generator, self.staged_plan_generator, grade_level
+        )
+        prediction = await planner.acall(
             country=country,
             language=language,
             subject=subject,
             topic=topic,
             grade_level=grade_level,
+            **stage,
             learner_notes=learner_notes or NO_NOTES,
         )
         return prediction.plan
@@ -65,10 +89,14 @@ class StagedLessonGenerator(dspy.Module):
         country: str,
         again: bool = False,
     ) -> LessonSlide:
-        written = await self.slide_generator.acall(
+        writer, stage = _asked(
+            self.slide_generator, self.staged_slide_generator, grade_level
+        )
+        written = await writer.acall(
             subject=subject,
             topic=topic,
             grade_level=grade_level,
+            **stage,
             language=language,
             country=country,
             slide_spec=slide_spec,
@@ -98,10 +126,14 @@ class StagedLessonGenerator(dspy.Module):
         country: str,
         lesson_summary: str,
     ) -> LessonPractice:
-        written = await self.practice_generator.acall(
+        writer, stage = _asked(
+            self.practice_generator, self.staged_practice_generator, grade_level
+        )
+        written = await writer.acall(
             subject=subject,
             topic=topic,
             grade_level=grade_level,
+            **stage,
             language=language,
             country=country,
             lesson_summary=lesson_summary,

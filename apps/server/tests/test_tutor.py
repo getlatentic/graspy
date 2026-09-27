@@ -1,5 +1,7 @@
 """The tutor's ReAct loop, driven by DummyLM: each step, then the answer."""
 
+from pathlib import Path
+
 import pytest
 from dspy.utils.exceptions import AdapterParseError
 from stand_in import inputs, stand_in
@@ -17,7 +19,9 @@ from app.agent.tutor import (
     NO_APP_CALLS,
     Tutor,
     TutorReply,
+    TutorTurn,
     clean_follow_ups,
+    signature_for,
 )
 from app.agent.unanswered import NO_ANSWER
 
@@ -435,3 +439,128 @@ async def test_a_message_answering_nothing_says_so():
     assert list((await memory.load("c1")).exchanges) == [
         Exchange(message="hi", answer="Hello")
     ]
+
+
+def instructions(lm) -> str:
+    """The system prompt of a turn's first model call, as one line."""
+    return " ".join(lm.history[0]["messages"][0]["content"].split())
+
+
+async def turn_for(grade_level: str | None):
+    """The model after one turn of a learner in this class."""
+    lm, context = stand_in(finish("Hello"))
+    learner = MATHS.model_copy(update={"grade_level": grade_level})
+    with context:
+        await finished(Tutor(InMemoryConversationStore()), "c1", "hi", learner)
+    return lm
+
+
+PRIMARY_2 = "Primary 2 (Primary), Nigeria, age 7"
+
+
+@pytest.mark.parametrize(
+    ("grade_level", "tutor_for", "stage"),
+    [
+        (PRIMARY_2, "primary school", "lower primary, age 7"),
+        (
+            "Primary 5 (Primary), Nigeria, age 10",
+            "primary school",
+            "upper primary, age 10",
+        ),
+        (
+            "JSS 1 (Junior Secondary School), Nigeria, age 12",
+            "junior secondary school",
+            "junior secondary, age 12",
+        ),
+        (
+            "SS 2 (Senior Secondary School), Nigeria, age 16",
+            "senior secondary school",
+            "senior secondary, age 16",
+        ),
+        (
+            "Undergraduate student, studying Law",
+            "university and college",
+            "after school, an adult",
+        ),
+    ],
+)
+async def test_the_tutor_is_a_tutor_for_the_learners_own_stage(
+    grade_level, tutor_for, stage
+):
+    lm = await turn_for(grade_level)
+
+    told = instructions(lm)
+    assert f"You are graspy, a tutor for {tutor_for} learners" in told
+    assert f"This learner is in {stage}." in told
+    assert inputs(lm, 0)["learner"].endswith(f"; stage: {stage}")
+
+
+async def test_a_primary_child_is_never_told_of_secondary_school():
+    assert "secondary" not in instructions(await turn_for(PRIMARY_2))
+
+
+async def test_practice_and_passages_are_aimed_at_the_learners_stage():
+    told = instructions(await turn_for(PRIMARY_2))
+
+    assert "Write every answer, practice question and passage for them:" in told
+    assert "Sentences of at most 10 words." in told
+    assert "a passage is 60 to 120 words" in told
+
+
+# The tutor's instructions exactly as they were before it knew the stage.
+WITHOUT_STAGE = (
+    Path(__file__).parent / "tutor_instructions_without_stage.txt"
+).read_text()
+
+
+def test_the_tutor_without_a_stage_is_word_for_word_the_tutor_before_stages():
+    assert TutorTurn.instructions == WITHOUT_STAGE
+
+
+@pytest.mark.parametrize("grade_level", ["JSS 1", "Standard", None])
+async def test_a_class_the_catalogue_cannot_place_meets_the_tutor_as_before(
+    grade_level,
+):
+    lm = await turn_for(grade_level)
+
+    assert signature_for(MATHS.model_copy(update={"grade_level": grade_level})) is (
+        TutorTurn
+    )
+    assert " ".join(WITHOUT_STAGE.split()) in instructions(lm)
+    assert "This learner is in" not in instructions(lm)
+    assert "; stage:" not in inputs(lm, 0)["learner"]
+
+
+async def test_a_lower_primary_answer_is_short_sentences_and_a_full_explanation():
+    told = instructions(await turn_for(PRIMARY_2))
+
+    assert "Sentences of at most 10 words." in told
+    assert "worked example" in told
+    assert "short numbered steps" in told
+    assert "one quick question the child can try" in told
+    assert (
+        "The question has one definite answer the child can give from what "
+        "you explained." in told
+    )
+
+
+PRIMARY_5 = "Primary 5 (Primary), Nigeria, age 10"
+
+
+async def test_only_lower_primary_answers_carry_the_worked_example_rule():
+    told = instructions(await turn_for(PRIMARY_5))
+
+    assert "short numbered steps" not in told
+
+
+async def test_an_upper_primary_tutor_explains_fully_without_a_sentence_limit():
+    """Measured: held to short sentences, its answers dropped the working."""
+    told = instructions(await turn_for(PRIMARY_5))
+
+    assert "You are graspy, a tutor for primary school learners" in told
+    assert "This learner is in upper primary, age 10." in told
+    assert "secondary" not in told
+    assert "Sentences of at most" not in told
+    assert "Only the sentences are short" not in told
+    assert "Explain fully, with worked calculations where they fit" in told
+    assert "no filler praise" in told

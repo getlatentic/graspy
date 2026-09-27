@@ -4,6 +4,8 @@ as Nigeria's early childhood, has voice lessons and no slide subjects."""
 
 from __future__ import annotations
 
+from functools import cache
+
 from pydantic import Field
 
 from ..wire import Wire
@@ -45,24 +47,26 @@ def _by_ids(ask: ClassAsk) -> tuple[System, Level] | None:
     return (system, level) if system and level else None
 
 
-def _by_descriptor(ask: ClassAsk) -> tuple[System, Level] | None:
-    if not ask.grade_level:
-        return None
-    return next(
-        (
-            (system, level)
-            for system in systems().values()
-            for level in system.levels
-            if descriptor(system, level) == ask.grade_level
-        ),
-        None,
-    )
+@cache
+def _by_descriptors() -> dict[str, tuple[System, Level]]:
+    """The first system wins a name two share, as it did when searched in order."""
+    placed: dict[str, tuple[System, Level]] = {}
+    for system in systems().values():
+        for level in system.levels:
+            placed.setdefault(descriptor(system, level), (system, level))
+    return placed
+
+
+def named(grade_level: str) -> tuple[System, Level] | None:
+    """The class the apps name in full: "JSS 1 (Junior Secondary School),
+    Nigeria, age 12"."""
+    return _by_descriptors().get(grade_level)
 
 
 def voice_only(ask: ClassAsk) -> bool | None:
     """None when the class is not one the catalogue can place."""
-    placed = _by_ids(ask) or _by_descriptor(ask)
-    if placed is None:
+    found = _by_ids(ask) or (named(ask.grade_level) if ask.grade_level else None)
+    if found is None:
         return None
-    system, level = placed
+    system, level = found
     return next(s.voice_only for s in system.stages if s.id == level.stage)
