@@ -29,7 +29,7 @@ class UnsentWork(
     private val outboxes: List<Outbox>,
     /** Where the sending goes on after the leave stops waiting for it, so what is under way still reaches graspy. */
     private val sending: CoroutineScope,
-    private val patienceMillis: Long = UNSENT_PATIENCE_MILLIS,
+    internal val patienceMillis: Long = UNSENT_PATIENCE_MILLIS,
 ) : Outbox {
     override suspend fun flush(learnerKey: String): Boolean {
         if (!online()) return false
@@ -60,7 +60,7 @@ class UnsentWork(
 class RecordingOutbox(
     private val dao: SubmissionDao,
     private val repository: SubmissionRepository,
-    private val patienceMillis: Long = UNSENT_PATIENCE_MILLIS,
+    internal val patienceMillis: Long = UNSENT_PATIENCE_MILLIS,
 ) : Outbox {
     override suspend fun flush(learnerKey: String): Boolean {
         repository.recoverIncomplete(learnerKey)
