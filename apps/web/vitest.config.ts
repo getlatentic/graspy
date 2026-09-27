@@ -8,14 +8,19 @@ export default mergeConfig(
   defineConfig({
     test: {
       environment: "node",
-      include: ["src/**/*.test.ts"],
+      include: ["src/**/*.test.{ts,tsx}"],
       restoreMocks: true,
       coverage: {
         // Every source file, not only the ones a test imports. Without this
         // the percentage describes the tested files and flatters the total.
         all: true,
         include: ["src/**/*.{ts,tsx}"],
-        exclude: ["src/**/*.test.ts", "src/**/*.d.ts", "src/locales/**"],
+        exclude: [
+          "src/**/*.test.{ts,tsx}",
+          "src/test/**",
+          "src/**/*.d.ts",
+          "src/locales/**",
+        ],
       },
     },
   }),
