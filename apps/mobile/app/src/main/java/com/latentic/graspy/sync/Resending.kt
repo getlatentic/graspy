@@ -1,5 +1,6 @@
-package com.latentic.graspy.mcp
+package com.latentic.graspy.sync
 
+import com.latentic.graspy.mcp.bestEffort
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -8,14 +9,17 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.merge
 
 /**
- * Sends a learner's kept view calls while there is a connection: once it comes, and again each time a call is
- * kept. A call kept online, with the server failing, stays on the phone, so while some do it tries again after
- * a wait that doubles up to [longestWaitMillis] instead of leaving them until the connection comes back.
+ * Sends what a learner did on the phone while there is a connection: once it comes, and again each time
+ * something is kept. What is kept online, with the server failing, stays on the phone, so while some does it
+ * tries again after a wait that doubles up to [longestWaitMillis] instead of leaving it until the connection
+ * comes back.
  */
-class KeptCallResending(
-    /** Sends the kept calls; false while some are still on the phone. */
+class Resending(
+    /** What is sent, as the log names it. */
+    private val what: String,
+    /** Sends what is kept; false while some is still on the phone. */
     private val sentEverything: suspend () -> Boolean,
-    /** Tells each time a call is kept. */
+    /** Tells each time something is kept. */
     private val kept: Flow<Unit>,
     private val firstWaitMillis: Long = FIRST_WAIT_MILLIS,
     private val longestWaitMillis: Long = LONGEST_WAIT_MILLIS,
@@ -34,10 +38,10 @@ class KeptCallResending(
         }
     }
 
-    private suspend fun sent(): Boolean = bestEffort(TAG, "Sending the kept view calls") { sentEverything() } ?: false
+    private suspend fun sent(): Boolean = bestEffort(TAG, "Sending $what") { sentEverything() } ?: false
 
     private companion object {
-        const val TAG = "GraspyViews"
+        const val TAG = "GraspySending"
 
         /** A server failing for a moment is usually back within this. */
         const val FIRST_WAIT_MILLIS = 15_000L

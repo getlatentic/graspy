@@ -58,6 +58,7 @@ fun AskTab(
     opening: AskOpening? = null,
     onOpened: () -> Unit = {},
 ) {
+    LaunchedEffect(ask) { ask.refresh() }
     val threads = ask.threads.collectAsStateWithLifecycle().value ?: return
     val unread by ask.unread.collectAsStateWithLifecycle()
     var chosen by rememberSaveable(stateSaver = targetSaver) { mutableStateOf<ChatTarget?>(null) }

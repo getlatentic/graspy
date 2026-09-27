@@ -25,4 +25,17 @@ private val MIGRATION_12_13 = object : Migration(12, 13) {
     }
 }
 
-val chatMigrations: Array<Migration> = arrayOf(MIGRATION_12_13)
+/**
+ * Marks each conversation and message until graspy has it, for the learner's other devices: what the phone kept
+ * before is unsent, so it goes to the learner's account with the first sync.
+ */
+private val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `chat_threads` ADD COLUMN `unsent` INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE `chat_messages` ADD COLUMN `editedAt` INTEGER")
+        db.execSQL("ALTER TABLE `chat_messages` ADD COLUMN `unsent` INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_chat_messages_ownerId_unsent` ON `chat_messages` (`ownerId`, `unsent`)")
+    }
+}
+
+val chatMigrations: Array<Migration> = arrayOf(MIGRATION_12_13, MIGRATION_15_16)

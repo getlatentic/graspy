@@ -20,7 +20,7 @@ fun interface Outbox {
 
 /**
  * Everything a learner did here that graspy has yet to take, as the web's flushUnsent reads it: their voice
- * answers and their views' calls, each sent first. The plan is not among them: the phone sends each change to
+ * answers, their views' calls and their conversations, each sent first. The plan is not among them: the phone sends each change to
  * it at once. Offline, when any of it fails, or once [patienceMillis] have passed, not everything has reached
  * graspy.
  */

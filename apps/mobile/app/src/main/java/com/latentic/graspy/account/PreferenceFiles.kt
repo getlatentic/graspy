@@ -23,6 +23,9 @@ object PreferenceFiles {
     /** The learner's plan and record as last read, so their subjects show without a connection. */
     const val PLAN = "graspy_plan"
 
+    /** How far the phone has read the learner's conversations from their other devices. */
+    const val THREADS = "graspy_threads"
+
     /** What the learner in use kept: gone when the device takes another learner. */
-    val learnerData: List<String> = listOf(PLAYBACK, CONSENT, IDENTITY, PLAN)
+    val learnerData: List<String> = listOf(PLAYBACK, CONSENT, IDENTITY, PLAN, THREADS)
 }
