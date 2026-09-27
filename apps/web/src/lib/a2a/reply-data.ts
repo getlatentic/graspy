@@ -168,7 +168,7 @@ function isTutorAction(value: unknown): value is TutorAction {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-function isTutorCard(value: unknown): value is TutorCard {
+export function isTutorCard(value: unknown): value is TutorCard {
   const card = value as Partial<TutorCard> | null;
   const result = card?.toolResult;
   return (

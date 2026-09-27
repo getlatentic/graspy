@@ -13,6 +13,7 @@ import { deviceId } from "@/lib/device-id";
 import { wipeLearnerData } from "@/lib/device-wipe";
 import { sentEverything } from "@/lib/mcp/outbox";
 import { syncPlan } from "@/lib/plan-sync";
+import { sentEveryThread } from "@/lib/threads/thread-sync";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import { saveUserProfile } from "@/lib/user-storage";
 import { sentEveryAnswer } from "@/lib/voice/answer-outbox";
@@ -53,6 +54,7 @@ async function sentAll(): Promise<boolean> {
     const learner = voiceLearnerKey();
     const sent = await Promise.all([
       sentEverything(),
+      sentEveryThread(),
       !learner || sentEveryAnswer(learner),
     ]);
     return sent.every(Boolean);
@@ -62,7 +64,8 @@ async function sentAll(): Promise<boolean> {
 }
 
 /** Whether everything the device holds for its learner has reached the server: the plan,
- * the views' calls and the spoken answers. False once it has taken too long. */
+ * the views' calls, the conversations and the spoken answers. False once it has taken too
+ * long. */
 export async function flushUnsent(
   pause: (ms: number) => Promise<unknown> = wait,
 ): Promise<boolean> {

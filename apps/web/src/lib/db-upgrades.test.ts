@@ -1,9 +1,11 @@
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  messageForSending,
   messageInCurrentShape,
   messageWithQuestionSet,
   messageWithViewCard,
+  threadForSending,
 } from "@/lib/db-upgrades";
 import type {
   LearntTopic,
@@ -20,6 +22,7 @@ async function storage() {
     ...(await import("@/lib/curriculum-db")),
     ...(await import("@/lib/chat-db")),
     ...(await import("@/lib/lesson-copies")),
+    ...(await import("@/lib/threads/thread-store")),
   };
 }
 
@@ -465,6 +468,69 @@ describe("version 10: lesson copies indexed by the lesson each holds", () => {
       { ...ref(2), lessonId: null },
     ]);
   });
+});
+
+describe("version 11: conversations kept until the server has them", () => {
+  it("marks each conversation and what it shows to be sent, and finds it by scope", async () => {
+    const said = { ...message("said", 2), type: "user", sender: "user" };
+    const failed = { ...message("failed", 3), type: "error" };
+    await seed(10, { messages: [message("answer", 1), said, failed] });
+
+    const db = await storage();
+
+    const [unsent, ...others] = await db.unsentThreads();
+    expect(others).toEqual([]);
+    expect(unsent.thread).toEqual(THREAD);
+    expect(unsent.messages.map((m) => m.id).sort()).toEqual(["answer", "said"]);
+    const found = await db.keepThreadFor({
+      ...THREAD,
+      scope: { ...THREAD.scope, kind: "topic" },
+      id: "thread-2",
+    });
+    expect(found.id).toBe(THREAD.id);
+    expect(await db.listThreads()).toEqual([THREAD]);
+  });
+
+  it("marks messages as the earlier steps rewrote them, upgrading from the first version", async () => {
+    const said = (id: string, timestamp: number) => ({
+      id,
+      type: "user",
+      sender: "user",
+      content: "Hi",
+      timestamp,
+    });
+    await seed(1, { messages: [said("a", 10), said("b", 30)] });
+
+    const db = await storage();
+
+    const [earlier] = await db.unsentThreads();
+    expect(earlier.thread.id).toBe("earlier");
+    expect(earlier.messages.map((m) => [m.id, m.threadId])).toEqual([
+      ["a", "earlier"],
+      ["b", "earlier"],
+    ]);
+    expect(await db.getThreadMessages("earlier")).toHaveLength(2);
+  });
+
+  it("leaves a thread whose scope no version wrote unmarked, found by no scope", () => {
+    const odd = { id: "odd", scope: { kind: "lesson" }, createdAt: 0 };
+
+    expect(threadForSending(odd)).toBe(odd);
+    expect(threadForSending({ id: "none" })).toEqual({ id: "none" });
+    expect(threadForSending(THREAD)).toEqual({
+      ...THREAD,
+      scopeKey: `topic\u0000${PLAN_ID}\u0000mathematics\u0000Fractions`,
+      unsent: 1,
+    });
+  });
+
+  it.each(["error", "status", undefined])(
+    "keeps a %s message to this device",
+    (type) => {
+      const kept = { id: "m", type };
+      expect(messageForSending(kept)).toBe(kept);
+    },
+  );
 });
 
 // The upgrade writes back only the messages a step returned anew.

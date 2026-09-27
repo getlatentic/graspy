@@ -1,6 +1,7 @@
 import type { AppCallRequest } from "@/lib/a2a/request-data";
 import {
   getThreadMessages,
+  inOrder,
   saveChatMessage,
   saveMessageMetadata,
   type ChatMessage,
@@ -11,7 +12,11 @@ import {
 export interface MessageStorage {
   load: (threadId: string) => Promise<ChatMessage[]>;
   save: (message: NewChatMessage) => Promise<ChatMessage>;
-  saveMetadata: (id: string, metadata: ChatMessageMetadata) => Promise<void>;
+  saveMetadata: (
+    id: string,
+    metadata: ChatMessageMetadata,
+    editedAt: number,
+  ) => Promise<void>;
 }
 
 const IN_INDEXED_DB: MessageStorage = {
@@ -22,8 +27,7 @@ const IN_INDEXED_DB: MessageStorage = {
 
 const NONE: readonly ChatMessage[] = [];
 
-const byTimestamp = (a: ChatMessage, b: ChatMessage) =>
-  a.timestamp - b.timestamp;
+const editOf = (message: ChatMessage) => message.editedAt ?? message.timestamp;
 
 // Listeners are per conversation so a streaming answer re-renders only its own
 // view; lists are replaced, never mutated, so unchanged ones keep identity.
@@ -70,6 +74,23 @@ export class MessageStore {
     }
   };
 
+  /** Reads a loaded conversation again after another device's messages were taken in. A
+   * message changed here since storage last had it stays as shown, as do those never stored:
+   * one still arriving, a failure. */
+  refreshThread = async (threadId: string): Promise<void> => {
+    if (!this.loaded.has(threadId)) return;
+    const stored = await this.storage.load(threadId);
+    const shown = new Map(
+      this.messagesOf(threadId).map((message) => [message.id, message]),
+    );
+    const read = stored.map((message) => {
+      const own = shown.get(message.id);
+      shown.delete(message.id);
+      return own && editOf(own) > editOf(message) ? own : message;
+    });
+    this.write(threadId, [...read, ...shown.values()]);
+  };
+
   addMessage = async (
     message: NewChatMessage,
     { persist = true }: { persist?: boolean } = {},
@@ -107,10 +128,11 @@ export class MessageStore {
   keepViewCalls = (id: string, viewCalls: AppCallRequest[]): void => {
     this.change(id, (message) => {
       const merged = { ...message.metadata, viewCalls };
+      const editedAt = Date.now();
       void this.storage
-        .saveMetadata(id, merged)
+        .saveMetadata(id, merged, editedAt)
         .catch((error) => console.error("Failed to save the message:", error));
-      return { ...message, metadata: merged };
+      return { ...message, metadata: merged, editedAt };
     });
   };
 
@@ -126,7 +148,7 @@ export class MessageStore {
   }
 
   private write(threadId: string, messages: ChatMessage[]): void {
-    const sorted = messages.sort(byTimestamp);
+    const sorted = messages.sort(inOrder);
     for (const message of sorted) this.threadOf.set(message.id, threadId);
     this.threads.set(threadId, sorted);
     for (const listener of this.listeners.get(threadId) ?? []) listener();

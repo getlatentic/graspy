@@ -6,7 +6,7 @@ import type { ChatLink } from "@/lib/chat-db";
 import { useI18n, type Translate } from "@/lib/i18n-context";
 import { goalIndex, withPath, withTopic } from "../lib/curriculum-edit";
 import { rebuildRequest } from "../lib/curriculum-request";
-import { lessonPath, subjectPath } from "../lib/learn-paths";
+import { lessonPath, subjectPath } from "@/lib/learn-paths";
 import type { LearnerPlan } from "./use-learner-plan";
 
 export type ActionOf<K extends TutorAction["type"]> = Extract<

@@ -1,6 +1,8 @@
 import {
   currentPlan,
   forgetLocal,
+  messageForSending,
+  threadForSending,
   localEntries,
   messageInCurrentShape,
   messageWithQuestionSet,
@@ -19,9 +21,10 @@ const DB_NAME = "graspy-db";
 // 8: lesson copies for offline, and an outbox for the views' offline calls.
 // 9: spoken answers to voice lessons, kept until the server has them.
 // 10: lesson copies indexed by the lesson each holds, to list without cards.
+// 11: threads found by scope; threads and messages marked until the server has them.
 // A shipped upgrade is never changed: a new rewrite, or a new lesson format
 // (which must clear the lesson store), is a new version.
-const DB_VERSION = 10;
+const DB_VERSION = 11;
 
 export const CURRICULUM_STORE = "curriculum";
 export const CHAT_STORE = "chat-history";
@@ -34,6 +37,11 @@ export const LESSON_COPY_STORE = "lesson-copies";
 export const BY_LESSON = "lessonId";
 export const OUTBOX_STORE = "outbox";
 export const VOICE_ANSWER_STORE = "voice-answers";
+export const BY_SCOPE = "scopeKey";
+export const BY_UNSENT = "unsent";
+// Rewrites an upgrade leaves for after it has committed.
+const PENDING_STORE = "pending";
+const MARK_UNSENT = "mark-unsent";
 
 // Title included: a position whose topic changed is a different topic.
 const TOPIC_KEY = ["planId", "subjectSlug", "topicIndex", "topic"];
@@ -91,7 +99,14 @@ export function openDB(): Promise<IDBDatabase> {
         forget();
       };
       db.onclose = forget;
-      resolve(db);
+      finishPending(db).then(
+        () => resolve(db),
+        (error: unknown) => {
+          forget();
+          db.close();
+          reject(error);
+        },
+      );
     };
 
     request.onupgradeneeded = (event) => {
@@ -129,7 +144,55 @@ const UPGRADES: [version: number, step: Upgrade][] = [
     (_db, tx) =>
       tx.objectStore(LESSON_COPY_STORE).createIndex(BY_LESSON, "lessonId"),
   ],
+  [11, (db, tx) => keepForSending(db, tx)],
 ];
+
+// Everything kept so far is unsent: a device signed in sends it to its learner, and one
+// signed out keeps it until it signs in. Marked once the upgrade has committed: a cursor
+// here would read messages before earlier steps' cursors had rewritten them.
+function keepForSending(db: IDBDatabase, tx: IDBTransaction): void {
+  tx.objectStore(THREAD_STORE).createIndex(BY_SCOPE, BY_SCOPE);
+  tx.objectStore(CHAT_STORE).createIndex(BY_UNSENT, BY_UNSENT);
+  db.createObjectStore(PENDING_STORE, { keyPath: "id" }).put({
+    id: MARK_UNSENT,
+  });
+}
+
+// In one transaction with the pending mark, so a rewrite cut short runs again on the next
+// open.
+async function finishPending(db: IDBDatabase): Promise<void> {
+  const pending = db
+    .transaction(PENDING_STORE, "readonly")
+    .objectStore(PENDING_STORE);
+  if (!(await promisify(pending.get(MARK_UNSENT)))) return;
+  const tx = db.transaction(
+    [PENDING_STORE, THREAD_STORE, CHAT_STORE],
+    "readwrite",
+  );
+  const done = committed(tx);
+  const mark = tx.objectStore(PENDING_STORE).get(MARK_UNSENT);
+  mark.onsuccess = () => {
+    if (!mark.result) return;
+    rewriteEach(tx.objectStore(THREAD_STORE), threadForSending);
+    rewriteEach(tx.objectStore(CHAT_STORE), messageForSending);
+    tx.objectStore(PENDING_STORE).delete(MARK_UNSENT);
+  };
+  await done;
+}
+
+function rewriteEach(
+  store: IDBObjectStore,
+  step: (value: object) => object,
+): void {
+  const cursor = store.openCursor();
+  cursor.onsuccess = () => {
+    const found = cursor.result;
+    if (!found) return;
+    const rewritten = step(found.value);
+    if (rewritten !== found.value) found.update(rewritten);
+    found.continue();
+  };
+}
 
 function keepForOffline(db: IDBDatabase): void {
   db.createObjectStore(LESSON_COPY_STORE, { keyPath: TOPIC_KEY });

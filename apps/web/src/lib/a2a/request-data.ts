@@ -8,6 +8,20 @@ export interface AppCallRequest {
   params: { name: string; arguments: Record<string, unknown> };
 }
 
+export function isAppCall(value: unknown): value is AppCallRequest {
+  const call = value as Partial<AppCallRequest> | null;
+  const params = call?.params;
+  return (
+    call?.jsonrpc === "2.0" &&
+    typeof call.id === "number" &&
+    call.method === "tools/call" &&
+    typeof params?.name === "string" &&
+    typeof params.arguments === "object" &&
+    params.arguments !== null &&
+    !Array.isArray(params.arguments)
+  );
+}
+
 let lastId = 0;
 
 export function appCall(
