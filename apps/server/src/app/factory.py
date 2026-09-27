@@ -24,6 +24,7 @@ from .api.account_routes import account_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
 from .api.routes import api_router
+from .api.thread_routes import thread_router
 from .api.voice_routes import voice_router
 from .caller import Keeping
 from .config.cors import build_origin_rules, origin_matcher
@@ -45,6 +46,7 @@ from .security.headers import SecurityHeadersMiddleware
 from .security.rate_limit import Budgets, RateLimitMiddleware
 from .security.session import resolve_secret
 from .settings import Settings, get_settings
+from .threads.store import ThreadStore
 from .voice.keeping import NO_VOICE, BoundVoice
 
 logger = logging.getLogger(__name__)
@@ -62,6 +64,7 @@ def create_app(
     views: Views | None = None,
     budgets: Budgets | None = None,
     voice: Any | None = None,
+    threads: ThreadStore | None = None,
 ) -> FastAPI:
     """The keyword arguments are the Worker's bindings; without them
     everything is kept in memory, no request budget applies and voice lessons
@@ -77,12 +80,15 @@ def create_app(
     origins = _origins(settings)
     _add_middleware(app, settings, origins, session_secret, budgets, lm)
     _add_exception_handlers(app)
-    keeping = _keeping(lessons, learners, making, conversations, lm, voice)
+    keeping = _keeping(
+        lessons, learners, making, conversations, lm, voice, threads or _local_threads()
+    )
     _add_state(app, settings, session_secret, origins, keeping, views)
     app.state.voice = voice
 
     app.include_router(api_router, prefix="/api")
     app.include_router(learner_router, prefix="/api")
+    app.include_router(thread_router, prefix="/api")
     app.include_router(account_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
     app.include_router(voice_router, prefix="/api")
@@ -115,6 +121,7 @@ def _keeping(
     conversations: ConversationStore | None,
     lm: dspy.LM,
     voice: Any | None,
+    threads: ThreadStore,
 ) -> Keeping:
     lessons = lessons or InMemoryLessonStore()
     learners = learners or InMemoryLearnerStore()
@@ -126,8 +133,16 @@ def _keeping(
         lessons=lessons,
         making=making,
         conversations=conversations or InMemoryConversationStore(),
+        threads=threads,
         voice=NO_VOICE if voice is None else BoundVoice(voice),
     )
+
+
+def _local_threads() -> ThreadStore:
+    """Imported only here: a Worker keeps threads in D1 and has no SQLite."""
+    from .local_d1 import LocalD1
+
+    return ThreadStore(LocalD1())
 
 
 def _add_state(

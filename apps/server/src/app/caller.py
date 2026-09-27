@@ -7,6 +7,7 @@ from .learner.record import Change, LearnerRecord
 from .learner.store import LearnerStore
 from .lessons.makers import LessonMaking
 from .lessons.store import LessonStore
+from .threads.store import ThreadStore
 from .voice.keeping import NO_VOICE, VoiceKeeping
 
 
@@ -16,6 +17,7 @@ class Keeping:
     lessons: LessonStore
     making: LessonMaking
     conversations: ConversationStore
+    threads: ThreadStore
     voice: VoiceKeeping = NO_VOICE
 
 

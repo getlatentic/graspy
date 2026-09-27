@@ -1,0 +1,419 @@
+{
+  "sent": {
+    "threads": [
+      {
+        "id": "thread-5d1f3a52-8c4e-4f7e-9d0a-2b6c7e8f9a01",
+        "scope": {
+          "kind": "topic",
+          "planId": "plan-1",
+          "subjectSlug": "mathematics",
+          "topic": "Fractions"
+        },
+        "agentContextId": "context-7b2e",
+        "preview": "What is a quarter as a decimal?",
+        "createdAt": 1790000000000,
+        "updatedAt": 1790000060000,
+        "messages": [
+          {
+            "id": "msg-1790000000000-a1b2c3d4e",
+            "type": "user",
+            "content": "What is a quarter as a decimal?",
+            "timestamp": 1790000000000,
+            "editedAt": 1790000000000,
+            "metadata": {
+              "appCalls": [
+                {
+                  "jsonrpc": "2.0",
+                  "id": 1,
+                  "method": "tools/call",
+                  "params": {
+                    "name": "answer_practice",
+                    "arguments": {
+                      "question": "Convert 1/4 to a decimal.",
+                      "chosenIndex": 1
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "msg-1790000030000-f5e6d7c8b",
+            "type": "system",
+            "content": "A quarter is 0.25. Try this one.",
+            "timestamp": 1790000030000,
+            "editedAt": 1790000050000,
+            "metadata": {
+              "followUps": [
+                "What is a half as a decimal?"
+              ],
+              "card": {
+                "resourceUri": "ui://graspy/practice",
+                "toolName": "give_practice",
+                "toolInput": {
+                  "instruction": "Write the fraction as a decimal.",
+                  "questions": [
+                    {
+                      "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
+                      "working": "1 ÷ 4 = 0.25",
+                      "options": [
+                        "0.4",
+                        "0.25"
+                      ],
+                      "answer_index": 1,
+                      "correct_feedback": "1 ÷ 4 = 0.25.",
+                      "incorrect_feedback": "Divide 1 by 4.",
+                      "check": "1/4",
+                      "hint": ""
+                    }
+                  ]
+                },
+                "toolResult": {
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Write the fraction as a decimal.\n1. Convert \\(\\frac{1}{4}\\) to a decimal.\n   1. 0.4\n   2. 0.25\n   The right answer: 0.25"
+                    }
+                  ],
+                  "structuredContent": {
+                    "instruction": "Write the fraction as a decimal.",
+                    "questions": [
+                      {
+                        "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
+                        "options": [
+                          "0.4",
+                          "0.25"
+                        ],
+                        "answerIndex": 1,
+                        "correctFeedback": "1 ÷ 4 = 0.25.",
+                        "incorrectFeedback": "Divide 1 by 4.",
+                        "hint": ""
+                      }
+                    ]
+                  },
+                  "_meta": {
+                    "viewUUID": "9b8a7f6e5d4c4b3a8f2e1d0c9b8a7f6e"
+                  }
+                }
+              },
+              "viewCalls": [
+                {
+                  "jsonrpc": "2.0",
+                  "id": 1,
+                  "method": "tools/call",
+                  "params": {
+                    "name": "answer_practice",
+                    "arguments": {
+                      "question": "Convert 1/4 to a decimal.",
+                      "chosenIndex": 1
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "msg-1790000040000-9a8b7c6d5",
+            "type": "system",
+            "content": "A quarter is",
+            "timestamp": 1790000040000,
+            "editedAt": 1790000040000,
+            "metadata": {
+              "stopped": true
+            }
+          },
+          {
+            "id": "msg-1790000060000-0f1e2d3c4",
+            "type": "complete",
+            "content": "Decimals is ready for you.",
+            "timestamp": 1790000060000,
+            "editedAt": 1790000060000,
+            "metadata": {
+              "link": {
+                "label": "Open lesson",
+                "to": {
+                  "type": "lesson",
+                  "subjectSlug": "mathematics",
+                  "topicIndex": 3
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "thread-0c9d8e7f-6a5b-4c3d-2e1f-0a9b8c7d6e5f",
+        "scope": {
+          "kind": "general",
+          "planId": "plan-1"
+        },
+        "createdAt": 1790000070000,
+        "updatedAt": 1790000070000,
+        "messages": [
+          {
+            "id": "msg-1790000070000-1a2b3c4d5",
+            "type": "user",
+            "content": "Can you add Physics?",
+            "timestamp": 1790000070000,
+            "editedAt": 1790000070000
+          }
+        ]
+      },
+      {
+        "id": "thread-7e6d5c4b-3a2f-1e0d-9c8b-7a6f5e4d3c2b",
+        "scope": {
+          "kind": "subject",
+          "planId": "plan-1",
+          "subjectSlug": "mathematics"
+        },
+        "createdAt": 1790000080000,
+        "updatedAt": 1790000080000,
+        "messages": [
+          {
+            "id": "msg-1790000080000-6f7e8d9c0",
+            "type": "complete",
+            "content": "Your subjects have changed.",
+            "timestamp": 1790000080000,
+            "editedAt": 1790000080000,
+            "metadata": {
+              "link": {
+                "label": "See subjects",
+                "to": {
+                  "type": "subjects"
+                }
+              }
+            }
+          },
+          {
+            "id": "msg-1790000080001-5e4d3c2b1",
+            "type": "complete",
+            "content": "Mathematics is ready for you.",
+            "timestamp": 1790000080001,
+            "editedAt": 1790000080001,
+            "metadata": {
+              "link": {
+                "label": "Open subject",
+                "to": {
+                  "type": "subject",
+                  "subjectSlug": "mathematics"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "changes": {
+    "upTo": 1,
+    "threads": [
+      {
+        "id": "thread-0c9d8e7f-6a5b-4c3d-2e1f-0a9b8c7d6e5f",
+        "scope": {
+          "kind": "general",
+          "planId": "plan-1"
+        },
+        "agentContextId": null,
+        "preview": null,
+        "createdAt": 1790000070000,
+        "updatedAt": 1790000070000,
+        "messages": [
+          {
+            "id": "msg-1790000070000-1a2b3c4d5",
+            "type": "user",
+            "content": "Can you add Physics?",
+            "timestamp": 1790000070000,
+            "editedAt": 1790000070000,
+            "metadata": null
+          }
+        ]
+      },
+      {
+        "id": "thread-5d1f3a52-8c4e-4f7e-9d0a-2b6c7e8f9a01",
+        "scope": {
+          "kind": "topic",
+          "planId": "plan-1",
+          "subjectSlug": "mathematics",
+          "topic": "Fractions"
+        },
+        "agentContextId": "context-7b2e",
+        "preview": "What is a quarter as a decimal?",
+        "createdAt": 1790000000000,
+        "updatedAt": 1790000060000,
+        "messages": [
+          {
+            "id": "msg-1790000000000-a1b2c3d4e",
+            "type": "user",
+            "content": "What is a quarter as a decimal?",
+            "timestamp": 1790000000000,
+            "editedAt": 1790000000000,
+            "metadata": {
+              "appCalls": [
+                {
+                  "jsonrpc": "2.0",
+                  "id": 1,
+                  "method": "tools/call",
+                  "params": {
+                    "name": "answer_practice",
+                    "arguments": {
+                      "question": "Convert 1/4 to a decimal.",
+                      "chosenIndex": 1
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "msg-1790000030000-f5e6d7c8b",
+            "type": "system",
+            "content": "A quarter is 0.25. Try this one.",
+            "timestamp": 1790000030000,
+            "editedAt": 1790000050000,
+            "metadata": {
+              "followUps": [
+                "What is a half as a decimal?"
+              ],
+              "card": {
+                "resourceUri": "ui://graspy/practice",
+                "toolName": "give_practice",
+                "toolInput": {
+                  "instruction": "Write the fraction as a decimal.",
+                  "questions": [
+                    {
+                      "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
+                      "working": "1 ÷ 4 = 0.25",
+                      "options": [
+                        "0.4",
+                        "0.25"
+                      ],
+                      "answer_index": 1,
+                      "correct_feedback": "1 ÷ 4 = 0.25.",
+                      "incorrect_feedback": "Divide 1 by 4.",
+                      "check": "1/4",
+                      "hint": ""
+                    }
+                  ]
+                },
+                "toolResult": {
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Write the fraction as a decimal.\n1. Convert \\(\\frac{1}{4}\\) to a decimal.\n   1. 0.4\n   2. 0.25\n   The right answer: 0.25"
+                    }
+                  ],
+                  "structuredContent": {
+                    "instruction": "Write the fraction as a decimal.",
+                    "questions": [
+                      {
+                        "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
+                        "options": [
+                          "0.4",
+                          "0.25"
+                        ],
+                        "answerIndex": 1,
+                        "correctFeedback": "1 ÷ 4 = 0.25.",
+                        "incorrectFeedback": "Divide 1 by 4.",
+                        "hint": ""
+                      }
+                    ]
+                  },
+                  "_meta": {
+                    "viewUUID": "9b8a7f6e5d4c4b3a8f2e1d0c9b8a7f6e"
+                  }
+                }
+              },
+              "viewCalls": [
+                {
+                  "jsonrpc": "2.0",
+                  "id": 1,
+                  "method": "tools/call",
+                  "params": {
+                    "name": "answer_practice",
+                    "arguments": {
+                      "question": "Convert 1/4 to a decimal.",
+                      "chosenIndex": 1
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "msg-1790000040000-9a8b7c6d5",
+            "type": "system",
+            "content": "A quarter is",
+            "timestamp": 1790000040000,
+            "editedAt": 1790000040000,
+            "metadata": {
+              "stopped": true
+            }
+          },
+          {
+            "id": "msg-1790000060000-0f1e2d3c4",
+            "type": "complete",
+            "content": "Decimals is ready for you.",
+            "timestamp": 1790000060000,
+            "editedAt": 1790000060000,
+            "metadata": {
+              "link": {
+                "label": "Open lesson",
+                "to": {
+                  "type": "lesson",
+                  "subjectSlug": "mathematics",
+                  "topicIndex": 3
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "thread-7e6d5c4b-3a2f-1e0d-9c8b-7a6f5e4d3c2b",
+        "scope": {
+          "kind": "subject",
+          "planId": "plan-1",
+          "subjectSlug": "mathematics"
+        },
+        "agentContextId": null,
+        "preview": null,
+        "createdAt": 1790000080000,
+        "updatedAt": 1790000080000,
+        "messages": [
+          {
+            "id": "msg-1790000080000-6f7e8d9c0",
+            "type": "complete",
+            "content": "Your subjects have changed.",
+            "timestamp": 1790000080000,
+            "editedAt": 1790000080000,
+            "metadata": {
+              "link": {
+                "label": "See subjects",
+                "to": {
+                  "type": "subjects"
+                }
+              }
+            }
+          },
+          {
+            "id": "msg-1790000080001-5e4d3c2b1",
+            "type": "complete",
+            "content": "Mathematics is ready for you.",
+            "timestamp": 1790000080001,
+            "editedAt": 1790000080001,
+            "metadata": {
+              "link": {
+                "label": "Open subject",
+                "to": {
+                  "type": "subject",
+                  "subjectSlug": "mathematics"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "next": null
+  }
+}

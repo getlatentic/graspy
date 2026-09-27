@@ -5,7 +5,6 @@ behind a service binding. Checked against `npm run worker:dev`."""
 
 import json
 import sqlite3
-from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import unquote, urlsplit
 
@@ -13,47 +12,20 @@ from signed_in import UID
 
 from app.factory import create_app
 from app.learner.store import InMemoryLearnerStore
+from app.local_d1 import LocalD1
 from app.security import firebase
 from app.settings import Settings
 
-MIGRATIONS = Path(__file__).parents[1] / "migrations"
 
-
-class Statement:
-    def __init__(self, db: sqlite3.Connection, sql: str, values=()) -> None:
-        self._db, self._sql, self._values = db, sql, values
-
-    def bind(self, *values) -> Statement:
-        return Statement(self._db, self._sql, values)
-
-    async def first(self) -> dict | None:
-        row = self._db.execute(self._sql, self._values).fetchone()
-        return None if row is None else dict(row)
-
-    async def all(self) -> dict:
-        rows = self._db.execute(self._sql, self._values).fetchall()
-        return {"results": [dict(row) for row in rows]}
-
-    async def run(self) -> SimpleNamespace:
-        cursor = self._db.execute(self._sql, self._values)
-        self._db.commit()
-        return SimpleNamespace(meta=SimpleNamespace(changes=cursor.rowcount))
-
-
-class Database:
+class Database(LocalD1):
     """D1, as the moved tests build it: SQLite from the migrations."""
 
-    def __init__(self) -> None:
-        self.db = sqlite3.connect(":memory:")
-        self.db.row_factory = sqlite3.Row
-        for migration in sorted(MIGRATIONS.glob("*.sql")):
-            self.db.executescript(migration.read_text())
-
-    def prepare(self, sql: str) -> Statement:
-        return Statement(self.db, sql)
+    @property
+    def db(self) -> sqlite3.Connection:
+        return self.connection
 
     def rows(self, sql: str, *values) -> list[dict]:
-        return [dict(row) for row in self.db.execute(sql, values)]
+        return [dict(row) for row in self.connection.execute(sql, values)]
 
 
 class Stored:

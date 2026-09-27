@@ -34,9 +34,11 @@ from app.learner.record import Answer, Answered, LessonKept, TopicRef
 from app.learner.store import InMemoryLearnerStore
 from app.lessons.makers import TaskLessonMaking
 from app.lessons.store import InMemoryLessonStore
+from app.local_d1 import LocalD1
 from app.security.guard import SessionMiddleware
 from app.security.session import issue
 from app.settings import Settings
+from app.threads.store import ThreadStore
 
 BASE = "http://test"
 LEAKY = "upstream https://internal.example/v1 rejected key sk-or-v1-abc"
@@ -61,6 +63,7 @@ KEEPING = Keeping(
     lessons=InMemoryLessonStore(),
     making=TaskLessonMaking(never_run),
     conversations=InMemoryConversationStore(),
+    threads=ThreadStore(LocalD1()),
 )
 
 
