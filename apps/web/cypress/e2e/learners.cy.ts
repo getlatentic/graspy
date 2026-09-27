@@ -246,7 +246,8 @@ it("refuses to switch until what is unsent reaches the server, losing nothing", 
     cy.contains('[role="alert"]', "Connect to the internet first");
     online(true);
     cy.contains("button", "Grace").click();
-    cy.contains('[role="alert"]', "Connect to the internet first");
+    // Online, the learner is asked instead: they may switch anyway.
+    cy.contains("Some changes haven't been sent");
     cy.location("pathname").should("eq", "/app/learners");
     learnerOnDevice().its("name").should("equal", "Ada");
     devicePlan().should("deep.include", {
