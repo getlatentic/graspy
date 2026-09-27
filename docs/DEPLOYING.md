@@ -100,7 +100,7 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
    | Account: Cloudflare Pages | Edit (production only; staging's web is a Worker) |
    | Zone: Workers Routes | Edit (the custom domains in each `wrangler.jsonc`) |
 
-   Account Resources: Include, the Latentic account only. Zone Resources: Include, Specific zone, `getlatentic.com` only. A Worker token cannot be limited to one environment's Workers, so either token can deploy either environment; the environment keeps the production token behind the reviewer.
+   Account Resources: Include, the Latentic account only. Zone Resources: Include, Specific zone, `getlatentic.com`; production's token also `tosinamuda.com`, since production's API keeps `graspy-api.tosinamuda.com` and wrangler re-sends every custom domain on each deploy. A Worker token cannot be limited to one environment's Workers, so either token can deploy either environment; the environment keeps the production token behind the reviewer.
 
 6. **Environment secrets.** The token goes in at a hidden prompt; the Firebase web config comes from each environment's `.env.<environment>.local`. Nothing is printed:
 
