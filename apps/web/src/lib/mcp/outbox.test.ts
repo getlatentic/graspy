@@ -7,9 +7,21 @@ import {
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const callAppTool = vi.fn();
-const reachServer = vi.fn();
-vi.mock("./server", () => ({ callAppTool, reachServer }));
+type Pin = import("@/lib/learner-pin").LearnerPin<string>;
+const callAppTool =
+  vi.fn<(name: string, args: Record<string, unknown>, pin?: Pin) => unknown>();
+const reachServer = vi.fn<(pin?: Pin) => Promise<void>>();
+const ADA = "uid-1/ada";
+const GRACE = "uid-1/grace";
+let learner = ADA;
+vi.mock("./server", async () => {
+  const { pinTo } = await import("@/lib/learner-pin");
+  return {
+    callAppTool,
+    reachServer,
+    pinLearner: () => pinTo(() => learner),
+  };
+});
 
 const ANSWER = { question: "3/8?", options: ["0.375", "0.38"], chosenIndex: 1 };
 const FINISH = { planId: "plan-1", topic: "Fractions" };
@@ -24,6 +36,7 @@ async function fresh() {
 
 beforeEach(() => {
   online = true;
+  learner = ADA;
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("IDBKeyRange", IDBKeyRange);
   vi.stubGlobal("navigator", {
@@ -77,7 +90,7 @@ describe("a view's call", () => {
     online = true;
     callAppTool.mockReset().mockResolvedValue(DONE);
     expect(await sendKept()).toBe(2);
-    expect(callAppTool.mock.calls).toEqual([
+    expect(callAppTool.mock.calls.map(([name, args]) => [name, args])).toEqual([
       ["answer_check", ANSWER],
       ["finish_lesson", FINISH],
     ]);
@@ -111,7 +124,11 @@ describe("a view's call", () => {
     });
     callAppTool.mockReset().mockResolvedValue(DONE);
     expect(await sentEverything()).toBe(true);
-    expect(callAppTool).toHaveBeenCalledWith("answer_check", ANSWER);
+    expect(callAppTool).toHaveBeenCalledWith(
+      "answer_check",
+      ANSWER,
+      expect.anything(),
+    );
   });
 
   it("is kept when connecting is refused, whatever the status", async () => {
@@ -126,7 +143,11 @@ describe("a view's call", () => {
     reachServer.mockResolvedValue(undefined);
     callAppTool.mockReset().mockResolvedValue(DONE);
     expect(await sentEverything()).toBe(true);
-    expect(callAppTool).toHaveBeenCalledWith("answer_check", ANSWER);
+    expect(callAppTool).toHaveBeenCalledWith(
+      "answer_check",
+      ANSWER,
+      expect.anything(),
+    );
   });
 
   it("is not kept when the server refuses it, and a kept one it refuses is dropped", async () => {
@@ -281,5 +302,87 @@ describe("sentEverything", () => {
     online = true;
     callAppTool.mockReset().mockResolvedValue(DONE);
     expect(await sentEverything()).toBe(true);
+  });
+});
+
+/** As switching learners wipes the device: the kept calls go with the learner. */
+async function wipeOutbox(): Promise<void> {
+  const { committed, openDB, OUTBOX_STORE } = await import("@/lib/idb");
+  const tx = (await openDB()).transaction(OUTBOX_STORE, "readwrite");
+  const done = committed(tx);
+  tx.objectStore(OUTBOX_STORE).clear();
+  await done;
+}
+
+describe("the outbox once the device learns as another learner", () => {
+  const never = () => new Promise<never>(() => {});
+
+  it("keeps nothing for the next learner of a view's call that failed after the switch", async () => {
+    const { callOrKeep, sentEverything } = await fresh();
+    callAppTool.mockImplementation(async (_name, _args, pin) => {
+      learner = GRACE;
+      pin?.hold();
+    });
+
+    await expect(callOrKeep("answer_check", ANSWER)).rejects.toMatchObject({
+      name: "LearnerChanged",
+    });
+
+    callAppTool.mockReset().mockResolvedValue(DONE);
+    expect(await sentEverything()).toBe(true);
+    expect(callAppTool).not.toHaveBeenCalled();
+  });
+
+  it("keeps nothing for the next learner of a view's call that could not connect after the switch", async () => {
+    online = false;
+    const { callOrKeep, sentEverything } = await fresh();
+    reachServer.mockImplementation(async () => {
+      learner = GRACE;
+      throw new TypeError("Failed to fetch");
+    });
+
+    await expect(callOrKeep("answer_check", ANSWER)).rejects.toThrow();
+
+    online = true;
+    reachServer.mockReset().mockResolvedValue(undefined);
+    callAppTool.mockReset().mockResolvedValue(DONE);
+    expect(await sentEverything()).toBe(true);
+  });
+
+  it("sends the kept calls pinned to the learner they were kept for, and stops at the switch", async () => {
+    const outbox = await keptOffline();
+    await outbox.callOrKeep("finish_lesson", FINISH);
+    callAppTool.mockReset().mockImplementation(async (_name, _args, pin) => {
+      pin?.hold();
+      learner = GRACE;
+      return DONE;
+    });
+
+    expect(await outbox.sendKept()).toBe(1);
+
+    const pins = callAppTool.mock.calls.map(([, , pin]) => pin?.learner);
+    expect(pins).toEqual([ADA, ADA]);
+  });
+
+  it("sends the next learner's calls while the last learner's run still hangs", async () => {
+    const { callOrKeep, sendKept } = await keptOffline();
+    reachServer.mockImplementation(never);
+    void sendKept();
+
+    learner = GRACE;
+    await wipeOutbox();
+    reachServer.mockReset().mockResolvedValue(undefined);
+    online = false;
+    callAppTool.mockReset().mockRejectedValue(new TypeError("Failed to fetch"));
+    await callOrKeep("finish_lesson", FINISH);
+    online = true;
+    callAppTool.mockReset().mockResolvedValue(DONE);
+
+    expect(await sendKept()).toBe(1);
+    expect(callAppTool).toHaveBeenCalledWith("finish_lesson", FINISH, {
+      learner: GRACE,
+      holds: expect.any(Function),
+      hold: expect.any(Function),
+    });
   });
 });

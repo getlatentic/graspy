@@ -70,10 +70,12 @@ export async function flushUnsent(
   return Promise.race([sentAll(), pause(FLUSH_MS).then(() => false)]);
 }
 
-/** The device keeps nothing of the learner in use, and has none chosen. */
+/** The device keeps nothing of the learner in use, and has none chosen. The learner goes
+ * first: what is still in flight for them, pinned to them, then sends and writes nothing
+ * more, so nothing of theirs comes back after the wipe. */
 export async function leaveLearner(): Promise<void> {
-  await wipeLearnerData();
   leaveLearnerSession();
+  await wipeLearnerData();
 }
 
 /** Where the learner starts: their plan, or onboarding to make one. */

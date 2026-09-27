@@ -2,6 +2,7 @@ import { currentAccount, learnerKeyOf } from "@/lib/account/account-store";
 import { getCurriculum, holdCurriculum } from "@/lib/curriculum-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { followPlan } from "@/lib/follow-plan";
+import { pinTo, type LearnerPin } from "@/lib/learner-pin";
 import { completedPlan } from "@/lib/plan-details";
 import { accountPlan, joinPlan, sendPlan } from "@/lib/shared-plan-api";
 import { getUserProfile } from "@/lib/user-storage";
@@ -42,64 +43,94 @@ function forget(key: string): void {
 const stamp = (plan: CurriculumData | null) =>
   plan ? `${plan.planId}@${plan.updatedAt}` : "";
 
+type Pin = LearnerPin<string | null>;
+
+function learnerInUse(): string | null {
+  const account = currentAccount();
+  return account && learnerKeyOf(account);
+}
+
 async function joined(
   learner: string,
   local: CurriculumData | null,
+  pin: Pin,
 ): Promise<CurriculumData | null> {
   // Named as the server compares classes, even when no page has completed it yet.
   const held = local
-    ? await joinPlan(completedPlan(local, getUserProfile()))
-    : await accountPlan();
+    ? await joinPlan(completedPlan(local, getUserProfile()), pin.holds)
+    : await accountPlan(pin.holds);
+  pin.hold();
   remember(JOINED_KEY, learner);
   return held;
 }
 
 async function pulled(
   local: CurriculumData | null,
+  pin: Pin,
 ): Promise<CurriculumData | null> {
-  const account = await accountPlan();
+  const account = await accountPlan(pin.holds);
   if (!local) return account;
-  if (!account || local.updatedAt > account.updatedAt) return sendPlan(local);
+  if (!account || local.updatedAt > account.updatedAt) {
+    return sendPlan(local, pin.holds);
+  }
   return account;
 }
 
 function exchanged(
   learner: string,
   local: CurriculumData | null,
+  pin: Pin,
 ): Promise<CurriculumData | null> {
-  if (remembered(JOINED_KEY) !== learner) return joined(learner, local);
-  if (local && remembered(AGREED_KEY) !== stamp(local)) return sendPlan(local);
-  return pulled(local);
+  if (remembered(JOINED_KEY) !== learner) return joined(learner, local, pin);
+  if (local && remembered(AGREED_KEY) !== stamp(local)) {
+    return sendPlan(local, pin.holds);
+  }
+  return pulled(local, pin);
 }
 
-async function adopt(plan: CurriculumData): Promise<void> {
+async function adopt(plan: CurriculumData, pin: Pin): Promise<void> {
   await holdCurriculum(plan);
+  pin.hold();
   await followPlan(plan);
 }
 
-async function syncOnce(learner: string): Promise<CurriculumData | null> {
+// Each write on the device waits for the answer before it, so each first asks that the
+// device still learns as the learner the sync began for.
+async function syncOnce(
+  learner: string,
+  pin: Pin,
+): Promise<CurriculumData | null> {
+  pin.hold();
   const local = await getCurriculum();
-  const held = await exchanged(learner, local);
+  const held = await exchanged(learner, local, pin);
+  pin.hold();
   if (!held) return null;
   remember(AGREED_KEY, stamp(held));
   if (stamp(held) === stamp(local)) return null;
   // A save made while the server answered is newer than the answer: the next sync sends it.
   if (stamp(await getCurriculum()) !== stamp(local)) return null;
-  await adopt(held);
+  pin.hold();
+  await adopt(held, pin);
   return held;
 }
 
-let queue: Promise<unknown> = Promise.resolve();
+const syncFor = (pin: Pin) => (pin.learner ? syncOnce(pin.learner, pin) : null);
+
+// A sync pinned to a learner the device has left holds none back for the next learner: it
+// sends nothing more, however long the request it is waiting on hangs.
+let last: { learner: string | null; done: Promise<unknown> } = {
+  learner: null,
+  done: Promise.resolve(),
+};
 
 /** The learner's plan when the device now holds it in place of its own; otherwise null,
- * as when nobody is signed in or no learner is chosen. One sync runs at a time. */
+ * as when nobody is signed in or no learner is chosen. One sync runs at a time for a
+ * learner, and it rejects with LearnerChanged once the device learns as someone else. */
 export function syncPlan(): Promise<CurriculumData | null> {
-  const run = queue.then(() => {
-    const account = currentAccount();
-    const learner = account && learnerKeyOf(account);
-    return learner ? syncOnce(learner) : null;
-  });
-  queue = run.catch(() => undefined);
+  const pin = pinTo(learnerInUse);
+  const before = last.learner === pin.learner ? last.done : Promise.resolve();
+  const run = before.then(() => syncFor(pin));
+  last = { learner: pin.learner, done: run.catch(() => undefined) };
   return run;
 }
 
