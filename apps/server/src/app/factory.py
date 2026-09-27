@@ -97,7 +97,7 @@ def create_app(
 
 
 def _bare_app(settings: Settings) -> FastAPI:
-    expose_docs = not settings.is_production
+    expose_docs = not settings.is_deployed
     return FastAPI(
         title="graspy API",
         version="0.1.0",

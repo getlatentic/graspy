@@ -144,9 +144,10 @@ async def test_a_request_is_answered_by_the_apps_own_model(monkeypatch):
     assert len(own_model.history) == 1
 
 
+@pytest.mark.parametrize("app_env", ["production", "staging"])
 @pytest.mark.parametrize("path", [*DOCS, "/docs/oauth2-redirect"])
-def test_production_serves_no_docs(path):
-    client = TestClient(create_app(settings(app_env="production")))
+def test_a_deployment_serves_no_docs(path, app_env):
+    client = TestClient(create_app(settings(app_env=app_env)))
 
     assert client.get(path).status_code == 404
 

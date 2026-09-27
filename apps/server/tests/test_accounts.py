@@ -216,10 +216,11 @@ async def test_the_auth_emulator_is_asked_in_place_of_google():
     assert firebase.lookup_url(None) == firebase.LOOKUP_URL
 
 
-def test_production_refuses_the_auth_emulator():
+@pytest.mark.parametrize("app_env", ["production", "staging"])
+def test_a_deployment_refuses_the_auth_emulator(app_env):
     with pytest.raises(ValueError, match="FIREBASE_AUTH_EMULATOR_HOST"):
         Settings(
-            app_env="production",
+            app_env=app_env,
             firebase_auth_emulator_host="127.0.0.1:9099",
             _env_file=None,
         )
