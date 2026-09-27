@@ -10,8 +10,10 @@ import {
   type McpUiResourcePermissions,
 } from "@modelcontextprotocol/ext-apps/app-bridge";
 import type { TutorCard } from "@/lib/a2a/reply-data";
+import { currentAccount, learnerKeyOf } from "@/lib/account/account-store";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
+import { pinTo, type LearnerPin } from "@/lib/learner-pin";
 import { NotForViews } from "./refusal";
 import { isUnreachable } from "./unreachable";
 
@@ -39,17 +41,33 @@ interface Connection {
   views: Map<string, Promise<UiView>>;
 }
 
-let connection: Promise<Connection> | null = null;
+export type ServerPin = LearnerPin<string>;
 
-async function connect(): Promise<Connection> {
+// Whose session the server's requests go under: the account's learner, the account before
+// one is chosen, or the device signed out. Not the device's id, which is new on each read
+// where storage is refused.
+function sessionHolder(): string {
+  const account = currentAccount();
+  if (!account) return "device";
+  return learnerKeyOf(account) ?? account.uid;
+}
+
+/** Pins work with the server to whoever the device learns as now. */
+export const pinLearner = (): ServerPin => pinTo(sessionHolder);
+
+// Each learner has a connection of their own, whose every request goes under their session:
+// once the device learns as someone else, it sends nothing more.
+let connection: { learner: string; made: Promise<Connection> } | null = null;
+
+async function connect(pin: ServerPin): Promise<Connection> {
   const client = new Client(HOST_INFO, {
     capabilities: {
       extensions: { [UI_EXTENSION]: { mimeTypes: [RESOURCE_MIME_TYPE] } },
     },
   });
-  await client.connect(
-    new StreamableHTTPClientTransport(MCP_URL, { fetch: fetchWithSession }),
-  );
+  const fetch = (url: string | URL, init?: RequestInit) =>
+    fetchWithSession(url, init, pin.holds);
+  await client.connect(new StreamableHTTPClientTransport(MCP_URL, { fetch }));
   const [{ tools }, { resources }] = await Promise.all([
     client.listTools(),
     client.listResources(),
@@ -79,12 +97,25 @@ async function connect(): Promise<Connection> {
   };
 }
 
-function server(): Promise<Connection> {
-  connection ??= connect().catch((error: unknown) => {
-    connection = null;
+function opened(pin: ServerPin): Promise<Connection> {
+  const made: Promise<Connection> = connect(pin).catch((error: unknown) => {
+    if (connection?.made === made) connection = null;
     throw error;
   });
-  return connection;
+  return made;
+}
+
+function closeLeft(left: Promise<Connection>): void {
+  left.then(({ client }) => client.close()).catch(() => undefined);
+}
+
+/** The connection for the learner `pin` holds; none once the device learns as someone else. */
+function server(pin: ServerPin = pinLearner()): Promise<Connection> {
+  pin.hold();
+  if (connection?.learner === pin.learner) return connection.made;
+  if (connection) closeLeft(connection.made);
+  connection = { learner: pin.learner, made: opened(pin) };
+  return connection.made;
 }
 
 async function readView(
@@ -152,15 +183,17 @@ export async function uiView(uri: string): Promise<UiView> {
 }
 
 /** Connects, or rejects with why it could not. */
-export async function reachServer(): Promise<void> {
-  await server();
+export async function reachServer(pin?: ServerPin): Promise<void> {
+  await server(pin);
 }
 
+/** Calls a view's tool, for the learner `pin` holds when given. */
 export async function callAppTool(
   name: string,
   args: Record<string, unknown>,
+  pin?: ServerPin,
 ): Promise<CallToolResult> {
-  const { client, appTools } = await server();
+  const { client, appTools } = await server(pin);
   if (!appTools.has(name)) throw new NotForViews(name);
   return (await client.callTool({ name, arguments: args })) as CallToolResult;
 }
