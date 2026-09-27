@@ -9,6 +9,8 @@ import com.latentic.graspy.account.PreferenceFiles
 import com.latentic.graspy.ask.PlanChanges
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
+import com.latentic.graspy.lesson.FirstLesson
+import com.latentic.graspy.mcp.learnerLessons
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +55,7 @@ class PlanViewModel internal constructor(
 
     private val api = retrofit(calls).create(PlanApi::class.java)
     private val maker = PlanMaker(PlanStreams(calls, BuildConfig.API_BASE_URL.toHttpUrl())::curriculum)
+    private val firstLesson by lazy { FirstLesson(learnerLessons(application, ownerId, calls)) }
     private val kept = KeptPlan(application.getSharedPreferences(PreferenceFiles.PLAN, 0), ownerId) { AppGraph.account(application).learnsAs(ownerId) }
     private val shown = MutableStateFlow<PlanState>(kept.read() ?: PlanState.Loading)
     private val making = MutableStateFlow<Making?>(null)
@@ -101,11 +104,15 @@ class PlanViewModel internal constructor(
     /** A plan with no subjects for a class that learns by voice alone, replacing any the learner had, kept on the account. */
     suspend fun keepVoiceOnly(details: LearnerDetails): LearnerPlan = apply(maker.voiceOnly(details))
 
-    /** New topics for every chosen subject, the learner's paths carried over, their progress cleared. */
+    /**
+     * New topics for every chosen subject, the learner's paths carried over, their progress cleared. As on the
+     * web, the rebuilt plan is shown and kept only once its first lesson is ready; until then Home shows it
+     * being made, and if the lesson fails the learner keeps the plan they had and may try again.
+     */
     override fun rebuild(): Boolean {
         val previous = (shown.value as? PlanState.Ready)?.plan ?: return false
         val subjects = previous.rebuildSubjects().ifEmpty { return false }
-        start { carryPaths(previous, maker.make(previous.details(), subjects, ::showMaking)) }
+        start { carryPaths(previous, rebuilt(previous.details(), subjects)) }
         return true
     }
 
@@ -150,6 +157,9 @@ class PlanViewModel internal constructor(
             }
         }
     }
+
+    private suspend fun rebuilt(details: LearnerDetails, subjects: List<String>): LearnerPlan =
+        firstLesson.prepared(maker.make(details, subjects, ::showMaking))
 
     private fun showMaking(plan: LearnerPlan) {
         making.value = Making(plan)
