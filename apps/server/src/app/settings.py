@@ -89,15 +89,17 @@ class Settings(BaseSettings):
         return [item.strip() for item in value.split(",") if item.strip()]
 
     @property
-    def is_production(self) -> bool:
-        return self.app_env.lower() in {"production", "prod"}
+    def is_deployed(self) -> bool:
+        """Production, or staging, which runs as production does so that what
+        it shows holds there."""
+        return self.app_env.lower() in {"production", "prod", "staging"}
 
     @model_validator(mode="after")
-    def no_emulator_in_production(self) -> Settings:
-        if self.is_production and self.firebase_auth_emulator_host:
+    def no_emulator_when_deployed(self) -> Settings:
+        if self.is_deployed and self.firebase_auth_emulator_host:
             raise ValueError(
-                "FIREBASE_AUTH_EMULATOR_HOST is set in production, where it would "
-                "accept a sign-in nobody made."
+                f"FIREBASE_AUTH_EMULATOR_HOST is set in {self.app_env}, where it "
+                "would accept a sign-in nobody made."
             )
         return self
 

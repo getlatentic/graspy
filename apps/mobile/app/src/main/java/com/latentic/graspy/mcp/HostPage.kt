@@ -8,6 +8,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.core.net.toUri
+import com.latentic.graspy.BuildConfig
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -18,8 +19,8 @@ import java.io.InputStream
  * loads the real site, since every other address on that origin is refused here.
  */
 object HostPage {
-    const val ORIGIN = "https://graspy.getlatentic.com"
-    private const val HOST = "graspy.getlatentic.com"
+    const val ORIGIN = BuildConfig.WEB_ORIGIN
+    private val HOST = ORIGIN.substringAfter("://")
     private const val PATH = "/app-host/"
     const val URL = "$ORIGIN${PATH}host.html"
     const val REPLY_URL = "$ORIGIN${PATH}reply.html"

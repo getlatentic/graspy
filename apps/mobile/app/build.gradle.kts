@@ -51,6 +51,7 @@ android {
             .orElse("https://graspy-api.getlatentic.com/")
             .get()
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "WEB_ORIGIN", "\"https://graspy.getlatentic.com\"")
     }
 
     signingConfigs {
@@ -73,6 +74,14 @@ android {
         }
         release {
             signingConfig = signingConfigs.findByName("release")
+            buildConfigField("String", "AUTH_EMULATOR", "\"\"")
+        }
+        // Staging's API and web origin, installed beside the Play app and signed with the debug key.
+        create("staging") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".staging"
+            buildConfigField("String", "API_BASE_URL", "\"https://graspy-api-staging.getlatentic.com/\"")
+            buildConfigField("String", "WEB_ORIGIN", "\"https://graspy-staging.getlatentic.com\"")
             buildConfigField("String", "AUTH_EMULATOR", "\"\"")
         }
     }

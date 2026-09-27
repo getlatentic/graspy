@@ -95,5 +95,51 @@
     { "name": "GENERATE_LIMITER", "namespace_id": "4102", "simple": { "limit": 30, "period": 60 } },
     { "name": "AGENT_LIMITER", "namespace_id": "4103", "simple": { "limit": 30, "period": 60 } },
     { "name": "API_LIMITER", "namespace_id": "4104", "simple": { "limit": 120, "period": 60 } }
-  ]
+  ],
+
+  // Staging: its own Worker (graspy-web-api-staging), database, bucket, tutor,
+  // rate-limit counters and secrets, so a change is tried here before production.
+  // Deploy with scripts/deploy.sh staging (docs/DEPLOYING.md). Bindings, routes
+  // and vars are not inherited from the top level, so each is repeated here;
+  // main, compatibility, assets, rules, python_modules, observability and the
+  // Durable Object migrations are inherited. pywrangler reads the Python version
+  // from the top-level compatibility settings only, so never override them here.
+  "env": {
+    "staging": {
+      "routes": [{ "pattern": "graspy-api-staging.getlatentic.com", "custom_domain": true }],
+      "vars": {
+        "APP_ENV": "staging",
+        "LLM_HOST": "bedrock",
+        "AWS_REGION": "us-east-1",
+        "PUBLIC_BASE_URL": "https://graspy-api-staging.getlatentic.com",
+        "A2A_PATH_PREFIX": "/a2a",
+        "CORS_ORIGINS": "https://graspy-staging.getlatentic.com"
+      },
+      "durable_objects": {
+        "bindings": [
+          { "name": "CONVERSATIONS", "class_name": "Conversation" },
+          { "name": "LESSONS", "class_name": "Lesson" },
+          { "name": "LEARNERS", "class_name": "Learner" },
+          { "name": "LESSON_MAKERS", "class_name": "LessonMaker" }
+        ]
+      },
+      "ai": { "binding": "AI" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "graspy-staging",
+          "database_id": "07fc359e-dfd1-40f8-b656-3d2aa1f74673",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [{ "binding": "AUDIO", "bucket_name": "graspy-audio-staging" }],
+      "services": [{ "binding": "TUTOR", "service": "graspy-tutor-staging" }],
+      "ratelimits": [
+        { "name": "SESSION_LIMITER", "namespace_id": "4201", "simple": { "limit": 20, "period": 60 } },
+        { "name": "GENERATE_LIMITER", "namespace_id": "4202", "simple": { "limit": 30, "period": 60 } },
+        { "name": "AGENT_LIMITER", "namespace_id": "4203", "simple": { "limit": 30, "period": 60 } },
+        { "name": "API_LIMITER", "namespace_id": "4204", "simple": { "limit": 120, "period": 60 } }
+      ]
+    }
+  }
 }

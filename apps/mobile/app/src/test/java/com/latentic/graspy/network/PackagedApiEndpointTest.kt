@@ -11,4 +11,9 @@ class PackagedApiEndpointTest {
         assertEquals("https://graspy-api.getlatentic.com/", BuildConfig.API_BASE_URL)
         assertTrue(BuildConfig.API_BASE_URL.startsWith("https://"))
     }
+
+    @Test
+    fun `ordinary debug build hosts views at the web app's origin`() {
+        assertEquals("https://graspy.getlatentic.com", BuildConfig.WEB_ORIGIN)
+    }
 }

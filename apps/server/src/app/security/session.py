@@ -121,14 +121,14 @@ def account_of(claims: dict) -> str | None:
 
 
 def resolve_secret(settings) -> str:
-    """Refuses to run unconfigured in production; development falls back to
+    """Refuses to run unconfigured when deployed; development falls back to
     an ephemeral key, so a fresh clone runs with no setup."""
     if settings.session_secret:
         return settings.session_secret
 
-    if settings.is_production:
+    if settings.is_deployed:
         raise RuntimeError(
-            "SESSION_SECRET is required in production: without it the session "
+            "SESSION_SECRET is required when deployed: without it the session "
             "guard would sign with a key that changes on every restart."
         )
 

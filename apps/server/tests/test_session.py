@@ -144,29 +144,25 @@ def test_no_signed_payload_makes_verification_fail_any_other_way(payload):
 
 
 class _Settings:
-    def __init__(self, *, session_secret=None, is_production=False):
+    def __init__(self, *, session_secret=None, is_deployed=False):
         self.session_secret = session_secret
-        self.is_production = is_production
+        self.is_deployed = is_deployed
 
 
-@pytest.mark.parametrize(
-    "is_production", [True, False], ids=["production", "development"]
-)
-def test_a_configured_secret_is_used_as_given(is_production):
+@pytest.mark.parametrize("is_deployed", [True, False], ids=["deployed", "development"])
+def test_a_configured_secret_is_used_as_given(is_deployed):
     assert (
-        resolve_secret(
-            _Settings(session_secret="configured", is_production=is_production)
-        )
+        resolve_secret(_Settings(session_secret="configured", is_deployed=is_deployed))
         == "configured"
     )
 
 
-def test_production_refuses_to_start_without_a_secret():
+def test_a_deployment_refuses_to_start_without_a_secret():
     with pytest.raises(RuntimeError) as refused:
-        resolve_secret(_Settings(is_production=True))
+        resolve_secret(_Settings(is_deployed=True))
 
     assert str(refused.value) == (
-        "SESSION_SECRET is required in production: without it the session "
+        "SESSION_SECRET is required when deployed: without it the session "
         "guard would sign with a key that changes on every restart."
     )
 
