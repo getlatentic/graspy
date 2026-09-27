@@ -19,8 +19,10 @@ const following = new Map<string, Following>();
 const retryDelay = (attempt: number) =>
   RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)];
 
-/** Over after the delay, when the device comes back online, or when stopped. */
+/** Over after the delay, when the device comes back online, or when stopped; at once when
+ * already stopped, since an abort that has happened is never heard again. */
 export function waitToAskAgain(ms: number, stop: AbortSignal): Promise<void> {
+  if (stop.aborted) return Promise.resolve();
   return new Promise((resolve) => {
     const over = () => {
       clearTimeout(timer);
