@@ -94,6 +94,24 @@ class GraspyMigrationTest {
         }
     }
 
+    @Test
+    fun `version 16 moves to 17 with its kept pages, which name no sandbox and so are not opened`() = runBlocking {
+        createAt(16) { db ->
+            db.execSQL(
+                """INSERT INTO kept_views (uri, html, title, cspJson, permissionsJson)
+                   VALUES ('ui://graspy/lesson', '<html></html>', 'Lesson', NULL, NULL)""",
+            )
+        }
+
+        val database = migrated()
+        try {
+            assertNull(database.keptViewDao().kept("ui://graspy/lesson")?.sandbox)
+            assertEquals(emptyList<String>(), database.keptViewDao().sandboxes())
+        } finally {
+            database.close()
+        }
+    }
+
     private fun migrated(): GraspyDatabase = Room.databaseBuilder(context, GraspyDatabase::class.java, NAME)
         .addMigrations(*graspyMigrations)
         .allowMainThreadQueries()

@@ -19,7 +19,12 @@ import okhttp3.mockwebserver.RecordedRequest
 
 const val LESSON_VIEW = "ui://graspy/lesson"
 const val ROUTE_TOOL = "learner_route"
-const val LESSON_HTML = "<!doctype html><script src=\"/views/assets/lesson.js\"></script>"
+const val LESSON_SANDBOX = "/ui-sandbox/0123456789abcdef/"
+
+/** A sandbox whose worker holds every file of its build, as one kept online does. */
+val HOLDS_EVERY_FILE = SandboxKeeper { _, _ -> true }
+
+const val LESSON_HTML ="<!doctype html><script src=\"/views/assets/lesson.js\"></script>"
 
 /**
  * graspy's server as far as offline lessons reach it: the learner's plan and record, and MCP for one
@@ -97,6 +102,7 @@ class FakeGraspyServer(var plan: LearnerPlan, var record: LearnerRecord) : Dispa
                         put("uri", params.string("uri"))
                         put("mimeType", McpClient.RESOURCE_MIME_TYPE)
                         put("text", LESSON_HTML)
+                        putJsonObject("_meta") { put("graspy/sandbox", LESSON_SANDBOX) }
                     })
                 },
             )

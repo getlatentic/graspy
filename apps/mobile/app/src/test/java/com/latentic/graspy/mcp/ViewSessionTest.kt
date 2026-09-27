@@ -10,7 +10,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -22,7 +21,7 @@ class ViewSessionTest {
         toolInput = buildJsonObject { put("instruction", "Add the fractions.") },
         toolResult = buildJsonObject { put("structuredContent", buildJsonObject { put("questions", 1) }) },
     )
-    private val view = UiView("<p>practice</p>", "Practice", buildJsonObject { put("resourceDomains", "x") }, null)
+    private val view = UiView("<p>practice</p>", "Practice", "/ui-sandbox/0123456789abcdef/", buildJsonObject { put("resourceDomains", "x") }, null)
     private val sent = mutableListOf<JsonObject>()
     private val host = RecordingHost()
     private val session = ViewSession(card, view, HostContext("yo"), host) { sent += it }
@@ -74,13 +73,13 @@ class ViewSessionTest {
     }
 
     @Test
-    fun `the page is the host's to keep only once the view has initialised in the sandbox`() = runBlocking {
+    fun `the view is shown only once it has initialised in the sandbox`() = runBlocking {
         session.receive(notification(ViewSession.PROXY_READY))
         session.receive(request(1, ViewSession.INITIALIZE))
-        assertNull(host.shown)
+        assertFalse(host.shown)
 
         session.receive(notification(ViewSession.INITIALIZED))
-        assertEquals(card.resourceUri to view, host.shown)
+        assertTrue(host.shown)
     }
 
     @Test
@@ -143,7 +142,7 @@ class ViewSessionTest {
         val links = mutableListOf<String>()
         val heights = mutableListOf<Int>()
         val messages = mutableListOf<String>()
-        var shown: Pair<String, UiView>? = null
+        var shown = false
         var drawn = false
         var takesMessages = true
 
@@ -170,8 +169,8 @@ class ViewSessionTest {
             heights += height
         }
 
-        override suspend fun shown(uri: String, view: UiView) {
-            shown = uri to view
+        override fun shown() {
+            shown = true
         }
 
         override fun drawn() {

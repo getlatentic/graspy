@@ -10,6 +10,7 @@ import com.latentic.graspy.account.inMemoryDatabase
 import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.learnCopyFor
 import com.latentic.graspy.mcp.FakeGraspyServer
+import com.latentic.graspy.mcp.HOLDS_EVERY_FILE
 import com.latentic.graspy.mcp.KeptCallEntity
 import com.latentic.graspy.mcp.AppView
 import com.latentic.graspy.mcp.LearnerConnection
@@ -46,7 +47,7 @@ class TopicLessonTest {
     private val database = inMemoryDatabase()
     private val fractionsReady = LearnerRecord(topics = listOf(TopicMark("mathematics", 1, "Fractions", lessonId = "lesson-9")))
     private val server = FakeGraspyServer(PLAN, fractionsReady)
-    private val connection = LearnerConnection(database, ADA_KEY, OkHttpClient(), server.web.url("/mcp")) { true }
+    private val connection = LearnerConnection(database, ADA_KEY, OkHttpClient(), server.web.url("/mcp"), HOLDS_EVERY_FILE) { true }
 
     @After
     fun close() {
@@ -134,9 +135,7 @@ class TopicLessonTest {
     }
 
     private object ReadyView : ViewServer {
-        override suspend fun view(uri: String) = UiView("<html></html>", "Lesson", csp = null, permissions = null)
-
-        override suspend fun keepShown(uri: String, view: UiView) = Unit
+        override suspend fun view(uri: String) = UiView("<html></html>", "Lesson", sandbox = "/ui-sandbox/0123456789abcdef/", csp = null, permissions = null)
 
         override suspend fun call(name: String, arguments: JsonObject): JsonObject = awaitCancellation()
 

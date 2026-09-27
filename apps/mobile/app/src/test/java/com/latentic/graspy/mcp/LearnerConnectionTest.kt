@@ -31,7 +31,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * The learner's connection wired as the app wires it, against a server that answers MCP and then goes
  * away: what was copied while it answered is there offline, the lesson and its view's page, on a phone
- * that never showed either. The page's own scripts are cached only once that view has loaded online.
+ * that never showed either, once the page's sandbox holds its build's files.
  */
 @RunWith(RobolectricTestRunner::class)
 class LearnerConnectionTest {
@@ -40,6 +40,12 @@ class LearnerConnectionTest {
     private val server = FakeGraspyServer(PLAN, fractionsReady)
     private val endpoint = server.web.url("/mcp")
     private val calls = OkHttpClient()
+    private var sandboxHolds = true
+    private val kept = mutableListOf<String>()
+    private val keeper = SandboxKeeper { sandbox, _ ->
+        kept += sandbox
+        sandboxHolds
+    }
 
     @After
     fun close() {
@@ -66,16 +72,21 @@ class LearnerConnectionTest {
     }
 
     @Test
-    fun `a view shown once opens with no connection after the app starts again`() = runBlocking {
+    fun `a ready lesson copied while its sandbox cannot hold its files keeps no view page`() = runBlocking<Unit> {
+        sandboxHolds = false
         val online = connection()
-        online.keepShown(LESSON_VIEW, online.view(LESSON_VIEW))
+        val copier = launch { online.lessons.copyWhenAsked() }
+        online.lessons.copyReady(RecordRead(PLAN, fractionsReady, askedAt = 0))
+        eventually { database.lessonCopyDao().copied(ADA_KEY).isNotEmpty() }
+        copier.cancelAndJoin()
         server.web.shutdown()
 
-        assertEquals(LESSON_HTML, connection().view(LESSON_VIEW).html)
+        assertEquals(listOf(LESSON_SANDBOX), kept)
+        assertThrows(IOException::class.java) { runBlocking { connection().view(LESSON_VIEW) } }
     }
 
     @Test
-    fun `a view read but never loaded keeps no page`() {
+    fun `a view read but never kept keeps no page`() {
         runBlocking { connection().view(LESSON_VIEW) }
         server.web.shutdown()
 
@@ -98,7 +109,7 @@ class LearnerConnectionTest {
             if (!online) throw IOException("no connection")
             chain.proceed(chain.request())
         }.build()
-        val connection = LearnerConnection(database, ADA_KEY, flaky, endpoint) { true }
+        val connection = LearnerConnection(database, ADA_KEY, flaky, endpoint, keeper) { true }
         connection.call("give_lesson", JsonObject(emptyMap()))
         connection.call("lesson_progress", JsonObject(emptyMap()))
 
@@ -131,7 +142,7 @@ class LearnerConnectionTest {
             database.clearAllTables()
             throw SessionRefusal("That learner is no longer learning on this device")
         }.build()
-        val connection = LearnerConnection(database, ADA_KEY, refusing, endpoint) { false }
+        val connection = LearnerConnection(database, ADA_KEY, refusing, endpoint, keeper) { false }
 
         assertThrows(SessionRefusal::class.java) { runBlocking { connection.call("answer_check", JsonObject(emptyMap())) } }
         assertEquals(emptyList<KeptCallEntity>(), runBlocking { database.keptCallDao().kept(ADA_KEY) })
@@ -141,7 +152,7 @@ class LearnerConnectionTest {
     fun `a wipe waits for a lesson copy whose learner was already checked, and takes it too`() {
         val checked = CountDownLatch(1)
         val release = CountDownLatch(1)
-        val connection = LearnerConnection(database, ADA_KEY, calls, endpoint) {
+        val connection = LearnerConnection(database, ADA_KEY, calls, endpoint, keeper) {
             checked.countDown()
             release.await(WAIT_SECONDS, TimeUnit.SECONDS)
             true
@@ -164,7 +175,7 @@ class LearnerConnectionTest {
         val checked = CountDownLatch(1)
         val release = CountDownLatch(1)
         val unreachable = OkHttpClient.Builder().addInterceptor { throw IOException("no connection") }.build()
-        val connection = LearnerConnection(database, ADA_KEY, unreachable, endpoint) {
+        val connection = LearnerConnection(database, ADA_KEY, unreachable, endpoint, keeper) {
             checked.countDown()
             release.await(WAIT_SECONDS, TimeUnit.SECONDS)
             true
@@ -182,7 +193,7 @@ class LearnerConnectionTest {
         assertEquals(emptyList<KeptCallEntity>(), runBlocking { database.keptCallDao().kept(ADA_KEY) })
     }
 
-    private fun connection() = LearnerConnection(database, ADA_KEY, calls, endpoint) { true }
+    private fun connection() = LearnerConnection(database, ADA_KEY, calls, endpoint, keeper) { true }
 
     private companion object {
         const val ADA_KEY = "uid-1/aaaaaaaaaaaa"

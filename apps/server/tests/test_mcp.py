@@ -10,11 +10,13 @@ from mcp.client.streamable_http import streamable_http_client
 from mcp.shared.exceptions import MCPError
 
 from app.factory import create_app
+from app.mcp.sandbox import build_of
 from app.mcp.views import LocalViews
 from app.settings import Settings
 
 ORIGIN = "https://graspy-api.example"
 VIEW = '<!doctype html><html><head><meta charset="UTF-8" /></head><body></body></html>'
+WORKER = "// the views' build's sandbox worker"
 QUESTION = {
     "question": "Convert \\(\\frac{13}{40}\\) to a decimal.",
     "working": "13 ÷ 40 = 0.325",
@@ -55,6 +57,7 @@ ANSWER = {
 def app(tmp_path):
     (tmp_path / "views").mkdir()
     (tmp_path / "views" / "practice.html").write_text(VIEW, encoding="utf-8")
+    (tmp_path / "views" / "ui-sandbox-sw.js").write_text(WORKER, encoding="utf-8")
     settings = Settings(
         aws_bearer_token_bedrock="bedrock-test",
         session_secret="s",
@@ -226,7 +229,7 @@ async def test_an_unknown_tool_is_a_protocol_error(app):
             await client.call_tool("delete_everything", {})
 
 
-async def test_the_view_is_read_with_the_origin_it_loads_from(app):
+async def test_the_view_is_read_with_the_origin_and_sandbox_it_loads_in(app):
     async with connected(app) as client:
         listed = (await client.list_resources()).resources
         [content] = (await client.read_resource("ui://graspy/practice")).contents
@@ -241,9 +244,12 @@ async def test_the_view_is_read_with_the_origin_it_loads_from(app):
     assert content.text.startswith(
         f'<!doctype html><html><head><base href="{ORIGIN}/"><meta charset'
     )
-    assert content.meta["ui"] == {
-        "prefersBorder": False,
-        "csp": {"resourceDomains": [ORIGIN], "baseUriDomains": [ORIGIN]},
+    assert content.meta == {
+        "ui": {
+            "prefersBorder": False,
+            "csp": {"resourceDomains": [ORIGIN], "baseUriDomains": [ORIGIN]},
+        },
+        "graspy/sandbox": f"/ui-sandbox/{build_of(WORKER)}/",
     }
 
 

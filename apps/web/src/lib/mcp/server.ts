@@ -14,19 +14,23 @@ import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
 import { pinLearner, type LearnerPin } from "@/lib/learner-pin";
 import { NotForViews } from "./refusal";
+import { keepSandbox } from "./sandbox";
 import { isUnreachable } from "./unreachable";
+import { keepView, keptSandboxes, keptView } from "./view-copies";
 
 // The app is an MCP Apps host; graspy's server serves the views and runs their tools.
 const API_ORIGIN = new URL(API_BASE_URL).origin;
 const MCP_URL = new URL("/mcp", API_ORIGIN);
-/** On the server's origin, never the app's. */
-export const SANDBOX_URL = new URL("/ui-sandbox", API_ORIGIN);
 export const HOST_INFO = { name: "graspy", version: "1.0.0" };
 const UI_EXTENSION = "io.modelcontextprotocol/ui";
+// graspy's own: the sandbox of the build a view's page belongs to.
+const SANDBOX_META = "graspy/sandbox";
 
 export interface UiView {
   html: string;
   title: string;
+  /** The path, on the server, of the sandbox the page opens in. */
+  sandbox: string;
   csp?: McpUiResourceCsp;
   permissions?: McpUiResourcePermissions;
 }
@@ -123,10 +127,15 @@ async function readView(
     throw new Error(`${uri} is not an MCP App view`);
   }
   const html = "text" in content ? content.text : atob(content.blob);
-  const ui = (
-    content._meta as { ui?: Pick<UiView, "csp" | "permissions"> } | undefined
-  )?.ui;
-  return { html, title, csp: ui?.csp, permissions: ui?.permissions };
+  const meta = content._meta as
+    | { ui?: Pick<UiView, "csp" | "permissions">; [SANDBOX_META]?: unknown }
+    | undefined;
+  const sandbox = meta?.[SANDBOX_META];
+  if (typeof sandbox !== "string" || !sandbox.startsWith("/")) {
+    throw new Error(`${uri} names no sandbox`);
+  }
+  const ui = meta?.ui;
+  return { html, title, sandbox, csp: ui?.csp, permissions: ui?.permissions };
 }
 
 async function readOnce(uri: string): Promise<UiView> {
@@ -138,31 +147,6 @@ async function readOnce(uri: string): Promise<UiView> {
     view.catch(() => views.delete(uri));
   }
   return view;
-}
-
-// Kept so a view still opens after a reload without a connection. The document is small:
-// its scripts and styles are hashed files the sandbox's worker caches as the page loads them.
-// A shown view's page replaces its copy only once the view has initialized in the sandbox, so
-// the files it loaded are cached. The background read keeps a page only for a view with no
-// copy: a view never shown may have a copy whose files the sandbox has not cached.
-const keptKey = (uri: string) => `graspy.view.${uri}`;
-
-/** Keeps a view's page, to open without a connection. */
-export function keepView(uri: string, view: UiView): void {
-  try {
-    window.localStorage.setItem(keptKey(uri), JSON.stringify(view));
-  } catch {
-    // Storage refused: the view opens only with a connection.
-  }
-}
-
-function keptView(uri: string): UiView | null {
-  try {
-    const kept = window.localStorage.getItem(keptKey(uri));
-    return kept ? (JSON.parse(kept) as UiView) : null;
-  } catch {
-    return null;
-  }
 }
 
 /** The view to show, read once per visit; with no server to reach, the copy kept. A refusal is its answer. */
@@ -209,12 +193,35 @@ export async function openToolView(
   return { resourceUri, toolName: name, toolInput: args, toolResult };
 }
 
-/** Keeps each view that has no copy yet; a copy is left as it is. */
-export async function readAllViews(): Promise<void> {
+/**
+ * Keeps every view's page to open without a connection. A page replaces its copy only once its
+ * sandbox's worker holds every file of its build, so a copy never names files no worker holds; a
+ * sandbox no kept page needs any more is dropped.
+ */
+async function keepAllViews(): Promise<void> {
   const { titles } = await server();
-  await Promise.all(
-    [...titles.keys()]
-      .filter((uri) => !keptView(uri))
-      .map(async (uri) => keepView(uri, await readOnce(uri))),
+  const read = await Promise.all(
+    [...titles.keys()].map(async (uri): Promise<[string, UiView]> => [
+      uri,
+      await readOnce(uri),
+    ]),
   );
+  const sandboxes = new Set(read.map(([, view]) => view.sandbox));
+  for (const sandbox of sandboxes) {
+    const needed = new Set([...keptSandboxes(), ...sandboxes]);
+    if (!(await keepSandbox(sandbox, needed))) continue;
+    for (const [uri, view] of read) {
+      if (view.sandbox === sandbox) keepView(uri, view);
+    }
+  }
+}
+
+let keeping: Promise<void> | null = null;
+
+/** Keeps every view, once at a time however often it is asked. */
+export function readAllViews(): Promise<void> {
+  keeping ??= keepAllViews().finally(() => {
+    keeping = null;
+  });
+  return keeping;
 }

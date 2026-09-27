@@ -14,6 +14,7 @@ import com.latentic.graspy.mcp.KeptCallDao
 import com.latentic.graspy.mcp.KeptCallEntity
 import com.latentic.graspy.mcp.KeptViewDao
 import com.latentic.graspy.mcp.KeptViewEntity
+import com.latentic.graspy.mcp.keptViewMigrations
 import com.latentic.graspy.sync.CatalogueLessonEntity
 import com.latentic.graspy.sync.LessonCacheDao
 import com.latentic.graspy.sync.LessonMoveEntity
@@ -30,7 +31,7 @@ import com.latentic.graspy.sync.lessonCacheMigrations
         LessonCopyEntity::class,
         KeptViewEntity::class,
     ],
-    version = 16,
+    version = 17,
     exportSchema = true,
 )
 abstract class GraspyDatabase : RoomDatabase() {
@@ -48,4 +49,10 @@ abstract class GraspyDatabase : RoomDatabase() {
 }
 
 /** Every step from each version a phone may hold to this one. */
-val graspyMigrations: Array<Migration> = arrayOf(*submissionMigrations, *lessonCacheMigrations, *chatMigrations, *lessonCopyMigrations)
+val graspyMigrations: Array<Migration> = arrayOf(
+    *submissionMigrations,
+    *lessonCacheMigrations,
+    *chatMigrations,
+    *lessonCopyMigrations,
+    *keptViewMigrations,
+)

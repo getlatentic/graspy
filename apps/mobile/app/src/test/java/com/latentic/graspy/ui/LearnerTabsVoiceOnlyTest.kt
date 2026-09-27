@@ -27,6 +27,7 @@ import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.localization.copyFor
 import com.latentic.graspy.localization.learnCopyFor
 import com.latentic.graspy.mcp.FakeGraspyServer
+import com.latentic.graspy.mcp.HOLDS_EVERY_FILE
 import com.latentic.graspy.mcp.LearnerConnection
 import com.latentic.graspy.mcp.LearnerViews
 import com.latentic.graspy.plan.LearnerRecord
@@ -73,7 +74,7 @@ class LearnerTabsVoiceOnlyTest {
         LEARNER_VIEW_MODELS + mapOf(
             PlanViewModel::class.java to { app, key -> PlanViewModel(app, key, server.calls).also { planViewModel = it } },
             LearnerViews::class.java to { app, key ->
-                LearnerViews(app, LearnerConnection(database, key, OkHttpClient(), server.web.url("/mcp")) { true }).also { learnerViews = it }
+                LearnerViews(app, LearnerConnection(database, key, OkHttpClient(), server.web.url("/mcp"), HOLDS_EVERY_FILE) { true }).also { learnerViews = it }
             },
             HomeCatalogueViewModel::class.java to { app, key -> HomeCatalogueViewModel(app, key, database.lessonCacheDao(), {}) { true } },
         ),

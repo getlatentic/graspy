@@ -1,12 +1,7 @@
 package com.latentic.graspy.mcp
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
 import android.util.Log
-import android.view.ViewGroup
-import android.webkit.WebSettings
-import android.webkit.WebView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,8 +28,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.webkit.JavaScriptReplyProxy
-import androidx.webkit.WebViewCompat
-import androidx.webkit.WebViewFeature
 import com.latentic.graspy.BuildConfig
 import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.space
@@ -46,8 +39,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 /** What a screen does with its view's calls and messages; the rest the host does itself. */
@@ -194,10 +185,7 @@ private fun HostedFrame(
             override fun resize(height: Int) {
                 if (height > 0) viewHeight = height
             }
-            override suspend fun shown(uri: String, view: UiView) {
-                latestShown()
-                server.keepShown(uri, view)
-            }
+            override fun shown() = latestShown()
             override fun drawn() = latestDrawn()
         }
     }
@@ -212,7 +200,6 @@ private fun HostedFrame(
  * The WebView one view lives in: the host page, the listener only that page can reach, and the view's
  * MCP Apps conversation. Closing asks the view to finish before the WebView goes.
  */
-@SuppressLint("SetJavaScriptEnabled")
 private class HostedView(
     context: Context,
     card: ViewCard,
@@ -222,45 +209,23 @@ private class HostedView(
     onGone: () -> Unit,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val gate = HostGate(HostPage.ORIGIN, API_ORIGIN)
     private var page: JavaScriptReplyProxy? = null
     private val session = ViewSession(card, view, hostContext, host, ::post)
 
-    val webView = WebView(context).apply {
-        tag = this@HostedView
-        // Wrapped to its content, a WebView gives the page no height, and the view's frame fills 100% of none.
-        layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        setBackgroundColor(Color.TRANSPARENT)
-        settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            allowFileAccess = false
-            allowContentAccess = false
-            javaScriptCanOpenWindowsAutomatically = false
-            setSupportMultipleWindows(false)
-            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-        }
-        webViewClient = HostPageClient(context.assets::open, API_ORIGIN, onGone)
-    }
+    val webView = hostWebView(context, onGone).apply { tag = this@HostedView }
 
     init {
-        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
-        listen()
+        if (LISTENING) webView.listenToHostPage(::heard)
     }
 
-    private fun listen() {
-        if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) return
-        WebViewCompat.addWebMessageListener(webView, LISTENER, setOf(HostPage.ORIGIN)) { _, message, origin, isMainFrame, reply ->
-            when (val admitted = gate.admit(origin.toString(), isMainFrame, message.data)) {
-                HostMessage.Ready -> {
-                    page = reply
-                    open()
-                }
-                is HostMessage.Relay -> scope.launch { session.receive(admitted.data) }
-                null -> Log.w(TAG, "Refused a message from $origin")
+    private fun heard(message: HostMessage, reply: JavaScriptReplyProxy) {
+        when (message) {
+            HostMessage.Ready -> {
+                page = reply
+                reply.postMessage(openSandbox(view.sandbox, view.title))
             }
+            is HostMessage.Relay -> scope.launch { session.receive(message.data) }
         }
-        webView.loadUrl(HostPage.URL)
     }
 
     fun close() {
@@ -271,29 +236,9 @@ private class HostedView(
         }
     }
 
-    private fun open() = toPage(
-        buildJsonObject {
-            put("kind", "open")
-            put("src", HostPage.sandboxAddress(API_ORIGIN, view))
-            put("origin", API_ORIGIN)
-            put("title", view.title)
-        },
-    )
-
-    private fun post(message: JsonObject) = toPage(
-        buildJsonObject {
-            put("kind", "post")
-            put("message", message)
-        },
-    )
-
-    private fun toPage(command: JsonObject) {
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) page?.postMessage(command.toString())
+    private fun post(message: JsonObject) {
+        page?.postMessage(toSandbox(message))
     }
 }
 
-private const val LISTENER = "graspyHost"
-
-/** Without it a view cannot talk to the app, so none is shown. */
-private val LISTENING get() = WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)
 private const val TAG = "GraspyView"

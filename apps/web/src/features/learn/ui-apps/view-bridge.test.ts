@@ -2,13 +2,19 @@ import type { AppBridge } from "@modelcontextprotocol/ext-apps/app-bridge";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TutorCard } from "@/lib/a2a/reply-data";
 
-const VIEW = { html: "<html>lesson</html>", title: "Lesson" };
-const keepView = vi.fn();
+const VIEW = {
+  html: "<html>lesson</html>",
+  title: "Lesson",
+  sandbox: "/ui-sandbox/0123456789abcdef/",
+};
 vi.mock("@/lib/mcp/server", () => ({
   HOST_INFO: { name: "graspy", version: "1.0.0" },
-  SANDBOX_URL: new URL("https://api.test/ui-sandbox"),
   uiView: async () => VIEW,
-  keepView,
+}));
+const { keepView } = vi.hoisted(() => ({ keepView: vi.fn() }));
+vi.mock("@/lib/mcp/view-copies", () => ({ keepView }));
+vi.mock("@/lib/mcp/sandbox", () => ({
+  sandboxAddress: (sandbox: string) => `https://api.test${sandbox}?host=app`,
 }));
 vi.mock("@/lib/mcp/outbox", () => ({ callOrKeep: vi.fn() }));
 vi.mock("@modelcontextprotocol/ext-apps/app-bridge", () => ({
@@ -26,7 +32,7 @@ const CARD = {
 } as unknown as TutorCard;
 
 /** A frame whose sandbox proxy says it is ready as soon as it is given its address. */
-function sandboxFrame(): HTMLIFrameElement {
+function sandboxFrame(addresses: string[] = []): HTMLIFrameElement {
   const heard = new Set<(event: MessageEvent) => void>();
   vi.stubGlobal("window", {
     location: { origin: "https://app.test" },
@@ -42,7 +48,8 @@ function sandboxFrame(): HTMLIFrameElement {
   } as unknown as MessageEvent;
   return {
     contentWindow: proxy,
-    set src(_: string) {
+    set src(address: string) {
+      addresses.push(address);
       queueMicrotask(() => heard.forEach((listener) => listener(ready)));
     },
   } as unknown as HTMLIFrameElement;
@@ -58,10 +65,10 @@ function fakeBridge() {
   };
 }
 
-async function shownUntilLoaded(signal: AbortSignal) {
+async function shownUntilLoaded(signal: AbortSignal, addresses: string[] = []) {
   const bridge = fakeBridge();
   const shown = showView(
-    sandboxFrame(),
+    sandboxFrame(addresses),
     bridge as unknown as AppBridge,
     CARD,
     signal,
@@ -78,25 +85,24 @@ beforeEach(() => {
 });
 
 describe("a view being shown", () => {
-  it("keeps its page only once the view has initialized in the sandbox", async () => {
+  it("opens in the sandbox of its page's build", async () => {
+    const addresses: string[] = [];
+    await shownUntilLoaded(new AbortController().signal, addresses);
+
+    expect(addresses).toEqual([
+      "https://api.test/ui-sandbox/0123456789abcdef/?host=app",
+    ]);
+  });
+
+  it("never replaces the page kept: only a keep that holds its files does", async () => {
     const { bridge, shown } = await shownUntilLoaded(
       new AbortController().signal,
     );
-    expect(keepView).not.toHaveBeenCalled();
 
     bridge.oninitialized?.();
     await shown;
 
-    expect(keepView).toHaveBeenCalledWith(CARD.resourceUri, VIEW);
-  });
-
-  it("keeps nothing when it never initializes", async () => {
-    const leaving = new AbortController();
-    const { shown } = await shownUntilLoaded(leaving.signal);
-
-    leaving.abort();
-
-    await expect(shown).rejects.toThrow();
+    expect(bridge.sendToolResult).toHaveBeenCalled();
     expect(keepView).not.toHaveBeenCalled();
   });
 });

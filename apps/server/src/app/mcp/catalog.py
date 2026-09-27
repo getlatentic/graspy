@@ -24,6 +24,13 @@ from ..app_tool import AppTool
 from ..caller import Caller
 from ..learner.route import LEARNER_TOOLS
 from ..lessons.tools import LESSON_TOOLS, LESSON_UI
+from .sandbox import (
+    SANDBOX_META,
+    WORKER_FILE,
+    build_of,
+    declared_csp,
+    sandbox_path,
+)
 from .views import Views
 
 RESOURCE_MIME_TYPE = "text/html;profile=mcp-app"
@@ -91,8 +98,10 @@ class UiResource:
 
     async def read(self, views: Views, origin: str) -> dict:
         """The view loads its files from ``origin``, this server's: a host
-        frames the document on an origin of its own."""
+        frames the document on an origin of its own, in the sandbox of the
+        build the document belongs to."""
         document = await views.read(self.view)
+        build = build_of(await views.read(WORKER_FILE))
         base = f'<base href="{origin}/">'
         head = _HEAD.search(document)
         at = head.end() if head else 0
@@ -103,13 +112,8 @@ class UiResource:
                     "mimeType": RESOURCE_MIME_TYPE,
                     "text": document[:at] + base + document[at:],
                     "_meta": {
-                        "ui": {
-                            **UI_META,
-                            "csp": {
-                                "resourceDomains": [origin],
-                                "baseUriDomains": [origin],
-                            },
-                        }
+                        "ui": {**UI_META, "csp": declared_csp(origin)},
+                        SANDBOX_META: sandbox_path(build),
                     },
                 }
             ]

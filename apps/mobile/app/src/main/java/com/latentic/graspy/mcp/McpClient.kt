@@ -28,8 +28,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 
-/** A view a tool's result is shown in: its document and the policy its resource declared. */
-data class UiView(val html: String, val title: String, val csp: JsonObject?, val permissions: JsonObject?)
+/**
+ * A view a tool's result is shown in: its document, the policy its resource declared, and [sandbox], the path on the
+ * API of the sandbox of the build the document belongs to.
+ */
+data class UiView(val html: String, val title: String, val sandbox: String, val csp: JsonObject?, val permissions: JsonObject?)
 
 /** A tool's result to show as its view, as the tutor's cards carry it. */
 @Serializable
@@ -122,8 +125,10 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
         val html = content.string("text")
             ?: content.string("blob")?.let { String(Base64.decode(it, Base64.DEFAULT), Charsets.UTF_8) }
             ?: throw McpRefusal("$uri has no document")
-        val ui = content.path("_meta", "ui")
-        return UiView(html, title, ui?.get("csp") as? JsonObject, ui?.get("permissions") as? JsonObject)
+        val meta = content.path("_meta") ?: throw McpRefusal("$uri names no sandbox")
+        val sandbox = meta.string(SANDBOX_META)?.takeIf { it.startsWith("/") } ?: throw McpRefusal("$uri names no sandbox")
+        val ui = meta.path("ui")
+        return UiView(html, title, sandbox, ui?.get("csp") as? JsonObject, ui?.get("permissions") as? JsonObject)
     }
 
     private suspend fun rpc(method: String, params: JsonObject): JsonObject = withContext(Dispatchers.IO) {
@@ -165,6 +170,8 @@ class McpClient(private val calls: Call.Factory, private val endpoint: HttpUrl) 
 
     companion object {
         const val RESOURCE_MIME_TYPE = "text/html;profile=mcp-app"
+        // graspy's own: the sandbox of the build a view's document belongs to.
+        private const val SANDBOX_META = "graspy/sandbox"
         private const val READ_SECONDS = 60L
         private val JSON = "application/json".toMediaType()
     }

@@ -70,8 +70,6 @@ class LessonMakingTest {
     private class Server(private val opened: CompletableDeferred<ViewCard>) : ViewServer, LessonServer {
         override suspend fun view(uri: String): UiView = awaitCancellation()
 
-        override suspend fun keepShown(uri: String, view: UiView) = Unit
-
         override suspend fun call(name: String, arguments: JsonObject): JsonObject = awaitCancellation()
 
         override suspend fun callTool(name: String, arguments: JsonObject): JsonObject = awaitCancellation()
