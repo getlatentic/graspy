@@ -1,6 +1,5 @@
 package com.latentic.graspy.mcp
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -8,12 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -29,8 +24,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * A view stands behind its waiting card, out of reach, until it has drawn. It has twenty seconds the app is in
- * front to initialise, then twenty more to draw.
+ * A view stands behind its waiting card until it has drawn (out of reach meanwhile: ViewReachTest). It has twenty
+ * seconds the app is in front to initialise, then twenty more to draw.
  */
 @RunWith(RobolectricTestRunner::class)
 class AppViewTest {
@@ -45,7 +40,6 @@ class AppViewTest {
     private var shown: (() -> Unit)? = null
     private var drawn: (() -> Unit)? = null
     private var framesMade = 0
-    private var taps = 0
 
     @Before
     fun open() {
@@ -53,11 +47,11 @@ class AppViewTest {
         compose.runOnUiThread { app.registry.currentState = Lifecycle.State.RESUMED }
         compose.setContent {
             CompositionLocalProvider(LocalLifecycleOwner provides app) {
-                AppView(card, Server, UNAVAILABLE, Modifier, waiting = { Text(WAITING) }, retry = { Text(RETRY) }, listening = true) { _, onShown, onDrawn, _ ->
+                AppView(card, Server, UNAVAILABLE, Modifier, waiting = { Text(WAITING) }, retry = { Text(RETRY) }, listening = true) { _, _, onShown, onDrawn, _ ->
                     LaunchedEffect(Unit) { framesMade += 1 }
                     shown = onShown
                     drawn = onDrawn
-                    Box(Modifier.fillMaxWidth().height(192.dp).pointerInput(Unit) { detectTapGestures { taps += 1 } }) { Text(FRAME) }
+                    Box(Modifier.fillMaxWidth().height(192.dp)) { Text(FRAME) }
                 }
             }
         }
@@ -80,12 +74,7 @@ class AppViewTest {
     }
 
     @Test
-    fun `a view not yet drawn takes no touch and is hidden from TalkBack, and loads on in the same frame`() {
-        compose.onNodeWithText(FRAME).assertDoesNotExist()
-        compose.onRoot().performTouchInput { click() }
-        compose.mainClock.advanceTimeBy(1_000)
-        assertEquals(0, taps)
-
+    fun `a view is made once, and loads on under the waiting card until it draws`() {
         compose.runOnIdle {
             shown!!()
             drawn!!()
@@ -93,9 +82,6 @@ class AppViewTest {
         compose.mainClock.advanceTimeBy(1_000)
 
         compose.onNodeWithText(FRAME).assertExists()
-        compose.onRoot().performTouchInput { click() }
-        compose.mainClock.advanceTimeBy(1_000)
-        assertEquals(1, taps)
         assertEquals(1, framesMade)
     }
 

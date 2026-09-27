@@ -115,7 +115,7 @@ class TopicLessonTest {
                     onBack = {},
                     onLearnt = {},
                     showView = { card, _, _, retry ->
-                        AppView(card, ReadyView, learn.chat.viewUnavailable, Modifier, waiting = {}, retry = retry, listening = true) { _, _, _, onGone ->
+                        AppView(card, ReadyView, learn.chat.viewUnavailable, Modifier, waiting = {}, retry = retry, listening = true) { _, _, _, _, onGone ->
                             val first = remember { ++viewsMade == 1 }
                             LaunchedEffect(Unit) { if (first) onGone() }
                         }

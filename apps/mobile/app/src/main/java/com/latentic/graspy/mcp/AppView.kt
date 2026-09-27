@@ -24,12 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.webkit.JavaScriptReplyProxy
@@ -71,13 +67,14 @@ private const val COUNTED_EVERY_MS = 250L
 
 private enum class ViewProgress { Loading, Shown, Drawn }
 
-/** What shows a view's page and tells the screen how it went. */
-internal typealias ViewFrame = @Composable (document: UiView, onShown: () -> Unit, onDrawn: () -> Unit, onGone: () -> Unit) -> Unit
+/** What shows a view's page, out of reach until [reachable], and tells the screen how it went. */
+internal typealias ViewFrame =
+    @Composable (document: UiView, reachable: Boolean, onShown: () -> Unit, onDrawn: () -> Unit, onGone: () -> Unit) -> Unit
 
 /**
  * A tool's result as its MCP Apps view, sandboxed on the API's origin, as the web shows it. [waiting] stands over
- * the view until the view has drawn its result: until then the WebView shows nothing, takes no touch, and has
- * nothing TalkBack reads. A view not initialised after [SHOW_WITHIN_MS] of the app in the foreground, or not drawn
+ * the view until the view has drawn its result: until then the WebView shows nothing, takes no touch, mouse button,
+ * wheel or hover, and has nothing TalkBack reads ([FrameView]). A view not initialised after [SHOW_WITHIN_MS] of the app in the foreground, or not drawn
  * [DRAW_WITHIN_MS] after that, could not be shown, and [retry] stands under the notice. Time in the background
  * does not count, since a view cannot draw there.
  */
@@ -91,8 +88,8 @@ fun AppView(
     events: ViewEvents = ViewEvents(),
     waiting: @Composable () -> Unit = {},
     retry: @Composable () -> Unit = {},
-) = AppView(card, server, unavailable, modifier, waiting, retry, listening = LISTENING) { document, onShown, onDrawn, onGone ->
-    HostedFrame(card, document, server, locale, events, onShown, onDrawn, onGone)
+) = AppView(card, server, unavailable, modifier, waiting, retry, listening = LISTENING) { document, reachable, onShown, onDrawn, onGone ->
+    HostedFrame(card, document, server, locale, events, reachable, onShown, onDrawn, onGone)
 }
 
 @Composable
@@ -130,14 +127,13 @@ internal fun AppView(
     val drawn = progress == ViewProgress.Drawn
     Box(modifier.fillMaxWidth()) {
         view?.let { document ->
-            Box(if (drawn) Modifier else Unreachable) {
-                frame(
-                    document,
-                    { progress = maxOf(progress, ViewProgress.Shown) },
-                    { progress = ViewProgress.Drawn },
-                    { failed = true },
-                )
-            }
+            frame(
+                document,
+                drawn,
+                { progress = maxOf(progress, ViewProgress.Shown) },
+                { progress = ViewProgress.Drawn },
+                { failed = true },
+            )
         }
         if (!drawn) waiting()
     }
@@ -155,19 +151,6 @@ private suspend fun Lifecycle.inFrontWithin(ms: Long, done: () -> Boolean): Bool
     return true
 }
 
-// The waiting card lets touches through, and the view must go on loading under it: the frame refuses everything but
-// the rest of a press already refused, so the view never starts a touch, hover or wheel, and a drag still scrolls
-// the page around it.
-private val Unreachable = Modifier
-    .clearAndSetSemantics {}
-    .pointerInput(Unit) {
-        awaitPointerEventScope {
-            while (true) {
-                awaitPointerEvent(PointerEventPass.Initial).changes.forEach { if (!it.previousPressed) it.consume() }
-            }
-        }
-    }
-
 @Composable
 private fun HostedFrame(
     card: ViewCard,
@@ -175,6 +158,7 @@ private fun HostedFrame(
     server: ViewServer,
     locale: String,
     events: ViewEvents,
+    reachable: Boolean,
     onShown: () -> Unit,
     onDrawn: () -> Unit,
     onGone: () -> Unit,
@@ -201,10 +185,11 @@ private fun HostedFrame(
             override fun drawn() = latestDrawn()
         }
     }
-    AndroidView(
+    FrameView(
         factory = { context -> HostedView(context, card, document, HostContext(locale), host, onGone).webView },
-        onRelease = { webView -> (webView.tag as? HostedView)?.close() },
+        reachable = reachable,
         modifier = Modifier.fillMaxWidth().height(viewHeight.dp),
+        onRelease = { webView -> (webView.tag as? HostedView)?.close() },
     )
 }
 
