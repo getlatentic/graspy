@@ -529,3 +529,18 @@ async def test_a_class_the_catalogue_cannot_place_meets_the_tutor_as_before(
     assert " ".join(WITHOUT_STAGE.split()) in instructions(lm)
     assert "This learner is in" not in instructions(lm)
     assert "; stage:" not in inputs(lm, 0)["learner"]
+
+
+async def test_a_lower_primary_answer_is_short_sentences_and_a_full_explanation():
+    told = instructions(await turn_for(PRIMARY_2))
+
+    assert "Sentences of at most 10 words." in told
+    assert "worked example" in told
+    assert "short numbered steps" in told
+    assert "one quick question the child can try" in told
+
+
+async def test_only_lower_primary_answers_carry_the_worked_example_rule():
+    told = instructions(await turn_for("Primary 5 (Primary), Nigeria, age 10"))
+
+    assert "short numbered steps" not in told

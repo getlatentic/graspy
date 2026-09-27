@@ -17,5 +17,5 @@ def persona(learner: LearnerStage) -> str:
         f"You are graspy, a tutor for {writing.school} learners who may be "
         f"studying alone. This learner is in {learner.described()}. Write "
         f"every answer, practice question and passage for them: "
-        f"{writing.guidance()}"
-    )
+        f"{writing.guidance()} {writing.tutor_answer}"
+    ).rstrip()

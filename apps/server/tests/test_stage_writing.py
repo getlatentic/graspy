@@ -33,6 +33,15 @@ def test_a_stage_with_a_limit_is_told_it():
     assert guidance.startswith("Sentences of at most 10 words. ")
 
 
+def test_a_primary_sentence_limit_never_shortens_the_explanation():
+    """Measured: a limit alone gave a primary child fewer steps and examples."""
+    for stage in (Stage.LOWER_PRIMARY, Stage.UPPER_PRIMARY):
+        assert (
+            "Only the sentences are short: explain fully, with an example from "
+            "the learner's own country." in WRITING[stage].guidance()
+        )
+
+
 def test_secondary_writing_has_no_sentence_limit():
     for stage in (Stage.JUNIOR_SECONDARY, Stage.SENIOR_SECONDARY):
         assert "Sentences of at most" not in WRITING[stage].guidance()

@@ -675,3 +675,10 @@ async def test_a_slide_that_comes_back_unusable_is_written_again():
     assert events[-1]["payload"]["success"] is True
     assert _warnings(events) == []
     assert lm.history[3]["kwargs"]["temperature"] == 0.7
+
+
+async def test_a_lower_primary_lesson_is_not_given_the_tutors_answer_rule():
+    lm, _ = await _stream(_answers(), grade=PRIMARY_2)
+
+    for call in range(MIN_SLIDES + 2):
+        assert "short numbered steps" not in inputs(lm, call)["stage_guidance"]

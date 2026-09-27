@@ -19,6 +19,9 @@ class StageWriting:
     examples: str
     steps: str
     questions: str
+    # What every tutor answer holds at this stage; lessons have their own
+    # slide plan.
+    tutor_answer: str = ""
 
     def guidance(self) -> str:
         # A sentence limit alone shortens the explanation too: measured, the
@@ -55,6 +58,11 @@ WRITING: dict[Stage, StageWriting] = {
         steps="One idea at a time in small steps, each shown with an example.",
         questions="Questions of one short sentence and one step, with options "
         "of a few words; a passage is 60 to 120 words.",
+        # The owner's rule: short sentences, full answers.
+        tutor_answer="Every explanation has a worked example in a context "
+        "the child knows from their own country, as short numbered steps, "
+        "then one quick question the child can try: one line, with no "
+        "options, as questions to tap go on a practice card.",
     ),
     Stage.UPPER_PRIMARY: StageWriting(
         school="primary school",
