@@ -21,6 +21,7 @@ import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.GraspyText
 import com.latentic.graspy.ui.PageTitle
 import com.latentic.graspy.ui.PrimaryButton
+import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.Section
 import com.latentic.graspy.ui.icons.Lucide
 import com.latentic.graspy.ui.space
@@ -47,6 +48,22 @@ fun VoiceCard(words: VoiceNoteCopy, teacher: Teacher, onStart: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(space(4))) {
                 TeacherStrip(teacher, modifier = Modifier.weight(1f))
                 PrimaryButton(words.start, onStart, icon = Lucide.Mic)
+            }
+        }
+    }
+}
+
+/**
+ * Home for a class that learns by voice alone when the app has no voice lessons for it yet, as the web's
+ * NoVoiceCard: it says so, and leads to the details in case the class is wrong.
+ */
+@Composable
+fun NoVoiceCard(words: VoiceNoteCopy, noLessons: String, change: String, onChange: () -> Unit) {
+    Section(words.title) {
+        GraspyCard {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(space(4))) {
+                Text(noLessons, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                SecondaryButton(change, onChange)
             }
         }
     }

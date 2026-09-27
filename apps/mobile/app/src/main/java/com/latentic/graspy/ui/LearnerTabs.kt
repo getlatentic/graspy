@@ -29,6 +29,7 @@ import com.latentic.graspy.ask.AskViewModel
 import com.latentic.graspy.ask.LinkTarget
 import com.latentic.graspy.home.HomeCatalogueViewModel
 import com.latentic.graspy.home.HomeTab
+import com.latentic.graspy.home.NoVoiceCard
 import com.latentic.graspy.home.VoiceCard
 import com.latentic.graspy.home.VoicePage
 import com.latentic.graspy.lesson.TopicLesson
@@ -136,8 +137,9 @@ internal fun LearnerTabs(
                 else -> Page {
                     when (shownTab) {
                         LearnTab.HOME -> Home(
-                            learn, voice, voiceOnly, plan, planViewModel,
+                            learn, copy.home.noLessons, voice, voiceOnly, plan, planViewModel,
                             onVoice = { voicePage = true },
+                            onDetails = { editing = true },
                             onAsk = {
                                 askOpening = it
                                 tab = LearnTab.ASK
@@ -166,21 +168,27 @@ private fun Page(content: @Composable () -> Unit) {
     }
 }
 
-/** A class that learns by [voiceOnly] finds its voice lessons alone, as on the web. */
+/**
+ * A class that learns by [voiceOnly] finds its voice lessons alone, as on the web; with none in the app for its
+ * class yet, Home says so rather than showing nothing.
+ */
 @Composable
 private fun Home(
     learn: LearnCopy,
+    noLessons: String,
     voice: LearnerProfile?,
     voiceOnly: Boolean,
     plan: PlanState,
     planViewModel: PlanViewModel,
     onVoice: () -> Unit,
+    onDetails: () -> Unit,
     onAsk: (AskOpening) -> Unit,
     onPlace: (Place) -> Unit,
     onSeeAllSubjects: () -> Unit,
 ) {
     if (voiceOnly) {
-        voice?.let { VoiceCard(learn.voice, Teacher.forClass(it.schoolClass).first(), onVoice) }
+        if (voice == null) NoVoiceCard(learn.voice, noLessons, learn.you.change, onDetails)
+        else VoiceCard(learn.voice, Teacher.forClass(voice.schoolClass).first(), onVoice)
         return
     }
     val making by planViewModel.makingState.collectAsStateWithLifecycle()

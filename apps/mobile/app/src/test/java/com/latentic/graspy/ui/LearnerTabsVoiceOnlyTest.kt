@@ -94,6 +94,17 @@ class LearnerTabsVoiceOnlyTest {
     }
 
     @Test
+    fun `a class the server says learns by voice alone, with no voice lessons in the app, is told so on Home and led to its details`() {
+        server.voiceOnly = true
+        shown(voice = null)
+
+        compose.onNodeWithText(copyFor(InterfaceLanguage.ENGLISH).home.noLessons).assertExists()
+        compose.onNodeWithText(learn.nav.subjects).assertDoesNotExist()
+        compose.onNodeWithText(learn.you.change).performClick()
+        compose.onNodeWithText(copyFor(InterfaceLanguage.ENGLISH).home.noLessons).assertDoesNotExist()
+    }
+
+    @Test
     fun `the class's name decides nothing, so a nursery plan the server says learns by slides keeps its subjects`() {
         server.voiceOnly = false
         shown(voice = LearnerProfile(SchoolClass.NURSERY_2, AppLanguageSelection.ENGLISH))
@@ -155,7 +166,7 @@ class LearnerTabsVoiceOnlyTest {
         assertFalse(compose.activity.onBackPressedDispatcher.hasEnabledCallbacks())
     }
 
-    private fun shown(voice: LearnerProfile, answered: Boolean = true) {
+    private fun shown(voice: LearnerProfile?, answered: Boolean = true) {
         compose.setContent {
             LearnerScope(ada, viewModels) {
                 GraspyTheme(InterfaceLanguage.ENGLISH) {
