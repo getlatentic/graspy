@@ -3,11 +3,12 @@ package com.latentic.graspy.account
 import android.util.Log
 import com.latentic.graspy.collection.outbox.SubmissionDao
 import com.latentic.graspy.collection.outbox.SubmissionRepository
+import com.latentic.graspy.collection.outbox.awaitTried
+import com.latentic.graspy.collection.outbox.triesSoFar
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** A spoken answer may take minutes to mark; past this the learner is asked instead of kept waiting, as on the web. */
@@ -53,9 +54,9 @@ class UnsentWork(
 
 /**
  * Sends the learner's recordings still waiting in the outbox and waits for graspy to take them. One settled,
- * marked or refused, has reached graspy even while it waits to be shown. Still waiting after [patienceMillis],
- * they have not all reached graspy. WorkManager does the sending, so the wait only watches: it ends with
- * [UnsentWork]'s, never lingering after the leave has stopped waiting for it.
+ * marked or refused, has reached graspy even while it waits to be shown. One whose try failed, or still waiting
+ * after [patienceMillis], has not ([awaitTried]). WorkManager does the sending, so the wait only watches: it ends
+ * with [UnsentWork]'s, never lingering after the leave has stopped waiting for it.
  */
 class RecordingOutbox(
     private val dao: SubmissionDao,
@@ -63,9 +64,8 @@ class RecordingOutbox(
     private val patienceMillis: Long = UNSENT_PATIENCE_MILLIS,
 ) : Outbox {
     override suspend fun flush(learnerKey: String): Boolean {
-        repository.recoverIncomplete(learnerKey)
-        return withTimeoutOrNull(patienceMillis) {
-            dao.observeIncompleteCount(learnerKey).first { it == 0 }
-        } != null
+        val before = dao.triesSoFar(learnerKey)
+        repository.sendIncomplete(learnerKey)
+        return withTimeoutOrNull(patienceMillis) { dao.awaitTried(learnerKey, before) } ?: false
     }
 }
