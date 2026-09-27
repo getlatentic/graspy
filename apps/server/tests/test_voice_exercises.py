@@ -159,14 +159,38 @@ def test_each_further_attempt_waits_longer_after_the_one_before():
     assert RETRY_AFTER_MS[1] == 2 * 60 * 1000 and RETRY_AFTER_MS[2] == 30 * 60 * 1000
 
 
+def test_only_an_unfinished_turn_whose_next_attempt_is_not_due_awaits_it():
+    from app.voice.exercises import (
+        PROCESSING_LEASE_MS,
+        RETRY_AFTER_MS,
+        awaiting_next_attempt,
+        claimable,
+    )
+
+    now = 10_000_000_000
+    past_lease = now - PROCESSING_LEASE_MS - 1
+    marking = {"state": "processing", "attempts": 2, "updated_at": now - 1000}
+    cut_off = marking | {"updated_at": past_lease}
+    due = {"state": "processing", "attempts": 1, "updated_at": past_lease}
+    assert RETRY_AFTER_MS[1] < PROCESSING_LEASE_MS < RETRY_AFTER_MS[2]
+    assert not awaiting_next_attempt(marking, now)
+    assert awaiting_next_attempt(cut_off, now) and not claimable(cut_off, now)
+    assert not awaiting_next_attempt(due, now) and claimable(due, now)
+
+
 def test_a_worker_past_its_lease_cannot_win_the_write():
 
     from app.voice.exercises import PROCESSING_LEASE_MS, new_claim_token, write_won
     from app.voice.learner_memory import TEACH_TIMEOUT_SECONDS
     from app.voice.speech.intron_sync import SYNC_TIMEOUT_MS
-    from app.voice.speech.language_detect import CLASSIFIER_TIMEOUT_SECONDS
+    from app.voice.speech.language_detect import (
+        CLASSIFIER_TIMEOUT_SECONDS,
+        WHISPER_TIMEOUT_SECONDS,
+    )
 
-    limits = CLASSIFIER_TIMEOUT_SECONDS + TEACH_TIMEOUT_SECONDS
+    limits = (
+        WHISPER_TIMEOUT_SECONDS + CLASSIFIER_TIMEOUT_SECONDS + TEACH_TIMEOUT_SECONDS
+    )
     assert SYNC_TIMEOUT_MS + limits * 1000 < PROCESSING_LEASE_MS
     assert new_claim_token() != new_claim_token()
     assert write_won(SimpleNamespace(meta=SimpleNamespace(changes=1)))

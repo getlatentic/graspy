@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from app.voice.speech.language_detect import decide_language, marker_language
@@ -96,3 +98,35 @@ async def test_detection_records_the_classifier_answer_and_its_failure():
     silent = await detect_spoken_language(FakeEnv(FakeAi(nothing)), b"wav")
     assert silent.language == "unknown"
     assert silent.transcription_language == "en"
+
+
+class SilentWhisper(FakeAi):
+    """Whisper that never answers; the classifier would, if it were asked."""
+
+    def __init__(self):
+        super().__init__(None, "en")
+        self.asked = []
+
+    async def run(self, model, request):
+        self.asked.append(model)
+        if "whisper" in model:
+            await asyncio.Event().wait()
+        return await super().run(model, request)
+
+
+@pytest.mark.asyncio
+async def test_a_whisper_that_does_not_answer_in_time_leaves_the_language_unknown(
+    monkeypatch,
+):
+    from app.voice.speech import language_detect
+
+    monkeypatch.setattr(language_detect, "WHISPER_TIMEOUT_SECONDS", 0.01)
+    ai = SilentWhisper()
+
+    evidence = await language_detect.detect_spoken_language(FakeEnv(ai), b"wav")
+
+    assert not evidence.known
+    assert evidence.transcription_language == "en"
+    assert evidence.whisper_error.startswith("TimeoutError")
+    assert evidence.to_json()["whisper_error"] == evidence.whisper_error
+    assert ai.asked == [language_detect.WHISPER_MODEL]

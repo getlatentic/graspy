@@ -461,6 +461,56 @@ async def test_a_failed_turn_waiting_for_its_next_attempt_names_the_wait(
     assert waiting.headers["retry-after"] == "100"
 
 
+async def test_a_turn_being_marked_answers_a_plain_202(app, env, monkeypatch):
+    clock = Clock()
+    monkeypatch.setattr("app.voice.worker_evaluation.time", clock)
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http)
+        await uploaded(http, sample)
+        env.DB.db.execute(
+            "INSERT INTO tutoring_turns (sample_id, state, attempts, updated_at) "
+            "VALUES (?, 'processing', 2, ?)",
+            (sample["sample_id"], round(clock.now * 1000) - 60_000),
+        )
+        marking = await http.post(
+            f"/api/voice/samples/{sample['sample_id']}/evaluation"
+        )
+
+    assert marking.status_code == 202
+    assert marking.json() == {"sample_id": sample["sample_id"], "state": "processing"}
+    assert "retry-after" not in marking.headers
+
+
+async def test_a_turn_cut_off_past_its_lease_names_the_wait_for_its_next_attempt(
+    app, env, monkeypatch
+):
+    from app.voice.exercises import PROCESSING_LEASE_MS, RETRY_AFTER_MS
+
+    clock = Clock()
+    monkeypatch.setattr("app.voice.worker_evaluation.time", clock)
+    claimed = round(clock.now * 1000) - PROCESSING_LEASE_MS - 60_000
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http)
+        await uploaded(http, sample)
+        env.DB.db.execute(
+            "INSERT INTO tutoring_turns (sample_id, state, attempts, updated_at) "
+            "VALUES (?, 'processing', 2, ?)",
+            (sample["sample_id"], claimed),
+        )
+        stuck = await http.post(f"/api/voice/samples/{sample['sample_id']}/evaluation")
+
+    left = RETRY_AFTER_MS[2] - PROCESSING_LEASE_MS - 60_000
+    assert stuck.status_code == 202
+    assert stuck.json() == {
+        "sample_id": sample["sample_id"],
+        "state": "processing",
+        "retry_after_ms": left,
+    }
+    assert stuck.headers["retry-after"] == str(left // 1000)
+
+
 async def test_a_claim_read_before_the_last_attempt_was_spent_is_refused(env):
     from app.voice.exercises import MAX_TURN_ATTEMPTS
     from app.voice.worker_evaluation import _claim_turn
