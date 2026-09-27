@@ -13,9 +13,10 @@ be studying alone."""
 
 def persona(learner: LearnerStage) -> str:
     writing = WRITING[learner.stage]
+    guidance = writing.guidance() if writing.tutor_follows_guidance else ""
+    rules = f"{guidance} {writing.tutor_answer}".strip()
     return (
         f"You are graspy, a tutor for {writing.school} learners who may be "
         f"studying alone. This learner is in {learner.described()}. Write "
-        f"every answer, practice question and passage for them: "
-        f"{writing.guidance()} {writing.tutor_answer}"
-    ).rstrip()
+        f"every answer, practice question and passage for them: {rules}"
+    )

@@ -22,6 +22,9 @@ class StageWriting:
     # What every tutor answer holds at this stage; lessons have their own
     # slide plan.
     tutor_answer: str = ""
+    # False where the tutor writes as it does for any learner and only the
+    # lessons follow this guidance.
+    tutor_follows_guidance: bool = True
 
     def guidance(self) -> str:
         # A sentence limit alone shortens the explanation too: measured, the
@@ -62,7 +65,9 @@ WRITING: dict[Stage, StageWriting] = {
         tutor_answer="Every explanation has a worked example in a context "
         "the child knows from their own country, as short numbered steps, "
         "then one quick question the child can try: one line, with no "
-        "options, as questions to tap go on a practice card.",
+        "options, as questions to tap go on a practice card. The question "
+        "has one definite answer the child can give from what you "
+        "explained.",
     ),
     Stage.UPPER_PRIMARY: StageWriting(
         school="primary school",
@@ -77,6 +82,11 @@ WRITING: dict[Stage, StageWriting] = {
         steps="A worked example before the rule, in two or three steps, each shown.",
         questions="Questions of one or two sentences, with short options; a "
         "passage is 120 to 250 words.",
+        # Measured: held to short sentences, the tutor compressed its answers
+        # until one dropped the working and one taught a fraction wrongly.
+        tutor_answer="Explain fully, with worked calculations where they "
+        'fit, and no filler praise such as "Great question!".',
+        tutor_follows_guidance=False,
     ),
     Stage.JUNIOR_SECONDARY: StageWriting(
         school="junior secondary school",

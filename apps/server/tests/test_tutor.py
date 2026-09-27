@@ -538,9 +538,29 @@ async def test_a_lower_primary_answer_is_short_sentences_and_a_full_explanation(
     assert "worked example" in told
     assert "short numbered steps" in told
     assert "one quick question the child can try" in told
+    assert (
+        "The question has one definite answer the child can give from what "
+        "you explained." in told
+    )
+
+
+PRIMARY_5 = "Primary 5 (Primary), Nigeria, age 10"
 
 
 async def test_only_lower_primary_answers_carry_the_worked_example_rule():
-    told = instructions(await turn_for("Primary 5 (Primary), Nigeria, age 10"))
+    told = instructions(await turn_for(PRIMARY_5))
 
     assert "short numbered steps" not in told
+
+
+async def test_an_upper_primary_tutor_explains_fully_without_a_sentence_limit():
+    """Measured: held to short sentences, its answers dropped the working."""
+    told = instructions(await turn_for(PRIMARY_5))
+
+    assert "You are graspy, a tutor for primary school learners" in told
+    assert "This learner is in upper primary, age 10." in told
+    assert "secondary" not in told
+    assert "Sentences of at most" not in told
+    assert "Only the sentences are short" not in told
+    assert "Explain fully, with worked calculations where they fit" in told
+    assert "no filler praise" in told
