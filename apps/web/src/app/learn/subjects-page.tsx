@@ -3,7 +3,7 @@ import { Pencil } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { useSubjectRows } from "@/features/learn/hooks/use-subject-rows";
 import { SubjectList } from "@/features/learn/components/subject-list";
-import { subjectPath } from "@/features/learn/lib/learn-paths";
+import { subjectPath } from "@/lib/learn-paths";
 import { usePlan } from "@/features/learn/learner-context";
 
 export default function SubjectsPage() {

@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { useUserProfile } from "@/lib/use-user-profile";
 import { subjectOf } from "@/features/learn/lib/chat-targets";
 import { goalIndex } from "@/features/learn/lib/curriculum-edit";
-import { lessonPath } from "@/features/learn/lib/learn-paths";
+import { lessonPath } from "@/lib/learn-paths";
 import {
   SubjectHeader,
   SubjectProgress,

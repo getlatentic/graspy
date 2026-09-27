@@ -25,7 +25,9 @@ from app.learner.record import Learnt, TopicRef, changed
 from app.learner.store import DurableObjectLearnerStore
 from app.lessons.making import Job, LessonTarget, started
 from app.lessons.store import DurableObjectLessonStore
+from app.local_d1 import LocalD1
 from app.settings import DEPLOYMENT_KEYS
+from app.threads.wire import SentThreads
 
 VARS = {
     "APP_ENV": "development",
@@ -160,6 +162,7 @@ def fake_env(**limiter_success) -> SimpleNamespace:
         LEARNERS=FakeLearners(),
         LESSON_MAKERS=FakeLessonMakers(),
         ASSETS=FakeAssets(),
+        DB=LocalD1(),
     )
 
 
@@ -311,6 +314,33 @@ async def test_a_learners_record_is_kept_in_their_durable_object():
     [mark] = (await learners.load("device-1")).topics
     assert (mark.topic, mark.learnt_at) == ("Fractions", 5)
     assert (await learners.load("device-2")).topics == []
+
+
+async def test_a_learners_threads_are_kept_in_the_workers_database():
+    env = fake_env()
+    threads = build_worker_app(env, lambda value: value).state.keeping.threads
+    sent = SentThreads.model_validate(
+        {
+            "threads": [
+                {
+                    "id": "thread-1",
+                    "scope": {"kind": "general", "planId": "plan-1"},
+                    "createdAt": 1,
+                    "updatedAt": 1,
+                    "messages": [
+                        {"id": "m1", "type": "user", "content": "Hi", "timestamp": 1}
+                    ],
+                }
+            ]
+        }
+    ).threads
+
+    await threads.keep("account:u/learner", sent)
+
+    rows = env.DB.connection.execute(
+        "SELECT owner_id, thread_id FROM tutor_messages"
+    ).fetchall()
+    assert [tuple(row) for row in rows] == [("account:u/learner", "thread-1")]
 
 
 async def test_a_lesson_is_made_once_by_its_own_durable_object():

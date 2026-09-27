@@ -1,7 +1,8 @@
 import { wipeDatabases } from "./devices";
 
 const DB_NAME = "graspy-db";
-export const SERVER = "http://localhost:8081";
+// `--env SERVER=…` for an API on another port, as when one already runs on 8081.
+export const SERVER: string = Cypress.env("SERVER") ?? "http://localhost:8081";
 const API = `${SERVER}/api`;
 // Each test is a device of its own: the browser's fingerprint, the same in
 // every test, would give them all one record on the server.

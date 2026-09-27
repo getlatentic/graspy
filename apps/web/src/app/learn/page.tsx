@@ -8,7 +8,7 @@ import {
   type CurrentTopic,
 } from "@/features/learn/lib/current-topic";
 import type { CurriculumSubject } from "@/lib/curriculum-record";
-import { lessonPath, subjectPath } from "@/features/learn/lib/learn-paths";
+import { lessonPath, subjectPath } from "@/lib/learn-paths";
 import { useAskIdeas } from "@/features/learn/hooks/use-ask-ideas";
 import { HomeSection } from "@/features/learn/components/home-section";
 import { PlanBuilding } from "@/features/learn/components/plan-building";

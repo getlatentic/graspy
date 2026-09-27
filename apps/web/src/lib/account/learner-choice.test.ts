@@ -32,6 +32,8 @@ const wipeLearnerData = vi.fn(async () => void steps.push("wipe"));
 vi.mock("@/lib/device-wipe", () => ({ wipeLearnerData }));
 const sentEverything = vi.fn(async () => true);
 vi.mock("@/lib/mcp/outbox", () => ({ sentEverything }));
+const sentEveryThread = vi.fn(async () => true);
+vi.mock("@/lib/threads/thread-sync", () => ({ sentEveryThread }));
 const sentEveryAnswer = vi.fn(async (_: string) => true);
 vi.mock("@/lib/voice/answer-outbox", () => ({ sentEveryAnswer }));
 vi.mock("@/lib/voice/voice-learner-key", () => ({
@@ -65,6 +67,7 @@ beforeEach(() => {
   steps.length = 0;
   plan = { planId: "plan-1" };
   sentEverything.mockResolvedValue(true);
+  sentEveryThread.mockResolvedValue(true);
   sentEveryAnswer.mockResolvedValue(true);
   vi.stubGlobal("navigator", { onLine: true });
 });
@@ -126,6 +129,11 @@ describe("switching to another learner", () => {
       "a kept call cannot be sent",
       false,
       () => sentEverything.mockResolvedValue(false),
+    ],
+    [
+      "a conversation cannot be sent",
+      false,
+      () => sentEveryThread.mockResolvedValue(false),
     ],
     [
       "a kept spoken answer cannot be sent",
@@ -196,12 +204,13 @@ describe("a choice after the device's learner was removed", () => {
 });
 
 describe("flushUnsent", () => {
-  it("is true once the plan and every kept call reached the server", async () => {
+  it("is true once the plan, every kept call and every conversation reached the server", async () => {
     signedIn = { uid: "uid-1", learner: ADA, deviceJoins: false };
 
     await expect(flushUnsent()).resolves.toBe(true);
     expect(syncPlan).toHaveBeenCalled();
     expect(sentEverything).toHaveBeenCalled();
+    expect(sentEveryThread).toHaveBeenCalled();
     expect(sentEveryAnswer).toHaveBeenCalledWith(`uid-1/${ADA.id}`);
   });
 

@@ -20,6 +20,7 @@ from .llm.client import build_lm, configure_cache
 from .mcp.views import AssetViews
 from .security.rate_limit import Budgets
 from .settings import DEPLOYMENT_KEYS, get_settings
+from .threads.store import ThreadStore
 
 # Converts a Python dict into the JavaScript object a binding method expects.
 JsObject = Callable[[dict], Any]
@@ -58,6 +59,7 @@ def build_worker_app(env: Any, js_object: JsObject) -> FastAPI:
             api=BindingLimiter(env.API_LIMITER, js_object),
         ),
         voice=env,
+        threads=ThreadStore(env.DB),
     )
 
 

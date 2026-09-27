@@ -2,6 +2,8 @@ package com.latentic.graspy.ask
 
 import androidx.room.Room
 import com.latentic.graspy.collection.outbox.GraspyDatabase
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -57,6 +59,18 @@ class ChatStoreTest {
         ada.add(thread.id, MessageKind.FAILED, "That didn't get through.")
 
         assertTrue(ada.messages(thread.id).first().isEmpty())
+    }
+
+    @Test
+    fun `what is said here is kept to send, and told`() = runBlocking {
+        val told = async(start = CoroutineStart.UNDISPATCHED) { ada.kept.first() }
+        val thread = ada.ensureThread(fractions)
+        ada.add(thread.id, MessageKind.LEARNER, "What is a half?")
+        ada.add(thread.id, MessageKind.FAILED, "That didn't get through.")
+
+        told.await()
+        assertEquals(listOf(thread.id), database.chatDao().unsentThreads("uid/ada").map { it.id })
+        assertEquals(listOf("What is a half?"), database.chatDao().unsentMessages("uid/ada").map { it.content })
     }
 
     @Test

@@ -4,9 +4,14 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.localization.ChatCopy
 import com.latentic.graspy.mcp.API_ORIGIN
+import com.latentic.graspy.mcp.bestEffort
+import com.latentic.graspy.sync.Resending
+import com.latentic.graspy.sync.appStarted
+import com.latentic.graspy.sync.networkReach
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -47,12 +52,15 @@ data class TurnState(
 
 /**
  * The learner's conversations with the tutor, kept per topic as the web keeps them: a thread for each topic,
- * subject or general question, its messages on the phone, the tutor's memory of it on the server. What a
- * view did waits, deduplicated, for the next message, which carries it to the tutor.
+ * subject or general question, its messages on the phone and on the learner's other devices, the tutor's memory
+ * of it on the server. What a view did waits, deduplicated, for the next message, which carries it to the tutor.
+ * The conversations are synced while there is a connection, after each message kept, and when Ask is shown.
  */
 class AskViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
     private val tutor = TutorClient(AppGraph.callsFor(application, ownerId), "$API_ORIGIN/a2a".toHttpUrl())
-    private val store = ChatStore(AppGraph.database(application).chatDao(), ownerId)
+    private val database = AppGraph.database(application)
+    private val store = ChatStore(database.chatDao(), ownerId, { block -> database.withTransaction { block() } })
+    private val threadSync = threadSyncFor(application, ownerId)
     private val openScope = MutableStateFlow<ThreadScope?>(null)
     private val failures = MutableStateFlow<List<ChatMessage>>(emptyList())
     private val turn = MutableStateFlow(TurnState())
@@ -65,6 +73,15 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
     val threads: StateFlow<List<ChatThread>?> = store.threads.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val turnState: StateFlow<TurnState> = turn.asStateFlow()
+
+    init {
+        viewModelScope.launch { Resending("the conversations", threadSync::sync, store.kept).whileSeen(networkReach(application), appStarted()) }
+    }
+
+    /** Takes in what the learner said on their other devices since the phone last read. */
+    fun refresh() {
+        viewModelScope.launch { bestEffort(TAG, "Reading the conversations") { threadSync.sync() } }
+    }
 
     val unread: StateFlow<Unread> = unreadState.asStateFlow()
 

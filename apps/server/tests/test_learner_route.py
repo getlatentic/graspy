@@ -5,6 +5,8 @@ from app.learner.route import learner_route
 from app.learner.store import InMemoryLearnerStore
 from app.lessons.makers import TaskLessonMaking
 from app.lessons.store import InMemoryLessonStore
+from app.local_d1 import LocalD1
+from app.threads.store import ThreadStore
 
 
 class NamedOnlyStore(InMemoryLearnerStore):
@@ -26,6 +28,7 @@ def no_learner() -> Caller:
         lessons=InMemoryLessonStore(),
         making=TaskLessonMaking(never_run),
         conversations=InMemoryConversationStore(),
+        threads=ThreadStore(LocalD1()),
     )
     return Caller(None, keeping)
 

@@ -1,4 +1,4 @@
-package com.latentic.graspy.mcp
+package com.latentic.graspy.sync
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,11 +13,11 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * A view call kept while online, the server failing, is sent again without waiting for a reconnect, a few times
- * and only while the app is started, as the web sends its kept calls on start and on reconnect.
+ * What is kept while online, the server failing, is sent again without waiting for a reconnect, a few times
+ * and only while the app is started, as the web sends what it kept on start and on reconnect.
  */
 @RunWith(RobolectricTestRunner::class)
-class KeptCallResendingTest {
+class ResendingTest {
     private val online = MutableStateFlow(true)
     private val started = MutableStateFlow(true)
     private val kept = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -25,9 +25,10 @@ class KeptCallResendingTest {
     private var sends = 0
 
     /** Answers each send from [answers] in turn, then says everything was sent. */
-    private fun resending(vararg answers: Boolean, pause: suspend (Long) -> Unit = { waits += it }): KeptCallResending {
+    private fun resending(vararg answers: Boolean, pause: suspend (Long) -> Unit = { waits += it }): Resending {
         val left = ArrayDeque(answers.toList())
-        return KeptCallResending(
+        return Resending(
+            what = "the kept calls",
             sentEverything = { sends += 1; left.removeFirstOrNull() ?: true },
             kept = kept,
             firstWaitMillis = 10,
@@ -38,7 +39,8 @@ class KeptCallResendingTest {
     }
 
     /** A server that never takes the calls, as a proxy's 413 or a lasting 403 leaves them. */
-    private fun neverTaken() = KeptCallResending(
+    private fun neverTaken() = Resending(
+        what = "the kept calls",
         sentEverything = { sends += 1; false },
         kept = kept,
         firstWaitMillis = 10,
@@ -99,7 +101,8 @@ class KeptCallResendingTest {
     @Test
     fun `a failed send is tried again as one not yet sent`() = runBlocking {
         var failed = false
-        val sending = KeptCallResending(
+        val sending = Resending(
+            what = "the kept calls",
             sentEverything = { sends += 1; if (!failed) { failed = true; error("the outbox could not be read") }; true },
             kept = kept,
             firstWaitMillis = 10,

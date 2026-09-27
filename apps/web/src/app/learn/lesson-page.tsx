@@ -13,7 +13,7 @@ import {
   LessonProblemCard,
 } from "@/features/learn/components/lesson-status";
 import { AppFrame } from "@/features/learn/ui-apps/app-frame";
-import { lessonPath, subjectPath } from "@/features/learn/lib/learn-paths";
+import { lessonPath, subjectPath } from "@/lib/learn-paths";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
 
 type LessonTopic = ReturnType<typeof useLessonTopic>;

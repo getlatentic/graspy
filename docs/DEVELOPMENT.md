@@ -61,6 +61,7 @@ cd apps/server && uv run mutmut run                       # finds tests that che
 - The server's unit tests never call a model. A stand-in model (`tests/stand_in.py`) answers through the real DSPy adapter, and each test reads back what every stage asked.
 - The e2e specs stub nothing: a real browser, server and model, and Google's sign-in is the Auth emulator. A full run takes about five minutes.
 - `tests/fixtures/slug-corpus.json` is read by both the server and the web app's tests. Both must spell a subject's slug the same way.
+- `apps/server/scripts/export_thread_contract.py` writes what a device sends of its tutor conversations and what the server returns into the web app's and the Android app's tests. After a change to `app/threads/wire.py`, run it; both apps' tests fail until they send and read the new shape.
 - `apps/web/src/lib/csp.test.ts` fails with the new hash when the inline script in `index.html` changes. Put that hash in `public/_headers`.
 - A surviving mutant in `src/app/security/` or the calculator is a missing test.
 - Check dependencies with `npm audit` from the repository root, which covers every app's npm packages and dev tooling in `package-lock.json`, and in `apps/server` with `uv run pip-audit --locked .` (what the Worker ships, `pylock.toml`) and `uv run pip-audit` (the development environment). The teacher's Rust crates, its llama.cpp build and its data script's `pdfplumber`, Android's Gradle dependencies, firebase-tools (run with `npx`, outside the lockfile) and the actions CI uses are not scanned.

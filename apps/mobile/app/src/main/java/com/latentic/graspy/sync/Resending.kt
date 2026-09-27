@@ -1,5 +1,6 @@
-package com.latentic.graspy.mcp
+package com.latentic.graspy.sync
 
+import com.latentic.graspy.mcp.bestEffort
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -11,16 +12,18 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 
 /**
- * Sends a learner's kept view calls while the app is started and there is a connection, as the web sends them
- * on start and on reconnect: at once when both hold, and again after a wait each time a call is kept. A call
+ * Sends what a learner did on the phone while the app is started and there is a connection, as the web sends it
+ * on start and on reconnect: at once when both hold, and again after a wait each time something is kept. What is
  * kept with the server failing stays on the phone, so it is tried again after waits that double up to
- * [longestWaitMillis], [tries] times in all. Past those it stays kept, never lost: the next call kept, the next
+ * [longestWaitMillis], [tries] times in all. Past those it stays kept, never lost: the next thing kept, the next
  * reconnect or start, and the next leave (UnsentWork) each send it.
  */
-class KeptCallResending(
-    /** Sends the kept calls; false while some are still on the phone. */
+class Resending(
+    /** What is sent, as the log names it. */
+    private val what: String,
+    /** Sends what is kept; false while some is still on the phone. */
     private val sentEverything: suspend () -> Boolean,
-    /** Tells each time a call is kept. */
+    /** Tells each time something is kept. */
     private val kept: Flow<Unit>,
     private val firstWaitMillis: Long = FIRST_WAIT_MILLIS,
     private val longestWaitMillis: Long = LONGEST_WAIT_MILLIS,
@@ -44,10 +47,10 @@ class KeptCallResending(
     private fun waits(firstWait: Long): Sequence<Long> =
         sequenceOf(firstWait) + generateSequence(firstWaitMillis) { (it * 2).coerceAtMost(longestWaitMillis) }.take(tries - 1)
 
-    private suspend fun sent(): Boolean = bestEffort(TAG, "Sending the kept view calls") { sentEverything() } ?: false
+    private suspend fun sent(): Boolean = bestEffort(TAG, "Sending $what") { sentEverything() } ?: false
 
     private companion object {
-        const val TAG = "GraspyViews"
+        const val TAG = "GraspySending"
         const val NO_WAIT = 0L
 
         /** A server failing for a moment is usually back within this. */

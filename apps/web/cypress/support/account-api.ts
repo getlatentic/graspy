@@ -171,3 +171,44 @@ export function learnerLearnt(
       ),
   );
 }
+
+/** The learner's conversations as another of their devices, the Android app, sends them. */
+export function sendLearnerThreads(
+  signIn: GoogleSignIn,
+  learner: Learner,
+  threads: object[],
+): void {
+  learnerSession(signIn, learner).then((token) =>
+    cy.request({
+      method: "POST",
+      url: `${API}/learner/threads`,
+      headers: bearer(token),
+      body: { threads },
+    }),
+  );
+}
+
+export interface KeptMessage {
+  id: string;
+  type: string;
+  content: string;
+}
+
+/** Every message of the learner's conversations, as another of their devices reads them. */
+export function learnerMessages(
+  signIn: GoogleSignIn,
+  learner: Learner,
+): Cypress.Chainable<KeptMessage[]> {
+  return learnerSession(signIn, learner).then((token) =>
+    cy
+      .request({
+        url: `${API}/learner/threads`,
+        qs: { since: 0 },
+        headers: bearer(token),
+      })
+      .its("body.threads")
+      .then((threads: { messages: KeptMessage[] }[]) =>
+        threads.flatMap((thread) => thread.messages),
+      ),
+  );
+}

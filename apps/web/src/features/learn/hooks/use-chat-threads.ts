@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  keepThreadFor,
   listThreads,
   saveThread,
   scopeKey,
   type ChatThread,
   type ThreadScope,
 } from "@/lib/chat-db";
+import { onThreadsTakenIn } from "@/lib/threads/thread-sync";
 
 const findThread = (threads: ChatThread[], scope: ThreadScope) => {
   const key = scopeKey(scope);
@@ -33,10 +35,13 @@ export function useChatThreads() {
   }, []);
 
   useEffect(() => {
-    listThreads()
-      .then(commit)
-      .catch((error) => console.error("Failed to load chats:", error))
-      .finally(() => setThreadsLoaded(true));
+    const read = () =>
+      listThreads()
+        .then(commit)
+        .catch((error) => console.error("Failed to load chats:", error));
+    void read().finally(() => setThreadsLoaded(true));
+    // Another device's conversations, as a sync takes them in.
+    return onThreadsTakenIn(() => void read());
   }, [commit]);
 
   const threadFor = useCallback(
@@ -49,9 +54,9 @@ export function useChatThreads() {
     async (scope: ThreadScope) => {
       const existing = findThread(threadsRef.current, scope);
       if (existing) return existing;
-      const thread = newThread(scope);
-      commit([...threadsRef.current, thread]);
-      await saveThread(thread);
+      const thread = await keepThreadFor(newThread(scope));
+      const others = threadsRef.current.filter((t) => t.id !== thread.id);
+      commit([...others, thread]);
       return thread;
     },
     [commit],

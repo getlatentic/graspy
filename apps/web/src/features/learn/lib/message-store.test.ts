@@ -100,7 +100,50 @@ describe("MessageStore with storage", () => {
 
     const merged = { followUps: ["q"], viewCalls };
     expect(store.messagesOf("a")[0].metadata).toEqual(merged);
-    expect(keeping.saveMetadata).toHaveBeenCalledWith(message.id, merged);
+    expect(keeping.saveMetadata).toHaveBeenCalledWith(
+      message.id,
+      merged,
+      expect.any(Number),
+    );
+  });
+
+  it("shows another device's messages once taken in, in order, keeping what changed here", async () => {
+    const card: ChatMessage = {
+      ...said("a", "Card"),
+      id: "card",
+      timestamp: 20,
+      sender: "ai",
+    };
+    const kept: Record<string, ChatMessage[]> = { a: [card] };
+    const store = new MessageStore(storage(kept));
+    await store.loadThread("a");
+    store.keepViewCalls("card", [
+      appCall("answer_practice", { chosenIndex: 1 }),
+    ]);
+    const failure = await store.addMessage(
+      { ...said("a", "Failed"), type: "error", sender: "ai" },
+      { persist: false },
+    );
+    kept.a = [
+      { ...said("a", "From the phone"), id: "m-2", timestamp: 10 },
+      { ...said("a", "Also"), id: "m-1", timestamp: 10 },
+      { ...card, metadata: { followUps: ["older"] } },
+    ];
+
+    await store.refreshThread("a");
+
+    const shown = store.messagesOf("a");
+    expect(shown.map((m) => m.id)).toEqual(["m-1", "m-2", "card", failure.id]);
+    expect(shown[2].metadata?.viewCalls).toHaveLength(1);
+  });
+
+  it("reads again only a conversation already shown", async () => {
+    const keeping = storage();
+    const load = vi.spyOn(keeping, "load");
+
+    await new MessageStore(keeping).refreshThread("never-opened");
+
+    expect(load).not.toHaveBeenCalled();
   });
 
   it("counts a conversation as read once loading settles, even on failure", async () => {

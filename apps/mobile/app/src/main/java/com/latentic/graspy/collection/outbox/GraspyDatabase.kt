@@ -30,7 +30,7 @@ import com.latentic.graspy.sync.lessonCacheMigrations
         LessonCopyEntity::class,
         KeptViewEntity::class,
     ],
-    version = 15,
+    version = 16,
     exportSchema = true,
 )
 abstract class GraspyDatabase : RoomDatabase() {

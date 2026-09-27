@@ -2,6 +2,7 @@ package com.latentic.graspy.account
 
 import android.app.Application
 import androidx.work.WorkManager
+import com.latentic.graspy.ask.keptThreads
 import com.latentic.graspy.auth.FirebaseSession
 import com.latentic.graspy.auth.GoogleSignIn
 import com.latentic.graspy.collection.outbox.AppGraph
@@ -51,6 +52,7 @@ class AccountGraph(private val context: Application) {
             outboxes = listOf(
                 RecordingOutbox(AppGraph.database(context).submissionDao(), AppGraph.submissionRepository(context)),
                 keptViewCalls(context),
+                keptThreads(context),
             ),
             sending = CoroutineScope(SupervisorJob() + Dispatchers.IO),
         )

@@ -10,6 +10,7 @@ import type {
   StoredLesson,
 } from "@/lib/learning-records";
 import { normalizeSubjectList } from "@/lib/slug";
+import { scopeKey, type ThreadScope } from "@/lib/thread-scope";
 
 // Each step reads its own version's stored shapes, whatever the app writes now.
 // A message step returns the same object when it has nothing to rewrite.
@@ -445,4 +446,23 @@ export function messageWithQuestionSet<M extends StoredMessage>(message: M): M {
     },
   };
   return { ...message, metadata: { ...message.metadata, card: set } };
+}
+
+const SCOPE_KINDS = new Set(["topic", "subject", "general", "earlier"]);
+// What a device shows as the conversation; a failure and a note of its own are not.
+const SENT_TYPES = new Set(["user", "system", "complete"]);
+
+/** A thread whose scope no version wrote is left as it is: found by no scope, sent nowhere. */
+export function threadForSending<T extends object>(thread: T): T {
+  const scope = (thread as { scope?: { kind?: unknown } | null }).scope;
+  const kind = scope?.kind;
+  if (typeof kind !== "string" || !SCOPE_KINDS.has(kind)) return thread;
+  return { ...thread, scopeKey: scopeKey(scope as ThreadScope), unsent: 1 };
+}
+
+export function messageForSending<T extends object>(message: T): T {
+  const { type } = message as { type?: unknown };
+  return typeof type === "string" && SENT_TYPES.has(type)
+    ? { ...message, unsent: 1 }
+    : message;
 }

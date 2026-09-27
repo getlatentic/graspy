@@ -62,6 +62,8 @@ from app.lessons.makers import TaskLessonMaking
 from app.lessons.making import LessonTarget
 from app.lessons.store import InMemoryLessonStore
 from app.lessons.tools import LessonAsk, give_lesson
+from app.local_d1 import LocalD1
+from app.threads.store import ThreadStore
 
 APPS = Path(__file__).resolve().parents[2]
 TARGET = APPS / "web/src/lib/a2a/reply-contract.json"
@@ -235,6 +237,7 @@ async def _learner() -> tuple[dict, dict]:
         lessons=InMemoryLessonStore(),
         making=TaskLessonMaking(_never_made),
         conversations=InMemoryConversationStore(),
+        threads=ThreadStore(LocalD1()),
     )
     caller = Caller(DEVICE, keeping)
     await keeping.lessons.keep("lesson-1", LESSON)

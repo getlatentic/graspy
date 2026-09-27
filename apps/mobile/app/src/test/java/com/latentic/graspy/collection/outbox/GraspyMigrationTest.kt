@@ -70,6 +70,30 @@ class GraspyMigrationTest {
         }
     }
 
+    @Test
+    fun `version 15 moves to 16 with its conversations marked to send to the learner's account`() = runBlocking {
+        createAt(15) { db ->
+            db.execSQL(
+                """INSERT INTO chat_threads (ownerId, id, scopeKey, scopeJson, agentContextId, preview, createdAt, updatedAt)
+                   VALUES ('uid/ada', 'thread-1', 'general\u0000plan-1', '{"kind":"general","planId":"plan-1"}', 'ctx', 'Hi?', 1, 2)""",
+            )
+            db.execSQL(
+                """INSERT INTO chat_messages (ownerId, id, threadId, type, content, timestamp, metadataJson)
+                   VALUES ('uid/ada', 'msg-1', 'thread-1', 'user', 'Hi?', 2, '{}')""",
+            )
+        }
+
+        val database = migrated()
+        try {
+            val dao = database.chatDao()
+            assertEquals(listOf("thread-1"), dao.unsentThreads("uid/ada").map { it.id })
+            val message = dao.unsentMessages("uid/ada").single()
+            assertEquals(2L to null, message.lastEdited to message.editedAt)
+        } finally {
+            database.close()
+        }
+    }
+
     private fun migrated(): GraspyDatabase = Room.databaseBuilder(context, GraspyDatabase::class.java, NAME)
         .addMigrations(*graspyMigrations)
         .allowMainThreadQueries()

@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import type { ChatLink } from "@/lib/chat-db";
 import { useI18n } from "@/lib/i18n-context";
+import { SUBJECTS_PATH } from "@/lib/learn-paths";
 import { changeSubjects } from "../lib/change-subjects";
 import { namesAfter } from "../lib/curriculum-edit";
 import type { ActionOf } from "./use-chat-plan-edits";
@@ -38,7 +39,7 @@ export function useSubjectChange({
         await applyCurriculum(await changeSubjects(curriculum, names));
         onDone(t("chat.subjectsChanged"), {
           label: t("chat.seeSubjects"),
-          to: "/app/learn/subjects",
+          to: SUBJECTS_PATH,
         });
       } catch (error) {
         console.error("Changing subjects from the chat failed:", error);
