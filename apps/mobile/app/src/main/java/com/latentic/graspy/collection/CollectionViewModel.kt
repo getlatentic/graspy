@@ -136,12 +136,21 @@ class CollectionViewModel(application: Application, private val ownerId: String)
     }
 
     private fun dropSilentTake() {
+        discardTake()
+        mutableState.update { it.copy(failureReason = com.latentic.graspy.practice.NO_SPEECH) }
+        dropped.update { it + 1 }
+    }
+
+    /**
+     * The take in progress ends unsent and the microphone is released, as the web's lesson cancels its take on
+     * closing: whoever speaks after the child left the lesson is never that lesson's answer. A take already
+     * ending is kept as the answer it became.
+     */
+    fun discardTake() {
+        if (!mutableState.value.isRecording) return
         recordingTimeout?.cancel()
         recorder.cancel()
-        mutableState.update {
-            it.copy(isRecording = false, failureReason = com.latentic.graspy.practice.NO_SPEECH)
-        }
-        dropped.update { it + 1 }
+        mutableState.update { it.copy(isRecording = false) }
     }
 
     /** Ending a take that has already ended does nothing: a tap and the take ending itself can cross. */

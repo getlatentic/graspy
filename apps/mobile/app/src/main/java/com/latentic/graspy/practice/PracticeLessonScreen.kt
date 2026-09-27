@@ -2,6 +2,7 @@ package com.latentic.graspy.practice
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -91,6 +92,7 @@ fun PracticeLessonScreen(
     }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { lessonViewModel.pause() }
     DisposableEffect(Unit) { onDispose { lessonViewModel.pause() } }
+    WhenLessonLeft(collectionViewModel::discardTake)
     LaunchedEffect(recording.isRecording) {
         val wasRecording = lessonViewModel.recording
         lessonViewModel.recording = recording.isRecording
@@ -266,6 +268,19 @@ fun PracticeLessonScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Runs [leave] once the lesson leaves the screen by any way (its back arrow, the phone's back, the app moving to
+ * another learner), never when turning the phone redraws it: the lesson and its take outlive a rotation.
+ */
+@Composable
+private fun WhenLessonLeft(leave: () -> Unit) {
+    val activity = LocalActivity.current
+    val latest by rememberUpdatedState(leave)
+    DisposableEffect(Unit) {
+        onDispose { if (activity?.isChangingConfigurations != true) latest() }
     }
 }
 
