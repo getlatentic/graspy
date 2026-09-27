@@ -1,7 +1,5 @@
 package com.latentic.graspy.mcp
 
-import android.view.MotionEvent
-import android.view.View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +15,6 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.serialization.json.JsonObject
 import org.junit.Assert.assertEquals
@@ -38,21 +35,11 @@ class AppViewScrollTest {
     @Test
     fun `a drag over a view not yet drawn scrolls the page, and the view feels none of it`() {
         val scroll = ScrollState(0)
-        var touches = 0
+        lateinit var framed: RecordingView
         compose.setContent {
             Column(Modifier.testTag(PAGE).verticalScroll(scroll)) {
-                AppView(card, Server, "unavailable", Modifier, waiting = {}, retry = {}, listening = true) { _, _, _, _ ->
-                    AndroidView(
-                        factory = { context ->
-                            View(context).apply {
-                                setOnTouchListener { _, event ->
-                                    if (event.actionMasked != MotionEvent.ACTION_CANCEL) touches += 1
-                                    true
-                                }
-                            }
-                        },
-                        modifier = Modifier.testTag(VIEW).fillMaxWidth().height(400.dp),
-                    )
+                AppView(card, Server, "unavailable", Modifier, waiting = {}, retry = {}, listening = true) { _, reachable, _, _, _ ->
+                    FrameView({ RecordingView(it).also { view -> framed = view } }, reachable, Modifier.testTag(VIEW).fillMaxWidth().height(400.dp))
                 }
                 Spacer(Modifier.height(2_000.dp))
             }
@@ -63,28 +50,16 @@ class AppViewScrollTest {
         compose.waitForIdle()
 
         assertTrue("the page did not scroll", scroll.value > 0)
-        assertEquals(0, touches)
+        assertEquals(emptyList<Int>(), framed.touches)
     }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun `a mouse moved and scrolled over a view not yet drawn reaches none of it`() {
-        var events = 0
+    fun `a mouse moved, scrolled and clicked over a view not yet drawn reaches none of it`() {
+        lateinit var framed: RecordingView
         compose.setContent {
-            AppView(card, Server, "unavailable", Modifier, waiting = {}, retry = {}, listening = true) { _, _, _, _ ->
-                AndroidView(
-                    factory = { context ->
-                        View(context).apply {
-                            setOnTouchListener { _, _ -> events += 1; true }
-                            // Compose hands a mouse button's press and release to the view past any pointer modifier.
-                            setOnGenericMotionListener { _, e ->
-                                if (e.actionMasked !in BUTTON) events += 1
-                                true
-                            }
-                        }
-                    },
-                    modifier = Modifier.testTag(VIEW).fillMaxWidth().height(400.dp),
-                )
+            AppView(card, Server, "unavailable", Modifier, waiting = {}, retry = {}, listening = true) { _, reachable, _, _, _ ->
+                FrameView({ RecordingView(it).also { view -> framed = view } }, reachable, Modifier.testTag(VIEW).fillMaxWidth().height(400.dp))
             }
         }
         compose.waitForIdle()
@@ -97,7 +72,7 @@ class AppViewScrollTest {
         }
         compose.waitForIdle()
 
-        assertEquals(0, events)
+        assertEquals(emptyList<Int>(), framed.touches + framed.generic + framed.hovers)
     }
 
     private object Server : ViewServer {
@@ -113,6 +88,5 @@ class AppViewScrollTest {
     private companion object {
         const val PAGE = "page"
         const val VIEW = "view"
-        val BUTTON = setOf(MotionEvent.ACTION_BUTTON_PRESS, MotionEvent.ACTION_BUTTON_RELEASE)
     }
 }
