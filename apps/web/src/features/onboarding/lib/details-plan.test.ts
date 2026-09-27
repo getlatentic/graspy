@@ -30,7 +30,23 @@ const server = {
   sendPlan: vi.fn<(plan: CurriculumData) => Promise<CurriculumData>>(),
   joinPlan: vi.fn<(plan: CurriculumData) => Promise<CurriculumData>>(),
 };
-let signedIn: { uid: string; learner: { id: string } | null } | null = null;
+type Signed = {
+  uid: string;
+  learner: { id: string; name: string } | null;
+  deviceJoins: boolean;
+};
+const ADA: Signed = {
+  uid: "uid-1",
+  learner: { id: "ada", name: "Ada" },
+  deviceJoins: false,
+};
+let signedIn: Signed | null = null;
+let turn = 0;
+/** The device learns as someone else, as a switch or a sign-out makes it. */
+function learnAs(account: Signed | null): void {
+  signedIn = account;
+  turn += 1;
+}
 
 async function device() {
   vi.resetModules();
@@ -38,16 +54,39 @@ async function device() {
   vi.doMock("@/lib/plan-level", () => ({
     withRecoveredLevel: async (plan: CurriculumData) => plan,
   }));
-  vi.doMock("@/lib/account/account-store", () => ({
+  vi.doMock("@/lib/account/account-store", async (original) => ({
+    ...(await original<typeof import("@/lib/account/account-store")>()),
     currentAccount: () => signedIn,
-    learnerKeyOf: (account: { uid: string; learner: { id: string } | null }) =>
-      account.learner && `${account.uid}/${account.learner.id}`,
+    learnerTurn: () => turn,
   }));
   return {
     db: await import("@/lib/curriculum-db"),
     profile: await import("@/lib/user-storage"),
+    sync: await import("@/lib/plan-sync"),
     ...(await import("./details-plan")),
   };
+}
+
+/** The account's plan, for the class the learner was in before. */
+function accountPlan(updatedAt = 2): CurriculumData {
+  return {
+    id: "current",
+    planId: "plan-old",
+    country: "Nigeria",
+    language: "English",
+    gradeLevel: primary.gradeLevel,
+    subjects: [mathematics],
+    topics: { mathematics: ["Counting"] },
+    createdAt: 1,
+    updatedAt,
+  };
+}
+
+/** A request the test answers when it chooses. */
+function answeredLater<T>() {
+  let answer!: (value: T) => void;
+  const answered = new Promise<T>((resolve) => (answer = resolve));
+  return { answered, answer };
 }
 
 function memoryStorage(): Storage {
@@ -65,7 +104,9 @@ function memoryStorage(): Storage {
 }
 
 beforeEach(() => {
-  vi.stubGlobal("localStorage", memoryStorage());
+  const storage = memoryStorage();
+  vi.stubGlobal("localStorage", storage);
+  vi.stubGlobal("window", { localStorage: storage });
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("IDBKeyRange", IDBKeyRange);
 });
@@ -126,20 +167,9 @@ describe("keepDetails", () => {
   });
 
   it("has a signed-in device with none saved take the account's plan, not replace it", async () => {
-    signedIn = { uid: "uid-1", learner: { id: "ada" } };
+    signedIn = ADA;
     const { keepDetails, profile } = await device();
-    const account: CurriculumData = {
-      id: "current",
-      planId: "plan-old",
-      country: "Nigeria",
-      language: "English",
-      gradeLevel: primary.gradeLevel,
-      subjects: [mathematics],
-      topics: { mathematics: ["Counting"] },
-      createdAt: 1,
-      updatedAt: 2,
-    };
-    server.accountPlan.mockResolvedValue(account);
+    server.accountPlan.mockResolvedValue(accountPlan());
 
     const plan = await keepDetails(nursery, true);
 
@@ -152,7 +182,7 @@ describe("keepDetails", () => {
   });
 
   it("keeps no plan for a signed-in device that cannot reach the account", async () => {
-    signedIn = { uid: "uid-1", learner: { id: "ada" } };
+    signedIn = ADA;
     const { db, keepDetails } = await device();
     server.accountPlan.mockRejectedValue(new Error("offline"));
 
@@ -161,7 +191,7 @@ describe("keepDetails", () => {
   });
 
   it("keeps a plan of its own for a signed-in learner whose account has none", async () => {
-    signedIn = { uid: "uid-1", learner: { id: "ada" } };
+    signedIn = ADA;
     const { db, keepDetails } = await device();
     server.accountPlan.mockResolvedValue(null);
 
@@ -172,7 +202,7 @@ describe("keepDetails", () => {
   });
 
   it("keeps no plan when the account does not answer in time", async () => {
-    signedIn = { uid: "uid-1", learner: { id: "ada" } };
+    signedIn = ADA;
     const { db, keepDetails, profile } = await device();
     server.accountPlan.mockReturnValue(new Promise(() => {}));
     const waited: number[] = [];
@@ -188,11 +218,87 @@ describe("keepDetails", () => {
   });
 
   it("keeps no plan for an account with no learner chosen", async () => {
-    signedIn = { uid: "uid-1", learner: null };
+    signedIn = { ...ADA, learner: null, deviceJoins: true };
     const { db, keepDetails } = await device();
 
     expect(await keepDetails(nursery, true)).toBeNull();
     expect(await db.getCurriculum()).toBeNull();
     expect(server.accountPlan).not.toHaveBeenCalled();
+  });
+});
+
+describe("keepDetails when the account answers after the wait", () => {
+  const noWait = async () => undefined;
+
+  it("has the plan the account answers with take the new details, and sends them next", async () => {
+    signedIn = ADA;
+    const { db, keepDetails, profile, sync } = await device();
+    const late = answeredLater<CurriculumData>();
+    server.accountPlan.mockReturnValue(late.answered);
+    server.sendPlan.mockImplementation(async (plan) => plan);
+
+    expect(await keepDetails(nursery, true, noWait)).toBeNull();
+    late.answer(accountPlan());
+    await sync.syncPlan();
+
+    expect(profile.getUserProfile()).toMatchObject({
+      level: "nursery-1",
+      gradeLevel: nursery.gradeLevel,
+    });
+    expect(await db.getCurriculum()).toMatchObject({
+      planId: "plan-old",
+      subjects: [mathematics],
+      level: "nursery-1",
+      gradeLevel: nursery.gradeLevel,
+    });
+    expect(server.sendPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ planId: "plan-old", level: "nursery-1" }),
+      expect.any(Function),
+    );
+  });
+
+  it("leaves a plan the account holds that is newer than the details as it is", async () => {
+    signedIn = ADA;
+    const { db, keepDetails, sync } = await device();
+    const late = answeredLater<CurriculumData>();
+    server.accountPlan.mockReturnValue(late.answered);
+
+    await keepDetails(nursery, true, noWait);
+    late.answer(accountPlan(Date.now() + 60_000));
+    await sync.syncPlan();
+
+    expect(await db.getCurriculum()).toMatchObject({
+      gradeLevel: primary.gradeLevel,
+    });
+    expect(server.sendPlan).not.toHaveBeenCalled();
+  });
+
+  it("gives the details to no other learner whose plan the device takes", async () => {
+    signedIn = ADA;
+    const { db, keepDetails, sync } = await device();
+    server.accountPlan.mockReturnValue(new Promise(() => {}));
+    await keepDetails(nursery, true, noWait);
+
+    learnAs({ ...ADA, learner: { id: "grace", name: "Grace" } });
+    server.accountPlan.mockResolvedValue(accountPlan());
+    await sync.syncPlan();
+
+    expect(await db.getCurriculum()).toMatchObject({
+      gradeLevel: primary.gradeLevel,
+    });
+  });
+});
+
+describe("keepDetails once the device learns as someone else during the wait", () => {
+  it("writes none of the details onto the device, which now holds the next learner", async () => {
+    signedIn = ADA;
+    const { keepDetails, profile } = await device();
+    server.accountPlan.mockReturnValue(new Promise(() => {}));
+
+    await expect(
+      keepDetails(nursery, true, async () => learnAs(null)),
+    ).rejects.toMatchObject({ name: "LearnerChanged" });
+
+    expect(profile.getUserProfile()).toBeNull();
   });
 });

@@ -8,10 +8,20 @@ type Signed = { uid: string; learner: { id: string } | null };
 const ADA: Signed = { uid: "uid-1", learner: { id: "ada" } };
 const GRACE: Signed = { uid: "uid-1", learner: { id: "grace" } };
 let signedIn: Signed | null = ADA;
+// A turn ends each time the device learns as someone else, as account-store's does.
+let turnOf: Signed | null = ADA;
+let turn = 0;
 vi.mock("@/lib/account/account-store", () => ({
   currentAccount: () => signedIn,
   learnerKeyOf: (account: Signed) =>
     account.learner ? `${account.uid}/${account.learner.id}` : null,
+  learnerTurn: () => {
+    if (signedIn !== turnOf) {
+      turnOf = signedIn;
+      turn += 1;
+    }
+    return turn;
+  },
 }));
 
 // The server as the device meets it: what it was sent, and the pages it answers with.

@@ -1,6 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/client";
 import { committed, openDB, OUTBOX_STORE, promisify } from "@/lib/idb";
-import { callAppTool, pinLearner, reachServer, type ServerPin } from "./server";
+import { pinLearner } from "@/lib/learner-pin";
+import { callAppTool, reachServer, type ServerPin } from "./server";
 import { refusesTheCall } from "./refusal";
 
 // A view's tools/call the server did not take is kept and sent in order later. These calls
@@ -108,21 +109,21 @@ async function sendAll(pin: ServerPin): Promise<number> {
 }
 
 // One run at a time for a learner. A run pinned to a learner the device has left holds none
-// back for the next, however long the call it is waiting on hangs.
-let sending: { learner: string; run: Promise<number> } | null = null;
+// back for the next, however long the call it is waiting on hangs, nor for the same learner
+// back on the device.
+let sending: { pin: ServerPin; run: Promise<number> } | null = null;
 
 function started(pin: ServerPin): Promise<number> {
   const run: Promise<number> = sendAll(pin).finally(() => {
     if (sending?.run === run) sending = null;
   });
-  sending = { learner: pin.learner, run };
+  sending = { pin, run };
   return run;
 }
 
 export function sendKept(): Promise<number> {
-  const pin = pinLearner();
-  if (sending?.learner === pin.learner) return sending.run;
-  return started(pin);
+  if (sending?.pin.holds()) return sending.run;
+  return started(pinLearner());
 }
 
 /** Sends what was kept; false while some of it is still on the device. */

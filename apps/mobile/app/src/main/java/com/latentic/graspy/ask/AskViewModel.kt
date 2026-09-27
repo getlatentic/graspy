@@ -10,6 +10,7 @@ import com.latentic.graspy.localization.ChatCopy
 import com.latentic.graspy.mcp.API_ORIGIN
 import com.latentic.graspy.mcp.bestEffort
 import com.latentic.graspy.sync.Resending
+import com.latentic.graspy.sync.appStarted
 import com.latentic.graspy.sync.networkReach
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CancellationException
@@ -74,7 +75,7 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
     val turnState: StateFlow<TurnState> = turn.asStateFlow()
 
     init {
-        viewModelScope.launch { Resending("the conversations", threadSync::sync, store.kept).whileOnline(networkReach(application)) }
+        viewModelScope.launch { Resending("the conversations", threadSync::sync, store.kept).whileSeen(networkReach(application), appStarted()) }
     }
 
     /** Takes in what the learner said on their other devices since the phone last read. */

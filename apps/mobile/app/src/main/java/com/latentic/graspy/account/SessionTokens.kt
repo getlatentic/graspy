@@ -63,9 +63,18 @@ class SessionTokens(
             signedOutElsewhere(account.uid)
             throw SessionRefusal("Google no longer holds this sign-in")
         }
-        follow(account.learner, issued.learner)
+        if (stillLearnsAs(account)) follow(account.learner, issued.learner)
         if (accounts.account.value?.uid == account.uid) keep(account.uid, issued)
         return issued.token
+    }
+
+    /**
+     * An answer speaks of the account and learner its exchange began for: one signed out, or switched from, while
+     * it ran leaves whoever the device learns as since untouched.
+     */
+    private fun stillLearnsAs(account: Account): Boolean {
+        val now = accounts.account.value ?: return false
+        return now.uid == account.uid && now.learner?.id == account.learner?.id
     }
 
     /** Refused once, the ID token is made again: the server's clock may count the cached one expired. */

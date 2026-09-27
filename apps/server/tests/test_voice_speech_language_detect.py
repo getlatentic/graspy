@@ -123,10 +123,63 @@ async def test_a_whisper_that_does_not_answer_in_time_leaves_the_language_unknow
     monkeypatch.setattr(language_detect, "WHISPER_TIMEOUT_SECONDS", 0.01)
     ai = SilentWhisper()
 
-    evidence = await language_detect.detect_spoken_language(FakeEnv(ai), b"wav")
+    detection = language_detect.detect_spoken_language(FakeEnv(ai), b"wav")
+    # A regression that stops honouring the limit fails here instead of hanging the suite.
+    evidence = await asyncio.wait_for(detection, timeout=5)
 
-    assert not evidence.known
-    assert evidence.transcription_language == "en"
+    assert not evidence.known and not evidence.heard
     assert evidence.whisper_error.startswith("TimeoutError")
     assert evidence.to_json()["whisper_error"] == evidence.whisper_error
     assert ai.asked == [language_detect.WHISPER_MODEL]
+
+
+class BrokenWhisper(FakeAi):
+    """Whisper whose binding throws as it is called, before any awaitable exists."""
+
+    def __init__(self):
+        super().__init__(None, "en")
+
+    def run(self, model, request):
+        raise RuntimeError("AI binding unavailable")
+
+
+class EmptyWhisper(FakeAi):
+    """Whisper that answers, but with no transcription at all."""
+
+    def __init__(self):
+        super().__init__(None, "en")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("ai", "error"),
+    [
+        (BrokenWhisper(), "RuntimeError: AI binding unavailable"),
+        (EmptyWhisper(), "Whisper returned no transcription"),
+    ],
+)
+async def test_a_whisper_that_fails_or_returns_nothing_leaves_the_language_unheard(
+    ai, error
+):
+    from app.voice.speech.language_detect import detect_spoken_language
+
+    evidence = await detect_spoken_language(FakeEnv(ai), b"wav")
+
+    assert not evidence.known and not evidence.heard
+    assert evidence.whisper_error == error
+    assert evidence.classifier_answer is None
+
+
+def test_a_failed_detection_routes_by_the_client_language_pair():
+    from app.voice.speech.language_detect import LanguageEvidence, transcription_route
+
+    unheard = LanguageEvidence(
+        None, 0.0, "", None, "unknown", whisper_error="TimeoutError: "
+    )
+    unknown = LanguageEvidence("ru", 0.21, "…", None, "unknown")
+    pidgin = LanguageEvidence("en", 0.7, "1 x 1 na 1", "pcm", "pcm")
+
+    assert transcription_route(unheard, "yo") == ("yo", "yo")
+    assert transcription_route(None, "pcm") == ("pcm", "pcm")
+    assert transcription_route(unknown, "yo") == ("en", None)
+    assert transcription_route(pidgin, "yo") == ("pcm", "pcm")

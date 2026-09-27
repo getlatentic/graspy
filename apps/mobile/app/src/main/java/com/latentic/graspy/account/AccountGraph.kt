@@ -71,9 +71,7 @@ class AccountGraph(private val context: Application) {
         )
     }
 
-    val directory by lazy {
-        LearnerDirectory(AppGraph.accountApi(context), accounts, profiles, wipe::leaveLearner) { uid -> entry.signOut(of = uid) }
-    }
+    val directory by lazy { accountDirectory(AppGraph.accountApi(context), accounts, profiles, { wipe }, { entry }) }
 
     val entry by lazy {
         AccountEntry(context, GoogleSignIn(context, firebase), firebase, accounts, sessions, sessionApi, deviceIds, wipe)
@@ -98,4 +96,22 @@ fun accountSessions(
     exchange = exchange,
     learnerGone = { wipe().leaveLearner() },
     signedOutElsewhere = { uid -> entry().signOut(of = uid) },
+)
+
+/**
+ * The account's learners, wired to what removing one and deleting the account ask for: the learner in use is
+ * left, and the account deleted is signed out. Only that account: one signed in since the delete began stays.
+ */
+fun accountDirectory(
+    api: AccountApi,
+    accounts: AccountStore,
+    profiles: LearnerProfileStore,
+    wipe: () -> DeviceWipe,
+    entry: () -> AccountEntry,
+) = LearnerDirectory(
+    api = api,
+    accounts = accounts,
+    profiles = profiles,
+    leaveLearner = { wipe().leaveLearner() },
+    signOut = { uid -> entry().signOut(of = uid) },
 )

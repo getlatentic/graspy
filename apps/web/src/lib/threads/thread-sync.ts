@@ -1,4 +1,8 @@
-import { currentAccount, learnerKeyOf } from "@/lib/account/account-store";
+import {
+  currentAccount,
+  learnerKeyOf,
+  learnerTurn,
+} from "@/lib/account/account-store";
 import { pinTo, type LearnerPin } from "@/lib/learner-pin";
 import { markSent, takeIn, unsentThreads, type Unsent } from "./thread-store";
 import { sentMessage, sentThread, type WireThread } from "./thread-wire";
@@ -150,15 +154,12 @@ export function onThreadsTakenIn(
 }
 
 // A sync pinned to a learner the device has left holds none back for the next learner.
-let last: { learner: string | null; done: Promise<unknown> } = {
-  learner: null,
-  done: Promise.resolve(),
-};
+let last: { pin: Pin; done: Promise<unknown> } | null = null;
 
 function inTurn<T>(pin: Pin, run: () => Promise<T>): Promise<T> {
-  const before = last.learner === pin.learner ? last.done : Promise.resolve();
+  const before = last?.pin.holds() ? last.done : Promise.resolve();
   const running = before.then(run);
-  last = { learner: pin.learner, done: running.catch(() => undefined) };
+  last = { pin, done: running.catch(() => undefined) };
   return running;
 }
 
@@ -173,7 +174,7 @@ async function syncOnce(learner: string, pin: Pin): Promise<void> {
  * runs at a time for a learner, and it rejects with LearnerChanged once the device learns as
  * someone else. */
 export function syncThreads(): Promise<void> {
-  const pin = pinTo(learnerInUse);
+  const pin = pinTo(learnerInUse(), learnerTurn);
   const { learner } = pin;
   if (!learner) return Promise.resolve();
   return inTurn(pin, () => syncOnce(learner, pin));
@@ -181,7 +182,7 @@ export function syncThreads(): Promise<void> {
 
 /** Sends what is unsent; false while some of it is still on the device only. */
 export async function sentEveryThread(): Promise<boolean> {
-  const pin = pinTo(learnerInUse);
+  const pin = pinTo(learnerInUse(), learnerTurn);
   const { learner } = pin;
   if (!learner) return true;
   await inTurn(pin, () => sendAll(learner, pin)).catch((error: unknown) =>

@@ -331,7 +331,7 @@ class DeviceWipeTest {
             accounts.set(Account("uid-2", "other@example.com", learner = null, deviceJoins = true))
             firebase.uid = "uid-2"
         }
-        val directory = LearnerDirectory(api, accounts, profiles, wipe::leaveLearner) { uid -> entry.signOut(of = uid) }
+        val directory = accountDirectory(api, accounts, profiles, { wipe }, { entry })
 
         directory.deleteAccount()
 

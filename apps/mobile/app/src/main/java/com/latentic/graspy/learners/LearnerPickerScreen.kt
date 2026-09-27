@@ -59,7 +59,7 @@ fun LearnerPickerScreen(
         }
         if (learners != null) {
             ChoiceStatus(copy, state, { viewModel.anyway(onChosen) }, viewModel::cancel)
-            AccountLine(copy, account, viewModel::leaveForAnotherAccount)
+            AccountLine(copy, account, !state.busy, viewModel::leaveForAnotherAccount)
         }
     }
 }
@@ -138,6 +138,7 @@ private fun LoadFailed(copy: AccountCopy, onRetry: () -> Unit) {
 @Composable
 internal fun ChoiceStatus(copy: AccountCopy, state: PickerState, onAnyway: () -> Unit, onCancel: () -> Unit) {
     if (state.busy) {
+        if (state.leaving) return
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(space(2))) {
             CircularProgressIndicator(color = GraspyColor.Accent, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
             Text(copy.opening, color = GraspyColor.Muted, style = MaterialTheme.typography.bodyMedium)
@@ -154,7 +155,7 @@ internal fun ChoiceStatus(copy: AccountCopy, state: PickerState, onAnyway: () ->
 
 /** The account signed in; before a learner is chosen, a wrong one can be left without losing anything. */
 @Composable
-private fun AccountLine(copy: AccountCopy, account: Account, onOtherAccount: () -> Unit) {
+private fun AccountLine(copy: AccountCopy, account: Account, enabled: Boolean, onOtherAccount: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(space(4))) {
         HorizontalDivider(color = GraspyColor.Line)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(space(1.5)), verticalArrangement = Arrangement.spacedBy(space(1))) {
@@ -165,7 +166,7 @@ private fun AccountLine(copy: AccountCopy, account: Account, onOtherAccount: () 
                     copy.otherAccount,
                     color = GraspyColor.AccentInk,
                     style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.clickable(onClick = tapping(onOtherAccount)),
+                    modifier = Modifier.clickable(enabled = enabled, onClick = tapping(onOtherAccount)),
                 )
             }
         }

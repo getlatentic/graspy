@@ -71,7 +71,7 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
 
 3. **First staging deploy**, from `main` once this is merged: `scripts/deploy.sh staging`. It creates both Workers and applies every migration to the empty `graspy-staging`.
 
-4. **GitHub environments.** The Deploy workflow reads its secrets from the environments `staging` and `production`, never from the repository. Both deploy `main` only, and production waits for approval from `tosinamuda`. Until `staging` exists the workflow skips; it fails for production until production has its reviewer and branch rule. Make both, then check them:
+4. **GitHub environments.** The Deploy workflow reads its secrets from the environments `staging` and `production`, never from the repository. Both deploy `main` only, and production waits for approval from `tosinamuda`. Until `staging` exists the workflow skips; it fails for production until production has its reviewer and branch rule. It also fails, for either, when GitHub's API gives any answer but the environment or a 404, and when a repository or organization secret has a deploy secret's name, since the deploy job would read it wherever the environment lacks that secret. `scripts/check-deploy-environment.sh` makes these checks. Make both, then check them:
 
    ```bash
    repo=getlatentic/graspy

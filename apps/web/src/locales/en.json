@@ -284,7 +284,8 @@
     "askTitle": "Make a new plan for these details?",
     "askBody": "A new plan replaces the one you have.",
     "newPlan": "Make a new plan",
-    "keepPlan": "Keep my plan"
+    "keepPlan": "Keep my plan",
+    "saveFailed": "Your details couldn't be saved. Try again."
   },
   "learners": {
     "title": "Who's learning?",

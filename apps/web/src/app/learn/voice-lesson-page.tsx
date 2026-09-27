@@ -9,10 +9,11 @@ import { LessonStage } from "@/features/voice/components/lesson-stage";
 import { VoiceNote } from "@/features/voice/components/voice-note";
 import {
   useVoiceLearner,
+  useVoiceOnly,
   type VoiceLearner,
 } from "@/features/voice/hooks/use-voice-learner";
 import { useVoiceLesson } from "@/features/voice/hooks/use-voice-lesson";
-import { VOICE_PAGE } from "@/features/voice/lib/voice-paths";
+import { voiceLessonsPath } from "@/features/voice/lib/voice-paths";
 
 function Lesson({ learner, plan }: { learner: VoiceLearner; plan?: string }) {
   const { t } = useI18n();
@@ -66,16 +67,18 @@ function Lesson({ learner, plan }: { learner: VoiceLearner; plan?: string }) {
   );
 }
 
-/** One voice lesson: the one the teacher gives next, or the one the learner chose. */
+/** One voice lesson: the one the teacher gives next, or the one the learner chose. It leads
+ * back to the voice lessons, wherever the learner's class has them. */
 export default function VoiceLessonPage() {
   const { t } = useI18n();
   const learner = useVoiceLearner();
+  const voiceOnly = useVoiceOnly() === true;
   const plan = useSearchParams()[0].get("plan") ?? undefined;
   if (!learner) return <Navigate to="/app/learn" replace />;
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <Link
-        to={VOICE_PAGE}
+        to={voiceLessonsPath(voiceOnly)}
         className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-accent-ink hover:underline"
       >
         <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />

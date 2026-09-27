@@ -82,6 +82,13 @@ class UnsentWorkTest {
     }
 
     @Test
+    fun `the voice answers are watched no longer than the leave waits for them`() {
+        val unwatched = RecordingOutbox(database.submissionDao(), SubmissionRepository(database.submissionDao(), SubmissionScheduler {}))
+
+        assertEquals(UnsentWork({ online }, listOf(unwatched), sending).patienceMillis, unwatched.patienceMillis)
+    }
+
+    @Test
     fun `a voice answer marked or refused, waiting only to be shown, has reached graspy`() = runBlocking {
         database.submissionDao().insert(answer("marked", ADA_KEY, SubmissionStatus.COMPLETED))
         database.submissionDao().insert(answer("refused", ADA_KEY, SubmissionStatus.FAILED))

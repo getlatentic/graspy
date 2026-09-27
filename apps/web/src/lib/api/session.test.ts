@@ -235,7 +235,8 @@ describe("fetchWithSession", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("sends no retry once the session has moved on during the first try", async () => {
+  it("neither retries nor ends the next learner's session once the session moved on during the first try", async () => {
+    const stored = stubStorage();
     let same = true;
     fetchMock
       .mockResolvedValueOnce(minted("stale"))
@@ -249,7 +250,8 @@ describe("fetchWithSession", () => {
     await expect(
       fetchWithSession("/api/voice/samples", {}, () => same),
     ).rejects.toThrow("no longer the one");
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(stored.get("graspy.session")).toContain("stale");
   });
 
   it("passes other failures straight back", async () => {
