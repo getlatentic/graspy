@@ -95,14 +95,14 @@ describe("switching to another learner", () => {
     signedIn = { uid: "uid-1", learner: ADA, deviceJoins: false };
   });
 
-  it("sends what is unsent, wipes the device, then takes the learner's plan", async () => {
+  it("sends what is unsent, leaves the learner so what is still in flight for them stops, wipes the device, then takes the next learner's plan", async () => {
     await chooseLearner(GRACE);
 
     expect(api.learnerSession).toHaveBeenCalledWith(GRACE.id);
     expect(steps).toEqual([
       "sync",
-      "wipe",
       "leave",
+      "wipe",
       `keep ${GRACE.id}`,
       "sync",
     ]);
@@ -151,7 +151,7 @@ describe("switching to another learner", () => {
     );
 
     expect(sentEverything).not.toHaveBeenCalled();
-    expect(steps).toEqual(["wipe", "leave", `keep ${GRACE.id}`, "sync"]);
+    expect(steps).toEqual(["leave", "wipe", `keep ${GRACE.id}`, "sync"]);
   });
 
   it("wipes nothing when graspy cannot issue the learner's session", async () => {
@@ -191,7 +191,7 @@ describe("a choice after the device's learner was removed", () => {
 
     await chooseLearner(GRACE);
 
-    expect(steps).toEqual(["wipe", "leave", `keep ${GRACE.id}`, "sync"]);
+    expect(steps).toEqual(["leave", "wipe", `keep ${GRACE.id}`, "sync"]);
   });
 });
 
@@ -230,7 +230,7 @@ describe("forgetLearner", () => {
     await expect(forgetLearner(ADA.id)).resolves.toBe(true);
 
     expect(api.removeLearner).toHaveBeenCalledWith(ADA.id);
-    expect(steps).toEqual(["wipe", "leave"]);
+    expect(steps).toEqual(["leave", "wipe"]);
     expect(wipeOnNextStart).toHaveBeenCalledWith("learner");
   });
 

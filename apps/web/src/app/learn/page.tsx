@@ -19,6 +19,7 @@ import { SubjectTiles } from "@/features/learn/components/subject-tiles";
 import { TrySomethingNew } from "@/features/learn/components/try-something-new";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
 import { VoiceCard } from "@/features/voice/components/voice-card";
+import { VoiceLessons } from "@/features/voice/components/voice-lessons";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 import { homeParts } from "@/features/learn/lib/home-parts";
 
@@ -39,6 +40,7 @@ export default function HomePage() {
   );
 
   if (!userProfile) return null;
+  if (parts.has("lessons")) return <VoiceLessons />;
 
   const errorAlert = error ? (
     <PlanErrorCard

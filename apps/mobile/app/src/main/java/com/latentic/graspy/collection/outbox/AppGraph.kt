@@ -79,6 +79,8 @@ object AppGraph {
         dao = database(context).submissionDao(),
         scheduler = WorkManagerSubmissionScheduler(WorkManager.getInstance(context)),
     )
+
+    fun submissionRetry(context: Context): SubmissionRetry = WorkManagerSubmissionScheduler(WorkManager.getInstance(context))
 }
 
 internal fun retrofit(calls: Call.Factory): Retrofit = Retrofit.Builder()

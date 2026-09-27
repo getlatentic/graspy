@@ -75,7 +75,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       # The real file stays out of git; the unit tests never reach Firebase.
       - run: cp google-services.stand-in.json app/google-services.json
-      - run: ./gradlew testDebugUnitTest lintDebug
+      - run: ./gradlew testDebugUnitTest lintDebug assembleStaging
       - if: failure()
         uses: actions/upload-artifact@v7
         with:

@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo"
 CLASSIFIER_MODEL = "@cf/meta/llama-3.2-3b-instruct"
+# Whisper hears a note of up to two minutes in a few seconds; 20 s is ample and still keeps a turn's
+# marking (detection, 90 s transcription, 6 s classifier, 30 s tutor) well inside its 3-minute lease.
+WHISPER_TIMEOUT_SECONDS = 20
 CLASSIFIER_TIMEOUT_SECONDS = 6
 CONFIDENT_ENGLISH = 0.6
 PIDGIN_MARKERS = frozenset(
@@ -79,6 +82,7 @@ class LanguageEvidence:
     classifier_answer: str | None
     language: str
     classifier_error: str | None = None
+    whisper_error: str | None = None
 
     @property
     def known(self) -> bool:
@@ -96,6 +100,7 @@ class LanguageEvidence:
             "whisper_text": self.whisper_text[:500],
             "classifier_answer": self.classifier_answer,
             "classifier_error": self.classifier_error,
+            "whisper_error": self.whisper_error,
             "language": self.language,
         }
 
@@ -154,43 +159,51 @@ def _to_py(value):
     return value.to_py() if hasattr(value, "to_py") else value
 
 
-async def detect_spoken_language(env, audio: bytes) -> LanguageEvidence:
+async def _bounded(call, seconds: float, what: str):
+    """The model's answer, or None and the error it failed with; a failure is evidence, not a crash."""
+    try:
+        return _to_py(await asyncio.wait_for(call, timeout=seconds)), None
+    except Exception as failure:
+        logger.warning("%s failed", what, exc_info=True)
+        return None, f"{type(failure).__name__}: {failure}"[:200]
+
+
+async def _heard(env, audio: bytes):
     import base64
 
-    whisper = _to_py(
-        await env.AI.run(WHISPER_MODEL, {"audio": base64.b64encode(audio).decode()})
+    request = {"audio": base64.b64encode(audio).decode()}
+    return await _bounded(
+        env.AI.run(WHISPER_MODEL, request), WHISPER_TIMEOUT_SECONDS, "Whisper"
     )
+
+
+async def _classified(env, language: str, probability: float, text: str):
+    messages = [
+        {"role": "system", "content": CLASSIFIER_PROMPT},
+        {
+            "role": "user",
+            "content": f"First-pass detector said: {language} "
+            f"{probability:.2f}.\nTranscript: {text[:600]}",
+        },
+    ]
+    reply, error = await _bounded(
+        env.AI.run(CLASSIFIER_MODEL, {"messages": messages, "max_tokens": 4}),
+        CLASSIFIER_TIMEOUT_SECONDS,
+        "The language classifier",
+    )
+    return _classifier_text(reply), error
+
+
+async def detect_spoken_language(env, audio: bytes) -> LanguageEvidence:
+    """What each model heard; a model that fails or runs out of time leaves its part unknown."""
+    whisper, whisper_error = await _heard(env, audio)
     info = (whisper or {}).get("transcription_info") or {}
     language = info.get("language")
     probability = float(info.get("language_probability") or 0.0)
     text = str((whisper or {}).get("text") or "")
-    answer = None
-    error = None
+    answer, error = None, None
     if language == "en" and probability >= CONFIDENT_ENGLISH and _tokens(text):
-        try:
-            reply = _to_py(
-                await asyncio.wait_for(
-                    env.AI.run(
-                        CLASSIFIER_MODEL,
-                        {
-                            "messages": [
-                                {"role": "system", "content": CLASSIFIER_PROMPT},
-                                {
-                                    "role": "user",
-                                    "content": f"First-pass detector said: {language} "
-                                    f"{probability:.2f}.\nTranscript: {text[:600]}",
-                                },
-                            ],
-                            "max_tokens": 4,
-                        },
-                    ),
-                    timeout=CLASSIFIER_TIMEOUT_SECONDS,
-                )
-            )
-            answer = _classifier_text(reply)
-        except Exception as failure:
-            logger.warning("The language classifier failed", exc_info=True)
-            error = f"{type(failure).__name__}: {failure}"[:200]
+        answer, error = await _classified(env, language, probability, text)
     return LanguageEvidence(
         language,
         probability,
@@ -198,6 +211,7 @@ async def detect_spoken_language(env, audio: bytes) -> LanguageEvidence:
         answer,
         decide_language(language, probability, text, answer),
         classifier_error=error,
+        whisper_error=whisper_error,
     )
 
 

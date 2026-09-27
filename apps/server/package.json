@@ -7,7 +7,6 @@
     "start": "uv run serve",
     "dev": "UVICORN_RELOAD=true uv run serve",
     "worker:dev": "npm --prefix ui run build && uv run pywrangler dev",
-    "deploy": "npm --prefix ui run build && uv run pywrangler deploy",
     "test": "uv run pytest",
     "lint": "uv run ruff check src tests scripts && uv run ruff format --check src tests scripts"
   },

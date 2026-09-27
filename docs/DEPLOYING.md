@@ -17,16 +17,23 @@ Both sign in with the Firebase project `graspy-f482e`. `APP_ENV=staging` behaves
 
 ## Deploy
 
-- **Staging** is deployed after each push to `main` that passes CI (`.github/workflows/deploy.yml`). By hand: `scripts/deploy.sh staging`.
-- **Production** is deployed by hand only, from an up-to-date `main`: `scripts/deploy.sh production`, then type `production`. Or run the Deploy workflow with environment `production` and confirm `production`.
+- **Staging** is deployed after each push to `main` that passes CI (`.github/workflows/deploy.yml`). By hand, from any commit: `scripts/deploy.sh staging`.
+- **Production** is deployed by hand only, from an up-to-date `main`: `scripts/deploy.sh production`, then type `production`. Or run the Deploy workflow from `main` with environment `production` and confirm `production`, and approve it as the reviewer.
+- **Check without deploying:** `scripts/deploy.sh staging --dry-run` (or `production`). It runs every check, the install and the builds, and bundles the Workers without uploading them.
 - **Android staging:** `cd apps/mobile && ./gradlew installStaging`. It installs beside the Play app, signed with the debug key.
 
-`scripts/deploy.sh` first checks that the tree is clean and that the web build has its Firebase config (in the environment or `apps/web/.env.<environment>.local`). For production it also checks that `HEAD` is `origin/main`, and asks for confirmation. Then it deploys in this order and stops at the first failure:
+`scripts/deploy.sh` is the only way to deploy; the apps have no `npm run deploy`. It deploys nothing until all of these pass:
+
+1. The tree is clean, and the web build has its Firebase config (in the environment or `apps/web/.env.<environment>.local`). For production, `HEAD` is `origin/main`, and the deploy is confirmed.
+2. `npm ci` with the npm that `package.json`'s `packageManager` names, run through `npx`. Another npm can skip a workspace's packages without an error. Then every package that the tutor, the admin UI and the web declare must be installed, and `uv sync --locked` for the API.
+3. The admin UI and the web app are built. The web build must call the API in the committed `apps/web/.env.<environment>` and not the other environment's; a `VITE_API_URL` in the shell is ignored. `public/_headers` allows production's API in `connect-src` and `frame-src`; a staging build puts staging's API in its place.
+
+Then it deploys in this order and stops at the first failure:
 
 1. **The tutor.** The API's `TUTOR` binding needs its Worker to exist, and the API calls it, so the tutor goes first. It must keep answering what the running API asks.
-2. **The API**, with the admin UI built first.
+2. **The API**, with the admin UI built in step 3.
 3. **The API's D1 migrations**, `wrangler d1 migrations apply <database> --remote`.
-4. **The web app**, built in that environment's mode. `public/_headers` allows production's API in `connect-src` and `frame-src`; the script puts the environment's API in its place.
+4. **The web app.**
 
 A deploy that fails with code 10013 is the startup snapshot's size cap ([Development](DEVELOPMENT.md#build-and-deploy)). Run the script again: it stopped before the migrations.
 
@@ -64,14 +71,52 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
 
 3. **First staging deploy**, from `main` once this is merged: `scripts/deploy.sh staging`. It creates both Workers and applies every migration to the empty `graspy-staging`.
 
-4. **GitHub secrets**, for the Deploy workflow. It skips, and does not fail, until all six exist. Make the API token in the dashboard from the "Edit Cloudflare Workers" template, add Account D1 Edit and Cloudflare Pages Edit, and limit it to the Latentic account and the zone `getlatentic.com`:
+4. **GitHub environments.** The Deploy workflow reads its secrets from the environments `staging` and `production`, never from the repository. Both deploy `main` only, and production waits for approval from `tosinamuda`. Until `staging` exists the workflow skips; it fails for production until production has its reviewer and branch rule. Make both, then check them:
 
    ```bash
-   gh secret set CLOUDFLARE_ACCOUNT_ID --repo getlatentic/graspy --body f868290b46a61872545e64f71de18d51
-   gh secret set CLOUDFLARE_API_TOKEN --repo getlatentic/graspy   # paste at the prompt
-   for key in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_APP_ID; do
-     grep "^$key=" apps/web/.env.staging.local | cut -d= -f2- | tr -d '\n' | gh secret set "$key" --repo getlatentic/graspy
+   repo=getlatentic/graspy
+   owner_id="$(gh api users/tosinamuda --jq .id)"
+   gh api --method PUT "repos/$repo/environments/staging" --input - <<'JSON'
+   {"deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}
+   JSON
+   gh api --method PUT "repos/$repo/environments/production" --input - <<JSON
+   {"reviewers": [{"type": "User", "id": $owner_id}], "prevent_self_review": false,
+    "deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}
+   JSON
+   gh api --method POST "repos/$repo/environments/staging/deployment-branch-policies" -f name=main -f type=branch
+   gh api --method POST "repos/$repo/environments/production/deployment-branch-policies" -f name=main -f type=branch
+   gh api "repos/$repo/environments" --jq '.environments[] | {name, rules: [.protection_rules[].type]}'
+   gh api "repos/$repo/environments/production/deployment-branch-policies" --jq '.branch_policies[] | {name, type}'
+   ```
+
+   `prevent_self_review` is false because the owner both starts and approves a production deploy.
+
+5. **Cloudflare API tokens**, one for each environment, so each can be revoked alone. Make them at **My Profile > API Tokens > Create Token > Create Custom Token**, with:
+
+   | Resource | Permission |
+   |---|---|
+   | Account: Workers Scripts | Edit |
+   | Account: D1 | Edit |
+   | Account: Cloudflare Pages | Edit (production only; staging's web is a Worker) |
+   | Zone: Workers Routes | Edit (the custom domains in each `wrangler.jsonc`) |
+
+   Account Resources: Include, the Latentic account only. Zone Resources: Include, Specific zone, `getlatentic.com`; production's token also `tosinamuda.com`, since production's API keeps `graspy-api.tosinamuda.com` and wrangler re-sends every custom domain on each deploy. A Worker token cannot be limited to one environment's Workers, so either token can deploy either environment; the environment keeps the production token behind the reviewer.
+
+6. **Environment secrets.** The token goes in at a hidden prompt; the Firebase web config comes from each environment's `.env.<environment>.local`. Nothing is printed:
+
+   ```bash
+   repo=getlatentic/graspy
+   for env in staging production; do
+     gh secret set CLOUDFLARE_ACCOUNT_ID --env "$env" --repo "$repo" --body f868290b46a61872545e64f71de18d51
+     for key in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_APP_ID; do
+       grep "^$key=" "apps/web/.env.$env.local" | cut -d= -f2- | tr -d '\n' | gh secret set "$key" --env "$env" --repo "$repo"
+     done
    done
+   gh secret set CLOUDFLARE_API_TOKEN --env staging --repo "$repo"      # paste staging's token at the prompt
+   gh secret set CLOUDFLARE_API_TOKEN --env production --repo "$repo"   # paste production's token at the prompt
+   gh secret list --env staging --repo "$repo"
+   gh secret list --env production --repo "$repo"
+   gh secret list --repo "$repo"                                        # expect none: no repository secrets
    ```
 
 A new machine that builds the staging app signs it with its own debug key. Google sign-in works only once that key's fingerprints are on the staging Android app:

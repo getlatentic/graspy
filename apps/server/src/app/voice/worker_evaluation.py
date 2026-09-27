@@ -14,12 +14,12 @@ from .exercises import (
     Transport,
     TurnEvaluation,
     activity_for,
+    awaiting_next_attempt,
     claimable,
     given_up,
     new_claim_token,
     turn_payload,
     wait_left_ms,
-    waiting,
     write_won,
 )
 from .expectation import expectation
@@ -62,12 +62,10 @@ def _turn_response(row, now_ms: int):
             {"detail": "this recording could not be marked", "code": "marking_failed"},
             status=409,
         )
-    state = row["state"]
-    if state == "processing":
-        return _json({"sample_id": row["sample_id"], "state": state}, status=202)
-    # A failed turn whose next attempt is not due answers as one still being marked, so the app
-    # keeps the answer and no attempt is spent; it names the wait, so the app need not ask sooner.
-    if state == "failed" and waiting(row, now_ms):
+    # A turn failed or cut off whose next attempt is not due answers as one still being marked, so
+    # the app keeps the answer and no attempt is spent; it names the wait, so the app need not ask
+    # sooner.
+    if awaiting_next_attempt(row, now_ms):
         left = wait_left_ms(row, now_ms)
         return JSONResponse(
             {
@@ -78,6 +76,9 @@ def _turn_response(row, now_ms: int):
             status_code=202,
             headers={"Retry-After": str(math.ceil(left / 1000))},
         )
+    state = row["state"]
+    if state == "processing":
+        return _json({"sample_id": row["sample_id"], "state": state}, status=202)
     if state == "failed":
         return _json(
             {"detail": row.get("error_detail") or "transcription failed"}, status=502

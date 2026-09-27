@@ -71,7 +71,7 @@ function DashboardLayoutContent() {
 // Relative, so absolutely placed screen-reader text scrolls inside it rather
 // than stretching the document below the app. A page the learner's sections do
 // not hold, such as a slide lesson for a class that learns by voice alone, leads
-// to voice lessons.
+// Home.
 function PageArea({
   chat,
   redirect,

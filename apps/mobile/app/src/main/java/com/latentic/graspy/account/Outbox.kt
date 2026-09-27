@@ -10,6 +10,9 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
+/** A spoken answer may take minutes to mark; past this the learner is asked instead of kept waiting, as on the web. */
+internal const val UNSENT_PATIENCE_MILLIS = 20_000L
+
 /** Whether everything a learner did on this device has reached graspy, once sent. */
 fun interface Outbox {
     suspend fun flush(learnerKey: String): Boolean
@@ -26,7 +29,7 @@ class UnsentWork(
     private val outboxes: List<Outbox>,
     /** Where the sending goes on after the leave stops waiting for it, so what is under way still reaches graspy. */
     private val sending: CoroutineScope,
-    private val patienceMillis: Long = FLUSH_PATIENCE_MILLIS,
+    private val patienceMillis: Long = UNSENT_PATIENCE_MILLIS,
 ) : Outbox {
     override suspend fun flush(learnerKey: String): Boolean {
         if (!online()) return false
@@ -45,31 +48,24 @@ class UnsentWork(
 
     private companion object {
         const val TAG = "GraspyUnsent"
-
-        /** A spoken answer may take minutes to mark; past this the learner is asked instead of kept waiting, as on the web. */
-        const val FLUSH_PATIENCE_MILLIS = 20_000L
     }
 }
 
 /**
  * Sends the learner's recordings still waiting in the outbox and waits for graspy to take them. One settled,
  * marked or refused, has reached graspy even while it waits to be shown. Still waiting after [patienceMillis],
- * they have not all reached graspy.
+ * they have not all reached graspy. WorkManager does the sending, so the wait only watches: it ends with
+ * [UnsentWork]'s, never lingering after the leave has stopped waiting for it.
  */
 class RecordingOutbox(
     private val dao: SubmissionDao,
     private val repository: SubmissionRepository,
-    private val patienceMillis: Long = FLUSH_PATIENCE_MILLIS,
+    private val patienceMillis: Long = UNSENT_PATIENCE_MILLIS,
 ) : Outbox {
     override suspend fun flush(learnerKey: String): Boolean {
         repository.recoverIncomplete(learnerKey)
         return withTimeoutOrNull(patienceMillis) {
             dao.observeIncompleteCount(learnerKey).first { it == 0 }
         } != null
-    }
-
-    private companion object {
-        /** Marking one answer takes seconds; a queue that has not moved in this long is not moving. */
-        const val FLUSH_PATIENCE_MILLIS = 45_000L
     }
 }
