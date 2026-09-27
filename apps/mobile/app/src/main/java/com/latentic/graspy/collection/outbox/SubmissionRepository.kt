@@ -60,6 +60,17 @@ class SubmissionRepository(
         dao.findIncomplete(ownerId).forEach { scheduler.schedule(it.localId) }
     }
 
+    /**
+     * Sends the owner's kept answers before a leave, as the web's sendKeptAnswers sends each once: one whose last
+     * try failed goes at once rather than after its backoff; the others as [recoverIncomplete] sends them, so one
+     * still being marked keeps the server's wait.
+     */
+    suspend fun sendIncomplete(ownerId: String) {
+        dao.findIncomplete(ownerId).forEach { kept ->
+            if (kept.lastTryFailed()) scheduler.now(kept.localId) else scheduler.schedule(kept.localId)
+        }
+    }
+
     fun observe(localId: String): Flow<SubmissionEntity?> = dao.observe(localId)
 
     private companion object {
