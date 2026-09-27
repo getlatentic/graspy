@@ -10,13 +10,13 @@ const home = (state: Partial<HomeState>): HomeState => ({
 });
 
 describe("homeParts", () => {
-  it("shows a class that learns by voice alone its voice lessons and nothing to read", () => {
-    expect(homeParts(home({ voiceOnly: true }))).toEqual(["voice"]);
+  it("is the voice lessons for a class that learns by voice alone, with nothing to read", () => {
+    expect(homeParts(home({ voiceOnly: true }))).toEqual(["lessons"]);
   });
 
   it("hides the subjects of such a class's plan, and the topic it was on", () => {
     const plan = { hasCurrent: true, subjectCount: 4 };
-    expect(homeParts(home({ voiceOnly: true, ...plan }))).toEqual(["voice"]);
+    expect(homeParts(home({ voiceOnly: true, ...plan }))).toEqual(["lessons"]);
   });
 
   it("tells such a class when the app has no voice lessons for it yet", () => {

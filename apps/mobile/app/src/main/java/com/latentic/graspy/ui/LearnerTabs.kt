@@ -102,15 +102,17 @@ internal fun LearnerTabs(
     val tabs = learnTabs(voiceOnly)
     val shownTab = tab.takeIf { it in tabs } ?: LearnTab.HOME
     val shownPlace = place.takeUnless { voiceOnly }
+    // A class that learns by voice alone has its voice lessons as Home, not as a page over it.
+    val voicePageOpen = voicePage && !voiceOnly && voice != null
     LaunchedEffect(tab) { planViewModel.refresh() }
     LaunchedEffect(planViewModel, views) { planViewModel.recordsRead.collect(views::copyReadyLessons) }
     // What is shown decides what back does: a page hidden from a class that learns by voice alone is not left.
-    BackHandler(enabled = shownPlace != null || editing || voicePage || shownTab != LearnTab.HOME) {
+    BackHandler(enabled = shownPlace != null || editing || voicePageOpen || shownTab != LearnTab.HOME) {
         val current = shownPlace
         when {
             current != null -> place = current.back()
             editing -> editing = false
-            voicePage -> voicePage = false
+            voicePageOpen -> voicePage = false
             else -> tab = LearnTab.HOME
         }
     }
@@ -132,14 +134,17 @@ internal fun LearnerTabs(
             when {
                 shownPlace != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shownPlace, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
                 editing && ready != null -> Page { Details(learn, ready.plan, voiceOnly, interfaceLanguage, planViewModel, views.routes, onBack = { editing = false }, onReplan = onReplan) }
-                voicePage && voice != null && shownTab == LearnTab.HOME -> Page { VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson) }
+                // With no voice lessons in the app for the class yet, Home says so rather than showing nothing.
+                shownTab == LearnTab.HOME && (voicePageOpen || voiceOnly) -> Page {
+                    if (voice == null) NoVoiceCard(learn.voice, copy.home.noLessons, learn.you.change) { editing = true }
+                    else VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson)
+                }
                 shownTab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
                 else -> Page {
                     when (shownTab) {
                         LearnTab.HOME -> Home(
-                            learn, copy.home.noLessons, voice, voiceOnly, plan, planViewModel,
+                            learn, voice, plan, planViewModel,
                             onVoice = { voicePage = true },
-                            onDetails = { editing = true },
                             onAsk = {
                                 askOpening = it
                                 tab = LearnTab.ASK
@@ -168,29 +173,17 @@ private fun Page(content: @Composable () -> Unit) {
     }
 }
 
-/**
- * A class that learns by [voiceOnly] finds its voice lessons alone, as on the web; with none in the app for its
- * class yet, Home says so rather than showing nothing.
- */
 @Composable
 private fun Home(
     learn: LearnCopy,
-    noLessons: String,
     voice: LearnerProfile?,
-    voiceOnly: Boolean,
     plan: PlanState,
     planViewModel: PlanViewModel,
     onVoice: () -> Unit,
-    onDetails: () -> Unit,
     onAsk: (AskOpening) -> Unit,
     onPlace: (Place) -> Unit,
     onSeeAllSubjects: () -> Unit,
 ) {
-    if (voiceOnly) {
-        if (voice == null) NoVoiceCard(learn.voice, noLessons, learn.you.change, onDetails)
-        else VoiceCard(learn.voice, Teacher.forClass(voice.schoolClass).first(), onVoice)
-        return
-    }
     val making by planViewModel.makingState.collectAsStateWithLifecycle()
     HomeTab(
         learn = learn,

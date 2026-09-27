@@ -1,9 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, NetworkError, UNREADABLE_ANSWER } from "./errors";
-import { getJson } from "./request";
+import { LearnerChanged } from "@/lib/learner-pin";
+import { getJson, sendJson } from "./request";
 
 const { fetchWithSession } = vi.hoisted(() => ({
-  fetchWithSession: vi.fn<(url: string) => Promise<Response>>(),
+  fetchWithSession:
+    vi.fn<
+      (
+        url: string,
+        init?: RequestInit,
+        still?: () => boolean,
+      ) => Promise<Response>
+    >(),
 }));
 vi.mock("./session", () => ({ fetchWithSession }));
 
@@ -77,5 +85,40 @@ describe("getJson when the answer cannot be read", () => {
     const { error } = (await settled(getJson("/thing"))) as { error: unknown };
 
     expect(error).toBeInstanceOf(NetworkError);
+  });
+});
+
+describe("a request made for one learner", () => {
+  const still = () => true;
+
+  it("is sent only while the session is still theirs", async () => {
+    fetchWithSession.mockResolvedValue(Response.json({ ok: 1 }));
+
+    await settled(getJson("/thing", still));
+    await settled(sendJson("/thing", "PUT", { a: 1 }, still));
+
+    expect(fetchWithSession.mock.calls.map(([, , sent]) => sent)).toEqual([
+      still,
+      still,
+    ]);
+  });
+
+  it("is not tried again once the device learns as someone else", async () => {
+    const changed = new LearnerChanged();
+    fetchWithSession
+      .mockRejectedValueOnce(new NetworkError("Failed to fetch"))
+      .mockRejectedValue(changed);
+
+    expect(await settled(getJson("/thing", still))).toEqual({ error: changed });
+    expect(fetchWithSession).toHaveBeenCalledTimes(2);
+  });
+
+  it("passes the learner changing back as it is, not as the network failing", async () => {
+    const changed = new LearnerChanged();
+    fetchWithSession.mockRejectedValue(changed);
+
+    expect(await settled(sendJson("/thing", "POST", {}, still))).toEqual({
+      error: changed,
+    });
   });
 });

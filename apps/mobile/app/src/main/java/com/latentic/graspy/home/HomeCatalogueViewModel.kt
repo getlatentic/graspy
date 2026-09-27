@@ -7,7 +7,9 @@ import androidx.work.WorkManager
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.SchoolClass
+import com.latentic.graspy.sync.LessonCacheDao
 import com.latentic.graspy.sync.LessonRefreshRequest
+import com.latentic.graspy.sync.LessonRefreshScheduler
 import com.latentic.graspy.sync.RefreshState
 import com.latentic.graspy.sync.lessonRefreshWorkName
 import com.latentic.graspy.sync.networkReach
@@ -59,9 +61,21 @@ private data class OpenCatalogue(
 )
 
 /** Home reads the learner's stored catalogue and asks WorkManager to bring a newer one. */
-class HomeCatalogueViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
-    private val dao = AppGraph.database(application).lessonCacheDao()
-    private val scheduler = AppGraph.lessonRefreshScheduler(application)
+class HomeCatalogueViewModel internal constructor(
+    application: Application,
+    private val ownerId: String,
+    private val dao: LessonCacheDao,
+    private val scheduler: LessonRefreshScheduler,
+    private val stillLearning: () -> Boolean,
+) : AndroidViewModel(application) {
+    constructor(application: Application, ownerId: String) : this(
+        application,
+        ownerId,
+        AppGraph.database(application).lessonCacheDao(),
+        AppGraph.lessonRefreshScheduler(application),
+        { AppGraph.account(application).learnsAs(ownerId) },
+    )
+
     private val workManager = WorkManager.getInstance(application)
     private val opened = MutableStateFlow<OpenCatalogue?>(null)
 
@@ -71,7 +85,7 @@ class HomeCatalogueViewModel(application: Application, private val ownerId: Stri
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(KEEP_ALIVE_MILLIS), CatalogueState.Loading)
 
     fun open(language: AppLanguage, schoolClass: SchoolClass) {
-        if (!AppGraph.account(getApplication()).learnsAs(ownerId)) return
+        if (!stillLearning()) return
         opened.value = OpenCatalogue(ownerId, schoolClass.wireValue, language)
         scheduler.refresh(LessonRefreshRequest(ownerId, schoolClass.wireValue, language))
     }

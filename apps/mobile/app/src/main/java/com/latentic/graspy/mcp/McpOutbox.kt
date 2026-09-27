@@ -2,6 +2,9 @@ package com.latentic.graspy.mcp
 
 import android.util.Log
 import java.io.IOException
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonObject
@@ -44,6 +47,11 @@ class McpOutbox(
     private val inOneTransaction: suspend (suspend () -> Unit) -> Unit = { it() },
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
+    private val keptNow = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** Tells each time a call is kept, so one kept while online is sent again without waiting for a reconnect. */
+    val kept: Flow<Unit> = keptNow
+
     suspend fun callOrKeep(name: String, arguments: JsonObject): JsonObject {
         val failure = try {
             return server.call(name, arguments)
@@ -62,6 +70,7 @@ class McpOutbox(
                 kept = true
             }
         }
+        if (kept) keptNow.tryEmit(Unit)
         return kept
     }
 

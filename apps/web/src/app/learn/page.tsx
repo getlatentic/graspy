@@ -19,6 +19,7 @@ import { SubjectTiles } from "@/features/learn/components/subject-tiles";
 import { TrySomethingNew } from "@/features/learn/components/try-something-new";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
 import { NoVoiceCard, VoiceCard } from "@/features/voice/components/voice-card";
+import { VoiceLessons } from "@/features/voice/components/voice-lessons";
 import {
   useClassHasVoiceLessons,
   useVoiceOnly,
@@ -48,6 +49,9 @@ export default function HomePage() {
   );
 
   if (!userProfile) return null;
+  if (parts.has("lessons")) return <VoiceLessons />;
+  if (parts.has("noVoice"))
+    return <NoVoiceCard className="mx-auto w-full max-w-3xl" />;
 
   const errorAlert = error ? (
     <PlanErrorCard
@@ -83,8 +87,6 @@ export default function HomePage() {
       )}
 
       {parts.has("voice") && <VoiceCard className="lg:col-span-2" />}
-
-      {parts.has("noVoice") && <NoVoiceCard className="lg:col-span-2" />}
 
       {parts.has("subjects") && <SubjectsSection subjects={subjects} />}
 

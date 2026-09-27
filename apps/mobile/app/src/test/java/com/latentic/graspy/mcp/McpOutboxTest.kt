@@ -2,7 +2,12 @@ package com.latentic.graspy.mcp
 
 import com.latentic.graspy.account.SessionRefusal
 import java.io.IOException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
@@ -61,6 +66,21 @@ class McpOutboxTest {
         failure = null
         assertEquals(3, outbox.sendKept())
         assertEquals(List(3) { "answer_check" }, sent)
+    }
+
+    @Test
+    fun `each call kept is told, so it is sent again without a reconnect, and none not kept is`() = runBlocking {
+        val told = async(start = CoroutineStart.UNDISPATCHED) { outbox.kept.first() }
+
+        outbox.callOrKeep("answer_check", JsonObject(emptyMap()))
+
+        withTimeout(1_000) { told.await() }
+        learning = false
+        val toldAgain = async(start = CoroutineStart.UNDISPATCHED) { outbox.kept.first() }
+        assertThrows(IOException::class.java) { runBlocking { outbox.callOrKeep("answer_check", JsonObject(emptyMap())) } }
+        yield()
+        assertFalse(toldAgain.isCompleted)
+        toldAgain.cancel()
     }
 
     @Test

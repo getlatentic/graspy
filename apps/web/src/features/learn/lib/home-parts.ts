@@ -1,5 +1,5 @@
 export type HomePart =
-  "continue" | "rail" | "voice" | "noVoice" | "subjects" | "try";
+  "continue" | "rail" | "voice" | "lessons" | "noVoice" | "subjects" | "try";
 
 export interface HomeState {
   /** The server's word: the class learns by voice alone. */
@@ -10,16 +10,17 @@ export interface HomeState {
   subjectCount: number;
 }
 
-/** What Home shows, in order. A class that learns by voice alone has its voice lessons
- * and nothing to read, whatever subjects its plan holds; with no voice lessons for it
- * yet, Home says so rather than showing nothing. */
+/** What Home shows, in order. For a class that learns by voice alone Home is its voice
+ * lessons, with nothing to read, whatever subjects its plan holds; with no voice lessons
+ * in the app for it yet, Home says so rather than showing nothing. Any other class reaches
+ * them from a card. */
 export function homeParts({
   voiceOnly,
   hasVoiceLessons,
   hasCurrent,
   subjectCount,
 }: HomeState): HomePart[] {
-  if (voiceOnly) return [hasVoiceLessons ? "voice" : "noVoice"];
+  if (voiceOnly) return [hasVoiceLessons ? "lessons" : "noVoice"];
   return [
     ...(hasCurrent ? (["continue"] as const) : []),
     "rail",

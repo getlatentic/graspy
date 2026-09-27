@@ -68,6 +68,8 @@ data class EvaluatedSampleDto(
     val exercise: ExerciseDto? = null,
     val result: RecitationResult? = null,
     @SerialName("spoken_language") val spokenLanguage: String? = null,
+    /** While still being marked: how long the server asks to be left before it is asked again. */
+    @SerialName("retry_after_ms") val retryAfterMs: Long? = null,
 )
 
 @Serializable

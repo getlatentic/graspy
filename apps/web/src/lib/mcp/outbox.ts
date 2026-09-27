@@ -1,10 +1,12 @@
 import type { CallToolResult } from "@modelcontextprotocol/client";
 import { committed, openDB, OUTBOX_STORE, promisify } from "@/lib/idb";
-import { callAppTool, reachServer } from "./server";
+import { callAppTool, pinLearner, reachServer, type ServerPin } from "./server";
 import { refusesTheCall } from "./refusal";
 
 // A view's tools/call the server did not take is kept and sent in order later. These calls
-// record what the learner did, and the server takes each again without harm.
+// record what the learner did, and the server takes each again without harm. Each call and
+// each run is pinned to the learner it was made for: once the device learns as someone else,
+// it sends nothing more and keeps nothing in the next learner's outbox.
 interface KeptCall {
   id?: number;
   name: string;
@@ -21,8 +23,13 @@ const KEPT: CallToolResult = {
   ],
 };
 
-async function keep(name: string, args: Record<string, unknown>) {
+async function keep(
+  pin: ServerPin,
+  name: string,
+  args: Record<string, unknown>,
+) {
   const db = await openDB();
+  pin.hold();
   const store = db
     .transaction(OUTBOX_STORE, "readwrite")
     .objectStore(OUTBOX_STORE);
@@ -31,10 +38,11 @@ async function keep(name: string, args: Record<string, unknown>) {
 }
 
 async function kept(
+  pin: ServerPin,
   name: string,
   args: Record<string, unknown>,
 ): Promise<CallToolResult> {
-  await keep(name, args);
+  await keep(pin, name, args);
   return KEPT;
 }
 
@@ -42,18 +50,19 @@ export async function callOrKeep(
   name: string,
   args: Record<string, unknown>,
 ): Promise<CallToolResult> {
+  const pin = pinLearner();
   // As the run does: a connection refused, whatever its status, is not the server refusing a call.
   try {
-    await reachServer();
+    await reachServer(pin);
   } catch {
-    return kept(name, args);
+    return kept(pin, name, args);
   }
   try {
-    return await callAppTool(name, args);
+    return await callAppTool(name, args, pin);
   } catch (error) {
     // Kept as the outbox's run keeps it: until the server refuses this very call.
     if (refusesTheCall(error)) throw error;
-    return kept(name, args);
+    return kept(pin, name, args);
   }
 }
 
@@ -73,19 +82,20 @@ async function forget(id: number): Promise<void> {
   await done;
 }
 
-async function sendAll(): Promise<number> {
+async function sendAll(pin: ServerPin): Promise<number> {
   const calls = await keptCalls();
   if (calls.length === 0) return 0;
   // A connection refused, whatever its status, is not the server refusing a call.
   try {
-    await reachServer();
+    await reachServer(pin);
   } catch {
     return 0;
   }
   let sent = 0;
   for (const call of calls) {
     try {
-      await callAppTool(call.name, call.args);
+      // Once the device learns as someone else this stops the run: the rest go with the wipe.
+      await callAppTool(call.name, call.args, pin);
     } catch (error) {
       // What the learner did stays on the device until the server refuses this very call.
       if (!refusesTheCall(error)) break;
@@ -97,13 +107,22 @@ async function sendAll(): Promise<number> {
   return sent;
 }
 
-let sending: Promise<number> | null = null;
+// One run at a time for a learner. A run pinned to a learner the device has left holds none
+// back for the next, however long the call it is waiting on hangs.
+let sending: { learner: string; run: Promise<number> } | null = null;
+
+function started(pin: ServerPin): Promise<number> {
+  const run: Promise<number> = sendAll(pin).finally(() => {
+    if (sending?.run === run) sending = null;
+  });
+  sending = { learner: pin.learner, run };
+  return run;
+}
 
 export function sendKept(): Promise<number> {
-  sending ??= sendAll().finally(() => {
-    sending = null;
-  });
-  return sending;
+  const pin = pinLearner();
+  if (sending?.learner === pin.learner) return sending.run;
+  return started(pin);
 }
 
 /** Sends what was kept; false while some of it is still on the device. */

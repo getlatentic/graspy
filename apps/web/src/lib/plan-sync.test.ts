@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CurriculumData } from "@/lib/curriculum-record";
 
+type Still = () => boolean;
 const server = {
-  accountPlan: vi.fn<() => Promise<CurriculumData | null>>(),
-  sendPlan: vi.fn<(plan: CurriculumData) => Promise<CurriculumData>>(),
-  joinPlan: vi.fn<(plan: CurriculumData) => Promise<CurriculumData>>(),
+  accountPlan: vi.fn<(still?: Still) => Promise<CurriculumData | null>>(),
+  sendPlan:
+    vi.fn<(plan: CurriculumData, still?: Still) => Promise<CurriculumData>>(),
+  joinPlan:
+    vi.fn<(plan: CurriculumData, still?: Still) => Promise<CurriculumData>>(),
 };
 vi.mock("@/lib/shared-plan-api", () => server);
 
@@ -29,6 +32,7 @@ vi.mock("@/lib/user-storage", () => ({
 
 type Signed = { uid: string; learner: { id: string } | null };
 const ADA: Signed = { uid: "uid-1", learner: { id: "ada" } };
+const GRACE: Signed = { uid: "uid-1", learner: { id: "grace" } };
 let signedIn: Signed | null = ADA;
 vi.mock("@/lib/account/account-store", () => ({
   currentAccount: () => signedIn,
@@ -37,6 +41,7 @@ vi.mock("@/lib/account/account-store", () => ({
 }));
 
 const { forgetPlanSync, syncPlan } = await import("./plan-sync");
+const { LearnerChanged } = await import("./learner-pin");
 
 function plan(planId: string, updatedAt: number): CurriculumData {
   return {
@@ -139,6 +144,7 @@ describe("syncPlan on signing in", () => {
 
     expect(server.joinPlan).toHaveBeenCalledWith(
       expect.objectContaining(plan("plan-device", 10)),
+      expect.any(Function),
     );
     expect(holdCurriculum).toHaveBeenCalledWith(merged);
     expect(device).toEqual(merged);
@@ -152,6 +158,7 @@ describe("syncPlan on signing in", () => {
 
     expect(server.joinPlan).toHaveBeenCalledWith(
       expect.objectContaining({ country: "Nigeria", language: "English" }),
+      expect.any(Function),
     );
   });
 
@@ -216,7 +223,10 @@ describe("syncPlan after a save", () => {
 
     await expect(syncPlan()).resolves.toBeNull();
 
-    expect(server.sendPlan).toHaveBeenCalledWith(plan("plan-1", 11));
+    expect(server.sendPlan).toHaveBeenCalledWith(
+      plan("plan-1", 11),
+      expect.any(Function),
+    );
     expect(server.accountPlan).not.toHaveBeenCalled();
     expect(holdCurriculum).not.toHaveBeenCalled();
   });
@@ -245,7 +255,10 @@ describe("syncPlan after a save", () => {
     expect(device).toEqual(plan("plan-1", 12));
     server.sendPlan.mockResolvedValue(plan("plan-1", 12));
     await syncPlan();
-    expect(server.sendPlan).toHaveBeenLastCalledWith(plan("plan-1", 12));
+    expect(server.sendPlan).toHaveBeenLastCalledWith(
+      plan("plan-1", 12),
+      expect.any(Function),
+    );
   });
 });
 
@@ -260,7 +273,10 @@ describe("syncPlan offline", () => {
     await syncPlan();
 
     expect(server.sendPlan).toHaveBeenCalledTimes(2);
-    expect(server.sendPlan).toHaveBeenLastCalledWith(plan("plan-1", 11));
+    expect(server.sendPlan).toHaveBeenLastCalledWith(
+      plan("plan-1", 11),
+      expect.any(Function),
+    );
   });
 
   it("runs one sync at a time", async () => {
@@ -312,7 +328,10 @@ describe("syncPlan on starting the app", () => {
 
     await expect(syncPlan()).resolves.toBeNull();
 
-    expect(server.sendPlan).toHaveBeenCalledWith(plan("plan-1", 10));
+    expect(server.sendPlan).toHaveBeenCalledWith(
+      plan("plan-1", 10),
+      expect.any(Function),
+    );
   });
 });
 
@@ -353,5 +372,87 @@ describe("syncPlan adopting a plan", () => {
     await syncPlan();
 
     expect(saveUserProfile).not.toHaveBeenCalled();
+  });
+});
+
+describe("syncPlan once the device learns as another learner", () => {
+  const never = () => new Promise<never>(() => {});
+
+  it("sends each request only while the device learns as the learner it began for", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockResolvedValue(plan("plan-1", 11));
+
+    await syncPlan();
+
+    const [, still] = server.sendPlan.mock.calls[0];
+    expect(still?.()).toBe(true);
+    signedIn = GRACE;
+    expect(still?.()).toBe(false);
+  });
+
+  it("keeps nothing on the device of an answer that came back after the switch", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockImplementation(async () => {
+      signedIn = GRACE;
+      device = null;
+      return plan("plan-2", 15);
+    });
+
+    await expect(syncPlan()).rejects.toBeInstanceOf(LearnerChanged);
+
+    expect(holdCurriculum).not.toHaveBeenCalled();
+    expect(device).toBeNull();
+    server.joinPlan.mockResolvedValue(plan("plan-grace", 20));
+    server.accountPlan.mockResolvedValue(plan("plan-grace", 20));
+    await syncPlan();
+    expect(server.joinPlan).not.toHaveBeenCalled();
+    expect(server.sendPlan).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not join the next learner as the one it began for", async () => {
+    device = plan("plan-ada", 10);
+    server.joinPlan.mockImplementationOnce(async () => {
+      signedIn = GRACE;
+      device = null;
+      return plan("plan-ada", 10);
+    });
+    await expect(syncPlan()).rejects.toBeInstanceOf(LearnerChanged);
+
+    server.accountPlan.mockResolvedValue(plan("plan-grace", 20));
+    await syncPlan();
+
+    expect(server.accountPlan).toHaveBeenCalled();
+    expect(device).toEqual(plan("plan-grace", 20));
+  });
+
+  it("sends nothing for a sync queued behind one the switch overtook", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockImplementationOnce(async (sent) => {
+      signedIn = GRACE;
+      return sent;
+    });
+
+    const [first, second] = [syncPlan(), syncPlan()];
+
+    await expect(first).rejects.toBeInstanceOf(LearnerChanged);
+    await expect(second).rejects.toBeInstanceOf(LearnerChanged);
+    expect(server.sendPlan).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not hold the next learner's sync behind one still in flight", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockImplementation(never);
+    void syncPlan();
+    await Promise.resolve();
+
+    signedIn = GRACE;
+    device = null;
+    server.accountPlan.mockResolvedValue(plan("plan-grace", 20));
+
+    await expect(syncPlan()).resolves.toEqual(plan("plan-grace", 20));
   });
 });

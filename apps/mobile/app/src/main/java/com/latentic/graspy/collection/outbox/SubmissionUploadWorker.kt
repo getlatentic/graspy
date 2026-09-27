@@ -17,8 +17,7 @@ import java.io.File
 import java.io.IOException
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.asRequestBody
+import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 
 class SubmissionUploadWorker(
@@ -51,25 +50,13 @@ class SubmissionUploadWorker(
                 request = sampleRequest(submission, learnerClass, learnerLanguage(ownerId)),
             )
             dao.markCreated(localId, created.sampleId, created.uploadPath)
-            if (created.state != "ready") {
-                val uploadPath = created.uploadPath
-                if (uploadPath.isNullOrBlank()) {
-                    dao.markFailed(localId, "sample API omitted the audio upload path")
-                    return Result.failure()
-                }
-                val uploaded = api.uploadAudio(
-                    uploadPath = uploadPath,
-                    audio = audio.asRequestBody(WAV_MEDIA_TYPE),
-                )
-                if (uploaded.state != "ready") {
-                    dao.markFailed(localId, "sample API returned unexpected state: ${uploaded.state}")
-                    return Result.failure()
-                }
-            }
-            val evaluated = api.evaluateSample(created.sampleId)
+            val uploadPath = created.uploadPath?.takeIf { it.isNotBlank() } ?: audioPath(created.sampleId)
+            // Whether the audio landed is the evaluation's to say: `audio_not_ready` sends it once more.
+            if (created.state != "ready") api.uploadWav(uploadPath, audio)
+            val evaluated = api.evaluation(created.sampleId, uploadPath, audio)
             if (evaluated.state == "processing") {
                 dao.markPending(localId, "answer is still being checked")
-                return Result.retry()
+                return askAgain(localId, evaluated.retryAfterMs)
             }
             val transcript = evaluated.transcript
             val decision = evaluated.decision
@@ -100,7 +87,7 @@ class SubmissionUploadWorker(
             handleFailure(
                 localId,
                 failureCode(error) ?: "sample API returned HTTP ${error.code()}",
-                UploadFailurePolicy.forHttp(error.code(), runAttemptCount, fromGraspy(error), refusal),
+                UploadFailurePolicy.forHttp(error.code(), fromGraspy(error), refusal),
                 dao,
             )
         } catch (error: IOException) {
@@ -111,15 +98,24 @@ class SubmissionUploadWorker(
             handleFailure(
                 localId,
                 error.message ?: "sample API network failure",
-                UploadFailurePolicy.forNetwork(runAttemptCount),
+                UploadFailurePolicy.forNetwork(),
                 dao,
             )
+        } catch (error: SerializationException) {
+            handleFailure(localId, "sample API answer could not be read", UploadFailurePolicy.forNetwork(), dao)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
             dao.markFailed(localId, error.message ?: "sample submission failed")
             Result.failure()
         }
+    }
+
+    /** Still being marked: asked again when the server said, or after the usual backoff when it named no wait. */
+    private fun askAgain(localId: String, waitMillis: Long?): Result {
+        if (waitMillis == null || waitMillis <= 0) return Result.retry()
+        AppGraph.submissionRetry(applicationContext).after(localId, waitMillis)
+        return Result.success()
     }
 
     private suspend fun handleFailure(
@@ -173,7 +169,6 @@ class SubmissionUploadWorker(
 
     companion object {
         const val LOCAL_ID = "local_id"
-        private val WAV_MEDIA_TYPE = "audio/wav".toMediaType()
     }
 }
 

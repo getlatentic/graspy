@@ -1,5 +1,6 @@
 package com.latentic.graspy.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,8 +49,10 @@ fun GraspyRoot(
     LaunchedEffect(appLanguage, voice?.schoolClass) { voice?.let { lessonViewModel.prepare(appLanguage, it.schoolClass) } }
     val voiceNote = rememberVoiceNote(account)
     val learn = learnCopyFor(interfaceLanguage)
+    val tabs = rememberSaveableStateHolder()
 
     if (chatOpen && voice != null) {
+        BackHandler(onBack = lessonViewModel::closeChat)
         Box(Modifier.fillMaxSize().background(GraspyColor.Surface).statusBarsPadding().navigationBarsPadding()) {
             PracticeLessonScreen(
                 copy = copy,
@@ -63,11 +67,16 @@ fun GraspyRoot(
         }
         return
     }
-    LearnerTabs(copy, learn, appLanguage, interfaceLanguage, voice, account, menu, onReplan) { planId ->
-        voiceNote.before { lessonViewModel.openChat(planId) }
+    // Kept while a voice lesson covers the tabs, so leaving the lesson finds the page it was opened from.
+    tabs.SaveableStateProvider(TABS) {
+        LearnerTabs(copy, learn, appLanguage, interfaceLanguage, voice, account, menu, onReplan) { planId ->
+            voiceNote.before { lessonViewModel.openChat(planId) }
+        }
     }
     voiceNote.Shown(learn)
 }
+
+private const val TABS = "tabs"
 
 /** The note before a learner's first voice lesson: the lesson waits for its OK. */
 private class VoiceNote(private val consent: VoiceConsent) {

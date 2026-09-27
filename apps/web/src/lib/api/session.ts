@@ -9,6 +9,7 @@ import {
 import { deviceId, fingerprint } from "@/lib/device-id";
 import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
+import { LearnerChanged } from "@/lib/learner-pin";
 import { API_BASE_URL } from "@/lib/env";
 import { readJson } from "./body";
 import {
@@ -303,8 +304,7 @@ export async function fetchWithSession(
 ): Promise<Response> {
   // A Headers instance spreads to nothing.
   const send = (token: string) => {
-    if (still && !still())
-      throw new Error("The session is no longer the one this was made for");
+    if (still && !still()) throw new LearnerChanged();
     const headers = new Headers(init.headers);
     headers.set("Authorization", `Bearer ${token}`);
     return fetch(input, { ...init, headers });

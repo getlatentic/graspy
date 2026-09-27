@@ -229,6 +229,17 @@ def waiting(row: dict, now_ms: int) -> bool:
     return wait_left_ms(row, now_ms) > 0
 
 
+def awaiting_next_attempt(
+    row: dict, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS
+) -> bool:
+    """A turn left unfinished, failed or cut off past its lease, whose next attempt is not due.
+
+    Nothing will change such a turn before `wait_left_ms`, which is then the later of the lease
+    left (none) and the wait left, so the app is told to wait that long.
+    """
+    return _unfinished(row, now_ms, lease_ms) and waiting(row, now_ms)
+
+
 def claimable(
     row: dict | None, now_ms: int, lease_ms: int = PROCESSING_LEASE_MS
 ) -> bool:
