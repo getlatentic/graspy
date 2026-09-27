@@ -13,5 +13,16 @@
   "durable_objects": {
     "bindings": [{ "name": "Learner", "class_name": "Learner" }]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Learner"] }]
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Learner"] }],
+
+  // Staging: graspy-tutor-staging, reached only by graspy-web-api-staging. Bindings are
+  // not inherited from the top level; the Durable Object migrations are.
+  "env": {
+    "staging": {
+      "ai": { "binding": "AI" },
+      "durable_objects": {
+        "bindings": [{ "name": "Learner", "class_name": "Learner" }]
+      }
+    }
+  }
 }
