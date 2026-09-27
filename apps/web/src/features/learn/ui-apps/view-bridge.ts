@@ -6,13 +6,8 @@ import {
 } from "@modelcontextprotocol/ext-apps/app-bridge";
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { callOrKeep } from "@/lib/mcp/outbox";
-import {
-  HOST_INFO,
-  SANDBOX_URL,
-  keepView,
-  uiView,
-  type UiView,
-} from "@/lib/mcp/server";
+import { sandboxAddress } from "@/lib/mcp/sandbox";
+import { HOST_INFO, uiView } from "@/lib/mcp/server";
 
 export interface ViewHost {
   /** Defaults to the server, kept to send later while it cannot be reached. */
@@ -72,14 +67,6 @@ export function bridgeTo(
   return bridge;
 }
 
-/** The proxy frames the view under the domains its resource declared. */
-function sandboxAddress(view: UiView): string {
-  const address = new URL(SANDBOX_URL);
-  address.searchParams.set("host", window.location.origin);
-  if (view.csp) address.searchParams.set("csp", JSON.stringify(view.csp));
-  return address.href;
-}
-
 function unlessAborted<T>(
   promise: Promise<T>,
   signal: AbortSignal,
@@ -108,7 +95,7 @@ function proxyReady(frame: HTMLIFrameElement, signal: AbortSignal) {
 }
 
 /** MCP Apps' order: proxy frame, view document, then once initialised the
-    tool's input and result. */
+    tool's input and result. The view opens in its build's sandbox. */
 export async function showView(
   frame: HTMLIFrameElement,
   bridge: AppBridge,
@@ -117,7 +104,7 @@ export async function showView(
 ): Promise<void> {
   const view = await unlessAborted(uiView(card.resourceUri), signal);
   const ready = proxyReady(frame, signal);
-  frame.src = sandboxAddress(view);
+  frame.src = sandboxAddress(view.sandbox);
   await unlessAborted(ready, signal);
 
   const initialized = new Promise<void>((resolve) => {
@@ -127,7 +114,6 @@ export async function showView(
   await bridge.connect(new PostMessageTransport(proxy, proxy));
   await bridge.sendSandboxResourceReady(view);
   await unlessAborted(initialized, signal);
-  keepView(card.resourceUri, view);
   await bridge.sendToolInput({ arguments: card.toolInput });
   await bridge.sendToolResult(card.toolResult);
 }

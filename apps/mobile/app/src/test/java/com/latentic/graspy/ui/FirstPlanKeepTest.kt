@@ -22,6 +22,7 @@ import com.latentic.graspy.localization.LearnerProfile
 import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.localization.copyFor
 import com.latentic.graspy.localization.learnCopyFor
+import com.latentic.graspy.mcp.HOLDS_EVERY_FILE
 import com.latentic.graspy.mcp.LearnerConnection
 import com.latentic.graspy.mcp.LearnerViews
 import com.latentic.graspy.onboarding.DetailsFormViewModel
@@ -76,7 +77,7 @@ class FirstPlanKeepTest {
             PlanViewModel::class.java to { app, key -> PlanViewModel(app, key, server.calls).also { planViewModel = it } },
             DetailsFormViewModel::class.java to { _, _ -> DetailsFormViewModel { country -> listOf(nigeria).filter { it.country == country } } },
             PlanSetupViewModel::class.java to { _, _ -> PlanSetupViewModel { _, _, _, _ -> null } },
-            LearnerViews::class.java to { app, key -> LearnerViews(app, LearnerConnection(database, key, OkHttpClient(), server.web.url("/mcp")) { true }) },
+            LearnerViews::class.java to { app, key -> LearnerViews(app, LearnerConnection(database, key, OkHttpClient(), server.web.url("/mcp"), HOLDS_EVERY_FILE) { true }) },
         ),
     )
 

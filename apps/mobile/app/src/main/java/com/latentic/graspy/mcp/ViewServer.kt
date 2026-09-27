@@ -6,9 +6,6 @@ import kotlinx.serialization.json.JsonObject
 interface ViewServer {
     suspend fun view(uri: String): UiView
 
-    /** Keeps the page a view loaded in the sandbox from, to open with no connection. */
-    suspend fun keepShown(uri: String, view: UiView)
-
     /** A view's own call; kept to send later while the server cannot be reached. */
     suspend fun call(name: String, arguments: JsonObject): JsonObject
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from .protocol import (
@@ -15,15 +15,7 @@ from .protocol import (
     UNSUPPORTED_PROTOCOL_VERSION,
     answer,
 )
-from .sandbox import (
-    WORKER_FILE,
-    WORKER_PATH,
-    WORKER_POLICY,
-    page,
-    policy,
-    requested_csp,
-)
-from .views import ViewsMissing
+from .sandbox_routes import sandbox_routes
 
 MCP_PATH = "/mcp"
 PARSE_ERROR = -32700
@@ -76,43 +68,8 @@ async def mcp(request: Request) -> Response:
     return JSONResponse(response)
 
 
-async def ui_sandbox(request: Request) -> Response:
-    """The proxy a web host frames each view in, on this origin so it is
-    never the host's. The view gets the policy its resource declared."""
-    host = request.query_params.get("host", "")
-    own = request.app.state.mcp.origin
-    if host == own or not request.app.state.origin_allowed(host):
-        return PlainTextResponse("This page frames views for graspy only.", 400)
-    return HTMLResponse(
-        page(),
-        headers={
-            "content-security-policy": policy(
-                requested_csp(request.query_params.get("csp")), host
-            )
-        },
-    )
-
-
-async def ui_sandbox_worker(request: Request) -> Response:
-    """Served at the root so it may control the sandbox page; a stale worker
-    would serve stale views."""
-    try:
-        source = await request.app.state.mcp.views.read(WORKER_FILE)
-    except ViewsMissing as error:
-        return PlainTextResponse(str(error), 404)
-    return Response(
-        source,
-        media_type="text/javascript",
-        headers={
-            "cache-control": "no-cache",
-            "content-security-policy": WORKER_POLICY,
-        },
-    )
-
-
 def mcp_routes() -> list[Route]:
     return [
         Route(MCP_PATH, mcp, methods=["GET", "POST", "DELETE"]),
-        Route("/ui-sandbox", ui_sandbox, methods=["GET"]),
-        Route(WORKER_PATH, ui_sandbox_worker, methods=["GET"]),
+        *sandbox_routes(),
     ]

@@ -135,9 +135,7 @@ class AppViewTest {
     }
 
     private object Server : ViewServer {
-        override suspend fun view(uri: String) = UiView("<html></html>", "Lesson", csp = null, permissions = null)
-
-        override suspend fun keepShown(uri: String, view: UiView) = Unit
+        override suspend fun view(uri: String) = UiView("<html></html>", "Lesson", sandbox = "/ui-sandbox/0123456789abcdef/", csp = null, permissions = null)
 
         override suspend fun call(name: String, arguments: JsonObject): JsonObject = awaitCancellation()
 

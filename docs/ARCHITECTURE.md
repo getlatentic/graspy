@@ -33,7 +33,7 @@ A lesson is staged: a plan, then each slide with the earlier slides as context, 
 | `/a2a` | [A2A](https://a2a-protocol.org) JSON-RPC | The tutor. Its card is at `/.well-known/agent-card.json` on the origin root ([RFC 8615](https://www.rfc-editor.org/rfc/rfc8615)) |
 | `/mcp` | [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) | The lesson, practice and passage views, and the tools they call |
 
-The views are the server's own UI (`apps/server/ui`). The web app is only their host: it frames each view in a sandbox page on the server's origin (`/ui-sandbox`) and passes messages. A view's answers go to the server, which keeps them on the learner's record. The tutor then reads them with the learner's next message.
+The views are the server's own UI (`apps/server/ui`). The web app is only their host: it frames each view in a sandbox page on the server's origin (`/ui-sandbox/<build>/`, one per build of the views) and passes messages. A view's answers go to the server, which keeps them on the learner's record. The tutor then reads them with the learner's next message.
 
 ## State
 
@@ -41,7 +41,7 @@ The views are the server's own UI (`apps/server/ui`). The web app is only their 
 - **Tutor conversations** of an account's learner are kept in D1 under their key, so each of their devices shows them: one thread for each topic, subject or plan, its messages added by id. A device sends what it has not sent and reads what changed since it last read; before a device leaves a learner, it sends them. A device signed out keeps its conversations to itself until it signs in.
 - **Durable Objects** keep each tutor conversation as the tutor recalls it (older exchanges folded into a summary), each lesson, and each learner record. A lesson is made in a Durable Object's alarm, not in a request, so it carries on while the learner is elsewhere.
 - **Voice lessons**, which the Android app teaches aloud, keep each learner's recordings in R2 and their offered steps, heard steps and marked turns in D1, all under the learner's key. The tutor Worker (`apps/tutor`, TypeScript, reached only through a service binding) marks each spoken answer and keeps a Durable Object per learner with their spaced-repetition memory. Removing a learner forgets all three.
-- **The browser** keeps the plan, conversations and copies of lessons in IndexedDB, and a service worker keeps the app, so both open offline. What a view does offline waits in an outbox until the connection is back.
+- **The browser** keeps the plan, conversations and copies of lessons in IndexedDB, and a service worker keeps the app, so both open offline. Each view's page is kept too, once the sandbox's service worker for its build holds every script, style and font of that build; the worker serves them only if their digests, built into its script, match. What a view does offline waits in an outbox until the connection is back.
 - **The school catalogue** (`apps/server/src/app/education/data/systems`) has one file per school system. It lists every class from the first year of primary to the last of secondary, as learners there name them (JSS 1, Year 9, Grade 9 in Junior School), with the age a learner starts it. Each file cites the official sources it was checked against and says how far it can be trusted:
   - `sourced`: confirmed by the sources it cites;
   - `draft`: some of it could not be confirmed, and its notes say what;

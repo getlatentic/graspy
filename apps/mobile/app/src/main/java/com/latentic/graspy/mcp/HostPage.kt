@@ -49,11 +49,10 @@ object HostPage {
         "Permissions-Policy" to "camera=(), microphone=(), geolocation=()",
     )
 
-    /** The sandbox proxy, told which host frames it and the policy the view's resource declared. */
-    fun sandboxAddress(apiOrigin: String, view: UiView): String =
-        "$apiOrigin/ui-sandbox".toUri().buildUpon()
+    /** The sandbox proxy at [sandbox], a path on the API, told which host frames it. */
+    fun sandboxAddress(apiOrigin: String, sandbox: String): String =
+        "$apiOrigin$sandbox".toUri().buildUpon()
             .appendQueryParameter("host", ORIGIN)
-            .apply { view.csp?.let { appendQueryParameter("csp", it.toString()) } }
             .build()
             .toString()
 

@@ -18,11 +18,12 @@ class LearnerConnection(
     val ownerId: String,
     calls: Call.Factory,
     endpoint: HttpUrl,
+    keeper: SandboxKeeper,
     stillLearning: () -> Boolean,
 ) : ViewServer {
     private val mcp = McpClient(calls, endpoint)
     private val outbox = McpOutbox(database.keptCallDao(), ownerId, mcp::callTool, stillLearning, { keep -> database.withTransaction { keep() } })
-    private val views = OfflineViews(database.keptViewDao(), mcp::view)
+    private val views = OfflineViews(database.keptViewDao(), mcp::view, keeper)
 
     val lessons = OfflineLessons(
         database.lessonCopyDao(),
@@ -49,8 +50,6 @@ class LearnerConnection(
     suspend fun sentEverything(): Boolean = outbox.sentEverything()
 
     override suspend fun view(uri: String): UiView = views.view(uri)
-
-    override suspend fun keepShown(uri: String, view: UiView) = views.keepShown(uri, view)
 
     override suspend fun call(name: String, arguments: JsonObject): JsonObject = outbox.callOrKeep(name, arguments)
 

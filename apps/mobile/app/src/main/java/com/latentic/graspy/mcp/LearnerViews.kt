@@ -41,8 +41,6 @@ class LearnerViews internal constructor(
 
     override suspend fun view(uri: String): UiView = connection.view(uri)
 
-    override suspend fun keepShown(uri: String, view: UiView) = connection.keepShown(uri, view)
-
     override suspend fun call(name: String, arguments: JsonObject): JsonObject = connection.call(name, arguments)
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = connection.openToolView(name, arguments)
@@ -60,4 +58,5 @@ private fun connectionFor(application: Application, ownerId: String, calls: Call
     calls = calls,
     endpoint = "$API_ORIGIN/mcp".toHttpUrl(),
     stillLearning = { AppGraph.account(application).learnsAs(ownerId) },
+    keeper = WebViewSandboxKeeper(application),
 )

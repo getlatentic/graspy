@@ -25,13 +25,20 @@
     <script>
       // MCP Apps' sandbox proxy: the host frames this page, on another
       // origin, and this page writes the view into a frame of its own. It
-      // passes every message between the two, except the two addressed to
+      // passes every message between the two, except those addressed to
       // itself. The server lets only the host named in ?host= frame it, and
       // never one on its own origin, so the view is always isolated from it.
       (() => {
         "use strict";
         const PROXY_READY = "ui/notifications/sandbox-proxy-ready";
         const RESOURCE_READY = "ui/notifications/sandbox-resource-ready";
+        // graspy's own: the host asks this build's worker to keep every file
+        // of the build, naming the sandboxes its kept pages still need.
+        const KEEP = "graspy/sandbox-keep";
+        const KEPT = "graspy/sandbox-kept";
+        // Each build's worker names its cache by its sandbox's path.
+        const FILES_CACHE = "graspy-view-files:";
+        const VIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms";
         const FEATURES = {
           camera: "camera",
           microphone: "microphone",
@@ -40,60 +47,108 @@
         };
         const host = new URLSearchParams(location.search).get("host");
         if (window.self === window.top || !host) return;
-        // Once installed, the worker serves this page and the view's files
-        // when there is no connection. A browser that refuses it, such as
-        // one blocking storage, still shows the view online.
+        const own = location.origin;
+        // This page's path is its build's sandbox, where its worker lives.
+        const sandbox = location.pathname;
+        // Once installed, the worker serves this page, the view's page and
+        // the build's files when there is no connection. A browser that
+        // refuses it, such as one blocking storage, still shows the view
+        // online.
         const worker =
           "serviceWorker" in navigator
             ? navigator.serviceWorker
-                .register("/ui-sandbox-sw.js", { scope: "/ui-sandbox" })
+                .register("sw.js")
                 .then(() => navigator.serviceWorker.ready)
                 .catch(() => null)
             : Promise.resolve(null);
+        let inner = null;
 
-        // The first visit loads before the worker controls it, so the
-        // worker is told what this page and its view loaded, to keep.
-        function keepForOffline() {
-          const files = inner.contentWindow.performance
-            .getEntriesByType("resource")
-            .map((entry) => entry.name);
-          worker.then((registration) =>
-            registration?.active?.postMessage({
-              type: "keep",
-              urls: [location.href, ...files],
-            }),
-          );
-        }
-        const own = location.origin;
-        const inner = document.createElement("iframe");
-        inner.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms");
-        document.body.appendChild(inner);
-        let loaded = false;
-
-        function load({ html, sandbox, permissions }) {
-          if (loaded || typeof html !== "string") return;
-          loaded = true;
-          if (typeof sandbox === "string") inner.setAttribute("sandbox", sandbox);
+        // The view's frame loads a page of this origin, which the worker
+        // controls and serves offline, with the policy graspy's views
+        // declare; the view is then written into it, so the worker serves
+        // its files. A host's own sandbox flags are not taken: writing the
+        // view needs the frame's origin, and the view never gets more.
+        function load({ html, permissions }) {
+          if (inner || typeof html !== "string") return;
+          inner = document.createElement("iframe");
+          inner.setAttribute("sandbox", VIEW_SANDBOX);
           const allow = Object.keys(permissions || {})
             .filter((key) => key in FEATURES)
             .map((key) => FEATURES[key]);
           if (allow.length) inner.setAttribute("allow", allow.join("; "));
-          const doc = inner.contentDocument;
-          inner.addEventListener("load", keepForOffline, { once: true });
-          doc.open();
-          doc.write(html);
-          doc.close();
+          const page = new URL("frame", location.href);
+          page.searchParams.set("host", host);
+          inner.addEventListener(
+            "load",
+            () => {
+              const doc = inner.contentDocument;
+              doc.open();
+              doc.write(html);
+              doc.close();
+            },
+            { once: true },
+          );
+          inner.src = page.href;
+          document.body.appendChild(inner);
+        }
+
+        function filesKept(active) {
+          return new Promise((resolve) => {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = ({ data }) => resolve(data?.kept === true);
+            active.postMessage({ type: "keep" }, [channel.port2]);
+          });
+        }
+
+        // Every other build's worker and cache goes: no kept page needs them.
+        async function dropUnlisted(sandboxes) {
+          const scopes = new Set(sandboxes.map((path) => new URL(path, own).href));
+          const names = new Set(sandboxes.map((path) => FILES_CACHE + path));
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(
+            registrations
+              .filter((registration) => !scopes.has(registration.scope))
+              .map((registration) => registration.unregister()),
+          );
+          const cached = await caches.keys();
+          await Promise.all(
+            cached
+              .filter((name) => !names.has(name))
+              .map((name) => caches.delete(name)),
+          );
+        }
+
+        async function keep(params) {
+          const needed = Array.isArray(params?.sandboxes)
+            ? params.sandboxes.filter(
+                (path) => typeof path === "string" && path.startsWith("/"),
+              )
+            : [];
+          const registration = await worker;
+          const kept = registration?.active
+            ? await filesKept(registration.active)
+            : false;
+          if (registration) {
+            await dropUnlisted([sandbox, ...needed]).catch(() => undefined);
+          }
+          window.parent.postMessage(
+            { jsonrpc: "2.0", method: KEPT, params: { kept } },
+            host,
+          );
         }
 
         window.addEventListener("message", (event) => {
           if (event.source === window.parent) {
             if (event.origin !== host) return;
-            if (event.data && event.data.method === RESOURCE_READY) {
+            const method = event.data?.method;
+            if (method === RESOURCE_READY) {
               load(event.data.params || {});
-            } else if (inner.contentWindow) {
+            } else if (method === KEEP) {
+              keep(event.data.params);
+            } else if (inner?.contentWindow) {
               inner.contentWindow.postMessage(event.data, own);
             }
-          } else if (event.source === inner.contentWindow) {
+          } else if (inner && event.source === inner.contentWindow) {
             if (event.origin !== own) return;
             window.parent.postMessage(event.data, host);
           }

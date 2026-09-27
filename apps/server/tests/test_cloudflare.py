@@ -26,6 +26,7 @@ from app.learner.store import DurableObjectLearnerStore
 from app.lessons.making import Job, LessonTarget, started
 from app.lessons.store import DurableObjectLessonStore
 from app.local_d1 import LocalD1
+from app.mcp.sandbox import build_of
 from app.settings import DEPLOYMENT_KEYS
 from app.threads.wire import SentThreads
 
@@ -132,6 +133,8 @@ class FakeLessonMakers:
 
 LIMITERS = ("SESSION_LIMITER", "GENERATE_LIMITER", "AGENT_LIMITER", "API_LIMITER")
 VIEW = "<!doctype html><html><head><title>practice</title></head></html>"
+WORKER = "// the views' build's sandbox worker"
+BUILT = {"/views/practice.html": VIEW, "/views/ui-sandbox-sw.js": WORKER}
 
 
 class FakeAssets:
@@ -142,12 +145,12 @@ class FakeAssets:
 
     async def fetch(self, url: str):
         self.fetched.append(url)
-        found = url.endswith("/views/practice.html")
+        built = next((body for path, body in BUILT.items() if url.endswith(path)), None)
 
         async def text():
-            return VIEW
+            return built
 
-        return SimpleNamespace(ok=found, text=text)
+        return SimpleNamespace(ok=built is not None, text=text)
 
 
 def fake_env(**limiter_success) -> SimpleNamespace:
@@ -392,7 +395,10 @@ async def test_a_view_is_read_from_the_workers_assets():
         )
 
     [content] = response.json()["result"]["contents"]
-    assert env.ASSETS.fetched == ["https://assets.local/views/practice.html"]
+    assert env.ASSETS.fetched == [
+        "https://assets.local/views/practice.html",
+        "https://assets.local/views/ui-sandbox-sw.js",
+    ]
     assert content["text"] == VIEW.replace(
         "<head>", '<head><base href="https://api.example/">'
     )
@@ -400,3 +406,4 @@ async def test_a_view_is_read_from_the_workers_assets():
         "resourceDomains": ["https://api.example"],
         "baseUriDomains": ["https://api.example"],
     }
+    assert content["_meta"]["graspy/sandbox"] == f"/ui-sandbox/{build_of(WORKER)}/"

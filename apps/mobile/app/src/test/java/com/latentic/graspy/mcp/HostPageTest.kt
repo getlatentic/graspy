@@ -5,7 +5,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import java.io.File
 import java.io.FileNotFoundException
-import kotlinx.serialization.json.JsonObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -54,18 +53,17 @@ class HostPageTest {
 
     @Test
     fun `the sandbox and the view's files load from the API as they would anywhere`() {
-        assertNull(HostPage.response(open, API, Uri.parse("$API/ui-sandbox?host=x")))
+        assertNull(HostPage.response(open, API, Uri.parse("$API/ui-sandbox/0123456789abcdef/?host=x")))
         assertNull(HostPage.response(open, API, Uri.parse("http://graspy.getlatentic.com/app-host/host.html")))
     }
 
     @Test
-    fun `the sandbox is told graspy's host and the view's policy`() {
-        val view = UiView("<p/>", "Practice", mcpJson.parseToJsonElement("""{"resourceDomains":["$API"]}""") as JsonObject, null)
-        val address = Uri.parse(HostPage.sandboxAddress(API, view))
+    fun `the sandbox of the view's build is told graspy's host, and nothing the view could choose`() {
+        val address = Uri.parse(HostPage.sandboxAddress(API, "/ui-sandbox/0123456789abcdef/"))
 
-        assertEquals("$API/ui-sandbox", address.buildUpon().clearQuery().build().toString())
+        assertEquals("$API/ui-sandbox/0123456789abcdef/", address.buildUpon().clearQuery().build().toString())
+        assertEquals(setOf("host"), address.queryParameterNames)
         assertEquals(HostPage.ORIGIN, address.getQueryParameter("host"))
-        assertEquals("""{"resourceDomains":["$API"]}""", address.getQueryParameter("csp"))
     }
 
     @Test

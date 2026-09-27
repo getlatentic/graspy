@@ -223,8 +223,8 @@ describe("without a connection", () => {
     serverFollowsTheConnection();
     cy.intercept("GET", `${SERVER}/ui-sandbox*`).as("sandbox");
 
-    // On this first visit the sandbox page tells the server origin's service
-    // worker to keep it.
+    // On this first visit the app has the sandbox's service worker keep
+    // every file of the views' build, in a frame of its own.
     cy.visit(`/app/learn/${MATHS}/lesson/1`);
     lessonView().contains("h2", "Kept slide");
     cy.get("@sandbox.all").should("have.length.at.least", 2);

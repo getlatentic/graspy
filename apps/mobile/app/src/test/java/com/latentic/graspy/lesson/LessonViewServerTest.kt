@@ -45,8 +45,6 @@ class LessonViewServerTest {
 
         override suspend fun view(uri: String): UiView = error("not read here")
 
-        override suspend fun keepShown(uri: String, view: UiView) = error("not kept here")
-
         override suspend fun call(name: String, arguments: JsonObject): JsonObject = KEPT.also { called += name }
 
         override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = error("not opened here")

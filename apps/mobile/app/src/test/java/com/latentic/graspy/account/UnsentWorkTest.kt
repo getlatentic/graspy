@@ -5,6 +5,7 @@ import com.latentic.graspy.collection.outbox.SubmissionScheduler
 import com.latentic.graspy.collection.outbox.SubmissionStatus
 import com.latentic.graspy.lesson.PLAN
 import com.latentic.graspy.mcp.FakeGraspyServer
+import com.latentic.graspy.mcp.HOLDS_EVERY_FILE
 import com.latentic.graspy.mcp.KEPT_RESULT
 import com.latentic.graspy.mcp.LearnerConnection
 import com.latentic.graspy.plan.LearnerRecord
@@ -47,8 +48,8 @@ class UnsentWorkTest {
         if (!reachable) throw IOException("no connection")
         chain.proceed(chain.request())
     }.build()
-    private val connection = LearnerConnection(database, ADA_KEY, calls, server.web.url("/mcp")) { true }
-    private val viewCalls = Outbox { learnerKey -> LearnerConnection(database, learnerKey, calls, server.web.url("/mcp")) { true }.sentEverything() }
+    private val connection = LearnerConnection(database, ADA_KEY, calls, server.web.url("/mcp"), HOLDS_EVERY_FILE) { true }
+    private val viewCalls = Outbox { learnerKey -> LearnerConnection(database, learnerKey, calls, server.web.url("/mcp"), HOLDS_EVERY_FILE) { true }.sentEverything() }
     private var online = true
     private val sending = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val unsent = UnsentWork({ online }, listOf(recordings, viewCalls), sending)

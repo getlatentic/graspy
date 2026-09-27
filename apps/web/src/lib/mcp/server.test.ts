@@ -1,15 +1,19 @@
 import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const LESSON_VIEW = {
+const SANDBOX = "/ui-sandbox/0123456789abcdef/";
+const NEXT_SANDBOX = "/ui-sandbox/fedcba9876543210/";
+const pageOf = (text: string, sandbox = SANDBOX) => ({
   contents: [
     {
       uri: "ui://graspy/lesson",
       mimeType: "text/html;profile=mcp-app",
-      text: "<html>lesson</html>",
+      text,
+      _meta: { "graspy/sandbox": sandbox },
     },
   ],
-};
+});
+const LESSON_VIEW = pageOf("<html>lesson</html>");
 
 const connect = vi.fn();
 const readResource = vi.fn();
@@ -42,6 +46,10 @@ const { fetchWithSession } = vi.hoisted(() => ({
   ),
 }));
 vi.mock("@/lib/api/session", () => ({ fetchWithSession }));
+const { keepSandbox } = vi.hoisted(() => ({
+  keepSandbox: vi.fn(async (_sandbox: string, _needed: Set<string>) => true),
+}));
+vi.mock("./sandbox", () => ({ keepSandbox }));
 const ADA = "ada";
 const GRACE = "grace";
 let learner: string | null = ADA;
@@ -60,12 +68,18 @@ vi.mock("@/lib/account/account-store", async (original) => ({
 
 let online = true;
 
+let store = new Map<string, string>();
+
 function stubStorage() {
-  const store = new Map<string, string>();
+  store = new Map<string, string>();
   vi.stubGlobal("window", {
     localStorage: {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => void store.set(k, v),
+      key: (index: number) => [...store.keys()][index] ?? null,
+      get length() {
+        return store.size;
+      },
     },
   });
 }
@@ -75,13 +89,17 @@ async function fresh() {
   return import("./server");
 }
 
-/** Read and shown: the view bridge keeps the page once the view has initialized. */
-async function shownOnline() {
+/** Kept while online, its sandbox's worker holding its build's files. */
+async function keptOnline() {
   connect.mockResolvedValue(undefined);
-  const { uiView, keepView } = await fresh();
-  const view = await uiView("ui://graspy/lesson");
-  keepView("ui://graspy/lesson", view);
-  return view;
+  const { uiView, readAllViews } = await fresh();
+  await readAllViews();
+  return uiView("ui://graspy/lesson");
+}
+
+async function openedOffline() {
+  connect.mockRejectedValue(new TypeError("Failed to fetch"));
+  return (await fresh()).uiView("ui://graspy/lesson");
 }
 
 beforeEach(() => {
@@ -100,11 +118,13 @@ beforeEach(() => {
   connect.mockReset();
   readResource.mockReset();
   readResource.mockResolvedValue(LESSON_VIEW);
+  keepSandbox.mockReset();
+  keepSandbox.mockResolvedValue(true);
 });
 
 describe("a view", () => {
   it("opens from the copy kept when it was last shown, without a connection", async () => {
-    const read = await shownOnline();
+    const read = await keptOnline();
 
     connect.mockRejectedValue(new TypeError("Failed to fetch"));
     const offline = await (await fresh()).uiView("ui://graspy/lesson");
@@ -117,7 +137,7 @@ describe("a view", () => {
   });
 
   it("opens from the copy kept while the device is offline, whatever the failure", async () => {
-    const read = await shownOnline();
+    const read = await keptOnline();
 
     online = false;
     connect.mockRejectedValue(new Error("Network request failed"));
@@ -127,7 +147,7 @@ describe("a view", () => {
   });
 
   it("opens from the copy kept when nothing answers the read before it times out", async () => {
-    const read = await shownOnline();
+    const read = await keptOnline();
 
     readResource.mockRejectedValue(
       new SdkError(SdkErrorCode.RequestTimeout, "Request timed out", {
@@ -139,19 +159,41 @@ describe("a view", () => {
     expect(timedOut).toEqual(read);
   });
 
-  it("read but not shown leaves the copy kept as it is", async () => {
-    await shownOnline();
-    readResource.mockResolvedValue({
-      contents: [{ ...LESSON_VIEW.contents[0], text: "<html>newer</html>" }],
-    });
+  it("read but not kept leaves the copy kept as it is", async () => {
+    await keptOnline();
+    readResource.mockResolvedValue(pageOf("<html>newer</html>"));
     await expect(
       (await fresh()).uiView("ui://graspy/lesson"),
     ).resolves.toMatchObject({ html: "<html>newer</html>" });
 
-    connect.mockRejectedValue(new TypeError("Failed to fetch"));
-    const offline = await (await fresh()).uiView("ui://graspy/lesson");
+    expect((await openedOffline()).html).toBe("<html>lesson</html>");
+  });
 
-    expect(offline.html).toBe("<html>lesson</html>");
+  it("opens in the sandbox its resource names", async () => {
+    connect.mockResolvedValue(undefined);
+
+    await expect(
+      (await fresh()).uiView("ui://graspy/lesson"),
+    ).resolves.toMatchObject({ sandbox: SANDBOX });
+  });
+
+  it("is refused when its resource names no sandbox", async () => {
+    connect.mockResolvedValue(undefined);
+    const { _meta: _, ...unnamed } = LESSON_VIEW.contents[0];
+    readResource.mockResolvedValue({ contents: [unnamed] });
+
+    await expect((await fresh()).uiView("ui://graspy/lesson")).rejects.toThrow(
+      "names no sandbox",
+    );
+  });
+
+  it("kept before pages named their sandbox does not open without a connection", async () => {
+    store.set(
+      "graspy.view.ui://graspy/lesson",
+      JSON.stringify({ html: "<html>lesson</html>", title: "Lesson" }),
+    );
+
+    await expect(openedOffline()).rejects.toThrow();
   });
 
   it("never read cannot open without a connection", async () => {
@@ -162,7 +204,7 @@ describe("a view", () => {
   });
 
   it("refused by the server does not open from the copy kept", async () => {
-    await shownOnline();
+    await keptOnline();
 
     const refusal = new Error("Resource ui://graspy/lesson not found");
     readResource.mockRejectedValue(refusal);
@@ -172,7 +214,7 @@ describe("a view", () => {
   });
 
   it("does not open from the copy kept when the server answers with an error", async () => {
-    await shownOnline();
+    await keptOnline();
 
     const failure = new Error("Error POSTing to endpoint (HTTP 500)");
     connect.mockRejectedValue(failure);
@@ -182,41 +224,80 @@ describe("a view", () => {
   });
 });
 
-describe("the background read of every view", () => {
-  const newerView = (text: string) => ({
-    contents: [{ ...LESSON_VIEW.contents[0], text }],
-  });
-
-  it("keeps a view that has no copy, so it opens without a connection", async () => {
+describe("the background keep of every view", () => {
+  it("keeps a view never shown once its sandbox's worker holds its files", async () => {
     connect.mockResolvedValue(undefined);
     await (await fresh()).readAllViews();
 
-    connect.mockRejectedValue(new TypeError("Failed to fetch"));
-    const offline = await (await fresh()).uiView("ui://graspy/lesson");
-
-    expect(offline.html).toBe("<html>lesson</html>");
+    expect(keepSandbox).toHaveBeenCalledWith(SANDBOX, new Set([SANDBOX]));
+    expect((await openedOffline()).html).toBe("<html>lesson</html>");
   });
 
-  it("leaves a kept copy as it is: its files were cached by showing it, a newer page's may not be", async () => {
-    await shownOnline();
-    readResource.mockResolvedValue(newerView("<html>newer</html>"));
+  it("keeps nothing while the worker does not hold every file", async () => {
+    keepSandbox.mockResolvedValue(false);
+    connect.mockResolvedValue(undefined);
     await (await fresh()).readAllViews();
 
-    connect.mockRejectedValue(new TypeError("Failed to fetch"));
-    const offline = await (await fresh()).uiView("ui://graspy/lesson");
-
-    expect(offline.html).toBe("<html>lesson</html>");
+    await expect(openedOffline()).rejects.toThrow();
   });
 
-  it("is overtaken by a view being shown, which replaces its copy", async () => {
-    await shownOnline();
-    readResource.mockResolvedValue(newerView("<html>newer</html>"));
-    await shownOnline();
+  it("replaces a copy from an earlier build once the new build's files are held", async () => {
+    await keptOnline();
+    readResource.mockResolvedValue(
+      pageOf("<html>deployed</html>", NEXT_SANDBOX),
+    );
+    await (await fresh()).readAllViews();
 
-    connect.mockRejectedValue(new TypeError("Failed to fetch"));
-    const offline = await (await fresh()).uiView("ui://graspy/lesson");
+    expect(keepSandbox).toHaveBeenLastCalledWith(
+      NEXT_SANDBOX,
+      new Set([SANDBOX, NEXT_SANDBOX]),
+    );
+    expect(await openedOffline()).toMatchObject({
+      html: "<html>deployed</html>",
+      sandbox: NEXT_SANDBOX,
+    });
+  });
 
-    expect(offline.html).toBe("<html>newer</html>");
+  it("leaves a copy from an earlier build, and its sandbox, while the new build's files are not held", async () => {
+    await keptOnline();
+    readResource.mockResolvedValue(
+      pageOf("<html>deployed</html>", NEXT_SANDBOX),
+    );
+    keepSandbox.mockResolvedValue(false);
+    await (await fresh()).readAllViews();
+    await (await fresh()).readAllViews();
+
+    expect(keepSandbox).toHaveBeenLastCalledWith(
+      NEXT_SANDBOX,
+      new Set([SANDBOX, NEXT_SANDBOX]),
+    );
+    expect(await openedOffline()).toMatchObject({
+      html: "<html>lesson</html>",
+      sandbox: SANDBOX,
+    });
+  });
+
+  it("lets an earlier build's sandbox go once no copy opens in it", async () => {
+    await keptOnline();
+    readResource.mockResolvedValue(
+      pageOf("<html>deployed</html>", NEXT_SANDBOX),
+    );
+    await (await fresh()).readAllViews();
+    await (await fresh()).readAllViews();
+
+    expect(keepSandbox).toHaveBeenLastCalledWith(
+      NEXT_SANDBOX,
+      new Set([NEXT_SANDBOX]),
+    );
+  });
+
+  it("runs once at a time however often it is asked", async () => {
+    connect.mockResolvedValue(undefined);
+    const { readAllViews } = await fresh();
+
+    await Promise.all([readAllViews(), readAllViews()]);
+
+    expect(keepSandbox).toHaveBeenCalledTimes(1);
   });
 });
 
