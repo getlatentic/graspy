@@ -10,7 +10,7 @@ from .plan import Plan
 
 
 async def _stored_class(caller: Caller) -> ClassAsk | None:
-    stored = await caller.keeping.learners.plan(caller.learner)
+    stored = await caller.plan()
     if not stored:
         return None
     plan = Plan.model_validate_json(stored)

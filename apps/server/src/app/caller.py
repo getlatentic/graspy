@@ -32,6 +32,12 @@ class Caller:
             return LearnerRecord()
         return await self.keeping.learners.load(self.learner)
 
+    async def plan(self) -> str | None:
+        """The plan the learner's devices share, as kept."""
+        if not self.learner:
+            return None
+        return await self.keeping.learners.plan(self.learner)
+
     async def change(self, change: Change) -> None:
         if self.learner:
             await self.keeping.learners.change(self.learner, change)
