@@ -11,6 +11,7 @@ import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.sync.networkReach
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
+import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 /**
@@ -48,10 +49,13 @@ class LearnerViews internal constructor(
 /** A learner's kept view calls, sent before the device leaves them: whether none is left on the phone. */
 fun keptViewCalls(application: Application): Outbox = Outbox { learnerKey -> connectionFor(application, learnerKey).sentEverything() }
 
-private fun connectionFor(application: Application, ownerId: String) = LearnerConnection(
+/** The learner's lessons over a connection of their own, for work done away from a lesson's view. */
+fun learnerLessons(application: Application, ownerId: String, calls: Call.Factory): OfflineLessons = connectionFor(application, ownerId, calls).lessons
+
+private fun connectionFor(application: Application, ownerId: String, calls: Call.Factory = AppGraph.callsFor(application, ownerId)) = LearnerConnection(
     database = AppGraph.database(application),
     ownerId = ownerId,
-    calls = AppGraph.callsFor(application, ownerId),
+    calls = calls,
     endpoint = "$API_ORIGIN/mcp".toHttpUrl(),
     stillLearning = { AppGraph.account(application).learnsAs(ownerId) },
 )
