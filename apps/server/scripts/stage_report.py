@@ -14,9 +14,9 @@ from lesson_checks import missing_parts, questions
 from reading_level import reading_level
 
 HEADING = (
-    "| Learner | Run | Lesson words/sentence | Lesson letters/word | "
+    "| Learner | Run | Lesson words/sentence | "
     "Lesson syllables/word | Lesson over limit | Tutor words/sentence | "
-    "Tutor letters/word | Tutor syllables/word | Tutor over limit | "
+    "Tutor syllables/word | Tutor over limit | "
     "Persona names stage | Answers worked out: right/wrong/unmatched | "
     "Malformed questions | Lessons missing a part | Whole lessons | "
     "Failed draws |"
@@ -46,7 +46,6 @@ def _reading(done: list[dict], part: str, limit: int | None) -> list[str]:
     over = [level.over_limit for level in levels if level.over_limit is not None]
     return [
         _spread([level.words_per_sentence for level in levels]),
-        _spread([level.letters_per_word for level in levels]),
         _spread([level.syllables_per_word for level in levels]),
         _spread(over, 100) + " %" if over else "-",
     ]

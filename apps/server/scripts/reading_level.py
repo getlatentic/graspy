@@ -1,5 +1,5 @@
 """Reading level of what a learner reads, measured in code: words per
-sentence, letters and syllables per word, and the share of sentences longer
+sentence, syllables per word, and the share of sentences longer
 than a limit. Mathematics, tables and headings are left out: they are not
 prose."""
 
@@ -60,7 +60,6 @@ def syllables(word: str) -> int:
 class ReadingLevel:
     sentences: int
     words_per_sentence: float
-    letters_per_word: float
     syllables_per_word: float
     over_limit: float | None
 
@@ -72,7 +71,6 @@ def reading_level(texts: list[str], limit: int | None) -> ReadingLevel:
     return ReadingLevel(
         sentences=len(found),
         words_per_sentence=sum(lengths) / len(found) if found else 0.0,
-        letters_per_word=sum(map(len, words)) / len(words) if words else 0.0,
         syllables_per_word=sum(map(syllables, words)) / len(words) if words else 0.0,
         over_limit=(
             sum(length > limit for length in lengths) / len(found)
