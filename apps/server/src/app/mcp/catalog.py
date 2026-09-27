@@ -24,6 +24,7 @@ from ..app_tool import AppTool
 from ..caller import Caller
 from ..learner.route import LEARNER_TOOLS
 from ..lessons.tools import LESSON_TOOLS, LESSON_UI
+from .sandbox import declared_csp
 from .views import Views
 
 RESOURCE_MIME_TYPE = "text/html;profile=mcp-app"
@@ -105,10 +106,7 @@ class UiResource:
                     "_meta": {
                         "ui": {
                             **UI_META,
-                            "csp": {
-                                "resourceDomains": [origin],
-                                "baseUriDomains": [origin],
-                            },
+                            "csp": declared_csp(origin),
                         }
                     },
                 }

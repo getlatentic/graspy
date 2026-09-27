@@ -145,6 +145,7 @@ def _add_state(
     app.state.path_service = LearningPathService()
     app.state.keeping = keeping
     app.state.origin_allowed = origin_matcher(origins)
+    app.state.framing_hosts = origins
     public = urlsplit(settings.public_base_url)
     app.state.mcp = Server(
         views=views or LocalViews(),

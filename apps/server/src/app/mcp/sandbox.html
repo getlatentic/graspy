@@ -32,6 +32,7 @@
         "use strict";
         const PROXY_READY = "ui/notifications/sandbox-proxy-ready";
         const RESOURCE_READY = "ui/notifications/sandbox-resource-ready";
+        const VIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms";
         const FEATURES = {
           camera: "camera",
           microphone: "microphone",
@@ -40,49 +41,46 @@
         };
         const host = new URLSearchParams(location.search).get("host");
         if (window.self === window.top || !host) return;
-        // Once installed, the worker serves this page and the view's files
-        // when there is no connection. A browser that refuses it, such as
-        // one blocking storage, still shows the view online.
-        const worker =
-          "serviceWorker" in navigator
-            ? navigator.serviceWorker
-                .register("/ui-sandbox-sw.js", { scope: "/ui-sandbox" })
-                .then(() => navigator.serviceWorker.ready)
-                .catch(() => null)
-            : Promise.resolve(null);
-
-        // The first visit loads before the worker controls it, so the
-        // worker is told what this page and its view loaded, to keep.
-        function keepForOffline() {
-          const files = inner.contentWindow.performance
-            .getEntriesByType("resource")
-            .map((entry) => entry.name);
-          worker.then((registration) =>
-            registration?.active?.postMessage({
-              type: "keep",
-              urls: [location.href, ...files],
-            }),
-          );
+        // Once installed, the worker serves this page, the view's page and
+        // the view's files when there is no connection; it is asked to cache
+        // every view's files now. A browser that refuses it, such as one
+        // blocking storage, still shows the view online.
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("/ui-sandbox-sw.js", { scope: "/ui-sandbox" })
+            .then(() => navigator.serviceWorker.ready)
+            .then(({ active }) => active?.postMessage({ type: "precache" }))
+            .catch(() => undefined);
         }
         const own = location.origin;
-        const inner = document.createElement("iframe");
-        inner.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms");
-        document.body.appendChild(inner);
-        let loaded = false;
+        let inner = null;
 
-        function load({ html, sandbox, permissions }) {
-          if (loaded || typeof html !== "string") return;
-          loaded = true;
-          if (typeof sandbox === "string") inner.setAttribute("sandbox", sandbox);
+        // The view's frame loads a page of this origin, which the worker
+        // controls and serves offline, with the policy graspy's views
+        // declare; the view is then written into it, so the worker serves
+        // its files. A host's own sandbox flags are not taken: writing the
+        // view needs the frame's origin, and the view never gets more.
+        function load({ html, permissions }) {
+          if (inner || typeof html !== "string") return;
+          inner = document.createElement("iframe");
+          inner.setAttribute("sandbox", VIEW_SANDBOX);
           const allow = Object.keys(permissions || {})
             .filter((key) => key in FEATURES)
             .map((key) => FEATURES[key]);
           if (allow.length) inner.setAttribute("allow", allow.join("; "));
-          const doc = inner.contentDocument;
-          inner.addEventListener("load", keepForOffline, { once: true });
-          doc.open();
-          doc.write(html);
-          doc.close();
+          const page = new URL(`/ui-sandbox-frame${location.search}`, own).href;
+          inner.addEventListener(
+            "load",
+            () => {
+              const doc = inner.contentDocument;
+              doc.open();
+              doc.write(html);
+              doc.close();
+            },
+            { once: true },
+          );
+          inner.src = page;
+          document.body.appendChild(inner);
         }
 
         window.addEventListener("message", (event) => {
@@ -90,10 +88,10 @@
             if (event.origin !== host) return;
             if (event.data && event.data.method === RESOURCE_READY) {
               load(event.data.params || {});
-            } else if (inner.contentWindow) {
+            } else if (inner?.contentWindow) {
               inner.contentWindow.postMessage(event.data, own);
             }
-          } else if (event.source === inner.contentWindow) {
+          } else if (inner && event.source === inner.contentWindow) {
             if (event.origin !== own) return;
             window.parent.postMessage(event.data, host);
           }
