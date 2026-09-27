@@ -7,17 +7,27 @@ import {
 } from "./app-sections";
 
 describe("pageRedirect", () => {
-  it("leads a page a class that learns by voice alone does not have to its voice lessons", () => {
-    expect(pageRedirect("/app/learn/subjects", true)).toBe("/app/learn/voice");
+  it("leads a page a class that learns by voice alone does not have to Home, its voice lessons", () => {
+    expect(pageRedirect("/app/learn/subjects", true)).toBe("/app/learn");
     expect(pageRedirect("/app/learn/mathematics/lesson/2", true)).toBe(
-      "/app/learn/voice",
+      "/app/learn",
     );
   });
 
+  it("leads such a class's voice lessons page to Home, which is that page", () => {
+    expect(pageRedirect("/app/learn/voice", true)).toBe("/app/learn");
+    expect(pageRedirect("/app/learn/voice/", true)).toBe("/app/learn");
+  });
+
   it("leaves the pages a learner has where they are", () => {
-    expect(pageRedirect("/app/learn/voice", true)).toBeNull();
+    expect(pageRedirect("/app/learn", true)).toBeNull();
+    expect(pageRedirect("/app/learn/voice/lesson", true)).toBeNull();
     expect(pageRedirect("/app/learn/you", true)).toBeNull();
     expect(pageRedirect("/app/learn/subjects", false)).toBeNull();
+  });
+
+  it("keeps the voice lessons page for any other class", () => {
+    expect(pageRedirect("/app/learn/voice", false)).toBeNull();
   });
 });
 
