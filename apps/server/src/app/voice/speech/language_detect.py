@@ -89,6 +89,11 @@ class LanguageEvidence:
         return self.language != UNKNOWN
 
     @property
+    def heard(self) -> bool:
+        """Whisper answered; when it did not, detection says nothing about the speech."""
+        return self.whisper_error is None
+
+    @property
     def transcription_language(self) -> str:
         """Unknown speech is transcribed in the teaching language; it is never a routed guess."""
         return self.language if self.known else TEACHING_LANGUAGE
@@ -103,6 +108,20 @@ class LanguageEvidence:
             "whisper_error": self.whisper_error,
             "language": self.language,
         }
+
+
+def transcription_route(
+    evidence: LanguageEvidence | None, client_language: str
+) -> tuple[str, str | None]:
+    """The recognizer's language, and the language recorded for the turn (None when unknown).
+
+    Speech Whisper heard is routed by what it heard. When Whisper was not asked, failed or ran out
+    of time, there is no evidence, so the language the client sent decides, never a silent English.
+    """
+    if evidence is None or not evidence.heard:
+        return client_language, client_language
+    recorded = evidence.language if evidence.known else None
+    return evidence.transcription_language, recorded
 
 
 def _tokens(text: str) -> list[str]:
@@ -160,9 +179,12 @@ def _to_py(value):
 
 
 async def _bounded(call, seconds: float, what: str):
-    """The model's answer, or None and the error it failed with; a failure is evidence, not a crash."""
+    """The model's answer, or None and the error it failed with; a failure is evidence, not a crash.
+
+    `call` starts the model inside the guard, so a binding that throws as it is called is caught too.
+    """
     try:
-        return _to_py(await asyncio.wait_for(call, timeout=seconds)), None
+        return _to_py(await asyncio.wait_for(call(), timeout=seconds)), None
     except Exception as failure:
         logger.warning("%s failed", what, exc_info=True)
         return None, f"{type(failure).__name__}: {failure}"[:200]
@@ -172,9 +194,12 @@ async def _heard(env, audio: bytes):
     import base64
 
     request = {"audio": base64.b64encode(audio).decode()}
-    return await _bounded(
-        env.AI.run(WHISPER_MODEL, request), WHISPER_TIMEOUT_SECONDS, "Whisper"
+    reply, error = await _bounded(
+        lambda: env.AI.run(WHISPER_MODEL, request), WHISPER_TIMEOUT_SECONDS, "Whisper"
     )
+    if error is None and not isinstance(reply, dict):
+        return None, "Whisper returned no transcription"
+    return reply, error
 
 
 async def _classified(env, language: str, probability: float, text: str):
@@ -187,7 +212,7 @@ async def _classified(env, language: str, probability: float, text: str):
         },
     ]
     reply, error = await _bounded(
-        env.AI.run(CLASSIFIER_MODEL, {"messages": messages, "max_tokens": 4}),
+        lambda: env.AI.run(CLASSIFIER_MODEL, {"messages": messages, "max_tokens": 4}),
         CLASSIFIER_TIMEOUT_SECONDS,
         "The language classifier",
     )

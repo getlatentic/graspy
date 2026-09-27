@@ -42,7 +42,7 @@ from .speech.intron_sync import (
     needs_detection,
     transcribe_intron_sync,
 )
-from .speech.language_detect import detect_spoken_language
+from .speech.language_detect import detect_spoken_language, transcription_route
 from .speech.sahara_stream import buffer_bytes, transcribe_sahara
 from .teacher import TeacherChoiceError, TeacherModel
 
@@ -140,11 +140,10 @@ async def _transcribe(
             audio, metadata["language_pair"], api_key
         )
         return transcript, latency, asr_language(metadata)
-    language = evidence.transcription_language if evidence else asr_language(metadata)
+    language, recorded = transcription_route(evidence, asr_language(metadata))
     transcript, latency = await transcribe_intron_sync(
         audio, language, api_key, f"{sample_id}.wav"
     )
-    recorded = None if evidence is not None and not evidence.known else language
     return transcript, latency, recorded
 
 

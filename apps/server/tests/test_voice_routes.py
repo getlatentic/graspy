@@ -296,6 +296,48 @@ async def test_one_learner_cannot_reach_anothers_recording(app, env, monkeypatch
     assert env.TUTOR.actions(BO) == []
 
 
+class DownWhisper:
+    """Workers AI with Whisper down: every call fails."""
+
+    def __init__(self):
+        self.asked = []
+
+    async def run(self, model, inputs):
+        self.asked.append(model)
+        raise RuntimeError("Whisper is unavailable")
+
+
+async def test_a_whisper_failure_transcribes_in_the_client_language_pair(
+    app, env, monkeypatch
+):
+    from app.voice.speech.language_detect import WHISPER_MODEL
+
+    heard = []
+
+    async def transcribe(audio, language, api_key, file_name):
+        heard.append(language)
+        return "meji ati meje je merinla", 40
+
+    monkeypatch.setattr(
+        "app.voice.worker_evaluation.transcribe_intron_sync", transcribe
+    )
+    env.AI = DownWhisper()
+    unsaid = {key: value for key, value in METADATA.items() if key != "spoken_language"}
+    offered(env, ADA)
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http, unsaid)
+        await uploaded(http, sample)
+        marked = await http.post(f"/api/voice/samples/{sample['sample_id']}/evaluation")
+
+    assert marked.status_code == 200, marked.text
+    turn = marked.json()
+    assert heard == ["yo"] and env.AI.asked == [WHISPER_MODEL]
+    assert turn["spoken_language"] == "yo"
+    assert turn["language_evidence"]["language"] == "unknown"
+    assert turn["language_evidence"]["whisper_error"].startswith("RuntimeError")
+
+
 async def test_a_recording_may_answer_only_a_step_the_learner_was_offered(
     app, env, monkeypatch
 ):
