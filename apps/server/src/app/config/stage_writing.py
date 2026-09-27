@@ -21,8 +21,12 @@ class StageWriting:
     questions: str
 
     def guidance(self) -> str:
+        # A sentence limit alone shortens the explanation too: measured, the
+        # tutor then gives a primary child fewer steps and local examples.
         limit = (
-            f"Sentences of at most {self.max_sentence_words} words. "
+            f"Sentences of at most {self.max_sentence_words} words. Only the "
+            "sentences are short: explain fully, with an example from the "
+            "learner's own country. "
             if self.max_sentence_words
             else ""
         )
@@ -45,9 +49,10 @@ WRITING: dict[Stage, StageWriting] = {
         max_sentence_words=10,
         words="Everyday words a child of this age knows; say what a new word "
         "means once, simply, then use it.",
-        examples="Examples from their day: home, family, school, the market, "
-        "food, play and animals, with things they can count or hold.",
-        steps="One idea at a time in small steps; show it before asking it.",
+        examples="Examples that fit the idea, from a child's day in their "
+        "country, named as they know them: home, school, the market, food, "
+        "play and animals, with things they can count or hold.",
+        steps="One idea at a time in small steps, each shown with an example.",
         questions="Questions of one short sentence and one step, with options "
         "of a few words; a passage is 60 to 120 words.",
     ),
@@ -56,8 +61,11 @@ WRITING: dict[Stage, StageWriting] = {
         max_sentence_words=14,
         words="Plain words; give each subject word a short meaning the first "
         "time it is used.",
-        examples="Examples from their town: market prices in the local money, "
-        "farming, games and sport, school life.",
+        # Named money examples invite money sums where the idea is not about
+        # money: measured, a fraction explained as a division of naira.
+        examples="Examples that fit the idea, from their town and country, "
+        "named as they know them: the market, farming, games and sport, "
+        "school life.",
         steps="A worked example before the rule, in two or three steps, each shown.",
         questions="Questions of one or two sentences, with short options; a "
         "passage is 120 to 250 words.",
@@ -75,13 +83,16 @@ WRITING: dict[Stage, StageWriting] = {
     Stage.SENIOR_SECONDARY: StageWriting(
         school="senior secondary school",
         max_sentence_words=None,
-        words="The subject's full vocabulary, as their school-leaving exams use it.",
+        # Held to the syllabus: measured, lessons for this stage otherwise
+        # reach university detail, which a judge scored 2 of 5 for age.
+        words="The subject's terms as their senior secondary syllabus uses "
+        "them, each explained when first used.",
         examples="Examples from their country's economy, technology, industry "
-        "and careers, and exam-style problems.",
-        steps="Give the reasoning in full; problems may take several steps, "
-        "each named.",
-        questions="Exam-style questions that may take several steps; a passage "
-        "is 300 to 500 words.",
+        "and careers.",
+        steps="Teach what their syllabus covers on the topic and no more: no "
+        "calculation or mechanism it does not ask for. A worked example "
+        "before the learner's turn.",
+        questions="Questions on what was taught; a passage is 300 to 500 words.",
     ),
     Stage.AFTER_SCHOOL: StageWriting(
         school="university and college",

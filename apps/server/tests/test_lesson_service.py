@@ -1,6 +1,7 @@
 """The lesson pipeline, with what each stage was asked read back."""
 
 import json
+from pathlib import Path
 from unittest.mock import ANY
 
 import pytest
@@ -8,7 +9,7 @@ from dspy.utils.exceptions import AdapterParseError
 from lesson_example import wire
 from stand_in import inputs, stand_in
 
-from app.domains.lesson.generator import NO_NOTES, NO_STAGE_GUIDANCE, NOT_KNOWN
+from app.domains.lesson.generator import NO_NOTES
 from app.domains.lesson.service import LessonRequest, LessonService
 from app.learner.store import InMemoryLearnerStore
 from app.lessons.making import Job, LessonTarget
@@ -25,11 +26,10 @@ PRIMARY_2 = "Primary 2 (Primary), Nigeria, age 7"
 PRIMARY_5 = "Primary 5 (Primary), Nigeria, age 10"
 JSS_1 = "JSS 1 (Junior Secondary School), Nigeria, age 12"
 SS_2 = "SS 2 (Senior Secondary School), Nigeria, age 16"
-UNKNOWN_STAGE = {
-    "stage": NOT_KNOWN,
-    "age": NOT_KNOWN,
-    "stage_guidance": NO_STAGE_GUIDANCE,
-}
+# Each lesson call's system prompt exactly as it was before stages.
+WITHOUT_STAGE = json.loads(
+    (Path(__file__).parent / "lesson_prompts_without_stage.json").read_text()
+)
 
 # LessonPlan requires between three and six slide specs, so three is the
 # smallest lesson the schema allows.
@@ -262,7 +262,6 @@ async def test_each_stage_is_asked_about_the_learners_lesson():
         "subject": SUBJECT,
         "topic": TOPIC,
         "grade_level": GRADE,
-        **UNKNOWN_STAGE,
         "country": COUNTRY,
         "language": "English",
     }
@@ -273,7 +272,6 @@ async def test_each_stage_is_asked_about_the_learners_lesson():
         "subject": SUBJECT,
         "topic": TOPIC,
         "grade_level": GRADE,
-        **UNKNOWN_STAGE,
         "learner_notes": NO_NOTES,
     }
     for i, context in enumerate(
@@ -298,7 +296,7 @@ async def test_each_stage_is_asked_about_the_learners_lesson():
         (PRIMARY_2, "lower primary", "7", "Sentences of at most 10 words."),
         (PRIMARY_5, "upper primary", "10", "Sentences of at most 14 words."),
         (JSS_1, "junior secondary", "12", "the subject's proper terms"),
-        (SS_2, "senior secondary", "16", "The subject's full vocabulary"),
+        (SS_2, "senior secondary", "16", "and no more: no calculation"),
     ],
 )
 async def test_the_plan_each_slide_and_the_practice_are_told_the_stage_and_age(
@@ -311,6 +309,31 @@ async def test_the_plan_each_slide_and_the_practice_are_told_the_stage_and_age(
         assert asked["grade_level"] == grade
         assert (asked["stage"], asked["age"]) == (stage, age)
         assert guided in asked["stage_guidance"]
+
+
+@pytest.mark.parametrize("grade", [GRADE, "Standard", "Primary 2"])
+async def test_a_class_the_catalogue_cannot_place_is_asked_word_for_word_as_before(
+    grade,
+):
+    """Measured: even inputs saying the stage was not known took local
+    examples out of its lessons."""
+    lm, _ = await _stream(_answers(), grade=grade)
+
+    asked = [lm.history[call]["messages"][0]["content"] for call in range(5)]
+    assert asked == [
+        WITHOUT_STAGE["GenerateLessonPlan"],
+        *[WITHOUT_STAGE["GenerateSlide"]] * MIN_SLIDES,
+        WITHOUT_STAGE["GeneratePracticeQuestion"],
+    ]
+
+
+async def test_a_placed_class_is_asked_with_the_stage_added_to_the_same_prompt():
+    lm, _ = await _stream(_answers(), grade=PRIMARY_2)
+
+    plan = lm.history[0]["messages"][0]["content"]
+    assert plan != WITHOUT_STAGE["GenerateLessonPlan"]
+    assert "`stage_guidance`" in plan
+    assert "Create a pedagogical lesson plan." in plan
 
 
 async def test_an_undergraduate_lesson_is_written_for_an_adult():
