@@ -76,8 +76,12 @@ class FakeAccountApi(learners: List<LearnerDto> = listOf(ADA, BAYO)) : AccountAp
         return issued("learner-token-$id", kept.first { it.id == id })
     }
 
+    /** What happens on the device while graspy deletes the account. */
+    var whileDeleting: suspend () -> Unit = {}
+
     override suspend fun delete() {
         calls += "delete"
+        whileDeleting()
     }
 }
 

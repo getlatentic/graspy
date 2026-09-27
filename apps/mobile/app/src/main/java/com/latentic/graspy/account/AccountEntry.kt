@@ -117,8 +117,13 @@ class AccountEntry(
      * accounts from the start, as in a sign-in, so [reconcile] undoes Firebase's user rather than adopting it. The
      * account goes before Firebase: cut short between them, the next start finishes the leave rather than wiping
      * that learning as a sign-out.
+     *
+     * A sign-out whose wipe failed after the learner went leaves the account here, and the device asking who is
+     * learning. Leaving from there finishes that sign-out: a leave would drop the account with the wipe half done,
+     * and the next sign-in would drop the note that has the next start finish it.
      */
     suspend fun leaveForAnotherAccount() {
+        if (signOutLeftUnfinished()) return signOut()
         forgetting.edit(commit = true) {
             putBoolean(GOOGLE_ACCOUNT, true)
             putBoolean(SIGNING_IN, true)
@@ -128,6 +133,10 @@ class AccountEntry(
         firebase.signOut()
         forgetGoogleAccountOrLeaveMarked()
     }
+
+    /** The wipe clears the account last, so a sign-out's note with the account still here is one cut short. */
+    private fun signOutLeftUnfinished(): Boolean =
+        forgetting.getBoolean(SIGNING_OUT, false) && accounts.account.value != null
 
     /** The mark goes only once done, so a Google account Play services could not forget is forgotten later. */
     private suspend fun forgetGoogleAccount() {
@@ -182,7 +191,8 @@ class AccountEntry(
         when {
             account == null && (signInLeft || signOutLeft) -> undoFirebaseUser(uid, scope)
             uid != null && account == null -> accounts.set(Account(uid, firebase.email, learner = null, deviceJoins = true))
-            account != null && (account.uid != uid || signOutLeft) -> scope.finish("Finishing a sign-out") { signOut() }
+            account != null && (account.uid != uid || signOutLeft) ->
+                scope.finish("Finishing a sign-out") { signOut(of = account.uid) }
             account == null && forgetting.getBoolean(GOOGLE_ACCOUNT, false) ->
                 scope.finish("Forgetting the signed-out Google account") { forgetGoogleAccount() }
         }

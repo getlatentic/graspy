@@ -32,14 +32,7 @@ class AccountGraph(private val context: Application) {
     private val sessionApi: SessionApi by lazy { retrofit(OkHttpClient()).create(SessionApi::class.java) }
 
     val sessions: SessionTokens by lazy {
-        SessionTokens(
-            accounts = accounts,
-            deviceId = deviceIds::current,
-            idToken = firebase::idToken,
-            exchange = sessionApi::session,
-            learnerGone = { wipe.leaveLearner() },
-            signedOutElsewhere = { uid -> entry.signOut(of = uid) },
-        )
+        accountSessions(accounts, deviceIds::current, firebase, sessionApi::session, { wipe }, { entry })
     }
 
     val wipe by lazy {
@@ -77,10 +70,30 @@ class AccountGraph(private val context: Application) {
     }
 
     val directory by lazy {
-        LearnerDirectory(AppGraph.accountApi(context), accounts, profiles, wipe::leaveLearner) { entry.signOut() }
+        LearnerDirectory(AppGraph.accountApi(context), accounts, profiles, wipe::leaveLearner) { uid -> entry.signOut(of = uid) }
     }
 
     val entry by lazy {
         AccountEntry(context, GoogleSignIn(context, firebase), firebase, accounts, sessions, sessionApi, deviceIds, wipe)
     }
 }
+
+/**
+ * The device's sessions, wired to what a refusal asks for: a learner graspy no longer knows is left, and an
+ * account Google no longer holds is signed out. Only that account: one signed in since its exchange began stays.
+ */
+fun accountSessions(
+    accounts: AccountStore,
+    deviceId: () -> String,
+    firebase: FirebaseSession,
+    exchange: suspend (SessionRequestDto) -> IssuedSessionDto,
+    wipe: () -> DeviceWipe,
+    entry: () -> AccountEntry,
+) = SessionTokens(
+    accounts = accounts,
+    deviceId = deviceId,
+    idToken = firebase::idToken,
+    exchange = exchange,
+    learnerGone = { wipe().leaveLearner() },
+    signedOutElsewhere = { uid -> entry().signOut(of = uid) },
+)

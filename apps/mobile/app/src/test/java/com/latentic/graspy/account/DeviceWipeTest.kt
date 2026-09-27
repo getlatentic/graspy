@@ -9,6 +9,8 @@ import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.localization.SchoolClass
 import com.latentic.graspy.practice.TEACHER_AUDIO_DIRECTORY
 import java.io.File
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -286,6 +288,92 @@ class DeviceWipeTest {
         assertNull(firebase.uid)
         assertEquals(0, wipes)
         assertEquals(adaProfile, profiles.load(ada))
+    }
+
+    @Test
+    fun `leaving for another account after a sign-out whose wipe failed part-way finishes that wipe`() = runBlocking {
+        val failsOnce = failingOnce()
+        runCatching { entry(failsOnce).signOut() }
+        assertEquals("the picker is shown", signedIn(learner = null, deviceJoins = false), accounts.account.value)
+
+        entry(failsOnce).leaveForAnotherAccount()
+
+        assertLearnerDataGone()
+        assertFalse(teacherAudio.exists())
+        assertNull(profiles.load(ada))
+        assertNull(profiles.load(bayo))
+        assertNull(accounts.account.value)
+        assertNotEquals(deviceId, deviceIds.current())
+        assertEquals(setOf("signing_out"), signOutPending().keys)
+    }
+
+    @Test
+    fun `a sign-out whose wipe fails again as the account leaves keeps the account and its note for the next start`() = runBlocking {
+        val failing = DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) { error("The disk failed") }
+        runCatching { entry(failing).signOut() }
+
+        runCatching { entry(failing).leaveForAnotherAccount() }
+
+        assertEquals(signedIn(learner = null, deviceJoins = false), accounts.account.value)
+        assertTrue("signing_out" in signOutPending())
+        start()
+        assertNull(accounts.account.value)
+        assertNull(profiles.load(ada))
+        assertNotEquals(deviceId, deviceIds.current())
+    }
+
+    @Test
+    fun `an account deleted after a refusal signed it out leaves the account signed in since alone`() = runBlocking {
+        val entry = entry(wipe)
+        val api = FakeAccountApi()
+        api.whileDeleting = {
+            entry.signOut(of = UID)
+            accounts.set(Account("uid-2", "other@example.com", learner = null, deviceJoins = true))
+            firebase.uid = "uid-2"
+        }
+        val directory = LearnerDirectory(api, accounts, profiles, wipe::leaveLearner) { uid -> entry.signOut(of = uid) }
+
+        directory.deleteAccount()
+
+        assertEquals(listOf("delete"), api.calls)
+        assertEquals("uid-2", accounts.account.value?.uid)
+        assertEquals("uid-2", firebase.uid)
+        assertEquals("only the refusal wiped the device", 1, wipes)
+    }
+
+    @Test
+    fun `a sign-out the start finishes leaves an account signed in before it runs alone`() = runBlocking {
+        context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0).edit().putBoolean("signing_out", true).commit()
+        val held = mutableListOf<Runnable>()
+        var holding = true
+        val start = CoroutineScope(Job() + object : CoroutineDispatcher() {
+            override fun dispatch(context: CoroutineContext, block: Runnable) {
+                if (holding) held += block else block.run()
+            }
+        })
+
+        entry(wipe).reconcile(start)
+        accounts.set(Account("uid-2", "other@example.com", learner = null, deviceJoins = true))
+        firebase.uid = "uid-2"
+        holding = false
+        held.forEach { it.run() }
+        start.coroutineContext[Job]!!.children.forEach { it.join() }
+
+        assertEquals("uid-2", accounts.account.value?.uid)
+        assertEquals(0, wipes)
+    }
+
+    /** A wipe that fails once, after the learner has gone, as a full disk would. */
+    private fun failingOnce(): DeviceWipe {
+        var failed = false
+        return DeviceWipe(context, database, accounts, sessions, deviceIds, profiles) {
+            if (!failed) {
+                failed = true
+                error("The disk failed")
+            }
+            workCancelled = true
+            wipes += 1
+        }
     }
 
     private fun entry(wipe: DeviceWipe) =

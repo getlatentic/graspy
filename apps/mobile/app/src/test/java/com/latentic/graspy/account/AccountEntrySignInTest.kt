@@ -3,6 +3,8 @@ package com.latentic.graspy.account
 import com.latentic.graspy.auth.GoogleAccountSheet
 import com.latentic.graspy.auth.SignInOutcome
 import com.latentic.graspy.localization.LearnerProfileStore
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -19,6 +21,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -157,8 +160,9 @@ class AccountEntrySignInTest {
                 yield()
                 SignInOutcome.Succeeded("uid-first")
             } else {
-                secondAsked.complete(askWhichAccount to google.forgotten.size)
+                // Signed in before the test is told, which then reads Firebase from another thread.
                 firebase.uid = "uid-second"
+                secondAsked.complete(askWhichAccount to google.forgotten.size)
                 awaitCancellation()
             }
         }
@@ -372,6 +376,32 @@ class AccountEntrySignInTest {
         assertEquals("uid-2", accounts.account.value?.uid)
         assertEquals("uid-2", firebase.uid)
         assertEquals(0, wipes)
+    }
+
+    @Test
+    fun `a sign-out asked for while a sign-in stores its account waits, then signs that account out and keeps its note`() = runBlocking {
+        val signingIn = signsInAnother()
+        val signOutDone = CountDownLatch(1)
+        var signingOut: Job? = null
+        val watching = launch(Dispatchers.Unconfined) {
+            accounts.account.collect { stored ->
+                if (stored?.uid != "uid-2" || signingOut != null) return@collect
+                signingOut = CoroutineScope(Dispatchers.IO).launch {
+                    signingIn.signOut()
+                    signOutDone.countDown()
+                }
+                // The sign-in is held here, as it stores the account: a sign-out that could run now would finish first.
+                assertFalse("the sign-out ran while the account was stored", signOutDone.await(1, TimeUnit.SECONDS))
+            }
+        }
+
+        assertTrue(signingIn.signIn() is SignInOutcome.Succeeded)
+        signingOut!!.join()
+        watching.cancel()
+
+        assertNull(accounts.account.value)
+        assertEquals(1, wipes)
+        assertEquals(setOf("signing_out"), signOutPending().keys)
     }
 
     private fun entry(sessionApi: SessionApi = noSessionApi, sheet: GoogleAccountSheet = this.sheet) =

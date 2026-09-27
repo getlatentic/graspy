@@ -91,8 +91,17 @@ class LearnerPickerViewModel internal constructor(
 
     fun cancel() = mutableState.update { it.copy(problem = null) }
 
+    /** A leave that finishes a sign-out can fail as its wipe did: the device stays here, and the next start finishes it. */
     fun leaveForAnotherAccount() {
-        viewModelScope.launch { account.entry.leaveForAnotherAccount() }
+        viewModelScope.launch {
+            try {
+                account.entry.leaveForAnotherAccount()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Log.w(TAG, "Leaving for another account failed", error)
+            }
+        }
     }
 
     private fun run(onChosen: () -> Unit, loseUnsent: Boolean = false, pick: suspend () -> LearnerDto) {
