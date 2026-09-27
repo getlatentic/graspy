@@ -146,7 +146,8 @@ class ThreadSync(
         private const val ROUNDS = 3
         private const val MAX_THREADS = 50
         private const val MAX_MESSAGES = 200
-        private const val MAX_CHARS = 1_000_000
+        /** Counted in UTF-8 bytes, as D1 counts the batch it binds as one string. */
+        private const val MAX_BYTES = 1_000_000
 
         /** One sync at a time on the phone, whichever screen or leave started it. */
         private val running = Mutex()
@@ -156,24 +157,24 @@ class ThreadSync(
             val all = mutableListOf<Batch>()
             var parts = mutableListOf<Unsent>()
             var messages = 0
-            var chars = 0
+            var bytes = 0
             fun close() {
                 if (parts.isNotEmpty()) all += Batch(parts)
                 parts = mutableListOf()
                 messages = 0
-                chars = 0
+                bytes = 0
             }
             fun place(thread: ChatThreadEntity): Int {
                 if (parts.size == MAX_THREADS) close()
                 parts += Unsent(thread, emptyList())
-                chars += sizeOf(thread.sent(emptyList()))
+                bytes += sizeOf(thread.sent(emptyList()))
                 return parts.lastIndex
             }
             for ((thread, kept) in unsent) {
                 var part: Int? = null
                 for (message in kept) {
                     val size = sizeOf(message.sent())
-                    if (messages == MAX_MESSAGES || (parts.isNotEmpty() && chars + size > MAX_CHARS)) {
+                    if (messages == MAX_MESSAGES || (parts.isNotEmpty() && bytes + size > MAX_BYTES)) {
                         close()
                         part = null
                     }
@@ -181,7 +182,7 @@ class ThreadSync(
                     part = at
                     parts[at] = parts[at].copy(messages = parts[at].messages + message)
                     messages += 1
-                    chars += size
+                    bytes += size
                 }
                 // A thread with nothing new but itself, as when its context arrived.
                 if (part == null) place(thread)
@@ -190,9 +191,9 @@ class ThreadSync(
             return all
         }
 
-        private fun sizeOf(message: WireMessage) = chatJson.encodeToString(WireMessage.serializer(), message).length
+        private fun sizeOf(message: WireMessage) = chatJson.encodeToString(WireMessage.serializer(), message).encodeToByteArray().size
 
-        private fun sizeOf(thread: WireThread) = chatJson.encodeToString(WireThread.serializer(), thread).length
+        private fun sizeOf(thread: WireThread) = chatJson.encodeToString(WireThread.serializer(), thread).encodeToByteArray().size
     }
 }
 

@@ -582,3 +582,15 @@ async def test_more_messages_than_a_request_carries_are_refused(app):
         )
 
     assert refused.status_code == 422
+
+
+async def test_a_full_batch_in_arabic_fits_what_d1_binds():
+    """A device sends a million bytes at once; D1 binds the batch as one
+    string of at most 2 MB."""
+    threads = store()
+    said = [message(f"m{n}", n, "ع" * 2_500) for n in range(MAX_SENT_MESSAGES)]
+
+    await threads.keep(ADA, sent(thread("thread-arabic", messages=said)))
+
+    kept = await everything(threads, ADA)
+    assert len(kept["threads"]["thread-arabic"]["messages"]) == MAX_SENT_MESSAGES

@@ -169,20 +169,25 @@ def _joined(first: SentThread, second: SentThread) -> SentThread:
     )
 
 
+# Text is bound as itself rather than \u escapes, which would grow it sixfold past D1's
+# 2 MB limit on a bound string.
 def _sent_threads(threads: list[SentThread]) -> str:
     return json.dumps(
         [
             {
                 "id": thread.id,
                 "scopeKey": thread.key,
-                "scope": json.dumps(thread.scope.model_dump(by_alias=True)),
+                "scope": json.dumps(
+                    thread.scope.model_dump(by_alias=True), ensure_ascii=False
+                ),
                 "agentContextId": thread.agent_context_id,
                 "preview": thread.preview,
                 "createdAt": thread.created_at,
                 "updatedAt": thread.updated_at,
             }
             for thread in threads
-        ]
+        ],
+        ensure_ascii=False,
     )
 
 
@@ -198,11 +203,12 @@ def _sent_messages(threads: list[SentThread]) -> str:
                 "editedAt": message.edited_at,
                 "metadata": None
                 if message.metadata is None
-                else json.dumps(message.metadata),
+                else json.dumps(message.metadata, ensure_ascii=False),
             }
             for thread in threads
             for message in thread.messages
-        ]
+        ],
+        ensure_ascii=False,
     )
 
 

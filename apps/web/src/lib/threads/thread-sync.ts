@@ -19,7 +19,8 @@ const SINCE_KEY = "graspy.threads.since";
 // What one request carries, within the server's limits (app/threads/wire.py).
 const MAX_THREADS = 50;
 const MAX_MESSAGES = 200;
-const MAX_CHARS = 1_000_000;
+// Counted in UTF-8 bytes, as D1 counts the batch it binds as one string.
+const MAX_BYTES = 1_000_000;
 // Messages kept while a send runs go with the next round; a few rounds catch a turn's.
 const ROUNDS = 3;
 
@@ -54,19 +55,20 @@ interface Batch {
   sent: Unsent[];
 }
 
-const sizeOf = (value: unknown) => JSON.stringify(value).length;
+const encoder = new TextEncoder();
+const sizeOf = (value: unknown) => encoder.encode(JSON.stringify(value)).length;
 
 /** Within each request's limits, a long conversation split over several. */
 export function batches(unsent: readonly Unsent[]): Batch[] {
   const all: Batch[] = [];
   let batch: Batch = { threads: [], sent: [] };
   let messages = 0;
-  let chars = 0;
+  let bytes = 0;
   const close = () => {
     if (batch.threads.length > 0) all.push(batch);
     batch = { threads: [], sent: [] };
     messages = 0;
-    chars = 0;
+    bytes = 0;
   };
   for (const { thread, messages: kept } of unsent) {
     const header = sentThread(thread, []);
@@ -79,7 +81,7 @@ export function batches(unsent: readonly Unsent[]): Batch[] {
       };
       batch.threads.push(placed.wire);
       batch.sent.push(placed.sent);
-      chars += sizeOf(header);
+      bytes += sizeOf(header);
       return placed;
     };
     for (const message of kept) {
@@ -87,7 +89,7 @@ export function batches(unsent: readonly Unsent[]): Batch[] {
       const size = sizeOf(wire);
       const full =
         messages === MAX_MESSAGES ||
-        (batch.threads.length > 0 && chars + size > MAX_CHARS);
+        (batch.threads.length > 0 && bytes + size > MAX_BYTES);
       if (full) {
         close();
         part = null;
@@ -96,7 +98,7 @@ export function batches(unsent: readonly Unsent[]): Batch[] {
       part.wire.messages.push(wire);
       part.sent.messages.push(message);
       messages += 1;
-      chars += size;
+      bytes += size;
     }
     // A thread with nothing new but itself, as when its context arrived.
     if (!part) place();

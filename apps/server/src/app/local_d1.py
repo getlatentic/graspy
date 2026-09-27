@@ -39,6 +39,8 @@ class LocalD1:
         # One event loop's thread uses it, though not always the one that made it.
         self.connection = sqlite3.connect(":memory:", check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
+        # D1 refuses a string or blob over 2 MB.
+        self.connection.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, 2_000_000)
         for migration in sorted(MIGRATIONS.glob("*.sql")):
             self.connection.executescript(migration.read_text())
 

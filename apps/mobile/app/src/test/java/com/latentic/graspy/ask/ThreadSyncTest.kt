@@ -322,13 +322,21 @@ class ThreadSyncTest {
     }
 
     @Test
-    fun `at most fifty threads and a million characters go at once`() {
+    fun `at most fifty threads and a million bytes go at once`() {
         fun thread(id: String) = ChatThreadEntity(ADA, id, id, "{\"kind\":\"general\",\"planId\":\"$id\"}", null, null, 1, 1)
         val many = (0 until 60).map { Unsent(thread("t$it"), emptyList()) }
         val large = listOf("a", "b").map { id -> Unsent(thread(id), listOf(ChatMessageEntity(ADA, "$id-m", id, "user", "y".repeat(600_000), 1, null))) }
 
         assertEquals(listOf(50, 10), ThreadSync.batches(many).map { it.parts.size })
         assertEquals(listOf(listOf("a"), listOf("b")), ThreadSync.batches(large).map { batch -> batch.parts.map { it.thread.id } })
+    }
+
+    @Test
+    fun `text outside Latin script is counted by its bytes`() {
+        fun thread(id: String) = ChatThreadEntity(ADA, id, id, "{\"kind\":\"general\",\"planId\":\"$id\"}", null, null, 1, 1)
+        val arabic = listOf("a", "b").map { id -> Unsent(thread(id), listOf(ChatMessageEntity(ADA, "$id-m", id, "user", "ع".repeat(300_000), 1, null))) }
+
+        assertEquals(listOf(listOf("a"), listOf("b")), ThreadSync.batches(arabic).map { batch -> batch.parts.map { it.thread.id } })
     }
 
     @Test

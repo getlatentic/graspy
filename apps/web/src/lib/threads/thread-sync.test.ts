@@ -445,7 +445,7 @@ describe("what one request carries", () => {
     expect(batches.flatMap((b) => b.sent[0].messages)).toEqual(long);
   });
 
-  it("takes at most fifty threads and a million characters at once", async () => {
+  it("takes at most fifty threads and a million bytes at once", async () => {
     const db = await device();
     const many = Array.from({ length: 60 }, (_, n) => ({
       thread: thread(`t${n}`),
@@ -458,6 +458,19 @@ describe("what one request carries", () => {
 
     expect(db.batches(many).map((b) => b.threads.length)).toEqual([50, 10]);
     expect(db.batches(large).map((b) => b.threads.map((t) => t.id))).toEqual([
+      ["a"],
+      ["b"],
+    ]);
+  });
+
+  it("counts text outside Latin script by its bytes", async () => {
+    const db = await device();
+    const arabic = ["a", "b"].map((id) => ({
+      thread: thread(id),
+      messages: [said(id, 1, "ع".repeat(300_000))],
+    }));
+
+    expect(db.batches(arabic).map((b) => b.threads.map((t) => t.id))).toEqual([
       ["a"],
       ["b"],
     ]);
