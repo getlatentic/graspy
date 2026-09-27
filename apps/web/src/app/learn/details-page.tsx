@@ -14,7 +14,7 @@ import {
   learnerDetails,
   learnsByVoiceAlone,
 } from "@/features/onboarding/lib/details";
-import { keptPlan } from "@/features/onboarding/lib/details-plan";
+import { keepDetails } from "@/features/onboarding/lib/details-plan";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 import { keepRoute } from "@/lib/learner-route";
 import {
@@ -22,11 +22,7 @@ import {
   type DetailsSchema,
 } from "@/features/onboarding/schemas/onboarding-schema";
 import { useI18n } from "@/lib/i18n-context";
-import {
-  getUserProfile,
-  saveUserProfile,
-  type UserProfile,
-} from "@/lib/user-storage";
+import { getUserProfile, type UserProfile } from "@/lib/user-storage";
 import { usePlan } from "@/features/learn/learner-context";
 
 const YOU = "/app/learn/you";
@@ -74,14 +70,17 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
   const values = useFormContext<DetailsSchema>().watch();
   const voiceOnlyNow = useVoiceOnly() === true;
   const [asking, setAsking] = useState(false);
+  const [keeping, setKeeping] = useState(false);
 
   const keepPlan = async () => {
     const details = learnerDetails(values);
     const voiceOnly = learnsByVoiceAlone(values, voiceOnlyNow);
     // The catalogue's word stands for the class until the server is asked about it.
     keepRoute(details, voiceOnly);
-    saveUserProfile(details);
-    const plan = await keptPlan(details, voiceOnly);
+    setKeeping(true);
+    const plan = await keepDetails(details, voiceOnly).finally(() =>
+      setKeeping(false),
+    );
     if (plan) await applyCurriculum(plan);
     navigate(YOU);
   };
@@ -103,22 +102,34 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
     return (
       <Button
         onClick={save}
-        disabled={!detailsChanged(profile, values) || !detailsComplete(values)}
+        disabled={
+          keeping ||
+          !detailsChanged(profile, values) ||
+          !detailsComplete(values)
+        }
         className="self-start"
       >
         {t("details.save")}
       </Button>
     );
   }
-  return <AskNewPlan onNewPlan={newPlan} onKeepPlan={() => void keepPlan()} />;
+  return (
+    <AskNewPlan
+      onNewPlan={newPlan}
+      onKeepPlan={() => void keepPlan()}
+      keeping={keeping}
+    />
+  );
 }
 
 function AskNewPlan({
   onNewPlan,
   onKeepPlan,
+  keeping,
 }: {
   onNewPlan: () => void;
   onKeepPlan: () => void;
+  keeping: boolean;
 }) {
   const { t } = useI18n();
   return (
@@ -126,8 +137,10 @@ function AskNewPlan({
       <h2 className="font-semibold text-ink">{t("details.askTitle")}</h2>
       <p className="text-pretty text-sm text-muted">{t("details.askBody")}</p>
       <div className="flex flex-wrap gap-2">
-        <Button onClick={onNewPlan}>{t("details.newPlan")}</Button>
-        <Button variant="secondary" onClick={onKeepPlan}>
+        <Button onClick={onNewPlan} disabled={keeping}>
+          {t("details.newPlan")}
+        </Button>
+        <Button variant="secondary" onClick={onKeepPlan} disabled={keeping}>
           {t("details.keepPlan")}
         </Button>
       </div>
