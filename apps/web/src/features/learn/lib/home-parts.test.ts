@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { homeParts } from "./home-parts";
 
 describe("homeParts", () => {
-  it("shows a class that learns by voice alone its voice lessons and nothing to read", () => {
-    expect(homeParts(true, false, 0)).toEqual(["voice"]);
+  it("is the voice lessons for a class that learns by voice alone, with nothing to read", () => {
+    expect(homeParts(true, false, 0)).toEqual(["lessons"]);
   });
 
   it("hides the subjects of such a class's plan, and the topic it was on", () => {
-    expect(homeParts(true, true, 4)).toEqual(["voice"]);
+    expect(homeParts(true, true, 4)).toEqual(["lessons"]);
   });
 
   it("shows any other class the topic to continue, voice lessons, subjects and ideas", () => {

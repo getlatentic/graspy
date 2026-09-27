@@ -43,23 +43,31 @@ export const sectionsFor = (voiceOnly: boolean) =>
 export const pageShown = (pathname: string, voiceOnly: boolean): boolean =>
   sectionsFor(voiceOnly).some(({ id }) => id === sectionOf(pathname));
 
-/** Where a page the learner does not have leads: to their voice lessons. Null for a page
- * they have. */
-export const pageRedirect = (
+const LEARN = "/app/learn";
+
+const trimmed = (pathname: string) => pathname.replace(/\/+$/, "");
+
+/** Where a page leads that the learner does not have, or has as Home: to Home, which for a
+ * class that learns by voice alone is its voice lessons. Null for a page they have. */
+export function pageRedirect(
   pathname: string,
   voiceOnly: boolean,
-): string | null => (pageShown(pathname, voiceOnly) ? null : VOICE_PAGE);
-
-const LEARN = "/app/learn";
+): string | null {
+  const homeElsewhere = voiceOnly && trimmed(pathname) === VOICE_PAGE;
+  return pageShown(pathname, voiceOnly) && !homeElsewhere ? null : LEARN;
+}
 
 export const DETAILS_PAGE = `${LEARN}/you/details`;
 export const LEARNERS_PAGE = `${LEARN}/you/learners`;
 
 export function sectionOf(pathname: string): AppSection {
-  const path = pathname.replace(/\/+$/, "");
+  const path = trimmed(pathname);
   // Voice lessons open from Home.
-  const voice = `${LEARN}/voice`;
-  if (path === LEARN || path === voice || path.startsWith(`${voice}/`))
+  if (
+    path === LEARN ||
+    path === VOICE_PAGE ||
+    path.startsWith(`${VOICE_PAGE}/`)
+  )
     return "home";
   if (path === `${LEARN}/you` || path.startsWith(`${LEARN}/you/`)) return "you";
   if (path === ASK_HUB || path.startsWith(`${ASK_HUB}/`)) return "ask";
@@ -80,5 +88,5 @@ export function lessonChatTarget(pathname: string): ChatTarget | null {
 }
 
 export function isChatPath(pathname: string): boolean {
-  return pathname.replace(/\/+$/, "").startsWith(`${ASK_HUB}/`);
+  return trimmed(pathname).startsWith(`${ASK_HUB}/`);
 }
