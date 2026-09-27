@@ -76,9 +76,9 @@ class LessonRefreshTest {
         assertEquals(VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.of(refused))
         assertEquals(
             UploadDisposition.PERMANENT_FAILURE,
-            UploadFailurePolicy.forHttp(409, attemptIndex = 0, fromGraspy = fromGraspy(refused), refusal = VoiceRefusal.of(refused)),
+            UploadFailurePolicy.forHttp(409, fromGraspy = fromGraspy(refused), refusal = VoiceRefusal.of(refused)),
         )
-        assertEquals(UploadDisposition.RETRY, UploadFailurePolicy.forHttp(503, attemptIndex = 0, fromGraspy = false))
+        assertEquals(UploadDisposition.RETRY, UploadFailurePolicy.forHttp(503, fromGraspy = false))
     }
 
     private fun httpError(code: Int, body: String) = HttpException(

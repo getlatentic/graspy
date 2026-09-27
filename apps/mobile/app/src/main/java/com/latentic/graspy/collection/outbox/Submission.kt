@@ -31,33 +31,43 @@ enum class UploadDisposition {
     WAIT_FOR_LEARNER,
 }
 
+/**
+ * A recording leaves the phone only once graspy has marked or refused it, so every other failure, however often it
+ * comes, sends it again. WorkManager spaces those tries, and nothing counts them: the server spaces its own attempts
+ * at marking a turn (2 and 30 minutes apart) and says when to ask again.
+ */
 object UploadFailurePolicy {
-    const val MAX_ATTEMPTS = 5
-
     /**
      * A refusal the server named decides, whatever its status; an unnamed one goes by the status. A 4xx without the
      * voice API's own body ([fromGraspy]) came from something in the way, so the voice API gave no answer at all.
      */
-    fun forHttp(statusCode: Int, attemptIndex: Int, fromGraspy: Boolean, refusal: VoiceRefusal? = null): UploadDisposition = when {
-        statusCode < 500 && !fromGraspy -> forNetwork(attemptIndex)
-        else -> when (refusal) {
-            VoiceRefusal.LEARNER_REQUIRED -> UploadDisposition.WAIT_FOR_LEARNER
-            VoiceRefusal.AUDIO_NOT_READY -> disposition(true, attemptIndex)
-            VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.UNSUPPORTED_PROMPT, VoiceRefusal.IDEMPOTENCY_CONFLICT ->
-                UploadDisposition.PERMANENT_FAILURE
-            null -> disposition(transient(statusCode), attemptIndex)
-        }
+    fun forHttp(statusCode: Int, fromGraspy: Boolean, refusal: VoiceRefusal? = null): UploadDisposition = when {
+        statusCode < 500 && !fromGraspy -> forNetwork()
+        refusal != null -> forRefusal(refusal)
+        transient(statusCode) -> UploadDisposition.RETRY
+        else -> UploadDisposition.PERMANENT_FAILURE
     }
 
+    /** No answer from the voice API: the network, an answer it could not read, or a session it could not get. */
+    fun forNetwork(): UploadDisposition = UploadDisposition.RETRY
+
+    /**
+     * `audio_not_ready` is final here: the worker has already sent the audio once more ([SubmissionUploadWorker]),
+     * as the web does, and graspy still has none.
+     */
+    private fun forRefusal(refusal: VoiceRefusal): UploadDisposition = when (refusal) {
+        VoiceRefusal.LEARNER_REQUIRED -> UploadDisposition.WAIT_FOR_LEARNER
+        VoiceRefusal.AUDIO_NOT_READY, VoiceRefusal.STEP_NOT_OFFERED, VoiceRefusal.UNSUPPORTED_PROMPT,
+        VoiceRefusal.IDEMPOTENCY_CONFLICT,
+        -> UploadDisposition.PERMANENT_FAILURE
+    }
+
+    /** Busy, rate-limited or failing on graspy's side, or a refusal of the session rather than of the answer. */
     private fun transient(statusCode: Int) =
-        statusCode == 408 || statusCode == 425 || statusCode == 429 || statusCode >= 500
+        statusCode in RETRYABLE_STATUSES || statusCode in SESSION_STATUSES || statusCode >= 500
 
-    fun forNetwork(attemptIndex: Int): UploadDisposition = disposition(true, attemptIndex)
+    private val RETRYABLE_STATUSES = setOf(408, 425, 429)
 
-    private fun disposition(transient: Boolean, attemptIndex: Int): UploadDisposition =
-        if (transient && attemptIndex < MAX_ATTEMPTS - 1) {
-            UploadDisposition.RETRY
-        } else {
-            UploadDisposition.PERMANENT_FAILURE
-        }
+    /** A 401 still refused after the session was renewed, or a 403: it goes again once the session is sorted. */
+    private val SESSION_STATUSES = setOf(401, 403)
 }
