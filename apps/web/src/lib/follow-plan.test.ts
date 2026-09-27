@@ -27,6 +27,14 @@ const withRecoveredLevel = vi.fn(
 vi.mock("./plan-level", () => ({ withRecoveredLevel }));
 
 const { followPlan } = await import("./follow-plan");
+const { LearnerChanged } = await import("./learner-pin");
+
+let learning = true;
+const pin = {
+  hold: () => {
+    if (!learning) throw new LearnerChanged();
+  },
+};
 
 const plan = (gradeLevel: string): CurriculumData => ({
   id: "current",
@@ -40,6 +48,7 @@ const plan = (gradeLevel: string): CurriculumData => ({
 });
 
 beforeEach(() => {
+  learning = true;
   profile = {
     country: "SK",
     language: "en",
@@ -54,14 +63,14 @@ beforeEach(() => {
 
 describe("followPlan", () => {
   it("leaves the details of the class the plan was written for", async () => {
-    await followPlan(plan(GRADE_3));
+    await followPlan(plan(GRADE_3), pin);
 
     expect(withRecoveredLevel).not.toHaveBeenCalled();
     expect(saveUserProfile).not.toHaveBeenCalled();
   });
 
   it("takes the class of a plan written for another, with its level", async () => {
-    await followPlan(plan(GRADE_8));
+    await followPlan(plan(GRADE_8), pin);
 
     expect(saveUserProfile).toHaveBeenCalledWith({
       country: "SK",
@@ -81,7 +90,7 @@ describe("followPlan", () => {
       levelNames: null,
     };
 
-    await followPlan(plan(GRADE_8));
+    await followPlan(plan(GRADE_8), pin);
 
     expect(saveUserProfile).toHaveBeenCalledWith(
       expect.objectContaining({ gradeLevel: GRADE_8, level: "grade-8" }),
@@ -98,7 +107,7 @@ describe("followPlan", () => {
     };
     withRecoveredLevel.mockImplementationOnce(async (plan) => plan);
 
-    await followPlan(plan(GRADE_8));
+    await followPlan(plan(GRADE_8), pin);
 
     expect(saveUserProfile).not.toHaveBeenCalled();
   });
@@ -106,10 +115,25 @@ describe("followPlan", () => {
   it("gives a device without details the plan's", async () => {
     profile = null;
 
-    await followPlan(plan(GRADE_8));
+    await followPlan(plan(GRADE_8), pin);
 
     expect(saveUserProfile).toHaveBeenCalledWith(
       expect.objectContaining({ country: "SK", gradeLevel: GRADE_8 }),
     );
+  });
+});
+
+describe("followPlan once the device learns as someone else", () => {
+  it("gives the next learner none of the class the catalogue found after the switch", async () => {
+    withRecoveredLevel.mockImplementationOnce(async (found) => {
+      learning = false;
+      return { ...found, ...GRADE_8_LEVEL };
+    });
+
+    await expect(followPlan(plan(GRADE_8), pin)).rejects.toBeInstanceOf(
+      LearnerChanged,
+    );
+
+    expect(saveUserProfile).not.toHaveBeenCalled();
   });
 });

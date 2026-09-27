@@ -296,20 +296,25 @@ export function endAccountSession(): void {
 }
 
 /** Sent with the session in use. `still`, asked as each try is sent, may stop it: false, and
- * the session is no longer the one the request was made for, so nothing is sent. */
+ * the session is no longer the one the request was made for, so nothing is sent. Nor is the
+ * session renewed: it is the next learner's. */
 export async function fetchWithSession(
   input: string | URL,
   init: RequestInit = {},
   still?: () => boolean,
 ): Promise<Response> {
+  const hold = () => {
+    if (still && !still()) throw new LearnerChanged();
+  };
   // A Headers instance spreads to nothing.
   const send = (token: string) => {
-    if (still && !still()) throw new LearnerChanged();
+    hold();
     const headers = new Headers(init.headers);
     headers.set("Authorization", `Bearer ${token}`);
     return fetch(input, { ...init, headers });
   };
   const response = await send(await getSessionToken());
   if (response.status !== 401) return response;
+  hold();
   return send(await refreshSessionToken());
 }

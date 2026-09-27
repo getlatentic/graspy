@@ -14,7 +14,7 @@ import {
   learnerDetails,
   learnsByVoiceAlone,
 } from "@/features/onboarding/lib/details";
-import { keepDetails } from "@/features/onboarding/lib/details-plan";
+import { saveDetails } from "@/features/onboarding/lib/details-save";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 import { keepRoute } from "@/lib/learner-route";
 import {
@@ -71,18 +71,23 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
   const voiceOnlyNow = useVoiceOnly() === true;
   const [asking, setAsking] = useState(false);
   const [keeping, setKeeping] = useState(false);
+  const [failed, setFailed] = useState(false);
 
+  // Save stays off until the page is left: the plan takes the details before it.
   const keepPlan = async () => {
     const details = learnerDetails(values);
     const voiceOnly = learnsByVoiceAlone(values, voiceOnlyNow);
     // The catalogue's word stands for the class until the server is asked about it.
     keepRoute(details, voiceOnly);
     setKeeping(true);
-    const plan = await keepDetails(details, voiceOnly).finally(() =>
-      setKeeping(false),
-    );
-    if (plan) await applyCurriculum(plan);
-    navigate(YOU);
+    setFailed(false);
+    const saved = await saveDetails(details, voiceOnly, applyCurriculum);
+    if (saved === "kept") {
+      navigate(YOU);
+      return;
+    }
+    setKeeping(false);
+    setFailed(saved === "failed");
   };
   const newPlan = () =>
     navigate("/app/onboarding", { state: { replan: values } });
@@ -98,27 +103,32 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
     else setAsking(true);
   };
 
-  if (!asking) {
-    return (
-      <Button
-        onClick={save}
-        disabled={
-          keeping ||
-          !detailsChanged(profile, values) ||
-          !detailsComplete(values)
-        }
-        className="self-start"
-      >
-        {t("details.save")}
-      </Button>
-    );
-  }
-  return (
+  const control = asking ? (
     <AskNewPlan
       onNewPlan={newPlan}
       onKeepPlan={() => void keepPlan()}
       keeping={keeping}
     />
+  ) : (
+    <Button
+      onClick={save}
+      disabled={
+        keeping || !detailsChanged(profile, values) || !detailsComplete(values)
+      }
+      className="self-start"
+    >
+      {t("details.save")}
+    </Button>
+  );
+  return (
+    <div className="flex flex-col gap-3">
+      {control}
+      {failed && (
+        <p role="alert" className="text-sm font-medium text-danger">
+          {t("details.saveFailed")}
+        </p>
+      )}
+    </div>
   );
 }
 

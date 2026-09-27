@@ -14,14 +14,27 @@ const reachServer = vi.fn<(pin?: Pin) => Promise<void>>();
 const ADA = "uid-1/ada";
 const GRACE = "uid-1/grace";
 let learner = ADA;
-vi.mock("./server", async () => {
-  const { pinTo } = await import("@/lib/learner-pin");
-  return {
-    callAppTool,
-    reachServer,
-    pinLearner: () => pinTo(() => learner),
-  };
-});
+let turn = 0;
+/** The device learns as someone else, as a switch or a sign-out makes it. */
+function learnAs(next: string): void {
+  learner = next;
+  turn += 1;
+}
+/** Signed in, the device's own work joins the account. */
+function signIn(): void {
+  learner = "uid-1";
+}
+const accountOf = (holder: string) => {
+  const [uid, id] = holder.split("/");
+  if (holder === "device") return null;
+  return { uid, learner: id ? { id, name: id } : null, deviceJoins: !id };
+};
+vi.mock("./server", () => ({ callAppTool, reachServer }));
+vi.mock("@/lib/account/account-store", async (original) => ({
+  ...(await original<typeof import("@/lib/account/account-store")>()),
+  currentAccount: () => accountOf(learner),
+  learnerTurn: () => turn,
+}));
 
 const ANSWER = { question: "3/8?", options: ["0.375", "0.38"], chosenIndex: 1 };
 const FINISH = { planId: "plan-1", topic: "Fractions" };
@@ -314,13 +327,36 @@ async function wipeOutbox(): Promise<void> {
   await done;
 }
 
+describe("the outbox as the device signs in", () => {
+  it("keeps a view's call that fails once signed in, for the account the device joins", async () => {
+    learner = "device";
+    const { callOrKeep, sentEverything } = await fresh();
+    callAppTool.mockImplementation(async () => {
+      signIn();
+      throw new TypeError("Failed to fetch");
+    });
+
+    await expect(callOrKeep("answer_check", ANSWER)).resolves.toMatchObject({
+      content: [{ text: "This is kept on the device and sent later." }],
+    });
+
+    callAppTool.mockReset().mockResolvedValue(DONE);
+    expect(await sentEverything()).toBe(true);
+    expect(callAppTool).toHaveBeenCalledWith(
+      "answer_check",
+      ANSWER,
+      expect.objectContaining({ learner: "uid-1" }),
+    );
+  });
+});
+
 describe("the outbox once the device learns as another learner", () => {
   const never = () => new Promise<never>(() => {});
 
   it("keeps nothing for the next learner of a view's call that failed after the switch", async () => {
     const { callOrKeep, sentEverything } = await fresh();
     callAppTool.mockImplementation(async (_name, _args, pin) => {
-      learner = GRACE;
+      learnAs(GRACE);
       pin?.hold();
     });
 
@@ -337,7 +373,7 @@ describe("the outbox once the device learns as another learner", () => {
     online = false;
     const { callOrKeep, sentEverything } = await fresh();
     reachServer.mockImplementation(async () => {
-      learner = GRACE;
+      learnAs(GRACE);
       throw new TypeError("Failed to fetch");
     });
 
@@ -354,7 +390,7 @@ describe("the outbox once the device learns as another learner", () => {
     await outbox.callOrKeep("finish_lesson", FINISH);
     callAppTool.mockReset().mockImplementation(async (_name, _args, pin) => {
       pin?.hold();
-      learner = GRACE;
+      learnAs(GRACE);
       return DONE;
     });
 
@@ -369,7 +405,7 @@ describe("the outbox once the device learns as another learner", () => {
     reachServer.mockImplementation(never);
     void sendKept();
 
-    learner = GRACE;
+    learnAs(GRACE);
     await wipeOutbox();
     reachServer.mockReset().mockResolvedValue(undefined);
     online = false;

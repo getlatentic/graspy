@@ -12,17 +12,14 @@ const server = {
 vi.mock("@/lib/shared-plan-api", () => server);
 
 let device: CurriculumData | null = null;
+const getCurriculum = vi.fn(async () => device);
 const holdCurriculum = vi.fn(async (plan: CurriculumData) => {
   device = plan;
 });
-vi.mock("@/lib/curriculum-db", () => ({
-  getCurriculum: async () => device,
-  holdCurriculum,
-}));
+vi.mock("@/lib/curriculum-db", () => ({ getCurriculum, holdCurriculum }));
 
-vi.mock("@/lib/plan-level", () => ({
-  withRecoveredLevel: async (plan: CurriculumData) => plan,
-}));
+const withRecoveredLevel = vi.fn(async (plan: CurriculumData) => plan);
+vi.mock("@/lib/plan-level", () => ({ withRecoveredLevel }));
 
 const saveUserProfile = vi.fn();
 vi.mock("@/lib/user-storage", () => ({
@@ -34,10 +31,17 @@ type Signed = { uid: string; learner: { id: string } | null };
 const ADA: Signed = { uid: "uid-1", learner: { id: "ada" } };
 const GRACE: Signed = { uid: "uid-1", learner: { id: "grace" } };
 let signedIn: Signed | null = ADA;
+let turn = 0;
+/** The device comes to learn as `account`, as a switch or a sign-out makes it. */
+function learnAs(account: Signed | null): void {
+  signedIn = account;
+  turn += 1;
+}
 vi.mock("@/lib/account/account-store", () => ({
   currentAccount: () => signedIn,
   learnerKeyOf: (account: Signed) =>
     account.learner ? `${account.uid}/${account.learner.id}` : null,
+  learnerTurn: () => turn,
 }));
 
 const { forgetPlanSync, syncPlan } = await import("./plan-sync");
@@ -111,7 +115,7 @@ describe("syncPlan without a learner", () => {
     ["signed out", null],
     ["signed in with no learner chosen", { uid: "uid-1", learner: null }],
   ])("does nothing %s", async (_, account) => {
-    signedIn = account;
+    learnAs(account);
     device = plan("plan-1", 10);
 
     await expect(syncPlan()).resolves.toBeNull();
@@ -125,7 +129,7 @@ describe("syncPlan without a learner", () => {
 describe("syncPlan for another learner of the account", () => {
   it("joins again, as the first sync for that learner", async () => {
     await joinedWith(plan("plan-ada", 10));
-    signedIn = { uid: "uid-1", learner: { id: "grace" } };
+    learnAs(GRACE);
     server.joinPlan.mockResolvedValue(plan("plan-ada", 10));
 
     await syncPlan();
@@ -387,7 +391,7 @@ describe("syncPlan once the device learns as another learner", () => {
 
     const [, still] = server.sendPlan.mock.calls[0];
     expect(still?.()).toBe(true);
-    signedIn = GRACE;
+    learnAs(GRACE);
     expect(still?.()).toBe(false);
   });
 
@@ -395,7 +399,7 @@ describe("syncPlan once the device learns as another learner", () => {
     await joinedWith(plan("plan-1", 10));
     device = plan("plan-1", 11);
     server.sendPlan.mockImplementation(async () => {
-      signedIn = GRACE;
+      learnAs(GRACE);
       device = null;
       return plan("plan-2", 15);
     });
@@ -414,7 +418,7 @@ describe("syncPlan once the device learns as another learner", () => {
   it("does not join the next learner as the one it began for", async () => {
     device = plan("plan-ada", 10);
     server.joinPlan.mockImplementationOnce(async () => {
-      signedIn = GRACE;
+      learnAs(GRACE);
       device = null;
       return plan("plan-ada", 10);
     });
@@ -431,7 +435,7 @@ describe("syncPlan once the device learns as another learner", () => {
     await joinedWith(plan("plan-1", 10));
     device = plan("plan-1", 11);
     server.sendPlan.mockImplementationOnce(async (sent) => {
-      signedIn = GRACE;
+      learnAs(GRACE);
       return sent;
     });
 
@@ -449,10 +453,68 @@ describe("syncPlan once the device learns as another learner", () => {
     void syncPlan();
     await Promise.resolve();
 
-    signedIn = GRACE;
+    learnAs(GRACE);
     device = null;
     server.accountPlan.mockResolvedValue(plan("plan-grace", 20));
 
     await expect(syncPlan()).resolves.toEqual(plan("plan-grace", 20));
+  });
+});
+
+describe("syncPlan stopped by a switch at each step on the device", () => {
+  it("does not count the device joined to a learner it left while joining", async () => {
+    device = plan("plan-ada", 10);
+    server.joinPlan.mockImplementationOnce(async (sent) => {
+      learnAs(GRACE);
+      learnAs(ADA);
+      return sent;
+    });
+    await expect(syncPlan()).rejects.toBeInstanceOf(LearnerChanged);
+
+    server.joinPlan.mockResolvedValue(plan("plan-ada", 10));
+    await syncPlan();
+
+    expect(server.joinPlan).toHaveBeenCalledTimes(2);
+    expect(server.sendPlan).not.toHaveBeenCalled();
+  });
+
+  it("holds nothing it was answered once the switch comes while it looks for a newer save", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockResolvedValue(plan("plan-2", 15));
+    getCurriculum
+      .mockImplementationOnce(async () => device)
+      .mockImplementationOnce(async () => {
+        learnAs(GRACE);
+        return device;
+      });
+
+    await expect(syncPlan()).rejects.toBeInstanceOf(LearnerChanged);
+
+    expect(holdCurriculum).not.toHaveBeenCalled();
+  });
+
+  it("looks up no class for a plan the switch came while holding", async () => {
+    await joinedWith(plan("plan-1", 10));
+    device = plan("plan-1", 11);
+    server.sendPlan.mockResolvedValue(plan("plan-2", 15));
+    holdCurriculum.mockImplementationOnce(async () => learnAs(GRACE));
+
+    await expect(syncPlan()).rejects.toBeInstanceOf(LearnerChanged);
+
+    expect(withRecoveredLevel).not.toHaveBeenCalled();
+  });
+
+  it("writes nothing into the next learner's profile once the class is found after the switch", async () => {
+    device = plan("plan-device", 10);
+    server.joinPlan.mockResolvedValue(plan("plan-account", 20));
+    withRecoveredLevel.mockImplementationOnce(async () => {
+      learnAs(GRACE);
+      return forJss3("plan-account", 20);
+    });
+
+    await expect(syncPlan()).rejects.toBeInstanceOf(LearnerChanged);
+
+    expect(saveUserProfile).not.toHaveBeenCalled();
   });
 });

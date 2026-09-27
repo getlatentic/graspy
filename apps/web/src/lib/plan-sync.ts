@@ -1,6 +1,11 @@
-import { currentAccount, learnerKeyOf } from "@/lib/account/account-store";
+import {
+  currentAccount,
+  learnerKeyOf,
+  learnerTurn,
+} from "@/lib/account/account-store";
 import { getCurriculum, holdCurriculum } from "@/lib/curriculum-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
+import { settleDetailsDue, withDetailsDue } from "@/lib/details-due";
 import { followPlan } from "@/lib/follow-plan";
 import { pinTo, type LearnerPin } from "@/lib/learner-pin";
 import { completedPlan } from "@/lib/plan-details";
@@ -88,10 +93,17 @@ function exchanged(
   return pulled(local, pin);
 }
 
-async function adopt(plan: CurriculumData, pin: Pin): Promise<void> {
-  await holdCurriculum(plan);
+// Details the learner saved after the plan was made go on it, and with the next sync.
+async function adopt(
+  plan: CurriculumData,
+  learner: string,
+  pin: Pin,
+): Promise<CurriculumData> {
+  const taken = withDetailsDue(plan, learner);
+  await holdCurriculum(taken);
   pin.hold();
-  await followPlan(plan);
+  await followPlan(taken, pin);
+  return taken;
 }
 
 // Each write on the device waits for the answer before it, so each first asks that the
@@ -106,31 +118,29 @@ async function syncOnce(
   pin.hold();
   if (!held) return null;
   remember(AGREED_KEY, stamp(held));
+  settleDetailsDue(held, learner);
   if (stamp(held) === stamp(local)) return null;
   // A save made while the server answered is newer than the answer: the next sync sends it.
   if (stamp(await getCurriculum()) !== stamp(local)) return null;
   pin.hold();
-  await adopt(held, pin);
-  return held;
+  return adopt(held, learner, pin);
 }
 
 const syncFor = (pin: Pin) => (pin.learner ? syncOnce(pin.learner, pin) : null);
 
-// A sync pinned to a learner the device has left holds none back for the next learner: it
-// sends nothing more, however long the request it is waiting on hangs.
-let last: { learner: string | null; done: Promise<unknown> } = {
-  learner: null,
-  done: Promise.resolve(),
-};
+// A sync pinned to a learner the device has left holds none back for the next learner, nor
+// for the same learner back on the device: it sends nothing more, however long the request
+// it is waiting on hangs.
+let last: { pin: Pin; done: Promise<unknown> } | null = null;
 
 /** The learner's plan when the device now holds it in place of its own; otherwise null,
  * as when nobody is signed in or no learner is chosen. One sync runs at a time for a
  * learner, and it rejects with LearnerChanged once the device learns as someone else. */
 export function syncPlan(): Promise<CurriculumData | null> {
-  const pin = pinTo(learnerInUse);
-  const before = last.learner === pin.learner ? last.done : Promise.resolve();
+  const pin = pinTo(learnerInUse(), learnerTurn);
+  const before = last?.pin.holds() ? last.done : Promise.resolve();
   const run = before.then(() => syncFor(pin));
-  last = { learner: pin.learner, done: run.catch(() => undefined) };
+  last = { pin, done: run.catch(() => undefined) };
   return run;
 }
 
