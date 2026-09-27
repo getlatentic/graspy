@@ -39,7 +39,7 @@ The server's environment holds only what changes between deployments or is secre
 | `SESSION_SECRET` | Signs session tokens. Required in production; in development a temporary key is made |
 | `CORS_ORIGINS` | Allowed origins, comma-separated or JSON. One wildcard label is allowed; `*` is refused |
 | `PUBLIC_BASE_URL` / `A2A_PATH_PREFIX` | The origin the agent card advertises, and the tutor's path (default `/a2a`) |
-| `APP_ENV` | `production` hides `/api/docs` |
+| `APP_ENV` | `production` or `staging` hides `/api/docs`, requires `SESSION_SECRET` and refuses the Auth emulator |
 | `HOST` / `PORT` / `UVICORN_RELOAD` | uvicorn only, read by `uv run serve` |
 
 The web app reads `VITE_API_URL` and `VITE_A2A_BASE` from the committed `apps/web/.env.<mode>` files. Vite writes them into the bundle at build time, and there are no defaults, so a build without them fails instead of pointing at the wrong host.
@@ -86,8 +86,10 @@ D1 and R2 are local; Workers AI is remote, so `npx wrangler login` first. Signin
 
 ## Build and deploy
 
-- **Web:** `npm run build` writes `apps/web/dist` for Cloudflare Pages, using `.env.production`.
-- **Server:** needs the Workers Paid plan, because a lesson needs more than 10 ms of CPU. `npx wrangler login`, then `npx wrangler secret put` for `SESSION_SECRET`, `FIREBASE_API_KEY`, `INTRON_API_KEY`, `SPITCH_API_KEY` and the host's credentials (`AWS_BEARER_TOKEN_BEDROCK`, or `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`), then `npm run deploy` in `apps/server`. The plain values and bindings are in `apps/server/wrangler.jsonc`.
+Deploy with `scripts/deploy.sh staging|production`. [Deploying](DEPLOYING.md) has the two environments, the order and the one-time setup.
+
+- **Web:** `npm run build` writes `apps/web/dist` using `.env.production`; `npm run build:staging` uses `.env.staging`.
+- **Server:** needs the Workers Paid plan, because a lesson needs more than 10 ms of CPU. Each environment's Worker has the secrets `SESSION_SECRET`, `FIREBASE_API_KEY`, `INTRON_API_KEY`, `SPITCH_API_KEY` and the host's credentials (`AWS_BEARER_TOKEN_BEDROCK`, or `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`), set with `npx wrangler secret put <NAME> --env staging` or `--env=""` for production. The plain values and bindings are in `apps/server/wrangler.jsonc`.
 - **Imports that load at startup** grow the Worker's startup snapshot. It has a size cap, and past it a deploy fails with code 10013. Near the cap, the same build can pass or fail, so deploy a change that adds imports three times.
 - `pylock.toml` pins what the Worker vendors. `pywrangler` rewrites it when `pyproject.toml` changes. Commit it.
 
