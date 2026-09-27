@@ -5,8 +5,12 @@ from __future__ import annotations
 
 import re
 
-# A line's marker: "- ", "* ", "• ", "A) ", "b. ", "1) " or "2. ".
-_MARKER = re.compile(r"^\s*(?:[-*•]|[A-Da-d][).]|\d+[).])\s+")
+# A line's marker: "- ", "* ", "• ", "A) ", "b. ", "1) " or "2. ". The model
+# sometimes marks a line twice, "- - 0.875" or "- A) 0.875": a bullet may be
+# followed by more bullets and one letter.
+_MARKER = re.compile(
+    r"^\s*(?:[-*•]|[A-Da-d][).]|\d+[).])\s+(?:[-*•]\s+)*(?:[A-Da-d][).]\s+)?"
+)
 
 
 def option_lines(text: str) -> list[str]:

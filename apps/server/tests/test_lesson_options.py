@@ -20,6 +20,16 @@ def test_options_are_read_whatever_marks_them(written):
     assert option_lines(written) == ["\\(\\frac{1}{2}\\)", "0.5", "50%"]
 
 
+@pytest.mark.parametrize(
+    "written",
+    ["- - 0.875\n- - 0.5", "- A) 0.875\n- B) 0.5", "* • 0.875\n* • 0.5"],
+    ids=["dash-dash", "dash-letter", "star-bullet"],
+)
+def test_an_option_marked_twice_is_shown_without_either_mark(written):
+    """Measured: about one question in eight came back as "- - 0.875"."""
+    assert option_lines(written) == ["0.875", "0.5"]
+
+
 def test_an_option_starting_with_a_negative_number_keeps_its_sign():
     assert option_lines("- -3\n- 3") == ["-3", "3"]
 
