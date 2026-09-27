@@ -36,7 +36,11 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci --ignore-scripts
+      # The npm in package.json's packageManager, as scripts/deploy.sh installs with.
+      - name: Install with the pinned npm
+        run: |
+          npm="$(node scripts/pinned-npm.mjs)"
+          npx --yes "$npm" ci --ignore-scripts
       - name: Web
         working-directory: apps/web
         run: |
@@ -60,6 +64,8 @@ jobs:
           npx tsgo --noEmit -p tsconfig.json
           npx vitest run
           python3 -m unittest discover -s scripts/tests -t .
+      - name: Deploy scripts
+        run: node --test 'scripts/tests/*.test.mjs'
 
   android:
     runs-on: ubuntu-latest
@@ -97,7 +103,11 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/teacher/src-tauri
-      - run: npm ci --ignore-scripts
+      # The npm in package.json's packageManager, as scripts/deploy.sh installs with.
+      - name: Install with the pinned npm
+        run: |
+          npm="$(node scripts/pinned-npm.mjs)"
+          npx --yes "$npm" ci --ignore-scripts
       - name: Frontend the app embeds
         working-directory: apps/teacher
         run: npx vite build

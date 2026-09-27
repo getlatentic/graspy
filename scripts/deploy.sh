@@ -83,18 +83,9 @@ require_confirmation() {
   [[ "$answer" == "production" ]] || die "not confirmed; nothing was deployed."
 }
 
-# The npm that wrote package-lock.json, from package.json's packageManager. Another npm can
-# install less than the lockfile names and not fail.
-pinned_npm() {
-  local manager
-  manager="$(node -p 'require("./package.json").packageManager ?? ""')"
-  [[ "$manager" =~ ^npm@([0-9]+\.[0-9]+\.[0-9]+)$ ]] || die "package.json's packageManager is not npm@<version>."
-  echo "npm@${BASH_REMATCH[1]}"
-}
-
 install_dependencies() {
   local npm
-  npm="$(pinned_npm)"
+  npm="$(node scripts/pinned-npm.mjs)" || die "package.json's packageManager is not npm@<version>."
   step "Installing with $npm"
   npx --yes "$npm" ci --ignore-scripts
   node scripts/require-installed.mjs "${DEPLOYED_WORKSPACES[@]}" ||
