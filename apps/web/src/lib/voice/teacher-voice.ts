@@ -1,8 +1,20 @@
 /** How long a line is waited for before the lesson goes on with her words alone. */
 const LONGEST_WAIT_MS = 45_000;
 // A twentieth of a second of silence, played on the tap that starts a lesson: Safari lets a page
-// play sound only after one it played inside a gesture.
-const SILENCE = `data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA`;
+// play sound only after one it played inside a gesture. Played from a blob, as the page's policy
+// lets media come from blob: and not data:.
+const SILENCE = `UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA`;
+
+let silence: string | null = null;
+
+function silenceUrl(): string {
+  silence ??= URL.createObjectURL(
+    new Blob([Uint8Array.from(atob(SILENCE), (c) => c.charCodeAt(0))], {
+      type: "audio/wav",
+    }),
+  );
+  return silence;
+}
 
 export type Spoken = "heard" | "failed";
 
@@ -29,7 +41,7 @@ export class TeacherVoice {
 
   /** Called inside the tap that starts the lesson. */
   unlock(): void {
-    this.element.src = SILENCE;
+    this.element.src = silenceUrl();
     void this.element.play().catch(() => undefined);
     this.context ??= new AudioContext();
     void this.context.resume().catch(() => undefined);
