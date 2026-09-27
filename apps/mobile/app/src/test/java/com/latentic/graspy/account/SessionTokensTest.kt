@@ -98,6 +98,46 @@ class SessionTokensTest {
     }
 
     @Test
+    fun `a learner gone for the account that left while its exchange ran leaves the account signed in since alone`() = runBlocking {
+        answers += {
+            // The account is signed out and another, learning as Bayo, signed in while graspy answers.
+            accounts.set(Account("uid-2", "other@example.com", ChosenLearner(BAYO.id, BAYO.name), deviceJoins = false))
+            issued("account-only", learner = null)
+        }
+
+        sessions.token()
+
+        assertEquals(emptyList<String>(), events)
+        assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `a learner renamed for the account that left while its exchange ran leaves the account signed in since alone`() = runBlocking {
+        answers += {
+            // Signed out and back in as another account whose learner has Ada's id, as a restored backup would.
+            accounts.set(Account("uid-2", "other@example.com", ChosenLearner(ADA.id, "Ada"), deviceJoins = false))
+            issued("renamed", ADA.copy(name = "Ada Lovelace"))
+        }
+
+        sessions.token()
+
+        assertEquals(ChosenLearner(ADA.id, "Ada"), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `a learner gone for the learner switched from while its exchange ran leaves the learner switched to alone`() = runBlocking {
+        answers += {
+            accounts.setLearner(ChosenLearner(BAYO.id, BAYO.name))
+            issued("account-only", learner = null)
+        }
+
+        sessions.token()
+
+        assertEquals(emptyList<String>(), events)
+        assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
+    }
+
+    @Test
     fun `a sign-in Google no longer holds signs the device out`() {
         googleHolds = false
 

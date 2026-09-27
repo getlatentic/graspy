@@ -8,6 +8,7 @@ import com.latentic.graspy.account.LearnerPicks
 import com.latentic.graspy.account.UnsentChanges
 import com.latentic.graspy.settleMain
 import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -21,7 +22,10 @@ import org.robolectric.RuntimeEnvironment
 class LearnerPickerViewModelTest {
     private val application: Application = RuntimeEnvironment.getApplication()
     private val picks = FakePicks()
-    private val picker = LearnerPickerViewModel(application, picks)
+    private var leaves = 0
+    /** How each leave for another account ends; it leaves unless told otherwise. */
+    private var leaving: suspend () -> Unit = {}
+    private val picker = LearnerPickerViewModel(application, picks) { leaves += 1; leaving() }
     private var chosen = 0
 
     @Test
@@ -52,6 +56,54 @@ class LearnerPickerViewModelTest {
     }
 
     @Test
+    fun `a learner added shows among the tiles while the switch sends what is unsent`() {
+        val switched = CompletableDeferred<Unit>()
+        picks.switching = { switched.await() }
+        picker.startAdding()
+
+        picker.addAndChoose("Bayo") { chosen += 1 }
+        settleMain { picker.state.value.learners != null }
+
+        assertFalse(picker.state.value.adding)
+        assertTrue(picker.state.value.busy)
+        assertEquals(listOf(BAYO), picker.state.value.learners)
+        switched.complete(Unit)
+        settleMain { chosen == 1 }
+    }
+
+    @Test
+    fun `leaving for another account that fails says so, and can be tried again`() {
+        leaving = { throw IOException("the wipe could not finish") }
+
+        picker.leaveForAnotherAccount()
+        settleMain { picker.state.value.problem != null }
+
+        assertEquals(ChoiceProblem.FAILED, picker.state.value.problem)
+        assertFalse(picker.state.value.busy)
+        leaving = {}
+        picker.leaveForAnotherAccount()
+        settleMain { leaves == 2 }
+    }
+
+    @Test
+    fun `a second tap while leaving for another account, or while a learner opens, leaves nothing twice`() {
+        val left = CompletableDeferred<Unit>()
+        leaving = { left.await() }
+
+        picker.leaveForAnotherAccount()
+        picker.leaveForAnotherAccount()
+        picker.choose(ADA) { chosen += 1 }
+        settleMain { leaves == 1 }
+
+        assertTrue(picker.state.value.leaving)
+        left.complete(Unit)
+        settleMain { !picker.state.value.busy }
+        assertEquals(1, leaves)
+        assertFalse(picker.state.value.leaving)
+        assertTrue(picks.chosen.isEmpty())
+    }
+
+    @Test
     fun `an add graspy did not make keeps the form open to try again`() {
         picks.addFails = true
         picker.startAdding()
@@ -76,6 +128,8 @@ class LearnerPickerViewModelTest {
     private class FakePicks : LearnerPicks {
         var unsent = false
         var addFails = false
+        /** What the switch waits on, as unsent work being sent. */
+        var switching: suspend () -> Unit = {}
         val added = mutableListOf<String>()
         val chosen = mutableListOf<Pair<LearnerDto, Boolean>>()
 
@@ -87,6 +141,7 @@ class LearnerPickerViewModelTest {
 
         override suspend fun choose(learner: LearnerDto, loseUnsent: Boolean) {
             chosen += learner to loseUnsent
+            switching()
             if (unsent && !loseUnsent) throw UnsentChanges(offline = false)
         }
     }
