@@ -9,15 +9,15 @@ import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.lesson.OfflineLessons
 import com.latentic.graspy.plan.RecordRead
 import com.latentic.graspy.sync.networkReach
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 /**
  * The learner's MCP connection, kept while they learn here so the server's catalogue is read once. The
- * view calls the server has yet to take are sent whenever there is a connection, and the plan's ready
- * lessons are copied here each time the server gives the learner's record.
+ * view calls the server has yet to take are sent whenever there is a connection, and tried again while any
+ * stay on the phone ([KeptCallResending]); the plan's ready lessons are copied here each time the server
+ * gives the learner's record.
  */
 class LearnerViews internal constructor(
     application: Application,
@@ -30,7 +30,7 @@ class LearnerViews internal constructor(
     val routes = LearnerRoutes(connection::read, application.getSharedPreferences(PreferenceFiles.PLAN, 0), connection.ownerId)
 
     init {
-        viewModelScope.launch { networkReach(application).filter { it }.collect { bestEffort(TAG, "Sending the kept view calls") { connection.sendKept() } } }
+        viewModelScope.launch { KeptCallResending(connection::sentEverything, connection.kept).whileOnline(networkReach(application)) }
         viewModelScope.launch { lessons.copyWhenAsked() }
     }
 
@@ -43,10 +43,6 @@ class LearnerViews internal constructor(
     override suspend fun call(name: String, arguments: JsonObject): JsonObject = connection.call(name, arguments)
 
     override suspend fun openToolView(name: String, arguments: JsonObject): ViewCard = connection.openToolView(name, arguments)
-
-    private companion object {
-        const val TAG = "GraspyViews"
-    }
 }
 
 /** A learner's kept view calls, sent before the device leaves them: whether none is left on the phone. */
