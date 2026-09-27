@@ -56,6 +56,19 @@ describe("keepAtOnce", () => {
     });
   });
 
+  it("clears an earlier try's error before keeping starts", async () => {
+    const events: PlanSetupEvent[] = [];
+    const dispatch = (event: PlanSetupEvent) => events.push(event);
+    const failed = { ...FORM_SHOWN, error: "an earlier try" };
+    let whileKeeping: PlanSetupState | undefined;
+
+    await keepAtOnce(async () => {
+      whileKeeping = events.reduce(planSetupReducer, failed);
+    }, dispatch);
+
+    expect(whileKeeping).toBe(FORM_SHOWN);
+  });
+
   it("stays on the form, saying the plan was not kept, when keeping fails", async () => {
     const state = await shown(() => Promise.reject(new Error("storage full")));
 
