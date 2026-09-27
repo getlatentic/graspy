@@ -284,7 +284,8 @@
     "askTitle": "Ṣé kí a ṣe ètò tuntun fún àlàyé yìí?",
     "askBody": "Ètò tuntun yóò rọ́pò èyí tí o ní.",
     "newPlan": "Ṣe ètò tuntun",
-    "keepPlan": "Pa ètò mi mọ́"
+    "keepPlan": "Pa ètò mi mọ́",
+    "saveFailed": "A kò lè fi àlàyé rẹ pamọ́. Gbìyànjú lẹ́ẹ̀kan sí i."
   },
   "learners": {
     "title": "Ta ló ń kẹ́kọ̀ọ́?",

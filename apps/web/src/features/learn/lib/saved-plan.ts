@@ -2,6 +2,7 @@ import { currentAccount } from "@/lib/account/account-store";
 import { getCurriculum, holdCurriculum } from "@/lib/curriculum-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { followPlan } from "@/lib/follow-plan";
+import { pinLearner } from "@/lib/learner-pin";
 import { changePlanRecord } from "@/lib/learner-record";
 import { completedPlan } from "@/lib/plan-details";
 import { syncPlan } from "@/lib/plan-sync";
@@ -26,10 +27,11 @@ async function completed(plan: CurriculumData): Promise<CurriculumData> {
 }
 
 export async function loadSavedPlan(): Promise<CurriculumData | null> {
+  const pin = pinLearner();
   const stored = await getCurriculum();
   const saved = stored && (await completed(stored));
   if (saved) {
-    followPlan(saved).catch((err: unknown) =>
+    followPlan(saved, pin).catch((err: unknown) =>
       console.warn("Taking the plan's details failed:", err),
     );
   }

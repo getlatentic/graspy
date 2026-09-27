@@ -45,10 +45,17 @@ vi.mock("@/lib/api/session", () => ({ fetchWithSession }));
 const ADA = "ada";
 const GRACE = "grace";
 let learner: string | null = ADA;
-vi.mock("@/lib/account/account-store", () => ({
-  currentAccount: () => (learner ? { uid: "uid-1", learner } : null),
-  learnerKeyOf: ({ uid, learner }: { uid: string; learner: string }) =>
-    `${uid}/${learner}`,
+let turn = 0;
+/** The device learns as someone else, as a switch or a sign-out makes it. */
+function learnAs(next: string | null): void {
+  learner = next;
+  turn += 1;
+}
+vi.mock("@/lib/account/account-store", async (original) => ({
+  ...(await original<typeof import("@/lib/account/account-store")>()),
+  currentAccount: () =>
+    learner ? { uid: "uid-1", learner: { id: learner, name: learner } } : null,
+  learnerTurn: () => turn,
 }));
 
 let online = true;
@@ -223,7 +230,7 @@ describe("the connection to the server", () => {
     await reachServer();
     expect(connect).toHaveBeenCalledTimes(1);
 
-    learner = GRACE;
+    learnAs(GRACE);
     await reachServer();
     expect(connect).toHaveBeenCalledTimes(2);
   });
@@ -238,11 +245,24 @@ describe("the connection to the server", () => {
     expect(connect).toHaveBeenCalledTimes(1);
   });
 
+  it("is made again for a learner the device comes back to, whose last turn has ended", async () => {
+    const { reachServer } = await fresh();
+    await reachServer();
+
+    learnAs(GRACE);
+    learnAs(ADA);
+    await reachServer();
+
+    expect(connect).toHaveBeenCalledTimes(2);
+    const [, { fetch }] = transports;
+    await expect(fetch("https://api/mcp")).resolves.toBeInstanceOf(Response);
+  });
+
   it("closes the last learner's connection once the next learner's is made", async () => {
     const { reachServer } = await fresh();
     await reachServer();
 
-    learner = GRACE;
+    learnAs(GRACE);
     await reachServer();
 
     expect(close).toHaveBeenCalledTimes(1);
@@ -258,17 +278,17 @@ describe("the connection to the server", () => {
 
     expect([url, init]).toEqual(["https://api/mcp", { method: "POST" }]);
     expect(still?.()).toBe(true);
-    learner = GRACE;
+    learnAs(GRACE);
     expect(still?.()).toBe(false);
   });
 
   it("is not made for work pinned to a learner the device has left", async () => {
-    const { pinLearner, reachServer, callAppTool } = await fresh();
-    const { LearnerChanged } = await import("@/lib/learner-pin");
+    const { reachServer, callAppTool } = await fresh();
+    const { LearnerChanged, pinLearner } = await import("@/lib/learner-pin");
     const pin = pinLearner();
     await reachServer(pin);
 
-    learner = GRACE;
+    learnAs(GRACE);
 
     await expect(reachServer(pin)).rejects.toBeInstanceOf(LearnerChanged);
     await expect(callAppTool("answer_check", {}, pin)).rejects.toBeInstanceOf(

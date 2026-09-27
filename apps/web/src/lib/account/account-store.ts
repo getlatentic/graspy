@@ -48,6 +48,11 @@ function stored(): Account | null {
 
 let current: Account | null = stored();
 
+// Each time the device comes to learn as someone else, in this tab, their turn begins: work
+// begun in an earlier turn is not theirs, even when the same learner is back. Signing in and
+// choosing the first learner after take on what the device holds, so the turn goes on.
+let turn = 0;
+
 function store(account: Account | null): void {
   try {
     if (account) {
@@ -69,10 +74,33 @@ export function currentAccount(): Account | null {
   return current;
 }
 
-export function setAccount(account: Account | null): void {
-  current = account;
-  store(account);
+/** Whose session the device's requests go under: the account's learner, the account before
+ * one is chosen, or the device signed out. */
+export const holderOf = (account: Account | null): string =>
+  account ? (learnerKeyOf(account) ?? account.uid) : "device";
+
+// The device's own plan and progress join the account signed into, then its first learner.
+function joins(before: Account | null, after: Account | null): boolean {
+  if (!after) return false;
+  if (!before) return true;
+  return before.uid === after.uid && before.deviceJoins && !before.learner;
+}
+
+function become(next: Account | null): void {
+  const goesOn = holderOf(current) === holderOf(next) || joins(current, next);
+  if (!goesOn) turn += 1;
+  current = next;
   changed();
+}
+
+/** Changes each time the device comes to learn as someone else. */
+export function learnerTurn(): number {
+  return turn;
+}
+
+export function setAccount(account: Account | null): void {
+  store(account);
+  become(account);
 }
 
 /** The learner the device learns as; choosing one ends the device's joining. */
@@ -92,8 +120,7 @@ export const learnerKeyOf = (account: Account): string | null =>
 // Another tab signing in or out writes the same key.
 function onStorage(event: StorageEvent): void {
   if (event.key !== ACCOUNT_KEY && event.key !== null) return;
-  current = stored();
-  changed();
+  become(stored());
 }
 
 export function onAccountChange(listener: () => void): () => void {

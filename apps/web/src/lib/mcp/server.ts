@@ -10,10 +10,9 @@ import {
   type McpUiResourcePermissions,
 } from "@modelcontextprotocol/ext-apps/app-bridge";
 import type { TutorCard } from "@/lib/a2a/reply-data";
-import { currentAccount, learnerKeyOf } from "@/lib/account/account-store";
 import { fetchWithSession } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
-import { pinTo, type LearnerPin } from "@/lib/learner-pin";
+import { pinLearner, type LearnerPin } from "@/lib/learner-pin";
 import { NotForViews } from "./refusal";
 import { isUnreachable } from "./unreachable";
 
@@ -43,21 +42,11 @@ interface Connection {
 
 export type ServerPin = LearnerPin<string>;
 
-// Whose session the server's requests go under: the account's learner, the account before
-// one is chosen, or the device signed out. Not the device's id, which is new on each read
-// where storage is refused.
-function sessionHolder(): string {
-  const account = currentAccount();
-  if (!account) return "device";
-  return learnerKeyOf(account) ?? account.uid;
-}
-
-/** Pins work with the server to whoever the device learns as now. */
-export const pinLearner = (): ServerPin => pinTo(sessionHolder);
-
-// Each learner has a connection of their own, whose every request goes under their session:
-// once the device learns as someone else, it sends nothing more.
-let connection: { learner: string; made: Promise<Connection> } | null = null;
+// Each session holder has a connection of their own, pinned to them, whose every request goes
+// under their session: once the device learns as someone else, it sends nothing more. The
+// device signed out is one holder, not its id, which is new on each read where storage is
+// refused.
+let connection: { pin: ServerPin; made: Promise<Connection> } | null = null;
 
 async function connect(pin: ServerPin): Promise<Connection> {
   const client = new Client(HOST_INFO, {
@@ -109,12 +98,17 @@ function closeLeft(left: Promise<Connection>): void {
   left.then(({ client }) => client.close()).catch(() => undefined);
 }
 
-/** The connection for the learner `pin` holds; none once the device learns as someone else. */
+const servesNow = (now: ServerPin) =>
+  connection?.pin.learner === now.learner && connection.pin.holds();
+
+/** The connection for the learner `pin` holds; none once the device learns as someone else.
+ * Work the device's sign-in joined goes under the account's connection. */
 function server(pin: ServerPin = pinLearner()): Promise<Connection> {
   pin.hold();
-  if (connection?.learner === pin.learner) return connection.made;
+  const now = pinLearner();
+  if (connection && servesNow(now)) return connection.made;
   if (connection) closeLeft(connection.made);
-  connection = { learner: pin.learner, made: opened(pin) };
+  connection = { pin: now, made: opened(now) };
   return connection.made;
 }
 

@@ -25,8 +25,11 @@ vi.mock("@/lib/user-storage", () => ({
 const changePlanRecord = vi.fn(() => new Promise(() => {}));
 vi.mock("@/lib/learner-record", () => ({ changePlanRecord }));
 let signedIn: { uid: string } | null = null;
+let turn = 0;
 vi.mock("@/lib/account/account-store", () => ({
   currentAccount: () => signedIn,
+  holderOf: () => "device",
+  learnerTurn: () => turn,
 }));
 const syncPlan = vi.fn(async () => accountsPlan);
 vi.mock("@/lib/plan-sync", () => ({ syncPlan }));
@@ -59,12 +62,23 @@ describe("loadSavedPlan", () => {
       updatedAt: 5,
     });
     expect(holdCurriculum).toHaveBeenCalledWith(loaded);
-    expect(followPlan).toHaveBeenCalledWith(loaded);
+    expect(followPlan).toHaveBeenCalledWith(loaded, expect.anything());
+  });
+
+  it("takes the plan's details only while the device learns as the learner it loaded for", async () => {
+    await loadSavedPlan();
+    const [[, pin]] = followPlan.mock.calls as unknown as [
+      [CurriculumData, { hold: () => void }],
+    ];
+
+    expect(() => pin.hold()).not.toThrow();
+    turn += 1;
+    expect(() => pin.hold()).toThrow("no longer the one");
   });
 
   it("opens the saved plan without waiting for the server", async () => {
     await expect(loadSavedPlan()).resolves.toEqual(saved);
-    expect(followPlan).toHaveBeenCalledWith(saved);
+    expect(followPlan).toHaveBeenCalledWith(saved, expect.anything());
     expect(changePlanRecord).toHaveBeenCalledWith({
       kind: "plan_kept",
       planId: "plan-1",
