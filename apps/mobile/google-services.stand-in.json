@@ -5,6 +5,11 @@
     "oauth_client": [{"client_id": "000000000000-demo.apps.googleusercontent.com", "client_type": 3}],
     "api_key": [{"current_key": "demo-key"}],
     "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+  }, {
+    "client_info": {"mobilesdk_app_id": "1:000000000000:android:0000000000000001", "android_client_info": {"package_name": "com.latentic.graspy.staging"}},
+    "oauth_client": [{"client_id": "000000000000-demo.apps.googleusercontent.com", "client_type": 3}],
+    "api_key": [{"current_key": "demo-key"}],
+    "services": {"appinvite_service": {"other_platform_oauth_client": []}}
   }],
   "configuration_version": "1"
 }

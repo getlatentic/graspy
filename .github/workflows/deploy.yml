@@ -1,7 +1,9 @@
 name: Deploy
 
 # Staging follows main: each push to main that passes CI is deployed there. Production is
-# deployed only by hand, from main, with "production" typed in confirm. docs/DEPLOYING.md.
+# deployed only by hand, from main, with "production" typed in confirm and the owner's approval.
+# The Cloudflare token and the web build's Firebase config are secrets of the GitHub environment
+# of the same name. docs/DEPLOYING.md.
 on:
   workflow_run:
     workflows: [CI]
@@ -26,16 +28,57 @@ permissions:
   contents: read
 
 jobs:
-  secrets:
+  # A job that names an environment creates it when it is missing, with no reviewer and no branch
+  # rule. So the deploy job runs only once the owner has made its environment: staging is skipped
+  # until then, and production fails unless it asks for a reviewer and allows main only.
+  environment:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     outputs:
       ready: ${{ steps.check.outputs.ready }}
     steps:
-      # Until the owner adds these repository secrets, the deploy is skipped, not failed.
       - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENVIRONMENT: ${{ inputs.environment || 'staging' }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$ENVIRONMENT" = production ] && [ "$REF" != refs/heads/main ]; then
+            echo "::error::Production is deployed from main only, not $REF."
+            exit 1
+          fi
+          api="repos/$GITHUB_REPOSITORY/environments/$ENVIRONMENT"
+          if ! found="$(gh api "$api")"; then
+            if [ "$ENVIRONMENT" = production ]; then
+              echo "::error::No production environment. Set it up as docs/DEPLOYING.md says."
+              exit 1
+            fi
+            echo "::notice::Not deploying: no $ENVIRONMENT environment."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$ENVIRONMENT" = production ]; then
+            reviewers="$(jq '[.protection_rules[] | select(.type == "required_reviewers") | .reviewers[]] | length' <<< "$found")"
+            branches="$(gh api "$api/deployment-branch-policies" --jq '[.branch_policies[] | "\(.type) \(.name)"] | join(", ")')" ||
+              branches="any"
+            if [ "$reviewers" -eq 0 ] || [ "$branches" != "branch main" ]; then
+              echo "::error::Production needs a required reviewer and the branch main only; it has $reviewers reviewers and branches: $branches. docs/DEPLOYING.md."
+              exit 1
+            fi
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: environment
+    if: needs.environment.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'staging' }}
+    steps:
+      - name: Environment secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -50,17 +93,9 @@ jobs:
             [ -n "${!name}" ] || missing="$missing $name"
           done
           if [ -n "$missing" ]; then
-            echo "::notice::Not deploying. Repository secrets not set:$missing"
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "::error::Secrets not set in this environment:$missing"
+            exit 1
           fi
-
-  deploy:
-    needs: secrets
-    if: needs.secrets.outputs.ready == 'true'
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
@@ -71,9 +106,7 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
         with:
           enable-cache: true
-      - run: npm ci --ignore-scripts
-      - working-directory: apps/server
-        run: uv sync --locked
+      # The script installs with the pinned npm and builds before it deploys anything.
       - name: Deploy ${{ inputs.environment || 'staging' }}
         env:
           ENVIRONMENT: ${{ inputs.environment || 'staging' }}
