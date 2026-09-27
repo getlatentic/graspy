@@ -1,5 +1,6 @@
 package com.latentic.graspy.ui
 
+import android.Manifest
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -14,6 +15,8 @@ import com.latentic.graspy.account.context
 import com.latentic.graspy.account.inMemoryDatabase
 import com.latentic.graspy.account.learnerKey
 import com.latentic.graspy.account.signedIn
+import com.latentic.graspy.collection.CollectionViewModel
+import com.latentic.graspy.collection.RECORDINGS_DIRECTORY
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.home.HomeCatalogueViewModel
 import com.latentic.graspy.lesson.PLAN
@@ -30,18 +33,25 @@ import com.latentic.graspy.mcp.LearnerViews
 import com.latentic.graspy.plan.LearnerRecord
 import com.latentic.graspy.plan.PlanState
 import com.latentic.graspy.plan.PlanViewModel
+import com.latentic.graspy.practice.PracticeExercise
 import com.latentic.graspy.settleMain
 import com.latentic.graspy.sync.CatalogueLessonEntity
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowAudioRecord.AudioRecordSourceProvider
+import org.robolectric.shadows.ShadowAudioRecord
 
 /** Back from a voice lesson, by the phone's back button, finds the lesson list it was opened from. */
 @RunWith(RobolectricTestRunner::class)
@@ -56,6 +66,7 @@ class VoiceLessonBackTest {
     private val server = FakeGraspyServer(PLAN.copy(system = "NG", level = "nursery-2"), LearnerRecord())
     private var planViewModel: PlanViewModel? = null
     private var learnerViews: LearnerViews? = null
+    private var collection: CollectionViewModel? = null
     private val viewModels = LearnerViewModels(
         LEARNER_VIEW_MODELS + mapOf(
             PlanViewModel::class.java to { app, key -> PlanViewModel(app, key, server.calls).also { planViewModel = it } },
@@ -63,6 +74,7 @@ class VoiceLessonBackTest {
                 LearnerViews(app, LearnerConnection(database, key, OkHttpClient(), server.web.url("/mcp")) { true }).also { learnerViews = it }
             },
             HomeCatalogueViewModel::class.java to { app, key -> HomeCatalogueViewModel(app, key, database.lessonCacheDao(), {}) { true } },
+            CollectionViewModel::class.java to { app, key -> CollectionViewModel(app, key).also { collection = it } },
         ),
     )
 
@@ -115,6 +127,67 @@ class VoiceLessonBackTest {
         listed("The two times table").assertExists()
         compose.onNodeWithText(learn.home.subjectsTitle).assertDoesNotExist()
     }
+
+    @Test
+    fun `back during a take ends it, so the microphone is never left on outside the lesson and nothing is sent as its answer`() {
+        server.voiceOnly = true
+        stored(SchoolClass.NURSERY_2, "alphabet", "english.alphabet.say", "Saying the alphabet")
+        shown(LearnerProfile(SchoolClass.NURSERY_2, AppLanguageSelection.ENGLISH))
+        awaitListed("Saying the alphabet")
+        openLesson("Saying the alphabet")
+        val take = startTake()
+
+        pressBack()
+
+        listed("Saying the alphabet").assertExists()
+        val ended = take.state.value
+        assertFalse(ended.isRecording)
+        assertFalse(ended.isSaving)
+        assertNull(ended.queuedLocalId)
+        assertEquals(0, take.droppedTakes.value)
+        assertTrue(recordings().isEmpty())
+    }
+
+    @Test
+    fun `turning the phone during a take keeps it, since the lesson is still open`() {
+        server.voiceOnly = true
+        stored(SchoolClass.NURSERY_2, "alphabet", "english.alphabet.say", "Saying the alphabet")
+        shown(LearnerProfile(SchoolClass.NURSERY_2, AppLanguageSelection.ENGLISH))
+        awaitListed("Saying the alphabet")
+        openLesson("Saying the alphabet")
+        val take = startTake()
+
+        compose.activityRule.scenario.recreate()
+
+        assertTrue(take.state.value.isRecording)
+        assertEquals(1, recordings().size)
+    }
+
+    /** The child's answer, begun as the lesson's button begins it once the microphone is allowed. */
+    private fun startTake(): CollectionViewModel {
+        shadowOf(compose.activity.application).grantPermissions(Manifest.permission.RECORD_AUDIO)
+        ShadowAudioRecord.setSourceProvider(speaking)
+        val take = requireNotNull(collection) { "The lesson has no recorder" }
+        compose.runOnUiThread { take.startRecording(PracticeExercise.Planned("english.alphabet.say", "recitation", "alphabet")) }
+        assertTrue(take.state.value.isRecording)
+        return take
+    }
+
+    /** A child who keeps talking: loud, so the take never ends itself, and paced as a microphone is. */
+    private val speaking = AudioRecordSourceProvider {
+        object : ShadowAudioRecord.AudioRecordSource {
+            override fun readInByteArray(audioData: ByteArray, offsetInBytes: Int, sizeInBytes: Int, isBlocking: Boolean): Int {
+                Thread.sleep(READ_PACE_MS)
+                for (index in offsetInBytes until offsetInBytes + sizeInBytes step 2) {
+                    audioData[index] = 0
+                    audioData[index + 1] = if (index / 2 % 2 == 0) LOUD else (-LOUD).toByte()
+                }
+                return sizeInBytes
+            }
+        }
+    }
+
+    private fun recordings() = context().filesDir.resolve(RECORDINGS_DIRECTORY).listFiles().orEmpty().toList()
 
     private fun openLesson(title: String) {
         listed(title).performClick()
@@ -181,5 +254,7 @@ class VoiceLessonBackTest {
 
     private companion object {
         const val TIMEOUT_MS = 10_000L
+        const val READ_PACE_MS = 20L
+        const val LOUD: Byte = 0x60
     }
 }
