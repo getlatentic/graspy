@@ -16,11 +16,16 @@ class SessionTokensTest {
     private val events = mutableListOf<String>()
     private var now = 1_000_000L
     private var googleHolds = true
+    /** What happens on the device while Google is asked for the ID token. */
+    private var whileAskingGoogle: () -> Unit = {}
 
     private val sessions = SessionTokens(
         accounts = accounts,
         deviceId = { DEVICE },
-        idToken = { uid, fresh -> "$uid-${if (fresh) "fresh" else "cached"}".takeIf { googleHolds } },
+        idToken = { uid, fresh ->
+            whileAskingGoogle()
+            "$uid-${if (fresh) "fresh" else "cached"}".takeIf { googleHolds }
+        },
         exchange = { request ->
             sent += request
             answers.removeFirstOrNull()?.invoke(request) ?: issued("token-${sent.size}", ADA)
@@ -29,7 +34,7 @@ class SessionTokensTest {
             events += "learner gone"
             accounts.setLearner(null)
         },
-        signedOutElsewhere = { events += "signed out" },
+        signedOutElsewhere = { uid -> events += "signed out $uid" },
         clock = { now },
     )
 
@@ -97,8 +102,19 @@ class SessionTokensTest {
         googleHolds = false
 
         assertThrows(SessionRefusal::class.java) { runBlocking { sessions.token() } }
-        assertEquals(listOf("signed out"), events)
+        assertEquals(listOf("signed out $UID"), events)
         assertEquals(emptyList<SessionRequestDto>(), sent)
+    }
+
+    @Test
+    fun `the account signed out is the one whose exchange was refused, though another signed in meanwhile`() {
+        whileAskingGoogle = {
+            googleHolds = false
+            accounts.set(Account("uid-2", "other@example.com", learner = null, deviceJoins = true))
+        }
+
+        assertThrows(SessionRefusal::class.java) { runBlocking { sessions.token() } }
+        assertEquals(listOf("signed out $UID"), events)
     }
 
     @Test
