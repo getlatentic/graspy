@@ -29,6 +29,7 @@ import com.latentic.graspy.ask.AskViewModel
 import com.latentic.graspy.ask.LinkTarget
 import com.latentic.graspy.home.HomeCatalogueViewModel
 import com.latentic.graspy.home.HomeTab
+import com.latentic.graspy.home.NoVoiceCard
 import com.latentic.graspy.home.VoiceCard
 import com.latentic.graspy.home.VoicePage
 import com.latentic.graspy.lesson.TopicLesson
@@ -133,8 +134,10 @@ internal fun LearnerTabs(
             when {
                 shownPlace != null && ready != null -> Page { OpenPlace(learn, interfaceLanguage, ready, shownPlace, onPlace = { place = it }, onLearnt = planViewModel::refresh) }
                 editing && ready != null -> Page { Details(learn, ready.plan, voiceOnly, interfaceLanguage, planViewModel, views.routes, onBack = { editing = false }, onReplan = onReplan) }
+                // With no voice lessons in the app for the class yet, Home says so rather than showing nothing.
                 shownTab == LearnTab.HOME && (voicePageOpen || voiceOnly) -> Page {
-                    voice?.let { VoiceSection(copy, learn, appLanguage, it, openVoiceLesson) }
+                    if (voice == null) NoVoiceCard(learn.voice, copy.home.noLessons, learn.you.change) { editing = true }
+                    else VoiceSection(copy, learn, appLanguage, voice, openVoiceLesson)
                 }
                 shownTab == LearnTab.ASK -> AskPane(learn, interfaceLanguage, plan, planViewModel, ask, follow, askOpening, onOpened = { askOpening = null }) { tab = LearnTab.HOME }
                 else -> Page {

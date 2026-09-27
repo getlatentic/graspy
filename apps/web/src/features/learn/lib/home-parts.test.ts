@@ -1,17 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { homeParts } from "./home-parts";
+import { homeParts, type HomeState } from "./home-parts";
+
+const home = (state: Partial<HomeState>): HomeState => ({
+  voiceOnly: false,
+  hasVoiceLessons: true,
+  hasCurrent: false,
+  subjectCount: 0,
+  ...state,
+});
 
 describe("homeParts", () => {
   it("is the voice lessons for a class that learns by voice alone, with nothing to read", () => {
-    expect(homeParts(true, false, 0)).toEqual(["lessons"]);
+    expect(homeParts(home({ voiceOnly: true }))).toEqual(["lessons"]);
   });
 
   it("hides the subjects of such a class's plan, and the topic it was on", () => {
-    expect(homeParts(true, true, 4)).toEqual(["lessons"]);
+    const plan = { hasCurrent: true, subjectCount: 4 };
+    expect(homeParts(home({ voiceOnly: true, ...plan }))).toEqual(["lessons"]);
+  });
+
+  it("tells such a class when the app has no voice lessons for it yet", () => {
+    const state = home({ voiceOnly: true, hasVoiceLessons: false });
+    expect(homeParts(state)).toEqual(["noVoice"]);
   });
 
   it("shows any other class the topic to continue, voice lessons, subjects and ideas", () => {
-    expect(homeParts(false, true, 4)).toEqual([
+    expect(homeParts(home({ hasCurrent: true, subjectCount: 4 }))).toEqual([
       "continue",
       "rail",
       "voice",
@@ -21,6 +35,6 @@ describe("homeParts", () => {
   });
 
   it("leaves out a topic to continue and subjects a plan does not have", () => {
-    expect(homeParts(false, false, 0)).toEqual(["rail", "voice", "try"]);
+    expect(homeParts(home({}))).toEqual(["rail", "voice", "try"]);
   });
 });

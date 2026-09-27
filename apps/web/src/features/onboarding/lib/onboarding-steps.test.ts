@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
-import { nextLabelKey, stepsFor } from "./onboarding-steps";
+import { nextLabelKey, notKeptAtOnce, stepsFor } from "./onboarding-steps";
 
 // As chosen from the catalogue, which says whether the class learns by voice alone.
 const inClass = (level: string, voiceOnly = false): DetailsSchema => ({
@@ -44,5 +44,19 @@ describe("nextLabelKey", () => {
     expect(nextLabelKey(false, true, true)).toBe(
       "onboarding.generating.tryAgain",
     );
+  });
+});
+
+describe("notKeptAtOnce", () => {
+  it("tells a class that learns by voice alone its plan was not kept", () => {
+    expect(notKeptAtOnce(true, inClass("nursery-2", true))).toBe(true);
+  });
+
+  it("says nothing once the learner has chosen a class that chooses subjects", () => {
+    expect(notKeptAtOnce(true, inClass("primary-2"))).toBe(false);
+  });
+
+  it("says nothing before a plan has stopped", () => {
+    expect(notKeptAtOnce(false, inClass("nursery-2", true))).toBe(false);
   });
 });

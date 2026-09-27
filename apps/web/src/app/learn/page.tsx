@@ -18,9 +18,12 @@ import { ResumeCard } from "@/features/learn/components/resume-card";
 import { SubjectTiles } from "@/features/learn/components/subject-tiles";
 import { TrySomethingNew } from "@/features/learn/components/try-something-new";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
-import { VoiceCard } from "@/features/voice/components/voice-card";
+import { NoVoiceCard, VoiceCard } from "@/features/voice/components/voice-card";
 import { VoiceLessons } from "@/features/voice/components/voice-lessons";
-import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
+import {
+  useClassHasVoiceLessons,
+  useVoiceOnly,
+} from "@/features/voice/hooks/use-voice-learner";
 import { homeParts } from "@/features/learn/lib/home-parts";
 
 export default function HomePage() {
@@ -28,6 +31,7 @@ export default function HomePage() {
   const userProfile = useUserProfile();
   const { curriculum, isGenerating, error, nextSubject, generate } = usePlan();
   const voiceOnly = useVoiceOnly() === true;
+  const hasVoiceLessons = useClassHasVoiceLessons();
   const current = currentTopic(curriculum, nextSubject);
   const subjects = curriculum?.subjects ?? [];
   const ask = useAskIdeas(
@@ -36,11 +40,18 @@ export default function HomePage() {
   );
 
   const parts = new Set(
-    homeParts(voiceOnly, current !== null, subjects.length),
+    homeParts({
+      voiceOnly,
+      hasVoiceLessons,
+      hasCurrent: current !== null,
+      subjectCount: subjects.length,
+    }),
   );
 
   if (!userProfile) return null;
   if (parts.has("lessons")) return <VoiceLessons />;
+  if (parts.has("noVoice"))
+    return <NoVoiceCard className="mx-auto w-full max-w-3xl" />;
 
   const errorAlert = error ? (
     <PlanErrorCard

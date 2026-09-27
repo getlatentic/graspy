@@ -1,12 +1,8 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { currentAccount, onAccountChange } from "@/lib/account/account-store";
 import { deviceId } from "@/lib/device-id";
-import {
-  askRoute,
-  keptRoute,
-  onRouteKept,
-  routeKey,
-} from "@/lib/learner-route";
+import { keptRoute, onRouteKept, routeKey } from "@/lib/learner-route";
+import { followRoute } from "@/lib/learner-route-follow";
 import { useUserProfile } from "@/lib/use-user-profile";
 import {
   classOf,
@@ -47,8 +43,14 @@ export function useVoiceLearner(): VoiceLearner | null {
   };
 }
 
+/** Whether the app has voice lessons for the learner's class. */
+export function useClassHasVoiceLessons(): boolean {
+  const { details } = useLearnerClass();
+  return details !== null && voiceClassOf(details) !== null;
+}
+
 /** Whether the server has the learner's class learn by voice alone, with no slide subjects;
- * null until it has said, here or on an earlier visit. */
+ * null until it has said, here or on an earlier visit. Asked again until it says. */
 export function useVoiceOnly(): boolean | null {
   const { details } = useLearnerClass();
   const { isLoaded } = usePlan();
@@ -58,7 +60,8 @@ export function useVoiceOnly(): boolean | null {
   );
 
   useEffect(() => {
-    if (isLoaded && details) void askRoute(details);
+    if (!isLoaded || !details) return;
+    return followRoute(details);
     // Keyed on the class: the details object is new on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, isLoaded]);

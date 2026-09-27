@@ -123,7 +123,7 @@ async def change_plan(caller: CallerDep, change: Annotated[PlanChange, Body()]) 
 
 
 async def _stored_plan(caller: Caller) -> Plan | None:
-    stored = await caller.keeping.learners.plan(caller.learner)
+    stored = await caller.plan()
     return Plan.model_validate_json(stored) if stored else None
 
 
