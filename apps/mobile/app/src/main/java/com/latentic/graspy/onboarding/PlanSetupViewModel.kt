@@ -60,6 +60,7 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
     private val subjectsShown = MutableStateFlow(SubjectChoices())
     private val setupShown = MutableStateFlow<Setup?>(null)
     private val activeShown = MutableStateFlow(false)
+    private val replanningShown = MutableStateFlow(false)
     private val keepingShown = MutableStateFlow(false)
     private val notKeptShown = MutableStateFlow(false)
     private var subjectsFor: LearnerDetails? = null
@@ -75,6 +76,13 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
     /** From the first step until the learner leaves the plan it made. */
     val active: StateFlow<Boolean> = activeShown.asStateFlow()
 
+    /**
+     * Begun from a plan the learner already had, so leaving goes back to it. A first plan offers no way out until
+     * the server keeps it, as the web's onboarding offers Back only to a replan: the plan shown while it is being
+     * kept is not the learner's yet.
+     */
+    val replanning: StateFlow<Boolean> = replanningShown.asStateFlow()
+
     /** While the plan of a class that learns by voice alone is being kept. */
     val keeping: StateFlow<Boolean> = keepingShown.asStateFlow()
 
@@ -84,6 +92,7 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
     /** A learner replanning from their details goes straight to the subjects taught at [replanFor]. */
     fun begin(replanFor: LearnerDetails?) {
         activeShown.value = true
+        replanningShown.value = replanFor != null
         setupShown.value = null
         if (replanFor == null) stepShown.value = SetupStep.PROFILE else toSubjects(replanFor)
     }
@@ -173,6 +182,7 @@ class PlanSetupViewModel(private val subjectsAt: SubjectsSource) : ViewModel() {
 
     fun finish() {
         activeShown.value = false
+        replanningShown.value = false
         setupShown.value = null
         stepShown.value = SetupStep.PROFILE
     }

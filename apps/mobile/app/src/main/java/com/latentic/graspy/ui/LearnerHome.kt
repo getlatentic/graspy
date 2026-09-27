@@ -57,6 +57,7 @@ fun LearnerHome(
     val setup: PlanSetupViewModel = viewModel()
     val views: LearnerViews = viewModel()
     val setupActive by setup.active.collectAsStateWithLifecycle()
+    val replanning by setup.replanning.collectAsStateWithLifecycle()
     val ready = (plan as? PlanState.Ready)?.plan
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }
     val phone = ConfigurationCompat.getLocales(LocalConfiguration.current).get(0) ?: Locale.getDefault()
@@ -72,7 +73,6 @@ fun LearnerHome(
                     setup.begin(replanFor = null)
                 }
             }
-            val replanning = ready != null
             PlanOnboarding(
                 learn = learnCopyFor(interfaceLanguage),
                 form = form,
