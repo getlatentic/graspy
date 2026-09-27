@@ -77,6 +77,34 @@ def test_a_mark_is_stripped_only_when_every_option_carries_it_in_order(written, 
     assert option_lines(written) == shown
 
 
+@pytest.mark.parametrize(
+    ("written", "shown"),
+    [
+        (
+            "- a) only\n- b) only\n- c) only\n- d) only",
+            ["a) only", "b) only", "c) only", "d) only"],
+        ),
+        (
+            "A. Adebayo\nB. Okonkwo\nC. Eze\nD. Bello",
+            ["A. Adebayo", "B. Okonkwo", "C. Eze", "D. Bello"],
+        ),
+        (
+            "- A. Adebayo\n- B. Okonkwo\n- C. Eze\n- D. Bello",
+            ["A. Adebayo", "B. Okonkwo", "C. Eze", "D. Bello"],
+        ),
+        ("- -\n- - 5", ["-", "- 5"]),
+    ],
+    ids=["labels-are-the-answers", "initials-in-order", "bulleted-initials", "empty"],
+)
+def test_a_mark_that_is_part_of_the_answers_stays(written, shown):
+    """Taking it away would leave options that cannot be told apart."""
+    assert option_lines(written) == shown
+
+
+def test_a_label_before_a_capitalised_answer_is_taken_only_with_a_bracket():
+    assert option_lines("A) Adebayo\nB) Okonkwo") == ["Adebayo", "Okonkwo"]
+
+
 def test_an_option_starting_with_a_negative_number_keeps_its_sign():
     assert option_lines("- -3\n- 3") == ["-3", "3"]
 
