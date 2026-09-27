@@ -62,6 +62,8 @@ class SubmissionRepositoryTest {
 
         override suspend fun findIncomplete(ownerId: String) = incomplete.filter { it.ownerId == ownerId }
 
+        override fun observeIncomplete(ownerId: String): Flow<List<SubmissionEntity>> = flowOf(incomplete.filter { it.ownerId == ownerId })
+
         override fun observeLessonTurns(ownerId: String): Flow<List<SubmissionEntity>> = flowOf(incomplete.filter { it.ownerId == ownerId })
 
         override fun observeIncompleteCount(ownerId: String): Flow<Int> = flowOf(incomplete.count { it.ownerId == ownerId })
