@@ -278,12 +278,9 @@ def repeated(pairs: list[Item], count: int) -> list[Item]:
     so every learner and both kinds are judged again."""
     first = [item for item in pairs if item.draw == 0 and QUESTIONS[1] not in item.task]
     names = list(dict.fromkeys(item.learner for item in first))
-    chosen = [
-        next(i for i in first if i.learner == name and i.kind == kind)
-        for n, name in enumerate(names)
-        for kind in [("lesson", "tutor")[n % 2]]
-    ]
-    rest = [item for item in first if item not in chosen]
+    wanted = [(name, ("lesson", "tutor")[n % 2]) for n, name in enumerate(names)]
+    chosen = [i for i in first if (i.learner, i.kind) in wanted]
+    rest = [item for item in pairs if item not in chosen]
     return (chosen + rest)[:count]
 
 
@@ -296,6 +293,7 @@ async def main(options: argparse.Namespace) -> None:
         item
         for before, after in options.pair
         for item in items(_read(before), _read(after), before.stem)
+        if options.kind in (None, item.kind)
     ]
     if options.probe:
         await probe(settings, options.judge, pairs)
@@ -328,6 +326,9 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=Path, default=Path("stage-writing-judged.json"))
     parser.add_argument(
         "--repeat", type=int, default=6, help="Pairs judged three more times"
+    )
+    parser.add_argument(
+        "--kind", choices=["lesson", "tutor"], help="Judge one kind of pair only"
     )
     parser.add_argument("--probe", action="store_true")
     parser.add_argument("--report", type=Path, help="Report a judged file again")
