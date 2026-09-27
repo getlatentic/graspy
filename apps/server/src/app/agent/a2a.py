@@ -177,10 +177,11 @@ def build_agent_card(settings: Settings) -> AgentCard:
     """Written out, so the public card describes the tutor, not its prompt."""
     return AgentCard(
         name="graspy-tutor",
-        description="Tutor for secondary school learners: explains what they are "
-        "studying, and changes their plan: opens or adds topics and subjects, "
-        "proposes paths to goals beyond their grade, and rebuilds it. Send the "
-        "learner's situation as message metadata under 'learner'.",
+        description="Tutor for learners from primary school to university, "
+        "each at their own stage: explains what they are studying, and changes "
+        "their plan: opens or adds topics and subjects, proposes paths to goals "
+        "beyond their grade, and rebuilds it. Send the learner's situation as "
+        "message metadata under 'learner'.",
         version="0.1.0",
         supported_interfaces=[
             AgentInterface(

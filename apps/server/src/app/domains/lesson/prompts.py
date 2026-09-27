@@ -36,11 +36,17 @@ class PlanSummary(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+STAGE_DESC = "The learner's stage of schooling"
+AGE_DESC = "The learner's age"
+STAGE_GUIDANCE_DESC = "How to write for this stage and age"
+
+
 class GenerateLessonPlan(dspy.Signature):
     """
     Create a pedagogical lesson plan.
     Break down the topic into a logical specific sequence of 3-6 slides.
     Ensure a mix of concept, example, and practice slides.
+    Size each slide's idea and steps for `stage` and `age`, as `stage_guidance` says.
     """
 
     country: str = dspy.InputField(desc="Target country for cultural context")
@@ -48,6 +54,9 @@ class GenerateLessonPlan(dspy.Signature):
     subject: str = dspy.InputField(desc="The academic subject")
     topic: str = dspy.InputField(desc="Specific topic to teach")
     grade_level: str = dspy.InputField(desc="Target grade level")
+    stage: str = dspy.InputField(desc=STAGE_DESC)
+    age: str = dspy.InputField(desc=AGE_DESC)
+    stage_guidance: str = dspy.InputField(desc=STAGE_GUIDANCE_DESC)
     learner_notes: str = dspy.InputField(
         desc="What this learner has finished and recently got wrong. Aim the "
         "plan at it: a misconception slide for a mistake they keep making, "
@@ -80,14 +89,17 @@ OPTIONS_DESC = "Exactly four answer options, one per line, each starting with '-
 class GenerateSlide(dspy.Signature):
     __doc__ = f"""Write one lesson slide following `slide_spec`, and a multiple-choice check on it.
 
-Write every field in `language`, at `grade_level`, with examples from
-`country`. Build on `previous_context` without repeating it.
+Write every field in `language`, at `grade_level`, as `stage_guidance` says,
+with examples from `country`. Build on `previous_context` without repeating it.
 
 {MATH_NOTATION}"""
 
     subject: str = dspy.InputField(desc="The academic subject")
     topic: str = dspy.InputField(desc="Specific topic")
     grade_level: str = dspy.InputField(desc="Target grade level")
+    stage: str = dspy.InputField(desc=STAGE_DESC)
+    age: str = dspy.InputField(desc=AGE_DESC)
+    stage_guidance: str = dspy.InputField(desc=STAGE_GUIDANCE_DESC)
     country: str = dspy.InputField(desc="Target country for cultural context")
     language: str = dspy.InputField(
         desc="Language of instruction. Write every field in it."
@@ -116,13 +128,17 @@ class GeneratePracticeQuestion(dspy.Signature):
     __doc__ = f"""Write a final practice question on the lesson: challenging, but solvable
 from what the lesson taught.
 
-Write every field in `language`, with examples from `country`.
+Write every field in `language`, as `stage_guidance` says, with examples from
+`country`.
 
 {MATH_NOTATION}"""
 
     subject: str = dspy.InputField(desc="The academic subject")
     topic: str = dspy.InputField(desc="Specific topic")
     grade_level: str = dspy.InputField(desc="Target grade level")
+    stage: str = dspy.InputField(desc=STAGE_DESC)
+    age: str = dspy.InputField(desc=AGE_DESC)
+    stage_guidance: str = dspy.InputField(desc=STAGE_GUIDANCE_DESC)
     country: str = dspy.InputField(desc="Target country for cultural context")
     language: str = dspy.InputField(
         desc="Language of instruction. Write every field in it."

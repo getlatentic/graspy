@@ -8,7 +8,7 @@ from dspy.utils.exceptions import AdapterParseError
 from lesson_example import wire
 from stand_in import inputs, stand_in
 
-from app.domains.lesson.generator import NO_NOTES
+from app.domains.lesson.generator import NO_NOTES, NO_STAGE_GUIDANCE, NOT_KNOWN
 from app.domains.lesson.service import LessonRequest, LessonService
 from app.learner.store import InMemoryLearnerStore
 from app.lessons.making import Job, LessonTarget
@@ -19,6 +19,17 @@ COUNTRY = "Nigeria"
 SUBJECT = "Mathematics"
 TOPIC = "Algebra"
 GRADE = "JSS 1"
+
+# Classes as the apps name them.
+PRIMARY_2 = "Primary 2 (Primary), Nigeria, age 7"
+PRIMARY_5 = "Primary 5 (Primary), Nigeria, age 10"
+JSS_1 = "JSS 1 (Junior Secondary School), Nigeria, age 12"
+SS_2 = "SS 2 (Senior Secondary School), Nigeria, age 16"
+UNKNOWN_STAGE = {
+    "stage": NOT_KNOWN,
+    "age": NOT_KNOWN,
+    "stage_guidance": NO_STAGE_GUIDANCE,
+}
 
 # LessonPlan requires between three and six slide specs, so three is the
 # smallest lesson the schema allows.
@@ -133,10 +144,10 @@ def _answers(slide_count=MIN_SLIDES, *, slide=None, practice=None, translated=Fa
     return out
 
 
-async def _stream(answers, language="English"):
+async def _stream(answers, language="English", grade=GRADE):
     """The events as the app receives them."""
     lm, context = stand_in(answers)
-    request = LessonRequest(COUNTRY, language, SUBJECT, TOPIC, GRADE)
+    request = LessonRequest(COUNTRY, language, SUBJECT, TOPIC, grade)
     with context:
         events = [event async for event in LessonService().events(request)]
     return lm, json.loads(json.dumps(events, default=wire))
@@ -244,11 +255,14 @@ def _summary_of(*titles):
 
 
 async def test_each_stage_is_asked_about_the_learners_lesson():
+    """A class the catalogue cannot place, such as "JSS 1" alone, is written
+    for by its grade, as before stages were known."""
     lm, _ = await _stream(_answers())
     lesson = {
         "subject": SUBJECT,
         "topic": TOPIC,
         "grade_level": GRADE,
+        **UNKNOWN_STAGE,
         "country": COUNTRY,
         "language": "English",
     }
@@ -259,6 +273,7 @@ async def test_each_stage_is_asked_about_the_learners_lesson():
         "subject": SUBJECT,
         "topic": TOPIC,
         "grade_level": GRADE,
+        **UNKNOWN_STAGE,
         "learner_notes": NO_NOTES,
     }
     for i, context in enumerate(
@@ -275,6 +290,35 @@ async def test_each_stage_is_asked_about_the_learners_lesson():
         **lesson,
         "lesson_summary": _summary_of("Slide 0", "Slide 1", "Slide 2"),
     }
+
+
+@pytest.mark.parametrize(
+    ("grade", "stage", "age", "guided"),
+    [
+        (PRIMARY_2, "lower primary", "7", "Sentences of at most 10 words."),
+        (PRIMARY_5, "upper primary", "10", "Sentences of at most 14 words."),
+        (JSS_1, "junior secondary", "12", "the subject's proper terms"),
+        (SS_2, "senior secondary", "16", "The subject's full vocabulary"),
+    ],
+)
+async def test_the_plan_each_slide_and_the_practice_are_told_the_stage_and_age(
+    grade, stage, age, guided
+):
+    lm, _ = await _stream(_answers(), grade=grade)
+
+    for call in range(MIN_SLIDES + 2):
+        asked = inputs(lm, call)
+        assert asked["grade_level"] == grade
+        assert (asked["stage"], asked["age"]) == (stage, age)
+        assert guided in asked["stage_guidance"]
+
+
+async def test_an_undergraduate_lesson_is_written_for_an_adult():
+    lm, _ = await _stream(_answers(), grade="Undergraduate student, studying Law")
+
+    asked = inputs(lm, 0)
+    assert (asked["stage"], asked["age"]) == ("after school", "an adult")
+    assert "academic language" in asked["stage_guidance"]
 
 
 async def test_a_translated_lesson_is_written_in_english_and_read_back_in_english():

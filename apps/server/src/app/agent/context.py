@@ -18,6 +18,7 @@ from pydantic import (
 )
 
 from ..domains.lesson.lesson import Lesson
+from ..education.stage import stage_of
 from ..learner.record import LearnerRecord
 from ..lessons.store import LessonStore
 
@@ -142,6 +143,9 @@ class LearnerContext(BaseModel):
             self.language and f"learning in {self.language}",
         ]
         described = " ".join(part for part in parts if part)
+        learner = stage_of(self.grade_level)
+        if learner is not None:
+            described += f"; stage: {learner.described()}"
         return (
             described
             or "Not given: ask only if it matters, and otherwise answer generally."

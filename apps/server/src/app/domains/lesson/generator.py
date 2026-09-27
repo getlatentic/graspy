@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import dspy
 
+from ...config.stage_writing import WRITING
+from ...education.stage import stage_of
 from .lesson import LessonPractice, LessonSlide, LessonSlideAssessment
 from .options import as_option_lines, checked_answer, option_lines
 from .prompts import (
@@ -20,9 +22,28 @@ from .prompts import (
 )
 
 NO_NOTES = "None: plan for a typical learner at this grade."
+NOT_KNOWN = "Not known"
+NO_STAGE_GUIDANCE = "None: write for the grade in `grade_level`."
 # A slide written again is written with some sampling, or the model would
 # write the same unusable slide, and a cache would return it.
 RETRY_TEMPERATURE = 0.7
+
+
+def stage_inputs(grade_level: str) -> dict[str, str]:
+    """The learner's stage, age and how to write for them, each its own
+    input; a class the catalogue cannot place leaves the grade to say it."""
+    learner = stage_of(grade_level)
+    if learner is None:
+        return {
+            "stage": NOT_KNOWN,
+            "age": NOT_KNOWN,
+            "stage_guidance": NO_STAGE_GUIDANCE,
+        }
+    return {
+        "stage": learner.stage.value,
+        "age": learner.age_text(),
+        "stage_guidance": WRITING[learner.stage].guidance(),
+    }
 
 
 class StagedLessonGenerator(dspy.Module):
@@ -50,6 +71,7 @@ class StagedLessonGenerator(dspy.Module):
             subject=subject,
             topic=topic,
             grade_level=grade_level,
+            **stage_inputs(grade_level),
             learner_notes=learner_notes or NO_NOTES,
         )
         return prediction.plan
@@ -69,6 +91,7 @@ class StagedLessonGenerator(dspy.Module):
             subject=subject,
             topic=topic,
             grade_level=grade_level,
+            **stage_inputs(grade_level),
             language=language,
             country=country,
             slide_spec=slide_spec,
@@ -102,6 +125,7 @@ class StagedLessonGenerator(dspy.Module):
             subject=subject,
             topic=topic,
             grade_level=grade_level,
+            **stage_inputs(grade_level),
             language=language,
             country=country,
             lesson_summary=lesson_summary,

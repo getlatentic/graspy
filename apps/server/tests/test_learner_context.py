@@ -37,6 +37,27 @@ def context(**learner) -> LearnerContext:
     return LearnerContext.model_validate(learner)
 
 
+def test_a_class_the_catalogue_places_is_described_with_its_stage_and_age():
+    learner = context(
+        country="Nigeria",
+        language="English",
+        gradeLevel="Primary 2 (Primary), Nigeria, age 7",
+    )
+
+    assert learner.describe_learner() == (
+        "a Primary 2 (Primary), Nigeria, age 7 learner in Nigeria learning in "
+        "English; stage: lower primary, age 7"
+    )
+
+
+def test_a_class_the_catalogue_cannot_place_is_described_by_its_name_alone():
+    learner = context(country="Nigeria", language="English", gradeLevel="JSS 1")
+
+    assert learner.describe_learner() == (
+        "a JSS 1 learner in Nigeria learning in English"
+    )
+
+
 def test_a_lesson_the_app_sends_is_dropped():
     sent = LearnerContext.from_metadata({"learner": {**FRACTIONS, "lesson": LESSON}})
 
