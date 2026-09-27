@@ -22,12 +22,59 @@ def test_options_are_read_whatever_marks_them(written):
 
 @pytest.mark.parametrize(
     "written",
-    ["- - 0.875\n- - 0.5", "- A) 0.875\n- B) 0.5", "* • 0.875\n* • 0.5"],
-    ids=["dash-dash", "dash-letter", "star-bullet"],
+    [
+        "- - 0.875\n- - 0.5",
+        "- A) 0.875\n- B) 0.5",
+        "- a. 0.875\n- b. 0.5",
+        "* • 0.875\n* • 0.5",
+    ],
+    ids=["dash-dash", "dash-letter", "dash-lower-letter", "star-bullet"],
 )
-def test_an_option_marked_twice_is_shown_without_either_mark(written):
+def test_options_all_marked_twice_are_shown_without_either_mark(written):
     """Measured: about one question in eight came back as "- - 0.875"."""
     assert option_lines(written) == ["0.875", "0.5"]
+
+
+@pytest.mark.parametrize(
+    ("written", "shown"),
+    [
+        ("- A. Lincoln", ["A. Lincoln"]),
+        ("- D. H. Lawrence", ["D. H. Lawrence"]),
+        ("- a) x = 2", ["a) x = 2"]),
+        ("- b) and c) only", ["b) and c) only"]),
+        ("- - 5", ["- 5"]),
+        ("* - 4 °C", ["- 4 °C"]),
+        (
+            "- D. O. Fagunwa\n- A. B. Fafunwa\n- Wole Soyinka\n- Chinua Achebe",
+            ["D. O. Fagunwa", "A. B. Fafunwa", "Wole Soyinka", "Chinua Achebe"],
+        ),
+        (
+            "- A. Lincoln\n- B. Obama\n- D. Trump\n- C. Coolidge",
+            ["A. Lincoln", "B. Obama", "D. Trump", "C. Coolidge"],
+        ),
+        (
+            "- a) only\n- b) and c) only\n- a) and b) only\n- all of them",
+            ["a) only", "b) and c) only", "a) and b) only", "all of them"],
+        ),
+        ("- - 5\n- 3\n- 7\n- 2", ["- 5", "3", "7", "2"]),
+        ("* - 4 °C\n* 0 °C\n* 4 °C", ["- 4 °C", "0 °C", "4 °C"]),
+    ],
+    ids=[
+        "initial",
+        "two-initials",
+        "letter-in-an-answer",
+        "letters-in-an-answer",
+        "dash-before-a-number",
+        "minus-before-degrees",
+        "nigerian-authors",
+        "labels-out-of-order",
+        "labels-not-on-every-option",
+        "one-negative-among-others",
+        "one-minus-among-temperatures",
+    ],
+)
+def test_a_mark_is_stripped_only_when_every_option_carries_it_in_order(written, shown):
+    assert option_lines(written) == shown
 
 
 def test_an_option_starting_with_a_negative_number_keeps_its_sign():
