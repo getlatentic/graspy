@@ -8,12 +8,13 @@ async function planStore(mode: IDBTransactionMode): Promise<IDBObjectStore> {
   return db.transaction(CURRICULUM_STORE, mode).objectStore(CURRICULUM_STORE);
 }
 
-/** Keeps a plan, as a new plan unless `planId` says which one it is. */
+/** Keeps a plan, as a new plan unless `planId` says which one it is, and returns it as
+ * kept. */
 export async function saveCurriculum(
   data: Omit<CurriculumData, "id" | "createdAt" | "updatedAt" | "planId"> & {
     planId?: string;
   },
-): Promise<void> {
+): Promise<CurriculumData> {
   const now = Date.now();
   const curriculum: CurriculumData = {
     ...data,
@@ -23,6 +24,7 @@ export async function saveCurriculum(
     updatedAt: now,
   };
   await promisify((await planStore("readwrite")).put(curriculum));
+  return curriculum;
 }
 
 export async function getCurriculum(): Promise<CurriculumData | null> {

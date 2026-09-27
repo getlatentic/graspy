@@ -14,6 +14,7 @@ import {
   learnerDetails,
   learnsByVoiceAlone,
 } from "@/features/onboarding/lib/details";
+import { keptPlan } from "@/features/onboarding/lib/details-plan";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 import { keepRoute } from "@/lib/learner-route";
 import {
@@ -21,7 +22,6 @@ import {
   type DetailsSchema,
 } from "@/features/onboarding/schemas/onboarding-schema";
 import { useI18n } from "@/lib/i18n-context";
-import { planDetails } from "@/lib/plan-details";
 import {
   getUserProfile,
   saveUserProfile,
@@ -77,12 +77,12 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
 
   const keepPlan = async () => {
     const details = learnerDetails(values);
+    const voiceOnly = learnsByVoiceAlone(values, voiceOnlyNow);
     // The catalogue's word stands for the class until the server is asked about it.
-    keepRoute(details, learnsByVoiceAlone(values, voiceOnlyNow));
+    keepRoute(details, voiceOnly);
     saveUserProfile(details);
-    if (curriculum) {
-      await applyCurriculum({ ...curriculum, ...planDetails(details) });
-    }
+    const plan = await keptPlan(details, voiceOnly);
+    if (plan) await applyCurriculum(plan);
     navigate(YOU);
   };
   const newPlan = () =>

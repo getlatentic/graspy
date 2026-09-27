@@ -1,6 +1,7 @@
 import { CurriculumAccumulator } from "@/features/learn/lib/curriculum-accumulator";
 import { streamCurriculum, type CurriculumRequest } from "@/lib/curriculum-api";
 import { deleteCurriculum, saveCurriculum } from "@/lib/curriculum-db";
+import type { CurriculumData } from "@/lib/curriculum-record";
 import { planDetails } from "@/lib/plan-details";
 import type { LearnerDetails } from "@/lib/user-storage";
 
@@ -30,10 +31,10 @@ async function followStream(
 
 /** The plan of a class that learns by voice alone: who it is for, which the learner's
  * devices share, and no subjects, so the model is not asked. Replaces any plan they had. */
-export async function keepVoiceOnlyPlan(
+export function keepVoiceOnlyPlan(
   learner: LearnerDetails,
-): Promise<void> {
-  await saveCurriculum({
+): Promise<CurriculumData> {
+  return saveCurriculum({
     ...planDetails(learner),
     subjects: [],
     topics: {},
