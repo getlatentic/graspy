@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.account.LearnerDto
+import com.latentic.graspy.account.LearnerPicks
 import com.latentic.graspy.account.UnsentChanges
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.network.refusalCode
@@ -34,7 +35,12 @@ data class PickerState(
 )
 
 /** "Who's learning?": the account's learners, one of whom the device learns as. */
-class LearnerPickerViewModel(application: Application) : AndroidViewModel(application) {
+class LearnerPickerViewModel internal constructor(
+    application: Application,
+    private val picks: LearnerPicks,
+) : AndroidViewModel(application) {
+    constructor(application: Application) : this(application, AppGraph.account(application).choice)
+
     private val account = AppGraph.account(application)
     private val mutableState = MutableStateFlow(PickerState())
     private var loadedFor: String? = null
@@ -74,7 +80,8 @@ class LearnerPickerViewModel(application: Application) : AndroidViewModel(applic
 
     fun choose(learner: LearnerDto, onChosen: () -> Unit) = run(onChosen) { learner }
 
-    fun addAndChoose(name: String, onChosen: () -> Unit) = run(onChosen) { account.choice.add(name) }
+    /** The form closes once the learner is on the account, so a switch that stops after it never adds them again. */
+    fun addAndChoose(name: String, onChosen: () -> Unit) = run(onChosen) { picks.add(name).also { stopAdding() } }
 
     /** Switches to the learner last picked though what the device holds has not all reached graspy. */
     fun anyway(onChosen: () -> Unit) {
@@ -95,7 +102,7 @@ class LearnerPickerViewModel(application: Application) : AndroidViewModel(applic
             try {
                 val learner = pick()
                 chosen = learner
-                account.choice.choose(learner, loseUnsent)
+                picks.choose(learner, loseUnsent)
                 mutableState.update { it.copy(busy = false, adding = false) }
                 onChosen()
             } catch (error: CancellationException) {

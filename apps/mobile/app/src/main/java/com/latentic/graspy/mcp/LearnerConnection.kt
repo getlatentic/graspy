@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.latentic.graspy.collection.outbox.GraspyDatabase
 import com.latentic.graspy.lesson.LessonServer
 import com.latentic.graspy.lesson.OfflineLessons
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonObject
 import okhttp3.Call
 import okhttp3.HttpUrl
@@ -40,6 +41,9 @@ class LearnerConnection(
     )
 
     suspend fun sendKept(): Int = outbox.sendKept()
+
+    /** Tells each time a view call is kept. */
+    val kept: Flow<Unit> = outbox.kept
 
     /** Sends the kept view calls; false while some are still on the phone. */
     suspend fun sentEverything(): Boolean = outbox.sentEverything()

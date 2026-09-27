@@ -14,6 +14,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonObject
@@ -69,6 +71,14 @@ class UnsentWorkTest {
 
         assertFalse(unsent.flush(ADA_KEY))
         assertEquals(listOf("waiting"), scheduled)
+    }
+
+    @Test
+    fun `watching a kept voice answer ends when the leave stops waiting for it`() = runBlocking {
+        database.submissionDao().insert(answer("waiting", ADA_KEY))
+
+        assertFalse(UnsentWork({ online }, listOf(recordings), sending, patienceMillis = 100).flush(ADA_KEY))
+        withTimeout(1_000) { while (sending.coroutineContext.job.children.any()) delay(10) }
     }
 
     @Test

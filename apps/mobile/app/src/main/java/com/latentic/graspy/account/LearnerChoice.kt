@@ -9,6 +9,13 @@ import java.io.IOException
 class UnsentChanges(val offline: Boolean) :
     Exception(if (offline) "Connect to the internet first, so nothing is lost" else "Some changes haven't been sent")
 
+/** What "Who's learning?" asks of the account: a learner added, and the device switched to one. */
+interface LearnerPicks {
+    suspend fun add(name: String): LearnerDto
+
+    suspend fun choose(learner: LearnerDto, loseUnsent: Boolean = false)
+}
+
 /**
  * Which of the account's learners this device learns as. The first chosen after signing in takes the
  * device's own learning; any later choice starts from a wiped device.
@@ -22,16 +29,16 @@ class LearnerChoice(
     private val online: suspend () -> Boolean,
     private val leaveLearner: suspend () -> Unit,
     private val claimDeviceLearning: suspend (uid: String, learnerKey: String) -> Unit,
-) {
+) : LearnerPicks {
     /** [loseUnsent] switches even though what the device holds for its learner has not all reached graspy. */
-    suspend fun choose(learner: LearnerDto, loseUnsent: Boolean = false) {
+    override suspend fun choose(learner: LearnerDto, loseUnsent: Boolean) {
         val account = accounts.account.value ?: throw IllegalStateException("Sign in to choose a learner")
         if (account.learner?.id == learner.id) return
         if (account.deviceJoins) joinFirst(account, learner) else switchFrom(account, learner, loseUnsent)
     }
 
     /** Whoever adds a learner has confirmed they are that learner, or their parent or guardian. */
-    suspend fun add(name: String): LearnerDto = api.add(NewLearnerDto(name = name, guardian = true))
+    override suspend fun add(name: String): LearnerDto = api.add(NewLearnerDto(name = name, guardian = true))
 
     private suspend fun joinFirst(account: Account, learner: LearnerDto) {
         val issued = issuedFor(learner, ChosenLearnerDto(deviceId = deviceId()))
