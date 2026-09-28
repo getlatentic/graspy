@@ -52,7 +52,7 @@ ASKING_FOR_THE_LETTER = _words(
     what what's whats is the value of find calculate work out determine state
     solve correct right answer your give as a an in its simplest lowest form
     terms fraction decimal whole number mixed improper which equation satisfies
-    makes true and check verify solution by substitution for to giving write
+    makes true and check verify solution by substitution for
     """
 )
 # Before an equation, every word is one of these: words that only lead to it.
