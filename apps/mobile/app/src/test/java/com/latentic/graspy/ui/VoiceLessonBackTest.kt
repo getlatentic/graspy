@@ -1,7 +1,5 @@
 package com.latentic.graspy.ui
 
-import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
@@ -26,7 +24,7 @@ import org.robolectric.annotation.Config
 @Config(qualifiers = "w412dp-h915dp-xxhdpi")
 class VoiceLessonBackTest {
     @get:Rule
-    val compose = createAndroidComposeRule<ComponentActivity>()
+    val compose = voiceLessonRule()
 
     private val learn = learnCopyFor(InterfaceLanguage.ENGLISH)
     private val app = VoiceLessonApp(compose)

@@ -1,20 +1,13 @@
 package com.latentic.graspy.ui
 
-import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.Lifecycle
 import com.latentic.graspy.collection.CollectionViewModel
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.AppLanguageSelection
-import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.LearnerProfile
 import com.latentic.graspy.localization.SchoolClass
-import com.latentic.graspy.localization.copyFor
 import com.latentic.graspy.practice.PracticeExercise
-import com.latentic.graspy.settleMain
-import com.latentic.graspy.ui.VoiceLessonApp.Companion.TIMEOUT_MS
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -37,7 +30,7 @@ import org.robolectric.shadows.ShadowAudioRecord.AudioRecordSourceProvider
 @Config(qualifiers = "w412dp-h915dp-xxhdpi")
 class VoiceLessonTakeTest {
     @get:Rule
-    val compose = createAndroidComposeRule<ComponentActivity>()
+    val compose = voiceLessonRule()
 
     private val app = VoiceLessonApp(compose)
     private val nursery = LearnerProfile(SchoolClass.NURSERY_2, AppLanguageSelection.ENGLISH)
@@ -60,7 +53,6 @@ class VoiceLessonTakeTest {
     fun `back during a take ends it, so the microphone is never left on outside the lesson and nothing is sent as its answer`() {
         openAlphabet()
         val take = startTake()
-        compose.waitForIdle()
         assertTrue(app.screenKeptOn())
 
         app.pressBack()
@@ -80,8 +72,7 @@ class VoiceLessonTakeTest {
 
         assertEndedUnsent(take)
         compose.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
-        compose.waitForIdle()
-        app.answerButton().assertExists()
+        app.settle { app.shows(app.answerButton()) }
         assertFalse(take.state.value.isRecording)
         assertFalse(app.queued())
     }
@@ -96,7 +87,7 @@ class VoiceLessonTakeTest {
 
         assertTrue(take.state.value.isRecording)
         assertEquals(1, app.recordings().size)
-        compose.onNodeWithContentDescription(copyFor(InterfaceLanguage.ENGLISH).lesson.stopAndSend).assertExists()
+        app.finishButton().assertExists()
     }
 
     @Test
@@ -139,6 +130,7 @@ class VoiceLessonTakeTest {
 
         app.learnAs(nursery)
 
+        app.settle { recorder.state.value.spokenLanguage != null }
         assertEquals("en", recorder.state.value.spokenLanguage)
     }
 
@@ -162,7 +154,7 @@ class VoiceLessonTakeTest {
         openAlphabet()
         val take = startTake(held)
         // Heard before it is held, or it would end as a take nobody spoke in.
-        settleMain(TIMEOUT_MS) { take.voiceLevels.value.isNotEmpty() }
+        app.settle { take.voiceLevels.value.isNotEmpty() }
         held.holding = true
         compose.runOnUiThread { take.stopAndQueue(ALPHABET) }
         assertTrue(take.state.value.isSaving)
@@ -170,7 +162,7 @@ class VoiceLessonTakeTest {
         compose.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
         assertTrue(take.state.value.isSaving)
         held.release.countDown()
-        settleMain(TIMEOUT_MS) { !take.state.value.isSaving }
+        app.settle { !take.state.value.isSaving }
 
         assertNotNull(take.state.value.queuedLocalId)
         assertTrue(app.queued())
@@ -186,19 +178,17 @@ class VoiceLessonTakeTest {
     /** The child's answer, begun by the lesson's own button on a step that is theirs to answer. */
     private fun answer(): CollectionViewModel {
         app.grantMicrophone(speaking)
+        app.settle { app.shows(app.answerButton()) }
         app.answerButton().performClick()
-        compose.waitForIdle()
-        val take = requireNotNull(app.collection) { "The lesson has no recorder" }
-        assertTrue(take.state.value.isRecording)
-        return take
+        app.settle { app.collection?.state?.value?.isRecording == true && app.shows(app.finishButton()) }
+        return requireNotNull(app.collection)
     }
 
     /** The child, once heard, taps to say they are done, and the take is kept to be sent. */
     private fun finish(take: CollectionViewModel) {
-        settleMain(TIMEOUT_MS) { take.voiceLevels.value.isNotEmpty() }
-        compose.onNodeWithContentDescription(copyFor(InterfaceLanguage.ENGLISH).lesson.stopAndSend).performClick()
-        settleMain(TIMEOUT_MS) { take.state.value.queuedLocalId != null }
-        compose.waitForIdle()
+        app.settle { take.voiceLevels.value.isNotEmpty() }
+        app.finishButton().performClick()
+        app.settle { take.state.value.queuedLocalId != null && !app.shows(app.finishButton()) }
     }
 
     /** The child's answer, begun as the lesson's button begins it once the microphone is allowed. */
@@ -207,6 +197,7 @@ class VoiceLessonTakeTest {
         val take = requireNotNull(app.collection) { "The lesson has no recorder" }
         compose.runOnUiThread { take.startRecording(ALPHABET) }
         assertTrue(take.state.value.isRecording)
+        app.settle { app.shows(app.finishButton()) }
         return take
     }
 

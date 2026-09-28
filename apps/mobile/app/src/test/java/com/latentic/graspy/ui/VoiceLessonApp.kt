@@ -9,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -43,11 +45,12 @@ import com.latentic.graspy.plan.LearnerRecord
 import com.latentic.graspy.plan.PlanState
 import com.latentic.graspy.plan.PlanViewModel
 import com.latentic.graspy.practice.ClassroomStep
-import com.latentic.graspy.settleMain
+import com.latentic.graspy.practice.PracticeLessonViewModel
 import com.latentic.graspy.sync.CatalogueLessonEntity
 import com.latentic.graspy.sync.LessonMoveEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.robolectric.Shadows.shadowOf
@@ -55,6 +58,15 @@ import org.robolectric.shadows.ShadowAudioRecord
 import org.robolectric.shadows.ShadowAudioRecord.AudioRecordSourceProvider
 
 typealias LessonRule = AndroidComposeTestRule<ActivityScenarioRule<ComponentActivity>, ComponentActivity>
+
+/**
+ * The compose rule the voice lesson tests drive. A screen's effects run only on the main thread, as the app's do:
+ * by default a compose test runs them on an unconfined dispatcher, so a flow a screen collects, sent a value from a
+ * worker thread, writes the screen's state on that worker, and Compose can find its layout read on two threads at once.
+ * The effects then run only as the test moves the compose clock, which [VoiceLessonApp.settle] does.
+ */
+@OptIn(ExperimentalTestApi::class)
+fun voiceLessonRule(): LessonRule = createAndroidComposeRule(ComponentActivity::class.java, StandardTestDispatcher())
 
 /** The app signed in as Ada, against a fake graspy, drawn in [compose]: what the voice lesson tests drive. */
 class VoiceLessonApp(private val compose: LessonRule) {
@@ -65,6 +77,7 @@ class VoiceLessonApp(private val compose: LessonRule) {
     private var learnerViews: LearnerViews? = null
     var collection: CollectionViewModel? = null
         private set
+    private var lesson: PracticeLessonViewModel? = null
     private val viewModels = LearnerViewModels(
         LEARNER_VIEW_MODELS + mapOf(
             PlanViewModel::class.java to { app, key -> PlanViewModel(app, key, server.calls).also { planViewModel = it } },
@@ -73,6 +86,7 @@ class VoiceLessonApp(private val compose: LessonRule) {
             },
             HomeCatalogueViewModel::class.java to { app, key -> HomeCatalogueViewModel(app, key, database.lessonCacheDao(), {}) { true } },
             CollectionViewModel::class.java to { app, key -> CollectionViewModel(app, key).also { collection = it } },
+            PracticeLessonViewModel::class.java to { app, key -> PracticeLessonViewModel(app, key).also { lesson = it } },
         ),
     )
 
@@ -145,16 +159,13 @@ class VoiceLessonApp(private val compose: LessonRule) {
     fun shown(voice: LearnerProfile, language: AppLanguage = AppLanguage.ENGLISH) {
         learner = voice to language
         compose.setContent { App() }
-        settleMain(TIMEOUT_MS) { planViewModel?.state?.value is PlanState.Ready }
-        compose.waitForIdle()
-        settleMain(TIMEOUT_MS) { server.routesAsked.isNotEmpty() && learnerViews?.routes?.answers?.value?.isNotEmpty() == true }
-        compose.waitForIdle()
+        settle { planViewModel?.state?.value is PlanState.Ready }
+        settle { server.routesAsked.isNotEmpty() && learnerViews?.routes?.answers?.value?.isNotEmpty() == true }
     }
 
     /** The learner's language changes while the app is on screen, as a saved profile change reaches it. */
     fun learnAs(voice: LearnerProfile, language: AppLanguage = AppLanguage.ENGLISH) {
         compose.runOnUiThread { learner = voice to language }
-        compose.waitForIdle()
     }
 
     /** The phone turned: the activity is made again and draws the app again, as MainActivity does in onCreate. */
@@ -162,7 +173,7 @@ class VoiceLessonApp(private val compose: LessonRule) {
         learner = voice to language
         compose.activityRule.scenario.recreate()
         compose.activityRule.scenario.onActivity { it.setContent { App() } }
-        compose.waitForIdle()
+        settle { shows(answerButton()) || shows(finishButton()) }
     }
 
     @Composable
@@ -187,19 +198,34 @@ class VoiceLessonApp(private val compose: LessonRule) {
     fun listed(text: String) = compose.onNodeWithText(text, useUnmergedTree = true)
 
     /** The stored lessons are read off the main thread. */
-    fun awaitListed(text: String) = compose.waitUntil(TIMEOUT_MS) {
-        compose.onAllNodesWithText(text, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
-    }
+    fun awaitListed(text: String) = settle { shows(listed(text)) }
 
     fun openLesson(title: String) {
         listed(title).performClick()
-        compose.waitForIdle()
+        settle { lesson?.chatOpen?.value == true && collection != null }
     }
 
     fun pressBack() {
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
-        compose.waitForIdle()
+        settle { lesson?.chatOpen?.value == false }
     }
+
+    /**
+     * Runs the app until [done]: the main thread, and the screens' effects, which run as the compose clock moves.
+     * Fails after [TIMEOUT_MS] rather than hanging.
+     */
+    fun settle(done: () -> Boolean) {
+        val until = System.currentTimeMillis() + TIMEOUT_MS
+        while (true) {
+            compose.mainClock.advanceTimeByFrame()
+            compose.waitForIdle()
+            if (done()) return
+            check(System.currentTimeMillis() < until) { "Still waiting after $TIMEOUT_MS ms" }
+            Thread.sleep(POLL_MS)
+        }
+    }
+
+    fun shows(node: SemanticsNodeInteraction) = runCatching { node.assertExists() }.isSuccess
 
     fun grantMicrophone(source: AudioRecordSourceProvider) {
         shadowOf(compose.activity.application).grantPermissions(Manifest.permission.RECORD_AUDIO)
@@ -207,6 +233,9 @@ class VoiceLessonApp(private val compose: LessonRule) {
     }
 
     fun answerButton() = compose.onNodeWithContentDescription(copyFor(InterfaceLanguage.ENGLISH).lesson.recordTable)
+
+    /** The lesson's button while the child speaks: a tap sends what they said. */
+    fun finishButton() = compose.onNodeWithContentDescription(copyFor(InterfaceLanguage.ENGLISH).lesson.stopAndSend)
 
     fun queued() = runBlocking { AppGraph.database(context()).submissionDao().holdsAny(ada) }
 
@@ -229,5 +258,6 @@ class VoiceLessonApp(private val compose: LessonRule) {
 
     companion object {
         const val TIMEOUT_MS = 10_000L
+        private const val POLL_MS = 10L
     }
 }
