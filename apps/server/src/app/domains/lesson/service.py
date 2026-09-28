@@ -1,5 +1,7 @@
 """Lessons, written one slide at a time: a plan, then each slide with the
-earlier ones as context, then a practice question.
+earlier ones as context, then a practice question. Each check's answer is
+marked in code as it is written (checked.py), so only a new lesson is
+checked; one kept or already being read is never changed.
 
 A Yoruba, Hausa, Igbo or Nigerian Pidgin lesson is written in English and
 translated a stage at a time. A translation that fails leaves that part in
@@ -15,7 +17,12 @@ from dataclasses import dataclass, field
 
 from pydantic import BaseModel
 
-from ...config.languages import generation_language_for, needs_translation
+from ...config.languages import (
+    GENERATION_LANGUAGE,
+    generation_language_for,
+    needs_translation,
+)
+from .checked import PRACTICE_CHECKS, SLIDE_CHECKS, checked
 from .generator import StagedLessonGenerator
 from .lesson import (
     FinishedLesson,
@@ -46,6 +53,15 @@ class LessonRequest:
     @property
     def writing_language(self) -> str:
         return generation_language_for(self.language)
+
+    @property
+    def answers_checked(self) -> bool:
+        """The checks read questions in English; a lesson translated from
+        English is checked before it is translated."""
+        return self.writing_language.strip().lower() == GENERATION_LANGUAGE.lower()
+
+    def part(self, name: str) -> str:
+        return f"{name} of {self.subject}/{self.topic}"
 
 
 @dataclass
@@ -157,7 +173,7 @@ class LessonService:
                 f"Generating slide {index + 1}/{total}: {spec.title}...",
             )
             try:
-                original = await self._written_slide(spec, request, lesson)
+                original = await self._written_slide(index, spec, request, lesson)
                 # Later slides are written from the untranslated ones.
                 lesson.written.append(original)
                 if request.should_translate:
@@ -189,11 +205,12 @@ class LessonService:
             }
 
     async def _written_slide(
-        self, spec: SlideSpec, request: LessonRequest, lesson: _Draft
+        self, index: int, spec: SlideSpec, request: LessonRequest, lesson: _Draft
     ) -> LessonSlide:
         """Written once more when the first comes back unusable, as when the
         model writes a table into a check's options: a lesson short of a
-        slide is never kept."""
+        slide is never kept. Its check is marked in English, before any
+        translation, whose options keep their order."""
         written = (
             spec,
             request.subject,
@@ -204,24 +221,27 @@ class LessonService:
             request.country,
         )
         try:
-            return await self.module.generate_slide(*written)
+            slide = await self.module.generate_slide(*written)
         except Exception:
             logger.warning("Slide %r is written again", spec.title, exc_info=True)
-            return await self.module.generate_slide(*written, again=True)
+            slide = await self.module.generate_slide(*written, again=True)
+        if not request.answers_checked:
+            return slide
+        return await checked(
+            slide,
+            SLIDE_CHECKS,
+            lambda problem: self.module.generate_slide(*written, problem=problem),
+            request.part(f"slide {index + 1}"),
+        )
 
     async def _practice_events(
         self, request: LessonRequest, lesson: _Draft
     ) -> AsyncIterator[dict]:
         yield _status("slides_ready", "Slides ready. Finishing touches...")
         yield _status("generating_practice", "Generating practice question...")
-        practice = await self.module.generate_practice(
-            request.subject,
-            request.topic,
-            request.grade_level,
-            request.writing_language,
-            request.country,
-            _context_summary(lesson.written),
-        )
+        practice = await self._written_practice(request, lesson)
+        if practice is None:
+            return
         if request.should_translate:
             yield _status(
                 "generating_practice",
@@ -249,13 +269,36 @@ class LessonService:
             "payload": lesson.practice,
         }
 
+    async def _written_practice(
+        self, request: LessonRequest, lesson: _Draft
+    ) -> LessonPractice | None:
+        """None when its check was taken out."""
+        written = (
+            request.subject,
+            request.topic,
+            request.grade_level,
+            request.writing_language,
+            request.country,
+            _context_summary(lesson.written),
+        )
+        practice = await self.module.generate_practice(*written)
+        if not request.answers_checked:
+            return practice
+        return await checked(
+            practice,
+            PRACTICE_CHECKS,
+            lambda problem: self.module.generate_practice(*written, problem=problem),
+            request.part("the practice question"),
+        )
+
     async def _localise_slide(
         self, slide: LessonSlide, request: LessonRequest
     ) -> LessonSlide:
         if request.should_translate:
             slide = await self.module.translate_slide_content(slide, request.language)
         slide = _repaired(slide, "title", "body_md")
-        slide.assessment = _repaired(slide.assessment, *_ANSWERED_TEXT, "prompt")
+        if slide.assessment is not None:
+            slide.assessment = _repaired(slide.assessment, *_ANSWERED_TEXT, "prompt")
         return slide
 
 
@@ -286,7 +329,8 @@ def _context_summary(slides: list[LessonSlide]) -> str:
     if not slides:
         return "This is the first slide of the lesson."
     lines = [
-        f"{number}. {slide.title}: {slide.assessment.prompt}"
+        f"{number}. {slide.title}"
+        + (f": {slide.assessment.prompt}" if slide.assessment else "")
         for number, slide in enumerate(slides, 1)
     ]
     return "Previous slides covered:\n" + "\n".join(lines) + "\n"

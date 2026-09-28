@@ -47,7 +47,8 @@ class LessonSlide(BaseModel):
     )
     title: str = Field(description="Concise title of the slide")
     body_md: str = Field(alias="bodyMd", description="Main slide content in Markdown")
-    assessment: LessonSlideAssessment
+    # None for a check taken out because its key could not be made right.
+    assessment: LessonSlideAssessment | None
 
     model_config = ConfigDict(populate_by_name=True)
 

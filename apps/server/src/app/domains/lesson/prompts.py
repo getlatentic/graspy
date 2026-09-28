@@ -70,8 +70,10 @@ they mean money. Use only commands KaTeX renders: write a ceiling as
 the alphabet as "A, B, C", and sounds with Unicode IPA such as /æ/ or /ʃ/.
 No diagrams or TikZ."""
 
-KEEP_MATHS = r"""Translate the words around mathematics, never the mathematics: keep every
-span between \( and \) or \[ and \] exactly as it is. Keep the Markdown
+KEEP_MATHS_SPANS = r"""Translate the words around mathematics, never the mathematics: keep every
+span between \( and \) or \[ and \] exactly as it is."""
+
+KEEP_MATHS = f"""{KEEP_MATHS_SPANS} Keep the Markdown
 formatting, and keep the options in the same order, one per line."""
 
 OPTIONS_DESC = "Exactly four answer options, one per line, each starting with '- '"
@@ -164,6 +166,20 @@ teaching and its examples.
     )
     translated_correct_feedback: str = dspy.OutputField()
     translated_incorrect_feedback: str = dspy.OutputField()
+
+
+class TranslateSlideText(dspy.Signature):
+    __doc__ = f"""Translate a lesson slide into `target_language`, keeping its teaching and
+its examples.
+
+{KEEP_MATHS_SPANS} Keep the Markdown formatting."""
+
+    target_language: str = dspy.InputField(desc="The language to translate into")
+    title: str = dspy.InputField()
+    body_md: str = dspy.InputField()
+
+    translated_title: str = dspy.OutputField()
+    translated_body_md: str = dspy.OutputField()
 
 
 class TranslateLessonPractice(dspy.Signature):

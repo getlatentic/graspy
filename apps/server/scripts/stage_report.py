@@ -13,11 +13,14 @@ from typing import Protocol
 from lesson_checks import missing_parts, questions
 from reading_level import reading_level
 
+from app.domains.lesson.answers.verdict import Found
+
 HEADING = (
     "| Learner | Run | Lesson words/sentence | "
     "Lesson syllables/word | Lesson over limit | Tutor words/sentence | "
     "Tutor syllables/word | Tutor over limit | "
-    "Persona names stage | Answers worked out: right/wrong/unmatched | "
+    "Persona names stage | Answers worked out: right/wrong key/no right "
+    "option/double right | "
     "Malformed questions | Lessons missing a part | Whole lessons | "
     "Failed draws |"
 )
@@ -51,13 +54,21 @@ def _reading(done: list[dict], part: str, limit: int | None) -> list[str]:
     ]
 
 
+_WORKED_OUT = (
+    Found.RIGHT,
+    Found.WRONG_KEY,
+    Found.NO_RIGHT_OPTION,
+    Found.DOUBLE_RIGHT,
+)
+
+
 def _content(done: list[dict]) -> list[str]:
     asked = [q for r in done for q in questions(r["lesson_wire"])]
     verdicts = Counter(q.verdict() for q in asked)
     malformed = sum(bool(q.problems()) for q in asked)
     missing = sum(bool(missing_parts(r["lesson_wire"])) for r in done)
     return [
-        f"{verdicts['right']}/{verdicts['wrong']}/{verdicts['unmatched']}",
+        "/".join(str(verdicts[found]) for found in _WORKED_OUT),
         f"{malformed}/{len(asked)}",
         f"{missing}/{len(done)}",
     ]
@@ -89,7 +100,7 @@ def _findings(run: str, records: list[dict]) -> Iterable[str]:
             yield f"- {where}: lesson has no {part}"
         for q in questions(r["lesson_wire"]):
             verdict = q.verdict()
-            if verdict in ("wrong", "unmatched"):
+            if verdict in _WORKED_OUT[1:]:
                 yield (
                     f"- {where}, {q.where}: answer {verdict}: {q.question!r} "
                     f"marked {q.options[q.answer_index]!r} of {q.options}"
