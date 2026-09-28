@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -73,8 +74,8 @@ fun PracticeLessonScreen(
     // Told once a lesson that any language is welcome; after the child's first answer it is known.
     var answeredThisLesson by rememberSaveable(classroom.move?.planId) { mutableStateOf(false) }
 
-    LaunchedEffect(appLanguage, schoolClass) {
-        lessonViewModel.prepare(appLanguage, schoolClass)
+    LaunchedEffect(appLanguage, schoolClass) { lessonViewModel.prepare(appLanguage, schoolClass) }
+    LaunchedEffect(appLanguage, languageSelection) {
         collectionViewModel.selectLanguagePair(appLanguage.practiceLanguagePair(), languageSelection.declaredSpokenLanguage())
     }
     /** The newest note sits at the foot of the conversation, once the content has settled there. */
@@ -92,7 +93,8 @@ fun PracticeLessonScreen(
     }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { lessonViewModel.pause() }
     DisposableEffect(Unit) { onDispose { lessonViewModel.pause() } }
-    WhenLessonLeft(collectionViewModel::discardTake)
+    WhenLessonHidden(collectionViewModel::discardTake)
+    ScreenOnWhile(recording.isRecording)
     LaunchedEffect(recording.isRecording) {
         val wasRecording = lessonViewModel.recording
         lessonViewModel.recording = recording.isRecording
@@ -272,15 +274,29 @@ fun PracticeLessonScreen(
 }
 
 /**
- * Runs [leave] once the lesson leaves the screen by any way (its back arrow, the phone's back, the app moving to
- * another learner), never when turning the phone redraws it: the lesson and its take outlive a rotation.
+ * Runs [hide] whenever the lesson goes out of sight: it leaves the screen by any way (its back arrow, the phone's back,
+ * the app moving to another learner), the app goes to the background, or the screen locks. Never when turning the
+ * phone redraws it: the lesson and its take outlive a rotation.
  */
 @Composable
-private fun WhenLessonLeft(leave: () -> Unit) {
+private fun WhenLessonHidden(hide: () -> Unit) {
     val activity = LocalActivity.current
-    val latest by rememberUpdatedState(leave)
-    DisposableEffect(Unit) {
-        onDispose { if (activity?.isChangingConfigurations != true) latest() }
+    val latest by rememberUpdatedState(hide)
+    val unlessTurning = { if (activity?.isChangingConfigurations != true) latest() }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP, onEvent = unlessTurning)
+    DisposableEffect(Unit) { onDispose(unlessTurning) }
+}
+
+/**
+ * Keeps the screen on while [on]: a take ends when the lesson goes out of sight, so a screen timing out part way
+ * through a long recitation would end the child's answer for them.
+ */
+@Composable
+private fun ScreenOnWhile(on: Boolean) {
+    val view = LocalView.current
+    DisposableEffect(view, on) {
+        view.keepScreenOn = on
+        onDispose { view.keepScreenOn = false }
     }
 }
 

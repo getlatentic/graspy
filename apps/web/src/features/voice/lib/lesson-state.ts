@@ -46,6 +46,8 @@ export type LessonEvent =
   | { type: "saving" }
   | { type: "recordFailed"; note: "micDenied" | "micFailed" | "notSaved" }
   | { type: "nothingHeard" }
+  /** The take ended unsent, as the page was hidden or left: the turn is the child's again. */
+  | { type: "recordCancelled" }
   | { type: "recorded"; key: string }
   /** An answer from before the page was reloaded, still to be shown. */
   | { type: "resumed"; move: LessonMove; key: string }
@@ -184,6 +186,10 @@ export function lessonReducer(
         phase: { name: "your-turn", move },
         note: "noSpeech",
       }));
+    case "recordCancelled":
+      return state.phase.name === "recording"
+        ? { phase: { name: "your-turn", move: state.phase.move }, note: null }
+        : state;
     case "recorded":
       return inTurn(state, (move) => ({
         phase: { name: "checking", move, key: event.key },

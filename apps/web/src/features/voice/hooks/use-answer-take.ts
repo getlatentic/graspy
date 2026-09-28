@@ -24,10 +24,17 @@ export function useAnswerTake(
   learner: VoiceLearner,
 ) {
   const take = useRef<Take | null>(null);
+  const left = useRef(false);
   const [levels, setLevels] = useState<number[]>([]);
   const waiting = awaited(phase);
 
-  useEffect(() => () => take.current?.cancel(), []);
+  useEffect(() => {
+    left.current = false;
+    return () => {
+      left.current = true;
+      take.current?.cancel();
+    };
+  }, []);
   useEffect(() => {
     if (!waiting) return;
     const stop = new AbortController();
@@ -49,10 +56,13 @@ export function useAnswerTake(
         dispatch({ type: "recordFailed", note });
         return;
       }
+      // The lesson can close while the microphone is being opened.
+      if (left.current) take.current.cancel();
       dispatch({ type: "recordStarted" });
       const result = await take.current.done;
       take.current = null;
       if (result.kind === "nothing") dispatch({ type: "nothingHeard" });
+      if (result.kind === "cancelled") dispatch({ type: "recordCancelled" });
       if (result.kind !== "answer") return;
       const key = crypto.randomUUID();
       const kept = answerToKeep(move, learner, result.wav, key, Date.now());
