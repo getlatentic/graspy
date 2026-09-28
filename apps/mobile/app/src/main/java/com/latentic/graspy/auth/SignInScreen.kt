@@ -56,9 +56,7 @@ fun SignInScreen(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(space(3)),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                state.problem?.let {
-                    ProblemNote(if (it == SignInProblem.NO_GOOGLE_ACCOUNT) copy.noGoogleAccount else copy.signInFailed)
-                }
+                if (state.failed) ProblemNote(copy.signInFailed)
                 PrimaryButton(
                     if (state.busy) copy.signingIn else copy.signIn,
                     onSignIn,

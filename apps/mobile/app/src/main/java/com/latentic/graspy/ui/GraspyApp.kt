@@ -1,5 +1,6 @@
 package com.latentic.graspy.ui
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -63,7 +64,8 @@ fun GraspyApp() {
             if (signedIn == null) {
                 val signIn: SignInViewModel = viewModel()
                 val state by signIn.state.collectAsStateWithLifecycle()
-                SignInScreen(accountCopy, state, signIn::signIn)
+                val activity = checkNotNull(LocalActivity.current) { "The app is drawn in an activity" }
+                SignInScreen(accountCopy, state) { signIn.signIn(activity) }
             } else {
                 SignedIn(graph, signedIn, profile, languages, accountCopy, learnerViewModels, signOut::start)
             }

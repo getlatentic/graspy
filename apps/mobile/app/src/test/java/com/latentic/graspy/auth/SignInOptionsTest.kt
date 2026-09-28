@@ -2,6 +2,7 @@ package com.latentic.graspy.auth
 
 import androidx.credentials.CredentialOption
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,5 +26,15 @@ class SignInOptionsTest {
 
         assertTrue(options.isNotEmpty())
         assertFalse(signsAnAccountInUnasked(options))
+    }
+
+    @Test
+    fun `the sheet only offers the phone's accounts, and never adds one to the phone`() {
+        for (askWhichAccount in listOf(false, true)) {
+            val options = signInOptions("demo-client", askWhichAccount)
+
+            assertFalse(options.any { it is GetSignInWithGoogleOption })
+            assertTrue(options.all { it is GetGoogleIdOption })
+        }
     }
 }

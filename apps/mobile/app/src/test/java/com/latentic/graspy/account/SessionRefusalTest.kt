@@ -29,7 +29,7 @@ class SessionRefusalTest {
     private val wipe: DeviceWipe = DeviceWipe(context, database, accounts, sessions, deviceIds, LearnerProfileStore(context)) { wipes += 1 }
 
     init {
-        entry = AccountEntry(context, { error("No sign-in is asked for") }, firebase, accounts, sessions, noSessionApi, deviceIds, wipe)
+        entry = AccountEntry(context, { _, _ -> error("No sign-in is asked for") }, firebase, accounts, sessions, noSessionApi, deviceIds, wipe)
     }
 
     @After

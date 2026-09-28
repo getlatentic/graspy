@@ -2,6 +2,7 @@ package com.latentic.graspy.account
 
 import android.app.Application
 import androidx.work.WorkManager
+import com.latentic.graspy.R
 import com.latentic.graspy.ask.keptThreads
 import com.latentic.graspy.auth.FirebaseSession
 import com.latentic.graspy.auth.GoogleSignIn
@@ -74,7 +75,8 @@ class AccountGraph(private val context: Application) {
     val directory by lazy { accountDirectory(AppGraph.accountApi(context), accounts, profiles, { wipe }, { entry }) }
 
     val entry by lazy {
-        AccountEntry(context, GoogleSignIn(context, firebase), firebase, accounts, sessions, sessionApi, deviceIds, wipe)
+        val google = GoogleSignIn(firebase, context.getString(R.string.default_web_client_id))
+        AccountEntry(context, google, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
     }
 }
 

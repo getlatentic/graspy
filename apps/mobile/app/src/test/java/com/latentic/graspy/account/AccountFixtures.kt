@@ -1,5 +1,6 @@
 package com.latentic.graspy.account
 
+import android.app.Activity
 import android.content.Context
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
@@ -8,6 +9,7 @@ import com.latentic.graspy.auth.FirebaseSession
 import java.io.IOException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
+import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import retrofit2.HttpException
 import retrofit2.Response
@@ -18,6 +20,9 @@ val ADA = LearnerDto(id = "aaaaaaaaaaaa", name = "Ada", createdAt = 1L)
 val BAYO = LearnerDto(id = "bbbbbbbbbbbb", name = "Bayo", createdAt = 2L)
 
 fun context(): Context = RuntimeEnvironment.getApplication()
+
+/** What Google's sheet and sign-in page are shown over. */
+fun hostActivity(): Activity = Robolectric.buildActivity(Activity::class.java).get()
 
 fun accountStore(account: Account?): AccountStore =
     AccountStore(context().getSharedPreferences(PreferenceFiles.ACCOUNT, 0)).apply { set(account) }
