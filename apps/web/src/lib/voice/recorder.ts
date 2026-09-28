@@ -9,7 +9,10 @@ export type TakeResult =
   { kind: "answer"; wav: Blob } | { kind: "nothing" } | { kind: "cancelled" };
 
 export interface Take {
-  /** Settles once: when the child stops speaking, the take is stopped or cancelled. */
+  /**
+   * Settles once: when the child stops speaking, the take is stopped or cancelled. A take still open
+   * when the page is hidden or left is cancelled: whoever speaks then is never the child's answer.
+   */
   done: Promise<TakeResult>;
   stop(): void;
   cancel(): void;
@@ -49,6 +52,8 @@ export async function startTake(
     if (!open) return;
     open = false;
     clearTimeout(timer);
+    document.removeEventListener("visibilitychange", cancelWhenHidden);
+    window.removeEventListener("pagehide", cancel);
     node.port.onmessage = null;
     stream.getTracks().forEach((track) => track.stop());
     void context.close();
@@ -72,10 +77,14 @@ export async function startTake(
     if (open) collector.add(event.data);
   };
   const timer = setTimeout(finish, LONGEST_TAKE_MS);
-
-  return {
-    done,
-    stop: finish,
-    cancel: () => close(() => ({ kind: "cancelled" })),
+  const cancel = () => close(() => ({ kind: "cancelled" }));
+  const cancelWhenHidden = () => {
+    if (document.visibilityState === "hidden") cancel();
   };
+  document.addEventListener("visibilitychange", cancelWhenHidden);
+  window.addEventListener("pagehide", cancel);
+  // The microphone can open after the child switched away while its prompt was showing.
+  cancelWhenHidden();
+
+  return { done, stop: finish, cancel };
 }

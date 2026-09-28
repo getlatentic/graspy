@@ -92,7 +92,7 @@ fun PracticeLessonScreen(
     }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { lessonViewModel.pause() }
     DisposableEffect(Unit) { onDispose { lessonViewModel.pause() } }
-    WhenLessonLeft(collectionViewModel::discardTake)
+    WhenLessonHidden(collectionViewModel::discardTake)
     LaunchedEffect(recording.isRecording) {
         val wasRecording = lessonViewModel.recording
         lessonViewModel.recording = recording.isRecording
@@ -272,16 +272,17 @@ fun PracticeLessonScreen(
 }
 
 /**
- * Runs [leave] once the lesson leaves the screen by any way (its back arrow, the phone's back, the app moving to
- * another learner), never when turning the phone redraws it: the lesson and its take outlive a rotation.
+ * Runs [hide] whenever the lesson goes out of sight: it leaves the screen by any way (its back arrow, the phone's back,
+ * the app moving to another learner), the app goes to the background, or the screen locks. Never when turning the
+ * phone redraws it: the lesson and its take outlive a rotation.
  */
 @Composable
-private fun WhenLessonLeft(leave: () -> Unit) {
+private fun WhenLessonHidden(hide: () -> Unit) {
     val activity = LocalActivity.current
-    val latest by rememberUpdatedState(leave)
-    DisposableEffect(Unit) {
-        onDispose { if (activity?.isChangingConfigurations != true) latest() }
-    }
+    val latest by rememberUpdatedState(hide)
+    val unlessTurning = { if (activity?.isChangingConfigurations != true) latest() }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP, onEvent = unlessTurning)
+    DisposableEffect(Unit) { onDispose(unlessTurning) }
 }
 
 private val STATUS_SLOT = 40.dp

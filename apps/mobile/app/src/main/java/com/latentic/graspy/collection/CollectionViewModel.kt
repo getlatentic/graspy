@@ -70,10 +70,13 @@ class CollectionViewModel(application: Application, private val ownerId: String)
      */
     val droppedTakes = dropped.asStateFlow()
 
+    /** The lesson names its language each time it is drawn, a turn of the phone during a take included. */
     fun selectLanguagePair(languagePair: String, spokenLanguage: String? = null) {
         require(languagePair == "yo-en" || languagePair == "pcm-en")
         require(spokenLanguage == null || spokenLanguage in SPOKEN_LANGUAGES)
-        check(!mutableState.value.isRecording) { "language cannot change during recording" }
+        val current = mutableState.value
+        val changed = current.languagePair != languagePair || current.spokenLanguage != spokenLanguage
+        check(!(changed && current.isRecording)) { "language cannot change during recording" }
         mutableState.update {
             it.copy(languagePair = languagePair, spokenLanguage = spokenLanguage, problem = null)
         }
@@ -143,8 +146,8 @@ class CollectionViewModel(application: Application, private val ownerId: String)
 
     /**
      * The take in progress ends unsent and the microphone is released, as the web's lesson cancels its take on
-     * closing: whoever speaks after the child left the lesson is never that lesson's answer. A take already
-     * ending is kept as the answer it became.
+     * closing or going out of sight: whoever speaks after the child left the lesson, pressed Home or locked the
+     * phone is never that lesson's answer. A take already ending is kept as the answer it became.
      */
     fun discardTake() {
         if (!mutableState.value.isRecording) return

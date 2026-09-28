@@ -176,6 +176,25 @@ describe("a voice lesson", () => {
     ).toMatchObject({ phase: { name: "your-turn" }, note: "micDenied" });
   });
 
+  it("gives the turn back, with nothing to say, when a take ends unsent out of sight", () => {
+    expect(
+      run(
+        ...toYourTurn,
+        { type: "recordStarted" },
+        { type: "recordCancelled" },
+      ),
+    ).toEqual({ phase: { name: "your-turn", move: ASKED }, note: null });
+  });
+
+  it("goes on saving a take that had already ended when it was put out of sight", () => {
+    const saving = run(
+      ...toYourTurn,
+      { type: "recordStarted" },
+      { type: "saving" },
+    );
+    expect(lessonReducer(saving, { type: "recordCancelled" })).toBe(saving);
+  });
+
   it.each([
     ["no_speech", "your-turn", "noSpeech"],
     ["provider_failure", "your-turn", "couldNotCheck"],
