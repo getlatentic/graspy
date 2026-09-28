@@ -2,12 +2,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMicrophone, showPage } from "./microphone.fake";
 import { startTake } from "./recorder";
+import { fakeWakeLock, noWakeLock } from "./wake-lock.fake";
 
 let microphone: ReturnType<typeof fakeMicrophone>;
 
 beforeEach(() => {
   showPage("visible");
   microphone = fakeMicrophone();
+  noWakeLock();
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -59,6 +61,41 @@ describe("a take out of sight", () => {
     microphone.speak(5);
 
     showPage("visible");
+    take.stop();
+
+    expect((await take.done).kind).toBe("answer");
+  });
+});
+
+describe("the screen during a take", () => {
+  const settled = () => new Promise((resolve) => setTimeout(resolve));
+
+  it("is kept on while the child speaks, and let sleep once the answer ends", async () => {
+    const wakeLock = fakeWakeLock();
+    const take = await startTake(() => undefined);
+    await settled();
+    expect(wakeLock.request).toHaveBeenCalledWith("screen");
+    expect(wakeLock.release).not.toHaveBeenCalled();
+
+    microphone.speak(5);
+    take.stop();
+
+    expect(wakeLock.release).toHaveBeenCalledOnce();
+  });
+
+  it("is let sleep when the take is cancelled", async () => {
+    const wakeLock = fakeWakeLock();
+    const take = await startTake(() => undefined);
+    await settled();
+
+    take.cancel();
+
+    expect(wakeLock.release).toHaveBeenCalledOnce();
+  });
+
+  it("keeps its own timeout where the browser has no wake lock", async () => {
+    const take = await startTake(() => undefined);
+    microphone.speak(5);
     take.stop();
 
     expect((await take.done).kind).toBe("answer");

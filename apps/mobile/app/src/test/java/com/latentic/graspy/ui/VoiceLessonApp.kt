@@ -1,9 +1,14 @@
 package com.latentic.graspy.ui
 
 import android.Manifest
+import android.view.View
+import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -97,7 +102,7 @@ class VoiceLessonApp(private val compose: LessonRule) {
                     position = 0,
                     subject = planId.substringBefore('.'),
                     topic = topic,
-                    titleJson = """{"en":"$title"}""",
+                    titleJson = """{"en":"$title","yo":"$title","pcm":"$title"}""",
                     standing = "untouched",
                     daysCorrect = 0,
                     current = true,
@@ -118,7 +123,8 @@ class VoiceLessonApp(private val compose: LessonRule) {
             ownerId = ada,
             learnerClass = schoolClass.wireValue,
             moveJson = """{"kind":"event","plan_id":"english.alphabet.say","event_id":"practice","event":"elicit_performance",
-                "subject":"english","title":{"en":"Saying the alphabet"},"say":"$say","say_text":{"en":"Say it with me."},
+                "subject":"english","title":{"en":"Saying the alphabet","yo":"Saying the alphabet","pcm":"Saying the alphabet"},
+                "say":"$say","say_text":{"en":"Say it with me.","yo":"Say it with me.","pcm":"Say it with me."},
                 "activity":{"kind":"sequence","prompt_id":"$say","items":[{"id":"a","spoken":"A"},{"id":"b","spoken":"B"}]}}""",
             revision = 1L,
             day = "2026-09-28",
@@ -133,28 +139,40 @@ class VoiceLessonApp(private val compose: LessonRule) {
         }
     }
 
-    fun shown(voice: LearnerProfile) {
-        compose.setContent { App(voice) }
+    /** The learner's class and language, and the app language it resolves to, as the app draws them now. */
+    private var learner by mutableStateOf<Pair<LearnerProfile, AppLanguage>?>(null)
+
+    fun shown(voice: LearnerProfile, language: AppLanguage = AppLanguage.ENGLISH) {
+        learner = voice to language
+        compose.setContent { App() }
         settleMain(TIMEOUT_MS) { planViewModel?.state?.value is PlanState.Ready }
         compose.waitForIdle()
         settleMain(TIMEOUT_MS) { server.routesAsked.isNotEmpty() && learnerViews?.routes?.answers?.value?.isNotEmpty() == true }
         compose.waitForIdle()
     }
 
+    /** The learner's language changes while the app is on screen, as a saved profile change reaches it. */
+    fun learnAs(voice: LearnerProfile, language: AppLanguage = AppLanguage.ENGLISH) {
+        compose.runOnUiThread { learner = voice to language }
+        compose.waitForIdle()
+    }
+
     /** The phone turned: the activity is made again and draws the app again, as MainActivity does in onCreate. */
-    fun turnPhone(voice: LearnerProfile) {
+    fun turnPhone(voice: LearnerProfile, language: AppLanguage = AppLanguage.ENGLISH) {
+        learner = voice to language
         compose.activityRule.scenario.recreate()
-        compose.activityRule.scenario.onActivity { it.setContent { App(voice) } }
+        compose.activityRule.scenario.onActivity { it.setContent { App() } }
         compose.waitForIdle()
     }
 
     @Composable
-    private fun App(voice: LearnerProfile) {
+    private fun App() {
+        val (voice, language) = learner ?: return
         LearnerScope(ada, viewModels) {
             GraspyTheme(InterfaceLanguage.ENGLISH) {
                 GraspyRoot(
                     copy = copyFor(InterfaceLanguage.ENGLISH),
-                    appLanguage = AppLanguage.ENGLISH,
+                    appLanguage = language,
                     interfaceLanguage = InterfaceLanguage.ENGLISH,
                     voice = voice,
                     account = signedIn(ADA, deviceJoins = false),
@@ -191,6 +209,21 @@ class VoiceLessonApp(private val compose: LessonRule) {
     fun answerButton() = compose.onNodeWithContentDescription(copyFor(InterfaceLanguage.ENGLISH).lesson.recordTable)
 
     fun queued() = runBlocking { AppGraph.database(context()).submissionDao().holdsAny(ada) }
+
+    /** The language pair and declared spoken language of each answer waiting to be sent, oldest first. */
+    fun queuedLanguages() = runBlocking {
+        AppGraph.database(context()).submissionDao().findIncomplete(ada).map { it.languagePair to it.spokenLanguage }
+    }
+
+    /** Whether anything on screen asks the phone to keep the screen on. */
+    fun screenKeptOn(): Boolean {
+        var kept = false
+        compose.runOnUiThread { kept = compose.activity.window.decorView.keepsScreenOn() }
+        return kept
+    }
+
+    private fun View.keepsScreenOn(): Boolean =
+        keepScreenOn || (this is ViewGroup && (0 until childCount).any { getChildAt(it).keepsScreenOn() })
 
     fun recordings() = context().filesDir.resolve(RECORDINGS_DIRECTORY).listFiles().orEmpty().toList()
 

@@ -70,13 +70,14 @@ class CollectionViewModel(application: Application, private val ownerId: String)
      */
     val droppedTakes = dropped.asStateFlow()
 
-    /** The lesson names its language each time it is drawn, a turn of the phone during a take included. */
+    /**
+     * The language of the takes to come. A take in progress keeps the language it began in: the lesson names its
+     * language again whenever it is drawn, and a turn of the phone can draw it with the language graspy heard in the
+     * last answer, so a change during a take is kept for the next one and never relabels what the child is saying.
+     */
     fun selectLanguagePair(languagePair: String, spokenLanguage: String? = null) {
         require(languagePair == "yo-en" || languagePair == "pcm-en")
         require(spokenLanguage == null || spokenLanguage in SPOKEN_LANGUAGES)
-        val current = mutableState.value
-        val changed = current.languagePair != languagePair || current.spokenLanguage != spokenLanguage
-        check(!(changed && current.isRecording)) { "language cannot change during recording" }
         mutableState.update {
             it.copy(languagePair = languagePair, spokenLanguage = spokenLanguage, problem = null)
         }
@@ -94,6 +95,7 @@ class CollectionViewModel(application: Application, private val ownerId: String)
         this.planEvent = planEvent
         val current = mutableState.value
         check(!current.isRecording) { "a recording is already active" }
+        takeLanguage = TakeLanguage(current.languagePair, current.spokenLanguage)
         val output = File(
             getApplication<Application>().filesDir,
             "$RECORDINGS_DIRECTORY/${UUID.randomUUID()}.wav",
@@ -124,6 +126,7 @@ class CollectionViewModel(application: Application, private val ownerId: String)
     }
 
     private var planEvent: Pair<String, String>? = null
+    private var takeLanguage: TakeLanguage? = null
 
     /**
      * The take ends itself: a second of quiet after the child speaks sends it, and a take in which nobody
@@ -161,6 +164,7 @@ class CollectionViewModel(application: Application, private val ownerId: String)
         if (!mutableState.value.isRecording) return
         recordingTimeout?.cancel()
         mutableState.update { it.copy(isRecording = false, isSaving = true, problem = null) }
+        val language = checkNotNull(takeLanguage) { "a take has the language it began in" }
         viewModelScope.launch {
             try {
                 val recording = recorder.stop()
@@ -169,8 +173,8 @@ class CollectionViewModel(application: Application, private val ownerId: String)
                         ownerId = ownerId,
                         participantId = participantId,
                         speakerId = participantId,
-                        languagePair = mutableState.value.languagePair,
-                        spokenLanguage = mutableState.value.spokenLanguage,
+                        languagePair = language.pair,
+                        spokenLanguage = language.spoken,
                         task = exercise.task,
                         topic = exercise.topic,
                         promptId = exercise.promptId,
@@ -232,6 +236,8 @@ class CollectionViewModel(application: Application, private val ownerId: String)
             preferences.edit { putString(PARTICIPANT_ID, it) }
         }
     }
+
+    private data class TakeLanguage(val pair: String, val spoken: String?)
 
     private companion object {
         const val TAG = "GraspyRecording"

@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -73,8 +74,8 @@ fun PracticeLessonScreen(
     // Told once a lesson that any language is welcome; after the child's first answer it is known.
     var answeredThisLesson by rememberSaveable(classroom.move?.planId) { mutableStateOf(false) }
 
-    LaunchedEffect(appLanguage, schoolClass) {
-        lessonViewModel.prepare(appLanguage, schoolClass)
+    LaunchedEffect(appLanguage, schoolClass) { lessonViewModel.prepare(appLanguage, schoolClass) }
+    LaunchedEffect(appLanguage, languageSelection) {
         collectionViewModel.selectLanguagePair(appLanguage.practiceLanguagePair(), languageSelection.declaredSpokenLanguage())
     }
     /** The newest note sits at the foot of the conversation, once the content has settled there. */
@@ -93,6 +94,7 @@ fun PracticeLessonScreen(
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { lessonViewModel.pause() }
     DisposableEffect(Unit) { onDispose { lessonViewModel.pause() } }
     WhenLessonHidden(collectionViewModel::discardTake)
+    ScreenOnWhile(recording.isRecording)
     LaunchedEffect(recording.isRecording) {
         val wasRecording = lessonViewModel.recording
         lessonViewModel.recording = recording.isRecording
@@ -283,6 +285,19 @@ private fun WhenLessonHidden(hide: () -> Unit) {
     val unlessTurning = { if (activity?.isChangingConfigurations != true) latest() }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP, onEvent = unlessTurning)
     DisposableEffect(Unit) { onDispose(unlessTurning) }
+}
+
+/**
+ * Keeps the screen on while [on]: a take ends when the lesson goes out of sight, so a screen timing out part way
+ * through a long recitation would end the child's answer for them.
+ */
+@Composable
+private fun ScreenOnWhile(on: Boolean) {
+    val view = LocalView.current
+    DisposableEffect(view, on) {
+        view.keepScreenOn = on
+        onDispose { view.keepScreenOn = false }
+    }
 }
 
 private val STATUS_SLOT = 40.dp

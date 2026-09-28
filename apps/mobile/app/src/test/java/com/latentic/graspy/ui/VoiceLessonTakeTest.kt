@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.Lifecycle
 import com.latentic.graspy.collection.CollectionViewModel
+import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.InterfaceLanguage
 import com.latentic.graspy.localization.LearnerProfile
@@ -59,11 +60,14 @@ class VoiceLessonTakeTest {
     fun `back during a take ends it, so the microphone is never left on outside the lesson and nothing is sent as its answer`() {
         openAlphabet()
         val take = startTake()
+        compose.waitForIdle()
+        assertTrue(app.screenKeptOn())
 
         app.pressBack()
 
         app.listed("Saying the alphabet").assertExists()
         assertEndedUnsent(take)
+        assertFalse(app.screenKeptOn())
     }
 
     @Test
@@ -96,6 +100,64 @@ class VoiceLessonTakeTest {
     }
 
     @Test
+    fun `the screen stays on while the child is speaking, and only then`() {
+        app.yourTurn(SchoolClass.NURSERY_2)
+        openAlphabet()
+        assertFalse(app.screenKeptOn())
+
+        val take = answer()
+        assertTrue(app.screenKeptOn())
+        app.turnPhone(nursery)
+        assertTrue(app.screenKeptOn())
+
+        finish(take)
+        assertFalse(app.screenKeptOn())
+    }
+
+    @Test
+    fun `a turn of the phone that brings the language graspy heard keeps the take, sent as it began`() {
+        app.yourTurn(SchoolClass.NURSERY_2)
+        // Following an English phone, so the lesson names no spoken language and the Worker detects it.
+        openAlphabet(LearnerProfile(SchoolClass.NURSERY_2, AppLanguageSelection.SYSTEM))
+        val take = answer()
+
+        // The last answer was heard as English, which the upload saved to the learner's profile.
+        app.turnPhone(nursery)
+
+        assertTrue(take.state.value.isRecording)
+        finish(take)
+        assertEquals(listOf("pcm-en" to null), app.queuedLanguages())
+        assertEquals("en", take.state.value.spokenLanguage)
+    }
+
+    @Test
+    fun `the language graspy heard reaches an open lesson, though its app language is unchanged`() {
+        app.yourTurn(SchoolClass.NURSERY_2)
+        openAlphabet(LearnerProfile(SchoolClass.NURSERY_2, AppLanguageSelection.SYSTEM))
+        val recorder = requireNotNull(app.collection) { "The lesson has no recorder" }
+        assertNull(recorder.state.value.spokenLanguage)
+
+        app.learnAs(nursery)
+
+        assertEquals("en", recorder.state.value.spokenLanguage)
+    }
+
+    @Test
+    fun `a language changed during a take is the next take's, never the one being spoken`() {
+        app.yourTurn(SchoolClass.NURSERY_2)
+        openAlphabet()
+        val take = answer()
+
+        app.turnPhone(LearnerProfile(SchoolClass.NURSERY_2, AppLanguageSelection.YORUBA), AppLanguage.YORUBA)
+
+        assertTrue(take.state.value.isRecording)
+        finish(take)
+        assertEquals(listOf("pcm-en" to "en"), app.queuedLanguages())
+        assertEquals("yo-en", take.state.value.languagePair)
+        assertEquals("yo", take.state.value.spokenLanguage)
+    }
+
+    @Test
     fun `a take already being saved when the phone locks is kept as the child's answer`() {
         openAlphabet()
         val take = startTake(held)
@@ -115,8 +177,8 @@ class VoiceLessonTakeTest {
         assertEquals(1, app.recordings().size)
     }
 
-    private fun openAlphabet() {
-        app.shown(nursery)
+    private fun openAlphabet(voice: LearnerProfile = nursery) {
+        app.shown(voice)
         app.awaitListed("Saying the alphabet")
         app.openLesson("Saying the alphabet")
     }
@@ -125,9 +187,18 @@ class VoiceLessonTakeTest {
     private fun answer(): CollectionViewModel {
         app.grantMicrophone(speaking)
         app.answerButton().performClick()
+        compose.waitForIdle()
         val take = requireNotNull(app.collection) { "The lesson has no recorder" }
         assertTrue(take.state.value.isRecording)
         return take
+    }
+
+    /** The child, once heard, taps to say they are done, and the take is kept to be sent. */
+    private fun finish(take: CollectionViewModel) {
+        settleMain(TIMEOUT_MS) { take.voiceLevels.value.isNotEmpty() }
+        compose.onNodeWithContentDescription(copyFor(InterfaceLanguage.ENGLISH).lesson.stopAndSend).performClick()
+        settleMain(TIMEOUT_MS) { take.state.value.queuedLocalId != null }
+        compose.waitForIdle()
     }
 
     /** The child's answer, begun as the lesson's button begins it once the microphone is allowed. */

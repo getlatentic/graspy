@@ -1,3 +1,4 @@
+import { keepScreenOn } from "./screen-awake";
 import type { EndpointState } from "./speech-endpoint";
 import { TakeCollector } from "./take-collector";
 
@@ -54,6 +55,7 @@ export async function startTake(
     clearTimeout(timer);
     document.removeEventListener("visibilitychange", cancelWhenHidden);
     window.removeEventListener("pagehide", cancel);
+    letScreenSleep();
     node.port.onmessage = null;
     stream.getTracks().forEach((track) => track.stop());
     void context.close();
@@ -77,6 +79,7 @@ export async function startTake(
     if (open) collector.add(event.data);
   };
   const timer = setTimeout(finish, LONGEST_TAKE_MS);
+  const letScreenSleep = keepScreenOn();
   const cancel = () => close(() => ({ kind: "cancelled" }));
   const cancelWhenHidden = () => {
     if (document.visibilityState === "hidden") cancel();
