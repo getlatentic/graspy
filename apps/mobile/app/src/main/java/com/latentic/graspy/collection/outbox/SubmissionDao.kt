@@ -32,6 +32,10 @@ interface SubmissionDao {
     @Query("SELECT EXISTS(SELECT 1 FROM submissions WHERE ownerId = :ownerId)")
     suspend fun holdsAny(ownerId: String): Boolean
 
+    /** Every recording a submission holds, whoever it belongs to. */
+    @Query("SELECT audioPath FROM submissions")
+    suspend fun audioPaths(): List<String>
+
     /** The rows an account kept before it held learners become the learner's. */
     @Query("UPDATE submissions SET ownerId = :learnerKey WHERE ownerId = :uid")
     suspend fun claim(uid: String, learnerKey: String)
