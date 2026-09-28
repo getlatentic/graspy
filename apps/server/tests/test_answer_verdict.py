@@ -151,6 +151,43 @@ def test_a_check_the_checks_cannot_be_sure_of_is_not_judged(question, options):
     assert _found(question, options) == (Found.NOT_COMPUTABLE, ())
 
 
+# Right checks the review found read wrongly: each was re-marked, or written
+# again with a wrong answer, before the question was left unread.
+RIGHT_AS_WRITTEN = [
+    ("What percentage is 20 of 80?", ["25%", "40%", "60%", "20%"], 0),
+    ("What fraction is 15 of 60?", ["1/4", "1/3", "15/60", "4"], 0),
+    ("Write 3 of 8 as a fraction", ["3/8", "8/3", "3/5", "5/8"], 0),
+    ("What is 6 of 10 as a percentage?", ["60%", "6%", "16%", "40%"], 0),
+    ("What decimal is 3 of 4?", ["0.75", "12", "0.34", "1.33"], 0),
+    ("How many are 3 of 4 equal parts?", ["3/4", "12", "4/3", "1/4"], 0),
+    (
+        "Solve 2x = 10 to find the cost of one pen. How much do two pens cost?",
+        ["10", "5", "20", "12"],
+        0,
+    ),
+    ("Solve x + 5 = 12. How old will she be in one year?", ["8", "7", "17", "6"], 0),
+    (
+        (
+            "Solve 5x = 35 to find the number of pupils in each row. How many pupils "
+            "are in all the rows?"
+        ),
+        ["35", "7", "40", "30"],
+        0,
+    ),
+    ("What is 8 ÷ 2(2 + 2)?", ["1", "16", "4", "8"], 0),
+    ("What is 12 ÷ 6/2?", ["1", "4", "9", "36"], 0),
+    ("Evaluate 24 ÷ 4 × 2", ["3", "12", "48", "8"], 0),
+]
+
+
+@pytest.mark.parametrize(("question", "options", "marked"), RIGHT_AS_WRITTEN)
+def test_a_question_read_two_ways_is_left_as_written(question, options, marked):
+    check = _check(question, options, marked)
+
+    assert _found(question, options, marked) == (Found.NOT_COMPUTABLE, ())
+    assert _repaired(check) is check
+
+
 def _check(question, options, marked=0, right="", wrong=""):
     return Check(question, options, marked, right, wrong)
 

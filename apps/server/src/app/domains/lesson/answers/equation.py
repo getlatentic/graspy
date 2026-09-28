@@ -1,7 +1,7 @@
-"""One linear equation in one letter, solved exactly. An equation is its own
-answer, so the words around one are free ("the equation 5x + 30 = 130 that
-represents the credit bought"), but the question must ask for the letter and
-for nothing derived from it."""
+"""One linear equation in one letter, solved exactly. The words before it
+are free ("Find the value of x in the equation…"), but the question must ask
+for the letter, and every word after the equation may only ask for it:
+"Solve 2x = 10. How much do two pens cost?" asks for something else."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ import re
 
 from .asked import Asked, Worked
 from .expression import NotComputable, worked_out
-from .spans import Split
+from .spans import BREAK, SPAN, Split
 from .tokens import Kind, Token
 from .wanted import wanted
-from .words import NOT_THE_LETTER
+from .words import ASKING_FOR_THE_LETTER, NOT_THE_LETTER
 
 
 def is_equation(span: list[Token]) -> bool:
@@ -49,6 +49,12 @@ def _asks_for(letter: str, words: list[str]) -> bool:
     )
 
 
+def _only_asks_after(letter: str, words: list[str]) -> bool:
+    """Every word after the equation, in its sentence and any after it."""
+    after = words[words.index(SPAN) + 1 :]
+    return set(after) - {BREAK, letter} <= ASKING_FOR_THE_LETTER
+
+
 def equation(read: Split) -> Asked:
     if len(read.spans) != 1:
         raise NotComputable("more maths than the equation")
@@ -57,6 +63,8 @@ def equation(read: Split) -> Asked:
     left, right = sides(span)
     if set(read.words) & NOT_THE_LETTER or not _asks_for(letter, read.words):
         raise NotComputable("the question may ask for something else")
+    if not _only_asks_after(letter, read.words):
+        raise NotComputable("words after the equation that may ask for more")
     left_side, right_side = worked_out(left, letter), worked_out(right, letter)
     slope = left_side.slope - right_side.slope
     if slope == 0:

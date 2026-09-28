@@ -417,12 +417,13 @@ async def test_a_lesson_written_in_another_language_is_not_checked(caplog):
             _written(WRONG_KEY),
             _written(PLAIN),
             _written(PLAIN),
-            _practice(PLAIN),
+            _practice(WRONG_KEY),
         ],
         language="French",
     )
 
     assert _lesson(events)["slides"][0]["assessment"]["answerIndex"] == 0
+    assert _lesson(events)["practice"]["answerIndex"] == 0
     assert _reports(caplog) == []
 
 
@@ -447,6 +448,31 @@ async def test_a_question_the_checks_cannot_work_out_is_left_as_written(caplog):
         Found.NOT_COMPUTABLE,
         Found.NOT_COMPUTABLE,
     ]
+
+
+async def test_a_right_check_the_checks_cannot_read_is_never_written_again(caplog):
+    """ "What decimal is 3 of 4?" was read as 3 × 4, and its key moved to 12."""
+    caplog.set_level(logging.DEBUG, logger="app.domains.lesson.checked")
+    part_of = {
+        **RIGHT_KEY,
+        "question": "What decimal is 3 of 4?",
+        "options": ["0.75", "12", "0.34", "1.33"],
+        "answer_index": 0,
+    }
+    lm, events = await _made(
+        [
+            {"reasoning": "r", "plan": PLAN},
+            _written(part_of),
+            _written(PLAIN),
+            _written(PLAIN),
+            _practice(PLAIN),
+        ]
+    )
+
+    check = _lesson(events)["slides"][0]["assessment"]
+    assert (check["options"], check["answerIndex"]) == (part_of["options"], 0)
+    assert len(lm.history) == 5
+    assert _reports(caplog)[0][1:] == (Found.NOT_COMPUTABLE, Outcome.KEPT)
 
 
 def test_a_slide_without_a_check_is_read_back_as_one():

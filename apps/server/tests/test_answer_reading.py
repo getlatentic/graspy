@@ -13,11 +13,11 @@ from app.domains.lesson.answers.written import written
 @pytest.mark.parametrize(
     ("text", "plain"),
     [
-        (r"\(\frac{2}{5}\)", "2/5"),
-        (r"$\frac{2}{5}$", "2/5"),
-        (r"\(\dfrac{3}{4}\)", "3/4"),
-        (r"\(2\frac{1}{2}\)", "2 1/2"),
-        (r"<latex-inline>\frac{7}{8}</latex-inline>", "7/8"),
+        (r"\(\frac{2}{5}\)", "2⁄5"),
+        (r"$\frac{2}{5}$", "2⁄5"),
+        (r"\(\dfrac{3}{4}\)", "3⁄4"),
+        (r"\(2\frac{1}{2}\)", "2 1⁄2"),
+        (r"<latex-inline>\frac{7}{8}</latex-inline>", "7⁄8"),
         (r"\(0.6 \times 3.5\)", "0.6 × 3.5"),
         (r"\(12 \div 4\)", "12 ÷ 4"),
         (r"40\%", "40%"),
@@ -26,8 +26,8 @@ from app.domains.lesson.answers.written import written
         (r"\(\text{₦}7\)", "₦7"),
         (r"\(0.\overline{3}\)", "0.[3]"),
         (r"\(3^{2}\)", "3^2"),
-        ("2½", "2 1/2"),
-        (r"\(\frac{\frac{1}{2}}{3}\)", "((1/2)/(3))"),
+        ("2½", "2 1⁄2"),
+        (r"\(\frac{\frac{1}{2}}{3}\)", "((1⁄2)/(3))"),
         ("3.5 kg = \\_\\_\\_ g", "3.5 kg = _ g"),
     ],
 )

@@ -66,14 +66,8 @@ from app.domains.lesson.answers.tokens import Form
         (r"Solve \(\frac{x}{3} = 4\)", Fraction(12), "equation"),
         ("Solve 7x - 15 = 2x + 30", Fraction(9), "equation"),
         ("If 5y = 35, what is y?", Fraction(7), "equation"),
-        (
-            (
-                r"What is the value of \(x\) in the equation \(5x + 30 = 130\) "
-                "that represents the number of phone-credit units bought?"
-            ),
-            Fraction(20),
-            "equation",
-        ),
+        ("Solve 0.5x + 1.5 = 4", Fraction(5), "equation"),
+        ("If 5y = 35, what is the value of y?", Fraction(7), "equation"),
         (
             (
                 r"Solve the equation \(8z - 24 = 40\) and verify your solution by "
@@ -82,7 +76,14 @@ from app.domains.lesson.answers.tokens import Form
             Fraction(8),
             "equation",
         ),
-        ("Solve 0.5x + 1.5 = 4", Fraction(5), "equation"),
+        (r"Solve \(2x = 10\). What is the value of \(x\)?", Fraction(5), "equation"),
+        # A fraction written as one is one number beside a division.
+        (r"What is \(\frac{3}{4} \div \frac{1}{2}\)?", Fraction(3, 2), "arithmetic"),
+        (r"What is \(12 \div \frac{6}{2}\)?", Fraction(4), "arithmetic"),
+        ("What is 24 × 4 ÷ 2?", Fraction(48), "arithmetic"),
+        ("What is (24 ÷ 4) × 2?", Fraction(12), "arithmetic"),
+        ("What is 24 ÷ 4 + 2 × 3?", Fraction(12), "arithmetic"),
+        ("What is 1 1/2 of 10?", Fraction(15), "arithmetic"),
         # Joined in words.
         (
             r"What is the sum of \(\frac{1}{4}\) and \(\frac{1}{6}\)?",
@@ -219,7 +220,12 @@ def test_a_unit_named_in_the_question_is_asked_for_and_one_worked_out_is_not():
         # Two answers asked for.
         r"What is the correct decimal and percentage for the fraction \(\frac{2}{3}\)?",
         "Write 3/4 as a decimal and as a percentage.",
-        # Equations asking for something other than the letter.
+        # Equations asking for something other than the letter, or saying
+        # more after it than a question for the letter.
+        (
+            r"What is the value of \(x\) in the equation \(5x + 30 = 130\) "
+            "that represents the number of phone-credit units bought?"
+        ),
         "What is the coefficient of x in 5x + 30 = 130?",
         "If x = 3, what is 2x + 1?",
         "What is the first step to solve 3x + 5 = 20?",
@@ -227,6 +233,32 @@ def test_a_unit_named_in_the_question_is_asked_for_and_one_worked_out_is_not():
         "What is 2x if 3x + 1 = 7?",
         "The equation 5x + 30 = 130 shows the credit bought. How many units?",
         "Solve x^2 = 9",
+        "Solve 2x = 10 to find the cost of one pen. How much do two pens cost?",
+        "Solve x + 5 = 12. How old will she be in one year?",
+        (
+            "Solve 5x = 35 to find the number of pupils in each row. How many "
+            "pupils are in all the rows?"
+        ),
+        "Solve 2x = 10. What is the total?",
+        "Solve 2x = 10 and check how much two pens cost.",
+        "Solve 2x = 10 and verify the cost of one pen.",
+        "Solve 2x = 10, so how much is 3x?",
+        # "of" between whole numbers asks what part one is of the other.
+        "What percentage is 20 of 80?",
+        "What fraction is 15 of 60?",
+        "Write 3 of 8 as a fraction",
+        "What is 6 of 10 as a percentage?",
+        "What decimal is 3 of 4?",
+        "How many are 3 of 4 equal parts?",
+        "What is 0.5 of 20?",
+        # A division that reads two ways.
+        "What is 8 ÷ 2(2 + 2)?",
+        "What is 12 ÷ 6/2?",
+        "Evaluate 24 ÷ 4 × 2",
+        "What is 24 ÷ 4 ÷ 2?",
+        "What is 3/4 ÷ 1/2?",
+        "What is 6/2 ÷ 3?",
+        "What is 6 ÷ 2x?",
         "Solve 2x + 3y = 12",
         "Solve 2x + 3 = 2x + 5",
         # Units that do not add up, or were not asked.

@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from fractions import Fraction
 
-from .tokens import Form, Kind, Token
+from .tokens import Form, Kind, Token, is_plain_fraction
 from .units import Unit
 
 MAX_TOKENS = 60
@@ -145,15 +145,27 @@ class _Reader:
         return amount
 
     def product(self) -> Amount:
+        """One term. After a division, another ×, ÷ or implied × in the same
+        term, or a fraction typed with a slash, has no one reading: 24 ÷ 4 × 2
+        is 12 left to right and 3 to some; 8 ÷ 2(2 + 2) is 16 or 1."""
+        plain = is_plain_fraction(self.peek())
         amount = self.of()
-        while True:
-            if self.is_operator(*_PRODUCTS):
-                combine = _PRODUCTS[self.take().text]
-                amount = _checked(combine(amount, self.of()))
-            elif self._implicit():
-                amount = _checked(_multiply(amount, self.of()))
-            else:
-                return amount
+        divided = False
+        while (combine := self._combining()) is not None:
+            if divided:
+                raise NotComputable("more after a division, which reads two ways")
+            divided = combine is _divide
+            plain = plain or is_plain_fraction(self.peek())
+            if divided and plain:
+                raise NotComputable("a division beside a typed fraction")
+            amount = _checked(combine(amount, self.of()))
+        return amount
+
+    def _combining(self):
+        """The product operator next, taken, or None where the term ends."""
+        if self.is_operator(*_PRODUCTS):
+            return _PRODUCTS[self.take().text]
+        return _multiply if self._implicit() else None
 
     def _implicit(self) -> bool:
         """2x and 3(x + 1): a letter or a bracket straight after a value.

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .tokens import Kind, Token, is_letter_unit
+from .tokens import Form, Kind, Token, is_letter_unit
 from .units import unit_named
 
 # Where a span or a punctuation mark stands among the words.
@@ -22,8 +22,8 @@ _ALWAYS_MATHS = frozenset(
         Kind.CURRENCY,
     }
 )
-_ENDS_VALUE = frozenset({Kind.NUMBER, Kind.PERCENT, Kind.UNIT, Kind.LETTER})
-_STARTS_VALUE = frozenset({Kind.NUMBER, Kind.CURRENCY, Kind.LETTER})
+_STARTS_VALUE = frozenset({Kind.NUMBER, Kind.CURRENCY})
+_PARTS = frozenset({Form.FRACTION, Form.MIXED})
 
 
 @dataclass(frozen=True)
@@ -46,14 +46,20 @@ def _in_maths(tokens: list[Token], at: int) -> bool:
     return False
 
 
-def _joins(tokens: list[Token], at: int, maths: list[bool]) -> bool:
-    """ "of" between two values is multiplication: 20% of 50, 3/4 of ₦200."""
+def _is_part(token: Token) -> bool:
+    """A percentage or a fraction: what "of" takes a part with."""
+    if token.kind is Kind.PERCENT:
+        return True
+    return token.kind is Kind.NUMBER and token.number.form in _PARTS
+
+
+def _joins(tokens: list[Token], at: int) -> bool:
+    """ "of" after a percentage or a fraction is multiplication: 20% of 50,
+    3/4 of ₦200. Between whole numbers it asks what part one is of the
+    other ("What fraction is 15 of 60?"), which is left unread."""
     if tokens[at].text != "of" or not 0 < at < len(tokens) - 1:
         return False
-    before, after = tokens[at - 1], tokens[at + 1]
-    ends = maths[at - 1] and (before.kind in _ENDS_VALUE or before.text == ")")
-    starts = after.kind in _STARTS_VALUE or after.text in ("(", "-")
-    return ends and starts
+    return _is_part(tokens[at - 1]) and tokens[at + 1].kind in _STARTS_VALUE
 
 
 def _word(token: Token) -> str:
@@ -62,7 +68,7 @@ def _word(token: Token) -> str:
 
 def split(tokens: list[Token]) -> Split:
     maths = [_in_maths(tokens, at) for at in range(len(tokens))]
-    maths = [inside or _joins(tokens, at, maths) for at, inside in enumerate(maths)]
+    maths = [inside or _joins(tokens, at) for at, inside in enumerate(maths)]
     spans: list[list[Token]] = []
     words: list[str] = []
     named: list[Token] = []

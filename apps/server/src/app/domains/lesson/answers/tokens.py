@@ -53,8 +53,8 @@ _DIGITS = r"(?:\d{1,3}(?:,\d{3})+|\d+)"
 _PATTERN = re.compile(
     rf"""
     (?P<space>\s+)
-    |(?P<mixed>(?<![\d.,/])(?P<whole>\d+)\ (?P<top>\d+)/(?P<bottom>\d+)(?![\d/]|\.\d))
-    |(?P<fraction>(?<![\d.,/])(?P<numerator>\d+)/(?P<denominator>\d+)(?![\d/]|\.\d))
+    |(?P<mixed>(?<![\d.,/⁄])(?P<whole>\d+)\ (?P<top>\d+)[/⁄](?P<bottom>\d+)(?![\d/⁄]|\.\d))
+    |(?P<fraction>(?<![\d.,/⁄])(?P<numerator>\d+)[/⁄](?P<denominator>\d+)(?![\d/⁄]|\.\d))
     |(?P<decimal>(?<![\d.,])(?P<int>{_DIGITS})\.(?P<places>\d*)\[(?P<repeat>\d+)\]
         |(?<![\d.,]){_DIGITS}\.\d+(?!\.\d))
     |(?P<integer>(?<![\d.,]){_DIGITS}(?![\d.,]\d))
@@ -168,6 +168,12 @@ def numbers_in(text: str) -> Iterator[Number]:
         if text[match.end() :].lstrip().startswith("%"):
             number = Number(number.value / 100, Form.PERCENT)
         yield number
+
+
+def is_plain_fraction(token: Token | None) -> bool:
+    """ "6/2" typed with a slash, which may be read as a division; a fraction
+    written as one (\\frac{6}{2}, ½) may not."""
+    return token is not None and token.kind is Kind.NUMBER and "/" in token.text
 
 
 def is_letter_unit(token: Token) -> bool:
