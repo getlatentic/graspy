@@ -154,6 +154,34 @@ async def test_a_lesson_on_the_record_opens_without_being_made(server):
     assert server.state.service.requests == []
 
 
+async def test_a_kept_lesson_opens_as_it_was_kept_though_its_key_would_be_moved_now(
+    server,
+):
+    """Answers are checked as a lesson is made: a learner who has started a
+    lesson never finds its checks changed under them."""
+    wrong_key = SLIDE.assessment.model_copy(
+        update={
+            "prompt": "Which decimal is equal to 2/5?",
+            "options": ["0.2", "0.4", "2.5"],
+            "answer_index": 0,
+        }
+    )
+    kept = LESSON.model_copy(
+        update={"slides": [SLIDE.model_copy(update={"assessment": wrong_key})]}
+    )
+    keeping = server.state.keeping
+    await keeping.lessons.keep("lesson-1", kept)
+    await keeping.learners.change(
+        DEVICE, LessonKept(topic=FRACTIONS, lesson_id="lesson-1")
+    )
+
+    async with connected(server) as client:
+        opened = await client.call_tool("give_lesson", {"target": TARGET})
+
+    assert opened.structured_content["lesson"] == wire(kept)
+    assert server.state.service.requests == []
+
+
 async def test_a_lesson_is_aimed_at_what_the_learner_got_wrong(server):
     wrong = Answer(
         plan_id="plan-1",
