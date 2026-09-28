@@ -69,6 +69,18 @@ from app.domains.lesson.answers.tokens import Form
         ("Solve 0.5x + 1.5 = 4", Fraction(5), "equation"),
         ("If 5y = 35, what is the value of y?", Fraction(7), "equation"),
         (
+            r"What is the value of \(x\) in the one‑step equation \(x + 8 = 15\)?",
+            Fraction(7),
+            "equation",
+        ),
+        ("Given that 4x = 20, find x.", Fraction(5), "equation"),
+        (r"What is the value of \(y\) when \(2y - 4 = 14\)?", Fraction(9), "equation"),
+        (
+            "Solve 3x = 2 for x, giving your answer as a fraction.",
+            Fraction(2, 3),
+            "equation",
+        ),
+        (
             (
                 r"Solve the equation \(8z - 24 = 40\) and verify your solution by "
                 r"substitution. What is the correct value of \(z\)?"
@@ -240,6 +252,11 @@ def test_a_unit_named_in_the_question_is_asked_for_and_one_worked_out_is_not():
             "pupils are in all the rows?"
         ),
         "Solve 2x = 10. What is the total?",
+        "Solve 2x = 10 to find the cost of two pens.",
+        "Solve for x: a quarter of x = 3",
+        "Ada's age is x. Solve x + 5 = 12.",
+        "What is 2y when 2y - 4 = 14?",
+        "What is the value of y when a quarter of y = 3?",
         "Solve 2x = 10 and check how much two pens cost.",
         "Solve 2x = 10 and verify the cost of one pen.",
         "Solve 2x = 10, so how much is 3x?",

@@ -21,7 +21,7 @@ _SHOWN_MARKER = re.compile(r"^\s*(?:[-*•]|[A-Da-d][).])\s+")
 def _words(text: str) -> set[str]:
     """Its longer words and its numbers: an option such as "5/8 = 0.625 and
     0.6 = 3/5" has no long words at all."""
-    return set(re.findall(r"[a-z]{4,}|\d+(?:\.\d+)?(?:/\d+)?", text.lower()))
+    return set(re.findall(r"[a-z]{4,}|\d+(?:\.\d+)?(?:[/⁄]\d+)?", text.lower()))
 
 
 def _equal(a: Written | None, b: Written | None) -> bool:

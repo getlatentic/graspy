@@ -177,6 +177,13 @@ RIGHT_AS_WRITTEN = [
     ("What is 8 ÷ 2(2 + 2)?", ["1", "16", "4", "8"], 0),
     ("What is 12 ÷ 6/2?", ["1", "4", "9", "36"], 0),
     ("Evaluate 24 ÷ 4 × 2", ["3", "12", "48", "8"], 0),
+    ("Solve for x: a quarter of x = 3", ["12", "3", "3/4", "7"], 0),
+    ("Find x if two-thirds of x = 10.", ["15", "10", "20/3", "30"], 0),
+    ("Solve: one-third of x = 5", ["15", "5", "5/3", "8"], 0),
+    ("If a third of x = 4, find x.", ["12", "4", "4/3", "7"], 0),
+    ("Find y if a fifth of y = 7.", ["35", "7", "7/5", "12"], 0),
+    ("Solve: the reciprocal of x = 1/4", ["4", "1/4", "-4", "-1/4"], 0),
+    ("Solve for m: the opposite of m = 3", ["-3", "3", "1/3", "0"], 0),
 ]
 
 
@@ -186,6 +193,24 @@ def test_a_question_read_two_ways_is_left_as_written(question, options, marked):
 
     assert _found(question, options, marked) == (Found.NOT_COMPUTABLE, ())
     assert _repaired(check) is check
+
+
+@pytest.mark.parametrize(
+    ("question", "options", "marked"),
+    [
+        (
+            r"Write \(2\,\frac{125}{200}\) as a decimal.",
+            ["2.625", "10.625", "2.125", "2.6"],
+            0,
+        ),
+        (r"What is \(3\,\frac{125}{200}\) + 1?", ["4 5/8", "4 1/8", "3 5/8", "5"], 0),
+    ],
+)
+def test_a_mixed_number_spaced_from_its_fraction_is_read_as_one(
+    question, options, marked
+):
+    """Its whole number is not a thousands group of the fraction's top."""
+    assert _found(question, options, marked) == (Found.RIGHT, (marked,))
 
 
 def _check(question, options, marked=0, right="", wrong=""):

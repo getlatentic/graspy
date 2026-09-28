@@ -27,6 +27,7 @@ from app.domains.lesson.answers.written import written
         (r"\(0.\overline{3}\)", "0.[3]"),
         (r"\(3^{2}\)", "3^2"),
         ("2½", "2 1⁄2"),
+        (r"\(2\,\frac{125}{200}\)", "2 125⁄200"),
         (r"\(\frac{\frac{1}{2}}{3}\)", "((1⁄2)/(3))"),
         ("3.5 kg = \\_\\_\\_ g", "3.5 kg = _ g"),
     ],

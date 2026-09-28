@@ -20,7 +20,7 @@ _POWER = re.compile(r"\^\{(\d+)\}")
 _BLANK = re.compile(r"(?:\\_|_){2,}|\\square|\\Box|□")
 # Digits grouped in threes by a thin or no-break space, as "10\,000" and
 # "1 000" are written; an ordinary space is left, as "2 1/2" needs it.
-_GROUP_SPACE = re.compile(r"(?<=\d)[\u2009\u202f\u00a0](?=\d{3}(?![\d/]))")
+_GROUP_SPACE = re.compile(r"(?<=\d)[\u2009\u202f\u00a0](?=\d{3}(?![\d/⁄]))")
 _SPACES = re.compile(r"[\u2009\u202f\u00a0]|\\[;: !]|\\q?quad|~")
 _UNICODE_FRACTION = re.compile(r"(\d?)([½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞])")
 _VULGAR = {

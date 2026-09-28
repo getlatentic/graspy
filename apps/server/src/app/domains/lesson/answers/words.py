@@ -52,7 +52,18 @@ ASKING_FOR_THE_LETTER = _words(
     what what's whats is the value of find calculate work out determine state
     solve correct right answer your give as a an in its simplest lowest form
     terms fraction decimal whole number mixed improper which equation satisfies
-    makes true and check verify solution by substitution
+    makes true and check verify solution by substitution for to giving write
+    """
+)
+# Before an equation, every word is one of these: words that only lead to it.
+# "a quarter of x = 3" or "the reciprocal of x = 1/4" says what the letter
+# is taken of, and is left alone.
+LEADING_TO_THE_EQUATION = _words(
+    """
+    what what's whats is the value of find calculate work out determine state
+    solve correct right for if given that in equation satisfies satisfy makes
+    true which number unknown letter a an one-step one‑step two-step two‑step
+    linear simple following this when
     """
 )
 # Words that ask for something other than an equation's letter.

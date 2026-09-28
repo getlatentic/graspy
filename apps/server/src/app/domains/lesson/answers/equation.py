@@ -1,7 +1,7 @@
-"""One linear equation in one letter, solved exactly. The words before it
-are free ("Find the value of x in the equation…"), but the question must ask
-for the letter, and every word after the equation may only ask for it:
-"Solve 2x = 10. How much do two pens cost?" asks for something else."""
+"""One linear equation in one letter, solved exactly. Every word before it
+must only lead to it ("Find the value of x in the equation…"), and every word
+after it may only ask for the letter: "a quarter of x = 3" and "Solve
+2x = 10. How much do two pens cost?" ask for something else."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from .expression import NotComputable, worked_out
 from .spans import BREAK, SPAN, Split
 from .tokens import Kind, Token
 from .wanted import wanted
-from .words import ASKING_FOR_THE_LETTER, NOT_THE_LETTER
+from .words import ASKING_FOR_THE_LETTER, LEADING_TO_THE_EQUATION, NOT_THE_LETTER
 
 
 def is_equation(span: list[Token]) -> bool:
@@ -49,10 +49,14 @@ def _asks_for(letter: str, words: list[str]) -> bool:
     )
 
 
-def _only_asks_after(letter: str, words: list[str]) -> bool:
-    """Every word after the equation, in its sentence and any after it."""
-    after = words[words.index(SPAN) + 1 :]
-    return set(after) - {BREAK, letter} <= ASKING_FOR_THE_LETTER
+def _only_leads_to_it(letter: str, words: list[str]) -> bool:
+    """Every word before the equation leads to it, and every word after it,
+    in its sentence and any after it, asks for the letter."""
+    at = words.index(SPAN)
+    before, after = set(words[:at]), set(words[at + 1 :])
+    return before - {BREAK, letter} <= LEADING_TO_THE_EQUATION and (
+        after - {BREAK, letter} <= ASKING_FOR_THE_LETTER
+    )
 
 
 def equation(read: Split) -> Asked:
@@ -63,8 +67,8 @@ def equation(read: Split) -> Asked:
     left, right = sides(span)
     if set(read.words) & NOT_THE_LETTER or not _asks_for(letter, read.words):
         raise NotComputable("the question may ask for something else")
-    if not _only_asks_after(letter, read.words):
-        raise NotComputable("words after the equation that may ask for more")
+    if not _only_leads_to_it(letter, read.words):
+        raise NotComputable("words around the equation that may ask for more")
     left_side, right_side = worked_out(left, letter), worked_out(right, letter)
     slope = left_side.slope - right_side.slope
     if slope == 0:
