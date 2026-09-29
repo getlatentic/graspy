@@ -19,6 +19,7 @@ export function ServiceAgreement({
   busy = false,
   onAgreed,
   onDecline,
+  onSignOut,
 }: {
   learner: Learner;
   heading?: "h1" | "h2";
@@ -26,6 +27,7 @@ export function ServiceAgreement({
   busy?: boolean;
   onAgreed: (consent: ServiceConsent) => void;
   onDecline: () => void;
+  onSignOut?: () => void;
 }) {
   const { t } = useI18n();
   const uid = useAccount()?.uid;
@@ -50,6 +52,7 @@ export function ServiceAgreement({
       problem={agreement.problem}
       onAgree={agreement.agree}
       onDecline={onDecline}
+      onSignOut={onSignOut}
     />
   );
 }

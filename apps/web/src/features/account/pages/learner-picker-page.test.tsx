@@ -292,3 +292,101 @@ describe("adding a learner", () => {
     );
   });
 });
+
+describe("a learner who was added, when opening them fails", () => {
+  const TOLU = listed("c00000000003", "Tolu", AGREED);
+
+  async function addedButNotOpened() {
+    addLearner.mockResolvedValue(TOLU);
+    chooseLearner
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValue("#opened");
+    picker();
+    await untilListed("learners.addTile");
+    tap("learners.addTile");
+    fireEvent.change(screen.getByLabelText("learners.nameLabel"), {
+      target: { value: "Tolu" },
+    });
+    tap("consent.continue");
+    await screen.findByText(SERVICE_NOTICE);
+    tap("consent.agree");
+    await screen.findByRole("button", { name: "learners.tryAgain" });
+  }
+
+  it("moves on to opening them: no agreeing again, no second sign-in", async () => {
+    await addedButNotOpened();
+
+    expect(screen.queryByRole("button", { name: "consent.agree" })).toBeNull();
+    expect(screen.queryByText(SERVICE_NOTICE)).toBeNull();
+    expect(screen.getByRole("alert").textContent).toBe("learners.failed");
+  });
+
+  it("opens the learner that was added when tried again, and adds no one", async () => {
+    await addedButNotOpened();
+
+    tap("learners.tryAgain");
+
+    await waitFor(() => expect(chooseLearner).toHaveBeenCalledTimes(2));
+    expect(chooseLearner.mock.calls[1][0]).toMatchObject({ id: TOLU.id });
+    expect(addLearner).toHaveBeenCalledTimes(1);
+    expect(signInAgain).toHaveBeenCalledTimes(1);
+  });
+
+  it("lists them when the parent leaves instead, and asks again for a new learner", async () => {
+    listLearners
+      .mockResolvedValueOnce([ADA, GRACE])
+      .mockResolvedValueOnce([ADA, GRACE, TOLU]);
+    await addedButNotOpened();
+
+    tap("learners.cancel");
+
+    await untilListed("Tolu");
+    tap("learners.addTile");
+    expect(screen.getByLabelText("learners.nameLabel")).toBeTruthy();
+    expect(addLearner).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("focus, for the keyboard and a screen reader", () => {
+  it("moves into the notice for a learner nobody has agreed for, and back to their tile when the parent declines", async () => {
+    picker();
+    const grace = await screen.findByRole("button", { name: "Grace" });
+    grace.focus();
+    fireEvent.click(grace);
+    await screen.findByText(SERVICE_NOTICE);
+
+    expect(document.activeElement?.tagName).toBe("SECTION");
+
+    tap("consent.decline");
+
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "Grace" }),
+      ),
+    );
+  });
+
+  it("moves into the notice when adding a learner, and back to the add tile when the parent declines", async () => {
+    picker();
+    const add = await screen.findByRole("button", { name: "learners.addTile" });
+    add.focus();
+    fireEvent.click(add);
+    fireEvent.change(screen.getByLabelText("learners.nameLabel"), {
+      target: { value: "Tolu" },
+    });
+    const next = screen.getByRole("button", { name: "consent.continue" });
+    next.focus();
+    fireEvent.click(next);
+    await screen.findByText(SERVICE_NOTICE);
+
+    expect(document.activeElement?.tagName).toBe("SECTION");
+
+    tap("consent.decline");
+
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "learners.addTile" }),
+      ),
+    );
+  });
+});

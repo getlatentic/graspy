@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { currentAccount, type Learner } from "@/lib/account/account-store";
 import {
   chooseLearner,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/account/consent-problem";
 import {
   addLearner,
+  type AccountLearner,
   type ConsentProof,
   type ServiceConsent,
 } from "@/lib/account/learners-api";
@@ -35,6 +36,9 @@ export function useLearnerChoice() {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<ChoiceProblem | null>(null);
   const [chosen, setChosen] = useState<Learner | null>(null);
+  // Once the account holds the new learner, a retry chooses them and never adds another.
+  const addedRef = useRef<AccountLearner | null>(null);
+  const [added, setAdded] = useState<AccountLearner | null>(null);
 
   const run = useCallback(
     async (pick: () => Promise<Picked>, options?: ChoiceOptions) => {
@@ -63,13 +67,33 @@ export function useLearnerChoice() {
   );
   const addAndChoose = useCallback(
     (name: string, consent: ConsentProof) =>
-      run(() => addLearner(name, consent)),
+      run(async () => {
+        if (addedRef.current) return addedRef.current;
+        const learner = await addLearner(name, consent);
+        addedRef.current = learner;
+        setAdded(learner);
+        return learner;
+      }),
     [run],
   );
   const anyway = useCallback(() => {
     if (chosen) void run(async () => chosen, { loseUnsent: true });
   }, [chosen, run]);
   const cancel = useCallback(() => setProblem(null), []);
+  const forgetAdded = useCallback(() => {
+    addedRef.current = null;
+    setAdded(null);
+    setProblem(null);
+  }, []);
 
-  return { busy, problem, choose, addAndChoose, anyway, cancel };
+  return {
+    busy,
+    problem,
+    added,
+    choose,
+    addAndChoose,
+    anyway,
+    cancel,
+    forgetAdded,
+  };
 }

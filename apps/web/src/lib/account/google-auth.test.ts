@@ -56,7 +56,9 @@ describe("signing in again with Google", () => {
   it("fails when Firebase has nobody signed in", async () => {
     auth.currentUser = null;
 
-    await expect(reauthenticateWithGoogle()).rejects.toThrow("Not signed in");
+    await expect(reauthenticateWithGoogle()).rejects.toMatchObject({
+      code: "graspy/not-signed-in",
+    });
     expect(reauthenticateWithPopup).not.toHaveBeenCalled();
   });
 

@@ -80,17 +80,31 @@ export function LearnerRow({
         )}
       </div>
       {!learner.serviceConsent && (
-        <Button size="sm" onClick={() => setMode("agreeing")}>
+        <Button
+          size="sm"
+          data-restore-focus={`agree-${learner.id}`}
+          onClick={() => setMode("agreeing")}
+        >
           {t("consent.agreeRow")}
         </Button>
       )}
-      <Button variant="secondary" size="sm" onClick={() => setMode("renaming")}>
+      <Button
+        variant="secondary"
+        size="sm"
+        data-restore-focus={`rename-${learner.id}`}
+        onClick={() => setMode("renaming")}
+      >
         {t("learners.rename")}
       </Button>
       <Link to={`${LEARNERS_PAGE}/${learner.id}/voice`} className={LINK}>
         {t("learners.recordings")}
       </Link>
-      <Button variant="secondary" size="sm" onClick={() => setMode("removing")}>
+      <Button
+        variant="secondary"
+        size="sm"
+        data-restore-focus={`remove-${learner.id}`}
+        onClick={() => setMode("removing")}
+      >
         {t("learners.remove")}
       </Button>
     </div>

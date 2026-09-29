@@ -59,7 +59,15 @@ function Picker({ account }: { account: Account }) {
   return (
     <div className="flex flex-col gap-6">
       {adding ? (
-        <AddLearner choice={choice} onCancel={() => setAdding(false)} />
+        <AddLearner
+          choice={choice}
+          onCancel={() => {
+            setAdding(false);
+            // The account holds a learner added here, whom the list has not heard of.
+            if (choice.added) reload();
+            choice.forgetAdded();
+          }}
+        />
       ) : agreeing ? (
         <ServiceAgreement
           learner={agreeing}

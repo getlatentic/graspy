@@ -41,7 +41,11 @@ export function AddLearnerForm({
         />
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={!name.trim()}>
+        <Button
+          type="submit"
+          disabled={!name.trim()}
+          data-restore-focus="add-tile"
+        >
           {t("consent.continue")}
         </Button>
         <Button variant="ghost" onClick={onCancel}>

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { refusalCode } from "@/lib/account/account-call";
 import {
   NOTICE_VERSION,
   type RetentionDays,
@@ -13,55 +14,111 @@ import {
   type VoiceOverview,
 } from "@/lib/account/voice-recordings-api";
 
+/** Why the recordings did not load: `notFound` when the account holds no such learner, which
+ * trying again does not change. */
+export type LoadProblem = "failed" | "notFound";
+
+interface Held {
+  learner: string;
+  voice: VoiceOverview;
+}
+
 /** One learner's voice recordings as a parent sees them: whether they are kept, and the kept
- * ones. `voice` is null until they load. */
+ * ones. `voice` is null until they load. What is held is for one learner: an answer that comes
+ * after the parent has moved to another is dropped. */
 export function useVoiceRecordings(learner: string) {
-  const [voice, setVoice] = useState<VoiceOverview | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [held, setHeld] = useState<Held | null>(null);
+  const [problem, setProblem] = useState<{
+    learner: string;
+    problem: LoadProblem;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const current = useRef(learner);
+
+  const settle = useCallback(
+    (voice: VoiceOverview) => {
+      if (current.current === learner) setHeld({ learner, voice });
+    },
+    [learner],
+  );
 
   const load = useCallback(() => {
-    setLoadFailed(false);
+    setProblem(null);
     getVoice(learner)
-      .then(setVoice)
+      .then(settle)
       .catch((error: unknown) => {
         console.warn("Loading the voice recordings failed:", error);
-        setLoadFailed(true);
+        if (current.current !== learner) return;
+        setProblem({
+          learner,
+          problem:
+            refusalCode(error) === "no_such_learner" ? "notFound" : "failed",
+        });
       });
-  }, [learner]);
+  }, [learner, settle]);
 
-  useEffect(load, [load]);
-
-  const attempt = useCallback(async (work: () => Promise<void>) => {
-    setBusy(true);
+  useEffect(() => {
+    current.current = learner;
     setFailed(false);
-    try {
-      await work();
-      return true;
-    } catch (error) {
-      console.warn("Changing the voice recordings failed:", error);
-      setFailed(true);
-      return false;
-    } finally {
-      setBusy(false);
-    }
-  }, []);
+    load();
+  }, [learner, load]);
+
+  const change = useCallback(
+    (update: (voice: VoiceOverview) => VoiceOverview) =>
+      setHeld((shown) =>
+        shown?.learner === learner
+          ? { learner, voice: update(shown.voice) }
+          : shown,
+      ),
+    [learner],
+  );
+
+  // A failure part way may have changed the server, so what is shown is asked for again.
+  const attempt = useCallback(
+    async (work: () => Promise<void>, refreshOnFailure = false) => {
+      setBusy(true);
+      setFailed(false);
+      try {
+        await work();
+        return true;
+      } catch (error) {
+        console.warn("Changing the voice recordings failed:", error);
+        setFailed(true);
+        if (refreshOnFailure) {
+          await getVoice(learner).then(settle, () => undefined);
+        }
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [learner, settle],
+  );
+
+  const voice = held?.learner === learner ? held.voice : null;
+  const loadProblem = problem?.learner === learner ? problem.problem : null;
 
   const more = useCallback(
     () =>
       attempt(async () => {
-        if (voice?.nextBefore == null) return;
-        const next = await getVoice(learner, voice.nextBefore);
-        setVoice(
-          (shown) =>
-            shown && {
-              ...next,
-              recordings: [...shown.recordings, ...next.recordings],
-            },
-        );
+        if (
+          !voice ||
+          voice.nextBefore === null ||
+          voice.nextBeforeId === null
+        ) {
+          return;
+        }
+        const next = await getVoice(learner, {
+          before: voice.nextBefore,
+          beforeId: voice.nextBeforeId,
+        });
+        change((shown) => ({
+          ...next,
+          recordings: [...shown.recordings, ...next.recordings],
+        }));
       }),
-    [attempt, learner, voice?.nextBefore],
+    [attempt, change, learner, voice],
   );
 
   /** Throws when the agreement does not hold, for the parent to be told why. */
@@ -73,9 +130,9 @@ export function useVoiceRecordings(learner: string) {
         days,
         firebaseIdToken,
       );
-      setVoice((shown) => shown && { ...shown, consent });
+      change((shown) => ({ ...shown, consent }));
     },
-    [learner],
+    [change, learner],
   );
 
   const stop = useCallback(
@@ -86,49 +143,45 @@ export function useVoiceRecordings(learner: string) {
         } else {
           await stopKeepingRecordings(learner, false);
         }
-        setVoice(
-          (shown) =>
-            shown && {
-              consent: null,
-              recordings: deleteKept ? [] : shown.recordings,
-              nextBefore: deleteKept ? null : shown.nextBefore,
-            },
-        );
-      }),
-    [attempt, learner],
+        change((shown) => ({
+          consent: null,
+          recordings: deleteKept ? [] : shown.recordings,
+          nextBefore: deleteKept ? null : shown.nextBefore,
+          nextBeforeId: deleteKept ? null : shown.nextBeforeId,
+        }));
+      }, true),
+    [attempt, change, learner],
   );
 
   const remove = useCallback(
     (recording: string) =>
       attempt(async () => {
         await deleteRecording(learner, recording);
-        setVoice(
-          (shown) =>
-            shown && {
-              ...shown,
-              recordings: shown.recordings.filter(
-                (one) => one.id !== recording,
-              ),
-            },
-        );
+        change((shown) => ({
+          ...shown,
+          recordings: shown.recordings.filter((one) => one.id !== recording),
+        }));
       }),
-    [attempt, learner],
+    [attempt, change, learner],
   );
 
   const removeAll = useCallback(
     () =>
       attempt(async () => {
         await untilDone(() => deleteRecordings(learner));
-        setVoice(
-          (shown) => shown && { ...shown, recordings: [], nextBefore: null },
-        );
-      }),
-    [attempt, learner],
+        change((shown) => ({
+          ...shown,
+          recordings: [],
+          nextBefore: null,
+          nextBeforeId: null,
+        }));
+      }, true),
+    [attempt, change, learner],
   );
 
   return {
     voice,
-    loadFailed,
+    loadProblem,
     busy,
     failed,
     load,

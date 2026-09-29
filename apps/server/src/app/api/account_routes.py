@@ -109,6 +109,14 @@ def no_such_learner(learner_id: str) -> HTTPException:
     )
 
 
+async def require_learner(keeping: Keeping, uid: str, learner_id: str) -> None:
+    """The account holds the learner, now: a consent is written only for one it still holds."""
+    try:
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        raise no_such_learner(learner_id) from None
+
+
 @account_router.get("/learners", response_model=ListedLearners)
 async def learners(request: Request, uid: Uid, keeping: KeepingDep) -> ListedLearners:
     directory = await keeping.learners.directory(account_key(uid))
@@ -173,20 +181,25 @@ async def agree_to_service(
     body: ServiceConsentGrant,
 ) -> ServiceConsent:
     """The parent of a learner added without consent agrees to graspy teaching them."""
-    try:
-        await learner_of(keeping, uid, learner_id)
-    except NoSuchLearner:
-        raise no_such_learner(learner_id) from None
+    await require_learner(keeping, uid, learner_id)
     await _proved(request, uid, body)
-    granted = await grant_consent(
-        request.app.state.voice.DB,
-        learner_key(uid, learner_id),
-        uid,
-        SERVICE,
-        body.notice_version,
-        None,
-        now_ms(),
-    )
+    # The learner may have been removed while Google was asked.
+    await require_learner(keeping, uid, learner_id)
+    try:
+        granted = await grant_consent(
+            request.app.state.voice.DB,
+            learner_key(uid, learner_id),
+            uid,
+            SERVICE,
+            body.notice_version,
+            None,
+            now_ms(),
+        )
+    except Exception:
+        logger.exception("Consent for a learner was not kept")
+        raise refusal(
+            503, "consent_not_kept", "The consent was not kept. Try again"
+        ) from None
     return ServiceConsent.model_validate(granted)
 
 

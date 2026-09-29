@@ -11,7 +11,8 @@ type Recordings = ReturnType<typeof useVoiceRecordings>;
 type Mode = "shown" | "agreeing" | "stopping";
 
 /** Whether graspy keeps the learner's recordings, and the switch that changes it. Turning it
- * on asks the parent to agree; turning it off asks what becomes of what was kept. */
+ * on asks the parent to agree; turning it off asks what becomes of what was kept. The switch
+ * stays where it is, so focus can come back to it. */
 export function KeepingCard({
   consent,
   recordings,
@@ -23,24 +24,13 @@ export function KeepingCard({
   const [mode, setMode] = useState<Mode>("shown");
   const back = () => setMode("shown");
 
-  if (mode === "agreeing") {
-    return (
-      <Card>
-        <KeepRecordingsFlow
-          keep={recordings.keep}
-          onDone={back}
-          onCancel={back}
-        />
-      </Card>
-    );
-  }
   return (
     <>
       <Card className="flex flex-col gap-3">
         <Switch
           label={t("voiceRecordings.keep")}
           checked={consent !== null}
-          disabled={recordings.busy || mode === "stopping"}
+          disabled={recordings.busy}
           onChange={(on) => setMode(on ? "agreeing" : "stopping")}
         />
         <p className="text-pretty text-sm text-muted">
@@ -49,7 +39,16 @@ export function KeepingCard({
             : t("voiceRecordings.off")}
         </p>
       </Card>
-      {mode === "stopping" && (
+      {mode === "agreeing" && (
+        <Card>
+          <KeepRecordingsFlow
+            keep={recordings.keep}
+            onDone={back}
+            onCancel={back}
+          />
+        </Card>
+      )}
+      {mode === "stopping" && consent && (
         <StopKeepingCard
           busy={recordings.busy}
           onStop={(deleteKept) =>

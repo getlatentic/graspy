@@ -13,6 +13,7 @@ import {
 } from "firebase/auth";
 import { FIREBASE_AUTH_EMULATOR, FIREBASE_CONFIG } from "@/lib/env";
 import type { Identity } from "./account-store";
+import { NOT_SIGNED_IN } from "./google-auth-codes";
 
 // The only module that imports Firebase. It is imported on demand, so the app's
 // first download does not carry the SDK.
@@ -72,7 +73,9 @@ export async function signInWithGoogle(): Promise<GoogleSignIn> {
  * before it. A different Google account than the one signed in is refused by Firebase. */
 export async function reauthenticateWithGoogle(): Promise<string> {
   const { currentUser } = configuredAuth();
-  if (!currentUser) throw new Error("Not signed in");
+  if (!currentUser) {
+    throw Object.assign(new Error("Not signed in"), { code: NOT_SIGNED_IN });
+  }
   await reauthenticateWithPopup(currentUser, new GoogleAuthProvider());
   return currentUser.getIdToken(true);
 }

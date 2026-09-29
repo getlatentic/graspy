@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { ConsentProblem } from "@/lib/account/consent-problem";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
+import { useFocusInto } from "../hooks/use-focus-into";
 import { ConsentProblemNote } from "./consent-problem-note";
 
 /** What a parent reads before agreeing: the notice, word for word, then signing in with
@@ -15,6 +16,7 @@ export function ConsentStep({
   problem,
   onAgree,
   onDecline,
+  onSignOut,
   heading: Heading = "h1",
   children,
 }: {
@@ -25,13 +27,21 @@ export function ConsentStep({
   /** Called by the tap itself: Google's window must open within it. */
   onAgree: () => void;
   onDecline: () => void;
+  /** A way out for a parent who cannot agree here: signing out. */
+  onSignOut?: () => void;
   heading?: "h1" | "h2";
   /** What the parent chooses before agreeing, between the notice and the buttons. */
   children?: ReactNode;
 }) {
   const { t } = useI18n();
+  const ref = useFocusInto<HTMLElement>();
   return (
-    <section aria-labelledby="consent-title" className="flex flex-col gap-5">
+    <section
+      ref={ref}
+      aria-labelledby="consent-title"
+      tabIndex={-1}
+      className="flex flex-col gap-5 outline-none"
+    >
       <Heading
         id="consent-title"
         className={cn(
@@ -59,6 +69,11 @@ export function ConsentStep({
         <Button variant="ghost" onClick={onDecline} disabled={busy}>
           {t("consent.decline")}
         </Button>
+        {onSignOut && (
+          <Button variant="ghost" onClick={onSignOut} disabled={busy}>
+            {t("you.signOut")}
+          </Button>
+        )}
       </div>
     </section>
   );

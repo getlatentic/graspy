@@ -31,19 +31,29 @@ beforeEach(() => fetchWithSession.mockReset());
 
 describe("a learner's voice recordings", () => {
   it("are read with the consent and the kept recordings", async () => {
-    const overview = { consent: null, recordings: [], nextBefore: null };
+    const overview = {
+      consent: null,
+      recordings: [],
+      nextBefore: null,
+      nextBeforeId: null,
+    };
     answers(200, overview);
 
     await expect(api.getVoice(LEARNER)).resolves.toEqual(overview);
     expect(sent()).toMatchObject({ url: VOICE, method: "GET" });
   });
 
-  it("are paged by the time the last one was recorded", async () => {
-    answers(200, { consent: null, recordings: [], nextBefore: null });
+  it("are paged by where the last one shown was, its time and its id", async () => {
+    answers(200, {
+      consent: null,
+      recordings: [],
+      nextBefore: null,
+      nextBeforeId: null,
+    });
 
-    await api.getVoice(LEARNER, 1700);
+    await api.getVoice(LEARNER, { before: 1700, beforeId: "gvm_a b" });
 
-    expect(sent().url).toBe(`${VOICE}?before=1700`);
+    expect(sent().url).toBe(`${VOICE}?before=1700&beforeId=gvm_a%20b`);
   });
 
   it("are kept once a parent agrees, with the days and the fresh sign-in", async () => {

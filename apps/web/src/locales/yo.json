@@ -331,7 +331,7 @@
     "start": "Bẹ̀rẹ̀",
     "startHere": "Bẹ̀rẹ̀ níbí",
     "ok": "Ó dáa",
-    "note": "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò, lẹ́yìn náà ó ń pa á rẹ́, àfi tí òbí bá pa á mọ́.",
+    "note": "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò. Ní kété tí ó bá ti yẹ̀ ẹ́ wò, a óò pa ohùn náà rẹ́, àfi tí òbí bá pa á mọ́.",
     "loading": "Ń mú àwọn ẹ̀kọ́ rẹ wá…",
     "loadFailed": "Àwọn ẹ̀kọ́ rẹ kò ṣí.",
     "retry": "Tún gbìyànjú",
@@ -395,11 +395,16 @@
     "needed": "A kò tíì fọwọ́ sí i",
     "signIn": "Ìwọlé yẹn kò ṣiṣẹ́. Tún gbìyànjú.",
     "otherAccount": "Lo àkọọ́lẹ̀ Google tí o fi wọlé.",
-    "notice": "Ojú ìwé yìí ti pẹ́ jù. Tún ojú ìwé náà ṣí kí o sì tún gbìyànjú."
+    "notice": "Ojú ìwé yìí ti pẹ́ jù. Tún ojú ìwé náà ṣí kí o sì tún gbìyànjú.",
+    "browser": "Ṣí graspy nínú aṣàwákiri rẹ láti wọlé.",
+    "signedOut": "O kò wọlé níbí mọ́.",
+    "signInAgain": "Tún wọlé",
+    "notGoogle": "Wọlé pẹ̀lú Google láti fọwọ́ sí i.",
+    "notKept": "A kò tọ́jú rẹ̀. Tún gbìyànjú."
   },
   "voiceRecordings": {
     "title": "Àwọn ohùn tí a gbà sílẹ̀",
-    "off": "graspy ń pa gbogbo ohùn tí a gbà sílẹ̀ rẹ́ ní kété tí ó bá ti yẹ ìdáhùn wò.",
+    "off": "graspy ń pa gbogbo ohùn tí a gbà sílẹ̀ rẹ́ ní kété tí ó bá ti yẹ ìdáhùn wò. Àwọn ọ̀rọ̀ tí ó gbọ́ wà síbẹ̀.",
     "keep": "Pa àwọn ohùn tí a gbà sílẹ̀ mọ́",
     "keptFor": "A pa á mọ́ fún ọjọ́ {days}.",
     "keepFor": "Pa á mọ́ fún",
@@ -415,6 +420,10 @@
     "stopDelete": "Dẹ́kun kí o sì pa wọ́n rẹ́",
     "stopKeep": "Dẹ́kun, pa wọ́n mọ́ títí wọn yóò fi parí",
     "gone": "Ohùn yẹn ti lọ.",
-    "playFailed": "Ohùn yẹn kò ṣiṣẹ́. Tún gbìyànjú."
+    "playFailed": "Ohùn yẹn kò ṣiṣẹ́. Tún gbìyànjú.",
+    "notFound": "Akẹ́kọ̀ọ́ yìí kò sí lórí àkọọ́lẹ̀ rẹ.",
+    "playAt": "Tẹ́tí sí ohùn ti {when}",
+    "stopAt": "Dá ohùn ti {when} dúró",
+    "deleteAt": "Pa ohùn ti {when} rẹ́"
   }
 }

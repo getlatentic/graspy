@@ -8,13 +8,16 @@ import { KeepingCard } from "../components/keeping-card";
 import { ProblemNote } from "../components/problem-note";
 import { RecordingList } from "../components/recording-list";
 import { useLearners } from "../hooks/use-learners";
-import { useVoiceRecordings } from "../hooks/use-voice-recordings";
+import {
+  useVoiceRecordings,
+  type LoadProblem,
+} from "../hooks/use-voice-recordings";
 
 /** A learner's voice recordings, for their parent: whether graspy keeps them, and the ones kept. */
 export default function VoiceRecordingsPage() {
   const { learnerId } = useParams();
   if (!learnerId) return <Navigate to={LEARNERS_PAGE} replace />;
-  return <Recordings learner={learnerId} />;
+  return <Recordings key={learnerId} learner={learnerId} />;
 }
 
 function Recordings({ learner }: { learner: string }) {
@@ -51,7 +54,7 @@ function Recordings({ learner }: { learner: string }) {
           )}
         </>
       ) : (
-        <Loading failed={recordings.loadFailed} onRetry={recordings.load} />
+        <Loading problem={recordings.loadProblem} onRetry={recordings.load} />
       )}
       {recordings.failed && <ProblemNote>{t("learners.failed")}</ProblemNote>}
     </div>
@@ -59,14 +62,17 @@ function Recordings({ learner }: { learner: string }) {
 }
 
 function Loading({
-  failed,
+  problem,
   onRetry,
 }: {
-  failed: boolean;
+  problem: LoadProblem | null;
   onRetry: () => void;
 }) {
   const { t } = useI18n();
-  if (!failed) return <Spinner className="size-6 text-accent-ink" />;
+  if (!problem) return <Spinner className="size-6 text-accent-ink" />;
+  if (problem === "notFound") {
+    return <ProblemNote>{t("voiceRecordings.notFound")}</ProblemNote>;
+  }
   return (
     <div className="flex flex-col gap-3">
       <ProblemNote>{t("learners.loadFailed")}</ProblemNote>

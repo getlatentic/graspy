@@ -11,12 +11,14 @@ function Tile({
   face,
   label,
   note,
+  restoreKey,
   disabled,
   onClick,
 }: {
   face: ReactNode;
   label: string;
   note?: string;
+  restoreKey: string;
   disabled: boolean;
   onClick: () => void;
 }) {
@@ -25,6 +27,7 @@ function Tile({
       type="button"
       disabled={disabled}
       onClick={onClick}
+      data-restore-focus={restoreKey}
       className="group flex w-full flex-col items-center gap-3 rounded-3xl p-3 text-center transition hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60"
     >
       {face}
@@ -67,6 +70,7 @@ export function LearnerTile({
       }
       label={learner.name}
       note={inUse ? t("learners.inUse") : undefined}
+      restoreKey={`tile-${learner.id}`}
       disabled={disabled}
       onClick={onChoose}
     />
@@ -92,6 +96,7 @@ export function AddLearnerTile({
         </span>
       }
       label={t("learners.addTile")}
+      restoreKey="add-tile"
       disabled={disabled}
       onClick={onAdd}
     />

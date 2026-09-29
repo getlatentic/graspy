@@ -19,16 +19,20 @@ import {
   UID,
 } from "@/test/account-session";
 
-const { listLearners, agreeToService, signInAgain } = vi.hoisted(() => ({
-  listLearners: vi.fn(),
-  agreeToService: vi.fn(),
-  signInAgain: vi.fn(),
-}));
+const { listLearners, agreeToService, signInAgain, signOut } = vi.hoisted(
+  () => ({
+    listLearners: vi.fn(),
+    agreeToService: vi.fn(),
+    signInAgain: vi.fn(),
+    signOut: vi.fn(),
+  }),
+);
 vi.mock("@/lib/account/learners-api", () => ({ listLearners, agreeToService }));
 vi.mock("@/lib/account/sign-in", async (original) => ({
   ...(await original<typeof import("@/lib/account/sign-in")>()),
   prepareSignIn: () => undefined,
   signInAgain,
+  signOut,
 }));
 
 const { ServiceConsentGate } = await import("./service-consent-gate");
@@ -52,6 +56,7 @@ beforeEach(() => {
   window.localStorage.clear();
   signInAgain.mockResolvedValue("fresh-token");
   agreeToService.mockResolvedValue(AGREED);
+  signOut.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -179,5 +184,84 @@ describe("the pages of a learner in use", () => {
     gated();
 
     expect(await screen.findByText("the learner's pages")).toBeTruthy();
+  });
+});
+
+describe("a parent who cannot agree, in front of the gate", () => {
+  it("can sign out from the agree step, and is led to sign in", async () => {
+    signedInAs(ADA);
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    gated();
+    await screen.findByText(SERVICE_NOTICE);
+
+    fireEvent.click(screen.getByRole("button", { name: "you.signOut" }));
+
+    expect((await screen.findByTestId("elsewhere")).textContent).toBe(
+      "/app/sign-in",
+    );
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(pages()).toBeNull();
+  });
+
+  it("can sign out when the server cannot be asked", async () => {
+    signedInAs(ADA);
+    listLearners.mockRejectedValue(new Error("offline"));
+    gated();
+
+    fireEvent.click(await screen.findByRole("button", { name: "you.signOut" }));
+
+    expect((await screen.findByTestId("elsewhere")).textContent).toBe(
+      "/app/sign-in",
+    );
+    expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("is led to sign in again when Firebase no longer holds the sign-in", async () => {
+    signInAgain.mockRejectedValueOnce({ code: "graspy/not-signed-in" });
+    signedInAs(ADA);
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    gated();
+    await screen.findByText(SERVICE_NOTICE);
+
+    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
+
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "consent.signedOut",
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "consent.signInAgain" }),
+    );
+    expect((await screen.findByTestId("elsewhere")).textContent).toBe(
+      "/app/sign-in",
+    );
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(agreeToService).not.toHaveBeenCalled();
+  });
+
+  it("says in the browser to open graspy elsewhere when Google's window cannot open", async () => {
+    signInAgain.mockRejectedValueOnce({
+      code: "auth/operation-not-supported-in-this-environment",
+    });
+    signedInAs(ADA);
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    gated();
+    await screen.findByText(SERVICE_NOTICE);
+
+    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
+
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "consent.browser",
+    );
+  });
+
+  it("names what it waits for while the server is asked", () => {
+    signedInAs(ADA);
+    listLearners.mockReturnValue(new Promise(() => undefined));
+
+    gated();
+
+    expect(screen.getByRole("status").getAttribute("aria-label")).toBe(
+      "learners.opening",
+    );
   });
 });

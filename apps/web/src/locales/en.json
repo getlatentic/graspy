@@ -331,7 +331,7 @@
     "start": "Start",
     "startHere": "Start here",
     "ok": "OK",
-    "note": "graspy sends your voice to check your answers, then deletes it, unless a parent keeps it.",
+    "note": "graspy sends your voice to check your answers. Once marked, the recording is deleted, unless a parent keeps it.",
     "loading": "Getting your lessons…",
     "loadFailed": "Your lessons didn't load.",
     "retry": "Try again",
@@ -395,11 +395,16 @@
     "needed": "Not agreed yet",
     "signIn": "That sign-in didn't work. Try again.",
     "otherAccount": "Use the Google account you are signed in with.",
-    "notice": "This page is out of date. Reload it and try again."
+    "notice": "This page is out of date. Reload it and try again.",
+    "browser": "Open graspy in your browser to sign in.",
+    "signedOut": "You are not signed in here any more.",
+    "signInAgain": "Sign in again",
+    "notGoogle": "Sign in with Google to agree.",
+    "notKept": "That was not saved. Try again."
   },
   "voiceRecordings": {
     "title": "Voice recordings",
-    "off": "graspy deletes each recording as soon as it has marked the answer.",
+    "off": "graspy deletes each recording once it has marked the answer. The words it heard stay.",
     "keep": "Keep recordings",
     "keptFor": "Kept for {days} days.",
     "keepFor": "Keep for",
@@ -415,6 +420,10 @@
     "stopDelete": "Stop and delete them",
     "stopKeep": "Stop, keep them until they expire",
     "gone": "That recording is gone.",
-    "playFailed": "That recording didn't play. Try again."
+    "playFailed": "That recording didn't play. Try again.",
+    "notFound": "This learner is not on your account.",
+    "playAt": "Play the recording of {when}",
+    "stopAt": "Stop the recording of {when}",
+    "deleteAt": "Delete the recording of {when}"
   }
 }

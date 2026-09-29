@@ -165,3 +165,27 @@ describe("managing the account's learners", () => {
     ).toBeNull();
   });
 });
+
+describe("focus, for the keyboard and a screen reader", () => {
+  it("moves into the question when removing a learner, and back to the button after", async () => {
+    manage();
+    const grace = await rowOf("Grace");
+    const remove = within(grace).getByRole("button", {
+      name: "learners.remove",
+    });
+    remove.focus();
+    fireEvent.click(remove);
+
+    expect(document.activeElement).toBe(await screen.findByRole("alertdialog"));
+
+    fireEvent.click(screen.getByRole("button", { name: "learners.cancel" }));
+
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        within(screen.getByText("Grace").closest("li")!).getByRole("button", {
+          name: "learners.remove",
+        }),
+      ),
+    );
+  });
+});

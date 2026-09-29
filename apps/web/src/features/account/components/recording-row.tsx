@@ -22,6 +22,7 @@ export function RecordingRow({
   onDelete: () => void;
 }) {
   const { t, locale } = useI18n();
+  const when = whenOf(recording.recordedAt, locale);
   const details = [
     recording.lesson,
     recording.durationSeconds === null
@@ -32,9 +33,7 @@ export function RecordingRow({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 basis-full sm:flex-1 sm:basis-0">
-          <p className="font-medium text-ink">
-            {whenOf(recording.recordedAt, locale)}
-          </p>
+          <p className="font-medium text-ink">{when}</p>
           {details.length > 0 && (
             <p className="text-sm text-muted">{details.join(" · ")}</p>
           )}
@@ -43,6 +42,10 @@ export function RecordingRow({
           variant="secondary"
           size="sm"
           aria-pressed={playing}
+          aria-label={t(
+            playing ? "voiceRecordings.stopAt" : "voiceRecordings.playAt",
+            { when },
+          )}
           onClick={() => onPlay(!playing)}
         >
           {playing ? t("voiceRecordings.stop") : t("voiceRecordings.play")}
@@ -50,6 +53,7 @@ export function RecordingRow({
         <Button
           variant="secondary"
           size="sm"
+          aria-label={t("voiceRecordings.deleteAt", { when })}
           onClick={onDelete}
           disabled={busy}
         >

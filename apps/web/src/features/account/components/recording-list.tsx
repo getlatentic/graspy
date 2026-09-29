@@ -61,7 +61,12 @@ export function RecordingList({
           </Button>
         )}
         {!asking && (
-          <Button variant="secondary" size="sm" onClick={() => setAsking(true)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            data-restore-focus="delete-all"
+            onClick={() => setAsking(true)}
+          >
             {t("voiceRecordings.deleteAll")}
           </Button>
         )}

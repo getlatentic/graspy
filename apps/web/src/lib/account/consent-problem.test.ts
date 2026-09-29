@@ -12,6 +12,8 @@ describe("what a parent is told when agreeing did not go through", () => {
     [503, "sign_in_unchecked", "signIn"],
     [403, "sign_in_other_account", "otherAccount"],
     [400, "notice_unknown", "notice"],
+    [403, "sign_in_not_google", "notGoogle"],
+    [503, "consent_not_kept", "notKept"],
     [503, "consent_unavailable", "failed"],
     [404, "no_such_learner", "failed"],
   ])("%i %s is %s", (status, code, problem) => {
@@ -21,6 +23,20 @@ describe("what a parent is told when agreeing did not go through", () => {
   it("names signing in with another Google account than the one signed in", () => {
     expect(consentProblemOf({ code: "auth/user-mismatch" })).toBe(
       "otherAccount",
+    );
+  });
+
+  it("names an in-app browser, where Google's window cannot open", () => {
+    expect(
+      consentProblemOf({
+        code: "auth/operation-not-supported-in-this-environment",
+      }),
+    ).toBe("browser");
+  });
+
+  it("names Firebase holding nobody signed in", () => {
+    expect(consentProblemOf({ code: "graspy/not-signed-in" })).toBe(
+      "signedOut",
     );
   });
 

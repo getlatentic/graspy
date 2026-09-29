@@ -26,8 +26,15 @@ export interface Recording {
 export interface VoiceOverview {
   consent: RecordingsConsent | null;
   recordings: Recording[];
-  /** The `before` of the next page; null on the last. */
+  /** Where the next page starts, or null on the last: both go with the next request, as two
+   * recordings can share a millisecond. */
   nextBefore: number | null;
+  nextBeforeId: string | null;
+}
+
+export interface Cursor {
+  before: number;
+  beforeId: string;
 }
 
 /** What one call deleted; while `more`, the rest is deleted by asking again. */
@@ -41,9 +48,11 @@ const voiceUrl = (learner: string) =>
 
 export function getVoice(
   learner: string,
-  before?: number,
+  after?: Cursor,
 ): Promise<VoiceOverview> {
-  const query = before === undefined ? "" : `?before=${before}`;
+  const query = after
+    ? `?before=${after.before}&beforeId=${encodeURIComponent(after.beforeId)}`
+    : "";
   return call(`${voiceUrl(learner)}${query}`, "GET");
 }
 
