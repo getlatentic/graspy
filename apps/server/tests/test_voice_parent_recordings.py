@@ -110,7 +110,12 @@ async def test_before_any_consent_a_learner_has_none_and_no_recordings(app):
         overview = await http.get(voice(learner))
 
     assert overview.status_code == 200
-    assert overview.json() == {"consent": None, "recordings": [], "nextBefore": None}
+    assert overview.json() == {
+        "consent": None,
+        "recordings": [],
+        "nextBefore": None,
+        "nextBeforeId": None,
+    }
 
 
 async def test_a_parent_who_signed_in_just_now_agrees_and_it_is_kept_as_a_record(
@@ -147,6 +152,7 @@ async def test_a_parent_who_signed_in_just_now_agrees_and_it_is_kept_as_a_record
         ("stale", 401, "sign_in_stale"),
         ("undated", 401, "sign_in_stale"),
         ("other", 403, "sign_in_other_account"),
+        ("password", 403, "sign_in_not_google"),
         ("forged", 401, "sign_in_invalid"),
     ],
 )
@@ -279,6 +285,37 @@ async def test_recordings_are_listed_newest_first_a_page_at_a_time(app, env):
     assert second["nextBefore"] is None
 
 
+async def test_a_page_starts_after_its_cursor_and_before_zero_is_an_empty_page(
+    app, env
+):
+    async with client(app) as http:
+        learner = await parent(http)
+        await agree(http, learner)
+        samples = await recorded(http, env, learner, n=3)
+        env.DB.db.execute("UPDATE samples SET uploaded_at = 1000")
+        ordered = sorted(samples, reverse=True)
+        first = (await http.get(voice(learner), params={"limit": 2})).json()
+        second = (
+            await http.get(
+                voice(learner),
+                params={
+                    "limit": 2,
+                    "before": first["nextBefore"],
+                    "beforeId": first["nextBeforeId"],
+                },
+            )
+        ).json()
+        zero = (await http.get(voice(learner), params={"before": 0})).json()
+        huge = await http.get(voice(learner), params={"before": 2**60})
+
+    assert [one["id"] for one in first["recordings"]] == ordered[:2]
+    assert (first["nextBefore"], first["nextBeforeId"]) == (1000, ordered[1])
+    assert [one["id"] for one in second["recordings"]] == ordered[2:]
+    assert second["nextBefore"] is None and second["nextBeforeId"] is None
+    assert zero["recordings"] == []
+    assert huge.status_code == 422
+
+
 async def test_a_recording_past_its_time_is_neither_shown_nor_heard_and_the_sweep_deletes_it(
     app, env
 ):
@@ -338,7 +375,12 @@ async def test_stopping_and_deleting_removes_every_kept_recording(app, env):
         overview = (await http.get(voice(learner))).json()
 
     assert stopped.json() == {"deleted": 3, "more": False}
-    assert overview == {"consent": None, "recordings": [], "nextBefore": None}
+    assert overview == {
+        "consent": None,
+        "recordings": [],
+        "nextBefore": None,
+        "nextBeforeId": None,
+    }
     assert env.AUDIO.objects == {}
     assert (
         len(env.DB.rows("SELECT id FROM samples WHERE audio_deleted_at IS NOT NULL"))

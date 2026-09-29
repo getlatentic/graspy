@@ -4,6 +4,7 @@ signed-in session reaches these, whichever learner it names."""
 
 from __future__ import annotations
 
+import logging
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -42,6 +43,8 @@ from .listed_learners import (
     listed_with_consents,
 )
 from .routes import SessionResponse, learner_session
+
+logger = logging.getLogger(__name__)
 
 account_router = APIRouter(prefix="/account", tags=["account"])
 
@@ -138,15 +141,26 @@ async def add_learner(
         ) from None
     if body.consent is None:
         return listed(learner, {})
-    granted = await grant_consent(
-        request.app.state.voice.DB,
-        learner_key(uid, learner.id),
-        uid,
-        SERVICE,
-        body.consent.notice_version,
-        None,
-        now_ms(),
-    )
+    try:
+        granted = await grant_consent(
+            request.app.state.voice.DB,
+            learner_key(uid, learner.id),
+            uid,
+            SERVICE,
+            body.consent.notice_version,
+            None,
+            now_ms(),
+        )
+    except Exception:
+        # The learner lives in a Durable Object and the consent in D1, so they cannot be written
+        # together: the learner goes again, and a retry adds one learner, not two.
+        logger.exception(
+            "Consent for a new learner was not kept; the learner is removed"
+        )
+        await removed(keeping, uid, learner.id)
+        raise refusal(
+            503, "consent_not_kept", "The consent was not kept. Try again"
+        ) from None
     return listed(learner, {SERVICE: granted})
 
 

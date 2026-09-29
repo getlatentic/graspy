@@ -9,6 +9,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 MIGRATIONS = Path(__file__).parents[2] / "migrations"
+# Pyodide hands a Python integer past 2**52 to D1 as a JavaScript BigInt, which D1 refuses.
+MAX_BOUND_INTEGER = 2**52
 
 
 class Statement:
@@ -16,6 +18,9 @@ class Statement:
         self._connection, self._sql, self._values = connection, sql, values
 
     def bind(self, *values) -> Statement:
+        for value in values:
+            if isinstance(value, int) and abs(value) > MAX_BOUND_INTEGER:
+                raise OverflowError(f"D1 cannot bind the integer {value}")
         return Statement(self._connection, self._sql, values)
 
     def rows(self) -> list[dict]:

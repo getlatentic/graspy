@@ -20,6 +20,7 @@ from ..account.consents import (
 from ..account.directory import LearnerId, learner_key
 from ..account.learners import NoSuchLearner, learner_of
 from ..learner.time import now_ms
+from ..local_d1 import MAX_BOUND_INTEGER
 from ..voice.parent_recordings import (
     delete_kept,
     heard_recording,
@@ -68,6 +69,7 @@ class VoiceOverview(Wire):
     consent: ConsentState | None
     recordings: list[Recording]
     next_before: int | None
+    next_before_id: str | None
 
 
 class ConsentGrant(Wire):
@@ -90,13 +92,18 @@ async def voice_overview(
     env: EnvDep,
     learner: LearnerKey,
     limit: Annotated[int, Query(ge=1, le=200)] = 100,
-    before: Annotated[int | None, Query(ge=0)] = None,
+    before: Annotated[int | None, Query(ge=0, le=MAX_BOUND_INTEGER)] = None,
+    before_id: Annotated[str | None, Query(alias="beforeId", max_length=80)] = None,
 ) -> VoiceOverview:
-    recordings, next_before = await kept_recordings(env, learner, limit, before)
+    recordings, next_page = await kept_recordings(
+        env, learner, limit, before, before_id
+    )
+    next_before, next_before_id = next_page or (None, None)
     return VoiceOverview(
         consent=_consent(await active_consent(env.DB, learner, RECORDINGS)),
         recordings=[Recording(**one) for one in recordings],
         next_before=next_before,
+        next_before_id=next_before_id,
     )
 
 

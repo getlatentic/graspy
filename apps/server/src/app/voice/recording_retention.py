@@ -38,15 +38,21 @@ KEEP_SQL = (
     "(SELECT 1 FROM consents "
     f"WHERE learner_key = samples.owner_id AND scope = '{RECORDINGS}' AND revoked_at IS NULL)"
 )
+# The sweep names its indexes: with no statistics SQLite reads by state, which is every sample.
 ENDED_SQL = (
-    "SELECT s.id FROM samples s JOIN tutoring_turns t ON t.sample_id = s.id "
-    "WHERE s.state = 'ready' AND s.audio_deleted_at IS NULL AND s.expires_at IS NULL "
-    "AND (t.state = 'complete' OR (t.state = 'failed' AND t.attempts >= ?1)) LIMIT ?2"
+    "SELECT s.id FROM samples s INDEXED BY samples_audio_undecided WHERE s.state = 'ready' AND s.audio_deleted_at IS NULL "
+    "AND s.expires_at IS NULL AND EXISTS (SELECT 1 FROM tutoring_turns t "
+    "WHERE t.sample_id = s.id AND (t.state = 'complete' "
+    "OR (t.state = 'failed' AND t.attempts >= ?1))) LIMIT ?2"
 )
-DUE_SQL = (
-    f"SELECT id, audio_key FROM samples WHERE {PRESENT} AND "
-    "((expires_at IS NOT NULL AND expires_at <= ?1) "
-    "OR (expires_at IS NULL AND state = 'ready' AND uploaded_at < ?2)) LIMIT ?3"
+EXPIRED_SQL = (
+    "SELECT id, audio_key FROM samples INDEXED BY samples_audio_expiry WHERE audio_key IS NOT NULL "
+    "AND audio_deleted_at IS NULL AND expires_at IS NOT NULL AND expires_at <= ?1 LIMIT ?2"
+)
+UNSETTLED_SQL = (
+    "SELECT id, audio_key FROM samples INDEXED BY samples_audio_undecided WHERE audio_key IS NOT NULL "
+    "AND state = 'ready' AND audio_deleted_at IS NULL AND expires_at IS NULL "
+    "AND uploaded_at < ?1 LIMIT ?2"
 )
 MARK_DELETED_SQL = (
     "UPDATE samples SET audio_deleted_at = ?1 "
@@ -102,10 +108,11 @@ async def sweep_audio(env: Any, now_ms: int | None = None) -> int:
     for row in await rows_of(env, ENDED_SQL, MAX_TURN_ATTEMPTS, PAGE):
         await settle_audio(env, row["id"], now)
     deleted = 0
-    for _ in range(PAGES):
-        due = await rows_of(env, DUE_SQL, now, now - UNDECIDED_KEPT_MS, PAGE)
-        if not due:
-            break
-        await delete_audio(env, due)
-        deleted += len(due)
+    for sql, limit in ((EXPIRED_SQL, now), (UNSETTLED_SQL, now - UNDECIDED_KEPT_MS)):
+        for _ in range(PAGES):
+            due = await rows_of(env, sql, limit, PAGE)
+            if not due:
+                break
+            await delete_audio(env, due)
+            deleted += len(due)
     return deleted
