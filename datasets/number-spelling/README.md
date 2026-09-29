@@ -251,6 +251,27 @@ Much of the gain from v1 to v4 comes from widening the check, not from the promp
 
 Six lines on gpt-oss-20b on Bedrock with the first brief (`other-languages.jsonl`), run once. Pidgin came out right on all three. Yoruba did not: one line came back with number words but without tone marks or dots under letters, and two returned nothing because all 600 tokens went on reasoning. English only is enabled until this is tried properly on a larger Yoruba set.
 
+## How it sounds with prompt v4, and as the tutor deploys it
+
+The sound test was rerun with the replies of prompt v4 added as a variant (`gemma-4-e2b-v4`, 274 clips in `tts-roundtrip/results.jsonl`).
+
+Over all 75 referenced lines, v4 (0.917, 56 exact) and the earlier prompt (0.911, 55 exact) are the same within noise: v4 is better on 9 lines, worse on 4, level on 62 (mean difference +0.006, standard error 0.022). Its worst lines are ones the tutor never sends to the model: a phone number that lost its leading zero (`Call eight zero zero one two...`), `1-2-3` and `5/5`.
+
+The fair test is what a child would hear from the tutor. Of the 75 lines, 49 have a reading and go to the model; a reply is spoken only if it passes the check, otherwise the line is spoken as it was written. On those 49:
+
+| What is spoken | Mean score |
+|---|---|
+| the raw lines, never spelled | 0.78 |
+| gemma-4-e2b with prompt v1, replies that pass the check | 0.93 (43 of 49 accepted) |
+| **gemma-4-e2b with prompt v4, replies that pass the check** | **0.96 (48 of 49 accepted)** |
+| gemma-3-12b, reply as it came | 0.83 |
+| qwen3-32b, reply as it came | 0.83 |
+| llama-4-scout, reply as it came | 0.78 |
+| qwen3-next-80b, reply as it came | 0.77 |
+| gpt-oss-20b, reply as it came | 0.77 |
+
+One accepted v4 reply scored below its raw line: `Nigeria has over two hundred million people.` heard as `200 million` (0.80) against the raw `200,000,000` (1.00). That is the scorer, which reduces `200 million` and `200,000,000` differently, and not a Spitch fault.
+
 ## Reproducing
 
 `probe/` is a Worker that runs the same prompt and check. From `apps/tutor`, with `SPELLER_HOST` and the Bedrock key in a `.dev.vars` next to `probe/wrangler.jsonc`:
