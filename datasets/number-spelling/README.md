@@ -24,6 +24,7 @@ It was made to decide which lines graspy's tutor may trust the model with. The t
 lines.jsonl     one line per input: id, category, line
 results.jsonl   gpt-oss-20b: one row per line and host: the reply, latency, the automated check's verdict, a judgement
 results-gpt-oss-120b.jsonl   the same lines on gpt-oss-120b (Workers AI and Bedrock); judgements for replies that differ from 20b's
+results-qwen.jsonl   the same lines on four Qwen models
 probe/          the small Worker that produced the replies (see below)
 ```
 
@@ -79,6 +80,23 @@ The same 125 lines were run on `gpt-oss-120b` on both hosts (`results-gpt-oss-12
 | 120b, Bedrock | 34 | 25 | 4 | 0.9 s |
 
 The 57 lines code can check were passed by 120b too. The bigger model is better at some things (it writes `one half` for `1/2`, `fifty percent` for `50%`, `nineteen sixty` for a year, `Nine nines`) and worse at others (it glued letters to numbers, `Afour`, `Bseven`, `HtwoO`, `xtwo`, and `1st` became `onest` once). It is not a clear improvement on this set, and on Workers AI it is four times slower. The failures differ by model and host and are not consistent from line to line, which is the reason a spelling on a line code cannot check should not be trusted, whichever model wrote it.
+
+## Qwen
+
+Four Qwen models on the 120 lines with digits (`results-qwen.jsonl`; three on Bedrock, one on Workers AI), with the same prompt and the same automated check. The 63 lines code cannot check are judged as above. Latency is from one run.
+
+| Model | Checkable lines passed (of 57) | good | awkward | bad | median / slowest call |
+|---|---|---|---|---|---|
+| gpt-oss-20b (for comparison) | 57 | 32 | 26 | 5 | 0.5 s / 1.5 s (stalls of 10 s or more seen) |
+| qwen3-next-80b-a3b-instruct, Bedrock | 57 | 42 | 16 | 5 | 0.7 s / 1.3 s |
+| qwen3-235b-a22b-2507, Bedrock | 55 | 43 | 16 | 4 | 1.1 s / 6.3 s |
+| qwen3-32b, Bedrock | 53 (see below) | 48 | 13 | 2 | 0.6 s / 0.9 s |
+| qwen3-30b-a3b-fp8, Workers AI | 57 | 27 | 23 | 13 | 2.4 s / 7.9 s |
+
+- `qwen3-next-80b-a3b-instruct` follows the instruction exactly on every checkable line and does markedly better than gpt-oss on the others: `10:15` becomes `ten fifteen`, `7:05` becomes `seven oh five`, `80%` becomes `eighty percent`, `1/2` becomes `one-half`, `Class 3B` becomes `Class three B`, and no reply took over 1.3 s. It still glues some letters to numbers (`Utwelve`, `Nseven hundred`) and once left `two:30`.
+- `qwen3-32b` reads best aloud but does not do only what it was told: it also turns `+` and `=` into `plus` and `equals` (`3 + 4 = 7` becomes `Three plus four equals seven`) and `21 July` into `twenty-first July`. The automated check rejects those four lines for changing words other than the numbers, though they are better to say aloud; they are judged `good` here. It once dropped a leading zero from a phone number and once dropped the letter from `Q3`.
+- `qwen3-235b-a22b-2507` left digits in two replies and once copied the prompt text into its answer.
+- The Workers AI Qwen (`qwen3-30b-a3b-fp8`) returned nothing for 6 of the 120 lines and was the slowest.
 
 ## Reproducing
 
