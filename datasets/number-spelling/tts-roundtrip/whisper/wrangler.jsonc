@@ -1,0 +1,6 @@
+{
+  "name": "whisper-probe",
+  "main": "index.ts",
+  "compatibility_date": "2026-09-05",
+  "ai": { "binding": "AI" }
+}

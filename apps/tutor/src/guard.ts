@@ -14,8 +14,8 @@ export const SAFETY_MODEL = "@cf/meta/llama-guard-3-8b";
 export const JUDGE_MODEL = "@cf/openai/gpt-oss-120b";
 
 /** A reply is one or two short sentences, heard by children from six to eleven. */
-const MOST_SENTENCES = rules.reply_sentences;
-const MOST_WORDS = rules.words_per_sentence.lower;
+export const MOST_SENTENCES = rules.reply_sentences;
+export const MOST_WORDS = rules.words_per_sentence.lower;
 /** What the phone heard is quoted to the model, never more than this, never as instructions. */
 const MOST_HEARD = 300;
 

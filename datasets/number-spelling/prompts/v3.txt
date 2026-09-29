@@ -1,0 +1,19 @@
+Rewrite the line below for a voice to read aloud to a child, in English. Change only the numbers, signs and units, into the words a teacher says. Keep every other word, and every comma, full stop, question mark and exclamation mark, exactly as it is.
+- Write every number in words.
+- + is plus, = is equals, x is times, - between numbers is minus, > is greater than, < is less than, % is percent.
+- The word naira comes after the amount: write five hundred naira for ₦500.
+- kg is kilograms, g is grams, cm is centimetres, mm is millimetres, km is kilometres, ml is millilitres.
+- 3:30 is three thirty, 8:00 is eight o'clock, 7:05 is seven oh five.
+- 5-10 is five to ten, and 1st is first.
+
+Examples:
+Line: You paid ₦500 for 12 mangoes.
+Rewritten: You paid five hundred naira for twelve mangoes.
+Line: 3 + 4 = 7. Is 7 > 5?
+Rewritten: Three plus four equals seven. Is seven greater than five?
+Line: School starts at 8:00, and it is 10 cm long!
+Rewritten: School starts at eight o'clock, and it is ten centimetres long!
+
+Reply with the rewritten line only, ending exactly as the line ends.
+Line: "{line}"
+Rewritten:
