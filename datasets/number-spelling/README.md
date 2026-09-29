@@ -36,6 +36,14 @@ tts-roundtrip/  how each version of each line sounds: Spitch speaks it, Whisper 
 
 Fields of `results.jsonl`: `id`, `category`, `host` (`workers-ai` or `bedrock`), `line`, `reply`, `latency_ms`, `automated` (`pass`, `uncheckable`, or `no_digits`), `judged` (`good`, `awkward`, `bad`), `note`, `judged_by`.
 
+## Sourcing: where the lines, the readings and the labels came from
+
+- **The lines** were written by Claude Code (an Anthropic model) in one sitting on 2026-09-29, at the owner's request, in English, in the voice of a Nigerian primary-school teacher speaking to a child. They were not sampled from the tutor's output, from lesson plans, from children, or from a published corpus.
+- **Why these twelve categories.** The lessons that exist today teach counting, sums and times tables, and the tutor's own logs showed its teacher model writing lines such as "Well done! You counted 1, 2, 3, 4, 5." with digits in them; that one line is in the set as the model wrote it (`counting-01`), and the counting, sums and times-table lines follow its style. Time, money, measurements, fractions, years and the rest are not in a lesson yet: they were added because a voice teacher will need them, so how often a category will occur in real lines is not known. There are ten lines to a category (five in the control set with no digits), so category shares say nothing about frequency.
+- **The readings** used to score the sound test (`tts-roundtrip/references.jsonl`) were also written by Claude Code, one or two acceptable readings per line, from what a Nigerian primary teacher would say as Claude understands it. No native speaker has reviewed them.
+- **The labels** on the lines code could not check are Claude Code's too (see Method).
+- **What would make it stronger:** lines sampled from the tutor's real output on staging, readings reviewed by a Nigerian teacher, and a second, human, reviewer for the labels.
+
 ## Method
 
 The prompt is the tutor's own (`spellingBrief` in `apps/tutor/src/spell.ts`): rewrite the line so every number written in digits is written in words, change nothing else, reply with the line only. Temperature 0.
@@ -283,7 +291,7 @@ curl localhost:8797 -d '{"lines":[{"id":"x","line":"You said 45."}]}'
 
 ## Limits
 
-- English only, and lines written for this test, not taken from lessons.
+- English only, and lines written for this test, not taken from lessons (see Sourcing).
 - The two hosts serve the same model, so they are one system twice, not two systems.
 - Judgements are by one model reader, unchecked by a person, and about how a line reads, not how it sounds when spoken.
 - Licence and where to publish are the owner's to settle.
