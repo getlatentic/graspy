@@ -11,8 +11,8 @@
   "observability": { "enabled": true },
   "ai": { "binding": "AI" },
   // workers-ai or bedrock (with google.gemma-4-e2b, or SPELLER_MODEL). Bedrock also needs the secret
-  // AWS_BEARER_TOKEN_BEDROCK. Staging runs Bedrock; production stays on Workers AI until it is moved on purpose.
-  "vars": { "SPELLER_HOST": "workers-ai" },
+  // AWS_BEARER_TOKEN_BEDROCK, which is set as a secret on graspy-tutor and graspy-tutor-staging.
+  "vars": { "SPELLER_HOST": "bedrock" },
   "durable_objects": {
     "bindings": [{ "name": "Learner", "class_name": "Learner" }]
   },
