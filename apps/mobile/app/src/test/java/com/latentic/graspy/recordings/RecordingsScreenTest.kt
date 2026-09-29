@@ -98,7 +98,7 @@ class RecordingsScreenTest {
         compose.onNode(isToggleable()).performClick()
 
         compose.onNodeWithText(recordingsNotice(30)).assertIsDisplayed()
-        compose.onNodeWithText("Agree with Google").assertIsDisplayed()
+        compose.onNodeWithText("I agree").assertIsDisplayed()
         compose.onNodeWithText("365 days").performClick()
         compose.onNodeWithText(recordingsNotice(365)).assertIsDisplayed()
         assertTrue(api.calls.none { it.startsWith("keep") })
@@ -110,7 +110,7 @@ class RecordingsScreenTest {
         compose.onNode(isToggleable()).performClick()
         compose.onNodeWithText("90 days").performClick()
 
-        compose.onNodeWithText("Agree with Google").performClick()
+        compose.onNodeWithText("I agree").performClick()
 
         compose.waitUntilText("No recordings yet.")
         assertTrue(api.calls.contains("keep:$LEARNER:1:90:${FakeConfirmation.TOKEN}"))

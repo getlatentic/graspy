@@ -16,6 +16,7 @@ import { I18nProvider } from "@/lib/i18n-provider";
 import { installAppWorker } from "@/lib/app-worker";
 import { listenForStaleChunks } from "@/app/page-chunks";
 import { finishPendingWipe } from "@/lib/wipe-pending";
+import { warmApi } from "@/lib/warm-api";
 import { router } from "./routes";
 
 const queryClient = new QueryClient({
@@ -24,6 +25,7 @@ const queryClient = new QueryClient({
 
 listenForStaleChunks();
 installAppWorker();
+warmApi();
 
 function render(): void {
   createRoot(document.getElementById("root")!).render(
