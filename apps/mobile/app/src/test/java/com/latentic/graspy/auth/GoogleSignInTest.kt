@@ -4,6 +4,8 @@ import android.app.Activity
 import androidx.credentials.Credential
 import androidx.credentials.CredentialOption
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import androidx.credentials.exceptions.GetCredentialUnsupportedException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -26,6 +28,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 /** A phone without a Google account signs in on Google's own page in Chrome, and never adds one to the phone. */
 @RunWith(RobolectricTestRunner::class)
@@ -40,14 +43,12 @@ class GoogleSignInTest {
     private val pages = mutableListOf<Pair<Activity, FederatedAuthProvider>>()
     private var page: Task<AuthResult> = Tasks.forResult(null)
 
-    private var interrupted: Task<AuthResult>? = null
     private val phoneSignIns = mutableListOf<String>()
 
     private val session = object : FirebaseSession(
         FirebaseAuth.getInstance(demoFirebase()),
         clearCredentials = {},
         signInWithCredential = { phoneSignIns += it.provider; Tasks.forResult(null) },
-        pendingBrowserSignIn = { interrupted },
         signInWithProvider = { activity, provider -> pages += activity to provider; page },
     ) {
         override val userId = UID
@@ -66,6 +67,17 @@ class GoogleSignInTest {
 
         assertEquals("the sheet was asked for the last account, then for any", 2, sheets.size)
         assertEquals(listOf(GoogleAuthProvider.PROVIDER_ID), pages.map { (it.second as OAuthProvider).providerId })
+    }
+
+    @Test
+    fun `a phone with no Credential Manager to offer an account signs in on Google's page`() {
+        for (missing in listOf(GetCredentialProviderConfigurationException(), GetCredentialUnsupportedException())) {
+            pages.clear()
+            phone = { throw missing }
+
+            assertEquals(SignInOutcome.Succeeded(UID), signIn())
+            assertEquals(missing.toString(), 1, pages.size)
+        }
     }
 
     @Test
@@ -113,35 +125,26 @@ class GoogleSignInTest {
         }
     }
 
-    @Test
-    fun `a sign-in the system stopped the app during is finished first, without the sheet or the page`() {
-        interrupted = Tasks.forResult(null)
-
-        assertEquals(SignInOutcome.Succeeded(UID), signIn())
-
-        assertEquals(emptyList<Any>(), sheets)
-        assertEquals(emptyList<Any>(), pages)
-    }
 
     @Test
-    fun `an interrupted sign-in is finished once, though Firebase still offers it`() {
-        interrupted = Tasks.forResult(null)
-        signIn()
+    fun `Google's page asks which account rather than taking the one Chrome is signed in to`() {
+        val auth = FirebaseAuth.getInstance(demoFirebase())
+        val opened = FirebaseSession(auth, signInWithProvider = { activity, provider ->
+            auth.startActivityForSignInWithProvider(activity, provider)
+            Tasks.forResult(null)
+        })
 
-        signIn()
+        runBlocking { opened.signInInBrowser(activity) }
 
-        assertEquals(1, pages.size)
-    }
-
-    @Test
-    fun `an interrupted sign-in that failed leaves the sign-in asked for now to go ahead`() {
-        interrupted = Tasks.forException(FirebaseAuthException("ERROR_INVALID_CREDENTIAL", "The credential has expired"))
-
-        assertEquals(SignInOutcome.Succeeded(UID), signIn())
-        assertEquals(1, pages.size)
+        val page = shadowOf(activity).nextStartedActivity
+        assertEquals("select_account", page.getBundleExtra(CUSTOM_PARAMETERS)?.getString("prompt"))
     }
 
     private companion object {
+        // The extra Firebase hands Google's page its parameters in.
+        const val CUSTOM_PARAMETERS = "com.google.firebase.auth.KEY_PROVIDER_CUSTOM_PARAMS"
+
+
         /** Shaped as Google's: the sheet reads the token, and Firebase, faked here, would check its signature. */
         val GOOGLE_ID_TOKEN = listOf("""{"alg":"RS256"}""", """{"sub":"1","email":"parent@example.com"}""", "signature")
             .joinToString(".") { Base64.getUrlEncoder().withoutPadding().encodeToString(it.toByteArray()) }

@@ -22,13 +22,9 @@ open class FirebaseSession(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val clearCredentials: suspend (Context) -> Unit = ::clearCredentialState,
     private val signInWithCredential: (AuthCredential) -> Task<AuthResult> = auth::signInWithCredential,
-    private val pendingBrowserSignIn: () -> Task<AuthResult>? = { auth.pendingAuthResult },
     private val signInWithProvider: (Activity, FederatedAuthProvider) -> Task<AuthResult> =
         auth::startActivityForSignInWithProvider,
 ) {
-    // Firebase offers the same interrupted sign-in for an hour, so one already finished is not finished again.
-    private var finishedBrowserSignIn: Task<AuthResult>? = null
-
     open val userId: String? get() = auth.currentUser?.uid
     val email: String? get() = auth.currentUser?.email
 
@@ -50,17 +46,6 @@ open class FirebaseSession(
             .addCustomParameter("prompt", "select_account")
             .build()
         withContext(NonCancellable) { signInWithProvider(activity, google).await() }
-    }
-
-    /**
-     * A browser sign-in the system stopped the app during, which Firebase takes up again when it next starts, is
-     * finished here: true once it is, false when there is none. Waited out as [signInWithGoogle] is.
-     */
-    suspend fun finishInterruptedBrowserSignIn(): Boolean {
-        val pending = pendingBrowserSignIn()?.takeIf { it !== finishedBrowserSignIn } ?: return false
-        finishedBrowserSignIn = pending
-        withContext(NonCancellable) { pending.await() }
-        return true
     }
 
     /** At once; the Google account the sign-in used is forgotten apart from it, by [forgetGoogleAccount]. */

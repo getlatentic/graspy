@@ -1,7 +1,6 @@
 package com.latentic.graspy.auth
 
 import android.app.Activity
-import android.util.Log
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CredentialOption
@@ -9,6 +8,8 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import androidx.credentials.exceptions.GetCredentialUnsupportedException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -37,14 +38,13 @@ class GoogleSignIn(
 ) : GoogleAccountSheet {
     override suspend fun signIn(activity: Activity, askWhichAccount: Boolean): SignInOutcome {
         if (AuthEmulator.enabled) return emulatorSignIn()
-        if (interruptedSignInFinished()) return succeeded()
         for (option in signInOptions(serverClientId, askWhichAccount)) {
             onPhone(activity, option)?.let { return it }
         }
         return inBrowser(activity)
     }
 
-    /** Null when the phone has no Google account for [option]. */
+    /** Null when the phone has no Google account for [option], or no Credential Manager to offer one. */
     private suspend fun onPhone(activity: Activity, option: CredentialOption): SignInOutcome? = try {
         val credential = phoneAccount(activity, option)
         if (credential !is CustomCredential ||
@@ -60,6 +60,10 @@ class GoogleSignIn(
     } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (_: NoCredentialException) {
+        null
+    } catch (_: GetCredentialProviderConfigurationException) {
+        null
+    } catch (_: GetCredentialUnsupportedException) {
         null
     } catch (failure: GetCredentialException) {
         SignInOutcome.Failed(failure.message ?: "could not read a Google credential")
@@ -81,16 +85,6 @@ class GoogleSignIn(
         SignInOutcome.Failed(failure.message ?: "Google's sign-in page failed")
     }
 
-    /** One that failed, or ended in a closed tab, leaves the sign-in asked for now to go ahead. */
-    private suspend fun interruptedSignInFinished(): Boolean = try {
-        session.finishInterruptedBrowserSignIn()
-    } catch (cancelled: CancellationException) {
-        throw cancelled
-    } catch (failure: Exception) {
-        Log.w(TAG, "The sign-in Chrome was left with did not finish", failure)
-        false
-    }
-
     private suspend fun emulatorSignIn(): SignInOutcome = try {
         session.signInWithGoogle(AuthEmulator.GOOGLE_ACCOUNT)
         succeeded()
@@ -103,8 +97,6 @@ class GoogleSignIn(
     private fun succeeded() = SignInOutcome.Succeeded(session.userId.orEmpty())
 
     private companion object {
-        const val TAG = "GraspySignIn"
-
         // Firebase's code when the Chrome tab is closed before signing in.
         const val TAB_CLOSED = "ERROR_WEB_CONTEXT_CANCELED"
     }
