@@ -2,6 +2,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
+import { router } from "@/routes";
 import { SiteFooter } from "@/features/landing/components/site-chrome";
 import { PRIVACY_SECTIONS } from "../privacy-content";
 import PrivacyPage from "./privacy-page";
@@ -20,6 +21,7 @@ describe("the privacy policy", () => {
       screen.getByRole("heading", { level: 1, name: "Privacy policy" }),
     ).toBeTruthy();
     expect(screen.getByText(/^Updated \d/)).toBeTruthy();
+    expect(document.title).toBe("Privacy policy — graspy");
     const titles = screen
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent);
@@ -33,6 +35,12 @@ describe("the privacy policy", () => {
       .getAllByRole("link")
       .filter((link) => link.getAttribute("href")?.startsWith("mailto:"));
     expect(mail.length).toBeGreaterThan(0);
+  });
+
+  it("is a route of the site", () => {
+    const paths = router.routes[0]?.children?.map((route) => route.path);
+
+    expect(paths).toContain("/privacy");
   });
 
   it("is linked from the site footer", () => {

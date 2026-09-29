@@ -35,10 +35,11 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     body: (
       <ul>
         <li>
-          <strong>Your Google account.</strong> Signing in uses Google. We keep
-          its account id, and its name only to name a first learner. Your email
-          address stays with Google and on your device; it is not sent to our
-          servers.
+          <strong>Your Google account.</strong> Signing in uses Google, which
+          tells our servers the account&rsquo;s id, name and email address. We
+          keep the id, and the name only to name a first learner. We
+          don&rsquo;t store the email address, but it stays in graspy&rsquo;s
+          Google sign-in records and on your device.
         </li>
         <li>
           <strong>Each learner.</strong> A name, country, language, class or
@@ -47,7 +48,8 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         </li>
         <li>
           <strong>Tutor chats.</strong> What a learner types to the tutor, its
-          replies, and a short summary that helps it remember.
+          replies, and a short summary that helps it remember, including what
+          the child says about themselves.
         </li>
         <li>
           <strong>Voice.</strong> In voice lessons, a recording of what the
@@ -55,9 +57,13 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           while a learner is answering, and only after they allow it.
         </li>
         <li>
-          <strong>On the web without signing in.</strong> A random device id and
-          a hash of the browser&rsquo;s fingerprint, so the learner&rsquo;s
-          progress stays with that browser.
+          <strong>On the web without signing in.</strong> A random device id
+          keeps the learner&rsquo;s progress with that browser. We also store a
+          hash of the browser&rsquo;s fingerprint.
+        </li>
+        <li>
+          <strong>Technical data.</strong> Our servers see the IP address of
+          each request, to limit abuse, and Cloudflare may keep request logs.
         </li>
       </ul>
     ),
@@ -96,14 +102,17 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           <strong>Google</strong> confirms who you are when you sign in.
         </li>
         <li>
-          <strong>Cloudflare</strong> hosts graspy and stores its data, and runs
-          some of the models that mark answers and check replies are safe.
+          <strong>Cloudflare</strong> hosts graspy and stores its data. Its AI
+          models may listen to a recording to tell what language it is in, read
+          the transcript to mark an answer, write the teacher&rsquo;s reply, and
+          check that reply is safe.
         </li>
         <li>
           <strong>Amazon Web Services</strong> (Bedrock, in the United States)
-          runs the tutor and writes lessons. It receives what the learner types,
-          their country, language and class, and notes on their progress. It
-          does not receive the learner&rsquo;s saved name.
+          runs the tutor and writes lessons. It receives what the learner types
+          and the conversation so far with its summary, their country, language
+          and class, the subject and topic, and how they have done on practice.
+          It does not receive the learner&rsquo;s saved name.
         </li>
         <li>
           <strong>Intron</strong> turns a child&rsquo;s recording into text.{" "}
@@ -120,7 +129,9 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         Until you remove the learner or the account. That includes recordings
         and transcripts. Lesson copies expire after 180 days. On Android, chats
         and recordings also stay on the phone until you sign out or remove the
-        learner there. The Android app is excluded from cloud backups.
+        learner there. On the web, chats and offline copies stay in the browser
+        until you sign out, or for good if you never signed in. The Android app
+        is excluded from cloud backups.
       </p>
     ),
   },
@@ -129,12 +140,16 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     body: (
       <ul>
         <li>
-          In the app, <strong>remove a learner</strong> to delete their chats,
-          progress, plan, recordings and transcripts from our servers.{" "}
-          <strong>Delete account</strong> does this for every learner.
+          In the app, use <strong>Remove</strong> on a learner to delete their
+          chats, progress, plan, recordings and transcripts from our servers.{" "}
+          <strong>Delete account</strong> does this for every learner on the
+          account. What a phone or browser learned before anyone signed in is
+          kept separately: email us to delete it.
         </li>
         <li>
-          Your Google account stays with Google. Manage it at{" "}
+          Deleting the account does not delete graspy&rsquo;s Google sign-in
+          record of it (its email and name); email us to have that removed.
+          Manage the Google account itself at{" "}
           <a
             href="https://myaccount.google.com"
             className="font-medium text-accent-ink underline underline-offset-4"
@@ -161,8 +176,9 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     body: (
       <p>
         Everything travels over HTTPS. The voice teacher&rsquo;s replies are
-        checked for safety, and it is told not to ask for personal details.
-        Please tell children not to type any into questions.
+        checked for safety, and a second model rejects any line that asks for
+        personal details. The typed tutor has no such check, so please tell
+        children not to type any into questions.
       </p>
     ),
   },

@@ -8,6 +8,7 @@ import { PRIVACY_SECTIONS, PRIVACY_UPDATED } from "../privacy-content";
 export default function PrivacyPage() {
   return (
     <div className="min-h-dvh bg-surface text-ink">
+      <title>Privacy policy — graspy</title>
       <header className={cn(PAGE, "flex h-16 items-center")}>
         <Link to="/" aria-label="graspy home">
           <Logo />
