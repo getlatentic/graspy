@@ -1,5 +1,6 @@
 package com.latentic.graspy.auth
 
+import android.app.Activity
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -9,9 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-enum class SignInProblem { NO_GOOGLE_ACCOUNT, FAILED }
-
-data class SignInState(val busy: Boolean = false, val problem: SignInProblem? = null)
+data class SignInState(val busy: Boolean = false, val failed: Boolean = false)
 
 /** Signing in opens "Who's learning?" once Google and graspy have both answered. */
 class SignInViewModel(application: Application) : AndroidViewModel(application) {
@@ -20,19 +19,19 @@ class SignInViewModel(application: Application) : AndroidViewModel(application) 
 
     val state = mutableState.asStateFlow()
 
-    fun signIn() {
+    /** [activity] shows Google's account sheet or its sign-in page; it is used for this call only, never kept. */
+    fun signIn(activity: Activity) {
         if (mutableState.value.busy) return
         mutableState.value = SignInState(busy = true)
         viewModelScope.launch {
-            mutableState.value = SignInState(problem = problemOf(entry.signIn()))
+            mutableState.value = SignInState(failed = failed(entry.signIn(activity)))
         }
     }
 
-    /** Null when the learner closed the account sheet, which needs no message. */
-    private fun problemOf(outcome: SignInOutcome): SignInProblem? = when (outcome) {
-        is SignInOutcome.Succeeded, SignInOutcome.Cancelled -> null
-        SignInOutcome.NoAccountAvailable -> SignInProblem.NO_GOOGLE_ACCOUNT
-        is SignInOutcome.Failed -> SignInProblem.FAILED.also { Log.w(TAG, "Signing in failed: ${outcome.reason}") }
+    /** Closing the account sheet or Google's page needs no message. */
+    private fun failed(outcome: SignInOutcome): Boolean = when (outcome) {
+        is SignInOutcome.Succeeded, SignInOutcome.Cancelled -> false
+        is SignInOutcome.Failed -> true.also { Log.w(TAG, "Signing in failed: ${outcome.reason}") }
     }
 
     private companion object {

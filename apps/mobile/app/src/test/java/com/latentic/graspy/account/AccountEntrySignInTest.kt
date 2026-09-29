@@ -1,6 +1,5 @@
 package com.latentic.graspy.account
 
-import com.latentic.graspy.auth.GoogleAccountSheet
 import com.latentic.graspy.auth.SignInOutcome
 import com.latentic.graspy.localization.LearnerProfileStore
 import java.util.concurrent.CountDownLatch
@@ -31,6 +30,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AccountEntrySignInTest {
     private val context = context()
+    private val activity = hostActivity()
     private val database = inMemoryDatabase()
     private val accounts = accountStore(null)
     private val sessions = heldSessions(accounts)
@@ -42,7 +42,7 @@ class AccountEntrySignInTest {
 
     /** For each sign-in, whether the sheet was told to ask which account, and how many forgets came before it. */
     private val sheetAsked = mutableListOf<Pair<Boolean, Int>>()
-    private val sheet = GoogleAccountSheet { askWhichAccount ->
+    private val sheet: suspend (Boolean) -> SignInOutcome = { askWhichAccount ->
         sheetAsked += askWhichAccount to google.forgotten.size
         SignInOutcome.Cancelled
     }
@@ -57,7 +57,7 @@ class AccountEntrySignInTest {
         entry().signOut()
         google.failing = false
 
-        entry().signIn()
+        entry().signIn(activity)
 
         assertEquals(listOf(false to 1), sheetAsked)
         assertEquals(setOf("signing_in"), signOutPending().keys)
@@ -69,7 +69,7 @@ class AccountEntrySignInTest {
         google.failing = true
         entry().signOut()
 
-        entry().signIn()
+        entry().signIn(activity)
 
         assertEquals(listOf(true to 0), sheetAsked)
         assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
@@ -77,14 +77,14 @@ class AccountEntrySignInTest {
 
     @Test
     fun `a sign-in with nothing left to forget lets Google offer the last account`() = runBlocking {
-        entry().signIn()
+        entry().signIn(activity)
 
         assertEquals(listOf(false to 0), sheetAsked)
     }
 
     @Test
     fun `a sign-in graspy does not take forgets the Google account it used`() = runBlocking {
-        entry { SignInOutcome.Succeeded(UID) }.signIn()
+        entry { SignInOutcome.Succeeded(UID) }.signIn(activity)
 
         assertEquals(1, google.forgotten.size)
         assertEquals(setOf("signing_in"), signOutPending().keys)
@@ -94,14 +94,14 @@ class AccountEntrySignInTest {
     fun `a sign-in graspy does not take marks a Google account it could not forget, for the next sign-in`() = runBlocking {
         google.failing = true
 
-        entry { SignInOutcome.Succeeded(UID) }.signIn()
+        entry { SignInOutcome.Succeeded(UID) }.signIn(activity)
 
         assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
     }
 
     @Test
     fun `a sign-in graspy does not take is undone at the next start, though Firebase's sign-out never reached the disk`() = runBlocking {
-        entry { firebase.uid = UID; SignInOutcome.Succeeded(UID) }.signIn()
+        entry { firebase.uid = UID; SignInOutcome.Succeeded(UID) }.signIn(activity)
         firebase.uid = UID
 
         start()
@@ -112,7 +112,7 @@ class AccountEntrySignInTest {
 
     @Test
     fun `a sign-in that fails after a Google account was chosen forgets it`() = runBlocking {
-        entry { SignInOutcome.Failed("Firebase refused the credential") }.signIn()
+        entry { SignInOutcome.Failed("Firebase refused the credential") }.signIn(activity)
 
         assertEquals(1, google.forgotten.size)
         assertEquals(setOf("signing_in"), signOutPending().keys)
@@ -122,7 +122,7 @@ class AccountEntrySignInTest {
     fun `a failed sign-in marks a Google account it could not forget, for the next sign-in`() = runBlocking {
         google.failing = true
 
-        entry { SignInOutcome.Failed("Firebase refused the credential") }.signIn()
+        entry { SignInOutcome.Failed("Firebase refused the credential") }.signIn(activity)
 
         assertEquals(setOf("google_account", "signing_in"), signOutPending().keys)
     }
@@ -133,7 +133,7 @@ class AccountEntrySignInTest {
         val atSheet = CompletableDeferred<Unit>()
         val left = entry { atSheet.complete(Unit); awaitCancellation() }
 
-        val signingIn = launch { left.signIn() }
+        val signingIn = launch { left.signIn(activity) }
         atSheet.await()
         signingIn.cancelAndJoin()
 
@@ -166,10 +166,10 @@ class AccountEntrySignInTest {
                 awaitCancellation()
             }
         }
-        val first = launch(Dispatchers.Default) { entry.signIn() }
+        val first = launch(Dispatchers.Default) { entry.signIn(activity) }
         atFirstSheet.await()
         first.cancel()
-        val second = launch(Dispatchers.Default) { entry.signIn() }
+        val second = launch(Dispatchers.Default) { entry.signIn(activity) }
 
         firebaseFinishes.complete(Unit)
         val (_, forgetsBefore) = secondAsked.await()
@@ -182,7 +182,7 @@ class AccountEntrySignInTest {
 
     @Test
     fun `a Google task cancelled while the sign-in runs fails it, and the Google account is forgotten`() = runBlocking {
-        val outcome = entry { throw CancellationException("A Play services task was cancelled") }.signIn()
+        val outcome = entry { throw CancellationException("A Play services task was cancelled") }.signIn(activity)
 
         assertTrue(outcome.toString(), outcome is SignInOutcome.Failed)
         assertEquals(listOf<Account?>(null), google.forgotten)
@@ -191,17 +191,17 @@ class AccountEntrySignInTest {
 
     @Test
     fun `a sign-in that ends without an account leaves Firebase signed out, even one Firebase finished late`() = runBlocking {
-        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
+        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.Failed("refused"))) {
             firebase.uid = UID
-            entry { outcome }.signIn()
+            entry { outcome }.signIn(activity)
             assertNull(outcome.toString(), firebase.uid)
         }
     }
 
     @Test
     fun `a sign-in that ends without an account leaves its note, for a start that finds Firebase empty to drop`() = runBlocking {
-        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.NoAccountAvailable, SignInOutcome.Failed("refused"))) {
-            entry { outcome }.signIn()
+        for (outcome in listOf(SignInOutcome.Cancelled, SignInOutcome.Failed("refused"))) {
+            entry { outcome }.signIn(activity)
             assertTrue(outcome.toString(), "signing_in" in signOutPending())
         }
 
@@ -290,7 +290,7 @@ class AccountEntrySignInTest {
         firebase.uid = UID
         entry().signOut()
 
-        signsInAnother().signIn()
+        signsInAnother().signIn(activity)
         start()
 
         assertEquals("uid-2", accounts.account.value?.uid)
@@ -304,7 +304,7 @@ class AccountEntrySignInTest {
         firebase.uid = UID
         entry().leaveForAnotherAccount()
 
-        signsInAnother().signIn()
+        signsInAnother().signIn(activity)
         start()
 
         assertEquals("uid-2", accounts.account.value?.uid)
@@ -327,7 +327,7 @@ class AccountEntrySignInTest {
             },
         )
 
-        signingIn.signIn()
+        signingIn.signIn(activity)
         start()
 
         assertEquals("uid-2", accounts.account.value?.uid)
@@ -346,7 +346,7 @@ class AccountEntrySignInTest {
             sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
         )
 
-        assertTrue(signingIn.signIn() is SignInOutcome.Failed)
+        assertTrue(signingIn.signIn(activity) is SignInOutcome.Failed)
         assertNull(accounts.account.value)
         // Firebase's sign-out never reached the disk.
         firebase.uid = "uid-2"
@@ -369,7 +369,7 @@ class AccountEntrySignInTest {
             sheet = { firebase.uid = "uid-2"; SignInOutcome.Succeeded("uid-2") },
         )
 
-        assertTrue(signingIn.signIn() is SignInOutcome.Succeeded)
+        assertTrue(signingIn.signIn(activity) is SignInOutcome.Succeeded)
         signingIn.signOut(of = UID)
         start()
 
@@ -395,7 +395,7 @@ class AccountEntrySignInTest {
             }
         }
 
-        assertTrue(signingIn.signIn() is SignInOutcome.Succeeded)
+        assertTrue(signingIn.signIn(activity) is SignInOutcome.Succeeded)
         signingOut!!.join()
         watching.cancel()
 
@@ -404,8 +404,9 @@ class AccountEntrySignInTest {
         assertEquals(setOf("signing_out"), signOutPending().keys)
     }
 
-    private fun entry(sessionApi: SessionApi = noSessionApi, sheet: GoogleAccountSheet = this.sheet) =
-        AccountEntry(context, sheet, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
+    /** [sheet] is told whether to ask which account. */
+    private fun entry(sessionApi: SessionApi = noSessionApi, sheet: suspend (Boolean) -> SignInOutcome = this.sheet) =
+        AccountEntry(context, { _, ask -> sheet(ask) }, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
 
     /** A sign-in Google, Firebase and graspy all take, of an account other than the one that left. */
     private fun signsInAnother() = entry(

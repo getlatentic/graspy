@@ -1,87 +1,116 @@
 package com.latentic.graspy.auth
 
-import android.content.Context
+import android.app.Activity
+import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CredentialOption
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import androidx.credentials.exceptions.GetCredentialUnsupportedException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.latentic.graspy.R
+import com.google.firebase.auth.FirebaseAuthException
 import kotlinx.coroutines.CancellationException
 
-/** The Google account sheet: [askWhichAccount] leaves out signing the last account in without asking. */
+/**
+ * The Google account sheet, shown over [activity]: [askWhichAccount] leaves out signing the last account in without
+ * asking. [activity] is used for this call only, never kept.
+ */
 fun interface GoogleAccountSheet {
-    suspend fun signIn(askWhichAccount: Boolean): SignInOutcome
+    suspend fun signIn(activity: Activity, askWhichAccount: Boolean): SignInOutcome
 }
 
 sealed interface SignInOutcome {
     data class Succeeded(val userId: String) : SignInOutcome
     data object Cancelled : SignInOutcome
-    data object NoAccountAvailable : SignInOutcome
     data class Failed(val reason: String) : SignInOutcome
 }
 
+/** The phone's Google accounts in Credential Manager's sheet or, on a phone with none, Google's page in Chrome. */
 class GoogleSignIn(
-    private val context: Context,
     private val session: FirebaseSession,
-    private val serverClientId: String = context.getString(R.string.default_web_client_id),
+    private val serverClientId: String,
+    private val phoneAccount: suspend (Activity, CredentialOption) -> Credential = ::phoneAccountCredential,
 ) : GoogleAccountSheet {
-    override suspend fun signIn(askWhichAccount: Boolean): SignInOutcome {
+    override suspend fun signIn(activity: Activity, askWhichAccount: Boolean): SignInOutcome {
         if (AuthEmulator.enabled) return emulatorSignIn()
         for (option in signInOptions(serverClientId, askWhichAccount)) {
-            when (val outcome = attempt(option)) {
-                SignInOutcome.NoAccountAvailable -> Unit
-                else -> return outcome
-            }
+            onPhone(activity, option)?.let { return it }
         }
-        return SignInOutcome.NoAccountAvailable
+        return inBrowser(activity)
     }
 
-    private suspend fun attempt(option: CredentialOption): SignInOutcome = try {
-        val response = CredentialManager.create(context).getCredential(
-            context,
-            GetCredentialRequest.Builder().addCredentialOption(option).build(),
-        )
-        val credential = response.credential
+    /** Null when the phone has no Google account for [option], or no Credential Manager to offer one. */
+    private suspend fun onPhone(activity: Activity, option: CredentialOption): SignInOutcome? = try {
+        val credential = phoneAccount(activity, option)
         if (credential !is CustomCredential ||
             credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
             SignInOutcome.Failed("the account sheet returned an unsupported credential")
         } else {
-            signedIn(GoogleIdTokenCredential.createFrom(credential.data).idToken)
+            session.signInWithGoogle(GoogleIdTokenCredential.createFrom(credential.data).idToken)
+            succeeded()
         }
     } catch (_: GetCredentialCancellationException) {
         SignInOutcome.Cancelled
     } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (_: NoCredentialException) {
-        SignInOutcome.NoAccountAvailable
+        null
+    } catch (_: GetCredentialProviderConfigurationException) {
+        null
+    } catch (_: GetCredentialUnsupportedException) {
+        null
     } catch (failure: GetCredentialException) {
         SignInOutcome.Failed(failure.message ?: "could not read a Google credential")
     } catch (failure: Exception) {
         SignInOutcome.Failed(failure.message ?: "Google sign-in failed")
     }
 
+    private suspend fun inBrowser(activity: Activity): SignInOutcome = try {
+        session.signInInBrowser(activity)
+        succeeded()
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (failure: FirebaseAuthException) {
+        when (failure.errorCode) {
+            TAB_CLOSED -> SignInOutcome.Cancelled
+            else -> SignInOutcome.Failed("${failure.errorCode}: ${failure.message}")
+        }
+    } catch (failure: Exception) {
+        SignInOutcome.Failed(failure.message ?: "Google's sign-in page failed")
+    }
+
     private suspend fun emulatorSignIn(): SignInOutcome = try {
-        signedIn(AuthEmulator.GOOGLE_ACCOUNT)
+        session.signInWithGoogle(AuthEmulator.GOOGLE_ACCOUNT)
+        succeeded()
     } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (failure: Exception) {
         SignInOutcome.Failed(failure.message ?: "The Auth emulator refused the sign-in")
     }
 
-    private suspend fun signedIn(googleIdToken: String): SignInOutcome {
-        session.signInWithGoogle(googleIdToken)
-        return SignInOutcome.Succeeded(session.userId.orEmpty())
+    private fun succeeded() = SignInOutcome.Succeeded(session.userId.orEmpty())
+
+    private companion object {
+        // Firebase's code when the Chrome tab is closed before signing in.
+        const val TAB_CLOSED = "ERROR_WEB_CONTEXT_CANCELED"
     }
 }
 
-/** The accounts the sheet offers, in turn: the last one, signed in unasked, only when [askWhichAccount] is false. */
+private suspend fun phoneAccountCredential(activity: Activity, option: CredentialOption): Credential =
+    CredentialManager.create(activity)
+        .getCredential(activity, GetCredentialRequest.Builder().addCredentialOption(option).build())
+        .credential
+
+/**
+ * The phone's accounts the sheet offers, in turn: the last one, signed in unasked, only when [askWhichAccount] is
+ * false. Only ID-token options: each reports a phone without an account rather than adding one to the phone.
+ */
 internal fun signInOptions(serverClientId: String, askWhichAccount: Boolean): List<CredentialOption> = listOfNotNull(
     GetGoogleIdOption.Builder()
         .setFilterByAuthorizedAccounts(true)
@@ -93,5 +122,4 @@ internal fun signInOptions(serverClientId: String, askWhichAccount: Boolean): Li
         .setFilterByAuthorizedAccounts(false)
         .setServerClientId(serverClientId)
         .build(),
-    GetSignInWithGoogleOption.Builder(serverClientId).build(),
 )

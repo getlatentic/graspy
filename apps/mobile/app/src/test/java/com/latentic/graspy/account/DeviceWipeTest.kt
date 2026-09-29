@@ -377,7 +377,7 @@ class DeviceWipeTest {
     }
 
     private fun entry(wipe: DeviceWipe) =
-        AccountEntry(context, { error("No sign-in is asked for") }, firebase, accounts, sessions, noSessionApi, deviceIds, wipe)
+        AccountEntry(context, { _, _ -> error("No sign-in is asked for") }, firebase, accounts, sessions, noSessionApi, deviceIds, wipe)
 
     /** The app's start, its work waited for. */
     private suspend fun start() {

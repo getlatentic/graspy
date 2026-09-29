@@ -2,6 +2,7 @@ package com.latentic.graspy
 
 import android.app.Application
 import com.latentic.graspy.auth.AuthEmulator
+import com.latentic.graspy.auth.dropStoredBrowserSignIn
 import com.latentic.graspy.collection.RECORDINGS_DIRECTORY
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.sweepOrphanRecordings
@@ -18,6 +19,7 @@ class GraspyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        dropStoredBrowserSignIn(this)
         AuthEmulator.connect()
         val account = AppGraph.account(this)
         account.entry.reconcile(applicationScope)

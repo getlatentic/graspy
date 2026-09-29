@@ -1,5 +1,6 @@
 package com.latentic.graspy.account
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import androidx.core.content.edit
@@ -30,10 +31,13 @@ class AccountEntry(
     private val signingIn = Mutex()
     private val forgetting = context.getSharedPreferences(PreferenceFiles.SIGN_OUT, 0)
 
-    /** Google confirms who it is, graspy issues the account's session, and the account asks who is learning. */
-    suspend fun signIn(): SignInOutcome = signingIn.withLock { signInAlone() }
+    /**
+     * Google confirms who it is, over [activity], graspy issues the account's session, and the account asks who is
+     * learning.
+     */
+    suspend fun signIn(activity: Activity): SignInOutcome = signingIn.withLock { signInAlone(activity) }
 
-    private suspend fun signInAlone(): SignInOutcome {
+    private suspend fun signInAlone(activity: Activity): SignInOutcome {
         // Cleared once the account is stored, or by a start that finds Firebase holding no one: until then
         // [reconcile] undoes the sign-in rather than adopting it. It takes over a finished sign-out's note, which
         // would otherwise have the next start wipe the account this sign-in stores.
@@ -44,7 +48,7 @@ class AccountEntry(
             }
         }
         val outcome = try {
-            signInThroughGoogle()
+            signInThroughGoogle(activity)
         } catch (cancelled: CancellationException) {
             // Left part-way, perhaps with an account chosen and Firebase signed in: undone now, as far as it went.
             markGoogleAccountToForget()
@@ -70,8 +74,8 @@ class AccountEntry(
         return SignInOutcome.Failed("A Google task was cancelled")
     }
 
-    private suspend fun signInThroughGoogle(): SignInOutcome {
-        val outcome = google.signIn(askWhichAccount = !lastGoogleAccountForgotten())
+    private suspend fun signInThroughGoogle(activity: Activity): SignInOutcome {
+        val outcome = google.signIn(activity, askWhichAccount = !lastGoogleAccountForgotten())
         // A failed sign-in may have got as far as a Google account (Firebase refusing its credential); forgetting
         // it on any failure keeps the next sign-in from taking it unasked, at worst asking once more than needed.
         if (outcome is SignInOutcome.Failed) forgetGoogleAccountOrLeaveMarked()
