@@ -22,6 +22,8 @@ npx firebase-tools@15.31.0 emulators:start --only auth --project demo-graspy
 
 Its sign-in window lets you make up a Google account.
 
+A parent's consent is kept only in the Worker (D1), so under `npm run dev` adding a learner in the web app answers `503 consent_unavailable`. Run the Worker (see below) and point `VITE_API_URL` at it in `apps/web/.env.local` to add learners and try the voice recordings page.
+
 ## Configure
 
 The server's environment holds only what changes between deployments or is secret. Generation settings (temperature, token budgets) are in `apps/server/src/app/config/generation.py`, next to the prompts they tune.

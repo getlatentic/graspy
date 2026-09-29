@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { currentAccount, setLearner } from "@/lib/account/account-store";
 import { forgetLearner } from "@/lib/account/learner-choice";
-import { renameLearner } from "@/lib/account/learners-api";
+import { renameLearner, type ServiceConsent } from "@/lib/account/learners-api";
 import { deleteAccountAndSignOut } from "@/lib/account/sign-in";
 import { useLearners } from "./use-learners";
 
@@ -35,10 +35,22 @@ export function useManageLearners() {
           setLearner({ id, name: renamed.name });
         }
         setLearners(
-          (all) => all && all.map((one) => (one.id === id ? renamed : one)),
+          (all) =>
+            all &&
+            all.map((one) => (one.id === id ? { ...one, ...renamed } : one)),
         );
       }),
     [attempt, setLearners],
+  );
+
+  const agreed = useCallback(
+    (id: string, serviceConsent: ServiceConsent) =>
+      setLearners(
+        (all) =>
+          all &&
+          all.map((one) => (one.id === id ? { ...one, serviceConsent } : one)),
+      ),
+    [setLearners],
   );
 
   const remove = useCallback(
@@ -59,5 +71,5 @@ export function useManageLearners() {
     [attempt],
   );
 
-  return { ...listed, busy, failed, rename, remove, deleteAccount };
+  return { ...listed, busy, failed, rename, agreed, remove, deleteAccount };
 }

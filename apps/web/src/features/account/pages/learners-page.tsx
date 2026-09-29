@@ -64,6 +64,7 @@ function LearnerList({ manage }: { manage: Manage }) {
               inUse={learner.id === inUse}
               busy={manage.busy}
               onRename={(name) => manage.rename(learner.id, name)}
+              onAgreed={(consent) => manage.agreed(learner.id, consent)}
               onRemove={() => void manage.remove(learner.id)}
             />
           </li>

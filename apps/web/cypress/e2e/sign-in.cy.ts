@@ -119,7 +119,7 @@ it("tells a device with a plan of its own that it goes to the learner chosen", (
   cy.contains("This device's plan").should("not.exist");
 });
 
-it("adds a learner only once named and vouched for by them or their guardian", () => {
+it("adds a learner only once named, and once their parent has agreed", () => {
   onDevice("phone");
   oldDevice(phonePlan(Date.now()), { graspy_user_profile: learnerIn(1) });
   signInToGoogle(googleAccount("Ada Lovelace")).then(signInOnThisDevice);
@@ -128,14 +128,19 @@ it("adds a learner only once named and vouched for by them or their guardian", (
   cy.location("pathname").should("eq", "/app/learners");
   cy.contains("h1", "Who's learning?");
   cy.contains("button", "Add learner").click();
-  const add = () => cy.contains("button", /^Add$/);
-  add().should("be.disabled");
+  const next = () => cy.contains("button", "Continue");
+  next().should("be.disabled");
   cy.get("#learner-name").type("Ada");
-  add().should("be.disabled");
-  cy.contains("label", "I'm this learner").find("input").check();
-  add().should("be.enabled");
+  next().should("be.enabled");
   cy.get("#learner-name").clear();
-  add().should("be.disabled");
+  next().should("be.disabled");
+
+  cy.get("#learner-name").type("Ada");
+  next().click();
+  cy.contains("Cloudflare, Amazon, Intron and Spitch");
+  cy.contains("button", "Don't agree").click();
+  cy.contains("h1", "Who's learning?");
+  cy.contains("button", "Ada").should("not.exist");
 });
 
 it("says when the account holds as many learners as it can", () => {

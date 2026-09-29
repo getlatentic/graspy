@@ -6,6 +6,7 @@ import {
   GoogleAuthProvider,
   indexedDBLocalPersistence,
   initializeAuth,
+  reauthenticateWithPopup,
   signInWithPopup,
   signOut,
   type Auth,
@@ -64,6 +65,16 @@ export async function signInWithGoogle(): Promise<GoogleSignIn> {
     account: { uid: user.uid, name: user.displayName, email: user.email },
     idToken: await user.getIdToken(),
   };
+}
+
+/** The parent signs in with Google again, which the server takes as proof that it was them
+ * and not whoever left the device signed in. Call from the tap itself, with nothing awaited
+ * before it. A different Google account than the one signed in is refused by Firebase. */
+export async function reauthenticateWithGoogle(): Promise<string> {
+  const { currentUser } = configuredAuth();
+  if (!currentUser) throw new Error("Not signed in");
+  await reauthenticateWithPopup(currentUser, new GoogleAuthProvider());
+  return currentUser.getIdToken(true);
 }
 
 /** Null once Firebase no longer has the learner signed in. */

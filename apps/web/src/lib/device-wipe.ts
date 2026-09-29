@@ -1,4 +1,5 @@
 import { ACCOUNT_KEY } from "@/lib/account/account-store";
+import { isServiceConsentKey } from "@/lib/account/service-consent";
 import { DEVICE_ID_KEY, newDeviceId } from "@/lib/device-id";
 import { committed, openDB } from "@/lib/idb";
 
@@ -29,12 +30,16 @@ function forgetLocal(kept: (key: string) => boolean): void {
 }
 
 /** Everything the learner in use kept here: their plan, lessons, progress, practice,
- * conversations, offline copies and unsent calls, profile and caches. The account and
- * the device id stay. */
+ * conversations, offline copies and unsent calls, profile and caches. The account, the
+ * device id and what the account's parents agreed to stay. */
 export async function wipeLearnerData(): Promise<void> {
   await clearStores();
   forgetLocal(
-    (key) => key === ACCOUNT_KEY || key === DEVICE_ID_KEY || isFirebases(key),
+    (key) =>
+      key === ACCOUNT_KEY ||
+      key === DEVICE_ID_KEY ||
+      isFirebases(key) ||
+      isServiceConsentKey(key),
   );
 }
 
