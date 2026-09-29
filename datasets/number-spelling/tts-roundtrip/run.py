@@ -1,7 +1,9 @@
 """Speaks each model's version of each line with Spitch, transcribes it with Whisper, and scores the
 transcript against the readings a teacher would give. See ../README.md.
 
+  npx wrangler dev --config whisper/wrangler.jsonc --port 8797     (in another terminal)
   python3 run.py --vars <.dev.vars with SPITCH_API_KEY> --probe http://localhost:8797 --out out.jsonl
+  python3 score.py out.jsonl > scored.jsonl
 """
 import argparse, base64, hashlib, json, re, subprocess, sys, time, urllib.request
 from pathlib import Path
