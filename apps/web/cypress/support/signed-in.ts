@@ -37,7 +37,7 @@ export function addLearnerNamed(name: string): void {
   cy.get("#learner-name").type(name);
   cy.contains("button", "Continue").click();
   cy.contains("Cloudflare, Amazon, Intron and Spitch");
-  cy.contains("button", "Agree with Google").click();
+  cy.contains("button", "I agree").click();
 }
 
 export function pickLearner(choice: Choice): void {

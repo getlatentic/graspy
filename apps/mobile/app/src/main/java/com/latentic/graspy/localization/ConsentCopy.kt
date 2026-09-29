@@ -53,9 +53,9 @@ data class RecordingsCopy(
 )
 
 internal val ENGLISH_CONSENT = ConsentCopy(
-    title = "Agree to graspy for {name}",
-    who = "Agree as the learner, or their parent or guardian.",
-    agree = "Agree with Google",
+    title = "Let {name} use graspy?",
+    who = "Agree as the learner, or their parent or guardian. You'll sign in with Google again to confirm it's you.",
+    agree = "I agree",
     decline = "Don't agree",
     needed = "Not agreed yet",
     signIn = "That sign-in didn't work. Try again.",
@@ -89,9 +89,9 @@ internal val ENGLISH_RECORDINGS = RecordingsCopy(
 )
 
 internal val YORUBA_CONSENT = ConsentCopy(
-    title = "Fọwọ́ sí graspy fún {name}",
-    who = "Fọwọ́ sí gẹ́gẹ́ bí akẹ́kọ̀ọ́, tàbí òbí tàbí alágbàtọ́ rẹ̀.",
-    agree = "Fọwọ́ sí pẹ̀lú Google",
+    title = "Ṣé kí {name} lo graspy?",
+    who = "Fọwọ́ sí gẹ́gẹ́ bí akẹ́kọ̀ọ́, tàbí òbí tàbí alágbàtọ́ rẹ̀. Wàá tún wọlé pẹ̀lú Google láti jẹ́rìí pé ìwọ ni.",
+    agree = "Mo fọwọ́ sí",
     decline = "Kò fọwọ́ sí",
     needed = "A kò tíì fọwọ́ sí i",
     signIn = "Ìwọlé yẹn kò ṣiṣẹ́. Tún gbìyànjú.",
@@ -125,9 +125,9 @@ internal val YORUBA_RECORDINGS = RecordingsCopy(
 )
 
 internal val PIDGIN_CONSENT = ConsentCopy(
-    title = "Agree to graspy for {name}",
-    who = "Agree as the learner, or as im papa, mama or guardian.",
-    agree = "Agree with Google",
+    title = "Make {name} use graspy?",
+    who = "Agree as the learner, or as im papa, mama or guardian. You go sign in with Google again to show say na you.",
+    agree = "I agree",
     decline = "I no agree",
     needed = "Dem never agree yet",
     signIn = "That sign-in no work. Try again.",
@@ -161,9 +161,9 @@ internal val PIDGIN_RECORDINGS = RecordingsCopy(
 )
 
 internal val ARABIC_CONSENT = ConsentCopy(
-    title = "الموافقة على graspy لـ {name}",
-    who = "وافق بصفتك المتعلّم، أو والده أو وليّ أمره.",
-    agree = "الموافقة عبر Google",
+    title = "هل يستخدم {name} تطبيق graspy؟",
+    who = "وافق بصفتك المتعلّم، أو والده أو وليّ أمره. ستسجّل الدخول عبر Google مرة أخرى للتأكد أنك أنت.",
+    agree = "أوافق",
     decline = "لا أوافق",
     needed = "لم تتم الموافقة بعد",
     signIn = "لم ينجح تسجيل الدخول. حاول مرة أخرى.",

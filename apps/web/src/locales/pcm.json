@@ -387,9 +387,9 @@
   },
   "consent": {
     "continue": "Continue",
-    "serviceTitle": "Agree to graspy for {name}",
-    "who": "Agree as the learner, or as im papa, mama or guardian.",
-    "agree": "Agree with Google",
+    "serviceTitle": "Make {name} use graspy?",
+    "who": "Agree as the learner, or as im papa, mama or guardian. You go sign in with Google again to show say na you.",
+    "agree": "I agree",
     "agreeRow": "Agree",
     "decline": "I no agree",
     "needed": "Dem never agree yet",

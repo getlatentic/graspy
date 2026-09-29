@@ -59,9 +59,9 @@ class ConsentScreensTest {
 
         compose.onNodeWithText(SERVICE_NOTICE).assertIsDisplayed()
         compose.onNodeWithText("I'm this learner, or their parent or guardian").assertDoesNotExist()
-        compose.onNodeWithText("Agree with Google").assertIsNotEnabled()
+        compose.onNodeWithText("I agree").assertIsNotEnabled()
         compose.onNodeWithText("Name").performTextInput("  Tolu ")
-        compose.onNodeWithText("Agree with Google").assertIsEnabled().performClick()
+        compose.onNodeWithText("I agree").assertIsEnabled().performClick()
 
         assertEquals(listOf("Tolu"), agreedFor)
     }
@@ -74,7 +74,7 @@ class ConsentScreensTest {
             GraspyTheme(InterfaceLanguage.ENGLISH) { AddLearnerForm(copy, busy = false, onAgree = { agreedFor += it }, onCancel = { cancelled += 1 }) }
         }
 
-        compose.onNodeWithText("Agree as the learner, or their parent or guardian.").assertIsDisplayed()
+        compose.onNodeWithText("Agree as the learner, or their parent or guardian. You'll sign in with Google again to confirm it's you.").assertIsDisplayed()
         compose.onNodeWithText("Don't agree").performClick()
 
         assertEquals(1, cancelled)
@@ -105,10 +105,10 @@ class ConsentScreensTest {
         showGate(accounts) { switched += 1 }
 
         compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText(SERVICE_NOTICE).fetchSemanticsNodes().size == 1 }
-        compose.onNodeWithText("Agree to graspy for Cara").assertIsDisplayed()
-        compose.onNodeWithText("Agree as the learner, or their parent or guardian.").assertIsDisplayed()
+        compose.onNodeWithText("Let Cara use graspy?").assertIsDisplayed()
+        compose.onNodeWithText("Agree as the learner, or their parent or guardian. You'll sign in with Google again to confirm it's you.").assertIsDisplayed()
         compose.onNodeWithText("Lessons").assertDoesNotExist()
-        compose.onNodeWithText("Agree with Google").performClick()
+        compose.onNodeWithText("I agree").performClick()
 
         compose.waitUntil(WAIT_MS) { compose.onAllNodesWithText("Lessons").fetchSemanticsNodes().size == 1 }
         assertEquals(listOf("agree:${CARA.id}:1:${FakeConfirmation.TOKEN}"), api.calls)
