@@ -9,7 +9,7 @@ interface WireMove {
   say: string;
   say_text?: Record<string, string>;
   show?: Record<string, string> | null;
-  activity?: object | null;
+  activity?: { prompt_id?: string } | null;
   reason?: string;
 }
 
@@ -28,6 +28,7 @@ export function toMove(wire: WireMove, language: string): TeacherMove {
     kind: wire.kind,
     planId: wire.plan_id ?? null,
     eventId: wire.event_id ?? null,
+    promptId: wire.activity?.prompt_id ?? null,
     event: wire.event ?? null,
     says: pick(wire.say_text) ?? wire.say,
     shows: pick(wire.show),

@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { openChild } from "./browser.ts";
 import { checkRun } from "./checks.ts";
-import { ChildVoice, locateYarngo } from "./child-voice.ts";
+import { ChildVoice, ENGINE_NAME, locateYarngo } from "./child-voice.ts";
 import { judgeTranscript, type Judgement } from "./judge.ts";
 import { LessonObserver } from "./observer.ts";
 import { openLesson } from "./open-lesson.ts";
@@ -71,10 +71,10 @@ async function main(): Promise<void> {
     await openLesson(page, web, strings, args.lesson ?? null);
     const startedAt = new Date().toISOString();
     const { turns, finished } = await playLesson({
-      page, observer, persona, learnerClass, strings, voice, key: bedrockKey(), shotsDir: join(dir, "shots"),
+      page, observer, persona, learnerClass, strings, voice, key: bedrockKey(), shotsDir: join(dir, "shots"), runDir: dir,
       maxAnswers: persona.id === "silent" ? 3 : Number(args.answers),
     });
-    const run: Run = { id: runId, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, finished, turns };
+    const run: Run = { id: runId, voice: { engine: ENGINE_NAME, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, finished, turns };
     const findings = checkRun(run);
     const judgement: Judgement | null = args["no-judge"] ? null : await judgeTranscript(bedrockKey(), transcriptMarkdown(run, findings, null));
     writeRun(dir, run, findings, judgement);

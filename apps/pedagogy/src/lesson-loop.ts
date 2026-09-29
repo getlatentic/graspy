@@ -1,3 +1,4 @@
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Page } from "playwright-core";
 import { decideWhatToSay, type Exchange } from "./child-model.ts";
@@ -22,6 +23,7 @@ export interface Sitting {
   voice: ChildVoice;
   key: string;
   shotsDir: string;
+  runDir: string;
   maxAnswers: number;
 }
 
@@ -29,6 +31,7 @@ type Screen = "record" | "kept" | "rest" | "failed" | "waiting";
 
 interface Answered {
   child: ChildTurn;
+  audio: string | null;
   replyWaitMs: number | null;
   marking: Marking | null;
   pageNote: string | null;
@@ -75,6 +78,14 @@ async function openTake(sitting: Sitting): Promise<void> {
   await page.getByText(strings.speakNow).waitFor();
 }
 
+/** The child's recording is kept with the run, so what was played to the app can be heard again. */
+function keepRecording(runDir: string, index: number, wav: Buffer): string {
+  mkdirSync(join(runDir, "answers"), { recursive: true });
+  const file = `answers/${String(index).padStart(2, "0")}.wav`;
+  writeFileSync(join(runDir, file), wav);
+  return file;
+}
+
 /** The child answers what the teacher asked, and the page's reply is waited for and kept. */
 async function answer(sitting: Sitting, turn: Turn, turns: Turn[]): Promise<Answered> {
   const { page, observer, persona } = sitting;
@@ -88,6 +99,7 @@ async function answer(sitting: Sitting, turn: Turn, turns: Turn[]): Promise<Answ
   });
   const before = observer.markings.length;
   const wav = child.said ? await sitting.voice.speak(child.said, persona.pitch, index) : null;
+  const audio = wav ? keepRecording(sitting.runDir, index, wav) : null;
   await openTake(sitting);
   if (wav) {
     await page.waitForTimeout(persona.reactionMs);
@@ -98,7 +110,7 @@ async function answer(sitting: Sitting, turn: Turn, turns: Turn[]): Promise<Answ
   // A child who says nothing waits out the app's own listening window: that is not a slow reply.
   const replyWaitMs = wav ? Date.now() - spoke : null;
   shots.push(await shot(sitting, `${String(index).padStart(2, "0")}-result`));
-  return { child, shots, replyWaitMs, ...outcome };
+  return { child, audio, shots, replyWaitMs, ...outcome };
 }
 
 /** Waits for the answer to be marked, or for the page to say why it was not. */
@@ -119,7 +131,7 @@ async function settle(sitting: Sitting, before: number): Promise<Pick<Answered, 
 /** A turn for each move the server has offered since the last look. */
 function syncMoves(turns: Turn[], moves: TeacherMove[], counted: { moves: number }): void {
   for (; counted.moves < moves.length; counted.moves++) {
-    turns.push({ index: turns.length + 1, move: moves[counted.moves], child: null, marking: null, replyWaitMs: null, pageNote: null, screenshots: [] });
+    turns.push({ index: turns.length + 1, move: moves[counted.moves], child: null, answerAudio: null, marking: null, replyWaitMs: null, pageNote: null, screenshots: [] });
   }
 }
 
@@ -127,7 +139,7 @@ function syncMoves(turns: Turn[], moves: TeacherMove[], counted: { moves: number
 function turnToAnswer(turns: Turn[]): Turn {
   const latest = turns[turns.length - 1];
   if (!latest.child) return latest;
-  const again: Turn = { ...latest, index: turns.length + 1, child: null, marking: null, replyWaitMs: null, pageNote: null, screenshots: [] };
+  const again: Turn = { ...latest, index: turns.length + 1, child: null, answerAudio: null, marking: null, replyWaitMs: null, pageNote: null, screenshots: [] };
   turns.push(again);
   return again;
 }
@@ -147,7 +159,7 @@ export async function playLesson(sitting: Sitting): Promise<{ turns: Turn[]; fin
     if (screen === "record" && turns.length > 0) {
       const turn = turnToAnswer(turns);
       const given = await answer(sitting, turn, turns);
-      Object.assign(turn, { child: given.child, marking: given.marking, replyWaitMs: given.replyWaitMs, pageNote: given.pageNote, screenshots: given.shots });
+      Object.assign(turn, { child: given.child, answerAudio: given.audio, marking: given.marking, replyWaitMs: given.replyWaitMs, pageNote: given.pageNote, screenshots: given.shots });
       answered++;
       lastChange = Date.now();
     }

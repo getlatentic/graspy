@@ -22,6 +22,16 @@ The personas are `sure`, `unsure`, `stuck`, `silent`, `offtopic` and `pidgin` (`
 
 A run writes `runs/<id>/transcript.md` (open it in any Markdown viewer that shows images), `run.json` and `shots/`. `runs/` is not committed.
 
+## Keeping the recordings
+
+Each answer's recording is kept in the run (`answers/NN.wav`), and `src/export-samples.ts` gathers every run's recordings into one folder with a `metadata.jsonl` (the words intended, what the recogniser heard, the marking, the class, plan and prompt, and how the voice was made) and a dataset card:
+
+```bash
+node apps/pedagogy/src/export-samples.ts --dest ~/workspace/afro-math-voices/graspy-simulated
+```
+
+Running it again adds only new recordings. Every record says `synthetic: true`. The voice is a cloned voice pitched up, so these are not children and not African-accented speakers: keep them apart from AfroMathVoices' real recordings, and use them for measuring how the recogniser hears spoken numbers, not for training on real speech.
+
 ## Reading a run
 
 - **Mechanical findings** are checks that need no judgement: a right answer marked wrong, a wrong one accepted, a line repeated three times, the same feedback twice, a line too long for a child, silence answered with nothing, a long wait, an answer kept and never marked. A `recogniser-misheard` note means the speech recogniser, not the teacher, may be at fault: read the marking findings with it.

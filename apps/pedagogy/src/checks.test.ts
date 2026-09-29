@@ -6,8 +6,9 @@ function turn(index: number, over: Partial<Turn> & { says?: string; event?: stri
   const { says = `line ${index}`, event = "elicit_performance", ...rest } = over;
   return {
     index,
-    move: { kind: "event", planId: "p", eventId: `e${index}`, event, says, shows: null, asksForAnswer: true, reason: null },
+    move: { kind: "event", planId: "p", eventId: `e${index}`, promptId: null, event, says, shows: null, asksForAnswer: true, reason: null },
     child: null,
+    answerAudio: null,
     marking: null,
     replyWaitMs: null,
     pageNote: null,
@@ -27,7 +28,7 @@ const marking = (over: Partial<Marking>): Marking => ({
 });
 
 const run = (turns: Turn[]): Run => ({
-  id: "r", persona: "sure", language: "en", learnerClass: "primary_4", plan: null,
+  id: "r", voice: { engine: "e", reference: "voice-1", pitch: 1.2 }, persona: "sure", language: "en", learnerClass: "primary_4", plan: null,
   startedAt: "2026-09-29T00:00:00Z", finished: "rest", turns,
 });
 

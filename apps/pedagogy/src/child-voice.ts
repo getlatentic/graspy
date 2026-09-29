@@ -7,6 +7,9 @@ import { JsonRpcProcess } from "./json-rpc.ts";
 
 const ENGINE = "/Applications/yarngo studio.app/Contents/Resources/sidecar/engine.py";
 
+/** What made the child's recordings, as a dataset built from them must say. */
+export const ENGINE_NAME = "yarngo studio dots-tts-mf (voice cloning)";
+
 interface Generated {
   output_path: string;
   sample_rate: number;
@@ -55,6 +58,11 @@ export class ChildVoice {
     const file = join(this.cache, cacheName(text, pitch, this.where.reference, take));
     if (!existsSync(file)) await this.synthesise(text, pitch, file);
     return readFileSync(file);
+  }
+
+  /** The recorded voice that is cloned. */
+  get reference(): string {
+    return this.where.reference;
   }
 
   close(): void {

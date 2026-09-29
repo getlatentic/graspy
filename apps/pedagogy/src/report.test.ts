@@ -3,13 +3,14 @@ import { meanFidelity, transcriptMarkdown } from "./report.ts";
 import type { Run } from "./turn-log.ts";
 
 const run: Run = {
-  id: "r", persona: "unsure", language: "en", learnerClass: "primary_4", plan: "table-7",
+  id: "r", voice: { engine: "e", reference: "voice-1", pitch: 1.2 }, persona: "unsure", language: "en", learnerClass: "primary_4", plan: "table-7",
   startedAt: "2026-09-29T10:00:00Z", finished: "rest",
   turns: [
     {
       index: 1,
-      move: { kind: "event", planId: "table-7", eventId: "assess", event: "assess_performance", says: "What is seven times eight?", shows: "7 × 8", asksForAnswer: true, reason: null },
+      move: { kind: "event", planId: "table-7", eventId: "assess", promptId: "mul_fact_7x8_answer", event: "assess_performance", says: "What is seven times eight?", shows: "7 × 8", asksForAnswer: true, reason: null },
       child: { said: "fifty five", isRight: false, note: "off by one" },
+      answerAudio: "answers/01.wav",
       marking: { heard: "fifty five", parsedAnswer: 55, decision: "try_again", feedback: "Nearly. Count in sevens.", provider: "intron", latencyMs: 800 },
       replyWaitMs: 1200,
       pageNote: null,

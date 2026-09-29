@@ -5,6 +5,8 @@ export interface TeacherMove {
   kind: "event" | "rest";
   planId: string | null;
   eventId: string | null;
+  /** The prompt the teacher asks, when it asks for an answer. */
+  promptId: string | null;
   /** The Gagné event: gain_attention, present_content, elicit_performance ... */
   event: string | null;
   says: string;
@@ -34,6 +36,8 @@ export interface Turn {
   index: number;
   move: TeacherMove;
   child: ChildTurn | null;
+  /** The child's recording, relative to the run's folder; null when the child said nothing. */
+  answerAudio: string | null;
   /** Null when nothing was sent to be marked: the line taught, or the child was silent. */
   marking: Marking | null;
   /** Milliseconds from the child finishing speaking to the page showing an outcome; null with no answer. */
@@ -43,8 +47,16 @@ export interface Turn {
   screenshots: string[];
 }
 
+/** How the child's recordings were made: they are synthetic, and any dataset built from them must say so. */
+export interface ChildVoiceInfo {
+  engine: string;
+  reference: string;
+  pitch: number;
+}
+
 export interface Run {
   id: string;
+  voice: ChildVoiceInfo;
   persona: string;
   language: string;
   learnerClass: string;
