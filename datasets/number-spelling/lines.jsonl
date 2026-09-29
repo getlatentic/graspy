@@ -1,0 +1,125 @@
+{"id": "counting-01", "category": "counting", "line": "Well done! You counted 1, 2, 3, 4, 5."}
+{"id": "counting-02", "category": "counting", "line": "Say 5, 10, 15, 20 with me."}
+{"id": "counting-03", "category": "counting", "line": "Count from 1 to 10 with me."}
+{"id": "counting-04", "category": "counting", "line": "Count in twos: 2, 4, 6, 8."}
+{"id": "counting-05", "category": "counting", "line": "Count backwards from 10 to 1."}
+{"id": "counting-06", "category": "counting", "line": "Good try! The next number is 20."}
+{"id": "counting-07", "category": "counting", "line": "You skipped 13. Try again."}
+{"id": "counting-08", "category": "counting", "line": "Count from 90 to 100."}
+{"id": "counting-09", "category": "counting", "line": "Count in tens: 10, 20, 30, 40."}
+{"id": "counting-10", "category": "counting", "line": "After 19 comes 20."}
+{"id": "sums-01", "category": "sums", "line": "Two plus 3 is 5."}
+{"id": "sums-02", "category": "sums", "line": "3 + 4 = 7."}
+{"id": "sums-03", "category": "sums", "line": "Well done! 9 take away 4 is 5."}
+{"id": "sums-04", "category": "sums", "line": "What is 12 plus 8?"}
+{"id": "sums-05", "category": "sums", "line": "You said 15. The answer is 16."}
+{"id": "sums-06", "category": "sums", "line": "Add 7 and 5 to get 12."}
+{"id": "sums-07", "category": "sums", "line": "10 - 6 = 4."}
+{"id": "sums-08", "category": "sums", "line": "Half of 10 is 5."}
+{"id": "sums-09", "category": "sums", "line": "Double 6 is 12."}
+{"id": "sums-10", "category": "sums", "line": "Share 12 sweets between 3 friends."}
+{"id": "times_tables-01", "category": "times_tables", "line": "Nice! 7 times 8 is 56."}
+{"id": "times_tables-02", "category": "times_tables", "line": "Two times 6 is 12."}
+{"id": "times_tables-03", "category": "times_tables", "line": "3 x 4 = 12."}
+{"id": "times_tables-04", "category": "times_tables", "line": "Say it with me: 6 times 7 is 42."}
+{"id": "times_tables-05", "category": "times_tables", "line": "You said 45. Try 9 times 5 again."}
+{"id": "times_tables-06", "category": "times_tables", "line": "12 times 12 is 144."}
+{"id": "times_tables-07", "category": "times_tables", "line": "The 2 times table: 2, 4, 6, 8, 10."}
+{"id": "times_tables-08", "category": "times_tables", "line": "Well done! You said 8 times 8 is 64."}
+{"id": "times_tables-09", "category": "times_tables", "line": "5 times 5 is 25."}
+{"id": "times_tables-10", "category": "times_tables", "line": "Nine 9s are 81."}
+{"id": "time-01", "category": "time", "line": "It is 3:30 now."}
+{"id": "time-02", "category": "time", "line": "School starts at 8:00."}
+{"id": "time-03", "category": "time", "line": "Break is at 10:15."}
+{"id": "time-04", "category": "time", "line": "It is 6 o'clock."}
+{"id": "time-05", "category": "time", "line": "Half past 2 is 2:30."}
+{"id": "time-06", "category": "time", "line": "The bell rings at 12:45."}
+{"id": "time-07", "category": "time", "line": "You have 5 minutes left."}
+{"id": "time-08", "category": "time", "line": "A day has 24 hours."}
+{"id": "time-09", "category": "time", "line": "It is 7:05 in the morning."}
+{"id": "time-10", "category": "time", "line": "Class ends at 1:20 in the afternoon."}
+{"id": "money-01", "category": "money", "line": "You paid ₦500 for 12 mangoes."}
+{"id": "money-02", "category": "money", "line": "It costs ₦50."}
+{"id": "money-03", "category": "money", "line": "You have ₦1,500."}
+{"id": "money-04", "category": "money", "line": "That is 50 kobo."}
+{"id": "money-05", "category": "money", "line": "Your change is ₦20."}
+{"id": "money-06", "category": "money", "line": "Two books cost ₦300."}
+{"id": "money-07", "category": "money", "line": "A ball costs ₦2,000."}
+{"id": "money-08", "category": "money", "line": "You need ₦100 more."}
+{"id": "money-09", "category": "money", "line": "Give me ₦10."}
+{"id": "money-10", "category": "money", "line": "The bag is N750."}
+{"id": "ordinals_and_labels-01", "category": "ordinals_and_labels", "line": "You came 1st!"}
+{"id": "ordinals_and_labels-02", "category": "ordinals_and_labels", "line": "Today is the 2nd day of the week."}
+{"id": "ordinals_and_labels-03", "category": "ordinals_and_labels", "line": "This is your 3rd try."}
+{"id": "ordinals_and_labels-04", "category": "ordinals_and_labels", "line": "You are in Primary 4."}
+{"id": "ordinals_and_labels-05", "category": "ordinals_and_labels", "line": "Class 3B, sit down please."}
+{"id": "ordinals_and_labels-06", "category": "ordinals_and_labels", "line": "It is the 4th term."}
+{"id": "ordinals_and_labels-07", "category": "ordinals_and_labels", "line": "Read Lesson 5 tonight."}
+{"id": "ordinals_and_labels-08", "category": "ordinals_and_labels", "line": "Turn to page 12."}
+{"id": "ordinals_and_labels-09", "category": "ordinals_and_labels", "line": "Group 2 is ready."}
+{"id": "ordinals_and_labels-10", "category": "ordinals_and_labels", "line": "She is 10th in the line."}
+{"id": "fractions_decimals_percent-01", "category": "fractions_decimals_percent", "line": "You got 50% of them."}
+{"id": "fractions_decimals_percent-02", "category": "fractions_decimals_percent", "line": "1/2 plus 1/4 is 3/4."}
+{"id": "fractions_decimals_percent-03", "category": "fractions_decimals_percent", "line": "That is 2.5 metres."}
+{"id": "fractions_decimals_percent-04", "category": "fractions_decimals_percent", "line": "Half is 1/2."}
+{"id": "fractions_decimals_percent-05", "category": "fractions_decimals_percent", "line": "0.5 litres is half a litre."}
+{"id": "fractions_decimals_percent-06", "category": "fractions_decimals_percent", "line": "You scored 80% today."}
+{"id": "fractions_decimals_percent-07", "category": "fractions_decimals_percent", "line": "3/4 of 20 is 15."}
+{"id": "fractions_decimals_percent-08", "category": "fractions_decimals_percent", "line": "A quarter is 1/4."}
+{"id": "fractions_decimals_percent-09", "category": "fractions_decimals_percent", "line": "Round 3.14 to 3.1."}
+{"id": "fractions_decimals_percent-10", "category": "fractions_decimals_percent", "line": "25% is one quarter."}
+{"id": "years_dates_phones-01", "category": "years_dates_phones", "line": "Nigeria became free in 1960."}
+{"id": "years_dates_phones-02", "category": "years_dates_phones", "line": "In 1990 it was hot."}
+{"id": "years_dates_phones-03", "category": "years_dates_phones", "line": "The test is on 12 June 2026."}
+{"id": "years_dates_phones-04", "category": "years_dates_phones", "line": "Call 08012345678."}
+{"id": "years_dates_phones-05", "category": "years_dates_phones", "line": "My birthday is on 5 May."}
+{"id": "years_dates_phones-06", "category": "years_dates_phones", "line": "It happened in 2024."}
+{"id": "years_dates_phones-07", "category": "years_dates_phones", "line": "Your ID is 4471."}
+{"id": "years_dates_phones-08", "category": "years_dates_phones", "line": "The year 2000 was a leap year."}
+{"id": "years_dates_phones-09", "category": "years_dates_phones", "line": "School closes on 21 July."}
+{"id": "years_dates_phones-10", "category": "years_dates_phones", "line": "Room 204 is upstairs."}
+{"id": "measurements-01", "category": "measurements", "line": "The rope is 5 metres long."}
+{"id": "measurements-02", "category": "measurements", "line": "It weighs 3 kg."}
+{"id": "measurements-03", "category": "measurements", "line": "Draw a line of 10 cm."}
+{"id": "measurements-04", "category": "measurements", "line": "The road is 2 km long."}
+{"id": "measurements-05", "category": "measurements", "line": "Pour 500 ml of water."}
+{"id": "measurements-06", "category": "measurements", "line": "The box is 20 cm by 15 cm."}
+{"id": "measurements-07", "category": "measurements", "line": "It is 30 degrees today."}
+{"id": "measurements-08", "category": "measurements", "line": "A tonne is 1,000 kg."}
+{"id": "measurements-09", "category": "measurements", "line": "The tank holds 100 litres."}
+{"id": "measurements-10", "category": "measurements", "line": "Walk 50 steps."}
+{"id": "signs_ranges_negative-01", "category": "signs_ranges_negative", "line": "Count 5-10."}
+{"id": "signs_ranges_negative-02", "category": "signs_ranges_negative", "line": "-5 is below zero."}
+{"id": "signs_ranges_negative-03", "category": "signs_ranges_negative", "line": "2+3=5."}
+{"id": "signs_ranges_negative-04", "category": "signs_ranges_negative", "line": "Is 7 > 5?"}
+{"id": "signs_ranges_negative-05", "category": "signs_ranges_negative", "line": "The answer is between 20 and 30."}
+{"id": "signs_ranges_negative-06", "category": "signs_ranges_negative", "line": "Ages 6-8 may join."}
+{"id": "signs_ranges_negative-07", "category": "signs_ranges_negative", "line": "Write 4 x 3 = 12."}
+{"id": "signs_ranges_negative-08", "category": "signs_ranges_negative", "line": "It is -2 degrees."}
+{"id": "signs_ranges_negative-09", "category": "signs_ranges_negative", "line": "Use 1-2-3 to start."}
+{"id": "signs_ranges_negative-10", "category": "signs_ranges_negative", "line": "5/5 is 1."}
+{"id": "large_numbers-01", "category": "large_numbers", "line": "A thousand is 1,000."}
+{"id": "large_numbers-02", "category": "large_numbers", "line": "Say 100, then 200, then 300."}
+{"id": "large_numbers-03", "category": "large_numbers", "line": "Nigeria has over 200,000,000 people."}
+{"id": "large_numbers-04", "category": "large_numbers", "line": "The number 10000 has five digits."}
+{"id": "large_numbers-05", "category": "large_numbers", "line": "The hall seats 2500 people."}
+{"id": "large_numbers-06", "category": "large_numbers", "line": "999 plus 1 is 1,000."}
+{"id": "large_numbers-07", "category": "large_numbers", "line": "It cost ₦1,000,000."}
+{"id": "large_numbers-08", "category": "large_numbers", "line": "One million is 1,000,000."}
+{"id": "large_numbers-09", "category": "large_numbers", "line": "You read 350 pages."}
+{"id": "large_numbers-10", "category": "large_numbers", "line": "The school has 1,200 pupils."}
+{"id": "mixed_alphanumeric-01", "category": "mixed_alphanumeric", "line": "Use A4 paper."}
+{"id": "mixed_alphanumeric-02", "category": "mixed_alphanumeric", "line": "Vitamin B12 is good for you."}
+{"id": "mixed_alphanumeric-03", "category": "mixed_alphanumeric", "line": "Sit in seat B7."}
+{"id": "mixed_alphanumeric-04", "category": "mixed_alphanumeric", "line": "Take bus 22."}
+{"id": "mixed_alphanumeric-05", "category": "mixed_alphanumeric", "line": "Find Q3 on the chart."}
+{"id": "mixed_alphanumeric-06", "category": "mixed_alphanumeric", "line": "He is in Form 1A."}
+{"id": "mixed_alphanumeric-07", "category": "mixed_alphanumeric", "line": "Press 1 for yes."}
+{"id": "mixed_alphanumeric-08", "category": "mixed_alphanumeric", "line": "The team is U12."}
+{"id": "mixed_alphanumeric-09", "category": "mixed_alphanumeric", "line": "Draw an H2O molecule."}
+{"id": "mixed_alphanumeric-10", "category": "mixed_alphanumeric", "line": "The code is x2."}
+{"id": "no_digits-01", "category": "no_digits", "line": "Well done!"}
+{"id": "no_digits-02", "category": "no_digits", "line": "Nice try, let's count together."}
+{"id": "no_digits-03", "category": "no_digits", "line": "You said forty-five. Now say fifty."}
+{"id": "no_digits-04", "category": "no_digits", "line": "Good listening!"}
+{"id": "no_digits-05", "category": "no_digits", "line": "Say it after me."}

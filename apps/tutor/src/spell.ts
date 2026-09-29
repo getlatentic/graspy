@@ -18,7 +18,7 @@ import { complete } from "./speller-host";
 /** A spelled line is about as long as the line was; one far longer has been rewritten, not spelled. */
 const MOST_GROWTH = 2.5;
 
-function brief(text: string): string {
+export function spellingBrief(text: string): string {
   return [
     "Rewrite this line, which is said aloud to a child in English, so that every number",
     "written in digits is written in words instead. Change nothing else: not a word, not the punctuation.",
@@ -56,13 +56,23 @@ function checkable(line: string): boolean {
   return standaloneNumbers(line).length === (line.match(/\d+/g) ?? []).length;
 }
 
+/** What the model said, as a line: without the quotation marks it may put round it. */
+export function asLine(said: unknown): string | null {
+  return typeof said === "string" ? said.trim().replace(/^"(.*)"$/s, "$1") : null;
+}
+
+/** What the automated check makes of a reply: "uncheckable" when the line has no reading to check against. */
+export function verdictOf(line: string, spelled: string | null): "pass" | "fail" | "uncheckable" {
+  if (!checkable(line)) return "uncheckable";
+  return acceptable(line, spelled) ? "pass" : "fail";
+}
+
 /** The line with its digits written as words, or the line as it was when they cannot be trusted. */
 export async function spellNumbers(env: Env, line: string, language: string): Promise<string> {
   if (language !== "en" || !/\d/.test(line) || !checkable(line)) return line;
   try {
-    const said = await complete(env, brief(line));
-    const spelled = typeof said === "string" ? said.trim().replace(/^"(.*)"$/s, "$1") : null;
-    return acceptable(line, spelled) ? spelled : line;
+    const spelled = asLine(await complete(env, spellingBrief(line)));
+    return verdictOf(line, spelled) === "pass" ? (spelled as string) : line;
   } catch (error) {
     console.log(JSON.stringify({ part: "spell-failed", why: String(error) }));
     return line;
