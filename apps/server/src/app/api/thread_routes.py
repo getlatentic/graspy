@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from ..account.directory import learner_key
 from ..account.learners import NoSuchLearner, learner_of
 from ..caller import Keeping
+from ..local_d1 import MAX_BOUND_INTEGER
 from ..security.guard import Session, require_session
 from ..threads.store import BadCursor
 from ..threads.wire import SentThreads
@@ -86,8 +87,10 @@ async def keep_threads(learner: LearnerDep, request: Request) -> dict:
 async def changed_threads(
     learner: LearnerDep,
     request: Request,
-    since: Annotated[int, Query(ge=0)] = 0,
-    up_to: Annotated[int | None, Query(alias="upTo", ge=0)] = None,
+    since: Annotated[int, Query(ge=0, le=MAX_BOUND_INTEGER)] = 0,
+    up_to: Annotated[
+        int | None, Query(alias="upTo", ge=0, le=MAX_BOUND_INTEGER)
+    ] = None,
     after: Annotated[str | None, Query(max_length=200)] = None,
 ) -> dict:
     try:

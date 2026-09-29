@@ -184,6 +184,29 @@ async def test_the_time_the_person_signed_in_is_read_from_the_token_google_accep
     assert signed.auth_time == 1_700_000_000
 
 
+async def test_how_the_person_signed_in_is_read_from_the_token_google_accepted():
+    signed = await firebase.verified(
+        id_token({"firebase": {"sign_in_provider": "google.com"}}),
+        "key",
+        google(200, {"users": [{"localId": UID}]}),
+    )
+
+    assert signed.provider == "google.com"
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        "token",
+        id_token({"firebase": "google.com"}),
+        id_token({"firebase": {"sign_in_provider": 1}}),
+        id_token({"sub": "x"}),
+    ],
+)
+def test_a_token_that_does_not_say_how_the_person_signed_in_gives_no_provider(token):
+    assert firebase.token_sign_in_provider(token) is None
+
+
 @pytest.mark.parametrize(
     "token",
     [

@@ -41,23 +41,35 @@ class SignedIn:
     name: str
     # When the person last signed in, in epoch seconds, or None when the token does not say.
     auth_time: int | None = None
+    # How the person signed in, or None when the token does not say.
+    provider: str | None = None
 
     def signed_in_within(self, seconds: int, now: float) -> bool:
         return self.auth_time is not None and now - self.auth_time <= seconds
 
 
-def token_auth_time(id_token: str) -> int | None:
-    """The token's `auth_time` claim. Read from a token Google has just accepted, so no signature
-    is checked here."""
+def _claims(id_token: str) -> dict:
+    """The claims of a token Google has just accepted, so no signature is checked here."""
     try:
         payload = id_token.split(".")[1]
         claims = json.loads(
             base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))
         )
     except IndexError, ValueError:
-        return None
-    auth_time = claims.get("auth_time") if isinstance(claims, dict) else None
+        return {}
+    return claims if isinstance(claims, dict) else {}
+
+
+def token_auth_time(id_token: str) -> int | None:
+    auth_time = _claims(id_token).get("auth_time")
     return auth_time if isinstance(auth_time, int) else None
+
+
+def token_sign_in_provider(id_token: str) -> str | None:
+    """How the person signed in, such as `google.com`, `password` or `anonymous`."""
+    firebase = _claims(id_token).get("firebase")
+    provider = firebase.get("sign_in_provider") if isinstance(firebase, dict) else None
+    return provider if isinstance(provider, str) else None
 
 
 def lookup_url(emulator_host: str | None) -> str:
@@ -111,4 +123,5 @@ async def verified(
         uid=uid,
         name=name if isinstance(name, str) else "",
         auth_time=token_auth_time(id_token),
+        provider=token_sign_in_provider(id_token),
     )

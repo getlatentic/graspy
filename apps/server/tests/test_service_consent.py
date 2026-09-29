@@ -99,6 +99,7 @@ async def test_a_learner_added_the_old_way_without_the_workers_bindings_is_added
         ({"firebaseIdToken": "stale"}, 401, "sign_in_stale"),
         ({"firebaseIdToken": "undated"}, 401, "sign_in_stale"),
         ({"firebaseIdToken": "other"}, 403, "sign_in_other_account"),
+        ({"firebaseIdToken": "password"}, 403, "sign_in_not_google"),
         ({"firebaseIdToken": "forged"}, 401, "sign_in_invalid"),
     ],
 )
@@ -204,4 +205,35 @@ async def test_removing_a_learner_forgets_their_consent(app, env):
 
     assert [row["learner_key"] for row in env.DB.rows("SELECT * FROM consents")] == [
         f"account:{UID}/{second}"
+    ]
+
+
+async def test_a_consent_that_cannot_be_kept_leaves_no_learner_and_a_retry_adds_one(
+    app, env, monkeypatch
+):
+    batch = env.DB.batch
+
+    async def broken(statements):
+        raise RuntimeError("D1 is down")
+
+    monkeypatch.setattr(env.DB, "batch", broken)
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        failed = await http.post(
+            "/api/account/learners", json=adding(firebaseIdToken="fresh")
+        )
+        after_failure = await learners(http)
+        monkeypatch.setattr(env.DB, "batch", batch)
+        retried = await http.post(
+            "/api/account/learners", json=adding(firebaseIdToken="fresh")
+        )
+        after_retry = await learners(http)
+
+    assert failed.status_code == 503
+    assert failed.json()["detail"]["code"] == "consent_not_kept"
+    assert after_failure == []
+    assert retried.status_code == 201
+    assert [one["id"] for one in after_retry] == [retried.json()["id"]]
+    assert [row["learner_key"] for row in env.DB.rows("SELECT * FROM consents")] == [
+        f"account:{UID}/{retried.json()['id']}"
     ]

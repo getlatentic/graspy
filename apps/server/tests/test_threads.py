@@ -507,6 +507,17 @@ async def test_a_thread_started_on_the_phone_opens_on_the_web_and_back(app):
     assert [m["id"] for m in back["messages"]] == ["m3"]
 
 
+@pytest.mark.parametrize("cursor", ["since", "upTo"])
+async def test_a_cursor_past_what_d1_can_be_asked_is_refused_not_a_server_error(
+    app, cursor
+):
+    async with client(app) as http:
+        await learning_as(http, "Ada")
+        read = await http.get("/api/learner/threads", params={cursor: 2**60})
+
+    assert read.status_code == 422
+
+
 async def test_a_device_signed_out_keeps_its_threads_to_itself(app):
     async with client(app) as http:
         await signed_in(http, deviceId=DEVICE)
