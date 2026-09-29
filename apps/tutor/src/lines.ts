@@ -14,23 +14,26 @@ const ONES = [
 ];
 const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
 
-/** A whole number as English words, or its digits past four figures. */
+/** A whole number as English words, up to nine figures. */
 export function numberWords(n: number): string {
   if (n < 20) return ONES[n];
   if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? `-${ONES[n % 10]}` : "");
   if (n < 1000) return `${ONES[Math.floor(n / 100)]} hundred${n % 100 ? ` ${numberWords(n % 100)}` : ""}`;
-  if (n < 10_000) return `${ONES[Math.floor(n / 1000)]} thousand${n % 1000 ? ` ${numberWords(n % 1000)}` : ""}`;
+  for (const [size, name] of [[1_000_000, "million"], [1000, "thousand"]] as const) {
+    if (n >= size) return `${numberWords(Math.floor(n / size))} ${name}${n % size ? ` ${numberWords(n % size)}` : ""}`;
+  }
   return String(n);
 }
 
-const STANDALONE = /(?<![\w.,:;%/\-₦$£€])\d{1,3}(?![\w:%/\-]|[.,]\d)/g;
+const ORDINAL_ONES = [
+  "zeroth", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh",
+  "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth",
+];
 
-/** Whole numbers of up to three figures standing alone in a line, in order: "5, 10, 15" but not "3:30", "50%" or "1st". */
-export function standaloneNumbers(text: string): number[] {
-  return (text.match(STANDALONE) ?? []).map(Number);
-}
-
-/** The line as it must read once its standalone numbers are words: what a model's spelling has to equal. */
-export function expectedSpelling(text: string): string {
-  return text.replace(STANDALONE, (digits) => numberWords(Number(digits)));
+/** A number as an English ordinal, "first" to "ninety-ninth". */
+export function ordinalWords(n: number): string {
+  if (n < 20) return ORDINAL_ONES[n];
+  const units = n % 10;
+  if (units === 0) return TENS[n / 10].replace(/y$/, "ieth");
+  return `${TENS[Math.floor(n / 10)]}-${ORDINAL_ONES[units]}`;
 }

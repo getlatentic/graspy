@@ -1,0 +1,6 @@
+{"language": "yo", "host": "bedrock", "model": "gpt-oss-20b", "prompt": "v1", "line": "O ṣe dáadáa! O ka 1, 2, 3, 4, 5.", "reply": "O ṣe dáadáa! O ka okan, meji, meta, merin, marun.", "latency_ms": 2200, "note": "Digits became Yoruba words but without tone marks or dots under letters (should be ọ̀kan, èjì, ẹ̀ta, ẹ́rin, àrún)."}
+{"language": "yo", "host": "bedrock", "model": "gpt-oss-20b", "prompt": "v1", "line": "Méje ìlọ́po mẹ́jọ jẹ́ 56.", "reply": null, "latency_ms": 4300, "note": "No reply: all 600 tokens went on reasoning."}
+{"language": "yo", "host": "bedrock", "model": "gpt-oss-20b", "prompt": "v1", "line": "Ka 10, 20, 30 pẹ̀lú mi.", "reply": null, "latency_ms": 2300, "note": "No reply: all 600 tokens went on reasoning."}
+{"language": "pcm", "host": "bedrock", "model": "gpt-oss-20b", "prompt": "v1", "line": "You don do well! Na 5, 10, 15, 20.", "reply": "You don do well! Na five, ten, fifteen, twenty.", "latency_ms": 1600, "note": "Correct."}
+{"language": "pcm", "host": "bedrock", "model": "gpt-oss-20b", "prompt": "v1", "line": "Seven times eight na 56.", "reply": "Seven times eight na fifty six.", "latency_ms": 1500, "note": "Correct."}
+{"language": "pcm", "host": "bedrock", "model": "gpt-oss-20b", "prompt": "v1", "line": "You count 1 reach 5 well.", "reply": "You count one reach five well.", "latency_ms": 1300, "note": "Correct."}

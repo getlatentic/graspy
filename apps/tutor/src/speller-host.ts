@@ -1,10 +1,9 @@
 /**
  * Where the spelling model runs: Cloudflare's Workers AI, which the rest of the tutor already uses, or
  * Amazon Bedrock, whose bill takes the AWS credits. `SPELLER_HOST` picks one ("workers-ai" when unset,
- * or "bedrock"); nothing else changes. Both serve the same open model, gpt-oss-20b.
+ * or "bedrock") and `SPELLER_MODEL` the model on it; each host has a default.
  */
-export const WORKERS_AI_MODEL = "@cf/openai/gpt-oss-20b";
-export const BEDROCK_MODEL = "openai.gpt-oss-20b";
+export const DEFAULT_MODEL = { "workers-ai": "@cf/openai/gpt-oss-20b", bedrock: "google.gemma-4-e2b" } as const;
 
 /**
  * Either host now and then stalls for ten seconds or more on one call, measured on both. Spelling a
@@ -16,7 +15,7 @@ export const SPELL_TIMEOUT_MS = 4_000;
 type Complete = (env: Env, prompt: string) => Promise<unknown>;
 
 const workersAi: Complete = async (env, prompt) => {
-  const reply = (await env.AI.run(WORKERS_AI_MODEL, {
+  const reply = (await env.AI.run(env.SPELLER_MODEL || DEFAULT_MODEL["workers-ai"], {
     messages: [{ role: "user", content: prompt }],
     temperature: 0,
     max_tokens: 600,
@@ -24,19 +23,31 @@ const workersAi: Complete = async (env, prompt) => {
   return reply.choices?.[0]?.message?.content ?? reply.response;
 };
 
+/** Bedrock serves Gemma 4 on its /openai/v1 path and the other open models on /v1. */
+export function bedrockPath(model: string): string {
+  return model.startsWith("google.gemma-4") ? "/openai/v1" : "/v1";
+}
+
+/** Only the gpt-oss models take a reasoning setting; the others answer an unknown parameter with a 400. */
+function bedrockBody(model: string, prompt: string): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    model,
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0,
+    max_completion_tokens: 600,
+  };
+  if (model.startsWith("openai.gpt-oss")) body.reasoning_effort = "low";
+  return body;
+}
+
 const bedrock: Complete = async (env, prompt) => {
   if (!env.AWS_BEARER_TOKEN_BEDROCK) throw new Error("SPELLER_HOST is bedrock but AWS_BEARER_TOKEN_BEDROCK is not set");
   const region = env.AWS_REGION || "us-east-1";
-  const response = await fetch(`https://bedrock-mantle.${region}.api.aws/v1/chat/completions`, {
+  const model = env.SPELLER_MODEL || DEFAULT_MODEL.bedrock;
+  const response = await fetch(`https://bedrock-mantle.${region}.api.aws${bedrockPath(model)}/chat/completions`, {
     method: "POST",
     headers: { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      model: BEDROCK_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0,
-      max_completion_tokens: 600,
-      reasoning_effort: "low",
-    }),
+    body: JSON.stringify(bedrockBody(model, prompt)),
     signal: AbortSignal.timeout(SPELL_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`Bedrock answered ${response.status}`);

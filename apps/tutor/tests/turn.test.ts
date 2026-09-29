@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
 import { STEADY_LINES } from "../src/lines";
-import { WORKERS_AI_MODEL } from "../src/speller-host";
+import { DEFAULT_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
 
 // Yoruba number words are past the fast reader, so these turns go to the teacher on the big model.
@@ -27,7 +27,7 @@ function tutor(script: unknown[], verdicts: string[] = [], judged: boolean[] = [
     AI: {
       run: async (model: string, input: { messages: Record<string, unknown>[]; response_format?: unknown }) => {
         if (model === SAFETY_MODEL) return { response: verdicts.shift() ?? "safe" };
-        if (model === WORKERS_AI_MODEL) return { choices: [{ message: { content: spelled.shift() ?? "" } }] };
+        if (model === DEFAULT_MODEL["workers-ai"]) return { choices: [{ message: { content: spelled.shift() ?? "" } }] };
         if (model === READER_MODEL) {
           return { choices: [{ message: { content: JSON.stringify({ answer: read.shift() ?? null }) } }] };
         }

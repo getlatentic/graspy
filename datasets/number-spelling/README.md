@@ -28,6 +28,9 @@ results-qwen.jsonl   the same lines on four Qwen models
 results-llama-gemma.jsonl   the same lines on four Llama and two Gemma 3 models, and the Workers AI Gemma that gave no reply
 results-gemma-4.jsonl   the same lines on three Gemma 4 models
 probe/          the small Worker that produced the replies (see below)
+results-gemma-4-e2b-prompts.jsonl   gemma-4-e2b's replies to each of four prompts (v1 to v4), scored by the current check
+prompts/        the four prompts as text, and try.py, which ran a prompt on every line
+other-languages.jsonl   the Yoruba and Pidgin lines that were tried
 tts-roundtrip/  how each version of each line sounds: Spitch speaks it, Whisper transcribes it (see below)
 ```
 
@@ -69,7 +72,7 @@ What this says:
 - Glued labels (`Class threeB`, `Form oneA`) are wrong.
 - Latency was about one second per line on both hosts, with occasional stalls of ten seconds or more, which is why the tutor gives up on a spelling after four seconds.
 
-The tutor's rule follows from this: a line whose numbers all stand alone is checked by code and the model may spell it; every other line is left to the teacher model to rewrite.
+The tutor's rule follows from this: a line that has a reading (see the index below for what that covers) is checked by code and the model may spell it; every other line is left to the teacher model to rewrite.
 
 ## A bigger model
 
@@ -206,6 +209,47 @@ What Spitch does with what it is given:
 - Years, plain sums of counting and most ordinals are read well raw or spelled.
 
 Caveats: one voice, one listener (a Whisper mishearing looks like a Spitch fault: `B7` came back garbled in every version), readings written by one reviewer, and a scorer that reduces forms and so hides a few differences (`12` and `one two`). The per-clip transcripts are in `tts-roundtrip/results.jsonl`.
+
+## Index: everything that was tested, and where the data is
+
+| What | When it was run | Files |
+|---|---|---|
+| gpt-oss-20b on both hosts, 125 lines | first | `results.jsonl` |
+| gpt-oss-120b on both hosts | second | `results-gpt-oss-120b.jsonl` |
+| Four Qwen models (three Bedrock, one Workers AI) | third | `results-qwen.jsonl` |
+| Llama 4 Scout, 3.3 70B, 3.1 8B, 3.2 3B; Gemma 3 27B and 12B | fourth | `results-llama-gemma.jsonl` |
+| Three Gemma 4 models, at the route the AWS launch post documents | fifth | `results-gemma-4.jsonl` |
+| How each version sounds when Spitch speaks it and Whisper transcribes it | sixth | `tts-roundtrip/` |
+| Four prompts on gemma-4-e2b | seventh | `prompts/`, `results-gemma-4-e2b-prompts.jsonl` |
+| Yoruba and Pidgin lines on gpt-oss-20b (six lines, once) | early | `other-languages.jsonl` |
+
+Two checks were used. The model comparison above used the first, which trusted only numbers standing alone: 57 of the 120 lines with digits had a reading. The tutor now uses a wider one (`apps/tutor/src/reading.ts`) that also reads signs, units, naira amounts, percentages, decimals, times, ranges, ordinals and numbers with thousands separators: 94 lines have a reading. Years, phone numbers, fractions with a slash, letters joined to digits, `N750` and unseparated numbers of four or more figures have more than one reading and are declined, so the teacher model rewrites those lines.
+
+Things that went wrong on the way, so the next person does not repeat them:
+
+- A first check that looked for a number's words inside the reply accepted `five` inside `fifty five`, so `Say 5` could come back as `Say fifty-five`. It compares the whole line now.
+- A length cap in the check rejected a correct spelling of `12 times 12 is 144.`. It was redundant and is gone.
+- Gemma 4 was first reported unusable here. The route was wrong: it is served at `/openai/v1`, the other models at `/v1`.
+- A first scorer for the sound test could not read decimals, thousands or leading zeros, and scored every version too low.
+- Prompt v2 (below) made gemma-4-e2b drop the final punctuation and put `naira` before the amount.
+- Prompt v3 had it copy the amount from an example: `It costs ₦50.` came back as `It costs five hundred naira.` The check rejected it. The examples in v4 use numbers that do not appear in the lines.
+
+## Prompts (gemma-4-e2b, Bedrock, 94 lines that have a reading)
+
+Replies to each prompt scored by the current check (`prompts/v1.txt` to `v4.txt`).
+
+| Prompt | Passed | Failed | What it did |
+|---|---|---|---|
+| v1: change only the digits, nothing else | 88 | 6 | the original brief; the wider check already accepts its rewrites of signs and units |
+| v2: a list of what each sign and unit becomes, no examples | 19 | 75 | dropped the final punctuation and wrote `naira five hundred` |
+| v3: the list, with three examples and a punctuation rule | 92 | 2 | copied an example's amount into `₦50`; wrote `one thousand thousand` for `1,000,000` |
+| v4: as v3, with examples whose numbers cannot be copied | 93 | 1 | `1,000,000` became `one thousand` |
+
+Much of the gain from v1 to v4 comes from widening the check, not from the prompt: under the first check v1 passed 46 of the 57 lines it could read. Median latency was about 0.7 s and the slowest call about 1 s in the v3 and v4 runs. The failures in v3 and v4 are wrong numbers the check caught, which is the check doing its job.
+
+## Other languages
+
+Six lines on gpt-oss-20b on Bedrock with the first brief (`other-languages.jsonl`), run once. Pidgin came out right on all three. Yoruba did not: one line came back with number words but without tone marks or dots under letters, and two returned nothing because all 600 tokens went on reasoning. English only is enabled until this is tried properly on a larger Yoruba set.
 
 ## Reproducing
 

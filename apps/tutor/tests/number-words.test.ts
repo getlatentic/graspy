@@ -13,5 +13,6 @@ describe("numberWords across the whole range it writes", () => {
 
   it("writes only letters, spaces and hyphens, so no digit is left in a line", () => {
     for (let n = 0; n <= 9999; n += 1) expect(numberWords(n)).toMatch(/^[a-z -]+$/);
+    expect(numberWords(999_999_999)).toMatch(/^[a-z -]+$/);
   });
 });

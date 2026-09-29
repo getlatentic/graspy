@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { spellNumbers } from "../src/spell";
-import { SPELL_TIMEOUT_MS } from "../src/speller-host";
+import { SPELL_TIMEOUT_MS, bedrockPath } from "../src/speller-host";
 
 function speller(reply: unknown, calls: { n: number } = { n: 0 }) {
   return {
@@ -76,12 +76,44 @@ describe("spellNumbers", () => {
     expect(await spellNumbers(speller("You said forty five.").env, "You said 45.", "en")).toBe("You said forty five.");
   });
 
-  it("does not trust the model with a number that does not stand alone", async () => {
-    for (const line of ["It is 3:30 now.", "You paid ₦500.", "That was the 1st.", "You got 50%."]) {
+  it("does not trust the model with a line that has more than one reading", async () => {
+    for (const line of ["It happened in 1990.", "Call 08012345678.", "Sit in seat B7.", "Half is 1/2.", "The team is U12."]) {
       const { env, calls } = speller("anything");
       expect(await spellNumbers(env, line, "en")).toBe(line);
       expect(calls.n).toBe(0);
     }
+  });
+
+  it.each([
+    ["It is 3:30 now.", "It is three thirty now."],
+    ["You paid ₦500.", "You paid five hundred naira."],
+    ["You got 50% of them.", "You got fifty percent of them."],
+    ["3 + 4 = 7.", "Three plus four equals seven."],
+    ["It weighs 3 kg.", "It weighs three kilograms."],
+    ["It weighs 3 kg.", "It weighs three kilogram."],
+    ["Draw a line of 10 cm.", "Draw a line of ten centimeters."],
+    ["Count 5-10.", "Count five to ten."],
+    ["-5 is below zero.", "Negative five is below zero."],
+    ["You came 1st!", "You came first!"],
+    ["3 x 4 = 12.", "Three times four is twelve."],
+    ["It is 7:05.", "It is seven zero five."],
+  ])("takes the spelling of %s as %s", async (line, reply) => {
+    const { env } = speller(reply);
+    expect(await spellNumbers(env, line, "en")).toBe(reply);
+  });
+
+  it.each([
+    ["It is 3:30 now.", "It is three:thirty now."],
+    ["You paid ₦500.", "You paid ₦five hundred."],
+    ["You got 50% of them.", "You got fifty% of them."],
+    ["3 + 4 = 7.", "Three + four = seven."],
+    ["It weighs 3 kg.", "It weighs three kg."],
+    ["Count 5-10.", "Count five-ten."],
+    ["School starts at 8:00.", "School starts at eight zero zero."],
+    ["It is 3:30 now.", "It is three fifty now."],
+  ])("does not take %s spelled as %s", async (line, reply) => {
+    const { env } = speller(reply);
+    expect(await spellNumbers(env, line, "en")).toBe(line);
   });
 
   it("leaves every other language for the teacher to rewrite, until English is proven", async () => {
@@ -114,9 +146,28 @@ describe("the spelling model's host", () => {
     expect(await spellNumbers(bedrock, "You said 45.", "en")).toBe("You said forty-five.");
 
     const [url, init] = fetched.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("https://bedrock-mantle.us-east-1.api.aws/v1/chat/completions");
+    expect(url).toBe("https://bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions");
     expect((init.headers as Record<string, string>).authorization).toBe("Bearer key");
-    expect(JSON.parse(String(init.body)).model).toBe("openai.gpt-oss-20b");
+    expect(JSON.parse(String(init.body)).model).toBe("google.gemma-4-e2b");
+  });
+
+  it("asks Bedrock for Gemma 4 on its own path, without a reasoning setting", async () => {
+    const fetched = vi.fn(async () => Response.json({ choices: [{ message: { content: "You said forty-five." } }] }));
+    vi.stubGlobal("fetch", fetched);
+    const gemma = { ...bedrock, SPELLER_MODEL: "google.gemma-4-e2b" } as unknown as Env;
+
+    await spellNumbers(gemma, "You said 45.", "en");
+
+    const [url, init] = fetched.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions");
+    expect(JSON.parse(String(init.body))).toMatchObject({ model: "google.gemma-4-e2b" });
+    expect(JSON.parse(String(init.body))).not.toHaveProperty("reasoning_effort");
+  });
+
+  it("chooses the path by model", () => {
+    expect(bedrockPath("google.gemma-4-31b")).toBe("/openai/v1");
+    expect(bedrockPath("openai.gpt-oss-20b")).toBe("/v1");
+    expect(bedrockPath("qwen.qwen3-next-80b-a3b-instruct")).toBe("/v1");
   });
 
   it("keeps the line when Bedrock is chosen without its key, or refuses", async () => {
