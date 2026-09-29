@@ -4,11 +4,12 @@ import com.latentic.graspy.consent.ConsentProblem
 import com.latentic.graspy.consent.DEFAULT_RETENTION_DAYS
 
 /** What did not go through, as the parent is told it: to try again, or that the recording is gone. */
-enum class RecordingsProblem { OTHER_ACCOUNT, SIGN_IN, FAILED, GONE, PLAY_FAILED }
+enum class RecordingsProblem { OTHER_ACCOUNT, SIGN_IN, NOT_KEPT, FAILED, GONE, PLAY_FAILED }
 
 internal fun ConsentProblem.forRecordings() = when (this) {
     ConsentProblem.OTHER_ACCOUNT -> RecordingsProblem.OTHER_ACCOUNT
     ConsentProblem.SIGN_IN -> RecordingsProblem.SIGN_IN
+    ConsentProblem.NOT_KEPT -> RecordingsProblem.NOT_KEPT
     ConsentProblem.FAILED -> RecordingsProblem.FAILED
 }
 
@@ -16,6 +17,7 @@ internal fun ConsentProblem.forRecordings() = when (this) {
 internal fun RecordingsProblem?.forNotice() = when (this) {
     RecordingsProblem.OTHER_ACCOUNT -> ConsentProblem.OTHER_ACCOUNT
     RecordingsProblem.SIGN_IN -> ConsentProblem.SIGN_IN
+    RecordingsProblem.NOT_KEPT -> ConsentProblem.NOT_KEPT
     RecordingsProblem.FAILED -> ConsentProblem.FAILED
     else -> null
 }

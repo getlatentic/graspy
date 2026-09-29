@@ -126,11 +126,11 @@ class RecordingsOfTest {
     fun `each Play and Delete says which recording it is for, and is at least 48dp to tap`() {
         show()
 
-        for (action in listOf("Play", "Delete")) {
-            val described = compose.onAllNodes(hasContentDescription("$action, ", substring = true)).fetchSemanticsNodes()
+        for ((action, described) in listOf("Play" to "Play the recording of ", "Delete" to "Delete the recording of ")) {
+            val names = compose.onAllNodes(hasContentDescription(described, substring = true)).fetchSemanticsNodes()
                 .map { it.config[SemanticsProperties.ContentDescription].single() }
-            assertEquals(action, 2, described.toSet().size)
-            compose.onAllNodes(hasText(action) and hasContentDescription("$action, ", substring = true))[0].assertHeightIsAtLeast(48.dp)
+            assertEquals(action, 2, names.toSet().size)
+            compose.onAllNodes(hasText(action) and hasContentDescription(described, substring = true))[0].assertHeightIsAtLeast(48.dp)
         }
     }
 

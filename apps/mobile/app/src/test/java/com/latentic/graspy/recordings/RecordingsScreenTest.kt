@@ -59,7 +59,7 @@ class RecordingsScreenTest {
 
         compose.onNodeWithText("Voice recordings").assertIsDisplayed()
         compose.onNodeWithText("Ada").assertIsDisplayed()
-        compose.onNodeWithText("graspy deletes each recording as soon as it has marked the answer.").assertIsDisplayed()
+        compose.onNodeWithText("graspy deletes each recording once it has marked the answer. The words it heard stay.").assertIsDisplayed()
         compose.onNode(isToggleable()).assertIsOff()
         assertTrue(compose.onAllNodesWithText("Play").fetchSemanticsNodes().isEmpty())
     }
@@ -138,7 +138,7 @@ class RecordingsScreenTest {
         compose.onNodeWithText("Stop keeping recordings?").assertIsDisplayed()
         compose.onNodeWithText("Stop and delete them").performClick()
 
-        compose.waitUntilText("graspy deletes each recording as soon as it has marked the answer.")
+        compose.waitUntilText("graspy deletes each recording once it has marked the answer. The words it heard stay.")
         compose.onNode(isToggleable()).assertIsOff()
         assertTrue(api.kept.isEmpty())
     }

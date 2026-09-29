@@ -24,12 +24,13 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
 /** [UNSENT] asks whether to switch anyway; the others only say why nothing changed. */
-enum class ChoiceProblem { OFFLINE, UNSENT, FULL, OTHER_ACCOUNT, SIGN_IN, FAILED }
+enum class ChoiceProblem { OFFLINE, UNSENT, FULL, OTHER_ACCOUNT, SIGN_IN, NOT_KEPT, FAILED }
 
 fun choiceProblem(error: Throwable): ChoiceProblem = when {
     error is UnsentChanges -> if (error.offline) ChoiceProblem.OFFLINE else ChoiceProblem.UNSENT
     refusalCode(error) == "too_many_learners" -> ChoiceProblem.FULL
     consentProblemOf(error) == ConsentProblem.SIGN_IN -> ChoiceProblem.SIGN_IN
+    consentProblemOf(error) == ConsentProblem.NOT_KEPT -> ChoiceProblem.NOT_KEPT
     else -> ChoiceProblem.FAILED
 }
 

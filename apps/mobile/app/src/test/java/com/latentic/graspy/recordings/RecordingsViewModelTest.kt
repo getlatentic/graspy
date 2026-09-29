@@ -181,6 +181,7 @@ class RecordingsViewModelTest {
             Triple(401, "sign_in_stale", RecordingsProblem.SIGN_IN),
             Triple(400, "notice_unknown", RecordingsProblem.SIGN_IN),
             Triple(422, "invalid", RecordingsProblem.FAILED),
+            Triple(503, "consent_not_kept", RecordingsProblem.NOT_KEPT),
         )
         for ((status, code, told) in refusals) {
             api.refusedWith = httpError(status, """{"detail":{"error":"refused","code":"$code"}}""")
@@ -199,7 +200,7 @@ class RecordingsViewModelTest {
 
         assertTrue(model.state.value.keeping)
         assertNull(model.state.value.problem)
-        assertEquals(4, parent.shownOver.size)
+        assertEquals(5, parent.shownOver.size)
     }
 
     @Test

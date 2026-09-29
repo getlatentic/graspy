@@ -129,6 +129,7 @@ private fun KeptList(copy: AccountCopy, state: RecordingsState, viewModel: Recor
 private fun problemText(copy: AccountCopy, problem: RecordingsProblem): String = when (problem) {
     RecordingsProblem.OTHER_ACCOUNT -> copy.consent.otherAccount
     RecordingsProblem.SIGN_IN -> copy.consent.signIn
+    RecordingsProblem.NOT_KEPT -> copy.consent.notKept
     RecordingsProblem.FAILED -> copy.failed
     RecordingsProblem.GONE -> copy.recordings.gone
     RecordingsProblem.PLAY_FAILED -> copy.recordings.playFailed

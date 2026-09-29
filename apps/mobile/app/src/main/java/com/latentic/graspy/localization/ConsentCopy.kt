@@ -16,6 +16,8 @@ data class ConsentCopy(
     val needed: String,
     /** When signing in again, or the agreement, did not go through: trying again signs in again. */
     val signIn: String,
+    /** When graspy could not keep the agreement: nothing was recorded, and trying again asks again. */
+    val notKept: String,
     /** When the Google account chosen is not the one signed in to graspy. */
     val otherAccount: String,
 )
@@ -44,6 +46,10 @@ data class RecordingsCopy(
     val stopKeep: String,
     val gone: String,
     val playFailed: String,
+    /** What a recording's buttons are called for a screen reader; the recording is named by {when}. */
+    val playAt: String,
+    val stopAt: String,
+    val deleteAt: String,
 )
 
 internal val ENGLISH_CONSENT = ConsentCopy(
@@ -53,13 +59,14 @@ internal val ENGLISH_CONSENT = ConsentCopy(
     decline = "Don't agree",
     needed = "Not agreed yet",
     signIn = "That sign-in didn't work. Try again.",
+    notKept = "That was not saved. Try again.",
     otherAccount = "Use the Google account you are signed in with.",
 )
 
 internal val ENGLISH_RECORDINGS = RecordingsCopy(
     title = "Voice recordings",
     link = "Recordings",
-    off = "graspy deletes each recording as soon as it has marked the answer.",
+    off = "graspy deletes each recording once it has marked the answer. The words it heard stay.",
     keep = "Keep recordings",
     keptFor = "Kept for {days} days.",
     keepFor = "Keep for",
@@ -76,6 +83,9 @@ internal val ENGLISH_RECORDINGS = RecordingsCopy(
     stopKeep = "Stop, keep them until they expire",
     gone = "That recording is gone.",
     playFailed = "That recording didn't play. Try again.",
+    playAt = "Play the recording of {when}",
+    stopAt = "Stop the recording of {when}",
+    deleteAt = "Delete the recording of {when}",
 )
 
 internal val YORUBA_CONSENT = ConsentCopy(
@@ -85,13 +95,14 @@ internal val YORUBA_CONSENT = ConsentCopy(
     decline = "Kò fọwọ́ sí",
     needed = "A kò tíì fọwọ́ sí i",
     signIn = "Ìwọlé yẹn kò ṣiṣẹ́. Tún gbìyànjú.",
+    notKept = "A kò tọ́jú rẹ̀. Tún gbìyànjú.",
     otherAccount = "Lo àkọọ́lẹ̀ Google tí o fi wọlé.",
 )
 
 internal val YORUBA_RECORDINGS = RecordingsCopy(
     title = "Àwọn ohùn tí a gbà sílẹ̀",
     link = "Àwọn ohùn",
-    off = "graspy ń pa gbogbo ohùn tí a gbà sílẹ̀ rẹ́ ní kété tí ó bá ti yẹ ìdáhùn wò.",
+    off = "graspy ń pa gbogbo ohùn tí a gbà sílẹ̀ rẹ́ ní kété tí ó bá ti yẹ ìdáhùn wò. Àwọn ọ̀rọ̀ tí ó gbọ́ wà síbẹ̀.",
     keep = "Pa àwọn ohùn tí a gbà sílẹ̀ mọ́",
     keptFor = "A pa á mọ́ fún ọjọ́ {days}.",
     keepFor = "Pa á mọ́ fún",
@@ -108,6 +119,9 @@ internal val YORUBA_RECORDINGS = RecordingsCopy(
     stopKeep = "Dẹ́kun, pa wọ́n mọ́ títí wọn yóò fi parí",
     gone = "Ohùn yẹn ti lọ.",
     playFailed = "Ohùn yẹn kò ṣiṣẹ́. Tún gbìyànjú.",
+    playAt = "Tẹ́tí sí ohùn ti {when}",
+    stopAt = "Dá ohùn ti {when} dúró",
+    deleteAt = "Pa ohùn ti {when} rẹ́",
 )
 
 internal val PIDGIN_CONSENT = ConsentCopy(
@@ -117,13 +131,14 @@ internal val PIDGIN_CONSENT = ConsentCopy(
     decline = "I no agree",
     needed = "Dem never agree yet",
     signIn = "That sign-in no work. Try again.",
+    notKept = "Dem no save am. Try again.",
     otherAccount = "Use the Google account wey you sign in with.",
 )
 
 internal val PIDGIN_RECORDINGS = RecordingsCopy(
     title = "Voice recordings",
     link = "Recordings",
-    off = "graspy dey delete each recording as soon as e don mark the answer.",
+    off = "graspy dey delete each recording once e don mark the answer. The words wey e hear go stay.",
     keep = "Keep recordings",
     keptFor = "Dem go keep am for {days} days.",
     keepFor = "Keep am for",
@@ -140,6 +155,9 @@ internal val PIDGIN_RECORDINGS = RecordingsCopy(
     stopKeep = "Stop, but keep dem until dem expire",
     gone = "That recording don go.",
     playFailed = "That recording no play. Try again.",
+    playAt = "Play the recording of {when}",
+    stopAt = "Stop the recording of {when}",
+    deleteAt = "Delete the recording of {when}",
 )
 
 internal val ARABIC_CONSENT = ConsentCopy(
@@ -149,13 +167,14 @@ internal val ARABIC_CONSENT = ConsentCopy(
     decline = "لا أوافق",
     needed = "لم تتم الموافقة بعد",
     signIn = "لم ينجح تسجيل الدخول. حاول مرة أخرى.",
+    notKept = "لم يُحفظ ذلك. حاول مرة أخرى.",
     otherAccount = "استخدم حساب Google الذي سجّلت الدخول به.",
 )
 
 internal val ARABIC_RECORDINGS = RecordingsCopy(
     title = "التسجيلات الصوتية",
     link = "التسجيلات",
-    off = "يحذف graspy كل تسجيل بمجرد أن يصحّح الإجابة.",
+    off = "يحذف graspy كل تسجيل بمجرد أن يصحّح الإجابة. أما الكلمات التي سمعها فتبقى.",
     keep = "الاحتفاظ بالتسجيلات",
     keptFor = "يُحتفظ بها {days} يومًا.",
     keepFor = "الاحتفاظ لمدة",
@@ -172,4 +191,7 @@ internal val ARABIC_RECORDINGS = RecordingsCopy(
     stopKeep = "إيقاف وإبقاؤها حتى تنتهي مدتها",
     gone = "هذا التسجيل لم يعد موجودًا.",
     playFailed = "لم يُشغَّل هذا التسجيل. حاول مرة أخرى.",
+    playAt = "تشغيل تسجيل {when}",
+    stopAt = "إيقاف تسجيل {when}",
+    deleteAt = "حذف تسجيل {when}",
 )

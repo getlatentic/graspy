@@ -46,17 +46,19 @@ fun RecordingRow(
         )
         // Each button says which recording it is for, so a list of them is not a list of the same two words.
         val playLabel = if (playing) copy.stop else copy.play
+        val playFor = (if (playing) copy.stopAt else copy.playAt).replace("{when}", label)
+        val deleteFor = copy.deleteAt.replace("{when}", label)
         Column(horizontalAlignment = Alignment.End) {
             SecondaryButton(
                 playLabel,
                 onClick = onPlay,
-                modifier = Modifier.semantics { contentDescription = "$playLabel, $label" },
+                modifier = Modifier.semantics { contentDescription = playFor },
                 enabled = !fetching && !busy,
             )
             QuietButton(
                 copy.delete,
                 onClick = onDelete,
-                modifier = Modifier.semantics { contentDescription = "${copy.delete}, $label" },
+                modifier = Modifier.semantics { contentDescription = deleteFor },
                 enabled = !busy,
             )
         }

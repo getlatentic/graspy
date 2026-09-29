@@ -191,6 +191,7 @@ class LearnerPickerViewModelTest {
             Triple(401, "sign_in_invalid", ChoiceProblem.SIGN_IN),
             Triple(400, "notice_unknown", ChoiceProblem.SIGN_IN),
             Triple(503, "consent_unavailable", ChoiceProblem.FAILED),
+            Triple(503, "consent_not_kept", ChoiceProblem.NOT_KEPT),
         )
         for ((status, code, told) in refusals) {
             picks.refusedWith = httpError(status, """{"detail":{"error":"refused","code":"$code"}}""")
@@ -206,7 +207,7 @@ class LearnerPickerViewModelTest {
         picks.refusedWith = null
         picker.addAndChoose("Bayo", activity) { chosen += 1 }
         settleMain { chosen == 1 }
-        assertEquals(5, parent.shownOver.size)
+        assertEquals(6, parent.shownOver.size)
     }
 
     @Test

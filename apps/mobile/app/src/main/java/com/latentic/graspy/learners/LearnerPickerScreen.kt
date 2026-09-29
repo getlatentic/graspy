@@ -162,6 +162,7 @@ internal fun ChoiceStatus(copy: AccountCopy, state: PickerState, onAnyway: () ->
         ChoiceProblem.FULL -> ProblemNote(copy.full)
         ChoiceProblem.OTHER_ACCOUNT -> ProblemNote(copy.consent.otherAccount)
         ChoiceProblem.SIGN_IN -> ProblemNote(copy.consent.signIn)
+        ChoiceProblem.NOT_KEPT -> ProblemNote(copy.consent.notKept)
         ChoiceProblem.FAILED -> ProblemNote(copy.failed)
     }
 }

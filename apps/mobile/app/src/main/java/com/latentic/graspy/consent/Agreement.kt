@@ -29,9 +29,10 @@ class SignInAgainFailed(reason: String) : IOException(reason)
 
 /**
  * An agreement that did not go through, as a parent is told it: [SIGN_IN] when signing in again, or graspy's
- * check of it, did not hold, and asking again signs in again; [FAILED] for anything else.
+ * check of it, did not hold, and asking again signs in again; [NOT_KEPT] when graspy could not keep it, and nothing
+ * was recorded; [FAILED] for anything else.
  */
-enum class ConsentProblem { OTHER_ACCOUNT, SIGN_IN, FAILED }
+enum class ConsentProblem { OTHER_ACCOUNT, SIGN_IN, NOT_KEPT, FAILED }
 
 fun Agreement<*>.problem(): ConsentProblem? = when (this) {
     is Agreement.Recorded, Agreement.Declined -> null
@@ -42,12 +43,16 @@ fun Agreement<*>.problem(): ConsentProblem? = when (this) {
 /** What graspy names when the sign-in sent with an agreement does not hold, or the notice is not one it shows. */
 private val SIGN_IN_REFUSALS = setOf("sign_in_stale", "sign_in_invalid", "sign_in_unchecked", "notice_unknown")
 
-fun consentProblemOf(error: Throwable): ConsentProblem =
-    if (error is SignInAgainFailed || refusalCode(error) in SIGN_IN_REFUSALS) ConsentProblem.SIGN_IN else ConsentProblem.FAILED
+fun consentProblemOf(error: Throwable): ConsentProblem = when {
+    error is SignInAgainFailed || refusalCode(error) in SIGN_IN_REFUSALS -> ConsentProblem.SIGN_IN
+    refusalCode(error) == NOT_KEPT -> ConsentProblem.NOT_KEPT
+    else -> ConsentProblem.FAILED
+}
 
 fun ConsentProblem.text(copy: AccountCopy): String = when (this) {
     ConsentProblem.OTHER_ACCOUNT -> copy.consent.otherAccount
     ConsentProblem.SIGN_IN -> copy.consent.signIn
+    ConsentProblem.NOT_KEPT -> copy.consent.notKept
     ConsentProblem.FAILED -> copy.failed
 }
 
@@ -82,3 +87,4 @@ private suspend fun <T> recorded(signIn: FreshSignIn, record: suspend (FreshSign
 }
 
 private const val OTHER_ACCOUNT = "sign_in_other_account"
+private const val NOT_KEPT = "consent_not_kept"
