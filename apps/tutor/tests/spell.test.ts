@@ -132,7 +132,7 @@ describe("spellNumbers", () => {
     ["-5 is below zero.", "Negative five is below zero."],
     ["You came 1st!", "You came first!"],
     ["3 x 4 = 12.", "Three times four is twelve."],
-    ["It is 7:05.", "It is seven zero five."],
+    ["It is 7:05 now.", "It is seven zero five now."],
   ])("takes the spelling of %s as %s", async (line, reply) => {
     const { env } = speller(reply);
     expect(await spellNumbers(env, line, "en")).toBe(reply);
