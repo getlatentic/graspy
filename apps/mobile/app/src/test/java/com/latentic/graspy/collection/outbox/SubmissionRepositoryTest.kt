@@ -97,7 +97,7 @@ class SubmissionRepositoryTest {
         override suspend fun markFailed(localId: String, reason: String) = Unit
         override suspend fun markFeedbackHeard(localId: String) = Unit
         override suspend fun acknowledgeResult(localId: String) = Unit
-        override suspend fun audioPaths() = listOfNotNull(submission?.audioPath) + incomplete.map { it.audioPath }
+        override suspend fun unsentAudioPaths() = listOfNotNull(submission?.audioPath) + incomplete.map { it.audioPath }
     }
 
     private companion object {

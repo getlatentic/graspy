@@ -4,6 +4,8 @@ exchanged for a session."""
 
 from __future__ import annotations
 
+import base64
+import json
 import logging
 import re
 from dataclasses import dataclass
@@ -14,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 LOOKUP_URL = "https://identitytoolkit.googleapis.com/v1/accounts:lookup"
 _UID = re.compile(r"^[A-Za-z0-9]{1,128}$")
+# How recently a person must have signed in for what only they may decide.
+FRESH_SIGN_IN_SECONDS = 5 * 60
 
 
 class InvalidSignIn(Exception):
@@ -35,6 +39,25 @@ class SignedIn:
     uid: str
     # Google's name for the account, or empty.
     name: str
+    # When the person last signed in, in epoch seconds, or None when the token does not say.
+    auth_time: int | None = None
+
+    def signed_in_within(self, seconds: int, now: float) -> bool:
+        return self.auth_time is not None and now - self.auth_time <= seconds
+
+
+def token_auth_time(id_token: str) -> int | None:
+    """The token's `auth_time` claim. Read from a token Google has just accepted, so no signature
+    is checked here."""
+    try:
+        payload = id_token.split(".")[1]
+        claims = json.loads(
+            base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))
+        )
+    except IndexError, ValueError:
+        return None
+    auth_time = claims.get("auth_time") if isinstance(claims, dict) else None
+    return auth_time if isinstance(auth_time, int) else None
 
 
 def lookup_url(emulator_host: str | None) -> str:
@@ -84,4 +107,8 @@ async def verified(
     if not isinstance(uid, str) or not _UID.match(uid):
         raise InvalidSignIn("The sign-in is not valid. Sign in again.")
     name = user.get("displayName")
-    return SignedIn(uid=uid, name=name if isinstance(name, str) else "")
+    return SignedIn(
+        uid=uid,
+        name=name if isinstance(name, str) else "",
+        auth_time=token_auth_time(id_token),
+    )

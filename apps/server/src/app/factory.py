@@ -21,6 +21,7 @@ from pydantic import ValidationError
 from .agent.memory import ConversationStore, InMemoryConversationStore
 from .agent.tutor import Tutor
 from .api.account_routes import account_router
+from .api.account_voice_routes import account_voice_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
 from .api.routes import api_router
@@ -90,6 +91,7 @@ def create_app(
     app.include_router(learner_router, prefix="/api")
     app.include_router(thread_router, prefix="/api")
     app.include_router(account_router, prefix="/api")
+    app.include_router(account_voice_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
     app.include_router(voice_router, prefix="/api")
     # Imported on the Worker's first request, not at startup: the A2A SDK and

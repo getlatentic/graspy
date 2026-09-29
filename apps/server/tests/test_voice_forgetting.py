@@ -53,7 +53,7 @@ def key(learner_id: str) -> str:
 
 
 async def taught(http, env, learner_id: str, recordings: int) -> None:
-    """A lesson step offered and heard, and marked recordings."""
+    """A lesson step offered and heard, marked recordings, and one still waiting to be marked."""
     await chosen(http, learner_id)
     lesson = await http.get("/api/voice/lesson", params={"learner_class": "primary_3"})
     move = lesson.json()["move"]
@@ -66,7 +66,7 @@ async def taught(http, env, learner_id: str, recordings: int) -> None:
         "VALUES (?, ?, 'assess', 0)",
         (key(learner_id), T2),
     )
-    for n in range(recordings):
+    for n in range(recordings + 1):
         sample = (
             await http.post(
                 "/api/voice/samples",
@@ -79,6 +79,8 @@ async def taught(http, env, learner_id: str, recordings: int) -> None:
             content=b"RIFF",
             headers={"Content-Type": "audio/wav"},
         )
+        if n == recordings:
+            break
         marked = await http.post(f"/api/voice/samples/{sample['sample_id']}/evaluation")
         assert marked.status_code == 200, marked.text
 
@@ -114,11 +116,11 @@ async def test_removing_a_learner_forgets_their_voice_lessons_and_no_one_elses(
 
     assert removed.status_code == 200
     assert before[0] == {
-        "samples": 3,
+        "samples": 4,
         "tutoring_turns": 3,
         "lesson_offers": 2,
         "lesson_events": 1,
-        "recordings": 3,
+        "recordings": 1,
     }
     assert kept(env, ada) == dict.fromkeys(before[0], 0)
     assert kept(env, bo) == before[1]

@@ -1,5 +1,6 @@
 """What a learner's voice lessons keep, forgotten when the learner is removed: their recordings
-and marked turns, the steps they were offered and heard, and the tutor's memory of them.
+and marked turns, the steps they were offered and heard, a parent's consents, and the tutor's memory
+of them.
 
 Recordings are the only thing kept per learner in the bucket. The teacher's lines and replies are
 kept by their words and shared by every learner, so they stay."""
@@ -20,6 +21,7 @@ FORGET_SQL = (
     "DELETE FROM samples WHERE owner_id = ?1",
     "DELETE FROM lesson_events WHERE owner_id = ?1",
     "DELETE FROM lesson_offers WHERE owner_id = ?1",
+    "DELETE FROM consents WHERE learner_key = ?1",
 )
 
 

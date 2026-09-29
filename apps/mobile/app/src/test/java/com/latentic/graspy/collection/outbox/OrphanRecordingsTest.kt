@@ -13,7 +13,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** A take left by a process that died while the child spoke is removed at the next start; nothing else is. */
+/**
+ * A take left by a process that died while the child spoke is removed at the next start, and so is the recording of an
+ * answer already marked or given up on; a recording still waiting to be sent is not.
+ */
 @RunWith(RobolectricTestRunner::class)
 class OrphanRecordingsTest {
     private val database = inMemoryDatabase()
@@ -43,7 +46,7 @@ class OrphanRecordingsTest {
     }
 
     @Test
-    fun `a recording an answer holds is kept, whoever the answer belongs to`() = runBlocking {
+    fun `a recording an answer waiting to be sent holds is kept, whoever the answer belongs to`() = runBlocking {
         val held = recording("held", writtenAt = startedAt - 60_000)
         val heldByAnother = recording("held-by-another", writtenAt = startedAt - 60_000)
         dao.insert(answer("mine", ownerId = "uid/ada").copy(audioPath = held.path))
@@ -53,6 +56,22 @@ class OrphanRecordingsTest {
 
         assertTrue(held.exists())
         assertTrue(heldByAnother.exists())
+    }
+
+    @Test
+    fun `the recording of an answer already marked or given up on is removed`() = runBlocking {
+        val marked = recording("marked", writtenAt = startedAt - 60_000)
+        val refused = recording("refused", writtenAt = startedAt - 60_000)
+        val uploading = recording("uploading", writtenAt = startedAt - 60_000)
+        dao.insert(answer("marked", ownerId = "uid/ada", status = SubmissionStatus.COMPLETED).copy(audioPath = marked.path))
+        dao.insert(answer("refused", ownerId = "uid/ada", status = SubmissionStatus.FAILED).copy(audioPath = refused.path))
+        dao.insert(answer("uploading", ownerId = "uid/ada", status = SubmissionStatus.UPLOADING).copy(audioPath = uploading.path))
+
+        sweepOrphanRecordings(dao, recordings, startedAt)
+
+        assertFalse(marked.exists())
+        assertFalse(refused.exists())
+        assertTrue(uploading.exists())
     }
 
     @Test

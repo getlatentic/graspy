@@ -143,6 +143,7 @@ with allow_bad_entropy_calls(1):
 
 from app.cloudflare import build_lesson_runner, build_worker_app
 from app.lessons.store import KEEP_DAYS
+from app.voice.recording_retention import sweep_audio
 
 logging.basicConfig(format="%(levelname)s | %(name)s | %(message)s")
 
@@ -182,6 +183,10 @@ def _runner_for(env):
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
         return await asgi.fetch(_app_for(self.env), request, self.env)
+
+    async def scheduled(self, controller, env, ctx):
+        """Deletes the recordings due for it (voice/recording_retention)."""
+        await sweep_audio(env)
 
 
 class Lesson(DurableObject):

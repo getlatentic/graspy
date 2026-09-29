@@ -55,7 +55,9 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         <li>
           <strong>Voice.</strong> In voice lessons, a recording of what the
           learner says and a text transcript of it. The microphone is used only
-          while a learner is answering, and only after they allow it.
+          while a learner is answering, and only after they allow it. The
+          recording is deleted as soon as it has been marked, unless a parent
+          agrees to keep it. The transcript and the result are kept.
         </li>
         <li>
           <strong>On the web without signing in.</strong> A random device id
@@ -129,12 +131,17 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     title: "How long we keep it",
     body: (
       <p>
-        Until you remove the learner or the account. That includes recordings
-        and transcripts. Lesson copies expire after 180 days. On Android, chats
-        and recordings also stay on the phone until you sign out or remove the
-        learner there. On the web, chats and offline copies stay in the browser
-        until you sign out, or for good if you never signed in. The Android app
-        is excluded from cloud backups.
+        A recording is deleted as soon as it has been marked. If a parent agrees
+        to keep a learner&rsquo;s recordings, each is kept for the number of days
+        they choose (30, 90 or 365), and the parent can listen to it and delete
+        it, or stop keeping recordings, whenever they like. Everything else,
+        transcripts included, is kept until you remove the learner or the
+        account. Lesson copies expire after 180 days. On Android, chats stay on
+        the phone until you sign out or remove the learner there, and a
+        recording leaves the phone as soon as graspy has it. On the web, a
+        recording waits in the browser only until it has been marked, and chats
+        and offline copies stay until you sign out, or for good if you never
+        signed in. The Android app is excluded from cloud backups.
       </p>
     ),
   },

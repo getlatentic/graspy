@@ -13,6 +13,11 @@
   ],
   "observability": { "enabled": true },
 
+  // Every 15 minutes: deletes the recordings due for it, those kept with a
+  // parent's consent past their time and those never settled after a day
+  // (app/voice/recording_retention.py).
+  "triggers": { "crons": ["*/15 * * * *"] },
+
   // The MCP Apps views, built from ./ui (npm --prefix ui run build). The Worker
   // reads each document through ASSETS; its scripts, styles and fonts are
   // served straight from the assets, before the Worker runs.
@@ -123,6 +128,7 @@
           { "name": "LESSON_MAKERS", "class_name": "LessonMaker" }
         ]
       },
+      "triggers": { "crons": ["*/15 * * * *"] },
       "ai": { "binding": "AI" },
       "d1_databases": [
         {
