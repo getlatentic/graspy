@@ -32,7 +32,7 @@ Fields of `results.jsonl`: `id`, `category`, `host` (`workers-ai` or `bedrock`),
 
 The prompt is the tutor's own (`spellingBrief` in `apps/tutor/src/spell.ts`): rewrite the line so every number written in digits is written in words, change nothing else, reply with the line only. Temperature 0.
 
-- **Automated.** When every run of digits in a line stands alone (`5`, `45`, `1,2` no), the reply is checked against the line with each number written out by code: it must read the same, word for word, punctuation included. 57 of the 120 lines with digits were checkable, and the model passed all 57 on both hosts. Those rows are `good`, judged by `automated check`.
+- **Automated.** When every run of digits in a line stands alone (`5`, `45`, `120`, not `3:30`, `50%` or `1,000`), the reply is checked against the line with each number written out by code: it must read the same, word for word, punctuation included. 57 of the 120 lines with digits were checkable, and the model passed all 57 on both hosts. Those rows are `good`, judged by `automated check`.
 - **Judged by a reader.** The other 63 lines have numbers joined to other things (`3:30`, `₦500`, `50%`, `1st`, `3B`, `1/2`, `2.5`, `1990`, `1,000`) with no single correct reading for code to compare against. Each reply was read by Claude Code (an Anthropic model, acting as the reviewer at the owner's request) and labelled:
   - `good`: ready to say to a child as it is
   - `awkward`: the meaning is right but the text reads oddly (a leftover `₦`, `%`, `:` or `/`, or a year read as a quantity)
