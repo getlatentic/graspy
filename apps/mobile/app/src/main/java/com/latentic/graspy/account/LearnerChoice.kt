@@ -46,6 +46,8 @@ class LearnerChoice(
     private val leaveLearner: suspend () -> Unit,
     private val claimDeviceLearning: suspend (uid: String, learnerKey: String) -> Unit,
     private val now: () -> Long = System::currentTimeMillis,
+    /** Whether answers are queued on the phone for the learner, which is looked at and never sent. */
+    private val queued: suspend (learnerKey: String) -> Boolean = { false },
 ) : LearnerPicks {
     /** [loseUnsent] switches even though what the device holds for its learner has not all reached graspy. */
     override suspend fun choose(learner: LearnerDto, loseUnsent: Boolean) {
@@ -63,9 +65,13 @@ class LearnerChoice(
     override suspend fun add(name: String, consent: FreshSignIn): LearnerDto =
         api.add(NewLearnerDto(name = name, guardian = true, consent = ConsentProofDto(CONSENT_NOTICE_VERSION, consent.idToken)))
 
-    /** graspy's clock and the phone's may differ by minutes; a learner of the same name is not added twice a day. */
-    override suspend fun addedAlready(name: String): LearnerDto? =
-        api.learners().learners.firstOrNull { it.name == name && abs(now() - it.createdAt) <= JUST_ADDED_MILLIS }
+    /**
+     * graspy's clock and the phone's may differ by minutes, so a learner of that name made within [JUST_ADDED_MILLIS] of
+     * now counts; of several, the one made nearest to now.
+     */
+    override suspend fun addedAlready(name: String): LearnerDto? = api.learners().learners
+        .filter { it.name == name && abs(now() - it.createdAt) <= JUST_ADDED_MILLIS }
+        .minByOrNull { abs(now() - it.createdAt) }
 
     override suspend fun agree(learner: LearnerDto, consent: FreshSignIn): LearnerDto =
         learner.copy(serviceConsent = api.agree(learner.id, ConsentProofDto(CONSENT_NOTICE_VERSION, consent.idToken)))
@@ -77,8 +83,9 @@ class LearnerChoice(
     }
 
     private suspend fun switchFrom(account: Account, learner: LearnerDto, loseUnsent: Boolean) {
-        val leaving = account.agreedLearnerKey
-        if (leaving != null && !loseUnsent && !outbox.flush(leaving)) throw UnsentChanges(offline = !online())
+        if (!loseUnsent && leavingLosesAnswers(account, outbox, queued)) {
+            throw UnsentChanges(offline = account.agreedLearnerKey != null && !online())
+        }
         // Issued before the wipe, so a switch graspy cannot make leaves the device as it was.
         val issued = issuedFor(learner, ChosenLearnerDto())
         leaveLearner()

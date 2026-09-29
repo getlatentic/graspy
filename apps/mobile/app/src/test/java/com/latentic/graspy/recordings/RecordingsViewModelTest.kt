@@ -580,4 +580,40 @@ class RecordingsViewModelTest {
         assertFalse(file.exists())
         assertTrue(playback.stops > 0)
     }
+
+    @Test
+    fun `a recording is not played while a delete is in flight, and is not heard once it is deleted`() {
+        api.kept += two
+        val gate = CompletableDeferred<Unit>().also { api.deleteGate = it }
+        val model = viewModel()
+        model.delete("r-old")
+        settleMain { api.calls.any { it.startsWith("delete") } }
+
+        model.play("r-old")
+        model.play("r-new")
+        gate.complete(Unit)
+        model.settled()
+
+        assertTrue(api.calls.none { it.startsWith("audio") })
+        assertTrue(playback.played.isEmpty())
+        assertNull(model.state.value.playing)
+        assertEquals(listOf("r-new"), model.state.value.recordings.map { it.id })
+    }
+
+    @Test
+    fun `a recording is not played while delete-all is in flight`() {
+        api.consent = kept90
+        api.kept += two
+        val gate = CompletableDeferred<Unit>().also { api.deleteGate = it }
+        val model = viewModel()
+        model.deleteAll()
+        settleMain { api.calls.any { it.startsWith("deleteAll") } }
+
+        model.play("r-new")
+        gate.complete(Unit)
+        model.settled()
+
+        assertTrue(api.calls.none { it.startsWith("audio") })
+        assertTrue(playback.played.isEmpty())
+    }
 }

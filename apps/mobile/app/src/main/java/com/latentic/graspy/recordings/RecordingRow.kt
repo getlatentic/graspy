@@ -51,7 +51,7 @@ fun RecordingRow(
                 playLabel,
                 onClick = onPlay,
                 modifier = Modifier.semantics { contentDescription = "$playLabel, $label" },
-                enabled = !fetching,
+                enabled = !fetching && !busy,
             )
             QuietButton(
                 copy.delete,

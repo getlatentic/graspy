@@ -124,6 +124,7 @@ class RecordingsViewModel internal constructor(
 
     private fun stopKeeping(deleteRecordings: Boolean) = act(refreshAfterFailure = deleteRecordings) {
         keeping.stop(learnerId, deleteRecordings)
+        if (deleteRecordings) stopHearing()
         mutableState.update {
             val stopped = it.copy(consent = null, step = null)
             if (deleteRecordings) stopped.allDeleted() else stopped
@@ -137,6 +138,7 @@ class RecordingsViewModel internal constructor(
 
     private fun deleteEvery() = act(refreshAfterFailure = true) {
         keeping.deleteAll(learnerId)
+        stopHearing()
         mutableState.update { it.allDeleted() }
     }
 
@@ -150,13 +152,17 @@ class RecordingsViewModel internal constructor(
 
     private fun deleteOne(recordingId: String) = act {
         keeping.deleteOne(learnerId, recordingId)
+        // Whatever fetched or played it meanwhile stops: a deleted recording is not heard.
+        val now = mutableState.value
+        if (now.fetching == recordingId) cancelFetch()
+        if (now.playing == recordingId) finishPlaying()
         mutableState.update { it.without(recordingId) }
     }
 
     /** A recording playing stops; another is fetched to a file in the cache, played, and its file deleted. */
     fun play(recordingId: String) {
         val current = mutableState.value
-        if (current.fetching != null) return
+        if (current.fetching != null || current.busy) return
         val wasPlaying = current.playing == recordingId
         finishPlaying()
         if (wasPlaying) return

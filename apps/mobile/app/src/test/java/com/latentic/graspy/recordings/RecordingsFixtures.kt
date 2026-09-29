@@ -46,6 +46,9 @@ class FakeRecordingsApi(recordings: List<KeptRecordingDto> = emptyList(), var co
     /** A fetch waits here until told to go on, as a slow connection does. */
     var audioGate: CompletableDeferred<Unit>? = null
 
+    /** A delete waits here until told to go on, as a slow connection does. */
+    var deleteGate: CompletableDeferred<Unit>? = null
+
     /** The audio starts to arrive, and the connection is lost. */
     var audioFailsMidway = false
 
@@ -88,12 +91,14 @@ class FakeRecordingsApi(recordings: List<KeptRecordingDto> = emptyList(), var co
     override suspend fun delete(id: String, sampleId: String) {
         calls += "delete:$id:$sampleId"
         refuse()
+        deleteGate?.await()
         kept.removeAll { it.id == sampleId }
     }
 
     override suspend fun deleteAll(id: String): DeletedDto {
         calls += "deleteAll:$id"
         refuse()
+        deleteGate?.await()
         return deleteSome()
     }
 

@@ -74,7 +74,17 @@ class AccountGraph(private val context: Application) {
             online = ::online,
             leaveLearner = wipe::leaveLearner,
             claimDeviceLearning = deviceLearning::claim,
+            queued = ::hasQueued,
         )
+    }
+
+    private suspend fun hasQueued(learnerKey: String): Boolean =
+        AppGraph.database(context).submissionDao().findIncomplete(learnerKey).isNotEmpty()
+
+    /** Whether signing out would lose answers not yet sent, sending them first where the learner's parent has agreed. */
+    suspend fun signOutLosesAnswers(): Boolean {
+        val account = accounts.account.value ?: return false
+        return leavingLosesAnswers(account, outbox, ::hasQueued)
     }
 
     val directory by lazy { accountDirectory(AppGraph.accountApi(context), accounts, profiles, { wipe }, { entry }) }

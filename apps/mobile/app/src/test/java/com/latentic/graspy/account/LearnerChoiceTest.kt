@@ -17,6 +17,8 @@ class LearnerChoiceTest {
     private val events = api.calls
     private var everythingSent = true
     private var online = true
+    /** Answers queued on the phone for the learner leaving, which are looked at and never sent. */
+    private var queued = false
 
     private fun choice(accounts: AccountStore) = LearnerChoice(
         accounts = accounts,
@@ -30,6 +32,7 @@ class LearnerChoiceTest {
             accounts.setLearner(null)
         },
         claimDeviceLearning = { uid, learner -> events += "claim:$uid->$learner" },
+        queued = { queued },
     )
 
     @Test
@@ -100,14 +103,39 @@ class LearnerChoiceTest {
         assertEquals(chosen(ADA), accounts.account.value?.learner)
     }
 
+    private fun notAgreedFor() =
+        accountStore(Account(UID, "parent@example.com", ChosenLearner(CARA.id, CARA.name, consented = false), deviceJoins = false))
+
     @Test
-    fun `leaving a learner whose parent has not agreed sends nothing of theirs, and wipes them`() = runBlocking {
-        val accounts = accountStore(Account(UID, "parent@example.com", ChosenLearner(CARA.id, CARA.name, consented = false), deviceJoins = false))
+    fun `leaving a learner whose parent has not agreed, with answers queued, asks before wiping them, and sends nothing`() {
+        val accounts = notAgreedFor()
+        queued = true
+
+        val refused = assertThrows(UnsentChanges::class.java) { runBlocking { choice(accounts).choose(ADA) } }
+
+        assertFalse(refused.offline)
+        assertEquals(emptyList<String>(), events)
+        assertEquals(ChosenLearner(CARA.id, CARA.name, consented = false), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `confirming discards the queued answers of a learner not agreed for, still sending nothing`() = runBlocking {
+        val accounts = notAgreedFor()
+        queued = true
+
+        choice(accounts).choose(ADA, loseUnsent = true)
+
+        assertEquals(listOf("session:${ADA.id}:null", "wipe"), events)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `leaving a learner not agreed for with nothing queued goes at once`() = runBlocking {
+        val accounts = notAgreedFor()
 
         choice(accounts).choose(ADA)
 
         assertEquals(listOf("session:${ADA.id}:null", "wipe"), events)
-        assertEquals(chosen(ADA), accounts.account.value?.learner)
     }
 
     @Test
@@ -200,5 +228,27 @@ class LearnerChoiceTest {
 
         assertEquals(emptyList<String>(), events)
         assertEquals(chosen(ADA), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `of two learners of the name made within the window, the one made nearest to now is found`() = runBlocking {
+        val older = CARA.copy(id = "dddddddddddd", name = "Tolu", createdAt = 10_000L)
+        val newer = CARA.copy(id = "eeeeeeeeeeee", name = "Tolu", createdAt = 400_000L)
+        val accounts = accountStore(signedIn(learner = null))
+        val two = FakeAccountApi(listOf(older, newer))
+        fun choiceAt(now: Long) = LearnerChoice(
+            accounts = accounts,
+            api = two,
+            sessions = heldSessions(accounts),
+            deviceId = { DEVICE },
+            outbox = { true },
+            online = { true },
+            leaveLearner = {},
+            claimDeviceLearning = { _, _ -> },
+            now = { now },
+        )
+
+        assertEquals(newer.id, choiceAt(420_000L).addedAlready("Tolu")?.id)
+        assertEquals(older.id, choiceAt(0L).addedAlready("Tolu")?.id)
     }
 }

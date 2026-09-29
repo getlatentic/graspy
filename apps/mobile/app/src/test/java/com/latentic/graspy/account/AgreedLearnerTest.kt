@@ -75,4 +75,21 @@ class AgreedLearnerTest {
 
         assertEquals(1, recovered.size)
     }
+
+    @Test
+    fun `work that fails for one learner is logged, and the watch goes on for the next`() = runBlocking {
+        val accounts = inUse(ADA, consented = true)
+        val watching = launch {
+            accounts.whenLearnerAgreed {
+                recovered += it
+                if (it == learnerKey(UID, ADA.id)) throw IllegalStateException("the database failed")
+            }
+        }
+        repeat(20) { yield() }
+
+        accounts.setLearner(ChosenLearner(BAYO.id, BAYO.name, consented = true))
+        settle(watching)
+
+        assertEquals(listOf(learnerKey(UID, ADA.id), learnerKey(UID, BAYO.id)), recovered)
+    }
 }
