@@ -28,6 +28,7 @@ results-qwen.jsonl   the same lines on four Qwen models
 results-llama-gemma.jsonl   the same lines on four Llama and two Gemma 3 models, and the Workers AI Gemma that gave no reply
 results-gemma-4.jsonl   the same lines on three Gemma 4 models
 probe/          the small Worker that produced the replies (see below)
+tts-roundtrip/  how each version of each line sounds: Spitch speaks it, Whisper transcribes it (see below)
 ```
 
 Fields of `results.jsonl`: `id`, `category`, `host` (`workers-ai` or `bedrock`), `line`, `reply`, `latency_ms`, `automated` (`pass`, `uncheckable`, or `no_digits`), `judged` (`good`, `awkward`, `bad`), `note`, `judged_by`.
@@ -157,6 +158,35 @@ Checkable lines passed under the strict check (a rejection is not always an erro
 | llama-3.3-70b | Workers AI | 55 | 34 | 21 | 8 | 0.38 s / 5.0 s |
 | gemma-4-26b-a4b | Bedrock | 56 | 34 | 21 | 8 | 0.7 s / 3.9 s |
 | qwen3-30b-a3b-fp8 | Workers AI | 57 | 27 | 23 | 13 | 2.4 s / 7.9 s |
+
+## How it sounds (Spitch and Whisper)
+
+The point of writing numbers as words is that a voice reads the line well, so the test that matters is to speak it. For 75 lines (the 63 that code cannot check and 12 checkable ones with symbols or units) each version was spoken by Spitch (voice `lucy`, English, the voice Aunty Chioma uses), transcribed by Whisper (`whisper-large-v3-turbo` on Workers AI) and scored against one or two readings a teacher would give (`tts-roundtrip/references.jsonl`, written by Claude Code). The versions are the raw line and the replies of six models: 255 distinct clips. Scores (`tts-roundtrip/score.py`) run from 0 to 1 and reduce written and spoken number forms to one shape first (`nineteen sixty` and `1960` agree, and so do `three thirty` and `3.30`).
+
+| Version spoken | Mean score | Read exactly as a teacher would |
+|---|---|---|
+| gemma-4-e2b | 0.85 | 44 of 75 |
+| gemma-3-12b | 0.80 | 36 |
+| qwen3-32b | 0.79 | 33 |
+| qwen3-next-80b | 0.77 | 32 |
+| llama-4-scout | 0.77 | 31 |
+| gpt-oss-20b | 0.74 | 29 |
+| the raw line, digits and symbols as written | 0.72 | 26 |
+
+By category (raw line, then the best model version): sums 0.30, 1.00; times tables 0.12, 0.88; signs and ranges 0.65, 0.87; money 0.64, 0.89; large numbers 0.65, 0.77; years 0.87, 0.96; time 0.92, 0.95; measurements 0.76, 0.76; ordinals 0.94, 0.94.
+
+What Spitch does with what it is given:
+
+- `=` and `x` are the worst. `3 + 4 = 7.` is said "three plus four, seven": the `=` is dropped. `3 x 4 = 12.` is heard as "three, four, twelve", and `three x four = twelve.` as "three day four twelve". Only a version that writes `plus`, `equals` and `times` in words is read right.
+- A model that spells the digits but leaves the symbol makes it no better than the raw line: `Three + Four = Seven.` scored 0.40, the raw line 0.40. Llama 4 Scout, gpt-oss-20b and qwen3-next leave the symbols in.
+- The naira sign is not spoken: `₦1,500` is heard as "1,500", with no currency, in the raw line and in every version that keeps the sign. Only versions that write `naira` are heard with it.
+- `8:00` is heard as "8 Cologne"; `3:30` is read correctly. `school starts at eight o'clock` is right.
+- Units after a digit are read well: `3 kg` is said "three kilograms". After a number word they are not: `three kg` is said "three kilidj". Spelling the digit made that line worse.
+- Ranges: `5-10` is read "5 to 10"; `five-ten` is heard as "510". Spelling the digits made that worse too.
+- Phone numbers: `08012345678` loses a digit when spoken raw and comes out complete when written digit by digit.
+- Years, plain sums of counting and most ordinals are read well raw or spelled.
+
+Caveats: one voice, one listener (a Whisper mishearing looks like a Spitch fault: `B7` came back garbled in every version), readings written by one reviewer, and a scorer that reduces forms and so hides a few differences (`12` and `one two`). The per-clip transcripts are in `tts-roundtrip/results.jsonl`.
 
 ## Reproducing
 
