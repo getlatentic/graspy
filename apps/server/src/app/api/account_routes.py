@@ -37,6 +37,7 @@ from .consent_proof import refusal, require_fresh_sign_in, require_known_notice
 from .listed_learners import (
     ListedLearner,
     ListedLearners,
+    ServiceConsent,
     listed,
     listed_with_consents,
 )
@@ -112,7 +113,7 @@ async def learners(request: Request, uid: Uid, keeping: KeepingDep) -> ListedLea
 
 
 async def _proved(request: Request, uid: Uid, consent: ServiceConsentGrant) -> None:
-    """A consent sent with a new learner is checked before the learner is added."""
+    """A consent is checked before it is recorded, and before a new learner is added."""
     require_known_notice(NOTICE_VERSIONS[SERVICE], consent.notice_version)
     if request.app.state.voice is None:
         raise refusal(503, "consent_unavailable", "Consent cannot be kept here")
@@ -147,6 +148,32 @@ async def add_learner(
         now_ms(),
     )
     return listed(learner, {SERVICE: granted})
+
+
+@account_router.put("/learners/{learner_id}/consent", response_model=ServiceConsent)
+async def agree_to_service(
+    request: Request,
+    uid: Uid,
+    keeping: KeepingDep,
+    learner_id: LearnerId,
+    body: ServiceConsentGrant,
+) -> ServiceConsent:
+    """The parent of a learner added without consent agrees to graspy teaching them."""
+    try:
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        raise no_such_learner(learner_id) from None
+    await _proved(request, uid, body)
+    granted = await grant_consent(
+        request.app.state.voice.DB,
+        learner_key(uid, learner_id),
+        uid,
+        SERVICE,
+        body.notice_version,
+        None,
+        now_ms(),
+    )
+    return ServiceConsent.model_validate(granted)
 
 
 @account_router.patch("/learners/{learner_id}", response_model=Learner)

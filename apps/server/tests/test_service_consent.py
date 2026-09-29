@@ -205,3 +205,115 @@ async def test_removing_a_learner_forgets_their_consent(app, env):
     assert [row["learner_key"] for row in env.DB.rows("SELECT * FROM consents")] == [
         f"account:{UID}/{second}"
     ]
+
+
+async def added_without_consent(http, name: str = "Ada") -> str:
+    added = await http.post(
+        "/api/account/learners", json={"name": name, "guardian": True}
+    )
+    return added.json()["id"]
+
+
+async def test_a_parent_agrees_for_a_learner_added_without_consent(app, env):
+    before = int(time.time() * 1000)
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        agreed = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+        listed = await learners(http)
+
+    assert agreed.status_code == 200
+    consent = agreed.json()
+    assert set(consent) == {"noticeVersion", "grantedAt"}
+    assert consent["noticeVersion"] == 1
+    assert before <= consent["grantedAt"] <= int(time.time() * 1000)
+    assert listed[0]["serviceConsent"] == consent
+    assert [
+        (row["scope"], row["revoked_at"])
+        for row in env.DB.rows("SELECT * FROM consents")
+    ] == [("service", None)]
+
+
+async def test_agreeing_again_replaces_the_earlier_consent(app, env):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        for _ in range(2):
+            await http.put(
+                f"/api/account/learners/{learner}/consent",
+                json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+            )
+
+    assert sorted(
+        row["revoked_at"] is None for row in env.DB.rows("SELECT * FROM consents")
+    ) == [False, True]
+
+
+@pytest.mark.parametrize(
+    ("token", "status", "code"),
+    [
+        ("stale", 401, "sign_in_stale"),
+        ("undated", 401, "sign_in_stale"),
+        ("other", 403, "sign_in_other_account"),
+        ("forged", 401, "sign_in_invalid"),
+    ],
+)
+async def test_a_sign_in_that_does_not_hold_records_no_service_consent(
+    app, env, token, status, code
+):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": token},
+        )
+        listed = await learners(http)
+
+    assert refused.status_code == status
+    assert refused.json()["detail"]["code"] == code
+    assert listed[0]["serviceConsent"] is None
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_a_notice_graspy_does_not_show_records_no_service_consent(app, env):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 2, "firebaseIdToken": "fresh"},
+        )
+
+    assert refused.status_code == 400
+    assert refused.json()["detail"]["code"] == "notice_unknown"
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_a_learner_the_account_does_not_hold_is_not_agreed_for(app, env):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        refused = await http.put(
+            "/api/account/learners/a1b2c3d4e5f6/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+
+    assert refused.status_code == 404
+    assert refused.json()["detail"]["code"] == "no_such_learner"
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_service_consent_where_none_can_be_kept_is_unavailable(monkeypatch):
+    async with client(signed_in_app(monkeypatch)) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "good"},
+        )
+
+    assert refused.status_code == 503
+    assert refused.json()["detail"]["code"] == "consent_unavailable"
