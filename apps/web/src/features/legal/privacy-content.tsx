@@ -39,7 +39,8 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           tells our servers the account&rsquo;s id, name and email address. We
           keep the id, and the name only to name a first learner. We
           don&rsquo;t store the email address, but it stays in graspy&rsquo;s
-          Google sign-in records and on your device.
+          Google sign-in records. Your name and email are also kept on your
+          device.
         </li>
         <li>
           <strong>Each learner.</strong> A name, country, language, class or
@@ -104,14 +105,16 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         <li>
           <strong>Cloudflare</strong> hosts graspy and stores its data. Its AI
           models may listen to a recording to tell what language it is in, read
-          the transcript to mark an answer, write the teacher&rsquo;s reply, and
-          check that reply is safe.
+          the transcript to mark an answer, choose the next step from how the
+          learner has done, write the teacher&rsquo;s reply, and check that
+          reply is safe.
         </li>
         <li>
           <strong>Amazon Web Services</strong> (Bedrock, in the United States)
           runs the tutor and writes lessons. It receives what the learner types
           and the conversation so far with its summary, their country, language
-          and class, the subject and topic, and how they have done on practice.
+          and class, the subject and topic, the topics they have finished, and
+          how they have done on practice.
           It does not receive the learner&rsquo;s saved name.
         </li>
         <li>
@@ -176,7 +179,7 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     body: (
       <p>
         Everything travels over HTTPS. The voice teacher&rsquo;s replies are
-        checked for safety, and a second model rejects any line that asks for
+        checked for safety, and a second model checks that no line asks for
         personal details. The typed tutor has no such check, so please tell
         children not to type any into questions.
       </p>
