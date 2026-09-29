@@ -55,7 +55,7 @@ class SessionInterceptor(
     }
 
     private fun needsNewSession(response: Response): Boolean = when (response.code) {
-        UNAUTHORIZED -> true
+        UNAUTHORIZED -> refusalCode(response.peekBody(REFUSAL_BYTES).string()) !in REFUSED_SIGN_INS
         CONFLICT -> learnerInUse() != null && refusalCode(response.peekBody(REFUSAL_BYTES).string()) == LEARNER_REQUIRED
         else -> false
     }
@@ -73,5 +73,11 @@ class SessionInterceptor(
         const val CONFLICT = 409
         const val LEARNER_REQUIRED = "learner_required"
         const val REFUSAL_BYTES = 4_096L
+
+        /**
+         * A 401 that refuses the sign-in a request carries (a parent's agreement), not the session. Sending it again
+         * under a new session sends the same sign-in, which the server refuses the same way.
+         */
+        val REFUSED_SIGN_INS = setOf("sign_in_stale", "sign_in_invalid")
     }
 }

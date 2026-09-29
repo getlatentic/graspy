@@ -27,6 +27,9 @@ fun interface GoogleAccountSheet {
 sealed interface SignInOutcome {
     data class Succeeded(val userId: String) : SignInOutcome
     data object Cancelled : SignInOutcome
+
+    /** Only when confirming: the Google account chosen is not the one signed in to graspy. */
+    data object OtherAccount : SignInOutcome
     data class Failed(val reason: String) : SignInOutcome
 }
 
@@ -36,23 +39,51 @@ class GoogleSignIn(
     private val serverClientId: String,
     private val phoneAccount: suspend (Activity, CredentialOption) -> Credential = ::phoneAccountCredential,
 ) : GoogleAccountSheet {
-    override suspend fun signIn(activity: Activity, askWhichAccount: Boolean): SignInOutcome {
-        if (AuthEmulator.enabled) return emulatorSignIn()
+    /** What Firebase does with what Google returns: sign a user in, or sign the current user in again. */
+    private class Way(
+        val withGoogleToken: suspend (String) -> Unit,
+        val inBrowser: suspend (Activity) -> Unit,
+        val asEmulatorAccount: suspend () -> Unit,
+    )
+
+    private val signingIn = Way(
+        session::signInWithGoogle,
+        session::signInInBrowser,
+        { session.signInWithGoogle(AuthEmulator.GOOGLE_ACCOUNT) },
+    )
+
+    private val confirming = Way(
+        session::reauthenticateWithGoogle,
+        session::reauthenticateInBrowser,
+        { session.reauthenticateWithGoogle(AuthEmulator.GOOGLE_ACCOUNT) },
+    )
+
+    override suspend fun signIn(activity: Activity, askWhichAccount: Boolean): SignInOutcome =
+        through(activity, askWhichAccount, signingIn)
+
+    /**
+     * The signed-in user signs in with Google again, so their ID token carries the time of this sign-in. It always
+     * asks which account: taking the last one unasked would confirm nothing.
+     */
+    suspend fun reconfirm(activity: Activity): SignInOutcome = through(activity, askWhichAccount = true, confirming)
+
+    private suspend fun through(activity: Activity, askWhichAccount: Boolean, way: Way): SignInOutcome {
+        if (AuthEmulator.enabled) return asEmulatorAccount(way)
         for (option in signInOptions(serverClientId, askWhichAccount)) {
-            onPhone(activity, option)?.let { return it }
+            onPhone(activity, option, way)?.let { return it }
         }
-        return inBrowser(activity)
+        return inBrowser(activity, way)
     }
 
     /** Null when the phone has no Google account for [option], or no Credential Manager to offer one. */
-    private suspend fun onPhone(activity: Activity, option: CredentialOption): SignInOutcome? = try {
+    private suspend fun onPhone(activity: Activity, option: CredentialOption, way: Way): SignInOutcome? = try {
         val credential = phoneAccount(activity, option)
         if (credential !is CustomCredential ||
             credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
             SignInOutcome.Failed("the account sheet returned an unsupported credential")
         } else {
-            session.signInWithGoogle(GoogleIdTokenCredential.createFrom(credential.data).idToken)
+            way.withGoogleToken(GoogleIdTokenCredential.createFrom(credential.data).idToken)
             succeeded()
         }
     } catch (_: GetCredentialCancellationException) {
@@ -67,26 +98,29 @@ class GoogleSignIn(
         null
     } catch (failure: GetCredentialException) {
         SignInOutcome.Failed(failure.message ?: "could not read a Google credential")
+    } catch (failure: FirebaseAuthException) {
+        if (failure.errorCode == USER_MISMATCH) SignInOutcome.OtherAccount else failed(failure, "Google sign-in failed")
     } catch (failure: Exception) {
-        SignInOutcome.Failed(failure.message ?: "Google sign-in failed")
+        failed(failure, "Google sign-in failed")
     }
 
-    private suspend fun inBrowser(activity: Activity): SignInOutcome = try {
-        session.signInInBrowser(activity)
+    private suspend fun inBrowser(activity: Activity, way: Way): SignInOutcome = try {
+        way.inBrowser(activity)
         succeeded()
     } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (failure: FirebaseAuthException) {
         when (failure.errorCode) {
             TAB_CLOSED -> SignInOutcome.Cancelled
+            USER_MISMATCH -> SignInOutcome.OtherAccount
             else -> SignInOutcome.Failed("${failure.errorCode}: ${failure.message}")
         }
     } catch (failure: Exception) {
         SignInOutcome.Failed(failure.message ?: "Google's sign-in page failed")
     }
 
-    private suspend fun emulatorSignIn(): SignInOutcome = try {
-        session.signInWithGoogle(AuthEmulator.GOOGLE_ACCOUNT)
+    private suspend fun asEmulatorAccount(way: Way): SignInOutcome = try {
+        way.asEmulatorAccount()
         succeeded()
     } catch (cancelled: CancellationException) {
         throw cancelled
@@ -96,9 +130,14 @@ class GoogleSignIn(
 
     private fun succeeded() = SignInOutcome.Succeeded(session.userId.orEmpty())
 
+    private fun failed(failure: Exception, fallback: String) = SignInOutcome.Failed(failure.message ?: fallback)
+
     private companion object {
         // Firebase's code when the Chrome tab is closed before signing in.
         const val TAB_CLOSED = "ERROR_WEB_CONTEXT_CANCELED"
+
+        // Firebase's code when signing in again with Google's credential for another user than the signed-in one.
+        const val USER_MISMATCH = "ERROR_USER_MISMATCH"
     }
 }
 

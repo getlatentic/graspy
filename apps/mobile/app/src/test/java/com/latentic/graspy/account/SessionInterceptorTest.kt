@@ -36,7 +36,7 @@ class SessionInterceptorTest {
         exchange = {
             if (refuseExchange) throw httpError(503, """{"detail":{"code":"sign_in_off"}}""")
             exchanges += 1
-            switchDuringExchange?.let { accounts.setLearner(ChosenLearner(it.id, it.name)) }
+            switchDuringExchange?.let { accounts.setLearner(chosen(it)) }
             issued("session-$exchanges", ADA.takeIf { learnerHeld })
         },
         learnerGone = { accounts.setLearner(null) },
@@ -69,6 +69,29 @@ class SessionInterceptorTest {
         assertEquals("ok", response.body.string())
         assertEquals("Bearer session-1", server.takeRequest().getHeader("Authorization"))
         assertEquals("Bearer session-2", server.takeRequest().getHeader("Authorization"))
+        assertEquals(2, exchanges)
+    }
+
+    @Test
+    fun `a 401 that refuses the sign-in a request carries is the answer, and asks for no new session`() {
+        for (code in listOf("sign_in_stale", "sign_in_invalid")) {
+            server.enqueue(MockResponse().setResponseCode(401).setBody("""{"detail":{"error":"Sign in again to agree","code":"$code"}}"""))
+
+            val response = call(request())
+
+            assertEquals(code, 401, response.code)
+            assertEquals(code, 1, exchanges)
+            assertEquals(code, "Bearer session-1", server.takeRequest().getHeader("Authorization"))
+        }
+        assertEquals(2, server.requestCount)
+    }
+
+    @Test
+    fun `a 401 that refuses the session, by its code, is still answered with a new session`() {
+        server.enqueue(MockResponse().setResponseCode(401).setBody("""{"detail":{"error":"expired","code":"session_invalid"}}"""))
+        server.enqueue(MockResponse().setBody("ok"))
+
+        assertEquals("ok", call(request()).body.string())
         assertEquals(2, exchanges)
     }
 
@@ -142,7 +165,7 @@ class SessionInterceptorTest {
     fun `a session is not renewed for a learner switched away while the request was out`() {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
-                accounts.setLearner(ChosenLearner(BAYO.id, BAYO.name))
+                accounts.setLearner(chosen(BAYO))
                 return MockResponse().setResponseCode(401)
             }
         }

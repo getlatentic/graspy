@@ -58,4 +58,41 @@ class FirebaseSessionTest {
         signingIn.join()
         assertTrue(signingIn.isCancelled)
     }
+
+    @Test
+    fun `signing the user in again, on the phone or on Google's page, is waited out too`() = runBlocking {
+        val again = TaskCompletionSource<Void>()
+        val page = TaskCompletionSource<AuthResult>()
+        val session = FirebaseSession(
+            FirebaseAuth.getInstance(demoFirebase()),
+            reauthenticateWithCredential = { again.task },
+            reauthenticateWithProvider = { _, _ -> page.task },
+        )
+        val activity = hostActivity()
+        val phoneAsked = CompletableDeferred<Unit>()
+        val pageAsked = CompletableDeferred<Unit>()
+        val onPhone = launch(Dispatchers.Default) {
+            phoneAsked.complete(Unit)
+            session.reauthenticateWithGoogle("google-id-token")
+        }
+        val onPage = launch(Dispatchers.Default) {
+            pageAsked.complete(Unit)
+            session.reauthenticateInBrowser(activity)
+        }
+        try {
+            phoneAsked.await()
+            pageAsked.await()
+            onPhone.cancel()
+            onPage.cancel()
+            delay(100)
+            assertFalse("the caller went on while Firebase was still signing in again", onPhone.isCompleted)
+            assertFalse("the caller went on while Google's page was still open", onPage.isCompleted)
+        } finally {
+            again.setResult(null)
+            page.setResult(null)
+        }
+        onPhone.join()
+        onPage.join()
+        assertTrue(onPhone.isCancelled && onPage.isCancelled)
+    }
 }

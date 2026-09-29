@@ -11,6 +11,7 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FederatedAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
 import java.io.IOException
@@ -24,6 +25,10 @@ open class FirebaseSession(
     private val signInWithCredential: (AuthCredential) -> Task<AuthResult> = auth::signInWithCredential,
     private val signInWithProvider: (Activity, FederatedAuthProvider) -> Task<AuthResult> =
         auth::startActivityForSignInWithProvider,
+    private val reauthenticateWithCredential: (AuthCredential) -> Task<Void> =
+        { credential -> signedInUser(auth).reauthenticate(credential) },
+    private val reauthenticateWithProvider: (Activity, FederatedAuthProvider) -> Task<AuthResult> =
+        { activity, provider -> signedInUser(auth).startActivityForReauthenticateWithProvider(activity, provider) },
 ) {
     open val userId: String? get() = auth.currentUser?.uid
     val email: String? get() = auth.currentUser?.email
@@ -42,11 +47,26 @@ open class FirebaseSession(
      * [signInWithGoogle] is. The page always asks which account: a sign-out cannot forget Chrome's Google session.
      */
     suspend fun signInInBrowser(activity: Activity) {
-        val google = OAuthProvider.newBuilder(GoogleAuthProvider.PROVIDER_ID, auth)
-            .addCustomParameter("prompt", "select_account")
-            .build()
-        withContext(NonCancellable) { signInWithProvider(activity, google).await() }
+        withContext(NonCancellable) { signInWithProvider(activity, googleProvider()).await() }
     }
+
+    /**
+     * Signs the current user in with Google again, so their ID token says they did so just now. A Google account that
+     * is not the current user's fails with the code `ERROR_USER_MISMATCH` and leaves the user as they were.
+     */
+    suspend fun reauthenticateWithGoogle(googleIdToken: String) {
+        val credential = GoogleAuthProvider.getCredential(googleIdToken, null)
+        withContext(NonCancellable) { reauthenticateWithCredential(credential).await() }
+    }
+
+    /** [reauthenticateWithGoogle] on Google's page in a Chrome tab, as [signInInBrowser]. */
+    suspend fun reauthenticateInBrowser(activity: Activity) {
+        withContext(NonCancellable) { reauthenticateWithProvider(activity, googleProvider()).await() }
+    }
+
+    private fun googleProvider() = OAuthProvider.newBuilder(GoogleAuthProvider.PROVIDER_ID, auth)
+        .addCustomParameter("prompt", "select_account")
+        .build()
 
     /** At once; the Google account the sign-in used is forgotten apart from it, by [forgetGoogleAccount]. */
     open fun signOut() = auth.signOut()
@@ -66,6 +86,9 @@ open class FirebaseSession(
         }
     }
 }
+
+private fun signedInUser(auth: FirebaseAuth): FirebaseUser =
+    auth.currentUser ?: throw FirebaseAuthInvalidUserException("ERROR_USER_NOT_FOUND", "Nobody is signed in")
 
 private suspend fun clearCredentialState(context: Context) {
     CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())

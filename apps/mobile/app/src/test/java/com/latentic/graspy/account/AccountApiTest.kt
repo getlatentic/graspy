@@ -11,6 +11,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import retrofit2.HttpException
@@ -44,10 +45,19 @@ class AccountApiTest {
     }
 
     @Test
-    fun `the account's learners are read with their camel-case fields`() = runBlocking {
-        server.enqueue(json("""{"learners":[{"id":"${ADA.id}","name":"Ada","createdAt":1}]}"""))
+    fun `the account's learners are read with their camel-case fields and the consents held for them`() = runBlocking {
+        server.enqueue(
+            json(
+                """{"learners":[
+                {"id":"${ADA.id}","name":"Ada","createdAt":1,"serviceConsent":{"noticeVersion":1,"grantedAt":5},"voiceConsent":null},
+                {"id":"${CARA.id}","name":"Cara","createdAt":3,"serviceConsent":null,"voiceConsent":{"noticeVersion":1,"retentionDays":90}}
+                ]}""",
+            ),
+        )
 
-        assertEquals(listOf(ADA), accounts.learners().learners)
+        val learners = accounts.learners().learners
+
+        assertEquals(listOf(ADA, CARA.copy(voiceConsent = KeptRecordingsDto(1, 90))), learners)
         assertEquals("GET /api/account/learners", server.takeRequest().let { "${it.method} ${it.path}" })
     }
 
@@ -58,6 +68,38 @@ class AccountApiTest {
         accounts.add(NewLearnerDto("Tolu", guardian = true))
 
         assertEquals("""{"name":"Tolu","guardian":true}""", server.takeRequest().body.readUtf8())
+    }
+
+    @Test
+    fun `a learner added with a parent's consent sends the notice's version and the fresh token beside guardian`() = runBlocking {
+        server.enqueue(json("""{"id":"cccccccccccc","name":"Tolu","createdAt":3,"serviceConsent":{"noticeVersion":1,"grantedAt":9}}""").setResponseCode(201))
+
+        val added = accounts.add(NewLearnerDto("Tolu", guardian = true, consent = ConsentProofDto(1, "fresh-id-token")))
+
+        assertEquals(
+            """{"name":"Tolu","guardian":true,"consent":{"noticeVersion":1,"firebaseIdToken":"fresh-id-token"}}""",
+            server.takeRequest().body.readUtf8(),
+        )
+        assertEquals(ServiceConsentDto(1, 9), added.serviceConsent)
+    }
+
+    @Test
+    fun `a parent's agreement for a learner already added is a PUT to the learner's consent`() = runBlocking {
+        server.enqueue(json("""{"noticeVersion":1,"grantedAt":9}"""))
+
+        val agreed = accounts.agree(CARA.id, ConsentProofDto(1, "fresh-id-token"))
+
+        val sent = server.takeRequest()
+        assertEquals("PUT /api/account/learners/${CARA.id}/consent", "${sent.method} ${sent.path}")
+        assertEquals("""{"noticeVersion":1,"firebaseIdToken":"fresh-id-token"}""", sent.body.readUtf8())
+        assertEquals(ServiceConsentDto(1, 9), agreed)
+    }
+
+    @Test
+    fun `printing a consent never shows the token`() {
+        val printed = listOf(ConsentProofDto(1, "secret-token"), NewLearnerDto("Tolu", true, ConsentProofDto(1, "secret-token"))).joinToString()
+
+        assertFalse(printed, printed.contains("secret-token"))
     }
 
     @Test

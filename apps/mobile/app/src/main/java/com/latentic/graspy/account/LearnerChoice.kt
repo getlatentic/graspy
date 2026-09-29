@@ -1,6 +1,8 @@
 package com.latentic.graspy.account
 
+import com.latentic.graspy.auth.FreshSignIn
 import java.io.IOException
+import kotlin.math.abs
 
 /**
  * Refused so that nothing unsent is lost. Offline the switch cannot be made; online it is made when asked for
@@ -9,10 +11,24 @@ import java.io.IOException
 class UnsentChanges(val offline: Boolean) :
     Exception(if (offline) "Connect to the internet first, so nothing is lost" else "Some changes haven't been sent")
 
-/** What "Who's learning?" asks of the account: a learner added, and the device switched to one. */
+/**
+ * What "Who's learning?" asks of the account: a learner added, a parent's agreement recorded, and the device switched
+ * to a learner whose parent has agreed.
+ */
 interface LearnerPicks {
-    suspend fun add(name: String): LearnerDto
+    /** The learner is added with the parent's agreement, which [consent] proves. */
+    suspend fun add(name: String, consent: FreshSignIn): LearnerDto
 
+    /**
+     * A learner of this name that graspy added moments ago, if there is one: an add whose answer never reached the
+     * phone, so that trying again does not add them twice.
+     */
+    suspend fun addedAlready(name: String): LearnerDto?
+
+    /** Records the parent's agreement for a learner already added, and returns them as agreed for. */
+    suspend fun agree(learner: LearnerDto, consent: FreshSignIn): LearnerDto
+
+    /** Refuses a learner whose parent has not agreed. */
     suspend fun choose(learner: LearnerDto, loseUnsent: Boolean = false)
 }
 
@@ -29,16 +45,36 @@ class LearnerChoice(
     private val online: suspend () -> Boolean,
     private val leaveLearner: suspend () -> Unit,
     private val claimDeviceLearning: suspend (uid: String, learnerKey: String) -> Unit,
+    private val now: () -> Long = System::currentTimeMillis,
+    /** Whether answers are queued on the phone for the learner, which is looked at and never sent. */
+    private val queued: suspend (learnerKey: String) -> Boolean = { false },
 ) : LearnerPicks {
     /** [loseUnsent] switches even though what the device holds for its learner has not all reached graspy. */
     override suspend fun choose(learner: LearnerDto, loseUnsent: Boolean) {
         val account = accounts.account.value ?: throw IllegalStateException("Sign in to choose a learner")
-        if (account.learner?.id == learner.id) return
+        check(learner.serviceConsent != null) { "A parent has yet to agree to graspy teaching this learner" }
+        val inUse = account.learner
+        if (inUse?.id == learner.id) {
+            if (!inUse.consented) accounts.changeLearner(inUse.id) { it.copy(consented = true) }
+            return
+        }
         if (account.deviceJoins) joinFirst(account, learner) else switchFrom(account, learner, loseUnsent)
     }
 
     /** Whoever adds a learner has confirmed they are that learner, or their parent or guardian. */
-    override suspend fun add(name: String): LearnerDto = api.add(NewLearnerDto(name = name, guardian = true))
+    override suspend fun add(name: String, consent: FreshSignIn): LearnerDto =
+        api.add(NewLearnerDto(name = name, guardian = true, consent = ConsentProofDto(CONSENT_NOTICE_VERSION, consent.idToken)))
+
+    /**
+     * graspy's clock and the phone's may differ by minutes, so a learner of that name made within [JUST_ADDED_MILLIS] of
+     * now counts; of several, the one made nearest to now.
+     */
+    override suspend fun addedAlready(name: String): LearnerDto? = api.learners().learners
+        .filter { it.name == name && abs(now() - it.createdAt) <= JUST_ADDED_MILLIS }
+        .minByOrNull { abs(now() - it.createdAt) }
+
+    override suspend fun agree(learner: LearnerDto, consent: FreshSignIn): LearnerDto =
+        learner.copy(serviceConsent = api.agree(learner.id, ConsentProofDto(CONSENT_NOTICE_VERSION, consent.idToken)))
 
     private suspend fun joinFirst(account: Account, learner: LearnerDto) {
         val issued = issuedFor(learner, ChosenLearnerDto(deviceId = deviceId()))
@@ -47,8 +83,9 @@ class LearnerChoice(
     }
 
     private suspend fun switchFrom(account: Account, learner: LearnerDto, loseUnsent: Boolean) {
-        val leaving = account.learnerKey
-        if (leaving != null && !loseUnsent && !outbox.flush(leaving)) throw UnsentChanges(offline = !online())
+        if (!loseUnsent && leavingLosesAnswers(account, outbox, queued)) {
+            throw UnsentChanges(offline = account.agreedLearnerKey != null && !online())
+        }
         // Issued before the wipe, so a switch graspy cannot make leaves the device as it was.
         val issued = issuedFor(learner, ChosenLearnerDto())
         leaveLearner()
@@ -62,7 +99,11 @@ class LearnerChoice(
 
     private fun takeUp(account: Account, issued: Issued) {
         sessions.keep(account.uid, issued.session)
-        accounts.setLearner(ChosenLearner(issued.learner.id, issued.learner.name))
+        accounts.setLearner(ChosenLearner(issued.learner.id, issued.learner.name, consented = true))
+    }
+
+    private companion object {
+        const val JUST_ADDED_MILLIS = 10 * 60 * 1_000L
     }
 
     private class Issued(val session: IssuedSessionDto, val learner: LearnerDto)

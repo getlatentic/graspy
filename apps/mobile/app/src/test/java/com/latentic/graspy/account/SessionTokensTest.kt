@@ -69,7 +69,7 @@ class SessionTokensTest {
     @Test
     fun `a session made for another learner is never used`() = runBlocking {
         sessions.token()
-        accounts.setLearner(ChosenLearner(BAYO.id, BAYO.name))
+        accounts.setLearner(chosen(BAYO))
         answers += { issued("bayo", BAYO) }
 
         assertEquals("bayo", sessions.token())
@@ -88,12 +88,26 @@ class SessionTokensTest {
     }
 
     @Test
+    fun `a rename racing with the parent's agreement never takes the agreement back`() = runBlocking {
+        accounts.setLearner(ChosenLearner(ADA.id, ADA.name, consented = false))
+        answers += {
+            // The parent agrees while the exchange, which was asked with the learner as they were, is on its way.
+            accounts.changeLearner(ADA.id) { it.copy(consented = true) }
+            issued("renamed", ADA.copy(name = "Ada Lovelace"))
+        }
+
+        sessions.token()
+
+        assertEquals(ChosenLearner(ADA.id, "Ada Lovelace", consented = true), accounts.account.value?.learner)
+    }
+
+    @Test
     fun `a learner renamed on another device is known by the new name`() = runBlocking {
         answers += { issued("renamed", ADA.copy(name = "Ada Lovelace")) }
 
         sessions.token()
 
-        assertEquals(ChosenLearner(ADA.id, "Ada Lovelace"), accounts.account.value?.learner)
+        assertEquals(chosen(ADA).copy(name = "Ada Lovelace"), accounts.account.value?.learner)
         assertEquals(emptyList<String>(), events)
     }
 
@@ -101,14 +115,14 @@ class SessionTokensTest {
     fun `a learner gone for the account that left while its exchange ran leaves the account signed in since alone`() = runBlocking {
         answers += {
             // The account is signed out and another, learning as Bayo, signed in while graspy answers.
-            accounts.set(Account("uid-2", "other@example.com", ChosenLearner(BAYO.id, BAYO.name), deviceJoins = false))
+            accounts.set(Account("uid-2", "other@example.com", chosen(BAYO), deviceJoins = false))
             issued("account-only", learner = null)
         }
 
         sessions.token()
 
         assertEquals(emptyList<String>(), events)
-        assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
+        assertEquals(chosen(BAYO), accounts.account.value?.learner)
     }
 
     @Test
@@ -127,14 +141,14 @@ class SessionTokensTest {
     @Test
     fun `a learner gone for the learner switched from while its exchange ran leaves the learner switched to alone`() = runBlocking {
         answers += {
-            accounts.setLearner(ChosenLearner(BAYO.id, BAYO.name))
+            accounts.setLearner(chosen(BAYO))
             issued("account-only", learner = null)
         }
 
         sessions.token()
 
         assertEquals(emptyList<String>(), events)
-        assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
+        assertEquals(chosen(BAYO), accounts.account.value?.learner)
     }
 
     @Test

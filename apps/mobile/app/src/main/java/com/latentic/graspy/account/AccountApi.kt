@@ -6,14 +6,18 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 @Serializable
 data class LearnersDto(val learners: List<LearnerDto>)
 
-/** Whoever adds a learner confirms they are that learner, or their parent or guardian. */
+/**
+ * Whoever adds a learner confirms they are that learner, or their parent or guardian; a parent who has agreed to
+ * graspy teaching the learner sends [consent] with them.
+ */
 @Serializable
-data class NewLearnerDto(val name: String, val guardian: Boolean)
+data class NewLearnerDto(val name: String, val guardian: Boolean, val consent: ConsentProofDto? = null)
 
 @Serializable
 data class LearnerNameDto(val name: String)
@@ -29,6 +33,10 @@ interface AccountApi {
 
     @POST("api/account/learners")
     suspend fun add(@Body learner: NewLearnerDto): LearnerDto
+
+    /** A parent's agreement to graspy teaching a learner already added. */
+    @PUT("api/account/learners/{id}/consent")
+    suspend fun agree(@Path("id") id: String, @Body consent: ConsentProofDto): ServiceConsentDto
 
     @PATCH("api/account/learners/{id}")
     suspend fun rename(@Path("id") id: String, @Body name: LearnerNameDto): LearnerDto

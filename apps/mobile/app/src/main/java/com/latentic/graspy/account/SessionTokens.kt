@@ -101,7 +101,7 @@ class SessionTokens(
             sent == null -> Unit
             answered == null -> learnerGone()
             answered.id == sent.id && answered.name != sent.name ->
-                accounts.setLearner(ChosenLearner(answered.id, answered.name))
+                accounts.changeLearner(sent.id) { it.copy(name = answered.name) }
         }
     }
 

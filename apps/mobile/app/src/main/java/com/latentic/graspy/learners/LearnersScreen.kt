@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.localization.AccountCopy
 import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.GraspyColor
@@ -38,6 +39,7 @@ fun LearnersScreen(
     viewModel: LearnersViewModel,
     onBack: () -> Unit,
     onLeftLearner: () -> Unit,
+    onRecordings: (LearnerDto) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.load() }
@@ -47,7 +49,7 @@ fun LearnersScreen(
             BackLink(copy.back, onBack)
             AccountHeading(copy.manageTitle)
         }
-        LearnerList(copy, state, learnerInUse, viewModel, onLeftLearner)
+        LearnerList(copy, state, learnerInUse, viewModel, onLeftLearner, onRecordings)
         if (state.failed) ProblemNote(copy.failed)
         DeleteAccount(copy, state.busy, viewModel::deleteAccount)
     }
@@ -60,6 +62,7 @@ private fun LearnerList(
     learnerInUse: String?,
     viewModel: LearnersViewModel,
     onLeftLearner: () -> Unit,
+    onRecordings: (LearnerDto) -> Unit,
 ) {
     val learners = state.learners
     if (learners == null) {
@@ -78,6 +81,7 @@ private fun LearnerList(
                     busy = state.busy,
                     onRename = { name, onSaved -> viewModel.rename(learner.id, name, onSaved) },
                     onRemove = { viewModel.remove(learner.id, onLeftLearner) },
+                    onRecordings = { onRecordings(learner) },
                 )
             }
         }

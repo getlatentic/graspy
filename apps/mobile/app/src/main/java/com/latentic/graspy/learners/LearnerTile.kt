@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.latentic.graspy.account.LearnerDto
+import com.latentic.graspy.localization.AccountCopy
 import com.latentic.graspy.ui.GraspyRadius
 import com.latentic.graspy.ui.GraspyColor
 import com.latentic.graspy.ui.tapping
@@ -40,9 +41,15 @@ internal fun initialOf(name: String): String {
     return trimmed.substring(0, trimmed.offsetByCodePoints(0, 1)).uppercase()
 }
 
+/** Under the name: that their parent has yet to agree, or that the device learns as them. */
 @Composable
-fun LearnerTile(learner: LearnerDto, inUse: Boolean, inUseNote: String, enabled: Boolean, onChoose: () -> Unit) {
-    Tile(label = learner.name, note = inUseNote.takeIf { inUse }, enabled = enabled, onClick = onChoose) {
+fun LearnerTile(learner: LearnerDto, inUse: Boolean, copy: AccountCopy, enabled: Boolean, onChoose: () -> Unit) {
+    val note = when {
+        learner.serviceConsent == null -> copy.consent.needed
+        inUse -> copy.inUse
+        else -> null
+    }
+    Tile(label = learner.name, note = note, enabled = enabled, onClick = onChoose) {
         Box(
             Modifier
                 .size(80.dp)

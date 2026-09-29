@@ -19,6 +19,10 @@ data class LearnersState(
     val failed: Boolean = false,
 )
 
+/** The server answers a rename with the learner but not the consents held for them, so only the name is taken from it. */
+internal fun LearnersState.renamed(renamed: LearnerDto) =
+    copy(learners = learners?.map { if (it.id == renamed.id) it.copy(name = renamed.name) else it })
+
 /** Renames and removes the account's learners, and deletes the account. */
 class LearnersViewModel(application: Application) : AndroidViewModel(application) {
     private val account = AppGraph.account(application)
@@ -41,7 +45,7 @@ class LearnersViewModel(application: Application) : AndroidViewModel(application
 
     fun rename(id: String, name: String, onSaved: () -> Unit) = act {
         val renamed = account.directory.rename(id, name)
-        mutableState.update { state -> state.copy(learners = state.learners?.map { if (it.id == id) renamed else it }) }
+        mutableState.update { it.renamed(renamed) }
         onSaved()
     }
 

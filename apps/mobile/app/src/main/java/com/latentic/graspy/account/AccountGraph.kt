@@ -5,7 +5,9 @@ import androidx.work.WorkManager
 import com.latentic.graspy.R
 import com.latentic.graspy.ask.keptThreads
 import com.latentic.graspy.auth.FirebaseSession
+import com.latentic.graspy.auth.GoogleParentConfirmation
 import com.latentic.graspy.auth.GoogleSignIn
+import com.latentic.graspy.auth.ParentConfirmation
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
 import com.latentic.graspy.localization.LearnerProfileStore
@@ -24,8 +26,11 @@ class AccountGraph(private val context: Application) {
     private val deviceIds by lazy { DeviceIdStore(context.getSharedPreferences(PreferenceFiles.DEVICE, 0)) }
     private val firebase by lazy { FirebaseSession() }
 
-    /** The learner key of whoever the device learns as now, if anyone. */
-    fun learnerInUse(): String? = accounts.account.value?.learnerKey
+    /**
+     * The learner key of whoever the device learns as now, once their parent has agreed. Everything that acts for the
+     * learner in use, on screen or in the background, asks this, so a learner not agreed for is none of it.
+     */
+    fun learnerInUse(): String? = accounts.account.value?.agreedLearnerKey
 
     /** False once the device has left [learnerKey]: its screens may still be up, but nothing starts for them. */
     fun learnsAs(learnerKey: String): Boolean = learnerInUse() == learnerKey
@@ -69,15 +74,29 @@ class AccountGraph(private val context: Application) {
             online = ::online,
             leaveLearner = wipe::leaveLearner,
             claimDeviceLearning = deviceLearning::claim,
+            queued = ::hasQueued,
         )
+    }
+
+    private suspend fun hasQueued(learnerKey: String): Boolean =
+        AppGraph.database(context).submissionDao().findIncomplete(learnerKey).isNotEmpty()
+
+    /** Whether signing out would lose answers not yet sent, sending them first where the learner's parent has agreed. */
+    suspend fun signOutLosesAnswers(): Boolean {
+        val account = accounts.account.value ?: return false
+        return leavingLosesAnswers(account, outbox, ::hasQueued)
     }
 
     val directory by lazy { accountDirectory(AppGraph.accountApi(context), accounts, profiles, { wipe }, { entry }) }
 
-    val entry by lazy {
-        val google = GoogleSignIn(firebase, context.getString(R.string.default_web_client_id))
-        AccountEntry(context, google, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
-    }
+    private val google by lazy { GoogleSignIn(firebase, context.getString(R.string.default_web_client_id)) }
+
+    val entry by lazy { AccountEntry(context, google, firebase, accounts, sessions, sessionApi, deviceIds, wipe) }
+
+    /** A parent's agreement is proven by signing in with Google again, as the account already signed in. */
+    val parentConfirmation: ParentConfirmation by lazy { GoogleParentConfirmation(google, firebase) }
+
+    val serviceConsents by lazy { ServiceConsents(AppGraph.accountApi(context), accounts) }
 }
 
 /**

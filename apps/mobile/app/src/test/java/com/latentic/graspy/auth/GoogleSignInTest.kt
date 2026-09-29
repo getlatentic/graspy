@@ -9,12 +9,14 @@ import androidx.credentials.exceptions.GetCredentialUnsupportedException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FederatedAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
 import com.latentic.graspy.account.UID
@@ -45,11 +47,19 @@ class GoogleSignInTest {
 
     private val phoneSignIns = mutableListOf<String>()
 
+    /** Signing the current user in again, in place of signing a user in: through the phone's account and on Google's page. */
+    private val phoneReauths = mutableListOf<String>()
+    private val pageReauths = mutableListOf<Pair<Activity, FederatedAuthProvider>>()
+    private var reauth: Task<Void> = Tasks.forResult(null)
+    private var pageReauth: Task<AuthResult> = Tasks.forResult(null)
+
     private val session = object : FirebaseSession(
         FirebaseAuth.getInstance(demoFirebase()),
         clearCredentials = {},
         signInWithCredential = { phoneSignIns += it.provider; Tasks.forResult(null) },
         signInWithProvider = { activity, provider -> pages += activity to provider; page },
+        reauthenticateWithCredential = { phoneReauths += it.provider; reauth },
+        reauthenticateWithProvider = { activity, provider -> pageReauths += activity to provider; pageReauth },
     ) {
         override val userId = UID
     }
@@ -60,6 +70,11 @@ class GoogleSignInTest {
     }
 
     private fun signIn(askWhichAccount: Boolean = false) = runBlocking { google.signIn(activity, askWhichAccount) }
+
+    private fun reconfirm() = runBlocking { google.reconfirm(activity) }
+
+    private fun googleAccount(): Credential =
+        GoogleIdTokenCredential.Builder().setId("parent@example.com").setIdToken(GOOGLE_ID_TOKEN).build()
 
     @Test
     fun `a phone without a Google account signs in on Google's page`() {
@@ -137,6 +152,63 @@ class GoogleSignInTest {
 
         val page = shadowOf(activity).nextStartedActivity
         assertEquals("select_account", page.getBundleExtra(CUSTOM_PARAMETERS)?.getString("prompt"))
+    }
+
+    @Test
+    fun `confirming signs the current user in again with the phone's account, and signs no user in`() {
+        phone = { googleAccount() }
+
+        assertEquals(SignInOutcome.Succeeded(UID), reconfirm())
+
+        assertEquals(listOf(GoogleAuthProvider.PROVIDER_ID), phoneReauths)
+        assertEquals(emptyList<String>(), phoneSignIns)
+        assertEquals(emptyList<Any>(), pages + pageReauths)
+    }
+
+    @Test
+    fun `confirming always asks which account, and never takes the last one unasked`() {
+        phone = { googleAccount() }
+
+        reconfirm()
+
+        val option = sheets.single().second as GetGoogleIdOption
+        assertEquals(false, option.filterByAuthorizedAccounts)
+        assertEquals(false, option.autoSelectEnabled)
+        assertSame(activity, sheets.single().first)
+    }
+
+    @Test
+    fun `confirming on a phone without a Google account uses Google's page, to sign the user in again`() {
+        assertEquals(SignInOutcome.Succeeded(UID), reconfirm())
+
+        assertEquals(listOf(GoogleAuthProvider.PROVIDER_ID), pageReauths.map { (it.second as OAuthProvider).providerId })
+        assertSame(activity, pageReauths.single().first)
+        assertEquals(emptyList<Any>(), pages)
+    }
+
+    @Test
+    fun `a Google account that is not the signed-in user's is not confirmed, on the phone or on Google's page`() {
+        val mismatch = FirebaseAuthInvalidCredentialsException("ERROR_USER_MISMATCH", "The credential is not this user's")
+        phone = { googleAccount() }
+        reauth = Tasks.forException(mismatch)
+        assertEquals(SignInOutcome.OtherAccount, reconfirm())
+
+        phone = { throw NoCredentialException() }
+        pageReauth = Tasks.forException(mismatch)
+        assertEquals(SignInOutcome.OtherAccount, reconfirm())
+    }
+
+    @Test
+    fun `closing the sheet or Google's page while confirming cancels it, and any other failure fails it`() {
+        phone = { throw GetCredentialCancellationException() }
+        assertEquals(SignInOutcome.Cancelled, reconfirm())
+
+        phone = { throw NoCredentialException() }
+        pageReauth = Tasks.forException(FirebaseAuthException("ERROR_WEB_CONTEXT_CANCELED", "The web operation was canceled"))
+        assertEquals(SignInOutcome.Cancelled, reconfirm())
+
+        pageReauth = Tasks.forException(FirebaseNetworkException("Google could not be reached"))
+        assertTrue(reconfirm() is SignInOutcome.Failed)
     }
 
     private companion object {
