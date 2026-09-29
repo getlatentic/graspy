@@ -22,7 +22,8 @@ It was made to decide which lines graspy's tutor may trust the model with. The t
 
 ```text
 lines.jsonl     one line per input: id, category, line
-results.jsonl   one row per line and host: the model's reply, latency, the automated check's verdict, a judgement
+results.jsonl   gpt-oss-20b: one row per line and host: the reply, latency, the automated check's verdict, a judgement
+results-gpt-oss-120b.jsonl   the same lines on gpt-oss-120b (Workers AI and Bedrock); judgements for replies that differ from 20b's
 probe/          the small Worker that produced the replies (see below)
 ```
 
@@ -65,6 +66,19 @@ What this says:
 - Latency was about one second per line on both hosts, with occasional stalls of ten seconds or more, which is why the tutor gives up on a spelling after four seconds.
 
 The tutor's rule follows from this: a line whose numbers all stand alone is checked by code and the model may spell it; every other line is left to the teacher model to rewrite.
+
+## A bigger model
+
+The same 125 lines were run on `gpt-oss-120b` on both hosts (`results-gpt-oss-120b.jsonl`). Of the 63 lines code cannot check:
+
+| Model and host | good | awkward | bad | median latency |
+|---|---|---|---|---|
+| 20b, Workers AI | 32 | 26 | 5 | 0.5 s |
+| 20b, Bedrock | 32 | 25 | 6 | about 1 s |
+| 120b, Workers AI | 35 | 19 | 9 | 2.2 s (one call took 19.6 s) |
+| 120b, Bedrock | 34 | 25 | 4 | 0.9 s |
+
+The 57 lines code can check were passed by 120b too. The bigger model is better at some things (it writes `one half` for `1/2`, `fifty percent` for `50%`, `nineteen sixty` for a year, `Nine nines`) and worse at others (it glued letters to numbers, `Afour`, `Bseven`, `HtwoO`, `xtwo`, and `1st` became `onest` once). It is not a clear improvement on this set, and on Workers AI it is four times slower. The failures differ by model and host and are not consistent from line to line, which is the reason a spelling on a line code cannot check should not be trusted, whichever model wrote it.
 
 ## Reproducing
 
