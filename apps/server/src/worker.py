@@ -31,17 +31,25 @@ sys.modules.setdefault("openai", ModuleType("openai"))
 
 # Parts of DSPy and its dependencies that graspy never runs, kept out of the
 # snapshot: optimizers, evaluation, retrievers, datasets, unused programs and
-# adapters, console output, and requests (model calls go through httpx). Each
-# is a module that yields a permissive class for any name; DSPy only keeps
-# them for isinstance checks and class lists, which a stub class answers. A
-# trailing dot stubs a package's modules but runs its own __init__, which
-# names what DSPy's `import *` of it takes.
+# adapters, console output, requests (model calls go through httpx), httpx's
+# command line, FastAPI's OpenAPI models (docs are off once deployed), the
+# settings command line, and DSPy's embedder, test doubles and retrieval text
+# normaliser. Each is a module that yields a permissive class for any name;
+# DSPy only keeps them for isinstance checks and class lists, which a stub
+# class answers. A trailing dot stubs a package's modules but runs its own
+# __init__, which names what DSPy's `import *` of it takes.
 UNUSED_PACKAGES = (
     "gepa",
     "rich",
     "tqdm",
     "cloudpickle",
     "requests",
+    "httpx._main",
+    "fastapi.openapi.models",
+    "pydantic_settings.sources.providers.cli",
+    "dspy.utils.dummies",
+    "dspy.clients.embedding",
+    "dspy.dsp.utils.dpr",
     "dspy.teleprompt.",
     "dspy.retrievers.",
     "dspy.evaluate",
@@ -112,8 +120,20 @@ class _StubLoader:
         pass
 
 
+# Packages the Worker never loads and that a stub cannot stand in for: a
+# dependency that finds one missing takes its own fallback (sse-starlette
+# skips patching uvicorn's shutdown, which drags in click and more).
+ABSENT_PACKAGES = ("uvicorn",)
+
+
+def _absent(name: str) -> bool:
+    return any(name == p or name.startswith(p + ".") for p in ABSENT_PACKAGES)
+
+
 class _StubFinder:
     def find_spec(self, name: str, path=None, target=None):
+        if _absent(name):
+            raise ModuleNotFoundError(f"No module named {name!r}", name=name)
         if not _unused(name):
             return None
         return importlib.util.spec_from_loader(name, _StubLoader())
