@@ -6,6 +6,7 @@ const pages = {
   learners: () => import("@/features/account/pages/learner-picker-page"),
   signIn: () => import("@/features/account/pages/sign-in-page"),
   manageLearners: () => import("@/features/account/pages/learners-page"),
+  learnerVoice: () => import("@/features/account/pages/voice-recordings-page"),
   learnLayout: () => import("@/app/learn/layout"),
   home: () => import("@/app/learn/page"),
   subject: () => import("@/app/learn/subject-page"),

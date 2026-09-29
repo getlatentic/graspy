@@ -292,7 +292,6 @@
     "back": "Back",
     "inUse": "Learning on this device",
     "nameLabel": "Name",
-    "guardian": "I'm this learner, or their parent or guardian",
     "addButton": "Add",
     "cancel": "Cancel",
     "full": "This account is full: 8 learners.",
@@ -317,7 +316,8 @@
     "addTile": "Add learner",
     "addTitle": "Add a learner",
     "devicePlan": "This device's plan goes to who you choose.",
-    "otherAccount": "Use another account"
+    "otherAccount": "Use another account",
+    "recordings": "Recordings"
   },
   "signIn": {
     "link": "Sign in",
@@ -331,7 +331,7 @@
     "start": "Start",
     "startHere": "Start here",
     "ok": "OK",
-    "note": "graspy sends your voice to check your answers.",
+    "note": "graspy sends your voice to check your answers. Once marked, the recording is deleted, unless a parent keeps it.",
     "loading": "Getting your lessons…",
     "loadFailed": "Your lessons didn't load.",
     "retry": "Try again",
@@ -384,5 +384,46 @@
       "micFailed": "The microphone didn't start. Try again.",
       "notSaved": "Your answer wasn't saved. Try again."
     }
+  },
+  "consent": {
+    "continue": "Continue",
+    "serviceTitle": "Agree to graspy for {name}",
+    "who": "Agree as the learner, or their parent or guardian.",
+    "agree": "Agree with Google",
+    "agreeRow": "Agree",
+    "decline": "Don't agree",
+    "needed": "Not agreed yet",
+    "signIn": "That sign-in didn't work. Try again.",
+    "otherAccount": "Use the Google account you are signed in with.",
+    "notice": "This page is out of date. Reload it and try again.",
+    "browser": "Open graspy in your browser to sign in.",
+    "signedOut": "You are not signed in here any more.",
+    "signInAgain": "Sign in again",
+    "notGoogle": "Sign in with Google to agree.",
+    "notKept": "That was not saved. Try again."
+  },
+  "voiceRecordings": {
+    "title": "Voice recordings",
+    "off": "graspy deletes each recording once it has marked the answer. The words it heard stay.",
+    "keep": "Keep recordings",
+    "keptFor": "Kept for {days} days.",
+    "keepFor": "Keep for",
+    "days": "{days} days",
+    "empty": "No recordings yet.",
+    "play": "Play",
+    "stop": "Stop",
+    "delete": "Delete",
+    "deleteAll": "Delete all",
+    "deleteAllConfirm": "Delete all kept recordings? This can't be undone.",
+    "more": "Show more",
+    "stopTitle": "Stop keeping recordings?",
+    "stopDelete": "Stop and delete them",
+    "stopKeep": "Stop, keep them until they expire",
+    "gone": "That recording is gone.",
+    "playFailed": "That recording didn't play. Try again.",
+    "notFound": "This learner is not on your account.",
+    "playAt": "Play the recording of {when}",
+    "stopAt": "Stop the recording of {when}",
+    "deleteAt": "Delete the recording of {when}"
   }
 }

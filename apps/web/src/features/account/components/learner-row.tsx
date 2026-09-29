@@ -1,22 +1,33 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import type { AccountLearner } from "@/lib/account/learners-api";
+import { buttonStyles } from "@/components/ui/button-styles";
+import type {
+  AccountLearner,
+  ServiceConsent,
+} from "@/lib/account/learners-api";
 import { useI18n } from "@/lib/i18n-context";
+import { LEARNERS_PAGE } from "@/features/learn/lib/app-sections";
 import { ConfirmCard } from "./confirm-card";
+import { ServiceAgreement } from "./service-agreement";
 
-type Mode = "shown" | "renaming" | "removing";
+type Mode = "shown" | "renaming" | "removing" | "agreeing";
+
+const LINK = buttonStyles("secondary", "sm");
 
 export function LearnerRow({
   learner,
   inUse,
   busy,
   onRename,
+  onAgreed,
   onRemove,
 }: {
   learner: AccountLearner;
   inUse: boolean;
   busy: boolean;
   onRename: (name: string) => Promise<boolean>;
+  onAgreed: (consent: ServiceConsent) => void;
   onRemove: () => void;
 }) {
   const { t } = useI18n();
@@ -31,6 +42,20 @@ export function LearnerRow({
           void onRename(name).then((saved) => saved && setMode("shown"))
         }
         onCancel={() => setMode("shown")}
+      />
+    );
+  }
+  if (mode === "agreeing") {
+    return (
+      <ServiceAgreement
+        heading="h2"
+        learner={learner}
+        busy={busy}
+        onAgreed={(consent) => {
+          onAgreed(consent);
+          setMode("shown");
+        }}
+        onDecline={() => setMode("shown")}
       />
     );
   }
@@ -50,11 +75,36 @@ export function LearnerRow({
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-ink">{learner.name}</p>
         {inUse && <p className="text-xs text-muted">{t("learners.inUse")}</p>}
+        {!learner.serviceConsent && (
+          <p className="text-xs text-muted">{t("consent.needed")}</p>
+        )}
       </div>
-      <Button variant="secondary" size="sm" onClick={() => setMode("renaming")}>
+      {!learner.serviceConsent && (
+        <Button
+          size="sm"
+          data-restore-focus={`agree-${learner.id}`}
+          onClick={() => setMode("agreeing")}
+        >
+          {t("consent.agreeRow")}
+        </Button>
+      )}
+      <Button
+        variant="secondary"
+        size="sm"
+        data-restore-focus={`rename-${learner.id}`}
+        onClick={() => setMode("renaming")}
+      >
         {t("learners.rename")}
       </Button>
-      <Button variant="secondary" size="sm" onClick={() => setMode("removing")}>
+      <Link to={`${LEARNERS_PAGE}/${learner.id}/voice`} className={LINK}>
+        {t("learners.recordings")}
+      </Link>
+      <Button
+        variant="secondary"
+        size="sm"
+        data-restore-focus={`remove-${learner.id}`}
+        onClick={() => setMode("removing")}
+      >
         {t("learners.remove")}
       </Button>
     </div>

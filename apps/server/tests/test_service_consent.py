@@ -9,6 +9,11 @@ from consent_sign_ins import consent_app
 from signed_in import UID, client, signed_in, signed_in_app
 from voice_worker import worker_env
 
+from app.account.directory import account_key
+from app.account.learners import removed
+from app.api import account_routes as routes_of_accounts
+from app.api import routes
+
 SERVICE_NOTICE = 1
 
 
@@ -208,6 +213,119 @@ async def test_removing_a_learner_forgets_their_consent(app, env):
     ]
 
 
+async def added_without_consent(http, name: str = "Ada") -> str:
+    added = await http.post(
+        "/api/account/learners", json={"name": name, "guardian": True}
+    )
+    return added.json()["id"]
+
+
+async def test_a_parent_agrees_for_a_learner_added_without_consent(app, env):
+    before = int(time.time() * 1000)
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        agreed = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+        listed = await learners(http)
+
+    assert agreed.status_code == 200
+    consent = agreed.json()
+    assert set(consent) == {"noticeVersion", "grantedAt"}
+    assert consent["noticeVersion"] == 1
+    assert before <= consent["grantedAt"] <= int(time.time() * 1000)
+    assert listed[0]["serviceConsent"] == consent
+    assert [
+        (row["scope"], row["revoked_at"])
+        for row in env.DB.rows("SELECT * FROM consents")
+    ] == [("service", None)]
+
+
+async def test_agreeing_again_replaces_the_earlier_consent(app, env):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        for _ in range(2):
+            await http.put(
+                f"/api/account/learners/{learner}/consent",
+                json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+            )
+
+    assert sorted(
+        row["revoked_at"] is None for row in env.DB.rows("SELECT * FROM consents")
+    ) == [False, True]
+
+
+@pytest.mark.parametrize(
+    ("token", "status", "code"),
+    [
+        ("stale", 401, "sign_in_stale"),
+        ("undated", 401, "sign_in_stale"),
+        ("other", 403, "sign_in_other_account"),
+        ("forged", 401, "sign_in_invalid"),
+        ("password", 403, "sign_in_not_google"),
+    ],
+)
+async def test_a_sign_in_that_does_not_hold_records_no_service_consent(
+    app, env, token, status, code
+):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": token},
+        )
+        listed = await learners(http)
+
+    assert refused.status_code == status
+    assert refused.json()["detail"]["code"] == code
+    assert listed[0]["serviceConsent"] is None
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_a_notice_graspy_does_not_show_records_no_service_consent(app, env):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 2, "firebaseIdToken": "fresh"},
+        )
+
+    assert refused.status_code == 400
+    assert refused.json()["detail"]["code"] == "notice_unknown"
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_a_learner_the_account_does_not_hold_is_not_agreed_for(app, env):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        refused = await http.put(
+            "/api/account/learners/a1b2c3d4e5f6/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+
+    assert refused.status_code == 404
+    assert refused.json()["detail"]["code"] == "no_such_learner"
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_service_consent_where_none_can_be_kept_is_unavailable(monkeypatch):
+    async with client(signed_in_app(monkeypatch)) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "good"},
+        )
+
+    assert refused.status_code == 503
+    assert refused.json()["detail"]["code"] == "consent_unavailable"
+
+
 async def test_a_consent_that_cannot_be_kept_leaves_no_learner_and_a_retry_adds_one(
     app, env, monkeypatch
 ):
@@ -237,3 +355,136 @@ async def test_a_consent_that_cannot_be_kept_leaves_no_learner_and_a_retry_adds_
     assert [row["learner_key"] for row in env.DB.rows("SELECT * FROM consents")] == [
         f"account:{UID}/{retried.json()['id']}"
     ]
+
+
+def removing_during_lookup(monkeypatch, app, held: list[str]):
+    """Google's answer for the fresh sign-in comes after the learner was removed."""
+    lookup = routes.verified
+
+    async def verified(id_token, api_key, **kwargs):
+        signed = await lookup(id_token, api_key, **kwargs)
+        if id_token == "fresh" and held:
+            await removed(app.state.keeping, UID, held.pop())
+        return signed
+
+    monkeypatch.setattr("app.api.routes.verified", verified)
+
+
+async def test_a_learner_removed_while_google_is_asked_is_not_agreed_for(
+    app, env, monkeypatch
+):
+    held: list[str] = []
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        held.append(learner)
+        removing_during_lookup(monkeypatch, app, held)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+
+    assert refused.status_code == 404
+    assert refused.json()["detail"]["code"] == "no_such_learner"
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_a_consent_that_cannot_be_written_for_an_existing_learner_can_be_sent_again(
+    app, env, monkeypatch
+):
+    batch = env.DB.batch
+
+    async def broken(statements):
+        raise RuntimeError("D1 is down")
+
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        monkeypatch.setattr(env.DB, "batch", broken)
+        failed = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+        monkeypatch.setattr(env.DB, "batch", batch)
+        retried = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+
+    assert failed.status_code == 503
+    assert failed.json()["detail"]["code"] == "consent_not_kept"
+    assert retried.status_code == 200
+
+
+async def test_a_consent_that_cannot_be_kept_because_d1_is_down_answers_503_and_leaves_no_learner(
+    app, env, monkeypatch
+):
+    def down(*_):
+        raise RuntimeError("D1 is down")
+
+    async def down_batch(*_):
+        raise RuntimeError("D1 is down")
+
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        monkeypatch.setattr(env.DB, "batch", down_batch)
+        monkeypatch.setattr(env.DB, "prepare", down)
+        failed = await http.post(
+            "/api/account/learners", json=adding(firebaseIdToken="fresh")
+        )
+        directory = await app.state.keeping.learners.directory(account_key(UID))
+
+    assert failed.status_code == 503
+    assert failed.json()["detail"]["code"] == "consent_not_kept"
+    assert directory.learners == []
+
+
+async def test_a_learner_removed_between_the_check_and_the_write_leaves_no_consent(
+    app, env, monkeypatch
+):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        write = routes_of_accounts.grant_consent
+
+        async def racing(database, key, *rest):
+            await removed(app.state.keeping, UID, learner)
+            return await write(database, key, *rest)
+
+        monkeypatch.setattr("app.api.account_routes.grant_consent", racing)
+        refused = await http.put(
+            f"/api/account/learners/{learner}/consent",
+            json={"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        )
+
+    assert refused.status_code == 404
+    assert refused.json()["detail"]["code"] == "no_such_learner"
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_a_rollback_that_fails_too_still_answers_503(app, env, monkeypatch):
+    async def down(*_):
+        raise RuntimeError("D1 is down")
+
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        monkeypatch.setattr(env.DB, "batch", down)
+        change = app.state.keeping.learners.change_directory
+        calls = []
+
+        async def failing_second(key, change_):
+            calls.append(change_)
+            if len(calls) > 1:
+                raise RuntimeError("the directory is down")
+            return await change(key, change_)
+
+        monkeypatch.setattr(
+            app.state.keeping.learners, "change_directory", failing_second
+        )
+        failed = await http.post(
+            "/api/account/learners", json=adding(firebaseIdToken="fresh")
+        )
+
+    assert failed.status_code == 503
+    assert failed.json()["detail"]["code"] == "consent_not_kept"
+    assert len(calls) == 2

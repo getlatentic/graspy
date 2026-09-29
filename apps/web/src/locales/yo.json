@@ -292,7 +292,6 @@
     "back": "Padà",
     "inUse": "Ó ń kẹ́kọ̀ọ́ lórí ẹ̀rọ yìí",
     "nameLabel": "Orúkọ",
-    "guardian": "Èmi ni akẹ́kọ̀ọ́ yìí, tàbí òbí tàbí alágbàtọ́ rẹ̀",
     "addButton": "Fi kún un",
     "cancel": "Fagilé",
     "full": "Àkọọ́lẹ̀ yìí ti kún: akẹ́kọ̀ọ́ 8.",
@@ -317,7 +316,8 @@
     "addTile": "Fi akẹ́kọ̀ọ́ kún un",
     "addTitle": "Fi akẹ́kọ̀ọ́ kún un",
     "devicePlan": "Ètò ẹ̀rọ yìí yóò lọ sọ́dọ̀ ẹni tí o bá yàn.",
-    "otherAccount": "Lo àkántì mìíràn"
+    "otherAccount": "Lo àkántì mìíràn",
+    "recordings": "Àwọn ohùn"
   },
   "signIn": {
     "link": "Wọlé",
@@ -331,7 +331,7 @@
     "start": "Bẹ̀rẹ̀",
     "startHere": "Bẹ̀rẹ̀ níbí",
     "ok": "Ó dáa",
-    "note": "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò.",
+    "note": "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò. Ní kété tí ó bá ti yẹ̀ ẹ́ wò, a óò pa ohùn náà rẹ́, àfi tí òbí bá pa á mọ́.",
     "loading": "Ń mú àwọn ẹ̀kọ́ rẹ wá…",
     "loadFailed": "Àwọn ẹ̀kọ́ rẹ kò ṣí.",
     "retry": "Tún gbìyànjú",
@@ -384,5 +384,46 @@
       "micFailed": "Gbohùngbohùn kò bẹ̀rẹ̀. Tún gbìyànjú.",
       "notSaved": "A kò tọ́jú ìdáhùn rẹ. Tún gbìyànjú."
     }
+  },
+  "consent": {
+    "continue": "Tẹ̀síwájú",
+    "serviceTitle": "Fọwọ́ sí graspy fún {name}",
+    "who": "Fọwọ́ sí gẹ́gẹ́ bí akẹ́kọ̀ọ́, tàbí òbí tàbí alágbàtọ́ rẹ̀.",
+    "agree": "Fọwọ́ sí pẹ̀lú Google",
+    "agreeRow": "Fọwọ́ sí",
+    "decline": "Kò fọwọ́ sí",
+    "needed": "A kò tíì fọwọ́ sí i",
+    "signIn": "Ìwọlé yẹn kò ṣiṣẹ́. Tún gbìyànjú.",
+    "otherAccount": "Lo àkọọ́lẹ̀ Google tí o fi wọlé.",
+    "notice": "Ojú ìwé yìí ti pẹ́ jù. Tún ojú ìwé náà ṣí kí o sì tún gbìyànjú.",
+    "browser": "Ṣí graspy nínú aṣàwákiri rẹ láti wọlé.",
+    "signedOut": "O kò wọlé níbí mọ́.",
+    "signInAgain": "Tún wọlé",
+    "notGoogle": "Wọlé pẹ̀lú Google láti fọwọ́ sí i.",
+    "notKept": "A kò tọ́jú rẹ̀. Tún gbìyànjú."
+  },
+  "voiceRecordings": {
+    "title": "Àwọn ohùn tí a gbà sílẹ̀",
+    "off": "graspy ń pa gbogbo ohùn tí a gbà sílẹ̀ rẹ́ ní kété tí ó bá ti yẹ ìdáhùn wò. Àwọn ọ̀rọ̀ tí ó gbọ́ wà síbẹ̀.",
+    "keep": "Pa àwọn ohùn tí a gbà sílẹ̀ mọ́",
+    "keptFor": "A pa á mọ́ fún ọjọ́ {days}.",
+    "keepFor": "Pa á mọ́ fún",
+    "days": "ọjọ́ {days}",
+    "empty": "Kò sí ohùn tí a gbà sílẹ̀ síbẹ̀.",
+    "play": "Tẹ́tí sí i",
+    "stop": "Dúró",
+    "delete": "Pa á rẹ́",
+    "deleteAll": "Pa gbogbo rẹ̀ rẹ́",
+    "deleteAllConfirm": "Ṣé kí o pa gbogbo ohùn tí a pamọ́ rẹ́? A kò lè dá a padà.",
+    "more": "Fi púpọ̀ sí i hàn",
+    "stopTitle": "Ṣé kí a dẹ́kun pípa ohùn mọ́?",
+    "stopDelete": "Dẹ́kun kí o sì pa wọ́n rẹ́",
+    "stopKeep": "Dẹ́kun, pa wọ́n mọ́ títí wọn yóò fi parí",
+    "gone": "Ohùn yẹn ti lọ.",
+    "playFailed": "Ohùn yẹn kò ṣiṣẹ́. Tún gbìyànjú.",
+    "notFound": "Akẹ́kọ̀ọ́ yìí kò sí lórí àkọọ́lẹ̀ rẹ.",
+    "playAt": "Tẹ́tí sí ohùn ti {when}",
+    "stopAt": "Dá ohùn ti {when} dúró",
+    "deleteAt": "Pa ohùn ti {when} rẹ́"
   }
 }

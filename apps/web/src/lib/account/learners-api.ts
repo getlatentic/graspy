@@ -1,58 +1,67 @@
-import { toApiError, toNetworkError } from "@/lib/api/errors";
-import { fetchWithSession, type Issued } from "@/lib/api/session";
-import { API_BASE_URL } from "@/lib/env";
+import type { Issued } from "@/lib/api/session";
+import { ACCOUNT_URL, call } from "./account-call";
 
 // The account's learners (app/api/account_routes.py). Any signed-in session manages them.
+
+/** The parent's agreement to a notice, with the fresh Google sign-in that shows it was them. */
+export interface ConsentProof {
+  noticeVersion: number;
+  firebaseIdToken: string;
+}
+
+export interface ServiceConsent {
+  noticeVersion: number;
+  grantedAt: number;
+}
+
+export interface VoiceConsent {
+  noticeVersion: number;
+  retentionDays: number;
+}
 
 export interface AccountLearner {
   id: string;
   name: string;
   createdAt: number;
+  /** Null until a parent agreed to graspy teaching them. */
+  serviceConsent: ServiceConsent | null;
+  /** Null until a parent agreed to keep their voice recordings. */
+  voiceConsent: VoiceConsent | null;
 }
+
+/** What a rename answers: the learner without their consents. */
+export type RenamedLearner = Pick<AccountLearner, "id" | "name" | "createdAt">;
 
 interface Listed {
   learners: AccountLearner[];
 }
 
-const ACCOUNT_URL = `${API_BASE_URL}/account`;
 const LEARNERS_URL = `${ACCOUNT_URL}/learners`;
-
-async function call<T>(
-  url: string,
-  method: string,
-  body?: unknown,
-): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetchWithSession(url, {
-      method,
-      ...(body === undefined
-        ? {}
-        : {
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          }),
-    });
-  } catch (cause) {
-    throw toNetworkError(cause);
-  }
-  if (!response.ok) throw await toApiError(response);
-  return (response.status === 204 ? undefined : await response.json()) as T;
-}
 
 export async function listLearners(): Promise<AccountLearner[]> {
   return (await call<Listed>(LEARNERS_URL, "GET")).learners;
 }
 
-/** Whoever adds a learner confirms they are that learner, or their parent or guardian. */
-export function addLearner(name: string): Promise<AccountLearner> {
-  return call(LEARNERS_URL, "POST", { name, guardian: true });
+/** Whoever adds a learner is that learner, or their parent or guardian, and agrees for them. */
+export function addLearner(
+  name: string,
+  consent: ConsentProof,
+): Promise<AccountLearner> {
+  return call(LEARNERS_URL, "POST", { name, guardian: true, consent });
+}
+
+/** For a learner who was added without the parent's agreement. */
+export function agreeToService(
+  id: string,
+  consent: ConsentProof,
+): Promise<ServiceConsent> {
+  return call(`${LEARNERS_URL}/${id}/consent`, "PUT", consent);
 }
 
 export function renameLearner(
   id: string,
   name: string,
-): Promise<AccountLearner> {
+): Promise<RenamedLearner> {
   return call(`${LEARNERS_URL}/${id}`, "PATCH", { name });
 }
 
@@ -70,12 +79,4 @@ export function learnerSession(id: string, device?: string): Promise<Issued> {
 /** Every learner and everything kept for them. The Google account stays Google's. */
 export function deleteAccount(): Promise<void> {
   return call(ACCOUNT_URL, "DELETE");
-}
-
-/** The server's code for a refusal, such as too_many_learners. */
-export function refusalCode(error: unknown): string | null {
-  const data = (error as { data?: { detail?: { code?: unknown } } } | null)
-    ?.data;
-  const code = data?.detail?.code;
-  return typeof code === "string" ? code : null;
 }

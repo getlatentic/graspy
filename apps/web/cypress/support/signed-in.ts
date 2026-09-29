@@ -29,12 +29,15 @@ export function usedDevice(
 
 export type Choice = { add: string } | { choose: string };
 
-/** On "Who's learning?": the learner is added, as the form asks, and chosen. */
+/** On "Who's learning?": the learner is added, with the parent's agreement, and chosen. The
+ * agreeing tap opens Google's window to sign in again, which Cypress cannot drive, and the
+ * server keeps consent only in the Worker: no spec that adds a learner here passes yet. */
 export function addLearnerNamed(name: string): void {
   cy.contains("button", "Add learner").click();
   cy.get("#learner-name").type(name);
-  cy.contains("label", "I'm this learner").find("input").check();
-  cy.contains("button", /^Add$/).click();
+  cy.contains("button", "Continue").click();
+  cy.contains("Cloudflare, Amazon, Intron and Spitch");
+  cy.contains("button", "Agree with Google").click();
 }
 
 export function pickLearner(choice: Choice): void {

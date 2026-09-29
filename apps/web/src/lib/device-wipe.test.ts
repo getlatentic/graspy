@@ -40,6 +40,7 @@ const DEVICE = {
   "graspy.learner.plan-1": "{}",
   "graspy.records.imported": "1",
   "graspy.view.ui://graspy/lesson": "<html>",
+  "graspy.service-consent.uid/ada": "1",
 };
 
 beforeEach(() => {
@@ -57,14 +58,23 @@ describe("wipeLearnerData", () => {
     expect(Object.keys(storage).sort()).toEqual([
       "firebase:authUser:key:[DEFAULT]",
       "graspy.account",
+      "graspy.service-consent.uid/ada",
       "graspy_device_id",
     ]);
     expect(newDeviceId).not.toHaveBeenCalled();
   });
+
+  it("keeps what a parent agreed to, so the next learner's switch does not ask again", async () => {
+    const storage = localStorageWith(DEVICE);
+
+    await wipeLearnerData();
+
+    expect(storage["graspy.service-consent.uid/ada"]).toBe("1");
+  });
 });
 
 describe("wipeDevice", () => {
-  it("leaves only Firebase's keys, and gives the device a new id", async () => {
+  it("leaves only Firebase's keys, agreements included, and gives the device a new id", async () => {
     const storage = localStorageWith(DEVICE);
 
     await wipeDevice();

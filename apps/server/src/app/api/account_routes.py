@@ -10,7 +10,12 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from ..account.consents import NOTICE_VERSIONS, SERVICE, grant_consent
+from ..account.consents import (
+    NOTICE_VERSIONS,
+    SERVICE,
+    forget_consents,
+    grant_consent,
+)
 from ..account.directory import (
     MAX_LEARNERS,
     Directory,
@@ -28,6 +33,7 @@ from ..account.learners import (
     learner_of,
     removed,
     renamed,
+    unadded,
 )
 from ..caller import Caller, Keeping
 from ..learner.record import DeviceJoined
@@ -38,6 +44,7 @@ from .consent_proof import refusal, require_fresh_sign_in, require_known_notice
 from .listed_learners import (
     ListedLearner,
     ListedLearners,
+    ServiceConsent,
     listed,
     listed_with_consents,
 )
@@ -108,6 +115,38 @@ def no_such_learner(learner_id: str) -> HTTPException:
     )
 
 
+async def require_learner(keeping: Keeping, uid: str, learner_id: str) -> None:
+    """The account holds the learner, now: a consent is written only for one it still holds."""
+    try:
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        raise no_such_learner(learner_id) from None
+
+
+async def grant_for_held_learner(
+    keeping: Keeping,
+    database,
+    uid: str,
+    learner_id: str,
+    scope: str,
+    notice_version: int,
+    retention_days: int | None,
+) -> dict:
+    """Writes the consent, then checks the account still holds the learner. Removing a learner
+    deletes their consents before it removes them, so a consent written in between, or while
+    Google was asked, would be left with no learner: that row is deleted."""
+    key = learner_key(uid, learner_id)
+    granted = await grant_consent(
+        database, key, uid, scope, notice_version, retention_days, now_ms()
+    )
+    try:
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        await forget_consents(database, key)
+        raise no_such_learner(learner_id) from None
+    return granted
+
+
 @account_router.get("/learners", response_model=ListedLearners)
 async def learners(request: Request, uid: Uid, keeping: KeepingDep) -> ListedLearners:
     directory = await keeping.learners.directory(account_key(uid))
@@ -115,7 +154,7 @@ async def learners(request: Request, uid: Uid, keeping: KeepingDep) -> ListedLea
 
 
 async def _proved(request: Request, uid: Uid, consent: ServiceConsentGrant) -> None:
-    """A consent sent with a new learner is checked before the learner is added."""
+    """A consent is checked before it is recorded, and before a new learner is added."""
     require_known_notice(NOTICE_VERSIONS[SERVICE], consent.notice_version)
     if request.app.state.voice is None:
         raise refusal(503, "consent_unavailable", "Consent cannot be kept here")
@@ -152,15 +191,53 @@ async def add_learner(
         )
     except Exception:
         # The learner lives in a Durable Object and the consent in D1, so they cannot be written
-        # together: the learner goes again, and a retry adds one learner, not two.
+        # together: the learner goes again, and a retry adds one learner, not two. D1 may be what
+        # failed, so only the directory's entry is taken back; if that fails too, the learner
+        # stays without consent, for the parent to agree for.
         logger.exception(
-            "Consent for a new learner was not kept; the learner is removed"
+            "Consent for a new learner was not kept; the learner is undone"
         )
-        await removed(keeping, uid, learner.id)
+        try:
+            await unadded(keeping, uid, learner.id)
+        except Exception:
+            logger.exception(
+                "The learner whose consent was not kept could not be undone"
+            )
         raise refusal(
             503, "consent_not_kept", "The consent was not kept. Try again"
         ) from None
     return listed(learner, {SERVICE: granted})
+
+
+@account_router.put("/learners/{learner_id}/consent", response_model=ServiceConsent)
+async def agree_to_service(
+    request: Request,
+    uid: Uid,
+    keeping: KeepingDep,
+    learner_id: LearnerId,
+    body: ServiceConsentGrant,
+) -> ServiceConsent:
+    """The parent of a learner added without consent agrees to graspy teaching them."""
+    await require_learner(keeping, uid, learner_id)
+    await _proved(request, uid, body)
+    try:
+        granted = await grant_for_held_learner(
+            keeping,
+            request.app.state.voice.DB,
+            uid,
+            learner_id,
+            SERVICE,
+            body.notice_version,
+            None,
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Consent for a learner was not kept")
+        raise refusal(
+            503, "consent_not_kept", "The consent was not kept. Try again"
+        ) from None
+    return ServiceConsent.model_validate(granted)
 
 
 @account_router.patch("/learners/{learner_id}", response_model=Learner)
