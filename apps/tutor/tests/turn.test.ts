@@ -126,6 +126,24 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(reply.say).toBe("Well done! You said nine.");
   });
 
+  it("speaks no more than the lines it allows, however many the model asks for in one round", async () => {
+    const twice = { choices: [{ message: { content: "", tool_calls: [
+      { id: "a", function: { name: "say_it", arguments: JSON.stringify({ text: "Correct. Correct." }) } },
+      { id: "b", function: { name: "say_it", arguments: JSON.stringify({ text: "Correct. Correct." }) } },
+      { id: "c", function: { name: "say_it", arguments: JSON.stringify({ text: "Correct. Correct." }) } },
+    ] } }] };
+    const logged = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const { env, seen } = tutor([marked, twice, twice]);
+
+    const reply = await takeTurn(env, ask);
+    const rejected = logged.mock.calls.filter((row) => String(row[0]).includes("line-rejected")).length;
+    logged.mockRestore();
+
+    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(rejected).toBe(2);
+    expect(seen).toHaveLength(2);
+  });
+
   it("logs why a line was rejected but not the line itself", async () => {
     const logged = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const { env } = tutor([marked, call("say_it", { text: "Correct, Ada!" }), call("say_it", { text: "Well done! You said nine." })]);

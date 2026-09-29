@@ -57,6 +57,15 @@ describe("spellNumbers", () => {
     expect(await spellNumbers(env, "That is wrong, 45.", "en")).toBe("That is wrong, 45.");
   });
 
+  it.each([
+    ["You got 21.", "You got twenty and one."],
+    ["You got 21.", "You got twenty, one."],
+    ["You got 56.", "You got fifty and six."],
+  ])("does not let one number become two: %s", async (line, reply) => {
+    const { env } = speller(reply);
+    expect(await spellNumbers(env, line, "en")).toBe(line);
+  });
+
   it("takes the small differences of writing: case, hyphens and an added 'and'", async () => {
     expect(await spellNumbers(speller("you got One Hundred and five!").env, "You got 105!", "en")).toBe("you got One Hundred and five!");
     expect(await spellNumbers(speller("You said forty five.").env, "You said 45.", "en")).toBe("You said forty five.");

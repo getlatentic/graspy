@@ -27,14 +27,22 @@ function brief(text: string): string {
   ].join("\n");
 }
 
-/** The words of a line, without case, punctuation, hyphens or "and" (which "one hundred and five" adds). */
-const wordsOf = (text: string) =>
-  text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((word) => word !== "" && word !== "and");
+/**
+ * The words and punctuation of a line, without case or hyphens, so "twenty-one" and "twenty one" read
+ * alike and "twenty, one" does not. "and" goes only where "one hundred and five" puts it: elsewhere
+ * "twenty and one" would read as two numbers, not twenty-one.
+ */
+const readingOf = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[-\u2010-\u2013]/g, " ")
+    .replace(/\b(hundred|thousand) and\b/g, "$1")
+    .match(/[\p{L}\p{N}]+|[,.;:!?]/gu) ?? [];
 
-/** Whether the reply reads exactly as the line does with every number written out. */
+/** Whether the reply reads exactly as the line does with every number written out, word for word. */
 function keepsTheLine(line: string, spelled: string): boolean {
-  const want = wordsOf(expectedSpelling(line));
-  const got = wordsOf(spelled);
+  const want = readingOf(expectedSpelling(line));
+  const got = readingOf(spelled);
   return want.length === got.length && want.every((word, at) => word === got[at]);
 }
 

@@ -343,6 +343,10 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
           answer({ error: "mark what the child said before you speak to them." });
           continue;
         }
+        if (linesTried >= LINES_TRIED || Date.now() - started > LINE_BUDGET_MS) {
+          answer({ error: "say the line once, as you have been told; no more lines are taken." });
+          continue;
+        }
         linesTried += 1;
         const text = await timed("spell", spellNumbers(env, String(args.text ?? "").trim(), ask.language));
         const problems = lineProblems(text);
