@@ -24,6 +24,7 @@ import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.sync.LessonRefreshWorker
 import java.io.File
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -137,6 +138,7 @@ class ConsentGatedWorkTest {
             )
             .build()
 
-        assertEquals(Result.success(), worker.doWork())
+        // A worker that went on to ask graspy would wait on a session that never comes: it fails here, and does not hang.
+        assertEquals(Result.success(), withTimeoutOrNull(10_000) { worker.doWork() })
     }
 }
