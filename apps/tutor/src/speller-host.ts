@@ -6,6 +6,13 @@
 export const WORKERS_AI_MODEL = "@cf/openai/gpt-oss-20b";
 export const BEDROCK_MODEL = "openai.gpt-oss-20b";
 
+/**
+ * Either host now and then stalls for ten seconds or more on one call, measured on both. Spelling a
+ * line is worth about a second of a child's wait, so a call still out after this is given up on and
+ * the line goes back to the teacher as it was.
+ */
+export const SPELL_TIMEOUT_MS = 4_000;
+
 type Complete = (env: Env, prompt: string) => Promise<unknown>;
 
 const workersAi: Complete = async (env, prompt) => {
@@ -38,9 +45,13 @@ const bedrock: Complete = async (env, prompt) => {
 
 const HOSTS: Record<string, Complete> = { "workers-ai": workersAi, bedrock };
 
-/** The model's reply to one prompt, from the host this Worker is set to. */
+/** The model's reply to one prompt, from the host this Worker is set to, or a rejection once it is late. */
 export function complete(env: Env, prompt: string): Promise<unknown> {
   const host = HOSTS[env.SPELLER_HOST || "workers-ai"];
   if (!host) throw new Error(`SPELLER_HOST must be workers-ai or bedrock, not ${env.SPELLER_HOST}`);
-  return host(env, prompt);
+  let timer: ReturnType<typeof setTimeout>;
+  const late = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`the speller took over ${SPELL_TIMEOUT_MS} ms`)), SPELL_TIMEOUT_MS);
+  });
+  return Promise.race([host(env, prompt), late]).finally(() => clearTimeout(timer));
 }

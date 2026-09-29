@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { spellNumbers } from "../src/spell";
+import { SPELL_TIMEOUT_MS } from "../src/speller-host";
 
 function speller(reply: unknown, calls: { n: number } = { n: 0 }) {
   return {
@@ -92,5 +93,27 @@ describe("the spelling model's host", () => {
   it("keeps the line when the host is not one it knows", async () => {
     const odd = { SPELLER_HOST: "elsewhere" } as unknown as Env;
     expect(await spellNumbers(odd, "You said 45.", "en")).toBe("You said 45.");
+  });
+});
+
+describe("a spelling that stalls", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("is given up on after four seconds, and the line goes back as it was", async () => {
+    vi.useFakeTimers();
+    const env = { AI: { run: () => new Promise(() => {}) } } as unknown as Env;
+
+    const spelled = spellNumbers(env, "You said 45.", "en");
+    await vi.advanceTimersByTimeAsync(SPELL_TIMEOUT_MS + 1);
+
+    expect(await spelled).toBe("You said 45.");
+  });
+
+  it("does not hold a timer once the model has answered", async () => {
+    vi.useFakeTimers();
+    const { env } = speller("You said forty-five.");
+
+    expect(await spellNumbers(env, "You said 45.", "en")).toBe("You said forty-five.");
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
