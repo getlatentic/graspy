@@ -25,7 +25,8 @@ lines.jsonl     one line per input: id, category, line
 results.jsonl   gpt-oss-20b: one row per line and host: the reply, latency, the automated check's verdict, a judgement
 results-gpt-oss-120b.jsonl   the same lines on gpt-oss-120b (Workers AI and Bedrock); judgements for replies that differ from 20b's
 results-qwen.jsonl   the same lines on four Qwen models
-results-llama-gemma.jsonl   the same lines on four Llama and two Gemma models, and the Gemma models that gave no reply
+results-llama-gemma.jsonl   the same lines on four Llama and two Gemma 3 models, and the Workers AI Gemma that gave no reply
+results-gemma-4.jsonl   the same lines on three Gemma 4 models
 probe/          the small Worker that produced the replies (see below)
 ```
 
@@ -112,12 +113,50 @@ Six more models on the 120 lines with digits (`results-llama-gemma.jsonl`), by t
 | gemma-3-27b-it, Bedrock | 56 | 35 | 21 | 7 | 0.9 s / 15.8 s |
 | gemma-3-12b-it, Bedrock | 53 | 50 | 7 | 6 | 0.65 s / 11.2 s |
 
-Not usable: `gemma-4-31b` and `gemma-4-26b-a4b` on Bedrock (400 "isn't supported on this route" on chat completions, and a 90 s timeout on the Responses route), and `@cf/google/gemma-3-12b-it` on Workers AI (the account is not allowed to use it). Their rows carry no reply.
+Not usable: `@cf/google/gemma-3-12b-it` on Workers AI (the account is not allowed to use it); its rows carry no reply. Gemma 4 was first reported unusable here by mistake: it is served at `https://bedrock-mantle.{region}.api.aws/openai/v1`, not `/v1`. It is in the next section.
 
 - **Llama 4 Scout** follows the instruction on all 57 checkable lines, was the fastest of the models that did, and made only two bad replies on the others. Its habit is to capitalise number words (`Seven Hundred Fifty`, `Class Three B`), and it leaves the naira sign in front of them (`₦Twenty`), so those replies are `awkward`, not `bad`.
 - **Gemma 3 12B** reads best on the hard lines (it turns `₦500` into `five hundred naira` and `U12` into `under twelve`), but it also rewrites symbols and units beyond the numbers (`+` to `plus`, `cm` to `centimeters`), so 4 checkable lines fail the strict check. Those four are better to say aloud and are judged `good`. It had one call of 11 s.
 - **The small Llamas** are fastest, but lose numbers or words more often: `llama-3.2-3b` turned `12 plus 8` into `one two plus eight`, `2500` into `two hundred fifty`, and `Primary 4` into `Fourth`.
 - **Llama 3.3 70B** copied the prompt into the reply (`The line: "..."`) more than once.
+
+## Gemma 4
+
+Three Gemma 4 models on Bedrock (`results-gemma-4.jsonl`), called at `/openai/v1/chat/completions`, temperature 0, no reasoning mode.
+
+| Model | Checkable lines passed (of 57) | good | awkward | bad | median / slowest call |
+|---|---|---|---|---|---|
+| gemma-4-31b | 57 | 37 | 16 | 10 | 0.8 s / **58.7 s** |
+| gemma-4-26b-a4b | 56 | 34 | 21 | 8 | 0.7 s / 3.9 s |
+| gemma-4-e2b | 46 (all 11 rejections are better-aloud rewrites) | 51 | 7 | 5 | 0.66 s / 1.5 s |
+
+- `gemma-4-e2b` does what `gemma-3-12b` does: it turns `₦500` into `five hundred naira`, `+` into `plus`, `cm` into `centimeters`, so the strict check rejects 11 of the 57 checkable lines although each rewrite reads better aloud. It has the best "good" count on the hard lines of any model here, and its slowest call was 1.5 s.
+- `gemma-4-31b` passed every checkable line but did worse than Gemma 3 12B on the hard ones (`Form OneA`, `two.five metres`, `Under 12`) and had one call that took 58.7 s.
+- `gemma-4-26b-a4b` once ran on into its own reasoning instead of answering (over 400 characters).
+
+A bug in the automated check was found while scoring these: a length cap (2.5 times the line) rejected `12 times 12 is 144.` spelled as `Twelve times twelve is one hundred and forty-four.`, which is right. The cap was redundant once the word-for-word comparison existed, and was removed. Every reply in every results file was rescored with the corrected check and none of the earlier verdicts changed.
+
+## All models at a glance
+
+Checkable lines passed under the strict check (a rejection is not always an error: many are symbol or unit rewrites that read better aloud), then good, awkward and bad on the 63 lines code cannot check, median and slowest call. Where a model ran on both hosts the faster is shown.
+
+| Model | Host | Passed of 57 | good | awkward | bad | median / slowest |
+|---|---|---|---|---|---|---|
+| llama-4-scout-17b | Workers AI | 57 | 41 | 20 | 2 | 0.29 s / 1.05 s |
+| qwen3-next-80b-a3b | Bedrock | 57 | 42 | 16 | 5 | 0.7 s / 1.3 s |
+| qwen3-32b | Bedrock | 53 | 48 | 13 | 2 | 0.6 s / 0.9 s |
+| gemma-4-e2b | Bedrock | 46 | 51 | 7 | 5 | 0.66 s / 1.5 s |
+| gemma-3-12b | Bedrock | 53 | 50 | 7 | 6 | 0.65 s / 11.2 s |
+| llama-3.1-8b-fast | Workers AI | 52 | 40 | 17 | 6 | 0.23 s / 0.41 s |
+| llama-3.2-3b | Workers AI | 45 | 41 | 7 | 15 | 0.23 s / 0.42 s |
+| gpt-oss-20b | Workers AI | 57 | 32 | 26 | 5 | 0.5 s / 1.5 s (stalls of 10 s or more seen) |
+| gemma-4-31b | Bedrock | 57 | 37 | 16 | 10 | 0.8 s / 58.7 s |
+| qwen3-235b-a22b | Bedrock | 55 | 43 | 16 | 4 | 1.1 s / 6.3 s |
+| gpt-oss-120b | Workers AI | 57 | 35 | 19 | 9 | 2.2 s / 19.6 s |
+| gemma-3-27b | Bedrock | 56 | 35 | 21 | 7 | 0.9 s / 15.8 s |
+| llama-3.3-70b | Workers AI | 55 | 34 | 21 | 8 | 0.38 s / 5.0 s |
+| gemma-4-26b-a4b | Bedrock | 56 | 34 | 21 | 8 | 0.7 s / 3.9 s |
+| qwen3-30b-a3b-fp8 | Workers AI | 57 | 27 | 23 | 13 | 2.4 s / 7.9 s |
 
 ## Reproducing
 

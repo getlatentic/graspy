@@ -15,9 +15,6 @@
 import { expectedSpelling, standaloneNumbers } from "./lines";
 import { complete } from "./speller-host";
 
-/** A spelled line is about as long as the line was; one far longer has been rewritten, not spelled. */
-const MOST_GROWTH = 2.5;
-
 export function spellingBrief(text: string): string {
   return [
     "Rewrite this line, which is said aloud to a child in English, so that every number",
@@ -47,7 +44,7 @@ function keepsTheLine(line: string, spelled: string): boolean {
 }
 
 function acceptable(line: string, spelled: string | null): spelled is string {
-  if (!spelled || /\d/.test(spelled) || spelled.length > line.length * MOST_GROWTH) return false;
+  if (!spelled || /\d/.test(spelled)) return false;
   return keepsTheLine(line, spelled);
 }
 

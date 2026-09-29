@@ -52,6 +52,11 @@ describe("spellNumbers", () => {
     expect(await spellNumbers(env, line, "en")).toBe(line);
   });
 
+  it("takes a short line whose numbers spell out long", async () => {
+    const { env } = speller("Twelve times twelve is one hundred and forty-four.");
+    expect(await spellNumbers(env, "12 times 12 is 144.", "en")).toBe("Twelve times twelve is one hundred and forty-four.");
+  });
+
   it("does not let a word beside a number change", async () => {
     const { env } = speller("That is right, forty-five.");
     expect(await spellNumbers(env, "That is wrong, 45.", "en")).toBe("That is wrong, 45.");
