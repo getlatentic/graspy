@@ -16,6 +16,7 @@ const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", 
 
 /** A whole number as English words, up to nine figures. */
 export function numberWords(n: number): string {
+  if (!Number.isFinite(n) || n > 999_999_999) return String(n);
   if (n < 20) return ONES[n];
   if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? `-${ONES[n % 10]}` : "");
   if (n < 1000) return `${ONES[Math.floor(n / 100)]} hundred${n % 100 ? ` ${numberWords(n % 100)}` : ""}`;

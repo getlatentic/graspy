@@ -32,6 +32,12 @@ describe("expectedReading", () => {
     ["The school has 1,200 pupils.", "The school has one thousand two hundred pupils."],
     ["Nigeria has over 200,000,000 people.", "Nigeria has over two hundred million people."],
     ["Well done!", "Well done!"],
+    // A minus sign before a decimal, percentage, unit or ordinal is kept.
+    ["It is -2.5 degrees.", "It is minus two point five degrees."],
+    ["It fell -5% today.", "It fell minus five percent today."],
+    ["It is -5 kg.", "It is minus five kilograms."],
+    ["Add 3 -2.5.", "Add three minus two point five."],
+    ["Add 100 or 20.", "Add one hundred or twenty."],
   ])("reads %s", (line, reading) => {
     expect(expectedReading(line)).toBe(reading);
   });
@@ -51,7 +57,27 @@ describe("expectedReading", () => {
     "The bag is N750.",
     "Use 1-2-3 to start.",
     "Nine 9s are 81.",
-  ])("declines %s, which has more than one reading", (line) => {
+    // Readings that would be accepted for the wrong sum or the wrong sign.
+    "Add 100 and 20.",
+    "Count 500 and 60.",
+    "10-5=5.",
+    "What is 7-3?",
+    "5-3=2.",
+    // Symbols the readings do not cover are never dropped silently.
+    "You got 2.5% of them.",
+    "You got 50 % of them.",
+    "It costs ₦1.50.",
+    "Is 5 >= 3?",
+    "8 ÷ 2 is 4.",
+    "8 − 2 is 6.",
+    // Odd number forms.
+    "It is 3.5kg.",
+    "Add 12 345.",
+    "This is the 1th.",
+    "This is the 2st.",
+    "It is 1,000,000,000.",
+    "1" + ",000".repeat(1000),
+  ])("declines %s, which has more than one reading or none it can check", (line) => {
     expect(expectedReading(line)).toBeNull();
   });
 });

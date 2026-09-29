@@ -57,6 +57,30 @@ describe("spellNumbers", () => {
     expect(await spellNumbers(env, "12 times 12 is 144.", "en")).toBe("Twelve times twelve is one hundred and forty-four.");
   });
 
+  it.each([
+    ["-2.5", "two point five"],
+    ["Add 100 and 20.", "Add one hundred and twenty."],
+    ["10-5=5.", "Ten to five equals five."],
+    ["You got 2.5% of them.", "You got two point five of them."],
+    ["Oh, you have 5!", "Zero, you have five!"],
+    ["5 - 3 = 2.", "Five negative three equals two."],
+  ])("does not take %s spelled as %s", async (line, reply) => {
+    const { env } = speller(reply);
+    expect(await spellNumbers(env, line, "en")).toBe(line);
+  });
+
+  it("takes a minus in front of a decimal", async () => {
+    const { env } = speller("It is minus two point five degrees.");
+    expect(await spellNumbers(env, "It is -2.5 degrees.", "en")).toBe("It is minus two point five degrees.");
+  });
+
+  it("keeps the line, and the marked answer, when a number is too long to write", async () => {
+    const { env, calls } = speller("anything");
+    const line = "1" + ",000".repeat(1000);
+    expect(await spellNumbers(env, line, "en")).toBe(line);
+    expect(calls.n).toBe(0);
+  });
+
   it("does not let a word beside a number change", async () => {
     const { env } = speller("That is right, forty-five.");
     expect(await spellNumbers(env, "That is wrong, 45.", "en")).toBe("That is wrong, 45.");

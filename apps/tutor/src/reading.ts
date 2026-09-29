@@ -19,7 +19,8 @@ const UNIT_WORDS: Record<string, string> = {
   ml: "millilitres",
 };
 // Four or more figures without commas are as likely a year, an ID or a code as a quantity: left to the teacher.
-const NUMBER = String.raw`\d{1,3}(?:,\d{3})+|[1-9]\d{0,2}|0`;
+// Nine figures at most, with commas, so a number never outgrows what numberWords can write.
+const NUMBER = String.raw`\d{1,3}(?:,\d{3}){1,2}|[1-9]\d{0,2}|0`;
 const digitWords = (digits: string) => [...digits].map((d) => numberWords(Number(d))).join(" ");
 const whole = (text: string) => numberWords(Number(text.replace(/,/g, "")));
 
@@ -44,19 +45,29 @@ const SIGNS: Step[] = [
   [/(?<=\d)\s*<\s*(?=\d)/g, () => " less than "],
 ];
 
-// A year has more than one reading, so it is left as digits and the line goes to the teacher.
-const NOT_A_YEAR = String.raw`(?!(?:19|20)\d\d(?![\d,]))`;
+/** "5-10" is "five to ten"; "10-5" is a subtraction or a mistake, so it is left as digits and the line is declined. */
+function rangeWords(low: string, high: string): string {
+  return Number(low) < Number(high) ? `${whole(low)} to ${whole(high)}` : `${low}-${high}`;
+}
+
+/** "1st", "2nd", "3rd", "4th": a suffix that does not belong to the number is left as it is. */
+function ordinalOf(n: string, suffix: string): string {
+  const k = Number(n);
+  const right = k % 100 >= 11 && k % 100 <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[k % 10] ?? "th";
+  return suffix === right ? ordinalWords(k) : `${n}${suffix}`;
+}
 
 const FORMS: Step[] = [
+  // A minus sign comes first: the steps below turn the digits after it into words and would leave it bare.
+  [/(?<![\w.])-(?=\d)/g, () => "minus "],
   [/(?<![\w.:])(\d{1,2}):(\d{2})(?![\w:])/g, timeWords],
-  [/(?<![\w-])(\d{1,3})-(\d{1,3})(?![\w-])/g, (a, b) => `${whole(a)} to ${whole(b)}`],
+  [/(?<![\w-])(\d{1,3})-(\d{1,3})(?![\w-])/g, rangeWords],
   [new RegExp(String.raw`₦(${NUMBER})(?![\d.,]\d|\w)`, "g"), (n) => `${whole(n)} naira`],
   [/(?<![\w.,])(\d{1,3})%/g, (n) => `${whole(n)} percent`],
   [new RegExp(String.raw`(?<![\w.,])(${NUMBER})\s?(kg|mm|cm|km|ml|g)\b`, "g"), (n, u) => `${whole(n)} ${UNIT_WORDS[u]}`],
-  [/(?<![\w.,])(\d{1,3})\.(\d{1,9})(?![\w.,]\d)/g, (i, f) => `${whole(i)} point ${digitWords(f)}`],
-  [/(?<![\w.,])(\d{1,2})(st|nd|rd|th)\b/g, (n) => ordinalWords(Number(n))],
-  [/(?<![\w.])-(?=\d)/g, () => "minus "],
-  [new RegExp(String.raw`(?<![\w.,:;%/\-₦$£€])${NOT_A_YEAR}(${NUMBER})(?![\w:%/]|[.,]\d)`, "g"), whole],
+  [/(?<![\w.,])(\d{1,3})\.(\d{1,9})(?![\w]|[.,]\d)/g, (i, f) => `${whole(i)} point ${digitWords(f)}`],
+  [/(?<![\w.,])(\d{1,2})(st|nd|rd|th)\b/g, ordinalOf],
+  [new RegExp(String.raw`(?<![\w.,:;%/\-₦$£€])(${NUMBER})(?![\w:%/]|[.,]\d)`, "g"), whole],
 ];
 
 /** The capture groups of a match, without the match itself or the position and string String.replace adds. */
@@ -65,11 +76,20 @@ function groupsOf(rest: unknown[]): string[] {
   return rest.slice(0, end).map((group) => String(group ?? ""));
 }
 
+// Readings with a second meaning, or a symbol the steps above do not know: declined.
+const AMBIGUOUS = [
+  /\d\/|\/\d/,                        // 1/2 is a half, or one over two
+  /\d00\s+and\s+\d/,                   // "100 and 20" and "one hundred and twenty" read alike
+  /\d{1,3} \d{3}(?!\d)/,               // 12 345 with a space for a thousands separator
+  /\d-\d[^\n]*[=+×*<>]|[=+×*<>][^\n]*\d-\d/, // a dash beside an operator is a minus, not a range
+];
+const LEFT_OVER_SYMBOL = /[%₦$£€=<>+×÷−±&°]/;
+
 export function expectedReading(line: string): string | null {
-  if (/\d\/|\/\d/.test(line)) return null;
+  if (AMBIGUOUS.some((pattern) => pattern.test(line))) return null;
   let text = line;
   for (const [pattern, words] of [...SIGNS, ...FORMS]) {
     text = text.replace(pattern, (_match: string, ...rest: unknown[]) => words(...groupsOf(rest)));
   }
-  return /\d/.test(text) ? null : text.replace(/\s+/g, " ").trim();
+  return /\d/.test(text) || LEFT_OVER_SYMBOL.test(text) ? null : text.replace(/\s+/g, " ").trim();
 }

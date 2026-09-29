@@ -44,26 +44,43 @@ export function spellingBrief(text: string): string {
 const SAME_WORD: [RegExp, string][] = [
   [/\b(\w*(?:met|lit))er(s?)\b/g, "$1re$2"],
   [/\b(kilogram|gram|centimetre|millimetre|kilometre|millilitre)s\b/g, "$1"],
-  [/\bnegative\b/g, "minus"],
   [/\bequals\b/g, "is"],
-  [/\b(oh|o)\b(?!')/g, "zero"],
 ];
+
+const NUMBER_WORDS = new Set([
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen",
+  "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty", "sixty",
+  "seventy", "eighty", "ninety", "hundred", "thousand", "million",
+]);
+const DIGIT_WORDS = new Set(["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]);
+
+/**
+ * Words a teacher uses either way: "negative five" is "minus five" (but "five negative three" is not "five
+ * minus three"), and "seven oh five" is "seven zero five" (but a bare "oh" is an interjection).
+ */
+function sameWords(tokens: string[]): string[] {
+  return tokens.map((token, at) => {
+    if (token === "negative" && !NUMBER_WORDS.has(tokens[at - 1] ?? "")) return "minus";
+    if (token === "oh" && NUMBER_WORDS.has(tokens[at - 1] ?? "") && DIGIT_WORDS.has(tokens[at + 1] ?? "")) return "zero";
+    return token;
+  });
+}
 
 /**
  * The words and punctuation of a line, without case or hyphens, so "twenty-one" and "twenty one" read
  * alike and "twenty, one" does not. "and" goes only where "one hundred and five" puts it: elsewhere
  * "twenty and one" would read as two numbers, not twenty-one. Words a teacher uses either way (meters
- * and metres, negative and minus, equals and is) are one word.
+ * and metres, equals and is, negative and minus) are one word.
  */
 const readingOf = (text: string) => {
   let said = text.toLowerCase().replace(/[-\u2010-\u2013]/g, " ").replace(/\b(hundred|thousand|million) and\b/g, "$1");
   for (const [pattern, word] of SAME_WORD) said = said.replace(pattern, word);
-  return said.match(/[\p{L}\p{N}]+|[,.;:!?]/gu) ?? [];
+  return sameWords(said.match(/[\p{L}\p{N}]+|[,.;:!?]/gu) ?? []);
 };
 
 /** Whether the reply reads exactly as the line does with every number, sign and unit written out. */
 function keepsTheLine(line: string, spelled: string): boolean {
-  const expected = expectedReading(line);
+  const expected = readingOrNull(line);
   if (expected === null) return false;
   const want = readingOf(expected);
   const got = readingOf(spelled);
@@ -75,9 +92,18 @@ function acceptable(line: string, spelled: string | null): spelled is string {
   return keepsTheLine(line, spelled);
 }
 
+/** The reading of a line, or null when it has none or code could not work it out. */
+function readingOrNull(line: string): string | null {
+  try {
+    return expectedReading(line);
+  } catch {
+    return null;
+  }
+}
+
 /** The line has a reading to check a spelling against. */
 function checkable(line: string): boolean {
-  return expectedReading(line) !== null;
+  return readingOrNull(line) !== null;
 }
 
 /** What the model said, as a line: without the quotation marks it may put round it. */
