@@ -69,6 +69,18 @@ describe("spellNumbers", () => {
     expect(await spellNumbers(env, line, "en")).toBe(line);
   });
 
+  it.each([
+    ["What is 3-7?", "What is three to seven?"],
+    ["It is –5 degrees.", "It is five degrees."],
+    ["What is 8 – 5?", "What is eight five?"],
+    ["Is 5 ≥ 3?", "Is five three?"],
+    ["Add 100 AND 20.", "Add one hundred and twenty."],
+  ])("does not take %s spelled as %s", async (line, reply) => {
+    const { env, calls } = speller(reply);
+    expect(await spellNumbers(env, line, "en")).toBe(line);
+    expect(calls.n).toBe(0);
+  });
+
   it("takes a minus in front of a decimal", async () => {
     const { env } = speller("It is minus two point five degrees.");
     expect(await spellNumbers(env, "It is -2.5 degrees.", "en")).toBe("It is minus two point five degrees.");

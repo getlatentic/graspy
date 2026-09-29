@@ -76,8 +76,53 @@ describe("expectedReading", () => {
     "This is the 1th.",
     "This is the 2st.",
     "It is 1,000,000,000.",
+    // A dropped dash, sign or operator must never match a reply that leaves it out.
+    "It is –5 degrees.",
+    "It is —5 degrees.",
+    "What is 5 - -3?",
+    "What is 8 – 5?",
+    "What is x - 5?",
+    "Take 5 kg - 3 kg.",
+    "3*-2 is -6.",
+    "What is √9?",
+    "Is 5 ≥ 3?",
+    "Is 5 ≠ 3?",
+    "5^2 is 25.",
+    // 3-7 is a subtraction unless a word around it says it is a range.
+    "What is 3-7?",
+    "What is 2-5?",
+    "0-1",
+    "Say the sum 1-2.",
+    "Take 7-3 away.",
+    // Every way of joining "and" to a hundred.
+    "100 AND 20",
+    "Add 100 and -5.",
+    "Add 200 and ₦5.",
+    "Add 200 and twenty.",
+    // Ranges beside decimals, ordinals and codes.
+    "Count 4-4.5.",
+    "Read the 1st-3rd.",
+    "Call 1-800.",
+    "The date is 05-10.",
+    "Add 5\u00a0500.",
+    "It is 012,345.",
     "1" + ",000".repeat(1000),
   ])("declines %s, which has more than one reading or none it can check", (line) => {
     expect(expectedReading(line)).toBeNull();
+  });
+});
+
+describe("expectedReading on a long line", () => {
+  it("stays fast when a line is packed with dashes and operators", () => {
+    const line = "1-2 ".repeat(30_000) + "+";
+    const started = Date.now();
+    expect(expectedReading(line)).toBeNull();
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
+  it("still reads a range when a word says it is one", () => {
+    expect(expectedReading("Count 5-10.")).toBe("Count five to ten.");
+    expect(expectedReading("Ages 6-8 may join.")).toBe("Ages six to eight may join.");
+    expect(expectedReading("Turn to pages 12-15.")).toBe("Turn to pages twelve to fifteen.");
   });
 });

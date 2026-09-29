@@ -73,9 +73,11 @@ function sameWords(tokens: string[]): string[] {
  * and metres, equals and is, negative and minus) are one word.
  */
 const readingOf = (text: string) => {
-  let said = text.toLowerCase().replace(/[-\u2010-\u2013]/g, " ").replace(/\b(hundred|thousand|million) and\b/g, "$1");
+  // A hyphen between letters joins words ("twenty-one"). Any other symbol or dash is a token of its own, so
+  // a reply that leaves one out does not match a line that has it.
+  let said = text.toLowerCase().replace(/(?<=\p{L})-(?=\p{L})/gu, " ").replace(/\b(hundred|thousand|million) and\b/g, "$1");
   for (const [pattern, word] of SAME_WORD) said = said.replace(pattern, word);
-  return sameWords(said.match(/[\p{L}\p{N}]+|[,.;:!?]/gu) ?? []);
+  return sameWords(said.match(/[\p{L}\p{N}]+|[^\s\p{L}\p{N}]/gu) ?? []);
 };
 
 /** Whether the reply reads exactly as the line does with every number, sign and unit written out. */

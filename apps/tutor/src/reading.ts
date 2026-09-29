@@ -20,7 +20,7 @@ const UNIT_WORDS: Record<string, string> = {
 };
 // Four or more figures without commas are as likely a year, an ID or a code as a quantity: left to the teacher.
 // Nine figures at most, with commas, so a number never outgrows what numberWords can write.
-const NUMBER = String.raw`\d{1,3}(?:,\d{3}){1,2}|[1-9]\d{0,2}|0`;
+const NUMBER = String.raw`[1-9]\d{0,2}(?:,\d{3}){1,2}|[1-9]\d{0,2}|0`;
 const digitWords = (digits: string) => [...digits].map((d) => numberWords(Number(d))).join(" ");
 const whole = (text: string) => numberWords(Number(text.replace(/,/g, "")));
 
@@ -45,9 +45,16 @@ const SIGNS: Step[] = [
   [/(?<=\d)\s*<\s*(?=\d)/g, () => " less than "],
 ];
 
-/** "5-10" is "five to ten"; "10-5" is a subtraction or a mistake, so it is left as digits and the line is declined. */
-function rangeWords(low: string, high: string): string {
-  return Number(low) < Number(high) ? `${whole(low)} to ${whole(high)}` : `${low}-${high}`;
+// "3-7" is a range on a page or an age and a subtraction in a sum, and only the words around it say which:
+// without one of these before it in the sentence it is left as digits and the line goes to the teacher.
+const RANGE_CUE = /\b(?:ages?|pages?|classes|class|grades?|chapters?|lessons?|days?|years?|rows?|steps?|questions?|numbers?|from|between|count|counting)\b/i;
+const RANGE = /(?<![\w.,:-])(0|[1-9]\d{0,2})-(0|[1-9]\d{0,2})(?![\w:%/]|-\d|[.,]\d)/g;
+
+function rangesFirst(line: string): string {
+  return line.replace(RANGE, (whole_, low: string, high: string, at: number, all: string) => {
+    const sentence = all.slice(0, at).split(/[.!?]/).pop() ?? "";
+    return Number(low) < Number(high) && RANGE_CUE.test(sentence) ? `${whole(low)} to ${whole(high)}` : whole_;
+  });
 }
 
 /** "1st", "2nd", "3rd", "4th": a suffix that does not belong to the number is left as it is. */
@@ -61,7 +68,6 @@ const FORMS: Step[] = [
   // A minus sign comes first: the steps below turn the digits after it into words and would leave it bare.
   [/(?<![\w.])-(?=\d)/g, () => "minus "],
   [/(?<![\w.:])(\d{1,2}):(\d{2})(?![\w:])/g, timeWords],
-  [/(?<![\w-])(\d{1,3})-(\d{1,3})(?![\w-])/g, rangeWords],
   [new RegExp(String.raw`₦(${NUMBER})(?![\d.,]\d|\w)`, "g"), (n) => `${whole(n)} naira`],
   [/(?<![\w.,])(\d{1,3})%/g, (n) => `${whole(n)} percent`],
   [new RegExp(String.raw`(?<![\w.,])(${NUMBER})\s?(kg|mm|cm|km|ml|g)\b`, "g"), (n, u) => `${whole(n)} ${UNIT_WORDS[u]}`],
@@ -79,15 +85,19 @@ function groupsOf(rest: unknown[]): string[] {
 // Readings with a second meaning, or a symbol the steps above do not know: declined.
 const AMBIGUOUS = [
   /\d\/|\/\d/,                        // 1/2 is a half, or one over two
-  /\d00\s+and\s+\d/,                   // "100 and 20" and "one hundred and twenty" read alike
-  /\d{1,3} \d{3}(?!\d)/,               // 12 345 with a space for a thousands separator
-  /\d-\d[^\n]*[=+×*<>]|[=+×*<>][^\n]*\d-\d/, // a dash beside an operator is a minus, not a range
+  /\d00\s+and\b/i,                        // "100 and 20" and "one hundred and twenty" read alike
+  /\d{1,3}\s\d{3}(?!\d)/,                // 12 345 with a space for a thousands separator
 ];
-const LEFT_OVER_SYMBOL = /[%₦$£€=<>+×÷−±&°]/;
+// A dash beside an operator is a minus, not a range.
+const DASH_AND_OPERATOR = (line: string) => /\d-\d/.test(line) && /[=+×*<>]/.test(line);
+// A symbol or a dash that is not a hyphen between letters: nothing above knows what to say for it.
+const LEFT_OVER_SYMBOL = /[\u2010-\u2015%₦$£€=<>+×÷−±&°*^√≤≥≠≈#@~|\\]|(?<!\p{L})-|-(?!\p{L})/u;
 
 export function expectedReading(line: string): string | null {
-  if (AMBIGUOUS.some((pattern) => pattern.test(line))) return null;
-  let text = line;
+  if (AMBIGUOUS.some((pattern) => pattern.test(line)) || DASH_AND_OPERATOR(line)) return null;
+  let text = rangesFirst(line);
+  // A dash still between numbers is not a range a cue vouched for: a subtraction, a date, a code.
+  if (/\d(?:st|nd|rd|th)?-\d/.test(text)) return null;
   for (const [pattern, words] of [...SIGNS, ...FORMS]) {
     text = text.replace(pattern, (_match: string, ...rest: unknown[]) => words(...groupsOf(rest)));
   }
