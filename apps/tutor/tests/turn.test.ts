@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
 import { STEADY_LINES } from "../src/lines";
+import { WORKERS_AI_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
 
 // Yoruba number words are past the fast reader, so these turns go to the teacher on the big model.
@@ -20,12 +21,13 @@ function call(name: string, args: Record<string, unknown>) {
  * A tutor whose teacher model says `script` in turn, whose safety check answers `verdicts`, whose judge
  * answers `judged` and whose reader answers `read`, each in turn.
  */
-function tutor(script: unknown[], verdicts: string[] = [], judged: boolean[] = [], read: (number | null)[] = []) {
+function tutor(script: unknown[], verdicts: string[] = [], judged: boolean[] = [], read: (number | null)[] = [], spelled: string[] = []) {
   const seen: Record<string, unknown>[][] = [];
   const env = {
     AI: {
       run: async (model: string, input: { messages: Record<string, unknown>[]; response_format?: unknown }) => {
         if (model === SAFETY_MODEL) return { response: verdicts.shift() ?? "safe" };
+        if (model === WORKERS_AI_MODEL) return { choices: [{ message: { content: spelled.shift() ?? "" } }] };
         if (model === READER_MODEL) {
           return { choices: [{ message: { content: JSON.stringify({ answer: read.shift() ?? null }) } }] };
         }
@@ -47,7 +49,7 @@ const toolReplies = (messages: Record<string, unknown>[]) =>
   messages.filter((message) => message.role === "tool").map((message) => String(message.content));
 
 describe("a turn only ever speaks a line a child may hear", () => {
-  it("sends a line with grown-up words and digits back, and speaks the rewrite", async () => {
+  it("sends a line with grown-up words back, and speaks the rewrite", async () => {
     const { env, seen } = tutor([
       marked,
       call("say_it", { text: "Correct! 3 x 3 = 9." }),
@@ -59,7 +61,72 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(reply.verdict).toBe("correct");
     expect(reply.say).toBe("Well done! You said nine.");
     expect(toolReplies(seen[2]).at(-1)).toContain("do not say correct");
+  });
+
+  it("has a model write the digits of an English line as words, without spending a teacher round", async () => {
+    const { env, seen } = tutor(
+      [marked, call("say_it", { text: "Well done! You counted 1, 2, 3, 4, 5." })],
+      [], [], [], ["Well done! You counted one, two, three, four, five."],
+    );
+
+    const reply = await takeTurn(env, ask);
+
+    expect(reply.say).toBe("Well done! You counted one, two, three, four, five.");
+    expect(seen).toHaveLength(2);
+  });
+
+  it("does not speak a spelling that changed a number, and sends the line back to the teacher", async () => {
+    const { env, seen } = tutor(
+      [marked, call("say_it", { text: "You counted 45." }), call("say_it", { text: "You said forty-five." })],
+      [], [], [], ["You counted fifty-four."],
+    );
+
+    const reply = await takeTurn(env, ask);
+
+    expect(reply.say).toBe("You said forty-five.");
     expect(toolReplies(seen[2]).at(-1)).toContain("write every number as a word");
+  });
+
+  it("leaves a Yoruba line's digits for the model to rewrite", async () => {
+    const { env, seen } = tutor([marked, call("say_it", { text: "O ṣe dáadáa! 9." }), call("say_it", { text: "O ṣe dáadáa!" })]);
+
+    await takeTurn(env, { ...ask, language: "yo" });
+
+    expect(toolReplies(seen[2]).at(-1)).toContain("write every number as a word");
+  });
+
+  it("tells the model the rules a line is held to before it writes one", async () => {
+    const { env, seen } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);
+
+    await takeTurn(env, ask);
+
+    const brief = String((seen[0][0] as { content: string }).content);
+    expect(brief).toContain("write every");
+    expect(brief).toContain("number as a word and never as digits");
+    expect(brief).toContain("10 words or fewer");
+  });
+
+  it("says the steady line after one rewrite, not after five rounds", async () => {
+    const bad = call("say_it", { text: "Correct. Correct." });
+    const { env, seen } = tutor([marked, bad, bad, bad, bad, bad]);
+
+    const reply = await takeTurn(env, ask);
+
+    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(seen).toHaveLength(3);
+  });
+
+  it("settles for the steady line once the child has waited past the budget", async () => {
+    const bad = call("say_it", { text: "Correct. Correct." });
+    const { env, seen } = tutor([marked, bad, bad]);
+    let now = 0;
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 6_000));
+
+    const reply = await takeTurn(env, ask);
+    clock.mockRestore();
+
+    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(seen.length).toBeLessThan(3);
   });
 
   it("never speaks a line the safety model will not pass", async () => {
@@ -83,7 +150,7 @@ describe("a turn only ever speaks a line a child may hear", () => {
 
   it("keeps the child's marked answer and says a steady line when no line of its own passes", async () => {
     const bad = call("say_it", { text: "Correct. 9." });
-    const { env } = tutor([marked, bad, bad, bad, bad]);
+    const { env } = tutor([marked, bad, bad, bad]);
 
     const reply = await takeTurn(env, ask);
 

@@ -1,0 +1,96 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { spellNumbers } from "../src/spell";
+
+function speller(reply: unknown, calls: { n: number } = { n: 0 }) {
+  return {
+    calls,
+    env: {
+      AI: {
+        run: async () => {
+          calls.n += 1;
+          if (reply instanceof Error) throw reply;
+          return { choices: [{ message: { content: reply } }] };
+        },
+      },
+    } as unknown as Env,
+  };
+}
+
+describe("spellNumbers", () => {
+  it("does not ask a model about a line with no digits", async () => {
+    const { env, calls } = speller("x");
+    expect(await spellNumbers(env, "Well done!", "en")).toBe("Well done!");
+    expect(calls.n).toBe(0);
+  });
+
+  it("takes the model's spelling when every number comes back as its words, in order", async () => {
+    const { env } = speller("You said forty-five. Now say fifty.");
+    expect(await spellNumbers(env, "You said 45. Now say 50.", "en")).toBe("You said forty-five. Now say fifty.");
+  });
+
+  it.each([
+    ["a changed number", "You said fifty-four. Now say fifty."],
+    ["a number out of order", "You said fifty. Now say forty-five."],
+    ["digits left in", "You said forty-five. Now say 50."],
+    ["a rewritten line", "You said forty-five. Now say fifty. ".repeat(6)],
+    ["nothing at all", ""],
+  ])("keeps the line as it was after %s", async (_why, reply) => {
+    const { env } = speller(reply);
+    expect(await spellNumbers(env, "You said 45. Now say 50.", "en")).toBe("You said 45. Now say 50.");
+  });
+
+  it("does not trust the model with a number that does not stand alone", async () => {
+    for (const line of ["It is 3:30 now.", "You paid ₦500.", "That was the 1st.", "You got 50%."]) {
+      const { env, calls } = speller("anything");
+      expect(await spellNumbers(env, line, "en")).toBe(line);
+      expect(calls.n).toBe(0);
+    }
+  });
+
+  it("leaves every other language for the teacher to rewrite, until English is proven", async () => {
+    const { env, calls } = speller("okan");
+    expect(await spellNumbers(env, "O ka 1, 2.", "yo")).toBe("O ka 1, 2.");
+    expect(await spellNumbers(env, "Na 5.", "pcm")).toBe("Na 5.");
+    expect(calls.n).toBe(0);
+  });
+
+  it("keeps the line when the model cannot be reached", async () => {
+    const { env } = speller(new Error("down"));
+    expect(await spellNumbers(env, "You said 45.", "en")).toBe("You said 45.");
+  });
+});
+
+describe("the spelling model's host", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const bedrock = { SPELLER_HOST: "bedrock", AWS_BEARER_TOKEN_BEDROCK: "key", AI: { run: () => Promise.reject(new Error("not used")) } } as unknown as Env;
+
+  it("asks Workers AI unless told otherwise", async () => {
+    const { env, calls } = speller("You said forty-five.");
+    expect(await spellNumbers(env, "You said 45.", "en")).toBe("You said forty-five.");
+    expect(calls.n).toBe(1);
+  });
+
+  it("asks Bedrock, with its key and the model's Bedrock name, when SPELLER_HOST is bedrock", async () => {
+    const fetched = vi.fn(async () => Response.json({ choices: [{ message: { content: "You said forty-five." } }] }));
+    vi.stubGlobal("fetch", fetched);
+
+    expect(await spellNumbers(bedrock, "You said 45.", "en")).toBe("You said forty-five.");
+
+    const [url, init] = fetched.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://bedrock-mantle.us-east-1.api.aws/v1/chat/completions");
+    expect((init.headers as Record<string, string>).authorization).toBe("Bearer key");
+    expect(JSON.parse(String(init.body)).model).toBe("openai.gpt-oss-20b");
+  });
+
+  it("keeps the line when Bedrock is chosen without its key, or refuses", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("no", { status: 429 })));
+    expect(await spellNumbers(bedrock, "You said 45.", "en")).toBe("You said 45.");
+    const keyless = { ...bedrock, AWS_BEARER_TOKEN_BEDROCK: undefined } as unknown as Env;
+    expect(await spellNumbers(keyless, "You said 45.", "en")).toBe("You said 45.");
+  });
+
+  it("keeps the line when the host is not one it knows", async () => {
+    const odd = { SPELLER_HOST: "elsewhere" } as unknown as Env;
+    expect(await spellNumbers(odd, "You said 45.", "en")).toBe("You said 45.");
+  });
+});

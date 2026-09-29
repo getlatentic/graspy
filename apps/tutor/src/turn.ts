@@ -21,9 +21,10 @@
  * answer stands and a steady line kept for it is said.
  */
 
-import { fitForChild, heardForPrompt, lineProblems, safeForChild } from "./guard";
+import { MOST_SENTENCES, MOST_WORDS, fitForChild, heardForPrompt, lineProblems, safeForChild } from "./guard";
 import { hearNumber } from "./hear";
 import { STEADY_LINES } from "./lines";
+import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { answerHeard } from "./read";
 import {
@@ -36,7 +37,10 @@ import {
 } from "./recite";
 
 const MODEL = "@cf/openai/gpt-oss-120b";
-const ROUNDS = 5;
+/** Mark, say, and one rewrite: a child waits for every round, and a marked answer never goes unsaid. */
+const ROUNDS = 3;
+/** Past this a marked answer settles for the steady line: her own words are not worth the child's wait. */
+const LINE_BUDGET_MS = 10_000;
 
 /** What the child was asked for, and therefore how their answer is judged. */
 export type Expect =
@@ -200,9 +204,11 @@ function brief(ask: Ask): string {
     "whether the child was right; the marker decides and tells you. Then call say_it once with the",
     "teacher's line.",
     "",
-    "The line must be at most two short sentences, and must never use school or computer words:",
+    `The line must be at most ${MOST_SENTENCES} short sentences of ${MOST_WORDS} words or fewer each, must write every`,
+    "number as a word and never as digits, and must never use school or computer words:",
     "no answer, correct, incorrect, final number, recording, system, verdict or attempt.",
-    "When they were right, tell them so warmly and say the thing they said, so they hear it again.",
+    "When they were right, tell them so warmly. If they gave one number or one fact, say it so they",
+    "hear it again; if they gave a list, do not say the list.",
     "Ask nothing more of a child who was right: the lesson moves on by itself straight after your",
     "line, so a request to say it again would be one they are never given the turn to answer.",
     "When they were wrong, say the true one plainly as the teacher saying it, then ask them to say",
@@ -289,6 +295,7 @@ async function timed<T>(part: string, work: Promise<T>): Promise<T> {
 }
 
 export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
+  const started = Date.now();
   const plain = await timed("read", markedFromPlainNumber(env, ask));
   if (plain !== null) return plain;
 
@@ -297,6 +304,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   let marked: Marked | null = null;
 
   for (let round = 0; round < ROUNDS; round += 1) {
+    if (marked !== null && Date.now() - started > LINE_BUDGET_MS) break;
     const reply = (await timed(`teacher-round-${round}`, env.AI.run(MODEL, {
       messages,
       tools,
@@ -332,9 +340,10 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
           answer({ error: "mark what the child said before you speak to them." });
           continue;
         }
-        const text = String(args.text ?? "").trim();
+        const text = await timed("spell", spellNumbers(env, String(args.text ?? "").trim(), ask.language));
         const problems = lineProblems(text);
         if (problems.length > 0) {
+          console.log(JSON.stringify({ part: "line-rejected", why: problems, text }));
           answer({ error: `A child cannot hear that line yet: ${problems.join("; ")}. Write it again.` });
           continue;
         }
@@ -344,6 +353,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
           fitForChild(env, ask.heard, text),
         ]));
         if (!safe || !fit) {
+          console.log(JSON.stringify({ part: "line-rejected", why: { safe, fit }, text }));
           answer({ error: "That line is not right for a child. Write one kind, simple line about how they did." });
           continue;
         }

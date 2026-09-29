@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fitForChild, heardForPrompt, lineProblems, safeForChild } from "../src/guard";
-import { STEADY_LINES } from "../src/lines";
+import { STEADY_LINES, numberWords, standaloneNumbers } from "../src/lines";
 
 describe("a line a child may hear", () => {
   it("passes a short, kind line", () => {
@@ -83,5 +83,20 @@ describe("the kindness judge", () => {
     expect(await fitForChild(judgeSaying("{not json"), "eight", "...")).toBe(false);
     expect(await fitForChild(judgeSaying(undefined), "eight", "...")).toBe(false);
     expect(await fitForChild(judgeSaying('{"fit": "yes"}'), "eight", "...")).toBe(false);
+  });
+});
+
+describe("numbers as words", () => {
+  it("spells whole numbers a child counts and adds", () => {
+    expect(numberWords(0)).toBe("zero");
+    expect(numberWords(45)).toBe("forty-five");
+    expect(numberWords(60)).toBe("sixty");
+    expect(numberWords(105)).toBe("one hundred five");
+    expect(numberWords(2500)).toBe("two thousand five hundred");
+  });
+
+  it("finds the numbers standing alone in a line, and not those joined to something", () => {
+    expect(standaloneNumbers("Count: 5, 10, 15. Now say 20!")).toEqual([5, 10, 15, 20]);
+    expect(standaloneNumbers("It is 3:30, 50%, 1st, ₦500, 3B, 2.5 or 1990.")).toEqual([]);
   });
 });

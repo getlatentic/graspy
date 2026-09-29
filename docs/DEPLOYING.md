@@ -63,6 +63,8 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
    npx wrangler secret list --env staging
    ```
 
+   The tutor runs one small model call on Workers AI, with nothing to set up, to write the digits of a spoken line as words. To run it on Bedrock instead (the AWS credits), put the Bedrock key on the tutor and set `SPELLER_HOST` to `bedrock` in `apps/tutor/wrangler.jsonc`, then deploy the tutor: `grep '^AWS_BEARER_TOKEN_BEDROCK=' ../server/.env | cut -d= -f2- | tr -d '\n' | npx wrangler secret put AWS_BEARER_TOKEN_BEDROCK --env staging`, run from `apps/tutor`. Set it back to `workers-ai` to switch back.
+
 2. **Custom domains.** The first deploy attaches `graspy-api-staging.getlatentic.com` and `graspy-staging.getlatentic.com`. Neither may have a DNS record of its own (code 100117). Check that nothing answers:
 
    ```bash
