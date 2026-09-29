@@ -165,20 +165,39 @@ The point of writing numbers as words is that a voice reads the line well, so th
 
 | Version spoken | Mean score | Read exactly as a teacher would |
 |---|---|---|
-| gemma-4-e2b | 0.85 | 44 of 75 |
-| gemma-3-12b | 0.80 | 36 |
-| qwen3-32b | 0.79 | 33 |
-| qwen3-next-80b | 0.77 | 32 |
-| llama-4-scout | 0.77 | 31 |
-| gpt-oss-20b | 0.74 | 29 |
-| the raw line, digits and symbols as written | 0.72 | 26 |
+| gemma-4-e2b | 0.91 | 55 of 75 |
+| gemma-3-12b | 0.85 | 42 |
+| qwen3-32b | 0.84 | 40 |
+| qwen3-next-80b | 0.82 | 39 |
+| llama-4-scout | 0.82 | 38 |
+| gpt-oss-20b | 0.79 | 36 |
+| the raw line, digits and symbols as written | 0.78 | 33 |
 
-By category (raw line, then the best model version): sums 0.30, 1.00; times tables 0.12, 0.88; signs and ranges 0.65, 0.87; money 0.64, 0.89; large numbers 0.65, 0.77; years 0.87, 0.96; time 0.92, 0.95; measurements 0.76, 0.76; ordinals 0.94, 0.94.
+gemma-4-e2b's lead over gemma-3-12b is +0.066 in the mean (standard error 0.025 over the 75 lines): better on 17 lines, worse on 6, tied on 52. Over Llama 4 Scout it is +0.091 (0.029). The lead is concentrated in the categories with symbols and units; it is level with or behind the others on fractions, large numbers and letter-plus-digit labels.
+
+By category (raw line / gpt-oss-20b / Llama 4 Scout / qwen3-next / qwen3-32b / gemma-3-12b / gemma-4-e2b):
+
+| Category | raw | gpt-oss-20b | scout | qwen3-next | qwen3-32b | gemma-3-12b | gemma-4-e2b |
+|---|---|---|---|---|---|---|---|
+| sums | 0.30 | 0.00 | 0.20 | 0.20 | 1.00 | 0.50 | 1.00 |
+| times tables | 0.12 | 0.47 | 0.38 | 0.47 | 0.47 | 0.47 | 0.88 |
+| signs, ranges, negatives | 0.65 | 0.56 | 0.58 | 0.55 | 0.68 | 0.72 | 0.87 |
+| money | 0.72 | 0.74 | 0.76 | 0.74 | 0.74 | 0.93 | 0.98 |
+| measurements | 0.80 | 0.76 | 0.76 | 0.76 | 0.76 | 0.76 | 0.89 |
+| fractions, decimals, percent | 0.83 | 0.80 | 0.98 | 0.94 | 0.94 | 0.88 | 0.94 |
+| large numbers | 0.82 | 0.88 | 0.88 | 0.88 | 0.88 | 0.82 | 0.85 |
+| mixed letters and digits | 0.79 | 0.85 | 0.85 | 0.92 | 0.83 | 0.79 | 0.76 |
+| years, dates, phones | 0.91 | 1.00 | 1.00 | 1.00 | 0.93 | 1.00 | 1.00 |
+| time | 0.92 | 0.95 | 0.92 | 0.95 | 0.95 | 0.95 | 0.95 |
+| ordinals and labels | 0.94 | 0.94 | 0.94 | 0.94 | 0.94 | 0.94 | 0.94 |
+| counting | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+
+(An earlier scorer could not read decimals, thousands or leading zeros, and scored every version too low; the numbers above are from the corrected `score.py`.)
 
 What Spitch does with what it is given:
 
 - `=` and `x` are the worst. `3 + 4 = 7.` is said "three plus four, seven": the `=` is dropped. `3 x 4 = 12.` is heard as "three, four, twelve", and `three x four = twelve.` as "three day four twelve". Only a version that writes `plus`, `equals` and `times` in words is read right.
-- A model that spells the digits but leaves the symbol makes it no better than the raw line: `Three + Four = Seven.` scored 0.40, the raw line 0.40. Llama 4 Scout, gpt-oss-20b and qwen3-next leave the symbols in.
+- A model that spells the digits but leaves the symbol makes it no better than the raw line, and often worse: on sums the raw line scored 0.30 and gpt-oss-20b, which leaves `+` and `=` in, 0.00. Llama 4 Scout, gpt-oss-20b and qwen3-next leave the symbols in.
 - The naira sign is not spoken: `₦1,500` is heard as "1,500", with no currency, in the raw line and in every version that keeps the sign. Only versions that write `naira` are heard with it.
 - `8:00` is heard as "8 Cologne"; `3:30` is read correctly. `school starts at eight o'clock` is right.
 - Units after a digit are read well: `3 kg` is said "three kilograms". After a number word they are not: `three kg` is said "three kilidj". Spelling the digit made that line worse.
