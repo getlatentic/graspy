@@ -37,8 +37,10 @@ import {
 } from "./recite";
 
 const MODEL = "@cf/openai/gpt-oss-120b";
-/** Mark, say, and one rewrite: a child waits for every round, and a marked answer never goes unsaid. */
-const ROUNDS = 3;
+/** A turn is mark, say, rewrite, and a model that reaches for no tool wastes a round: room for that. */
+const ROUNDS = 5;
+/** A line and one rewrite: a child waits for every round, and a marked answer never goes unsaid. */
+const LINES_TRIED = 2;
 /** Past this a marked answer settles for the steady line: her own words are not worth the child's wait. */
 const LINE_BUDGET_MS = 10_000;
 
@@ -302,9 +304,10 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   const tools = [markerFor(ask.expect), SAY_IT];
   const messages: Record<string, unknown>[] = [{ role: "user", content: brief(ask) }];
   let marked: Marked | null = null;
+  let linesTried = 0;
 
   for (let round = 0; round < ROUNDS; round += 1) {
-    if (marked !== null && Date.now() - started > LINE_BUDGET_MS) break;
+    if (marked !== null && (linesTried >= LINES_TRIED || Date.now() - started > LINE_BUDGET_MS)) break;
     const reply = (await timed(`teacher-round-${round}`, env.AI.run(MODEL, {
       messages,
       tools,
@@ -340,10 +343,11 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
           answer({ error: "mark what the child said before you speak to them." });
           continue;
         }
+        linesTried += 1;
         const text = await timed("spell", spellNumbers(env, String(args.text ?? "").trim(), ask.language));
         const problems = lineProblems(text);
         if (problems.length > 0) {
-          console.log(JSON.stringify({ part: "line-rejected", why: problems, text }));
+          console.log(JSON.stringify({ part: "line-rejected", why: problems }));
           answer({ error: `A child cannot hear that line yet: ${problems.join("; ")}. Write it again.` });
           continue;
         }
@@ -353,7 +357,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
           fitForChild(env, ask.heard, text),
         ]));
         if (!safe || !fit) {
-          console.log(JSON.stringify({ part: "line-rejected", why: { safe, fit }, text }));
+          console.log(JSON.stringify({ part: "line-rejected", why: { safe, fit } }));
           answer({ error: "That line is not right for a child. Write one kind, simple line about how they did." });
           continue;
         }

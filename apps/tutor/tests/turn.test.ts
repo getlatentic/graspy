@@ -116,6 +116,29 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(seen).toHaveLength(3);
   });
 
+  it("still marks the answer when the model reaches for no tool in its first rounds", async () => {
+    const chatter = { choices: [{ message: { content: "Let me think about this child." } }] };
+    const { env } = tutor([chatter, chatter, marked, call("say_it", { text: "Well done! You said nine." })]);
+
+    const reply = await takeTurn(env, ask);
+
+    expect(reply.verdict).toBe("correct");
+    expect(reply.say).toBe("Well done! You said nine.");
+  });
+
+  it("logs why a line was rejected but not the line itself", async () => {
+    const logged = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const { env } = tutor([marked, call("say_it", { text: "Correct, Ada!" }), call("say_it", { text: "Well done! You said nine." })]);
+
+    await takeTurn(env, ask);
+    const lines = logged.mock.calls.map((row) => String(row[0])).filter((row) => row.includes("line-rejected"));
+    logged.mockRestore();
+
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain("do not say correct");
+    expect(lines[0]).not.toContain("Ada");
+  });
+
   it("settles for the steady line once the child has waited past the budget", async () => {
     const bad = call("say_it", { text: "Correct. Correct." });
     const { env, seen } = tutor([marked, bad, bad]);

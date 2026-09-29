@@ -23,7 +23,14 @@ export function numberWords(n: number): string {
   return String(n);
 }
 
+const STANDALONE = /(?<![\w.,:;%/\-₦$£€])\d{1,3}(?![\w:%/\-]|[.,]\d)/g;
+
 /** Whole numbers of up to three figures standing alone in a line, in order: "5, 10, 15" but not "3:30", "50%" or "1st". */
 export function standaloneNumbers(text: string): number[] {
-  return (text.match(/(?<![\w.,:;%/\-₦$£€])\d{1,3}(?![\w:%/\-]|[.,]\d)/g) ?? []).map(Number);
+  return (text.match(STANDALONE) ?? []).map(Number);
+}
+
+/** The line as it must read once its standalone numbers are words: what a model's spelling has to equal. */
+export function expectedSpelling(text: string): string {
+  return text.replace(STANDALONE, (digits) => numberWords(Number(digits)));
 }

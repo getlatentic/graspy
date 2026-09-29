@@ -37,6 +37,7 @@ const bedrock: Complete = async (env, prompt) => {
       max_completion_tokens: 600,
       reasoning_effort: "low",
     }),
+    signal: AbortSignal.timeout(SPELL_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`Bedrock answered ${response.status}`);
   const body = (await response.json()) as { choices?: { message?: { content?: unknown } }[] };

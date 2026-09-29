@@ -40,6 +40,28 @@ describe("spellNumbers", () => {
     expect(await spellNumbers(env, "You said 45. Now say 50.", "en")).toBe("You said 45. Now say 50.");
   });
 
+  it.each([
+    ["Say 5.", "Say fifty-five."],
+    ["You said 2.", "You said twenty-two."],
+    ["Count to 20.", "Count to twenty-five."],
+    ["You got 100.", "You got one hundred twenty."],
+    ["You said 7.", "You said seventy-seven."],
+    ["Take 3 from 5.", "Take thirty-three from fifty-five."],
+  ])("does not let a number grow into a longer one: %s", async (line, reply) => {
+    const { env } = speller(reply);
+    expect(await spellNumbers(env, line, "en")).toBe(line);
+  });
+
+  it("does not let a word beside a number change", async () => {
+    const { env } = speller("That is right, forty-five.");
+    expect(await spellNumbers(env, "That is wrong, 45.", "en")).toBe("That is wrong, 45.");
+  });
+
+  it("takes the small differences of writing: case, hyphens and an added 'and'", async () => {
+    expect(await spellNumbers(speller("you got One Hundred and five!").env, "You got 105!", "en")).toBe("you got One Hundred and five!");
+    expect(await spellNumbers(speller("You said forty five.").env, "You said 45.", "en")).toBe("You said forty five.");
+  });
+
   it("does not trust the model with a number that does not stand alone", async () => {
     for (const line of ["It is 3:30 now.", "You paid ₦500.", "That was the 1st.", "You got 50%."]) {
       const { env, calls } = speller("anything");

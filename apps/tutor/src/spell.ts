@@ -4,14 +4,15 @@
  * language of the line. Code does not spell numbers for a line, because what "3:30", "50%" or "1st"
  * come to in words, and what any of it comes to in Yoruba, is a matter of language.
  *
- * Code does check the result. A model asked to spell "45" must not hand a child "fifty-four": every
- * number must stand alone in the line, and each must come back as its English words, in order. A line
- * with a number that does not stand alone ("3:30", "₦500", "1st") is not trusted to the model.
+ * Code does check the result. A model asked to spell "5" must not hand a child "fifty-five", nor change a
+ * word beside it: the reply must read, word for word, as the line with each number written out. A line
+ * with a number that does not stand alone ("3:30", "₦500", "1st") has no such reading to check against, so
+ * it is not trusted to the model.
  *
  * English only, until it is proven there. Tried on Yoruba, the model wrote numbers without their tone
  * marks and twice ran out of tokens before answering; Pidgin has not been tried.
  */
-import { numberWords, standaloneNumbers } from "./lines";
+import { expectedSpelling, standaloneNumbers } from "./lines";
 import { complete } from "./speller-host";
 
 /** A spelled line is about as long as the line was; one far longer has been rewritten, not spelled. */
@@ -26,23 +27,20 @@ function brief(text: string): string {
   ].join("\n");
 }
 
-const plain = (text: string) => ` ${text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim()} `;
+/** The words of a line, without case, punctuation, hyphens or "and" (which "one hundred and five" adds). */
+const wordsOf = (text: string) =>
+  text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((word) => word !== "" && word !== "and");
 
-/** Whether every number that stood alone in the line is written, in order, as the words it is. */
-function keepsTheNumbers(line: string, spelled: string): boolean {
-  const words = plain(spelled);
-  let from = 0;
-  for (const n of standaloneNumbers(line)) {
-    const at = words.indexOf(plain(numberWords(n)), from);
-    if (at < 0) return false;
-    from = at + plain(numberWords(n)).length - 1;
-  }
-  return true;
+/** Whether the reply reads exactly as the line does with every number written out. */
+function keepsTheLine(line: string, spelled: string): boolean {
+  const want = wordsOf(expectedSpelling(line));
+  const got = wordsOf(spelled);
+  return want.length === got.length && want.every((word, at) => word === got[at]);
 }
 
 function acceptable(line: string, spelled: string | null): spelled is string {
   if (!spelled || /\d/.test(spelled) || spelled.length > line.length * MOST_GROWTH) return false;
-  return keepsTheNumbers(line, spelled);
+  return keepsTheLine(line, spelled);
 }
 
 /** Every run of digits in the line is a number standing alone, so the result can be checked. */
