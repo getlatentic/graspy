@@ -5,6 +5,7 @@ const google = {
   prepareGoogle: vi.fn(async () => undefined),
   signInWithGoogle: vi.fn(async () => ({ account: ACCOUNT, idToken: "id" })),
   signOutOfGoogle: vi.fn(async () => undefined),
+  reauthenticateWithGoogle: vi.fn(async () => "fresh-id"),
 };
 vi.mock("./google-auth", () => google);
 const session = {
@@ -17,7 +18,7 @@ vi.mock("@/lib/device-wipe", () => ({ wipeDevice }));
 const deleteAccount = vi.fn(async () => undefined);
 vi.mock("./learners-api", () => ({ deleteAccount }));
 
-const { deleteAccountAndSignOut, signIn, signInProblem, signOut } =
+const { deleteAccountAndSignOut, signIn, signInAgain, signInProblem, signOut } =
   await import("./sign-in");
 
 beforeEach(() => vi.clearAllMocks());
@@ -35,6 +36,26 @@ describe("signIn", () => {
     await expect(signIn()).rejects.toThrow("refused");
 
     expect(google.signOutOfGoogle).toHaveBeenCalled();
+  });
+});
+
+describe("signInAgain", () => {
+  it("returns the token of a sign-in just made with Google, and starts no session", async () => {
+    await expect(signInAgain()).resolves.toBe("fresh-id");
+
+    expect(google.reauthenticateWithGoogle).toHaveBeenCalledTimes(1);
+    expect(google.signInWithGoogle).not.toHaveBeenCalled();
+    expect(session.startAccountSession).not.toHaveBeenCalled();
+  });
+
+  it("fails as Google does when the parent closes the window", async () => {
+    google.reauthenticateWithGoogle.mockRejectedValueOnce({
+      code: "auth/popup-closed-by-user",
+    });
+
+    await expect(signInAgain()).rejects.toEqual({
+      code: "auth/popup-closed-by-user",
+    });
   });
 });
 

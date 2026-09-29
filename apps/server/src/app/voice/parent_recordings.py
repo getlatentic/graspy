@@ -16,7 +16,6 @@ from .recording_retention import PAGE, PAGES, delete_audio, rows_of
 PCM16_BYTES_PER_SECOND = 16_000 * 2
 WAV_HEADER_BYTES = 44
 MAX_LISTED = 200
-NEVER = 2**53
 
 KEPT = (
     "s.owner_id = ?1 AND s.audio_key IS NOT NULL AND s.audio_deleted_at IS NULL "
@@ -26,8 +25,9 @@ LIST_SQL = (
     "SELECT s.id, s.uploaded_at, s.expires_at, s.audio_bytes, s.audio_content_type, "
     "s.metadata_json, t.transcript FROM samples s "
     "LEFT JOIN tutoring_turns t ON t.sample_id = s.id "
-    f"WHERE {KEPT} AND s.expires_at > ?2 AND s.uploaded_at < ?3 "
-    "ORDER BY s.uploaded_at DESC, s.id DESC LIMIT ?4"
+    f"WHERE {KEPT} AND s.expires_at > ?2 AND (?3 IS NULL OR s.uploaded_at < ?3 "
+    "OR (s.uploaded_at = ?3 AND s.id < ?4)) "
+    "ORDER BY s.uploaded_at DESC, s.id DESC LIMIT ?5"
 )
 HEARD_SQL = (
     "SELECT s.audio_key, s.audio_content_type FROM samples s "
@@ -75,20 +75,19 @@ def _now_ms() -> int:
 
 
 async def kept_recordings(
-    env: Any, learner_key: str, limit: int, before: int | None
-) -> tuple[list[dict], int | None]:
-    """The newest `limit` recordings older than `before`, and where the next page starts."""
+    env: Any, learner_key: str, limit: int, before: int | None, before_id: str | None
+) -> tuple[list[dict], tuple[int, str] | None]:
+    """The newest `limit` recordings before the cursor (recorded time and id; none for the newest),
+    and the cursor of the next page."""
+    size = min(limit, MAX_LISTED)
     rows = await rows_of(
-        env,
-        LIST_SQL,
-        learner_key,
-        _now_ms(),
-        before or NEVER,
-        min(limit, MAX_LISTED) + 1,
+        env, LIST_SQL, learner_key, _now_ms(), before, before_id, size + 1
     )
-    page = rows[: min(limit, MAX_LISTED)]
-    more = len(rows) > len(page)
-    return [_listed(row) for row in page], (page[-1]["uploaded_at"] if more else None)
+    page = rows[:size]
+    last = page[-1] if len(rows) > size else None
+    return [_listed(row) for row in page], (
+        None if last is None else (last["uploaded_at"], last["id"])
+    )
 
 
 async def heard_recording(env: Any, learner_key: str, sample_id: str):

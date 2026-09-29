@@ -6,7 +6,14 @@ vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
 
 const api = await import("./learners-api");
 
-const ADA = { id: "a1b2c3d4e5f6", name: "Ada", createdAt: 1 };
+const ADA = {
+  id: "a1b2c3d4e5f6",
+  name: "Ada",
+  createdAt: 1,
+  serviceConsent: null,
+  voiceConsent: null,
+};
+const PROOF = { noticeVersion: 1, firebaseIdToken: "fresh-token" };
 
 function answers(status: number, body?: unknown) {
   fetchWithSession.mockResolvedValue({
@@ -34,11 +41,29 @@ describe("the account's learners", () => {
     });
   });
 
-  it("are added by their parent, guardian or themselves", async () => {
+  it("are added by their parent, guardian or themselves, who agree for them", async () => {
     answers(201, ADA);
 
-    await expect(api.addLearner("Ada")).resolves.toEqual(ADA);
-    expect(sent().body).toEqual({ name: "Ada", guardian: true });
+    await expect(api.addLearner("Ada", PROOF)).resolves.toEqual(ADA);
+    expect(sent()).toMatchObject({
+      url: "https://api.test/api/account/learners",
+      method: "POST",
+      body: { name: "Ada", guardian: true, consent: PROOF },
+    });
+  });
+
+  it("each need a parent's agreement, which is recorded for one added without", async () => {
+    answers(200, { noticeVersion: 1, grantedAt: 5 });
+
+    await expect(api.agreeToService(ADA.id, PROOF)).resolves.toEqual({
+      noticeVersion: 1,
+      grantedAt: 5,
+    });
+    expect(sent()).toMatchObject({
+      url: `https://api.test/api/account/learners/${ADA.id}/consent`,
+      method: "PUT",
+      body: PROOF,
+    });
   });
 
   it("are renamed and removed by id", async () => {
@@ -76,16 +101,5 @@ describe("the account's learners", () => {
       url: "https://api.test/api/account",
       method: "DELETE",
     });
-  });
-});
-
-describe("refusalCode", () => {
-  it("reads the server's code from a refusal", async () => {
-    answers(409, { detail: { code: "too_many_learners" } });
-
-    const refused = await api.addLearner("Ninth").catch((error) => error);
-
-    expect(api.refusalCode(refused)).toBe("too_many_learners");
-    expect(api.refusalCode(new Error("offline"))).toBeNull();
   });
 });

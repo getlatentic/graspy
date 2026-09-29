@@ -1,25 +1,24 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n-context";
 
-/** Adding a learner asks their name, and that whoever adds them is them or their
- * parent or guardian. */
+/** Adding a learner asks their name; a parent then agrees for them (see AddLearner). */
 export function AddLearnerForm({
-  busy,
-  onAdd,
+  name,
+  onName,
+  onContinue,
   onCancel,
 }: {
-  busy: boolean;
-  onAdd: (name: string) => void;
+  name: string;
+  onName: (name: string) => void;
+  onContinue: () => void;
   onCancel: () => void;
 }) {
   const { t } = useI18n();
-  const [name, setName] = useState("");
-  const [guardian, setGuardian] = useState(false);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    onAdd(name.trim());
+    onContinue();
   };
 
   return (
@@ -37,24 +36,19 @@ export function AddLearnerForm({
           maxLength={40}
           autoComplete="off"
           autoFocus
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => onName(event.target.value)}
           className="w-full rounded-2xl border border-accent-line bg-white px-4 py-3 text-base text-ink shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
-      <label className="flex items-start gap-3 rounded-2xl bg-accent-soft/60 p-4 text-sm text-ink">
-        <input
-          type="checkbox"
-          checked={guardian}
-          onChange={(event) => setGuardian(event.target.checked)}
-          className="mt-0.5 size-4 shrink-0 accent-accent"
-        />
-        {t("learners.guardian")}
-      </label>
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy || !name.trim() || !guardian}>
-          {t("learners.addButton")}
+        <Button
+          type="submit"
+          disabled={!name.trim()}
+          data-restore-focus="add-tile"
+        >
+          {t("consent.continue")}
         </Button>
-        <Button variant="ghost" onClick={onCancel} disabled={busy}>
+        <Button variant="ghost" onClick={onCancel}>
           {t("learners.cancel")}
         </Button>
       </div>

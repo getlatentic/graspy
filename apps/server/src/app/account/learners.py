@@ -75,6 +75,15 @@ async def renamed(keeping: Keeping, uid: str, learner_id: str, name: str) -> Lea
     return await learner_of(keeping, uid, learner_id)
 
 
+async def unadded(keeping: Keeping, uid: str, learner_id: str) -> None:
+    """Takes back a learner just added, who has nothing kept for them yet: only the directory's
+    entry goes, which is all that can be done where the stores that removing a learner also
+    clears are the ones that failed."""
+    await keeping.learners.change_directory(
+        account_key(uid), LearnerRemoved(id=learner_id)
+    )
+
+
 async def _forgot_kept(keeping: Keeping, key: str) -> None:
     record = await keeping.learners.load(key)
     for conversation_id in record.conversations:

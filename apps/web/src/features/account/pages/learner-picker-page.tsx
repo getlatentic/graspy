@@ -9,23 +9,21 @@ import { leaveForAnotherAccount } from "@/lib/account/sign-in";
 import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { AccountFrame } from "../components/account-frame";
-import { AddLearnerForm } from "../components/add-learner-form";
+import { AddLearner } from "../components/add-learner";
+import { ConsentProblemNote } from "../components/consent-problem-note";
 import { AddLearnerTile, LearnerTile } from "../components/learner-tile";
 import { ProblemNote } from "../components/problem-note";
+import { ServiceAgreement } from "../components/service-agreement";
 import { SIGN_IN_PAGE } from "../components/sign-in-link";
 import { useDeviceHoldsPlan } from "../hooks/use-device-plan";
-import {
-  useLearnerChoice,
-  type ChoiceProblem,
-} from "../hooks/use-learner-choice";
+import { useLearnerChoice } from "../hooks/use-learner-choice";
 import { useLearners } from "../hooks/use-learners";
 
 const MAX_LEARNERS = 8;
 
-const PROBLEMS: Record<Exclude<ChoiceProblem, "unsent">, string> = {
+const PROBLEMS = {
   offline: "learners.offline",
   full: "learners.full",
-  failed: "learners.failed",
 };
 
 /** "Who's learning?": the account's learners, one of whom the device learns as. */
@@ -44,6 +42,7 @@ function Picker({ account }: { account: Account }) {
   const { learners, failed, reload } = useLearners();
   const choice = useLearnerChoice();
   const [adding, setAdding] = useState(false);
+  const [agreeing, setAgreeing] = useState<AccountLearner | null>(null);
 
   if (failed) {
     return (
@@ -60,17 +59,32 @@ function Picker({ account }: { account: Account }) {
   return (
     <div className="flex flex-col gap-6">
       {adding ? (
-        <AddLearnerForm
+        <AddLearner
+          choice={choice}
+          onCancel={() => {
+            setAdding(false);
+            // The account holds a learner added here, whom the list has not heard of.
+            if (choice.added) reload();
+            choice.forgetAdded();
+          }}
+        />
+      ) : agreeing ? (
+        <ServiceAgreement
+          learner={agreeing}
           busy={choice.busy}
-          onAdd={(name) => void choice.addAndChoose(name)}
-          onCancel={() => setAdding(false)}
+          onAgreed={() => void choice.choose(agreeing)}
+          onDecline={() => setAgreeing(null)}
         />
       ) : (
         <Choosing
           account={account}
           learners={learners}
           busy={choice.busy}
-          onChoose={(learner) => void choice.choose(learner)}
+          onChoose={(learner) =>
+            learner.serviceConsent
+              ? void choice.choose(learner)
+              : setAgreeing(learner)
+          }
           onAdd={() => setAdding(true)}
         />
       )}
@@ -157,9 +171,11 @@ function Status({ choice }: { choice: ReturnType<typeof useLearnerChoice> }) {
   if (choice.problem === "unsent") {
     return <SwitchAnyway onAnyway={choice.anyway} onCancel={choice.cancel} />;
   }
-  return choice.problem ? (
-    <ProblemNote>{t(PROBLEMS[choice.problem])}</ProblemNote>
-  ) : null;
+  if (!choice.problem) return null;
+  if (choice.problem === "offline" || choice.problem === "full") {
+    return <ProblemNote>{t(PROBLEMS[choice.problem])}</ProblemNote>;
+  }
+  return <ConsentProblemNote problem={choice.problem} />;
 }
 
 function SwitchAnyway({

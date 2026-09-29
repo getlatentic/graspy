@@ -12,8 +12,11 @@ from voice_worker import voice_app, worker_env
 from app.account.consents import DAY_MS
 from app.voice.exercises import MAX_TURN_ATTEMPTS, PROCESSING_LEASE_MS, RETRY_AFTER_MS
 from app.voice.recording_retention import (
+    ENDED_SQL,
+    EXPIRED_SQL,
     PAGE,
     UNDECIDED_KEPT_MS,
+    UNSETTLED_SQL,
     settle_audio,
     sweep_audio,
 )
@@ -506,3 +509,41 @@ async def test_settling_one_recording_leaves_the_others_and_is_done_once():
     await settle_audio(env, "gvm_a")
 
     assert list(env.AUDIO.objects) == [second]
+
+
+@pytest.mark.parametrize(
+    ("sql", "values", "index"),
+    [
+        (EXPIRED_SQL, (0, 1), "samples_audio_expiry"),
+        (UNSETTLED_SQL, (0, 1), "samples_audio_undecided"),
+        (ENDED_SQL, (MAX_TURN_ATTEMPTS, 1), "samples_audio_undecided"),
+    ],
+    ids=["expired", "unsettled", "ended"],
+)
+def test_each_sweep_query_reads_a_partial_index_not_the_whole_samples_table(
+    sql, values, index
+):
+    env = worker_env()
+
+    plan = " ".join(
+        row["detail"] for row in env.DB.rows("EXPLAIN QUERY PLAN " + sql, *values)
+    )
+
+    assert f"USING INDEX {index}" in plan or f"USING COVERING INDEX {index}" in plan
+    assert "SCAN s" not in plan.replace("SCAN s USING", "")
+    assert "SCAN samples" not in plan.replace("SCAN samples USING", "")
+
+
+@pytest.mark.parametrize(
+    ("sql", "index"),
+    [
+        (EXPIRED_SQL, "samples_audio_expiry"),
+        (UNSETTLED_SQL, "samples_audio_undecided"),
+        (ENDED_SQL, "samples_audio_undecided"),
+    ],
+    ids=["expired", "unsettled", "ended"],
+)
+def test_each_sweep_query_names_its_index(sql, index):
+    """In a small database SQLite chooses the expiry index unaided, so the plan test above cannot
+    tell whether this hint is there; the sweep reads a table of every recording, where it may not."""
+    assert f"INDEXED BY {index}" in sql

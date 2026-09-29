@@ -292,7 +292,6 @@
     "back": "Go back",
     "inUse": "E dey learn for this device",
     "nameLabel": "Name",
-    "guardian": "Na me be this learner, or na me be im papa, mama or guardian",
     "addButton": "Add",
     "cancel": "Cancel",
     "full": "This account don full: 8 learners.",
@@ -317,7 +316,8 @@
     "addTile": "Add learner",
     "addTitle": "Add learner",
     "devicePlan": "This device plan go belong to who you choose.",
-    "otherAccount": "Use another account"
+    "otherAccount": "Use another account",
+    "recordings": "Recordings"
   },
   "signIn": {
     "link": "Sign in",
@@ -331,7 +331,7 @@
     "start": "Start",
     "startHere": "Start here",
     "ok": "OK",
-    "note": "graspy dey send your voice make e check your answers, then e go delete am, unless parent choose to keep am.",
+    "note": "graspy dey send your voice make e check your answers. Once e don mark am, dem go delete the recording, unless parent choose to keep am.",
     "loading": "Dey bring your lessons…",
     "loadFailed": "Your lessons no load.",
     "retry": "Try again",
@@ -384,5 +384,46 @@
       "micFailed": "Microphone no start. Try again.",
       "notSaved": "Your answer no save. Try again."
     }
+  },
+  "consent": {
+    "continue": "Continue",
+    "serviceTitle": "Agree to graspy for {name}",
+    "who": "Agree as the learner, or as im papa, mama or guardian.",
+    "agree": "Agree with Google",
+    "agreeRow": "Agree",
+    "decline": "I no agree",
+    "needed": "Dem never agree yet",
+    "signIn": "That sign-in no work. Try again.",
+    "otherAccount": "Use the Google account wey you sign in with.",
+    "notice": "This page don old. Reload am and try again.",
+    "browser": "Open graspy for your browser to sign in.",
+    "signedOut": "You no dey signed in here again.",
+    "signInAgain": "Sign in again",
+    "notGoogle": "Sign in with Google to agree.",
+    "notKept": "Dem no save am. Try again."
+  },
+  "voiceRecordings": {
+    "title": "Voice recordings",
+    "off": "graspy dey delete each recording once e don mark the answer. The words wey e hear go stay.",
+    "keep": "Keep recordings",
+    "keptFor": "Dem go keep am for {days} days.",
+    "keepFor": "Keep am for",
+    "days": "{days} days",
+    "empty": "No recording yet.",
+    "play": "Play",
+    "stop": "Stop",
+    "delete": "Delete",
+    "deleteAll": "Delete all",
+    "deleteAllConfirm": "Delete all the recordings wey dem keep? You no fit bring dem back.",
+    "more": "Show more",
+    "stopTitle": "Make graspy stop to keep recordings?",
+    "stopDelete": "Stop and delete dem",
+    "stopKeep": "Stop, but keep dem until dem expire",
+    "gone": "That recording don go.",
+    "playFailed": "That recording no play. Try again.",
+    "notFound": "This learner no dey your account.",
+    "playAt": "Play the recording of {when}",
+    "stopAt": "Stop the recording of {when}",
+    "deleteAt": "Delete the recording of {when}"
   }
 }

@@ -185,8 +185,9 @@ class Default(WorkerEntrypoint):
         return await asgi.fetch(_app_for(self.env), request, self.env)
 
     async def scheduled(self, controller, env, ctx):
-        """Deletes the recordings due for it (voice/recording_retention)."""
-        await sweep_audio(env)
+        """Deletes the recordings due for it (voice/recording_retention). The runtime passes
+        `env` and `ctx` as None to a Python Worker's handler, so the sweep reads `self.env`."""
+        await sweep_audio(self.env)
 
 
 class Lesson(DurableObject):
