@@ -141,4 +141,18 @@ class ConsentGatedWorkTest {
         // A worker that went on to ask graspy would wait on a session that never comes: it fails here, and does not hang.
         assertEquals(Result.success(), withTimeoutOrNull(10_000) { worker.doWork() })
     }
+
+    @Test
+    fun `signing out of a learner not agreed for asks first when answers are queued for them, and sends nothing`() = runBlocking {
+        AppGraph.database(application).submissionDao().insert(answer("queued-for-sign-out", owner))
+
+        assertTrue(graph.signOutLosesAnswers())
+
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun `signing out of a learner not agreed for with nothing queued goes at once`() = runBlocking {
+        assertEquals(false, graph.signOutLosesAnswers())
+    }
 }

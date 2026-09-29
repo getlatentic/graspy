@@ -6,7 +6,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.isNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -130,6 +132,19 @@ class RecordingsOfTest {
             assertEquals(action, 2, described.toSet().size)
             compose.onAllNodes(hasText(action) and hasContentDescription("$action, ", substring = true))[0].assertHeightIsAtLeast(48.dp)
         }
+    }
+
+    @Test
+    fun `Play is disabled while a delete is in flight`() {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>().also { api.deleteGate = it }
+        show()
+
+        compose.onAllNodesWithText("Delete")[0].performClick()
+        compose.waitUntil(WAIT_MS) { api.calls.any { it.startsWith("delete") } }
+        compose.waitForIdle()
+
+        compose.onAllNodesWithText("Play").assertAll(isNotEnabled())
+        gate.complete(Unit)
     }
 
     @Test
