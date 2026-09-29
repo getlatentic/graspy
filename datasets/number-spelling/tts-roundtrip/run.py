@@ -10,13 +10,14 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DATASET = HERE.parent
-MODELS = {  # results file, model name in it, host
+MODELS = {  # results file, model name in it, host, and the prompt when the file holds several
     "gpt-oss-20b": ("results.jsonl", None, "workers-ai"),
     "llama-4-scout": ("results-llama-gemma.jsonl", "llama-4-scout-17b-16e-instruct", "workers-ai"),
     "qwen3-next-80b": ("results-qwen.jsonl", "qwen3-next-80b-a3b-instruct", "bedrock"),
     "qwen3-32b": ("results-qwen.jsonl", "qwen3-32b", "bedrock"),
     "gemma-3-12b": ("results-llama-gemma.jsonl", "gemma-3-12b-it", "bedrock"),
     "gemma-4-e2b": ("results-gemma-4.jsonl", "gemma-4-e2b", "bedrock"),
+    "gemma-4-e2b-v4": ("results-gemma-4-e2b-prompts.jsonl", "gemma-4-e2b", "bedrock", "v4"),
 }
 ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
 TENS = [None, None, "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
@@ -102,9 +103,10 @@ def main():
     refs = {json.loads(l)["id"]: json.loads(l)["readings"] for l in open(HERE / "references.jsonl")}
     lines = {json.loads(l)["id"]: json.loads(l)["line"] for l in open(DATASET / "lines.jsonl")}
     replies = {}
-    for name, (file, model, host) in MODELS.items():
+    for name, (file, model, host, *prompt) in MODELS.items():
         for l in open(DATASET / file):
             r = json.loads(l)
+            if prompt and r.get("prompt") != prompt[0]: continue
             if r["host"] == host and (model is None or r.get("model") == model) and r["id"] in refs: replies[(name, r["id"])] = r["reply"] or ""
     cache = HERE / ".audio"; cache.mkdir(exist_ok=True)
     jobs = {}
