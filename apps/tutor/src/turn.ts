@@ -379,6 +379,10 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
         }
         return { ...marked, say: text };
       }
+      if (premarked !== null) {
+        answer({ error: "the answer is already marked, and cannot be marked again. Call say_it." });
+        continue;
+      }
       const outcome = await timed("mark", mark(env, ask, call.function.name, args));
       if (outcome === null) {
         answer({ error: `${call.function.name} is not the marker for this question.` });

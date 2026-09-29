@@ -7,7 +7,7 @@
  * that is neither, a garbled number or another language, means the plain reading cannot be trusted,
  * and the answer goes to the teacher model as before.
  */
-import type { SequenceItem } from "./recite";
+import { flattened, type SequenceItem } from "./recite";
 
 const FILLER = new Set(["and", "then", "um", "uh", "er", "erm", "so", "okay", "ok", "the", "is"]);
 /**
@@ -15,27 +15,39 @@ const FILLER = new Set(["and", "then", "um", "uh", "er", "erm", "so", "okay", "o
  * heard, where the marker ignores it. Four or more figures, or a leading zero, are as likely a recogniser
  * running numbers together ("1235", "05") and are not plain.
  */
-const NUMBER_LIKE = /^(?:[1-9]\d{0,2}|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)$/;
-/** The longest spelling of an item, in words: "twenty five". */
-const LONGEST_SPELLING = 3;
-
-const flat = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const NUMBER_LIKE = /^(?:[1-9]\d{0,2}|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)$/;
+const TENS = new Set(["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]);
+const ONES = new Set(["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]);
 
 /**
- * The spellings of items the child said, in order, or null when a word in the transcript is not one.
- * A comma or full stop ends a phrase, so "twenty, five" is two items and "twenty five" is one.
+ * The spellings of items the child said, in order, or null when the recording is not plain: a word that is
+ * not an item, a filler or a small number, a hundred or a thousand said other than as an item's own
+ * spelling, or a word in another script. A comma or full stop ends a phrase, so "twenty, five" is two items
+ * and "twenty five" is one.
  */
 export function heardSequence(items: SequenceItem[], transcript: string | null): string[] | null {
-  const spellings = new Set(items.flatMap((item) => item.spoken.map(flat)));
+  const spellings = new Set(items.flatMap((item) => item.spoken.map(flattened)));
+  const longest = Math.max(1, ...[...spellings].map((spelling) => spelling.split(" ").length));
   const heard: string[] = [];
   for (const segment of (transcript ?? "").split(/[,;.!?]+/)) {
-    const words = flat(segment).split(" ").filter(Boolean);
+    const words: string[] = [];
+    for (const token of segment.split(/\s+/).filter(Boolean)) {
+      const flat = flattened(token);
+      // Letters and digits that flatten to nothing are another script: not read here.
+      if (flat === "" && /[\p{L}\p{N}]/u.test(token)) return null;
+      words.push(...flat.split(" ").filter(Boolean));
+    }
     for (let at = 0; at < words.length; ) {
-      const length = [...Array(LONGEST_SPELLING).keys()]
-        .map((k) => LONGEST_SPELLING - k)
+      const length = [...Array(longest).keys()]
+        .map((k) => longest - k)
         .find((n) => at + n <= words.length && spellings.has(words.slice(at, at + n).join(" ")));
-      if (length) {
-        heard.push(words.slice(at, at + length).join(" "));
+      const whole = length ? words.slice(at, at + length).join(" ") : "";
+      // "sixty five" is one number, and not sixty and five, when it is not an item's own spelling.
+      if (length === 1 && TENS.has(words[at]) && ONES.has(words[at + 1] ?? "") && !spellings.has(`${words[at]} ${words[at + 1]}`)) {
+        heard.push(`${words[at]} ${words[at + 1]}`);
+        at += 2;
+      } else if (length) {
+        heard.push(whole);
         at += length;
       } else if (FILLER.has(words[at])) {
         at += 1;

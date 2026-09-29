@@ -40,14 +40,18 @@ export interface SequenceItem {
   spoken: string[];
 }
 
-function flattened(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+/**
+ * Words as a recogniser and the curriculum may spell them alike: lower case, letters and digits only. Accents
+ * and dots under letters go first, or Yoruba's "méjì" (two) and "mẹ́jọ" (eight) would both become "m j".
+ */
+export function flattened(text: string): string {
+  return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 /** Whether these words were really in the recording, so a fact cannot be conjured up for a child. */
-function grounded(transcript: string, evidence: string): boolean {
+function grounded(flatTranscript: string, evidence: string): boolean {
   const words = flattened(evidence);
-  return words !== "" && flattened(transcript).includes(words);
+  return words !== "" && flatTranscript.includes(words);
 }
 
 /**
@@ -63,8 +67,9 @@ export function markRecitation(
   transcript: string,
 ): { verdict: Verdict; result: RecitationResult } {
   const byMultiplier = new Map<number, HeardFact>();
+  const flatTranscript = flattened(transcript);
   for (const fact of heard) {
-    if (grounded(transcript, fact.evidence)) byMultiplier.set(fact.multiplier, fact);
+    if (grounded(flatTranscript, fact.evidence)) byMultiplier.set(fact.multiplier, fact);
   }
   const result: RecitationResult = {
     correct_multipliers: [],
@@ -110,8 +115,9 @@ export function markSequence(
   transcript: string,
 ): { verdict: Verdict; result: SequenceResult } {
   const said: string[] = [];
+  const flatTranscript = flattened(transcript);
   for (const words of heard) {
-    if (!grounded(transcript, words)) continue;
+    if (!grounded(flatTranscript, words)) continue;
     const spoken = flattened(words);
     const item = items.find((one) => one.spoken.some((alias) => flattened(alias) === spoken));
     if (item && !said.includes(item.id)) said.push(item.id);

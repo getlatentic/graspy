@@ -325,6 +325,15 @@ describe("a list said in order", () => {
     expect(seen).toHaveLength(1);
   });
 
+  it("keeps the marking code made, even if the model reaches for the marker", async () => {
+    const { env } = tutor([call("mark_sequence", { said: ["1", "2", "3", "4", "5"] }), call("say_it", { text: "You missed four." })]);
+
+    const reply = await takeTurn(env, counting("1, 2, 3, 5"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.result).toMatchObject({ missing: ["4"] });
+  });
+
   it("marks an out-of-order list wrong in code", async () => {
     const { env } = tutor([call("say_it", { text: "Nearly. Say them in order." })]);
 
