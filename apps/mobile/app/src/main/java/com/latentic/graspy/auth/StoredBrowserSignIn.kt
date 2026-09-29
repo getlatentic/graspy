@@ -13,7 +13,7 @@ import androidx.core.content.edit
 fun dropStoredBrowserSignIn(context: Context) {
     val stored = context.getSharedPreferences(FIREBASE_STORED_SIGN_IN, Context.MODE_PRIVATE)
     if (stored.all.isEmpty()) return
-    Log.w("GraspySignIn", "Dropped a sign-in Google's page returned after graspy was stopped")
+    Log.w("GraspySignIn", "Dropped what Firebase kept of a sign-in on Google's page graspy was stopped behind")
     stored.edit { clear() }
 }
 

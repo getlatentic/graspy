@@ -125,7 +125,6 @@ class GoogleSignInTest {
         }
     }
 
-
     @Test
     fun `Google's page asks which account rather than taking the one Chrome is signed in to`() {
         val auth = FirebaseAuth.getInstance(demoFirebase())
@@ -143,7 +142,6 @@ class GoogleSignInTest {
     private companion object {
         // The extra Firebase hands Google's page its parameters in.
         const val CUSTOM_PARAMETERS = "com.google.firebase.auth.KEY_PROVIDER_CUSTOM_PARAMS"
-
 
         /** Shaped as Google's: the sheet reads the token, and Firebase, faked here, would check its signature. */
         val GOOGLE_ID_TOKEN = listOf("""{"alg":"RS256"}""", """{"sub":"1","email":"parent@example.com"}""", "signature")
