@@ -1,5 +1,6 @@
 package com.latentic.graspy.account
 
+import com.latentic.graspy.auth.FreshSignIn
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,7 +13,7 @@ import retrofit2.HttpException
 
 @RunWith(RobolectricTestRunner::class)
 class LearnerChoiceTest {
-    private val api = FakeAccountApi()
+    private val api = FakeAccountApi(listOf(ADA, BAYO, CARA))
     private val events = api.calls
     private var everythingSent = true
     private var online = true
@@ -38,7 +39,7 @@ class LearnerChoiceTest {
         choice(accounts).choose(ADA)
 
         assertEquals(listOf("session:${ADA.id}:$DEVICE", "claim:$UID->${learnerKey(UID, ADA.id)}"), events)
-        assertEquals(ChosenLearner(ADA.id, ADA.name), accounts.account.value?.learner)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
         assertFalse(requireNotNull(accounts.account.value).deviceJoins)
     }
 
@@ -49,7 +50,7 @@ class LearnerChoiceTest {
         choice(accounts).choose(BAYO)
 
         assertEquals(listOf("flush:${learnerKey(UID, ADA.id)}", "session:${BAYO.id}:null", "wipe"), events)
-        assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
+        assertEquals(chosen(BAYO), accounts.account.value?.learner)
     }
 
     @Test
@@ -62,7 +63,7 @@ class LearnerChoiceTest {
 
         assertTrue(refused.offline)
         assertEquals(listOf("flush:${learnerKey(UID, ADA.id)}"), events)
-        assertEquals(ChosenLearner(ADA.id, ADA.name), accounts.account.value?.learner)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
     }
 
     @Test
@@ -74,7 +75,7 @@ class LearnerChoiceTest {
 
         assertFalse(refused.offline)
         assertEquals(listOf("flush:${learnerKey(UID, ADA.id)}"), events)
-        assertEquals(ChosenLearner(ADA.id, ADA.name), accounts.account.value?.learner)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
     }
 
     @Test
@@ -85,7 +86,7 @@ class LearnerChoiceTest {
         choice(accounts).choose(BAYO, loseUnsent = true)
 
         assertEquals(listOf("session:${BAYO.id}:null", "wipe"), events)
-        assertEquals(ChosenLearner(BAYO.id, BAYO.name), accounts.account.value?.learner)
+        assertEquals(chosen(BAYO), accounts.account.value?.learner)
     }
 
     @Test
@@ -96,7 +97,7 @@ class LearnerChoiceTest {
         assertThrows(HttpException::class.java) { runBlocking { choice(accounts).choose(BAYO, loseUnsent = true) } }
 
         assertEquals(listOf("session:${BAYO.id}:null"), events)
-        assertEquals(ChosenLearner(ADA.id, ADA.name), accounts.account.value?.learner)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
     }
 
     @Test
@@ -118,10 +119,55 @@ class LearnerChoiceTest {
     }
 
     @Test
-    fun `adding a learner confirms the guardian`() = runBlocking {
-        val added = choice(accountStore(signedIn(learner = null))).add("Tolu")
+    fun `adding a learner confirms the guardian and sends the parent's consent with the fresh sign-in`() = runBlocking {
+        val added = choice(accountStore(signedIn(learner = null))).add("Tolu", FreshSignIn("fresh-id-token"))
 
-        assertEquals(listOf("add:Tolu:true"), events)
+        assertEquals(listOf("add:Tolu:true:consent:1:fresh-id-token"), events)
         assertEquals("Tolu", added.name)
+        assertEquals(1, added.serviceConsent?.noticeVersion)
+    }
+
+    @Test
+    fun `a learner whose parent has not agreed is refused, and the device stays as it was`() {
+        val accounts = accountStore(signedIn(ADA, deviceJoins = false))
+
+        assertThrows(IllegalStateException::class.java) { runBlocking { choice(accounts).choose(CARA) } }
+
+        assertEquals(emptyList<String>(), events)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `the first choice of a learner whose parent has not agreed takes nothing of the device's learning`() {
+        val accounts = accountStore(signedIn(learner = null))
+
+        assertThrows(IllegalStateException::class.java) { runBlocking { choice(accounts).choose(CARA) } }
+
+        assertEquals(emptyList<String>(), events)
+        assertTrue(requireNotNull(accounts.account.value).deviceJoins)
+    }
+
+    @Test
+    fun `a parent's agreement for a learner already added is put with the fresh sign-in, and the learner is chosen as agreed for`() = runBlocking {
+        val accounts = accountStore(signedIn(learner = null))
+        val choice = choice(accounts)
+        val agreedFor = choice.agree(CARA, FreshSignIn("fresh-id-token"))
+
+        choice.choose(agreedFor)
+
+        assertEquals(listOf("agree:${CARA.id}:1:fresh-id-token", "session:${CARA.id}:$DEVICE", "claim:$UID->${learnerKey(UID, CARA.id)}"), events)
+        assertEquals(1, agreedFor.serviceConsent?.noticeVersion)
+        assertEquals(ChosenLearner(CARA.id, CARA.name, consented = true), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `agreeing for the learner in use, whose agreement the device had yet to see, records it without a switch`() = runBlocking {
+        val unseen = ChosenLearner(ADA.id, ADA.name, consented = false)
+        val accounts = accountStore(Account(UID, "parent@example.com", unseen, deviceJoins = false))
+
+        choice(accounts).choose(ADA)
+
+        assertEquals(emptyList<String>(), events)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
     }
 }

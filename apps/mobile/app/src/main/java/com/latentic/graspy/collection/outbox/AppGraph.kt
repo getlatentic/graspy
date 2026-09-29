@@ -12,8 +12,12 @@ import com.latentic.graspy.account.SessionInterceptor
 import com.latentic.graspy.collection.SampleApi
 import com.latentic.graspy.network.HttpStack
 import com.latentic.graspy.network.ReadTimeoutInterceptor
+import com.latentic.graspy.recordings.KEPT_RECORDINGS_DIRECTORY
+import com.latentic.graspy.recordings.RecordingsApi
+import com.latentic.graspy.recordings.VoiceKeeping
 import com.latentic.graspy.sync.LessonRefreshScheduler
 import com.latentic.graspy.sync.WorkManagerLessonRefreshScheduler
+import java.io.File
 import kotlinx.serialization.json.Json
 import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
@@ -53,6 +57,11 @@ object AppGraph {
     fun sampleApiFor(context: Context, learnerKey: String): SampleApi = api(callsFor(context, learnerKey))
 
     fun accountApi(context: Context): AccountApi = retrofit(httpStack(context).callFactory).create(AccountApi::class.java)
+
+    fun voiceKeeping(context: Context): VoiceKeeping = VoiceKeeping(
+        api = retrofit(httpStack(context).callFactory).create(RecordingsApi::class.java),
+        cache = File(context.cacheDir, KEPT_RECORDINGS_DIRECTORY),
+    )
 
     suspend fun awaitTransport(context: Context) {
         httpStack(context).awaitReady()

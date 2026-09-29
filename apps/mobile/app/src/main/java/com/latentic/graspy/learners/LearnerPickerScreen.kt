@@ -1,6 +1,7 @@
 package com.latentic.graspy.learners
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,15 +47,25 @@ fun LearnerPickerScreen(
     onChosen: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val activity = checkNotNull(LocalActivity.current) { "The app is drawn in an activity" }
     LaunchedEffect(account.uid) { viewModel.load() }
     BackHandler(enabled = state.adding && !state.busy) { viewModel.stopAdding() }
-    BackHandler(enabled = !state.adding && onBack != null) { onBack?.invoke() }
+    BackHandler(enabled = state.consenting != null && !state.busy) { viewModel.declineConsent() }
+    BackHandler(enabled = !state.adding && state.consenting == null && onBack != null) { onBack?.invoke() }
     val learners = state.learners
+    val consenting = state.consenting
     AccountFrame {
         when {
             learners == null && state.loadFailed -> LoadFailed(copy, viewModel::load)
             learners == null -> CircularProgressIndicator(color = GraspyColor.Accent, modifier = Modifier.size(28.dp))
-            state.adding -> AddLearnerForm(copy, state.busy, { viewModel.addAndChoose(it, onChosen) }, viewModel::stopAdding)
+            state.adding -> AddLearnerForm(copy, state.busy, { viewModel.addAndChoose(it, activity, onChosen) }, viewModel::stopAdding)
+            consenting != null -> LearnerConsent(
+                copy = copy,
+                learnerName = consenting.name,
+                busy = state.busy,
+                onAgree = { viewModel.agreeAndChoose(consenting, activity, onChosen) },
+                onCancel = viewModel::declineConsent,
+            )
             else -> Choosing(copy, account, learners, state, onBack, { viewModel.choose(it, onChosen) }, viewModel::startAdding)
         }
         if (learners != null) {
@@ -83,7 +94,7 @@ private fun Choosing(
         TileGrid(learners.map(PickerTile::Learner) + listOfNotNull(PickerTile.Add.takeIf { !full })) { tile ->
             when (tile) {
                 is PickerTile.Learner ->
-                    LearnerTile(tile.learner, tile.learner.id == account.learner?.id, copy.inUse, !state.busy) {
+                    LearnerTile(tile.learner, tile.learner.id == account.learner?.id, copy, !state.busy) {
                         onChoose(tile.learner)
                     }
                 PickerTile.Add -> AddLearnerTile(copy.addTile, !state.busy, onAdd)
@@ -149,6 +160,8 @@ internal fun ChoiceStatus(copy: AccountCopy, state: PickerState, onAnyway: () ->
         ChoiceProblem.UNSENT -> ConfirmCard(copy.unsent, copy.switchAnyway, copy.cancel, busy = false, onAnyway, onCancel)
         ChoiceProblem.OFFLINE -> ProblemNote(copy.offline)
         ChoiceProblem.FULL -> ProblemNote(copy.full)
+        ChoiceProblem.OTHER_ACCOUNT -> ProblemNote(copy.consent.otherAccount)
+        ChoiceProblem.SIGN_IN -> ProblemNote(copy.consent.signIn)
         ChoiceProblem.FAILED -> ProblemNote(copy.failed)
     }
 }

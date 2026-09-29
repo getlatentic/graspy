@@ -1,5 +1,6 @@
 package com.latentic.graspy.learners
 
+import android.app.Activity
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -7,7 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.account.LearnerPicks
 import com.latentic.graspy.account.UnsentChanges
+import com.latentic.graspy.auth.ParentConfirmation
 import com.latentic.graspy.collection.outbox.AppGraph
+import com.latentic.graspy.consent.Agreement
+import com.latentic.graspy.consent.ConsentProblem
+import com.latentic.graspy.consent.consentProblemOf
+import com.latentic.graspy.consent.agree
 import com.latentic.graspy.network.refusalCode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,11 +22,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** [UNSENT] asks whether to switch anyway; the others only say why nothing changed. */
-enum class ChoiceProblem { OFFLINE, UNSENT, FULL, FAILED }
+enum class ChoiceProblem { OFFLINE, UNSENT, FULL, OTHER_ACCOUNT, SIGN_IN, FAILED }
 
 fun choiceProblem(error: Throwable): ChoiceProblem = when {
     error is UnsentChanges -> if (error.offline) ChoiceProblem.OFFLINE else ChoiceProblem.UNSENT
     refusalCode(error) == "too_many_learners" -> ChoiceProblem.FULL
+    consentProblemOf(error) == ConsentProblem.SIGN_IN -> ChoiceProblem.SIGN_IN
     else -> ChoiceProblem.FAILED
 }
 
@@ -29,6 +36,8 @@ data class PickerState(
     val learners: List<LearnerDto>? = null,
     val loadFailed: Boolean = false,
     val adding: Boolean = false,
+    /** A learner whose parent has yet to agree to graspy teaching them: no one uses them until they do. */
+    val consenting: LearnerDto? = null,
     val busy: Boolean = false,
     /** Busy leaving for another account, not opening a learner. */
     val leaving: Boolean = false,
@@ -36,16 +45,18 @@ data class PickerState(
     val deviceHoldsLearning: Boolean = false,
 )
 
-/** "Who's learning?": the account's learners, one of whom the device learns as. */
+/** "Who's learning?": the account's learners, one of whom the device learns as once their parent has agreed. */
 class LearnerPickerViewModel internal constructor(
     application: Application,
     private val picks: LearnerPicks,
+    private val confirmation: ParentConfirmation,
     /** Leaves the account before a learner is chosen, finishing a sign-out cut short. */
     private val leave: suspend () -> Unit,
 ) : AndroidViewModel(application) {
     constructor(application: Application) : this(
         application,
         AppGraph.account(application).choice,
+        AppGraph.account(application).parentConfirmation,
         { AppGraph.account(application).entry.leaveForAnotherAccount() },
     )
 
@@ -84,20 +95,38 @@ class LearnerPickerViewModel internal constructor(
 
     fun startAdding() = mutableState.update { it.copy(adding = true, problem = null) }
 
-    fun stopAdding() = mutableState.update { it.copy(adding = false) }
+    fun stopAdding() = mutableState.update { it.copy(adding = false, problem = null) }
 
-    fun choose(learner: LearnerDto, onChosen: () -> Unit) = run(onChosen) { learner }
+    /** A learner whose parent has yet to agree is asked about first; nothing is chosen until they do. */
+    fun choose(learner: LearnerDto, onChosen: () -> Unit) {
+        if (learner.serviceConsent == null) {
+            mutableState.update { it.copy(consenting = learner, problem = null) }
+        } else {
+            busyWith { choosing(learner, onChosen) }
+        }
+    }
+
+    /** A parent who does not agree leaves the learner unchosen. */
+    fun declineConsent() = mutableState.update { it.copy(consenting = null, problem = null) }
 
     /**
-     * The form closes once the learner is on the account, so a switch that stops after it never adds them again,
-     * and their tile shows while the switch sends what is unsent.
+     * The parent signs in with Google again over [activity] and agrees, and the learner is added with that agreement.
+     * The form closes once the learner is on the account, so a switch that stops after it never adds them again, and
+     * their tile shows while the switch sends what is unsent. [activity] is used for this call only.
      */
-    fun addAndChoose(name: String, onChosen: () -> Unit) = run(onChosen) { picks.add(name).also(::showAdded) }
+    fun addAndChoose(name: String, activity: Activity, onChosen: () -> Unit) = busyWith {
+        settle(confirmation.agree(activity) { picks.add(name, it).also(::showAdded) }, onChosen)
+    }
+
+    /** The parent of [learner] signs in again over [activity] and agrees; the learner is chosen once it is recorded. */
+    fun agreeAndChoose(learner: LearnerDto, activity: Activity, onChosen: () -> Unit) = busyWith {
+        settle(confirmation.agree(activity) { picks.agree(learner, it).also(::showAgreed) }, onChosen)
+    }
 
     /** Switches to the learner last picked though what the device holds has not all reached graspy. */
     fun anyway(onChosen: () -> Unit) {
         val learner = chosen ?: return
-        run(onChosen, loseUnsent = true) { learner }
+        busyWith { choosing(learner, onChosen, loseUnsent = true) }
     }
 
     fun cancel() = mutableState.update { it.copy(problem = null) }
@@ -118,21 +147,36 @@ class LearnerPickerViewModel internal constructor(
         }
     }
 
-    private fun run(onChosen: () -> Unit, loseUnsent: Boolean = false, pick: suspend () -> LearnerDto) = busyWith {
+    private suspend fun settle(agreement: Agreement<LearnerDto>, onChosen: () -> Unit) {
+        when (agreement) {
+            is Agreement.Recorded -> choosing(agreement.value, onChosen)
+            Agreement.Declined -> mutableState.update { it.copy(busy = false) }
+            Agreement.OtherAccount -> failed(ChoiceProblem.OTHER_ACCOUNT)
+            is Agreement.Failed -> {
+                Log.w(TAG, "The parent's agreement was not recorded", agreement.error)
+                failed(choiceProblem(agreement.error))
+            }
+        }
+    }
+
+    private suspend fun choosing(learner: LearnerDto, onChosen: () -> Unit, loseUnsent: Boolean = false) {
         try {
-            val learner = pick()
             chosen = learner
             picks.choose(learner, loseUnsent)
-            mutableState.update { it.copy(busy = false, adding = false) }
+            mutableState.update { it.copy(busy = false, adding = false, consenting = null) }
             onChosen()
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
             Log.w(TAG, "Choosing the learner failed", error)
-            mutableState.update { it.copy(busy = false, problem = choiceProblem(error)) }
-            // A learner added before the choice failed is on the account now, so the tiles must show them.
-            load()
+            failed(choiceProblem(error))
         }
+    }
+
+    private fun failed(problem: ChoiceProblem) {
+        mutableState.update { it.copy(busy = false, problem = problem) }
+        // A learner added before the choice failed is on the account now, so the tiles must show them.
+        load()
     }
 
     /** Starts [work] unless something already runs; [work] clears [PickerState.busy] when it ends. */
@@ -145,6 +189,11 @@ class LearnerPickerViewModel internal constructor(
     /** The form closes on the tiles with the new learner among them, before the server lists them again. */
     private fun showAdded(learner: LearnerDto) = mutableState.update { state ->
         state.copy(adding = false, learners = state.learners.orEmpty().filterNot { it.id == learner.id } + learner)
+    }
+
+    /** The tile shows the learner as agreed for, and the consent step closes. */
+    private fun showAgreed(learner: LearnerDto) = mutableState.update { state ->
+        state.copy(consenting = null, learners = state.learners?.map { if (it.id == learner.id) learner else it })
     }
 
     private companion object {

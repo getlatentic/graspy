@@ -368,7 +368,7 @@ private val ENGLISH_LEARN = LearnCopy(
     voice = VoiceNoteCopy(
         title = "Voice lessons",
         start = "Start",
-        note = "graspy sends your voice to check your answers.",
+        note = "graspy sends your voice to check your answers, then deletes it, unless a parent keeps it.",
         ok = "OK",
     ),
     chat = ChatCopy(
@@ -582,7 +582,7 @@ private val YORUBA_LEARN = LearnCopy(
     voice = VoiceNoteCopy(
         title = "Ẹ̀kọ́ ohùn",
         start = "Bẹ̀rẹ̀",
-        note = "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò.",
+        note = "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò, lẹ́yìn náà ó ń pa á rẹ́, àfi tí òbí bá pa á mọ́.",
         ok = "Ó dáa",
     ),
     chat = ChatCopy(
@@ -796,7 +796,7 @@ private val PIDGIN_LEARN = LearnCopy(
     voice = VoiceNoteCopy(
         title = "Voice lessons",
         start = "Start",
-        note = "graspy dey send your voice make e check your answers.",
+        note = "graspy dey send your voice make e check your answers, then e go delete am, unless parent choose to keep am.",
         ok = "OK",
     ),
     chat = ChatCopy(
@@ -1010,7 +1010,7 @@ private val ARABIC_LEARN = LearnCopy(
     voice = VoiceNoteCopy(
         title = "دروس صوتية",
         start = "ابدأ",
-        note = "يرسل graspy صوتك للتحقّق من إجاباتك.",
+        note = "يرسل graspy صوتك للتحقّق من إجاباتك، ثم يحذفه ما لم يُبقِه أحد الوالدين.",
         ok = "حسنًا",
     ),
     chat = ChatCopy(

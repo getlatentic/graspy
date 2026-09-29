@@ -5,7 +5,9 @@ import androidx.work.WorkManager
 import com.latentic.graspy.R
 import com.latentic.graspy.ask.keptThreads
 import com.latentic.graspy.auth.FirebaseSession
+import com.latentic.graspy.auth.GoogleParentConfirmation
 import com.latentic.graspy.auth.GoogleSignIn
+import com.latentic.graspy.auth.ParentConfirmation
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
 import com.latentic.graspy.localization.LearnerProfileStore
@@ -74,10 +76,14 @@ class AccountGraph(private val context: Application) {
 
     val directory by lazy { accountDirectory(AppGraph.accountApi(context), accounts, profiles, { wipe }, { entry }) }
 
-    val entry by lazy {
-        val google = GoogleSignIn(firebase, context.getString(R.string.default_web_client_id))
-        AccountEntry(context, google, firebase, accounts, sessions, sessionApi, deviceIds, wipe)
-    }
+    private val google by lazy { GoogleSignIn(firebase, context.getString(R.string.default_web_client_id)) }
+
+    val entry by lazy { AccountEntry(context, google, firebase, accounts, sessions, sessionApi, deviceIds, wipe) }
+
+    /** A parent's agreement is proven by signing in with Google again, as the account already signed in. */
+    val parentConfirmation: ParentConfirmation by lazy { GoogleParentConfirmation(google, firebase) }
+
+    val serviceConsents by lazy { ServiceConsents(AppGraph.accountApi(context), accounts) }
 }
 
 /**

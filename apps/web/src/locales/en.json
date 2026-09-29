@@ -331,7 +331,7 @@
     "start": "Start",
     "startHere": "Start here",
     "ok": "OK",
-    "note": "graspy sends your voice to check your answers.",
+    "note": "graspy sends your voice to check your answers, then deletes it, unless a parent keeps it.",
     "loading": "Getting your lessons…",
     "loadFailed": "Your lessons didn't load.",
     "retry": "Try again",

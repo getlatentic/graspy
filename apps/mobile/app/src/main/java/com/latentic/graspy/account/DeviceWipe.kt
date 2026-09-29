@@ -7,6 +7,7 @@ import com.latentic.graspy.collection.outbox.GraspyDatabase
 import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.practice.TEACHER_AUDIO_DIRECTORY
 import com.latentic.graspy.practice.forgetReplies
+import com.latentic.graspy.recordings.KEPT_RECORDINGS_DIRECTORY
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,5 +56,6 @@ class DeviceWipe(
         PreferenceFiles.learnerData.forEach { context.getSharedPreferences(it, 0).edit(commit = true) { clear() } }
         File(context.filesDir, RECORDINGS_DIRECTORY).deleteRecursively()
         forgetReplies(File(context.cacheDir, TEACHER_AUDIO_DIRECTORY))
+        File(context.cacheDir, KEPT_RECORDINGS_DIRECTORY).deleteRecursively()
     }
 }
