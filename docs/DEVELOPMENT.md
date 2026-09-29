@@ -87,6 +87,10 @@ cd apps/tutor && npx wrangler dev --port 8798
 
 D1 and R2 are local; Workers AI is remote, so `npx wrangler login` first. Signing in is not available here, so voice is tried as a signed-out device.
 
+## Pedagogy test
+
+`apps/pedagogy` plays a simulated child through a voice lesson in the real web app and keeps the transcript and screenshots for review. It needs the Worker setup above (API, tutor, database, both speech keys), the web app on port 5173 pointed at the Worker (`VITE_API_URL` and `VITE_A2A_BASE` in `apps/web/.env.development.local`), and yarngo studio installed for the child's voice. [Its README](../apps/pedagogy/README.md) has the personas, the checks and how to read a run.
+
 ## Build and deploy
 
 Deploy with `scripts/deploy.sh staging|production`. [Deploying](DEPLOYING.md) has the two environments, the order and the one-time setup.
