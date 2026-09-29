@@ -25,6 +25,7 @@ lines.jsonl     one line per input: id, category, line
 results.jsonl   gpt-oss-20b: one row per line and host: the reply, latency, the automated check's verdict, a judgement
 results-gpt-oss-120b.jsonl   the same lines on gpt-oss-120b (Workers AI and Bedrock); judgements for replies that differ from 20b's
 results-qwen.jsonl   the same lines on four Qwen models
+results-llama-gemma.jsonl   the same lines on four Llama and two Gemma models, and the Gemma models that gave no reply
 probe/          the small Worker that produced the replies (see below)
 ```
 
@@ -97,6 +98,26 @@ Four Qwen models on the 120 lines with digits (`results-qwen.jsonl`; three on Be
 - `qwen3-32b` reads best aloud but does not do only what it was told: it also turns `+` and `=` into `plus` and `equals` (`3 + 4 = 7` becomes `Three plus four equals seven`) and `21 July` into `twenty-first July`. The automated check rejects those four lines for changing words other than the numbers, though they are better to say aloud; they are judged `good` here. It once dropped a leading zero from a phone number and once dropped the letter from `Q3`.
 - `qwen3-235b-a22b-2507` left digits in two replies and once copied the prompt text into its answer.
 - The Workers AI Qwen (`qwen3-30b-a3b-fp8`) returned nothing for 6 of the 120 lines and was the slowest.
+
+## Llama and Gemma
+
+Six more models on the 120 lines with digits (`results-llama-gemma.jsonl`), by the same method. Llama runs on Workers AI; Bedrock's model list has no Llama. Latency is from one run.
+
+| Model | Checkable lines passed (of 57) | good | awkward | bad | median / slowest call |
+|---|---|---|---|---|---|
+| llama-4-scout-17b-16e-instruct, Workers AI | 57 | 41 | 20 | 2 | 0.29 s / 1.05 s |
+| llama-3.3-70b-instruct-fp8-fast, Workers AI | 55 | 34 | 21 | 8 | 0.38 s / 5.0 s |
+| llama-3.1-8b-instruct-fast, Workers AI | 52 | 40 | 17 | 6 | 0.23 s / 0.41 s |
+| llama-3.2-3b-instruct, Workers AI | 45 | 41 | 7 | 15 | 0.23 s / 0.42 s |
+| gemma-3-27b-it, Bedrock | 56 | 35 | 21 | 7 | 0.9 s / 15.8 s |
+| gemma-3-12b-it, Bedrock | 53 | 50 | 7 | 6 | 0.65 s / 11.2 s |
+
+Not usable: `gemma-4-31b` and `gemma-4-26b-a4b` on Bedrock (400 "isn't supported on this route" on chat completions, and a 90 s timeout on the Responses route), and `@cf/google/gemma-3-12b-it` on Workers AI (the account is not allowed to use it). Their rows carry no reply.
+
+- **Llama 4 Scout** follows the instruction on all 57 checkable lines, was the fastest of the models that did, and made only two bad replies on the others. Its habit is to capitalise number words (`Seven Hundred Fifty`, `Class Three B`), and it leaves the naira sign in front of them (`₦Twenty`), so those replies are `awkward`, not `bad`.
+- **Gemma 3 12B** reads best on the hard lines (it turns `₦500` into `five hundred naira` and `U12` into `under twelve`), but it also rewrites symbols and units beyond the numbers (`+` to `plus`, `cm` to `centimeters`), so 4 checkable lines fail the strict check. Those four are better to say aloud and are judged `good`. It had one call of 11 s.
+- **The small Llamas** are fastest, but lose numbers or words more often: `llama-3.2-3b` turned `12 plus 8` into `one two plus eight`, `2500` into `two hundred fifty`, and `Primary 4` into `Fourth`.
+- **Llama 3.3 70B** copied the prompt into the reply (`The line: "..."`) more than once.
 
 ## Reproducing
 
