@@ -38,9 +38,14 @@ export function SiteFooter() {
     <footer className={cn(PAGE, "pb-10")}>
       <div className="flex flex-col gap-3 border-t border-line pt-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
         <span>© {new Date().getFullYear()} graspy</span>
-        <a href={contactHref()} className="hover:text-ink">
-          {CONTACT_EMAIL}
-        </a>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Link to="/privacy" className="hover:text-ink">
+            Privacy
+          </Link>
+          <a href={contactHref()} className="hover:text-ink">
+            {CONTACT_EMAIL}
+          </a>
+        </div>
       </div>
     </footer>
   );

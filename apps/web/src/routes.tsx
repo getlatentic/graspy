@@ -10,6 +10,13 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", Component: LandingPage },
       {
+        path: "/privacy",
+        lazy: async () => ({
+          Component: (await import("@/features/legal/pages/privacy-page"))
+            .default,
+        }),
+      },
+      {
         path: "/app",
         Component: AppShell,
         HydrateFallback: PageLoading,
