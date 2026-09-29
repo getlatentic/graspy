@@ -24,9 +24,6 @@ data class AccountCopy(
     val switchAnyway: String,
     val addTitle: String,
     val nameLabel: String,
-    /** The consent the server requires, kept word for word. */
-    val guardian: String,
-    val addButton: String,
     val cancel: String,
     val manageTitle: String,
     val rename: String,
@@ -45,6 +42,8 @@ data class AccountCopy(
     val signOut: String,
     val signOutUnsent: String,
     val signingOut: String,
+    val consent: ConsentCopy,
+    val recordings: RecordingsCopy,
 )
 
 fun String.withName(name: String): String = replace("{name}", name)
@@ -76,8 +75,6 @@ private val ENGLISH = AccountCopy(
     switchAnyway = "Switch",
     addTitle = "Add a learner",
     nameLabel = "Name",
-    guardian = "I'm this learner, or their parent or guardian",
-    addButton = "Add",
     cancel = "Cancel",
     manageTitle = "Learners",
     rename = "Rename",
@@ -95,6 +92,8 @@ private val ENGLISH = AccountCopy(
     signOut = "Sign out",
     signOutUnsent = "Some changes haven't been sent. Sign out anyway?",
     signingOut = "Signing out…",
+    consent = ENGLISH_CONSENT,
+    recordings = ENGLISH_RECORDINGS,
 )
 
 private val YORUBA = AccountCopy(
@@ -117,8 +116,6 @@ private val YORUBA = AccountCopy(
     switchAnyway = "Yí padà",
     addTitle = "Fi akẹ́kọ̀ọ́ kún un",
     nameLabel = "Orúkọ",
-    guardian = "Èmi ni akẹ́kọ̀ọ́ yìí, tàbí òbí tàbí alágbàtọ́ rẹ̀",
-    addButton = "Fi kún un",
     cancel = "Fagilé",
     manageTitle = "Àwọn akẹ́kọ̀ọ́",
     rename = "Yí orúkọ padà",
@@ -136,6 +133,8 @@ private val YORUBA = AccountCopy(
     signOut = "Jáde",
     signOutUnsent = "A kò tíì fi àwọn àyípadà kan ránṣẹ́. Ṣé kí o jáde bẹ́ẹ̀ náà?",
     signingOut = "Ó ń jáde…",
+    consent = YORUBA_CONSENT,
+    recordings = YORUBA_RECORDINGS,
 )
 
 private val PIDGIN = AccountCopy(
@@ -158,8 +157,6 @@ private val PIDGIN = AccountCopy(
     switchAnyway = "Change",
     addTitle = "Add learner",
     nameLabel = "Name",
-    guardian = "Na me be this learner, or na me be im papa, mama or guardian",
-    addButton = "Add",
     cancel = "Cancel",
     manageTitle = "Learners",
     rename = "Change name",
@@ -177,6 +174,8 @@ private val PIDGIN = AccountCopy(
     signOut = "Sign out",
     signOutUnsent = "Some changes never send. You still wan sign out?",
     signingOut = "E dey sign out…",
+    consent = PIDGIN_CONSENT,
+    recordings = PIDGIN_RECORDINGS,
 )
 
 private val ARABIC = AccountCopy(
@@ -199,8 +198,6 @@ private val ARABIC = AccountCopy(
     switchAnyway = "تبديل",
     addTitle = "أضف متعلّمًا",
     nameLabel = "الاسم",
-    guardian = "أنا هذا المتعلّم، أو والده أو وليّ أمره",
-    addButton = "إضافة",
     cancel = "إلغاء",
     manageTitle = "المتعلّمون",
     rename = "تغيير الاسم",
@@ -218,4 +215,6 @@ private val ARABIC = AccountCopy(
     signOut = "تسجيل الخروج",
     signOutUnsent = "لم تُرسَل بعض التغييرات. هل تسجّل الخروج على أي حال؟",
     signingOut = "جارٍ تسجيل الخروج…",
+    consent = ARABIC_CONSENT,
+    recordings = ARABIC_RECORDINGS,
 )

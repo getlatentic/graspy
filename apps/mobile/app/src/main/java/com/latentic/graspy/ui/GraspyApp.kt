@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.latentic.graspy.account.Account
 import com.latentic.graspy.account.AccountGraph
+import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.auth.SignInScreen
 import com.latentic.graspy.auth.SignInViewModel
 import com.latentic.graspy.auth.SignOutDialogs
@@ -29,6 +30,8 @@ import com.latentic.graspy.auth.SignOutViewModel
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.learners.LearnerPickerScreen
 import com.latentic.graspy.learners.LearnersScreen
+import com.latentic.graspy.learners.ServiceConsentGate
+import com.latentic.graspy.recordings.RecordingsOf
 import com.latentic.graspy.localization.AccountCopy
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.AppLanguageSelection
@@ -62,6 +65,9 @@ fun GraspyApp() {
         CompositionLocalProvider(LocalLayoutDirection provides languages.words.layoutDirection) {
             val signedIn = account
             if (signedIn == null) {
+                // Signed out, no settings screen of the last account, nor a learner's recordings, waits for the next.
+                val screens: AccountScreens = viewModel()
+                LaunchedEffect(Unit) { screens.reset() }
                 val signIn: SignInViewModel = viewModel()
                 val state by signIn.state.collectAsStateWithLifecycle()
                 val activity = checkNotNull(LocalActivity.current) { "The app is drawn in an activity" }
@@ -92,27 +98,34 @@ private fun SignedIn(
 ) {
     val screens: AccountScreens = viewModel()
     val screen by screens.screen.collectAsStateWithLifecycle()
+    val recordingsOf by screens.recordingsOf.collectAsStateWithLifecycle()
     val learnerKey = account.learnerKey
+    val learner = account.learner
     val learning = { screens.show(AccountScreen.LEARNING) }
+    val picking = { screens.show(AccountScreen.PICKER) }
     when {
+        learnerKey != null && screen == AccountScreen.RECORDINGS && recordingsOf != null ->
+            RecordingsOf(accountCopy, checkNotNull(recordingsOf), onBack = { screens.show(AccountScreen.LEARNERS) })
         learnerKey != null && screen == AccountScreen.LEARNERS ->
-            LearnersScreen(accountCopy, account.learner?.id, viewModel(), learning) { screens.show(AccountScreen.PICKER) }
-        learnerKey == null || screen == AccountScreen.PICKER ->
+            LearnersScreen(accountCopy, learner?.id, viewModel(), learning, picking, screens::showRecordingsOf)
+        learnerKey == null || learner == null || screen == AccountScreen.PICKER ->
             LearnerPickerScreen(accountCopy, account, viewModel(), learning.takeIf { learnerKey != null }, learning)
-        else -> Learning(
-            graph = graph,
-            account = account,
-            learnerKey = learnerKey,
-            profile = profile,
-            languages = languages,
-            learnerViewModels = learnerViewModels,
-            menu = AccountMenu(
-                onSwitchLearner = { screens.show(AccountScreen.PICKER) },
-                onManageLearners = { screens.show(AccountScreen.LEARNERS) },
-                onEditProfile = {},
-                onSignOut = onSignOut,
-            ),
-        )
+        else -> ServiceConsentGate(accountCopy, learner, viewModel(key = "service-consent-${learner.id}"), picking) {
+            Learning(
+                graph = graph,
+                account = account,
+                learnerKey = checkNotNull(learnerKey),
+                profile = profile,
+                languages = languages,
+                learnerViewModels = learnerViewModels,
+                menu = AccountMenu(
+                    onSwitchLearner = picking,
+                    onManageLearners = { screens.show(AccountScreen.LEARNERS) },
+                    onEditProfile = {},
+                    onSignOut = onSignOut,
+                ),
+            )
+        }
     }
 }
 

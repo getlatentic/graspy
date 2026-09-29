@@ -21,6 +21,7 @@ import {
   type Section,
 } from "@/features/learn/lib/app-sections";
 import { scopeOf, type ChatTarget } from "@/features/learn/lib/chat-targets";
+import { ServiceConsentGate } from "@/features/account/components/service-consent-gate";
 import { LearnerProviders } from "@/features/learn/learner-providers";
 import { useChat, usePlan } from "@/features/learn/learner-context";
 
@@ -157,8 +158,10 @@ function ShellFooter({
 export default function DashboardLayout() {
   if (!useLearnerChosen()) return null;
   return (
-    <LearnerProviders>
-      <DashboardLayoutContent />
-    </LearnerProviders>
+    <ServiceConsentGate>
+      <LearnerProviders>
+        <DashboardLayoutContent />
+      </LearnerProviders>
+    </ServiceConsentGate>
   );
 }

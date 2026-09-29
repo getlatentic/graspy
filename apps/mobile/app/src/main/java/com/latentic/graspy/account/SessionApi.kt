@@ -4,9 +4,18 @@ import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-/** One of the account's learners, as the server lists them. */
+/**
+ * One of the account's learners, as the server lists them. The consents are null until a parent agreed, and in a
+ * session's learner, which the server does not fill: only the account's list says who has agreed.
+ */
 @Serializable
-data class LearnerDto(val id: String, val name: String, val createdAt: Long)
+data class LearnerDto(
+    val id: String,
+    val name: String,
+    val createdAt: Long,
+    val serviceConsent: ServiceConsentDto? = null,
+    val voiceConsent: KeptRecordingsDto? = null,
+)
 
 @Serializable
 data class SessionRequestDto(

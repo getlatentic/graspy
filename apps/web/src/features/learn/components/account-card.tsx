@@ -1,9 +1,9 @@
 import { Link } from "react-router";
 import { UserRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { Card } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/features/account/components/google-sign-in-button";
+import { SignOutControl } from "@/features/account/components/sign-out-control";
 import type { Account } from "@/lib/account/account-store";
 import { useAccount } from "@/lib/account/use-account";
 import { FIREBASE_CONFIG } from "@/lib/env";
@@ -66,36 +66,8 @@ function SignedIn({ account }: { account: Account }) {
 }
 
 function SignOut() {
-  const { t } = useI18n();
   const signOut = useSignOut();
-  if (!signOut.unsent) {
-    return (
-      <Button
-        variant="secondary"
-        size="sm"
-        className="self-start"
-        onClick={() => void signOut.start()}
-        disabled={signOut.busy}
-      >
-        {signOut.busy ? t("you.signingOut") : t("you.signOut")}
-      </Button>
-    );
-  }
-  return (
-    <div role="alertdialog" className="flex flex-col gap-2">
-      <p className="text-sm font-medium text-danger">
-        {t("you.signOutUnsent")}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" onClick={signOut.anyway} disabled={signOut.busy}>
-          {t("you.signOutAnyway")}
-        </Button>
-        <Button variant="secondary" size="sm" onClick={signOut.cancel}>
-          {t("you.cancel")}
-        </Button>
-      </div>
-    </div>
-  );
+  return <SignOutControl leave={signOut} className="self-start" />;
 }
 
 function SignedOut() {

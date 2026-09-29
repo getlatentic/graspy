@@ -4,11 +4,18 @@ signed-in session reaches these, whichever learner it names."""
 
 from __future__ import annotations
 
+import logging
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from ..account.consents import (
+    NOTICE_VERSIONS,
+    SERVICE,
+    forget_consents,
+    grant_consent,
+)
 from ..account.directory import (
     MAX_LEARNERS,
     Directory,
@@ -26,12 +33,24 @@ from ..account.learners import (
     learner_of,
     removed,
     renamed,
+    unadded,
 )
 from ..caller import Caller, Keeping
 from ..learner.record import DeviceJoined
 from ..learner.time import now_ms
 from ..security.guard import Session, require_session
+from ..wire import Wire
+from .consent_proof import refusal, require_fresh_sign_in, require_known_notice
+from .listed_learners import (
+    ListedLearner,
+    ListedLearners,
+    ServiceConsent,
+    listed,
+    listed_with_consents,
+)
 from .routes import SessionResponse, learner_session
+
+logger = logging.getLogger(__name__)
 
 account_router = APIRouter(prefix="/account", tags=["account"])
 
@@ -55,10 +74,19 @@ async def _keeping(request: Request) -> Keeping:
 KeepingDep = Annotated[Keeping, Depends(_keeping)]
 
 
+class ServiceConsentGrant(Wire):
+    """The parent's agreement to graspy teaching the learner, with their fresh sign-in."""
+
+    notice_version: int
+    firebase_id_token: str = Field(max_length=4096)
+
+
 class NewLearner(BaseModel):
     name: LearnerName
     # Whoever adds a learner is that learner, or their parent or guardian.
     guardian: Literal[True]
+    # Without it the learner is added and no consent is recorded.
+    consent: ServiceConsentGrant | None = None
 
 
 class LearnerRename(BaseModel):
@@ -80,22 +108,67 @@ def _listed(directory: Directory) -> Learners:
     return Learners(learners=directory.learners)
 
 
-def _not_found(learner_id: str) -> HTTPException:
+def no_such_learner(learner_id: str) -> HTTPException:
     return HTTPException(
         status_code=404,
         detail={"error": f"No learner {learner_id}", "code": "no_such_learner"},
     )
 
 
-@account_router.get("/learners", response_model=Learners)
-async def learners(uid: Uid, keeping: KeepingDep) -> Learners:
-    return _listed(await keeping.learners.directory(account_key(uid)))
-
-
-@account_router.post("/learners", response_model=Learner, status_code=201)
-async def add_learner(uid: Uid, keeping: KeepingDep, body: NewLearner) -> Learner:
+async def require_learner(keeping: Keeping, uid: str, learner_id: str) -> None:
+    """The account holds the learner, now: a consent is written only for one it still holds."""
     try:
-        return await added(keeping, uid, body.name, now_ms())
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        raise no_such_learner(learner_id) from None
+
+
+async def grant_for_held_learner(
+    keeping: Keeping,
+    database,
+    uid: str,
+    learner_id: str,
+    scope: str,
+    notice_version: int,
+    retention_days: int | None,
+) -> dict:
+    """Writes the consent, then checks the account still holds the learner. Removing a learner
+    deletes their consents before it removes them, so a consent written in between, or while
+    Google was asked, would be left with no learner: that row is deleted."""
+    key = learner_key(uid, learner_id)
+    granted = await grant_consent(
+        database, key, uid, scope, notice_version, retention_days, now_ms()
+    )
+    try:
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        await forget_consents(database, key)
+        raise no_such_learner(learner_id) from None
+    return granted
+
+
+@account_router.get("/learners", response_model=ListedLearners)
+async def learners(request: Request, uid: Uid, keeping: KeepingDep) -> ListedLearners:
+    directory = await keeping.learners.directory(account_key(uid))
+    return await listed_with_consents(request.app.state.voice, uid, directory)
+
+
+async def _proved(request: Request, uid: Uid, consent: ServiceConsentGrant) -> None:
+    """A consent is checked before it is recorded, and before a new learner is added."""
+    require_known_notice(NOTICE_VERSIONS[SERVICE], consent.notice_version)
+    if request.app.state.voice is None:
+        raise refusal(503, "consent_unavailable", "Consent cannot be kept here")
+    await require_fresh_sign_in(request, uid, consent.firebase_id_token)
+
+
+@account_router.post("/learners", response_model=ListedLearner, status_code=201)
+async def add_learner(
+    request: Request, uid: Uid, keeping: KeepingDep, body: NewLearner
+) -> ListedLearner:
+    if body.consent is not None:
+        await _proved(request, uid, body.consent)
+    try:
+        learner = await added(keeping, uid, body.name, now_ms())
     except TooManyLearners:
         raise HTTPException(
             status_code=409,
@@ -104,6 +177,67 @@ async def add_learner(uid: Uid, keeping: KeepingDep, body: NewLearner) -> Learne
                 "code": "too_many_learners",
             },
         ) from None
+    if body.consent is None:
+        return listed(learner, {})
+    try:
+        granted = await grant_consent(
+            request.app.state.voice.DB,
+            learner_key(uid, learner.id),
+            uid,
+            SERVICE,
+            body.consent.notice_version,
+            None,
+            now_ms(),
+        )
+    except Exception:
+        # The learner lives in a Durable Object and the consent in D1, so they cannot be written
+        # together: the learner goes again, and a retry adds one learner, not two. D1 may be what
+        # failed, so only the directory's entry is taken back; if that fails too, the learner
+        # stays without consent, for the parent to agree for.
+        logger.exception(
+            "Consent for a new learner was not kept; the learner is undone"
+        )
+        try:
+            await unadded(keeping, uid, learner.id)
+        except Exception:
+            logger.exception(
+                "The learner whose consent was not kept could not be undone"
+            )
+        raise refusal(
+            503, "consent_not_kept", "The consent was not kept. Try again"
+        ) from None
+    return listed(learner, {SERVICE: granted})
+
+
+@account_router.put("/learners/{learner_id}/consent", response_model=ServiceConsent)
+async def agree_to_service(
+    request: Request,
+    uid: Uid,
+    keeping: KeepingDep,
+    learner_id: LearnerId,
+    body: ServiceConsentGrant,
+) -> ServiceConsent:
+    """The parent of a learner added without consent agrees to graspy teaching them."""
+    await require_learner(keeping, uid, learner_id)
+    await _proved(request, uid, body)
+    try:
+        granted = await grant_for_held_learner(
+            keeping,
+            request.app.state.voice.DB,
+            uid,
+            learner_id,
+            SERVICE,
+            body.notice_version,
+            None,
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Consent for a learner was not kept")
+        raise refusal(
+            503, "consent_not_kept", "The consent was not kept. Try again"
+        ) from None
+    return ServiceConsent.model_validate(granted)
 
 
 @account_router.patch("/learners/{learner_id}", response_model=Learner)
@@ -113,7 +247,7 @@ async def rename_learner(
     try:
         return await renamed(keeping, uid, learner_id, body.name)
     except NoSuchLearner:
-        raise _not_found(learner_id) from None
+        raise no_such_learner(learner_id) from None
 
 
 @account_router.delete("/learners/{learner_id}", response_model=Learners)
@@ -123,7 +257,7 @@ async def remove_learner(
     try:
         return _listed(await removed(keeping, uid, learner_id))
     except NoSuchLearner:
-        raise _not_found(learner_id) from None
+        raise no_such_learner(learner_id) from None
 
 
 @account_router.post("/learners/{learner_id}/session", response_model=SessionResponse)
@@ -137,7 +271,7 @@ async def choose_learner(
     try:
         learner = await learner_of(keeping, uid, learner_id)
     except NoSuchLearner:
-        raise _not_found(learner_id) from None
+        raise no_such_learner(learner_id) from None
     if body and body.device_id:
         device = await Caller(body.device_id, keeping).record()
         await Caller(learner_key(uid, learner.id), keeping).change(

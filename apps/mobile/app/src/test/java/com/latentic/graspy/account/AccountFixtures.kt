@@ -16,8 +16,17 @@ import retrofit2.Response
 
 const val UID = "uid-1"
 const val DEVICE = "device-0001"
-val ADA = LearnerDto(id = "aaaaaaaaaaaa", name = "Ada", createdAt = 1L)
-val BAYO = LearnerDto(id = "bbbbbbbbbbbb", name = "Bayo", createdAt = 2L)
+val AGREED = ServiceConsentDto(noticeVersion = 1, grantedAt = 5L)
+
+/** Learners whose parent has agreed to graspy teaching them, as the account's list says. */
+val ADA = LearnerDto(id = "aaaaaaaaaaaa", name = "Ada", createdAt = 1L, serviceConsent = AGREED)
+val BAYO = LearnerDto(id = "bbbbbbbbbbbb", name = "Bayo", createdAt = 2L, serviceConsent = AGREED)
+
+/** A learner whose parent has yet to agree: nobody uses them until they do. */
+val CARA = LearnerDto(id = "cccccccccccc", name = "Cara", createdAt = 3L)
+
+/** The learner as the device holds them once chosen: agreed for when the account's list said so. */
+fun chosen(learner: LearnerDto) = ChosenLearner(learner.id, learner.name, consented = learner.serviceConsent != null)
 
 fun context(): Context = RuntimeEnvironment.getApplication()
 
@@ -28,7 +37,7 @@ fun accountStore(account: Account?): AccountStore =
     AccountStore(context().getSharedPreferences(PreferenceFiles.ACCOUNT, 0)).apply { set(account) }
 
 fun signedIn(learner: LearnerDto?, deviceJoins: Boolean = learner == null) =
-    Account(UID, "parent@example.com", learner?.let { ChosenLearner(it.id, it.name) }, deviceJoins)
+    Account(UID, "parent@example.com", learner?.let(::chosen), deviceJoins)
 
 fun issued(token: String, learner: LearnerDto?, expiresIn: Long = 43_200) =
     IssuedSessionDto(token = token, expiresIn = expiresIn, signedIn = true, learner = learner)
@@ -52,18 +61,43 @@ class FakeAccountApi(learners: List<LearnerDto> = listOf(ADA, BAYO)) : AccountAp
     val calls = mutableListOf<String>()
     private val kept = learners.toMutableList()
 
-    override suspend fun learners() = LearnersDto(kept.toList())
+    /** Graspy cannot be reached to list the learners. */
+    var listingFails = false
+
+    override suspend fun learners(): LearnersDto {
+        if (listingFails) throw IOException("graspy could not be reached")
+        return LearnersDto(kept.toList())
+    }
+
+    /** The status and body graspy refuses an add or an agreement with, if it does. */
+    var consentRefusedWith: Pair<Int, String>? = null
 
     override suspend fun add(learner: NewLearnerDto): LearnerDto {
-        calls += "add:${learner.name}:${learner.guardian}"
-        return LearnerDto("cccccccccccc", learner.name, 3L).also { kept += it }
+        calls += "add:${learner.name}:${learner.guardian}" +
+            (learner.consent?.let { ":consent:${it.noticeVersion}:${it.firebaseIdToken}" } ?: "")
+        if (learner.consent != null) consentRefusedWith?.let { throw httpError(it.first, it.second) }
+        val consent = learner.consent?.let { ServiceConsentDto(it.noticeVersion, 9L) }
+        return LearnerDto("cccccccccccc", learner.name, 3L, serviceConsent = consent).also { kept += it }
+    }
+
+    /** What happens on the device while graspy records an agreement. */
+    var whileAgreeing: suspend () -> Unit = {}
+
+    override suspend fun agree(id: String, consent: ConsentProofDto): ServiceConsentDto {
+        calls += "agree:$id:${consent.noticeVersion}:${consent.firebaseIdToken}"
+        whileAgreeing()
+        consentRefusedWith?.let { throw httpError(it.first, it.second) }
+        return ServiceConsentDto(consent.noticeVersion, 9L).also { agreed ->
+            kept.replaceAll { if (it.id == id) it.copy(serviceConsent = agreed) else it }
+        }
     }
 
     override suspend fun rename(id: String, name: LearnerNameDto): LearnerDto {
         calls += "rename:$id:${name.name}"
         val renamed = kept.first { it.id == id }.copy(name = name.name)
         kept.replaceAll { if (it.id == id) renamed else it }
-        return renamed
+        // As graspy answers a rename: the learner, without the consents held for them.
+        return renamed.copy(serviceConsent = null, voiceConsent = null)
     }
 
     override suspend fun remove(id: String): LearnersDto {

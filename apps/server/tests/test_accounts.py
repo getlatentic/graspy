@@ -1,6 +1,9 @@
 """Signing in: Google vouches for the account, a learner takes in each
 device's record once, and the learner's devices share one plan."""
 
+import base64
+import json
+
 import httpx
 import pytest
 from signed_in import DEVICE, UID, as_learner, client, signed_in, signed_in_app
@@ -164,6 +167,76 @@ async def test_google_names_the_account_of_a_valid_token():
     )
 
     assert signed == firebase.SignedIn(uid=UID, name="Ada Lovelace")
+
+
+def id_token(claims) -> str:
+    payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).rstrip(b"=")
+    return f"header.{payload.decode()}.signature"
+
+
+async def test_the_time_the_person_signed_in_is_read_from_the_token_google_accepted():
+    signed = await firebase.verified(
+        id_token({"auth_time": 1_700_000_000}),
+        "key",
+        google(200, {"users": [{"localId": UID}]}),
+    )
+
+    assert signed.auth_time == 1_700_000_000
+
+
+async def test_how_the_person_signed_in_is_read_from_the_token_google_accepted():
+    signed = await firebase.verified(
+        id_token({"firebase": {"sign_in_provider": "google.com"}}),
+        "key",
+        google(200, {"users": [{"localId": UID}]}),
+    )
+
+    assert signed.provider == "google.com"
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        "token",
+        id_token({"firebase": "google.com"}),
+        id_token({"firebase": {"sign_in_provider": 1}}),
+        id_token({"sub": "x"}),
+    ],
+)
+def test_a_token_that_does_not_say_how_the_person_signed_in_gives_no_provider(token):
+    assert firebase.token_sign_in_provider(token) is None
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        "token",
+        "a.!!.c",
+        id_token({"sub": "x"}),
+        id_token({"auth_time": "soon"}),
+        id_token([1]),
+    ],
+    ids=["not-a-jwt", "not-base64", "no-claim", "not-a-number", "not-an-object"],
+)
+def test_a_token_that_does_not_say_when_the_person_signed_in_gives_no_time(token):
+    assert firebase.token_auth_time(token) is None
+
+
+@pytest.mark.parametrize(
+    ("auth_time", "fresh"),
+    [
+        (1_000_000 - 30, True),
+        (1_000_000 - 300, True),
+        (1_000_000 - 301, False),
+        (None, False),
+    ],
+)
+def test_a_sign_in_is_recent_for_five_minutes(auth_time, fresh):
+    signed = firebase.SignedIn(uid=UID, name="", auth_time=auth_time)
+
+    assert (
+        signed.signed_in_within(firebase.FRESH_SIGN_IN_SECONDS, now=1_000_000) is fresh
+    )
 
 
 @pytest.mark.parametrize(

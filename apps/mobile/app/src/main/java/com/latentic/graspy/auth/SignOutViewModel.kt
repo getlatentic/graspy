@@ -23,8 +23,7 @@ class SignOutViewModel(application: Application) : AndroidViewModel(application)
         if (mutableState.value.busy) return
         mutableState.value = SignOutState(busy = true)
         viewModelScope.launch {
-            val learner = account.learnerInUse()
-            if (learner == null || account.outbox.flush(learner)) leave() else mutableState.value = SignOutState(unsent = true)
+            if (account.signOutLosesAnswers()) mutableState.value = SignOutState(unsent = true) else leave()
         }
     }
 

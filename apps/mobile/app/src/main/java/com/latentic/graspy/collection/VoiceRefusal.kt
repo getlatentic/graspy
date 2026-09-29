@@ -7,7 +7,7 @@ enum class VoiceRefusal(val code: String) {
     /** The step answered was never given to this learner: take the step the server gives now. */
     STEP_NOT_OFFERED("step_not_offered"),
 
-    /** The recording was marked before its audio arrived: send it again. */
+    /** The recording is not there to mark: graspy no longer has it, and the phone's copy is gone. */
     AUDIO_NOT_READY("audio_not_ready"),
 
     /** The recording answers something no lesson asks. */

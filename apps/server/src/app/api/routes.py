@@ -131,7 +131,7 @@ async def create_session(
 
 
 async def _account_session(request: Request, body: SessionRequest) -> SessionResponse:
-    signed = await _signed_in(request, body.firebase_id_token)
+    signed = await verified_sign_in(request, body.firebase_id_token)
     directory = await opened(
         request.app.state.keeping, signed.uid, signed.name, now_ms()
     )
@@ -155,7 +155,7 @@ def learner_session(
     )
 
 
-async def _signed_in(request: Request, id_token: str) -> SignedIn:
+async def verified_sign_in(request: Request, id_token: str) -> SignedIn:
     settings = request.app.state.settings
     api_key = settings.firebase_api_key
     if not api_key:

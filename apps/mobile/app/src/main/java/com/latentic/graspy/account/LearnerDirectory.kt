@@ -15,7 +15,7 @@ class LearnerDirectory(
 
     suspend fun rename(id: String, name: String): LearnerDto {
         val renamed = api.rename(id, LearnerNameDto(name))
-        if (accounts.account.value?.learner?.id == id) accounts.setLearner(ChosenLearner(id, renamed.name))
+        accounts.changeLearner(id) { it.copy(name = renamed.name) }
         return renamed
     }
 

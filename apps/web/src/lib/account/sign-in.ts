@@ -44,6 +44,12 @@ export async function signIn(): Promise<void> {
   }
 }
 
+/** The parent signs in again: a token from a sign-in just now. Call from the tap itself. */
+export async function signInAgain(): Promise<string> {
+  const google = prepared ?? (await loadGoogle());
+  return google.reauthenticateWithGoogle();
+}
+
 /** Nothing of the account or its learner stays on the device. */
 export async function signOut(): Promise<void> {
   endAccountSession();

@@ -12,6 +12,7 @@ import com.latentic.graspy.localization.AppLanguageSelection
 import com.latentic.graspy.localization.LearnerProfileStore
 import com.latentic.graspy.localization.resolveAppLanguage
 import com.latentic.graspy.network.fromGraspy
+import com.latentic.graspy.network.refusalCode
 import com.latentic.graspy.practice.fromSpoken
 import com.latentic.graspy.sync.LessonRefreshRequest
 import com.latentic.graspy.sync.LessonRefreshScheduler
@@ -35,6 +36,9 @@ internal fun markingWait(retryAfterMs: Long?): Long? =
 /**
  * One try at sending a recorded answer and having graspy mark it, for [SubmissionUploadWorker]. The answer is
  * kept until graspy has marked or refused it: every other outcome leaves it PENDING for another try.
+ *
+ * The recording itself is kept only until graspy has taken it, or the answer is given up on: graspy then holds
+ * it until it is marked and asks nothing more of the phone.
  */
 class SubmissionUpload(
     private val dao: SubmissionDao,
@@ -52,10 +56,9 @@ class SubmissionUpload(
         if (submission.status == SubmissionStatus.FAILED.name) return Result.failure()
 
         val audio = File(submission.audioPath)
-        if (!audio.isFile) {
-            dao.markFailed(localId, "recording file is missing")
-            return Result.failure()
-        }
+        // A recording graspy has taken is gone from the phone, so a missing file is a loss only while graspy has
+        // no sample for it.
+        if (!audio.isFile && submission.serverSampleId == null) return failed(submission, "recording file is missing")
 
         val learnerClass = profiles.learnerClass(ownerId)
         dao.markUploading(localId)
@@ -65,8 +68,10 @@ class SubmissionUpload(
             val refusal = VoiceRefusal.of(error)
             if (refusal == VoiceRefusal.STEP_NOT_OFFERED) refreshLesson(ownerId, learnerClass)
             handleFailure(
-                localId,
-                failureCode(error) ?: "sample API returned HTTP ${error.code()}",
+                submission,
+                // The Worker names permanent, learner-facing failures with a `code`, e.g. `no_speech`. It is peeked:
+                // reading the body here would leave nothing for the policy to tell graspy's own refusal by.
+                refusalCode(error) ?: "sample API returned HTTP ${error.code()}",
                 UploadFailurePolicy.forHttp(error.code(), fromGraspy(error), refusal),
             )
         } catch (error: IOException) {
@@ -74,14 +79,13 @@ class SubmissionUpload(
                 dao.markPending(localId, "Waiting for the recording's learner")
                 return Result.success()
             }
-            handleFailure(localId, error.message ?: "sample API network failure", UploadFailurePolicy.forNetwork())
+            handleFailure(submission, error.message ?: "sample API network failure", UploadFailurePolicy.forNetwork())
         } catch (error: SerializationException) {
-            handleFailure(localId, "sample API answer could not be read", UploadFailurePolicy.forNetwork())
+            handleFailure(submission, "sample API answer could not be read", UploadFailurePolicy.forNetwork())
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            dao.markFailed(localId, error.message ?: "sample submission failed")
-            Result.failure()
+            failed(submission, error.message ?: "sample submission failed")
         }
     }
 
@@ -95,16 +99,18 @@ class SubmissionUpload(
         )
         dao.markCreated(localId, created.sampleId, created.uploadPath)
         val uploadPath = created.uploadPath?.takeIf { it.isNotBlank() } ?: audioPath(created.sampleId)
-        // Whether the audio landed is the evaluation's to say: `audio_not_ready` sends it once more.
-        if (created.state != "ready") api.uploadWav(uploadPath, audio)
-        val evaluated = api.evaluation(created.sampleId, uploadPath, audio)
+        if (created.state != "ready") {
+            if (!audio.isFile) return failed(submission, "recording file is missing")
+            api.uploadWav(uploadPath, audio)
+        }
+        audio.delete()
+        val evaluated = api.evaluateSample(created.sampleId)
         if (evaluated.state == "processing") {
             dao.markPending(localId, STILL_BEING_CHECKED)
             return askAgain(localId, evaluated.retryAfterMs)
         }
         if (!evaluated.isCompleteFor(submission.promptId)) {
-            dao.markFailed(localId, "evaluation API returned an incomplete tutoring result")
-            return Result.failure()
+            return failed(submission, "evaluation API returned an incomplete tutoring result")
         }
         adoptDetectedLanguage(ownerId, evaluated.spokenLanguage)
         dao.markCompleted(
@@ -141,21 +147,25 @@ class SubmissionUpload(
         false
     }
 
-    private suspend fun handleFailure(localId: String, reason: String, disposition: UploadDisposition): Result =
+    private suspend fun handleFailure(submission: SubmissionEntity, reason: String, disposition: UploadDisposition): Result =
         when (disposition) {
             UploadDisposition.RETRY -> {
-                dao.markPending(localId, reason)
+                dao.markPending(submission.localId, reason)
                 Result.retry()
             }
-            UploadDisposition.PERMANENT_FAILURE -> {
-                dao.markFailed(localId, reason)
-                Result.failure()
-            }
+            UploadDisposition.PERMANENT_FAILURE -> failed(submission, reason)
             UploadDisposition.WAIT_FOR_LEARNER -> {
-                dao.markPending(localId, "Waiting for the recording's learner")
+                dao.markPending(submission.localId, "Waiting for the recording's learner")
                 Result.success()
             }
         }
+
+    /** The answer is given up on, so its recording, which will never be sent, goes too. */
+    private suspend fun failed(submission: SubmissionEntity, reason: String): Result {
+        dao.markFailed(submission.localId, reason)
+        File(submission.audioPath).delete()
+        return Result.failure()
+    }
 
     /**
      * A marked answer changes what the teacher gives next, and a 409 says the step was never theirs.
@@ -177,12 +187,6 @@ class SubmissionUpload(
         if (profile.language != AppLanguageSelection.SYSTEM) return
         val detected = AppLanguageSelection.fromSpoken(code) ?: return
         profiles.save(ownerId, profile.copy(language = detected))
-    }
-
-    /** The Worker names permanent, learner-facing failures with a `code`, e.g. `no_speech`. */
-    private fun failureCode(error: HttpException): String? {
-        val body = runCatching { error.response()?.errorBody()?.string() }.getOrNull() ?: return null
-        return Regex(""""code"\s*:\s*"([a-z_]+)"""").find(body)?.groupValues?.get(1)
     }
 
     private companion object {

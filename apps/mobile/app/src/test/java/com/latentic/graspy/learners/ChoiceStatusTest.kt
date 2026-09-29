@@ -41,6 +41,18 @@ class ChoiceStatusTest {
     }
 
     @Test
+    fun `an agreement that did not go through says to try again, or to use the account signed in`() {
+        show(ChoiceProblem.SIGN_IN)
+        compose.onNodeWithText("That sign-in didn't work. Try again.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `a Google account that is not the account's says to use the one signed in`() {
+        show(ChoiceProblem.OTHER_ACCOUNT)
+        compose.onNodeWithText("Use the Google account you are signed in with.").assertIsDisplayed()
+    }
+
+    @Test
     fun `offline, it says to connect first and offers no switch`() {
         show(ChoiceProblem.OFFLINE)
 

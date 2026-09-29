@@ -31,6 +31,7 @@ class SignInViewModel(application: Application) : AndroidViewModel(application) 
     /** Closing the account sheet or Google's page needs no message. */
     private fun failed(outcome: SignInOutcome): Boolean = when (outcome) {
         is SignInOutcome.Succeeded, SignInOutcome.Cancelled -> false
+        SignInOutcome.OtherAccount -> true
         is SignInOutcome.Failed -> true.also { Log.w(TAG, "Signing in failed: ${outcome.reason}") }
     }
 

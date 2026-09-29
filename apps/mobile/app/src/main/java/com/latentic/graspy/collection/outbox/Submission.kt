@@ -52,8 +52,8 @@ object UploadFailurePolicy {
     fun forNetwork(): UploadDisposition = UploadDisposition.RETRY
 
     /**
-     * `audio_not_ready` is final here: the worker has already sent the audio once more ([SubmissionUploadWorker]),
-     * as the web does, and graspy still has none.
+     * `audio_not_ready` is final here: the phone's copy went once graspy took the audio, and graspy no longer has it,
+     * so there is nothing to send again.
      */
     private fun forRefusal(refusal: VoiceRefusal): UploadDisposition = when (refusal) {
         VoiceRefusal.LEARNER_REQUIRED -> UploadDisposition.WAIT_FOR_LEARNER

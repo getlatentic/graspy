@@ -36,6 +36,7 @@ from .lesson_store import (
     record_event,
     was_offered,
 )
+from .recording_retention import settle_audio
 from .speech.intron_sync import (
     NoSpeechError,
     asr_language,
@@ -308,6 +309,7 @@ async def _complete_turn(
     )
     if not write_won(written):
         return await _current_turn(env, sample_id)
+    await settle_audio(env, sample_id)
     await remember_assessment(env, learner, sample_id, metadata, evaluation.decision)
     return _json(
         turn_payload(
@@ -352,27 +354,40 @@ def failure_status(error: Exception) -> int:
 
 
 async def _fail_turn(env, sample_id: str, token: str, error: Exception, evidence=None):
+    """A recording with no speech in it is marked failed for good, as the same audio would say the
+    same again; any other failure leaves the attempts that are left."""
     detail = str(error)[:500] or "transcription failed"
     evidence_json = json.dumps(evidence.to_json(), sort_keys=True) if evidence else None
-    written = (
+    spent = MAX_TURN_ATTEMPTS if isinstance(error, NoSpeechError) else 0
+    failed = (
         await env.DB.prepare(
             "UPDATE tutoring_turns SET state = 'failed', error_detail = ?2, "
-            "language_evidence_json = ?3, updated_at = ?4 "
-            "WHERE sample_id = ?1 AND state = 'processing' AND claim_token = ?5"
+            "language_evidence_json = ?3, updated_at = ?4, attempts = MAX(attempts, ?6) "
+            "WHERE sample_id = ?1 AND state = 'processing' AND claim_token = ?5 "
+            "RETURNING attempts"
         )
-        .bind(sample_id, detail, evidence_json, round(time.time() * 1000), token)
-        .run()
+        .bind(sample_id, detail, evidence_json, round(time.time() * 1000), token, spent)
+        .first()
     )
-    if not write_won(written):
+    if failed is None:
         return await _current_turn(env, sample_id)
+    if int(failed["attempts"]) >= MAX_TURN_ATTEMPTS:
+        await settle_audio(env, sample_id)
     code = "no_speech" if isinstance(error, NoSpeechError) else "provider_failure"
     return _json({"detail": detail, "code": code}, status=failure_status(error))
+
+
+def _audio_not_ready():
+    """The recording is not there to mark: it never arrived, or was deleted before it was marked."""
+    return _json(
+        {"detail": "sample audio is not ready", "code": "audio_not_ready"}, status=409
+    )
 
 
 async def evaluate_sample(env, learner: str, sample_id: str):
     sample = (
         await env.DB.prepare(
-            "SELECT id, owner_id, state, metadata_json, audio_key "
+            "SELECT id, owner_id, state, metadata_json, audio_key, audio_deleted_at "
             "FROM samples WHERE id = ?1 AND owner_id = ?2"
         )
         .bind(sample_id, learner)
@@ -380,11 +395,8 @@ async def evaluate_sample(env, learner: str, sample_id: str):
     )
     if sample is None:
         return _json({"detail": "sample was not found"}, status=404)
-    if sample["state"] != "ready" or not sample.get("audio_key"):
-        return _json(
-            {"detail": "sample audio is not ready", "code": "audio_not_ready"},
-            status=409,
-        )
+    if sample["state"] != "ready":
+        return _audio_not_ready()
     metadata = json.loads(sample["metadata_json"])
     activity = activity_for(metadata)
     if activity is None:
@@ -402,11 +414,15 @@ async def evaluate_sample(env, learner: str, sample_id: str):
     )
     now = round(time.time() * 1000)
     if existing is not None and not claimable(existing, now):
+        if existing["state"] == "complete" or given_up(existing, now):
+            await settle_audio(env, sample_id)
         if existing["state"] == "complete":
             await remember_assessment(
                 env, learner, sample_id, metadata, existing["decision"]
             )
         return _turn_response(existing, now)
+    if sample["audio_deleted_at"] is not None:
+        return _audio_not_ready()
     if not await _answers_a_taught_step(env, learner, metadata):
         return _json({"detail": NOT_OFFERED, "code": "step_not_offered"}, status=409)
     token = await _claim_turn(env, sample_id)

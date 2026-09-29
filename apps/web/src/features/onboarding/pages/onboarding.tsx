@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router";
 import { FormProvider } from "react-hook-form";
+import { ServiceConsentGate } from "@/features/account/components/service-consent-gate";
 import { useI18n } from "@/lib/i18n-context";
 import { detectLocale } from "@/lib/locale-detector";
 import { hasCompletedOnboarding } from "@/lib/user-storage";
@@ -23,7 +24,11 @@ export default function OnboardingPage() {
   // learner has opened it.
   const [onboarded] = useState(() => !replan && hasCompletedOnboarding());
   if (onboarded) return <Navigate to="/app/learn" />;
-  return <Onboarding replan={replan} />;
+  return (
+    <ServiceConsentGate>
+      <Onboarding replan={replan} />
+    </ServiceConsentGate>
+  );
 }
 
 function Onboarding({ replan }: { replan?: DetailsSchema }) {
