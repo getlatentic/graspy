@@ -13,6 +13,7 @@ import com.latentic.graspy.account.httpError
 import com.latentic.graspy.auth.Confirmation
 import com.latentic.graspy.auth.FakeConfirmation
 import com.latentic.graspy.auth.FreshSignIn
+import com.google.firebase.auth.FirebaseAuthException
 import com.latentic.graspy.settleMain
 import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
@@ -283,9 +284,76 @@ class LearnerPickerViewModelTest {
         assertEquals(2, parent.shownOver.size)
     }
 
+    @Test
+    fun `Firebase failing inside the sign-in is a retry, and nothing is left busy`() {
+        parent.throwing = FirebaseAuthException("ERROR_INTERNAL_ERROR", "An internal error has occurred")
+        picker.startAdding()
+
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { picker.state.value.problem != null }
+
+        assertEquals(ChoiceProblem.SIGN_IN, picker.state.value.problem)
+        assertFalse(picker.state.value.busy)
+        assertTrue(picker.state.value.adding)
+        assertTrue(picks.added.isEmpty())
+        parent.throwing = null
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { chosen == 1 }
+    }
+
+    @Test
+    fun `an add whose answer was lost is found when tried again, not added twice, and agreed for if it had no agreement`() {
+        picks.addLosesReply = true
+        picks.lostLearnerAgreed = false
+        picker.startAdding()
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { picker.state.value.problem != null }
+        assertTrue(picker.state.value.adding)
+
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { chosen == 1 }
+
+        assertEquals(listOf("Bayo"), picks.addCalls)
+        assertEquals(listOf("Bayo"), picks.agreed.map { it.first.name })
+        assertEquals(listOf("Bayo"), picks.chosen.map { it.first.name })
+    }
+
+    @Test
+    fun `an add whose answer was lost, and that had the agreement, is chosen without another`() {
+        picks.addLosesReply = true
+        picker.startAdding()
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { picker.state.value.problem != null }
+
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { chosen == 1 }
+
+        assertEquals(listOf("Bayo"), picks.addCalls)
+        assertTrue(picks.agreed.isEmpty())
+    }
+
+    @Test
+    fun `an add graspy refused added no one, so trying again adds`() {
+        picks.refusedWith = httpError(400, """{"detail":{"error":"refused","code":"notice_unknown"}}""")
+        picker.startAdding()
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { picker.state.value.problem != null }
+        picks.refusedWith = null
+
+        picker.addAndChoose("Bayo", activity) { chosen += 1 }
+        settleMain { chosen == 1 }
+
+        assertEquals(listOf("Bayo", "Bayo"), picks.addCalls)
+    }
+
     private class FakePicks : LearnerPicks {
         var unsent = false
         var addFails = false
+        /** The add is made, and its answer never reaches the phone. */
+        var addLosesReply = false
+        var lostLearnerAgreed = true
+        val addCalls = mutableListOf<String>()
+        private val made = mutableListOf<LearnerDto>()
         /** The refusal graspy answers an add or an agreement with, if it does. */
         var refusedWith: Throwable? = null
         /** What the switch waits on, as unsent work being sent. */
@@ -295,11 +363,18 @@ class LearnerPickerViewModelTest {
         val chosen = mutableListOf<Pair<LearnerDto, Boolean>>()
 
         override suspend fun add(name: String, consent: FreshSignIn): LearnerDto {
+            addCalls += name
             if (addFails) throw IOException("graspy could not be reached")
             refusedWith?.let { throw it }
+            if (addLosesReply) {
+                made += BAYO.copy(name = name, serviceConsent = AGREED.takeIf { lostLearnerAgreed })
+                throw IOException("the answer never came")
+            }
             added += name to consent.idToken
             return BAYO
         }
+
+        override suspend fun addedAlready(name: String): LearnerDto? = made.firstOrNull { it.name == name }
 
         override suspend fun agree(learner: LearnerDto, consent: FreshSignIn): LearnerDto {
             refusedWith?.let { throw it }

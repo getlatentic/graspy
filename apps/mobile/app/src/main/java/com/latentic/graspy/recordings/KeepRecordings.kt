@@ -103,7 +103,7 @@ private fun DaysChoice(copy: RecordingsCopy, chosen: Int, enabled: Boolean, onCh
                 color = if (selected) GraspyColor.AccentInk else GraspyColor.Ink,
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier
-                    .heightIn(min = 40.dp)
+                    .heightIn(min = 48.dp)
                     .background(if (selected) GraspyColor.AccentSoft else GraspyColor.Surface, shape)
                     .border(BorderStroke(1.dp, if (selected) GraspyColor.Accent else GraspyColor.Line), shape)
                     .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = tapping { onChoose(days) })

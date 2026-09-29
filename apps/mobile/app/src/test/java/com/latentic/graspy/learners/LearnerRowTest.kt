@@ -1,6 +1,14 @@
 package com.latentic.graspy.learners
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -40,6 +48,19 @@ class LearnerRowTest {
         compose.onNodeWithText("Recordings").performClick()
 
         assertEquals(1, opened)
+    }
+
+    @Test
+    fun `the way to their recordings is a button at least 48dp tall`() {
+        compose.setContent {
+            GraspyTheme(InterfaceLanguage.ENGLISH) {
+                LearnerRow(copy, ADA, inUse = false, busy = false, onRename = { _, _ -> }, onRemove = {}, onRecordings = {})
+            }
+        }
+
+        val link = compose.onNode(hasText("Recordings") and hasClickAction())
+        link.assertHeightIsAtLeast(48.dp)
+        link.assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
     }
 
     @Test

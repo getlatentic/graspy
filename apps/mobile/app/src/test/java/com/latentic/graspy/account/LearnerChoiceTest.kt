@@ -101,6 +101,37 @@ class LearnerChoiceTest {
     }
 
     @Test
+    fun `leaving a learner whose parent has not agreed sends nothing of theirs, and wipes them`() = runBlocking {
+        val accounts = accountStore(Account(UID, "parent@example.com", ChosenLearner(CARA.id, CARA.name, consented = false), deviceJoins = false))
+
+        choice(accounts).choose(ADA)
+
+        assertEquals(listOf("session:${ADA.id}:null", "wipe"), events)
+        assertEquals(chosen(ADA), accounts.account.value?.learner)
+    }
+
+    @Test
+    fun `a learner graspy added moments ago under that name is found, and none of another name or of long ago`() = runBlocking {
+        api.add(NewLearnerDto("Tolu", guardian = true))
+        val accounts = accountStore(signedIn(learner = null))
+        fun choiceAt(now: Long) = LearnerChoice(
+            accounts = accounts,
+            api = api,
+            sessions = heldSessions(accounts),
+            deviceId = { DEVICE },
+            outbox = { true },
+            online = { true },
+            leaveLearner = {},
+            claimDeviceLearning = { _, _ -> },
+            now = { now },
+        )
+
+        assertEquals("Tolu", choiceAt(3L + 60_000).addedAlready("Tolu")?.name)
+        assertEquals(null, choiceAt(3L + 60_000).addedAlready("Bayo B"))
+        assertEquals(null, choiceAt(3L + 3 * 60 * 60_000).addedAlready("Tolu"))
+    }
+
+    @Test
     fun `choosing the learner already in use changes nothing`() = runBlocking {
         val accounts = accountStore(signedIn(ADA, deviceJoins = false))
 

@@ -6,6 +6,7 @@ import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.latentic.graspy.account.UID
 import com.latentic.graspy.account.demoFirebase
@@ -31,6 +32,7 @@ class ParentConfirmationTest {
     private val tokenAsks = mutableListOf<Pair<String, Boolean>>()
     private var held: String? = "token-made-just-now"
     private var offline = false
+    private var failing: Exception? = null
 
     private val firebase = object : FirebaseSession(
         FirebaseAuth.getInstance(demoFirebase()),
@@ -43,6 +45,7 @@ class ParentConfirmationTest {
         override suspend fun idToken(uid: String, fresh: Boolean): String? {
             tokenAsks += uid to fresh
             if (offline) throw IOException("Google could not be reached")
+            failing?.let { throw it }
             return held
         }
     }
@@ -94,6 +97,14 @@ class ParentConfirmationTest {
 
         held = "token"
         offline = true
+        assertTrue(confirm() is Confirmation.Failed)
+    }
+
+    @Test
+    fun `Firebase failing on its own while the token is made confirms nothing, and throws nothing`() {
+        phone = { googleAccount() }
+        failing = FirebaseAuthException("ERROR_INTERNAL_ERROR", "An internal error has occurred")
+
         assertTrue(confirm() is Confirmation.Failed)
     }
 

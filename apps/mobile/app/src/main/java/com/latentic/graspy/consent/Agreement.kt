@@ -57,12 +57,21 @@ fun ConsentProblem.text(copy: AccountCopy): String = when (this) {
  * [Agreement.OtherAccount]; any other, such as a sign-in older than the server accepts, is [Agreement.Failed].
  */
 suspend fun <T> ParentConfirmation.agree(activity: Activity, record: suspend (FreshSignIn) -> T): Agreement<T> =
-    when (val confirmation = confirm(activity)) {
+    when (val confirmation = confirmed(activity)) {
         is Confirmation.Confirmed -> recorded(confirmation.signIn, record)
         Confirmation.Cancelled -> Agreement.Declined
         Confirmation.OtherAccount -> Agreement.OtherAccount
         is Confirmation.Failed -> Agreement.Failed(SignInAgainFailed(confirmation.reason))
     }
+
+/** Whatever goes wrong signing in again, such as Firebase failing inside, is a failed sign-in and no more. */
+private suspend fun ParentConfirmation.confirmed(activity: Activity): Confirmation = try {
+    confirm(activity)
+} catch (cancelled: CancellationException) {
+    throw cancelled
+} catch (error: Exception) {
+    Confirmation.Failed(error.message ?: error.javaClass.simpleName)
+}
 
 private suspend fun <T> recorded(signIn: FreshSignIn, record: suspend (FreshSignIn) -> T): Agreement<T> = try {
     Agreement.Recorded(record(signIn))

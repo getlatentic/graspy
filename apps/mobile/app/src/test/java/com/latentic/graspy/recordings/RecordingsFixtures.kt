@@ -2,6 +2,12 @@ package com.latentic.graspy.recordings
 
 import com.latentic.graspy.account.httpError
 import java.io.File
+import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
+import okio.Buffer
+import okio.Source
+import okio.Timeout
+import okio.buffer
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -37,6 +43,12 @@ class FakeRecordingsApi(recordings: List<KeptRecordingDto> = emptyList(), var co
     /** Recordings past this many calls stay for ever, as if deleting them kept failing quietly. */
     var deletesNothing = false
 
+    /** A fetch waits here until told to go on, as a slow connection does. */
+    var audioGate: CompletableDeferred<Unit>? = null
+
+    /** The audio starts to arrive, and the connection is lost. */
+    var audioFailsMidway = false
+
     private fun refuse() {
         refusedWith?.let { throw it }
     }
@@ -68,6 +80,8 @@ class FakeRecordingsApi(recordings: List<KeptRecordingDto> = emptyList(), var co
         if (kept.none { it.id == sampleId }) {
             throw httpError(404, """{"detail":{"error":"That recording is not kept","code":"recording_gone"}}""")
         }
+        audioGate?.await()
+        if (audioFailsMidway) return LostMidway
         return audio.toResponseBody("audio/wav".toMediaType())
     }
 
@@ -90,6 +104,28 @@ class FakeRecordingsApi(recordings: List<KeptRecordingDto> = emptyList(), var co
     }
 }
 
+/** A body that gives a few bytes and then loses the connection. */
+private object LostMidway : ResponseBody() {
+    override fun contentType() = "audio/wav".toMediaType()
+
+    override fun contentLength() = -1L
+
+    override fun source() = object : Source {
+        private var sent = false
+
+        override fun read(sink: Buffer, byteCount: Long): Long {
+            if (sent) throw IOException("the connection was lost")
+            sent = true
+            sink.write("part".toByteArray())
+            return 4
+        }
+
+        override fun timeout() = Timeout.NONE
+
+        override fun close() = Unit
+    }.buffer()
+}
+
 /** Plays nothing; finishes a recording when told to. */
 class FakePlayback : RecordingPlayback {
     val played = mutableListOf<File>()
@@ -98,10 +134,14 @@ class FakePlayback : RecordingPlayback {
     var stops = 0
     private var ended: (() -> Unit)? = null
 
+    /** Playing fails, as a player that cannot open the file does. */
+    var playFails: Exception? = null
+
     override fun play(file: File, onEnded: () -> Unit) {
         played += file
         heard += file.readBytes()
         ended = onEnded
+        playFails?.let { throw it }
     }
 
     override fun stop() {

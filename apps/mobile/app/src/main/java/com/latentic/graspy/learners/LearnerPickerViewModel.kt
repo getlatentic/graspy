@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.account.LearnerPicks
 import com.latentic.graspy.account.UnsentChanges
+import com.latentic.graspy.auth.FreshSignIn
 import com.latentic.graspy.auth.ParentConfirmation
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.consent.Agreement
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 /** [UNSENT] asks whether to switch anyway; the others only say why nothing changed. */
 enum class ChoiceProblem { OFFLINE, UNSENT, FULL, OTHER_ACCOUNT, SIGN_IN, FAILED }
@@ -65,6 +67,8 @@ class LearnerPickerViewModel internal constructor(
     private var loadedFor: String? = null
     /** Picked last, added already if it was new, so switching anyway never adds them twice. */
     private var chosen: LearnerDto? = null
+    /** The name of an add whose outcome is not known, until it is. */
+    private var uncertainAdd: String? = null
 
     val state = mutableState.asStateFlow()
 
@@ -115,7 +119,23 @@ class LearnerPickerViewModel internal constructor(
      * their tile shows while the switch sends what is unsent. [activity] is used for this call only.
      */
     fun addAndChoose(name: String, activity: Activity, onChosen: () -> Unit) = busyWith {
-        settle(confirmation.agree(activity) { picks.add(name, it).also(::showAdded) }, onChosen)
+        settle(confirmation.agree(activity) { addOnce(name, it).also(::showAdded) }, onChosen)
+    }
+
+    /**
+     * An add whose answer was lost may have made the learner: trying again finds them and records the agreement for
+     * them, rather than adding a second. Only a refusal graspy named, which adds no one, clears the doubt.
+     */
+    private suspend fun addOnce(name: String, consent: FreshSignIn): LearnerDto {
+        val added = if (uncertainAdd == name) picks.addedAlready(name) else null
+        if (added != null) return added.takeIf { it.serviceConsent != null } ?: picks.agree(added, consent)
+        uncertainAdd = name
+        try {
+            return picks.add(name, consent)
+        } catch (refused: HttpException) {
+            if (refused.code() in REFUSED) uncertainAdd = null
+            throw refused
+        }
     }
 
     /** The parent of [learner] signs in again over [activity] and agrees; the learner is chosen once it is recorded. */
@@ -149,7 +169,10 @@ class LearnerPickerViewModel internal constructor(
 
     private suspend fun settle(agreement: Agreement<LearnerDto>, onChosen: () -> Unit) {
         when (agreement) {
-            is Agreement.Recorded -> choosing(agreement.value, onChosen)
+            is Agreement.Recorded -> {
+                uncertainAdd = null
+                choosing(agreement.value, onChosen)
+            }
             Agreement.Declined -> mutableState.update { it.copy(busy = false) }
             Agreement.OtherAccount -> failed(ChoiceProblem.OTHER_ACCOUNT)
             is Agreement.Failed -> {
@@ -183,7 +206,17 @@ class LearnerPickerViewModel internal constructor(
     private fun busyWith(leaving: Boolean = false, work: suspend () -> Unit) {
         if (mutableState.value.busy) return
         mutableState.update { it.copy(busy = true, leaving = leaving, problem = null) }
-        viewModelScope.launch { work() }
+        viewModelScope.launch {
+            try {
+                work()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Log.w(TAG, "Working on the learners failed", error)
+                failed(ChoiceProblem.FAILED)
+                mutableState.update { it.copy(leaving = false) }
+            }
+        }
     }
 
     /** The form closes on the tiles with the new learner among them, before the server lists them again. */
@@ -198,5 +231,8 @@ class LearnerPickerViewModel internal constructor(
 
     private companion object {
         const val TAG = "GraspyLearners"
+
+        /** The statuses graspy refuses an add with before adding anyone. */
+        val REFUSED = 400..499
     }
 }

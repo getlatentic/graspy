@@ -3,6 +3,9 @@ package com.latentic.graspy.recordings
 import com.latentic.graspy.auth.FreshSignIn
 import java.io.File
 import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -99,6 +102,38 @@ class VoiceKeepingTest {
         keeping.fetch(LEARNER, "r2")
 
         keeping.forgetFetched()
+
+        assertFalse(cache.exists())
+    }
+
+    @Test
+    fun `a recording whose connection is lost part way leaves its half in no file`() {
+        api.audioFailsMidway = true
+
+        assertThrows(IOException::class.java) { runBlocking { keeping.fetch(LEARNER, "r3") } }
+
+        assertTrue(cache.listFiles().orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `a fetch its caller stops waiting for leaves no file`() = runBlocking {
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>().also { api.audioGate = it }
+        val fetching = launch(Dispatchers.Default) { keeping.fetch(LEARNER, "r3") }
+        while (api.calls.none { it.startsWith("audio") }) delay(10)
+
+        fetching.cancel()
+        gate.complete(Unit)
+        fetching.join()
+
+        assertTrue(cache.listFiles().orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `forgetting kept recordings removes the directory and what is in it`() {
+        cache.mkdirs()
+        File(cache, "a.wav").writeText("a child's voice")
+
+        forgetKeptRecordings(cache)
 
         assertFalse(cache.exists())
     }

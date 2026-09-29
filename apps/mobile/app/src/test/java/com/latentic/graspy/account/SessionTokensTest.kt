@@ -88,6 +88,20 @@ class SessionTokensTest {
     }
 
     @Test
+    fun `a rename racing with the parent's agreement never takes the agreement back`() = runBlocking {
+        accounts.setLearner(ChosenLearner(ADA.id, ADA.name, consented = false))
+        answers += {
+            // The parent agrees while the exchange, which was asked with the learner as they were, is on its way.
+            accounts.changeLearner(ADA.id) { it.copy(consented = true) }
+            issued("renamed", ADA.copy(name = "Ada Lovelace"))
+        }
+
+        sessions.token()
+
+        assertEquals(ChosenLearner(ADA.id, "Ada Lovelace", consented = true), accounts.account.value?.learner)
+    }
+
+    @Test
     fun `a learner renamed on another device is known by the new name`() = runBlocking {
         answers += { issued("renamed", ADA.copy(name = "Ada Lovelace")) }
 

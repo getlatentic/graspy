@@ -57,7 +57,7 @@ class LearnerScopedTest {
     fun signOut() = AppGraph.account(application).accounts.set(null)
 
     private fun deviceLearnsAs(learnerId: String) =
-        AppGraph.account(application).accounts.set(Account("u", null, ChosenLearner(learnerId, learnerId), deviceJoins = false))
+        AppGraph.account(application).accounts.set(Account("u", null, ChosenLearner(learnerId, learnerId, consented = true), deviceJoins = false))
 
     @Test
     fun `a view model is made for the learner of its scope, not the device's, and anew for the next learner`() {

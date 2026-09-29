@@ -17,6 +17,12 @@ data class Account(
 ) {
     /** The owner of the learner's rows, files and preferences on this device. */
     val learnerKey: String? get() = learner?.let { learnerKey(uid, it.id) }
+
+    /**
+     * [learnerKey] once a parent has agreed to graspy teaching the learner, and null before: nothing runs for a
+     * learner in the background, or sends anything of theirs, until then.
+     */
+    val agreedLearnerKey: String? get() = learnerKey.takeIf { learner?.consented == true }
 }
 
 /** Learner ids are unique within an account, so the account's uid is part of the key. */

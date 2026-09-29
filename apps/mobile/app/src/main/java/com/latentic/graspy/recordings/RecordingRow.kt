@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.core.os.ConfigurationCompat
 import com.latentic.graspy.localization.RecordingsCopy
 import com.latentic.graspy.ui.GraspyColor
@@ -35,15 +37,28 @@ fun RecordingRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(space(2)),
     ) {
+        val label = recordingLabel(recording, locale)
         Text(
-            recordingLabel(recording, locale),
+            label,
             color = GraspyColor.Ink,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(1f),
         )
+        // Each button says which recording it is for, so a list of them is not a list of the same two words.
+        val playLabel = if (playing) copy.stop else copy.play
         Column(horizontalAlignment = Alignment.End) {
-            SecondaryButton(if (playing) copy.stop else copy.play, onClick = onPlay, enabled = !fetching)
-            QuietButton(copy.delete, onClick = onDelete, enabled = !busy)
+            SecondaryButton(
+                playLabel,
+                onClick = onPlay,
+                modifier = Modifier.semantics { contentDescription = "$playLabel, $label" },
+                enabled = !fetching,
+            )
+            QuietButton(
+                copy.delete,
+                onClick = onDelete,
+                modifier = Modifier.semantics { contentDescription = "${copy.delete}, $label" },
+                enabled = !busy,
+            )
         }
     }
 }

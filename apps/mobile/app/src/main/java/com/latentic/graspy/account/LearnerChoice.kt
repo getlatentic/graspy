@@ -2,6 +2,7 @@ package com.latentic.graspy.account
 
 import com.latentic.graspy.auth.FreshSignIn
 import java.io.IOException
+import kotlin.math.abs
 
 /**
  * Refused so that nothing unsent is lost. Offline the switch cannot be made; online it is made when asked for
@@ -17,6 +18,12 @@ class UnsentChanges(val offline: Boolean) :
 interface LearnerPicks {
     /** The learner is added with the parent's agreement, which [consent] proves. */
     suspend fun add(name: String, consent: FreshSignIn): LearnerDto
+
+    /**
+     * A learner of this name that graspy added moments ago, if there is one: an add whose answer never reached the
+     * phone, so that trying again does not add them twice.
+     */
+    suspend fun addedAlready(name: String): LearnerDto?
 
     /** Records the parent's agreement for a learner already added, and returns them as agreed for. */
     suspend fun agree(learner: LearnerDto, consent: FreshSignIn): LearnerDto
@@ -38,6 +45,7 @@ class LearnerChoice(
     private val online: suspend () -> Boolean,
     private val leaveLearner: suspend () -> Unit,
     private val claimDeviceLearning: suspend (uid: String, learnerKey: String) -> Unit,
+    private val now: () -> Long = System::currentTimeMillis,
 ) : LearnerPicks {
     /** [loseUnsent] switches even though what the device holds for its learner has not all reached graspy. */
     override suspend fun choose(learner: LearnerDto, loseUnsent: Boolean) {
@@ -45,7 +53,7 @@ class LearnerChoice(
         check(learner.serviceConsent != null) { "A parent has yet to agree to graspy teaching this learner" }
         val inUse = account.learner
         if (inUse?.id == learner.id) {
-            if (!inUse.consented) accounts.setLearner(inUse.copy(consented = true))
+            if (!inUse.consented) accounts.changeLearner(inUse.id) { it.copy(consented = true) }
             return
         }
         if (account.deviceJoins) joinFirst(account, learner) else switchFrom(account, learner, loseUnsent)
@@ -54,6 +62,10 @@ class LearnerChoice(
     /** Whoever adds a learner has confirmed they are that learner, or their parent or guardian. */
     override suspend fun add(name: String, consent: FreshSignIn): LearnerDto =
         api.add(NewLearnerDto(name = name, guardian = true, consent = ConsentProofDto(CONSENT_NOTICE_VERSION, consent.idToken)))
+
+    /** graspy's clock and the phone's may differ by minutes; a learner of the same name is not added twice a day. */
+    override suspend fun addedAlready(name: String): LearnerDto? =
+        api.learners().learners.firstOrNull { it.name == name && abs(now() - it.createdAt) <= JUST_ADDED_MILLIS }
 
     override suspend fun agree(learner: LearnerDto, consent: FreshSignIn): LearnerDto =
         learner.copy(serviceConsent = api.agree(learner.id, ConsentProofDto(CONSENT_NOTICE_VERSION, consent.idToken)))
@@ -65,7 +77,7 @@ class LearnerChoice(
     }
 
     private suspend fun switchFrom(account: Account, learner: LearnerDto, loseUnsent: Boolean) {
-        val leaving = account.learnerKey
+        val leaving = account.agreedLearnerKey
         if (leaving != null && !loseUnsent && !outbox.flush(leaving)) throw UnsentChanges(offline = !online())
         // Issued before the wipe, so a switch graspy cannot make leaves the device as it was.
         val issued = issuedFor(learner, ChosenLearnerDto())
@@ -81,6 +93,10 @@ class LearnerChoice(
     private fun takeUp(account: Account, issued: Issued) {
         sessions.keep(account.uid, issued.session)
         accounts.setLearner(ChosenLearner(issued.learner.id, issued.learner.name, consented = true))
+    }
+
+    private companion object {
+        const val JUST_ADDED_MILLIS = 10 * 60 * 1_000L
     }
 
     private class Issued(val session: IssuedSessionDto, val learner: LearnerDto)

@@ -26,8 +26,11 @@ class AccountGraph(private val context: Application) {
     private val deviceIds by lazy { DeviceIdStore(context.getSharedPreferences(PreferenceFiles.DEVICE, 0)) }
     private val firebase by lazy { FirebaseSession() }
 
-    /** The learner key of whoever the device learns as now, if anyone. */
-    fun learnerInUse(): String? = accounts.account.value?.learnerKey
+    /**
+     * The learner key of whoever the device learns as now, once their parent has agreed. Everything that acts for the
+     * learner in use, on screen or in the background, asks this, so a learner not agreed for is none of it.
+     */
+    fun learnerInUse(): String? = accounts.account.value?.agreedLearnerKey
 
     /** False once the device has left [learnerKey]: its screens may still be up, but nothing starts for them. */
     fun learnsAs(learnerKey: String): Boolean = learnerInUse() == learnerKey

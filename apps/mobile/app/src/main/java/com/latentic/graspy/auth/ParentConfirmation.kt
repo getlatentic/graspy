@@ -1,6 +1,7 @@
 package com.latentic.graspy.auth
 
 import android.app.Activity
+import com.google.firebase.FirebaseException
 import java.io.IOException
 
 /** The Firebase ID token of a sign-in made just now. It goes into one request and is neither logged nor kept. */
@@ -46,5 +47,7 @@ class GoogleParentConfirmation(
             ?: Confirmation.Failed("Google no longer holds the sign-in")
     } catch (offline: IOException) {
         Confirmation.Failed(offline.message ?: "Google could not be reached")
+    } catch (failure: FirebaseException) {
+        Confirmation.Failed(failure.message ?: "Firebase failed")
     }
 }

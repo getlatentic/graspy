@@ -31,7 +31,7 @@ import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.learners.LearnerPickerScreen
 import com.latentic.graspy.learners.LearnersScreen
 import com.latentic.graspy.learners.ServiceConsentGate
-import com.latentic.graspy.recordings.RecordingsScreen
+import com.latentic.graspy.recordings.RecordingsOf
 import com.latentic.graspy.localization.AccountCopy
 import com.latentic.graspy.localization.AppLanguage
 import com.latentic.graspy.localization.AppLanguageSelection
@@ -65,6 +65,9 @@ fun GraspyApp() {
         CompositionLocalProvider(LocalLayoutDirection provides languages.words.layoutDirection) {
             val signedIn = account
             if (signedIn == null) {
+                // Signed out, no settings screen of the last account, nor a learner's recordings, waits for the next.
+                val screens: AccountScreens = viewModel()
+                LaunchedEffect(Unit) { screens.reset() }
                 val signIn: SignInViewModel = viewModel()
                 val state by signIn.state.collectAsStateWithLifecycle()
                 val activity = checkNotNull(LocalActivity.current) { "The app is drawn in an activity" }
@@ -102,7 +105,7 @@ private fun SignedIn(
     val picking = { screens.show(AccountScreen.PICKER) }
     when {
         learnerKey != null && screen == AccountScreen.RECORDINGS && recordingsOf != null ->
-            RecordingsOf(accountCopy, checkNotNull(recordingsOf)) { screens.show(AccountScreen.LEARNERS) }
+            RecordingsOf(accountCopy, checkNotNull(recordingsOf), onBack = { screens.show(AccountScreen.LEARNERS) })
         learnerKey != null && screen == AccountScreen.LEARNERS ->
             LearnersScreen(accountCopy, learner?.id, viewModel(), learning, picking, screens::showRecordingsOf)
         learnerKey == null || learner == null || screen == AccountScreen.PICKER ->
@@ -124,12 +127,6 @@ private fun SignedIn(
             )
         }
     }
-}
-
-/** One learner's voice recordings, for their parent: a view model of its own for each learner. */
-@Composable
-private fun RecordingsOf(copy: AccountCopy, learner: LearnerDto, onBack: () -> Unit) {
-    RecordingsScreen(copy, learner, viewModel(key = "recordings-${learner.id}"), onBack)
 }
 
 /** The learner's plan comes first; the tabs, and voice lessons for a class that has them, follow it. */

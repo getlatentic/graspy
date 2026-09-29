@@ -65,9 +65,14 @@ class ServiceConsentViewModel internal constructor(
         if (mutableState.value.busy) return
         mutableState.update { it.copy(busy = true, problem = null) }
         viewModelScope.launch {
-            val agreement = confirmation.agree(activity) { consents.agree(it) }
-            if (agreement is Agreement.Failed) Log.w(TAG, "The parent's agreement was not recorded", agreement.error)
-            mutableState.update { it.copy(busy = false, problem = agreement.problem()) }
+            var problem: ConsentProblem? = ConsentProblem.FAILED
+            try {
+                val agreement = confirmation.agree(activity) { consents.agree(it) }
+                if (agreement is Agreement.Failed) Log.w(TAG, "The parent's agreement was not recorded", agreement.error)
+                problem = agreement.problem()
+            } finally {
+                mutableState.update { it.copy(busy = false, problem = problem) }
+            }
         }
     }
 

@@ -12,15 +12,28 @@ class AccountStore(private val preferences: SharedPreferences) {
 
     val account: StateFlow<Account?> = current.asStateFlow()
 
+    @Synchronized
     fun set(account: Account?) {
         write(account)
         current.value = account
     }
 
     /** Choosing a learner ends the device's joining; leaving one does not start it again. */
+    @Synchronized
     fun setLearner(learner: ChosenLearner?) {
         val account = current.value ?: return
         set(account.copy(learner = learner, deviceJoins = learner == null && account.deviceJoins))
+    }
+
+    /**
+     * Changes the learner in use, read as it is now, when they are [learnerId]: nothing if the device has since left
+     * them. An agreement the device holds is never taken back by a change made from an older reading.
+     */
+    @Synchronized
+    fun changeLearner(learnerId: String, change: (ChosenLearner) -> ChosenLearner) {
+        val learner = current.value?.learner?.takeIf { it.id == learnerId } ?: return
+        val changed = change(learner)
+        setLearner(changed.copy(consented = changed.consented || learner.consented))
     }
 
     private fun read(): Account? {

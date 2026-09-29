@@ -15,6 +15,7 @@ import com.latentic.graspy.network.refusalCode
 import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -40,6 +41,7 @@ class RecordingsViewModel internal constructor(
 
     private val mutableState = MutableStateFlow(RecordingsState())
     private var playingFile: File? = null
+    private var fetchJob: Job? = null
 
     /** The learner whose recordings these are, named by the screen that loads them. */
     private var learnerId = ""
@@ -100,35 +102,54 @@ class RecordingsViewModel internal constructor(
         mutableState.update { it.copy(busy = true, problem = null) }
         viewModelScope.launch {
             val days = mutableState.value.days
-            val agreement = confirmation.agree(activity) { keeping.keep(learnerId, days, it) }
-            if (agreement is Agreement.Failed) Log.w(TAG, "The parent's agreement was not recorded", agreement.error)
-            mutableState.update {
-                when (agreement) {
-                    is Agreement.Recorded -> it.copy(busy = false, consent = agreement.value, step = null)
-                    else -> it.copy(busy = false, problem = agreement.problem()?.forRecordings())
+            try {
+                val agreement = confirmation.agree(activity) { keeping.keep(learnerId, days, it) }
+                if (agreement is Agreement.Failed) Log.w(TAG, "The parent's agreement was not recorded", agreement.error)
+                mutableState.update {
+                    when (agreement) {
+                        is Agreement.Recorded -> it.copy(consent = agreement.value, step = null)
+                        else -> it.copy(problem = agreement.problem()?.forRecordings())
+                    }
                 }
+            } finally {
+                mutableState.update { it.copy(busy = false) }
             }
         }
     }
 
-    fun stop(deleteRecordings: Boolean) = act(refreshAfterFailure = deleteRecordings) {
+    fun stop(deleteRecordings: Boolean) {
+        if (deleteRecordings) stopHearing()
+        stopKeeping(deleteRecordings)
+    }
+
+    private fun stopKeeping(deleteRecordings: Boolean) = act(refreshAfterFailure = deleteRecordings) {
         keeping.stop(learnerId, deleteRecordings)
-        if (deleteRecordings) finishPlaying()
         mutableState.update {
             val stopped = it.copy(consent = null, step = null)
             if (deleteRecordings) stopped.allDeleted() else stopped
         }
     }
 
-    fun deleteAll() = act(refreshAfterFailure = true) {
+    fun deleteAll() {
+        stopHearing()
+        deleteEvery()
+    }
+
+    private fun deleteEvery() = act(refreshAfterFailure = true) {
         keeping.deleteAll(learnerId)
-        finishPlaying()
         mutableState.update { it.allDeleted() }
     }
 
-    fun delete(recordingId: String) = act {
+    /** A recording being fetched or played for a parent who is deleting it is not fetched or played on. */
+    fun delete(recordingId: String) {
+        val current = mutableState.value
+        if (current.fetching == recordingId) cancelFetch()
+        if (current.playing == recordingId) finishPlaying()
+        deleteOne(recordingId)
+    }
+
+    private fun deleteOne(recordingId: String) = act {
         keeping.deleteOne(learnerId, recordingId)
-        if (mutableState.value.playing == recordingId) finishPlaying()
         mutableState.update { it.without(recordingId) }
     }
 
@@ -140,26 +161,51 @@ class RecordingsViewModel internal constructor(
         finishPlaying()
         if (wasPlaying) return
         mutableState.update { it.copy(fetching = recordingId, problem = null) }
-        viewModelScope.launch { fetchAndPlay(recordingId) }
+        fetchJob = viewModelScope.launch { fetchAndPlay(recordingId) }
     }
 
     private suspend fun fetchAndPlay(recordingId: String) {
-        try {
-            val file = keeping.fetch(learnerId, recordingId)
-            playingFile = file
-            mutableState.update { it.copy(fetching = null, playing = recordingId) }
-            playback.play(file) { finishPlaying() }
+        val file = try {
+            keeping.fetch(learnerId, recordingId)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
+            fetchFailed(recordingId, error)
+            return
+        }
+        playingFile = file
+        mutableState.update { it.copy(fetching = null, playing = recordingId) }
+        try {
+            playback.play(file) { finishPlaying() }
+        } catch (error: Exception) {
             Log.w(TAG, "Playing a kept recording failed", error)
-            val problem = if (refusalCode(error) == RECORDING_GONE) RecordingsProblem.GONE else RecordingsProblem.PLAY_FAILED
-            mutableState.update {
-                val listed = if (problem == RecordingsProblem.GONE) it.without(recordingId) else it
-                listed.copy(fetching = null, problem = problem)
-            }
+            finishPlaying()
+            mutableState.update { it.copy(problem = RecordingsProblem.PLAY_FAILED) }
         }
     }
+
+    private fun fetchFailed(recordingId: String, error: Exception) {
+        Log.w(TAG, "Fetching a kept recording failed", error)
+        val problem = if (refusalCode(error) == RECORDING_GONE) RecordingsProblem.GONE else RecordingsProblem.PLAY_FAILED
+        mutableState.update {
+            val listed = if (problem == RecordingsProblem.GONE) it.without(recordingId) else it
+            listed.copy(fetching = null, problem = problem)
+        }
+    }
+
+    private fun cancelFetch() {
+        fetchJob?.cancel()
+        fetchJob = null
+        mutableState.update { it.copy(fetching = null) }
+    }
+
+    private fun stopHearing() {
+        cancelFetch()
+        finishPlaying()
+    }
+
+    /** The screen left, or the app went to the background: what plays stops, and its file goes. */
+    fun stopPlaying() = stopHearing()
 
     private fun finishPlaying() {
         playback.stop()
@@ -198,7 +244,7 @@ class RecordingsViewModel internal constructor(
     }
 
     override fun onCleared() {
-        finishPlaying()
+        stopHearing()
         keeping.forgetFetched()
     }
 

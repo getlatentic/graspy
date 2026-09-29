@@ -28,6 +28,6 @@ class ServiceConsents(private val api: AccountApi, private val accounts: Account
 
     /** Only while the device still learns as them: a learner left meanwhile stays left. */
     private fun markAgreed(learnerId: String) {
-        accounts.account.value?.learner?.takeIf { it.id == learnerId }?.let { accounts.setLearner(it.copy(consented = true)) }
+        accounts.changeLearner(learnerId) { it.copy(consented = true) }
     }
 }

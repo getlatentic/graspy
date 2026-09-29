@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,6 +16,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.localization.AccountCopy
@@ -26,6 +29,9 @@ import com.latentic.graspy.ui.QuietButton
 import com.latentic.graspy.ui.SecondaryButton
 import com.latentic.graspy.ui.space
 import com.latentic.graspy.ui.tapping
+
+/** The smallest a thing to tap is, for a thumb and for a screen reader's touch. */
+private val MIN_TARGET = 48.dp
 
 private enum class RowMode { SHOWN, RENAMING, REMOVING }
 
@@ -73,7 +79,10 @@ private fun Shown(
             SecondaryButton(copy.remove, onClick = onRemove)
         }
         Row(
-            Modifier.clickable(onClick = tapping(onRecordings)).padding(vertical = space(1)),
+            Modifier
+                .heightIn(min = MIN_TARGET)
+                .clickable(role = Role.Button, onClick = tapping(onRecordings))
+                .padding(vertical = space(1)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(copy.recordings.link, color = GraspyColor.AccentInk, style = MaterialTheme.typography.labelLarge)

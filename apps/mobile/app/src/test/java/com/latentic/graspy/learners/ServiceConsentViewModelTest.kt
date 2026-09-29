@@ -1,6 +1,7 @@
 package com.latentic.graspy.learners
 
 import android.app.Application
+import com.google.firebase.auth.FirebaseAuthException
 import com.latentic.graspy.account.ADA
 import com.latentic.graspy.account.Account
 import com.latentic.graspy.account.AccountStore
@@ -121,6 +122,22 @@ class ServiceConsentViewModelTest {
         settleMain { consented(accounts) }
 
         assertEquals(3, parent.shownOver.size)
+    }
+
+    @Test
+    fun `Firebase failing inside the sign-in is a retry, and nothing is left busy`() {
+        parent.throwing = FirebaseAuthException("ERROR_INTERNAL_ERROR", "An internal error has occurred")
+        val (accounts, model) = viewModel(CARA)
+
+        model.agree(activity)
+        settleMain { model.state.value.problem != null }
+
+        assertEquals(ConsentProblem.SIGN_IN, model.state.value.problem)
+        assertFalse(model.state.value.busy)
+        assertFalse(consented(accounts))
+        parent.throwing = null
+        model.agree(activity)
+        settleMain { consented(accounts) }
     }
 
     @Test

@@ -26,6 +26,12 @@ class AccountScreens : ViewModel() {
         shown.value = screen
     }
 
+    /** Signed out: the next account starts where a signed-in device does, and holds nothing of a learner's. */
+    fun reset() {
+        recordings.value = null
+        shown.value = AccountScreen.LEARNING
+    }
+
     fun showRecordingsOf(learner: LearnerDto) {
         recordings.value = learner
         shown.value = AccountScreen.RECORDINGS

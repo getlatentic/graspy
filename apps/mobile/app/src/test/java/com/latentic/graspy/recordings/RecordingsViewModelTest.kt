@@ -4,12 +4,14 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
+import com.google.firebase.auth.FirebaseAuthException
 import com.latentic.graspy.account.hostActivity
 import com.latentic.graspy.account.httpError
 import com.latentic.graspy.auth.Confirmation
 import com.latentic.graspy.auth.FakeConfirmation
 import com.latentic.graspy.settleMain
 import java.io.File
+import kotlinx.coroutines.CompletableDeferred
 import java.io.IOException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -457,6 +459,124 @@ class RecordingsViewModelTest {
 
         store.clear()
 
+        assertFalse(file.exists())
+        assertTrue(playback.stops > 0)
+    }
+
+    @Test
+    fun `Firebase failing inside the sign-in is a retry, and nothing is left busy`() {
+        parent.throwing = FirebaseAuthException("ERROR_INTERNAL_ERROR", "An internal error has occurred")
+        val model = viewModel()
+        model.switchTapped()
+
+        model.keep(activity)
+        model.settled()
+
+        assertEquals(RecordingsProblem.SIGN_IN, model.state.value.problem)
+        assertFalse(model.state.value.busy)
+        assertEquals(RecordingsStep.KEEPING, model.state.value.step)
+        parent.throwing = null
+        model.keep(activity)
+        model.settled()
+        assertTrue(model.state.value.keeping)
+    }
+
+    @Test
+    fun `deleting a recording while it is still being fetched stops the fetch, and it is never played`() {
+        api.kept += two
+        val gate = CompletableDeferred<Unit>().also { api.audioGate = it }
+        val model = viewModel()
+        model.play("r-new")
+        settleMain { api.calls.any { it.startsWith("audio") } }
+
+        model.delete("r-new")
+        gate.complete(Unit)
+        model.settled()
+
+        assertTrue(playback.played.isEmpty())
+        assertNull(model.state.value.playing)
+        assertNull(model.state.value.fetching)
+        assertEquals(listOf("r-old"), model.state.value.recordings.map { it.id })
+        assertTrue(cache.listFiles().orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `deleting all while a recording is still being fetched stops the fetch, and nothing is played`() {
+        api.kept += two
+        val gate = CompletableDeferred<Unit>().also { api.audioGate = it }
+        val model = viewModel()
+        model.play("r-old")
+        settleMain { api.calls.any { it.startsWith("audio") } }
+
+        model.deleteAll()
+        gate.complete(Unit)
+        model.settled()
+
+        assertTrue(playback.played.isEmpty())
+        assertNull(model.state.value.fetching)
+        assertTrue(cache.listFiles().orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `stopping and deleting while a recording is still being fetched stops the fetch too`() {
+        api.consent = kept90
+        api.kept += two
+        val gate = CompletableDeferred<Unit>().also { api.audioGate = it }
+        val model = viewModel()
+        model.play("r-old")
+        settleMain { api.calls.any { it.startsWith("audio") } }
+
+        model.stop(deleteRecordings = true)
+        gate.complete(Unit)
+        model.settled()
+
+        assertTrue(playback.played.isEmpty())
+        assertTrue(cache.listFiles().orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `deleting a recording that plays stops it at once, before graspy has answered`() {
+        api.kept += two
+        val model = viewModel()
+        model.play("r-new")
+        model.settled()
+        val file = cache.listFiles().orEmpty().single()
+
+        model.delete("r-new")
+
+        assertNull(model.state.value.playing)
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun `a recording the player cannot play says so, and leaves no file and no Stop on its row`() {
+        api.kept += two
+        playback.playFails = IllegalStateException("the player could not open the file")
+        val model = viewModel()
+
+        model.play("r-new")
+        model.settled()
+
+        assertEquals(RecordingsProblem.PLAY_FAILED, model.state.value.problem)
+        assertNull(model.state.value.playing)
+        assertTrue(cache.listFiles().orEmpty().isEmpty())
+        playback.playFails = null
+        model.play("r-new")
+        model.settled()
+        assertEquals("r-new", model.state.value.playing)
+    }
+
+    @Test
+    fun `leaving the screen for the background stops what plays and deletes its file`() {
+        api.kept += two
+        val model = viewModel()
+        model.play("r-new")
+        model.settled()
+        val file = cache.listFiles().orEmpty().single()
+
+        model.stopPlaying()
+
+        assertNull(model.state.value.playing)
         assertFalse(file.exists())
         assertTrue(playback.stops > 0)
     }

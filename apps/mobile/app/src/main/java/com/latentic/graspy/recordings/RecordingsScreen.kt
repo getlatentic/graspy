@@ -15,10 +15,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.latentic.graspy.account.LearnerDto
 import com.latentic.graspy.learners.AccountFrame
@@ -38,6 +42,7 @@ import com.latentic.graspy.ui.space
 fun RecordingsScreen(copy: AccountCopy, learner: LearnerDto, viewModel: RecordingsViewModel, onBack: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(learner.id) { viewModel.load(learner.id) }
+    StopPlayingInTheBackground(viewModel)
     BackHandler(onBack = onBack)
     AccountFrame {
         Column(verticalArrangement = Arrangement.spacedBy(space(4))) {
@@ -53,6 +58,17 @@ fun RecordingsScreen(copy: AccountCopy, learner: LearnerDto, viewModel: Recordin
             }
             else -> CircularProgressIndicator(color = GraspyColor.Accent, modifier = Modifier.size(28.dp))
         }
+    }
+}
+
+/** A recording does not play on while the app is out of sight: it stops, and its file goes. */
+@Composable
+private fun StopPlayingInTheBackground(viewModel: RecordingsViewModel) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, viewModel) {
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) viewModel.stopPlaying() }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
     }
 }
 
