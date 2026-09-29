@@ -11,6 +11,7 @@ from voice_worker import worker_env
 
 from app.account.consents import DAY_MS
 from app.account.learners import removed
+from app.api import account_routes as routes_of_accounts
 from app.api import routes
 from app.voice.curriculum import load_plans
 from app.voice.recording_retention import sweep_audio
@@ -509,6 +510,25 @@ async def test_a_learner_removed_while_google_is_asked_is_not_agreed_for_recordi
     async with client(app) as http:
         learner_id = await parent(http)
         monkeypatch.setattr("app.api.routes.verified", verified)
+        refused = await agree(http, learner_id)
+
+    assert refused.status_code == 404
+    assert refused.json()["detail"]["code"] == "no_such_learner"
+    assert env.DB.rows("SELECT * FROM consents") == []
+
+
+async def test_a_learner_removed_between_the_check_and_the_write_leaves_no_recordings_consent(
+    app, env, monkeypatch
+):
+    write = routes_of_accounts.grant_consent
+
+    async def racing(database, key, *rest):
+        await removed(app.state.keeping, UID, learner_id)
+        return await write(database, key, *rest)
+
+    async with client(app) as http:
+        learner_id = await parent(http)
+        monkeypatch.setattr("app.api.account_routes.grant_consent", racing)
         refused = await agree(http, learner_id)
 
     assert refused.status_code == 404

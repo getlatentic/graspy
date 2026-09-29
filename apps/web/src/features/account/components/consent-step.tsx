@@ -16,7 +16,7 @@ export function ConsentStep({
   problem,
   onAgree,
   onDecline,
-  onSignOut,
+  signOut,
   heading: Heading = "h1",
   children,
 }: {
@@ -27,8 +27,8 @@ export function ConsentStep({
   /** Called by the tap itself: Google's window must open within it. */
   onAgree: () => void;
   onDecline: () => void;
-  /** A way out for a parent who cannot agree here: signing out. */
-  onSignOut?: () => void;
+  /** A way out for a parent who cannot agree here: the control that signs out. */
+  signOut?: ReactNode;
   heading?: "h1" | "h2";
   /** What the parent chooses before agreeing, between the notice and the buttons. */
   children?: ReactNode;
@@ -69,11 +69,7 @@ export function ConsentStep({
         <Button variant="ghost" onClick={onDecline} disabled={busy}>
           {t("consent.decline")}
         </Button>
-        {onSignOut && (
-          <Button variant="ghost" onClick={onSignOut} disabled={busy}>
-            {t("you.signOut")}
-          </Button>
-        )}
+        {signOut}
       </div>
     </section>
   );

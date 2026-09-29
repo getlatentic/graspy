@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import type { Learner } from "@/lib/account/account-store";
 import { NOTICE_VERSION, SERVICE_NOTICE } from "@/lib/account/consent-notices";
 import {
@@ -19,7 +19,7 @@ export function ServiceAgreement({
   busy = false,
   onAgreed,
   onDecline,
-  onSignOut,
+  signOut,
 }: {
   learner: Learner;
   heading?: "h1" | "h2";
@@ -27,7 +27,8 @@ export function ServiceAgreement({
   busy?: boolean;
   onAgreed: (consent: ServiceConsent) => void;
   onDecline: () => void;
-  onSignOut?: () => void;
+  /** The control that signs out, for a parent who cannot agree here. */
+  signOut?: ReactNode;
 }) {
   const { t } = useI18n();
   const uid = useAccount()?.uid;
@@ -52,7 +53,7 @@ export function ServiceAgreement({
       problem={agreement.problem}
       onAgree={agreement.agree}
       onDecline={onDecline}
-      onSignOut={onSignOut}
+      signOut={signOut}
     />
   );
 }

@@ -1,8 +1,10 @@
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
 import type { ConsentProblem } from "@/lib/account/consent-problem";
+import { useSignOut } from "@/features/learn/hooks/use-sign-out";
 import { useI18n } from "@/lib/i18n-context";
-import { useSignOutToSignIn } from "../hooks/use-sign-out-to-sign-in";
 import { ProblemNote } from "./problem-note";
+import { SIGN_IN_PAGE } from "./sign-in-link";
+import { SignOutControl } from "./sign-out-control";
 
 const MESSAGES: Record<ConsentProblem, string> = {
   popupBlocked: "you.signInBlocked",
@@ -28,17 +30,10 @@ export function ConsentProblemNote({ problem }: { problem: ConsentProblem }) {
   );
 }
 
+// Signing out as everywhere else: what is unsent goes first, or the parent is asked.
 function SignInAgain() {
   const { t } = useI18n();
-  const leave = useSignOutToSignIn();
-  return (
-    <Button
-      variant="secondary"
-      size="sm"
-      onClick={leave.start}
-      disabled={leave.busy}
-    >
-      {t("consent.signInAgain")}
-    </Button>
-  );
+  const navigate = useNavigate();
+  const leave = useSignOut(() => navigate(SIGN_IN_PAGE, { replace: true }));
+  return <SignOutControl leave={leave} label={t("consent.signInAgain")} />;
 }

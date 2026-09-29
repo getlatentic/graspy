@@ -19,14 +19,15 @@ import {
   UID,
 } from "@/test/account-session";
 
-const { listLearners, agreeToService, signInAgain, signOut } = vi.hoisted(
-  () => ({
+const { listLearners, agreeToService, signInAgain, signOut, flushUnsent } =
+  vi.hoisted(() => ({
     listLearners: vi.fn(),
     agreeToService: vi.fn(),
     signInAgain: vi.fn(),
     signOut: vi.fn(),
-  }),
-);
+    flushUnsent: vi.fn(),
+  }));
+vi.mock("@/lib/account/learner-choice", () => ({ flushUnsent }));
 vi.mock("@/lib/account/learners-api", () => ({ listLearners, agreeToService }));
 vi.mock("@/lib/account/sign-in", async (original) => ({
   ...(await original<typeof import("@/lib/account/sign-in")>()),
@@ -57,6 +58,7 @@ beforeEach(() => {
   signInAgain.mockResolvedValue("fresh-token");
   agreeToService.mockResolvedValue(AGREED);
   signOut.mockResolvedValue(undefined);
+  flushUnsent.mockResolvedValue(true);
 });
 
 afterEach(() => {
@@ -263,5 +265,94 @@ describe("a parent who cannot agree, in front of the gate", () => {
     expect(screen.getByRole("status").getAttribute("aria-label")).toBe(
       "learners.opening",
     );
+  });
+});
+
+describe("signing out from in front of the gate, with answers still to be sent", () => {
+  async function agreeStep() {
+    signedInAs(ADA);
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    gated();
+    await screen.findByText(SERVICE_NOTICE);
+  }
+
+  it("sends what is unsent first, and signs out only once it has been", async () => {
+    await agreeStep();
+
+    fireEvent.click(screen.getByRole("button", { name: "you.signOut" }));
+
+    expect((await screen.findByTestId("elsewhere")).textContent).toBe(
+      "/app/sign-in",
+    );
+    expect(flushUnsent).toHaveBeenCalledTimes(1);
+    expect(flushUnsent.mock.invocationCallOrder[0]).toBeLessThan(
+      signOut.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("asks, and wipes nothing, when what is unsent could not be sent", async () => {
+    flushUnsent.mockResolvedValue(false);
+    await agreeStep();
+
+    fireEvent.click(screen.getByRole("button", { name: "you.signOut" }));
+
+    expect(await screen.findByRole("alertdialog")).toBeTruthy();
+    expect(screen.getByText("you.signOutUnsent")).toBeTruthy();
+    expect(signOut).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("elsewhere")).toBeNull();
+  });
+
+  it("stays signed in, nothing wiped, when the parent cancels", async () => {
+    flushUnsent.mockResolvedValue(false);
+    await agreeStep();
+    fireEvent.click(screen.getByRole("button", { name: "you.signOut" }));
+    await screen.findByRole("alertdialog");
+
+    fireEvent.click(screen.getByRole("button", { name: "you.cancel" }));
+
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByText(SERVICE_NOTICE)).toBeTruthy();
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("signs out when the parent says to, having been told what is lost", async () => {
+    flushUnsent.mockResolvedValue(false);
+    await agreeStep();
+    fireEvent.click(screen.getByRole("button", { name: "you.signOut" }));
+    await screen.findByRole("alertdialog");
+
+    fireEvent.click(screen.getByRole("button", { name: "you.signOutAnyway" }));
+
+    expect((await screen.findByTestId("elsewhere")).textContent).toBe(
+      "/app/sign-in",
+    );
+    expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks the same when the server cannot be asked and the parent signs out", async () => {
+    flushUnsent.mockResolvedValue(false);
+    signedInAs(ADA);
+    listLearners.mockRejectedValue(new Error("offline"));
+    gated();
+
+    fireEvent.click(await screen.findByRole("button", { name: "you.signOut" }));
+
+    expect(await screen.findByRole("alertdialog")).toBeTruthy();
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("asks the same before signing in again, when Firebase no longer holds the sign-in", async () => {
+    flushUnsent.mockResolvedValue(false);
+    signInAgain.mockRejectedValueOnce({ code: "graspy/not-signed-in" });
+    await agreeStep();
+    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
+    await screen.findByText("consent.signedOut");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "consent.signInAgain" }),
+    );
+
+    expect(await screen.findByRole("alertdialog")).toBeTruthy();
+    expect(signOut).not.toHaveBeenCalled();
   });
 });

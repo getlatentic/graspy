@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AGREED, listed } from "@/test/account-session";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { serviceConsentKept } from "@/lib/account/service-consent";
+import { setAccount } from "@/lib/account/account-store";
+import { AGREED, listed, signedInAs, UID } from "@/test/account-session";
 
 const { addLearner, chooseLearner } = vi.hoisted(() => ({
   addLearner: vi.fn(),
@@ -21,6 +23,7 @@ const PROOF = { noticeVersion: 1, firebaseIdToken: "fresh-token" };
 beforeEach(() => {
   vi.resetAllMocks();
   window.localStorage.clear();
+  signedInAs(null);
   addLearner.mockResolvedValue(TOLU);
   // Only a change of hash is a move in jsdom.
   chooseLearner
@@ -60,3 +63,37 @@ describe("adding a learner and choosing them", () => {
     expect(addLearner.mock.calls[1][0]).toBe("Bo");
   });
 });
+
+describe("what the device remembers of a parent's agreement", () => {
+  beforeEach(() => chooseLearner.mockResolvedValue("#opened"));
+
+  it("is nothing for a learner the server lists without one", async () => {
+    const { result } = renderHook(() => useLearnerChoice());
+
+    await act(() =>
+      result.current.choose(listed("g00000000004", "Grace", null)),
+    );
+
+    expect(serviceConsentKept(UID, "g00000000004")).toBe(false);
+  });
+
+  it("is nothing for a learner the device holds, whose agreement it was not told of", async () => {
+    const { result } = renderHook(() => useLearnerChoice());
+
+    await act(() =>
+      result.current.choose({ id: "g00000000004", name: "Grace" }),
+    );
+
+    expect(serviceConsentKept(UID, "g00000000004")).toBe(false);
+  });
+
+  it("is kept for a learner the server lists with one", async () => {
+    const { result } = renderHook(() => useLearnerChoice());
+
+    await act(() => result.current.choose(TOLU));
+
+    expect(serviceConsentKept(UID, TOLU.id)).toBe(true);
+  });
+});
+
+afterEach(() => setAccount(null));

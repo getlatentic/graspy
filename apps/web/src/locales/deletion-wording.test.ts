@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import privacy from "../features/legal/privacy-content.tsx?raw";
 import en from "./en.json";
 
 // What graspy says it deletes must be what it deletes: the recording, once its turn has ended,
@@ -14,6 +15,14 @@ describe("what the app says graspy deletes", () => {
     expect(en.voice.note).toBe(
       "graspy sends your voice to check your answers. Once marked, the recording is deleted, unless a parent keeps it.",
     );
+  });
+
+  it("is said the same in the privacy policy", () => {
+    const text = privacy.replace(/\s+/g, " ");
+
+    expect(text).toContain("recording is deleted once it has been marked");
+    expect(text).toContain("A recording is deleted once it has been marked");
+    expect(text).not.toMatch(/as soon as/i);
   });
 
   it("does not say it happens as soon as, or that everything is deleted", () => {

@@ -532,3 +532,18 @@ def test_each_sweep_query_reads_a_partial_index_not_the_whole_samples_table(
     assert f"USING INDEX {index}" in plan or f"USING COVERING INDEX {index}" in plan
     assert "SCAN s" not in plan.replace("SCAN s USING", "")
     assert "SCAN samples" not in plan.replace("SCAN samples USING", "")
+
+
+@pytest.mark.parametrize(
+    ("sql", "index"),
+    [
+        (EXPIRED_SQL, "samples_audio_expiry"),
+        (UNSETTLED_SQL, "samples_audio_undecided"),
+        (ENDED_SQL, "samples_audio_undecided"),
+    ],
+    ids=["expired", "unsettled", "ended"],
+)
+def test_each_sweep_query_names_its_index(sql, index):
+    """In a small database SQLite chooses the expiry index unaided, so the plan test above cannot
+    tell whether this hint is there; the sweep reads a table of every recording, where it may not."""
+    assert f"INDEXED BY {index}" in sql

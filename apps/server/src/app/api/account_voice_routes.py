@@ -14,7 +14,6 @@ from ..account.consents import (
     NOTICE_VERSIONS,
     RECORDINGS,
     active_consent,
-    grant_consent,
     revoke_consent,
 )
 from ..account.directory import LearnerId, learner_key
@@ -28,7 +27,12 @@ from ..voice.parent_recordings import (
 )
 from ..voice.samples import SAMPLE_ID
 from ..wire import Wire
-from .account_routes import KeepingDep, Uid, require_learner
+from .account_routes import (
+    KeepingDep,
+    Uid,
+    grant_for_held_learner,
+    require_learner,
+)
 from .consent_proof import refusal, require_fresh_sign_in, require_known_notice
 from .listed_learners import VoiceConsent
 from .voice_routes import EnvDep
@@ -116,16 +120,14 @@ async def agree_to_keep(
     """The parent signed in again just now, with the account this session belongs to."""
     require_known_notice(NOTICE_VERSIONS[RECORDINGS], body.notice_version)
     await require_fresh_sign_in(request, uid, body.firebase_id_token)
-    # The learner may have been removed while Google was asked.
-    await require_learner(keeping, uid, learner_id)
-    granted = await grant_consent(
+    granted = await grant_for_held_learner(
+        keeping,
         env.DB,
-        learner,
         uid,
+        learner_id,
         RECORDINGS,
         body.notice_version,
         body.retention_days,
-        now_ms(),
     )
     return ConsentState(**granted)
 

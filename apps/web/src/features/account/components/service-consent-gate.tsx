@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
+import { useSignOut } from "@/features/learn/hooks/use-sign-out";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { Learner } from "@/lib/account/account-store";
 import { useI18n } from "@/lib/i18n-context";
 import { useServiceStanding } from "../hooks/use-service-standing";
-import { useSignOutToSignIn } from "../hooks/use-sign-out-to-sign-in";
 import { AccountFrame } from "./account-frame";
 import { ProblemNote } from "./problem-note";
 import { ServiceAgreement } from "./service-agreement";
+import { SIGN_IN_PAGE } from "./sign-in-link";
+import { SignOutControl } from "./sign-out-control";
 
 /** The pages of the learner in use open only once a parent has agreed to graspy teaching
  * them; until then this is all they show. Declining leads to choosing someone else. */
@@ -40,14 +42,14 @@ function Waiting({
 }) {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const leave = useSignOutToSignIn();
+  const leave = useSignOut(() => navigate(SIGN_IN_PAGE, { replace: true }));
   if (standing === "needed" && learner) {
     return (
       <ServiceAgreement
         learner={learner}
         onAgreed={onAgreed}
         onDecline={() => navigate("/app/learners")}
-        onSignOut={leave.start}
+        signOut={<SignOutControl leave={leave} variant="ghost" />}
       />
     );
   }
@@ -59,9 +61,7 @@ function Waiting({
           <Button variant="secondary" onClick={onRetry}>
             {t("learners.tryAgain")}
           </Button>
-          <Button variant="ghost" onClick={leave.start} disabled={leave.busy}>
-            {t("you.signOut")}
-          </Button>
+          <SignOutControl leave={leave} variant="ghost" />
         </div>
       </div>
     );

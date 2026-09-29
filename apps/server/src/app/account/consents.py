@@ -24,6 +24,7 @@ ACTIVE_OF_ACCOUNT_SQL = (
     "SELECT learner_key, scope, notice_version, retention_days, granted_at "
     "FROM consents WHERE account_uid = ?1 AND revoked_at IS NULL"
 )
+FORGET_SQL = "DELETE FROM consents WHERE learner_key = ?1"
 REVOKE_SQL = (
     "UPDATE consents SET revoked_at = ?3 "
     "WHERE learner_key = ?1 AND scope = ?2 AND revoked_at IS NULL"
@@ -68,6 +69,11 @@ async def grant_consent(
         "retention_days": retention_days,
         "granted_at": now_ms,
     }
+
+
+async def forget_consents(database: Any, learner_key: str) -> None:
+    """Every consent row of a learner who is gone."""
+    await database.prepare(FORGET_SQL).bind(learner_key).run()
 
 
 async def revoke_consent(
