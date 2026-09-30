@@ -50,6 +50,52 @@ const marked = call("mark_answer", { said: "nine", sure: true });
 const toolReplies = (messages: Record<string, unknown>[]) =>
   messages.filter((message) => message.role === "tool").map((message) => String(message.content));
 
+describe("a question tried again", () => {
+  const before = [
+    { verdict: "unheard" as const, line: "That is all right. Let us count together." },
+    { verdict: "wrong" as const, line: "Nearly. Say one, two, three." },
+  ];
+
+  it("tells the teacher what it already said, and to say something new", async () => {
+    const { env, seen } = tutor([marked, call("say_it", { text: "Good try. Say nine." })]);
+
+    await takeTurn(env, { ...ask, earlier: before });
+
+    const brief = JSON.stringify(seen[0]);
+    expect(brief).toContain("That is all right. Let us count together.");
+    expect(brief).toContain("Nearly. Say one, two, three.");
+    expect(brief).toContain("Do not say any of it again");
+  });
+
+  it("does not mention earlier tries the first time", async () => {
+    const { env, seen } = tutor([marked, call("say_it", { text: "Good try. Say nine." })]);
+
+    await takeTurn(env, ask);
+
+    expect(JSON.stringify(seen[0])).not.toContain("already been tried");
+  });
+
+  it("sends back a line the child has already been told, and speaks the rewrite", async () => {
+    const { env } = tutor([
+      marked,
+      call("say_it", { text: "That is all right. Let us count together!" }),
+      call("say_it", { text: "Listen first. One, two, three." }),
+    ]);
+
+    const reply = await takeTurn(env, { ...ask, earlier: before });
+
+    expect(reply.say).toBe("Listen first. One, two, three.");
+  });
+
+  it("does not object to a line said to another question", async () => {
+    const { env } = tutor([marked, call("say_it", { text: "Good try. Say nine." })]);
+
+    const reply = await takeTurn(env, ask);
+
+    expect(reply.say).toBe("Good try. Say nine.");
+  });
+});
+
 describe("a turn only ever speaks a line a child may hear", () => {
   it("tells the teacher not to praise a child who did not try the question", async () => {
     const { env, seen } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);

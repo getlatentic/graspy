@@ -2,6 +2,7 @@ import { Agent, callable } from "agents";
 import type { Card } from "ts-fsrs";
 import type { Verdict } from "./mark";
 import { keepRepliesTable, repliesIn, TurnReplies } from "./replies";
+import { keepToldTable, toldIn } from "./told";
 import { takeTurn, type Ask, type Reply } from "./turn";
 import {
   chooseSitting,
@@ -27,6 +28,11 @@ export class Learner extends Agent<Env> {
     }),
   );
 
+  private readonly told = toldIn((strings, ...values) => {
+    this.ensure();
+    return this.sql(strings, ...values);
+  });
+
   private ensure(): void {
     if (this.ready) return;
     this.sql`
@@ -40,6 +46,7 @@ export class Learner extends Agent<Env> {
     `;
     this.sql`CREATE TABLE IF NOT EXISTS applied (turn TEXT PRIMARY KEY)`;
     keepRepliesTable(this.sql.bind(this));
+    keepToldTable(this.sql.bind(this));
     this.ready = true;
   }
 
@@ -112,7 +119,9 @@ export class Learner extends Agent<Env> {
   @callable()
   async teach(lesson: string, ask: Ask, turn?: string, at?: string): Promise<Reply> {
     return this.replies.reply(turn, async () => {
-      const reply = await takeTurn(this.env, ask);
+      const earlier = this.told.before(lesson, ask.prompt);
+      const reply = await takeTurn(this.env, earlier.length > 0 ? { ...ask, earlier } : ask);
+      this.told.put(lesson, ask.prompt, { verdict: reply.verdict, line: reply.say });
       this.record(lesson, ask.expect.item, reply.verdict, at, turn);
       return reply;
     });
