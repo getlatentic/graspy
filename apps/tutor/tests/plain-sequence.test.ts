@@ -30,10 +30,23 @@ describe("heardSequence", () => {
     expect(heardSequence(letters, "ay bee see")).toEqual(["ay", "bee", "see"]);
   });
 
-  it("keeps a number that is not an item, which the marker will count as a miss", () => {
-    expect(heardSequence(fives, "5, 10, 15, 21")).toEqual(["5", "10", "15", "21"]);
-    expect(heardSequence(fives, "5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 65")).toContain("65");
-    expect(heardSequence(letters, "a, b, 7")).toEqual(["a", "b", "7"]);
+  it("declines a number that is not an item, which is a child counting by ones or saying a wrong number", () => {
+    expect(heardSequence(fives, "5, 10, 15, 21")).toBeNull();
+    expect(heardSequence(fives, "5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 65")).toBeNull();
+    expect(heardSequence(fives, "1, 2, 3, 4, 5, 6, 7, 8, 9, 10")).toBeNull();
+    expect(heardSequence(letters, "a, b, 7")).toBeNull();
+  });
+
+  it("declines an item said twice", () => {
+    expect(heardSequence(fives, "5, 10, 10, 15")).toBeNull();
+    expect(heardSequence(letters, "a, b, a")).toBeNull();
+  });
+
+  it("declines a number that runs on across a comma or an 'and'", () => {
+    const tens = [100, 110, 120, 10].map((k) => ({ id: String(k), spoken: [String(k)] }));
+    expect(heardSequence(tens, "100, and 10, 120")).toBeNull();
+    expect(heardSequence(tens, "100 and 10, 120")).toBeNull();
+    expect(heardSequence(tens, "100, 110, 120")).toEqual(["100", "110", "120"]);
   });
 
   it("is nothing heard for an empty recording", () => {

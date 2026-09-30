@@ -68,6 +68,33 @@ describe("every real list question, in English, Pidgin and Yoruba", () => {
   }
 });
 
+describe("what the child adds to a real list never makes it right", () => {
+  const numeric = activities.filter((row) => row.items.length > 1 && row.items.every((item) => /^\d+$/.test(item.id)));
+
+  it("covers the skip-counting lists", () => {
+    expect(numeric.length).toBeGreaterThan(5);
+  });
+
+  for (const language of ["en", "pcm", "yo"]) {
+    for (const { name, items: raw } of numeric) {
+      it(`${language} ${name}: counting by ones through the list is not right`, () => {
+        const items = forLanguage(raw, language);
+        const last = Number(items[items.length - 1].id);
+        const missing = Array.from({ length: last }, (_, i) => String(i + 1)).filter((n) => !items.some((item) => item.id === n));
+        if (missing.length === 0) return;
+        const byOnes = Array.from({ length: last }, (_, i) => String(i + 1)).join(", ");
+        expect(verdict(items, byOnes)).not.toBe("correct");
+      });
+
+      it(`${language} ${name}: an item said twice is not right`, () => {
+        const items = forLanguage(raw, language);
+        const said = [items[0], items[0], ...items.slice(1)].map((item) => item.id).join(", ");
+        expect(verdict(items, said)).not.toBe("correct");
+      });
+    }
+  }
+});
+
 describe("lists that need care", () => {
   const tens = activities.find((row) => row.name.startsWith("mathematics.number.counting-in-tens") && row.items.some((item) => item.id === "120"))?.items ?? [];
 
@@ -94,9 +121,9 @@ describe("lists that need care", () => {
     expect(verdict(items, "méjì, mẹ́jọ")).toBe("correct");
   });
 
-  it("does not read 'sixty five' as sixty and five when it is not an item", () => {
+  it("sends 'sixty five' to the model when it is not an item, and does not read it as sixty and five", () => {
     const fives = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((k) => ({ id: String(k), spoken: [String(k)] }));
-    expect(verdict([...fives.slice(0, 11), { id: "60", spoken: ["60", "sixty"] }, { id: "5x", spoken: ["five"] }], "5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, sixty five")).toBe("wrong");
+    expect(verdict([...fives.slice(0, 11), { id: "60", spoken: ["60", "sixty"] }, { id: "5x", spoken: ["five"] }], "5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, sixty five")).toBe("not plain");
   });
 
   it("does not read another script as plain", () => {

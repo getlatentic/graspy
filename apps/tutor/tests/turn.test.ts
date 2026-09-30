@@ -315,14 +315,23 @@ describe("a list said in order", () => {
     expect(brief).not.toContain("First call mark_sequence");
   });
 
-  it("marks a list wrong in code when the child said a number that is not in it", async () => {
+  it("marks a list wrong in code when the child stopped short", async () => {
     const { env, seen } = tutor([call("say_it", { text: "Nearly. Five comes next." })]);
 
-    const reply = await takeTurn(env, counting("1, 2, 3, 4, 6"));
+    const reply = await takeTurn(env, counting("1, 2, 3, 4"));
 
     expect(reply.verdict).toBe("wrong");
     expect(reply.result).toMatchObject({ said: ["1", "2", "3", "4"], missing: ["5"] });
     expect(seen).toHaveLength(1);
+  });
+
+  it("does not mark in code a list with a number that is not in it, which the teacher reads", async () => {
+    const { env } = tutor([call("mark_sequence", { said: ["1", "2", "3", "4"] }), call("say_it", { text: "Nearly. Five comes next." })]);
+
+    const reply = await takeTurn(env, counting("1, 2, 3, 4, 6"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.say).toBe("Nearly. Five comes next.");
   });
 
   it("keeps the marking code made, even if the model reaches for the marker", async () => {
