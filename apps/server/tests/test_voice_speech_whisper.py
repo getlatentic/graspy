@@ -83,12 +83,15 @@ async def test_a_slow_whisper_is_given_up_on(monkeypatch):
     import asyncio
 
     monkeypatch.setattr(whisper_asr, "WHISPER_TIMEOUT_SECONDS", 0.01)
+    asked = []
 
     class Slow:
         async def run(self, model, inputs):
+            asked.append(model)
             await asyncio.sleep(1)
 
     assert await heard_by_whisper(Slow(), b"audio") is None
+    assert len(asked) == 1
 
 
 @pytest.mark.asyncio

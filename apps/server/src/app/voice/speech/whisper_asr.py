@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo"
 WHISPER_TIMEOUT_SECONDS = 10
-# Workers AI answers some recordings with a decode error that a second ask does not repeat.
+# Workers AI answers some recordings with a decode error that a second ask does not repeat. A slow
+# answer is not asked for again: it says Whisper is slow, not that the recording was bad.
 WHISPER_TRIES = 2
 ENGLISH_ASRS = ("whisper", "intron")
 
@@ -52,7 +53,10 @@ async def heard_by_whisper(ai, audio: bytes) -> str | None:
                 timeout=WHISPER_TIMEOUT_SECONDS,
             )
             return whisper_text(reply)
-        except Exception:
+        except TimeoutError:
+            logger.warning("Whisper did not answer in time")
+            return None
+        except Exception:  # a provider failure is not the child's
             logger.warning("Whisper gave no answer (ask %s)", attempt, exc_info=True)
     return None
 

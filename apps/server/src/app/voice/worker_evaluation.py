@@ -145,7 +145,9 @@ async def _transcribe(
         return transcript, latency, asr_language(metadata), "sahara"
     language, recorded = transcription_route(evidence, asr_language(metadata))
     file_name = f"{sample_id}.wav"
-    if language == "en":
+    # Only a client that says the child spoke English has Whisper hear it: a recording of unknown language
+    # keeps going to Intron, since Whisper told English would write plausible English for anything.
+    if language == "en" and metadata.get("spoken_language") == "en":
         transcript, latency, heard_by = await transcribe_english(
             env, audio, api_key, file_name, transcribe_intron_sync
         )
