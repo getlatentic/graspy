@@ -27,6 +27,7 @@ import { STEADY_LINES } from "./lines";
 import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { heardSequence } from "./plain-sequence";
+import { praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import {
@@ -343,7 +344,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   const plain = await timed("read", markedFromPlainNumber(env, ask));
   if (plain !== null) return plain;
   const listed = markedFromPlainSequence(ask);
-  if (listed !== null && listed.verdict !== "wrong") return { ...listed, say: steadyLine(listed.verdict, ask.language) };
+  if (listed !== null && listed.verdict !== "wrong") return { ...listed, say: saidFor(listed.verdict, ask) };
 
   // A list marked by code needs only the teacher's words for what was missed.
   const premarked: Marked | null = listed;
@@ -431,7 +432,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   // The child's answer is marked either way; only her own words for it are missing, so she says a
   // steady line kept for exactly this, rather than the child losing the turn.
   if (marked === null) throw new Error("the teacher did not finish the turn");
-  return { ...marked, say: steadyLine(marked.verdict, ask.language) };
+  return { ...marked, say: saidFor(marked.verdict, ask) };
 }
 
 /**
@@ -451,6 +452,11 @@ function steadyLine(verdict: Verdict, language: string): string {
   return lines[language as keyof typeof lines] ?? lines.en;
 }
 
+/** What is said with a verdict code has reached alone: a right answer is praised for what it was, the rest have a steady line. */
+function saidFor(verdict: Verdict, ask: Ask): string {
+  return (verdict === "correct" ? praiseLine(ask) : null) ?? steadyLine(verdict, ask.language);
+}
+
 /**
  * One number, plainly said, marked without the teacher: the reader says which number the child gave,
  * code checks they said it and works out whether it is right. A child who only said the question back,
@@ -461,13 +467,13 @@ async function markedFromPlainNumber(env: Env, ask: Ask): Promise<Reply | null> 
   const expected = spokenNumber(expectedAnswer(ask.expect.item));
   if (expected === null) return null;
   const heard = heardForPrompt(ask.heard);
-  if (heard === "") return marked(markAnswer(ask.expect.item, null), ask.language);
+  if (heard === "") return marked(markAnswer(ask.expect.item, null), ask);
   const answer = await answerHeard(env, heard);
   if (answer === null) return null;
   if (answer !== expected && factOperands(ask.expect.item).includes(answer)) return null;
-  return marked(markAnswer(ask.expect.item, String(answer), true, ask.expect.accept ?? []), ask.language);
+  return marked(markAnswer(ask.expect.item, String(answer), true, ask.expect.accept ?? []), ask);
 }
 
-function marked(marking: Marking, language: string): Reply {
-  return { ...marking, say: steadyLine(marking.verdict, language) };
+function marked(marking: Marking, ask: Ask): Reply {
+  return { ...marking, say: saidFor(marking.verdict, ask) };
 }
