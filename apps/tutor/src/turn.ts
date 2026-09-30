@@ -38,6 +38,10 @@ import {
 } from "./recite";
 
 const MODEL = "@cf/openai/gpt-oss-120b";
+// Measured on the edge: low effort takes a marking round from 3.4 s to 0.9 s and the line round from 2.5 s to 1.6 s,
+// with the same tool calls and lines, and at the default a round sometimes spent all its tokens thinking. The safety
+// judge is left at the default: at low effort it once let a line that compares a child with another through.
+const REASONING_EFFORT = "low";
 /** A turn is mark, say, rewrite, and a model that reaches for no tool wastes a round: room for that. */
 const ROUNDS = 5;
 /** A line and one rewrite: a child waits for every round, and a marked answer never goes unsaid. */
@@ -227,6 +231,9 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "and hearing twelve of them read out teaches nothing. Say in a few words how it went, and when",
     "some were missed, name at most one of them to say again.",
     "When nothing was heard, treat it as the phone not hearing, never as the child being wrong.",
+    "The child is between three and eleven: be kind and encouraging, never mock, shame or compare them,",
+    "ask nothing about who they are, where they live or their family, and never send them to a link, an",
+    "app or another person.",
     `Write the line in ${SPEECH[ask.language] ?? "English"}.`,
   ].join("\n");
 }
@@ -325,6 +332,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
       tools,
       temperature: 0,
       max_tokens: 800,
+      reasoning_effort: REASONING_EFFORT,
     }))) as { choices?: { message: { content?: string; tool_calls?: ToolCall[] } }[] };
     const message = reply.choices?.[0]?.message;
     const calls = message?.tool_calls ?? [];
