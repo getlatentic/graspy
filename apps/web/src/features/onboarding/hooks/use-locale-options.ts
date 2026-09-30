@@ -4,7 +4,8 @@ import {
   getCountryName,
   getLanguageName,
   getLanguageNativeName,
-  SUPPORTED_LANGUAGES,
+  isOfferedLanguage,
+  OFFERED_LANGUAGES,
   type Country,
 } from "@/lib/locale";
 import type { SelectOption } from "../lib/select-options";
@@ -16,11 +17,15 @@ function languageLabel(code: string, locale: string): string {
   return native === known ? native : `${native} (${known})`;
 }
 
-/** Values stay codes: the API is sent English names built from them. */
+/**
+ * Values stay codes: the API is sent English names built from them. Only offered languages are listed, and
+ * the language a learner already has stays listed so a plan in it can be edited.
+ */
 export function useLocaleOptions(
   allCountries: Country[],
   detectedCountry: string | undefined,
   selectedCountry: string,
+  currentLanguage = "",
 ) {
   const { t, locale } = useI18n();
 
@@ -46,21 +51,23 @@ export function useLocaleOptions(
       label: languageLabel(code, locale),
       group,
     });
-    const suggestedCodes =
+    const listed = (code: string) =>
+      isOfferedLanguage(code) || code === currentLanguage;
+    const suggestedCodes = (
       allCountries.find((country) => country.code === selectedCountry)
-        ?.languages ?? [];
+        ?.languages ?? []
+    ).filter(listed);
     const suggested = t("onboarding.profile.suggested");
     const all = t("onboarding.profile.allLanguages");
-    const others = SUPPORTED_LANGUAGES.filter(
-      (code) => !suggestedCodes.includes(code),
-    )
+    const others = [...new Set([...OFFERED_LANGUAGES, currentLanguage])]
+      .filter((code) => code !== "" && !suggestedCodes.includes(code))
       .map((code) => option(code, all))
       .sort((a, b) => a.label.localeCompare(b.label, locale));
     return [
       ...suggestedCodes.map((code) => option(code, suggested)),
       ...others,
     ];
-  }, [allCountries, selectedCountry, locale, t]);
+  }, [allCountries, selectedCountry, currentLanguage, locale, t]);
 
   return { countryOptions, languageOptions };
 }

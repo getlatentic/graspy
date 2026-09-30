@@ -16,6 +16,16 @@ class PlacesTest {
     }
 
     @Test
+    fun `English alone is offered, as on the web`() {
+        val web = File("../../web/src/lib/locale.ts").readText()
+        val offered = Regex("""OFFERED_LANGUAGES[^=]*=\s*\[([^\]]*)]""").find(web)!!.groupValues[1].split(',').map { it.trim().trim('"') }.filter(String::isNotEmpty)
+        assertEquals(offered, OFFERED_LANGUAGES)
+        assertEquals("en", offeredLanguageIn(listOf("yo", "en")))
+        assertEquals("en", offeredLanguageIn(listOf("fr")))
+        assertEquals("en", offeredLanguageIn(emptyList()))
+    }
+
+    @Test
     fun `the server is sent English names, as the web sends them`() {
         assertEquals("Nigeria", countryName("NG"))
         assertEquals("Palestine", countryName("PS"))

@@ -4,7 +4,9 @@ import {
   getCountryName,
   getLanguageName,
   getLanguageNativeName,
+  isOfferedLanguage,
   isSupportedLanguage,
+  offeredLanguageIn,
 } from "./locale";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -52,5 +54,19 @@ describe("locale", () => {
     expect(isSupportedLanguage("yo")).toBe(true);
     expect(isSupportedLanguage("pcm")).toBe(true);
     expect(isSupportedLanguage("sk")).toBe(false);
+  });
+
+  it("offers English alone, though the code can hold the others", () => {
+    expect(isOfferedLanguage("en")).toBe(true);
+    for (const code of ["yo", "pcm", "fr", "ha", "ig", "ar"]) {
+      expect(isSupportedLanguage(code)).toBe(true);
+      expect(isOfferedLanguage(code)).toBe(false);
+    }
+  });
+
+  it("takes English for a country whose own languages are not offered", () => {
+    expect(offeredLanguageIn(["yo", "en"])).toBe("en");
+    expect(offeredLanguageIn(["fr"])).toBe("en");
+    expect(offeredLanguageIn([])).toBe("en");
   });
 });
