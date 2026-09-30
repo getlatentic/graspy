@@ -13,6 +13,7 @@ from app.voice.teacher import (
     event_move,
     evidence_from_rows,
     left_for_tomorrow,
+    next_new_plan,
     next_options,
     parse_choice,
     progress_by_plan,
@@ -234,9 +235,7 @@ def test_a_review_passed_first_is_not_followed_by_the_whole_lesson_again():
     evidence = [marked(T1, "assess", "correct")]
     assert next_step(evidence) == "retain"
     done = [*evidence, said(T1, "retain")]
-    progress = progress_by_plan(done, PLANS, DAY_1)
-    options = next_options(PLANS, progress, DAY_1, TABLE_CLASS, done)
-    assert all(option.plan_id != T1 for option in options)
+    assert next_step(done) is None
 
 
 def test_a_check_passed_late_after_three_misses_is_a_pass_not_a_lesson_left_for_tomorrow():
@@ -270,6 +269,35 @@ def test_a_lesson_left_for_tomorrow_on_three_days_comes_after_the_others_and_sti
     )
     left = next_options(PLANS, only, DATE_5, "kindergarten", [])
     assert left and left[0].plan_id == "mathematics.shapes.naming-shapes"
+
+
+def test_the_day_is_over_once_a_lesson_is_finished_because_it_ends_by_naming_tomorrow():
+    evidence = lesson(COUNT_20)
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, "primary_1", evidence) == []
+    assert rest_move(PLANS, progress, "primary_1")["say"] == "finished"
+
+
+def test_a_review_passed_ends_without_tomorrows_line_and_the_day_goes_on():
+    day_one = lesson(COUNT_20)
+    review = [*day_one, marked(COUNT_20, "assess", "correct", DAY_2)]
+    progress = progress_by_plan(review, PLANS, DAY_2)
+    options = next_options(PLANS, progress, DAY_2, "primary_1", review)
+    assert options and options[0].plan_id == TWOS
+    assert all(option.event_id != "retain" for option in options)
+
+
+def test_a_lesson_finished_yesterday_does_not_end_today_before_it_starts():
+    evidence = lesson(COUNT_20, DAY_1)
+    progress = progress_by_plan(evidence, PLANS, DAY_2)
+    assert next_options(PLANS, progress, DAY_2, "primary_1", evidence)
+
+
+def test_a_child_may_still_open_another_lesson_the_day_a_lesson_was_finished():
+    evidence = lesson(COUNT_20)
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    opened = next_options(PLANS, progress, DAY_1, "primary_1", evidence, chosen=TWOS)
+    assert [option.plan_id for option in opened] == [TWOS]
 
 
 def test_when_nothing_is_due_the_rest_is_the_plain_finish():
@@ -352,7 +380,7 @@ def test_mastery_needs_two_assessed_days_and_a_weakened_lesson_comes_before_new_
     day_one = [*lesson(COUNT_20), *lesson(TWOS)]
     progress = progress_by_plan(day_one, PLANS, DAY_1)
     assert not progress[COUNT_20].mastered
-    assert next_options(PLANS, progress, DAY_1, "primary_1")[0].plan_id == TENS
+    assert next_new_plan(PLANS, progress, "primary_1").id == TENS
     next_day = progress_by_plan(day_one, PLANS, DAY_2)
     slipped = (COUNT_20, TWOS)
     options = next_options(PLANS, next_day, DAY_2, "primary_1", weakened=slipped)
@@ -370,13 +398,15 @@ def test_mastery_needs_two_assessed_days_and_a_weakened_lesson_comes_before_new_
     ]
     assert progress_by_plan(both_days, PLANS, DAY_2)[COUNT_20].mastered
     day_three = progress_by_plan(both_days, PLANS, DAY_3)
-    assert next_options(PLANS, day_three, DAY_3, "primary_1")[0].plan_id == TENS
+    assert (
+        next_options(PLANS, day_three, DAY_3, "primary_1", both_days)[0].plan_id == TENS
+    )
 
 
 def test_a_lesson_holds_while_it_is_remembered_and_returns_weakest_first():
     done = [*lesson(COUNT_20), *lesson(TWOS)]
     progress = progress_by_plan(done, PLANS, DAY_2)
-    assert next_options(PLANS, progress, DAY_2, "primary_1")[0].plan_id == TENS
+    assert next_options(PLANS, progress, DAY_2, "primary_1", done)[0].plan_id == TENS
     weakest_first = next_options(
         PLANS, progress, DAY_2, "primary_1", weakened=(TWOS, COUNT_20)
     )
@@ -397,18 +427,18 @@ def test_a_weakened_lesson_from_another_class_is_never_offered():
 
 def test_a_prerequisite_gates_the_next_table():
     progress = progress_by_plan([], PLANS, DAY_1)
-    assert next_options(PLANS, progress, DAY_1, "primary_3")[0].plan_id == PLACE_VALUE
-    assert next_options(PLANS, progress, DAY_1, "primary_4")[0].plan_id == FIVES
+    assert next_new_plan(PLANS, progress, "primary_3").id == PLACE_VALUE
+    assert next_new_plan(PLANS, progress, "primary_4").id == FIVES
     after_place_value = progress_by_plan(lesson(PLACE_VALUE), PLANS, DAY_1)
-    assert next_options(PLANS, after_place_value, DAY_1, "primary_3")[0].plan_id == T1
+    assert next_new_plan(PLANS, after_place_value, "primary_3").id == T1
     after_table_one = progress_by_plan(
         [*lesson(PLACE_VALUE), *lesson(T1)], PLANS, DAY_1
     )
-    assert next_options(PLANS, after_table_one, DAY_1, "primary_3")[0].plan_id == T2
+    assert next_new_plan(PLANS, after_table_one, "primary_3").id == T2
     after_two = progress_by_plan(
         [*lesson(PLACE_VALUE), *lesson(T1), *lesson(T2)], PLANS, DAY_1
     )
-    assert next_options(PLANS, after_two, DAY_1, "primary_3")[0].plan_id == T3
+    assert next_new_plan(PLANS, after_two, "primary_3").id == T3
 
 
 @pytest.mark.asyncio
