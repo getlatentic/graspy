@@ -149,6 +149,11 @@ def next_step(evidence, day=DAY_1):
     return options[0].event_id if options else None
 
 
+def test_the_plans_feedback_is_not_played_after_an_activity_the_child_got_right():
+    evidence = [*taught_before_practice(), marked(T1, "practice", "correct")]
+    assert next_step(evidence) == "assess"
+
+
 def test_a_child_who_did_not_know_is_shown_it_again_not_told_what_they_skipped():
     evidence = [*taught_before_practice(), marked(T1, "practice", "not_understood")]
     assert next_step(evidence) == "guide"
@@ -615,11 +620,12 @@ def test_the_whole_table_is_asked_first_and_a_full_recitation_is_never_narrowed(
         *taught_up_to_practice(),
         Evidence(T2, "practice", DAY_1, "correct", whole),
     ]
-    after = [*evidence, said(T2, "feedback")]
 
-    assert next_move(evidence)["event"] == "provide_feedback"
-    assert next_move(after)["activity"]["prompt_id"] == "mul_fact_2x7_answer"
-    assert next_move(after)["say"] == "plan.mathematics.multiplication.table-2.assess"
+    assert next_move(evidence)["event"] == "assess_performance"
+    assert next_move(evidence)["activity"]["prompt_id"] == "mul_fact_2x7_answer"
+    assert (
+        next_move(evidence)["say"] == "plan.mathematics.multiplication.table-2.assess"
+    )
 
 
 def test_a_recite_event_may_be_answered_one_fact_at_a_time_and_nothing_else():
