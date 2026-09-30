@@ -103,6 +103,7 @@ describe("checkRun", () => {
     expect(names([turn(1, { event: "enhance_retention" }), other(2, "gain_attention")])).toEqual([]);
     const missed = turn(1, { event: "elicit_performance", child: { said: "no", isRight: false, note: "" }, marking: marking({ heard: "no", decision: "not_understood", feedback: "Let us try." }) });
     expect(names([missed, turn(2, { event: "provide_guidance" })])).toEqual([]);
+    expect(names([missed, turn(2, { event: "provide_feedback" }), turn(3, { event: "provide_guidance" })])).toEqual([]);
   });
 
   it("notes an event that goes back to an earlier one", () => {

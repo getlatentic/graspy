@@ -145,7 +145,7 @@ export function orderFindings(run: Run): Finding[] {
   const found: Finding[] = [];
   let highest = -1;
   let lesson: string | null = null;
-  let previous: Turn | null = null;
+  let lastAnswered: Turn | null = null;
   for (const turn of run.turns) {
     if (turn.move.planId !== lesson) {
       lesson = turn.move.planId;
@@ -153,12 +153,12 @@ export function orderFindings(run: Run): Finding[] {
     }
     const rank = turn.move.event ? EVENT_ORDER.indexOf(turn.move.event) : -1;
     if (rank >= 0) {
-      const reteach = turn.move.event === "provide_guidance" && previous?.marking && previous.marking.decision !== "correct";
+      const reteach = turn.move.event === "provide_guidance" && lastAnswered?.marking && lastAnswered.marking.decision !== "correct";
       if (rank < highest && !reteach)
         found.push(finding("event-out-of-order", "note", turn.index, `${turn.move.event} came after ${EVENT_ORDER[highest]}.`));
       highest = Math.max(highest, rank);
     }
-    previous = turn;
+    if (turn.marking) lastAnswered = turn;
   }
   return found;
 }
