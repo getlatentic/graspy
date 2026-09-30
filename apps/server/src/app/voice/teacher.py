@@ -140,6 +140,11 @@ def progress_by_plan(
                     plan.failed_today[item.event_id] = (
                         plan.failed_today.get(item.event_id, 0) + 1
                     )
+                    if (
+                        event.event == "stimulate_recall"
+                        and plan.failed_today[item.event_id] >= RECALL_ATTEMPTS
+                    ):
+                        plan.feedback_owed.discard(item.event_id)
     return progress
 
 

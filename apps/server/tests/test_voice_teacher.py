@@ -134,6 +134,30 @@ def test_a_recall_check_failed_twice_is_followed_by_the_teaching_not_asked_a_thi
     )
 
 
+def test_a_skipped_recall_leaves_no_feedback_owed_for_a_later_miss_to_spend():
+    taught = [
+        said(T1, "attention"),
+        said(T1, "objective"),
+        marked(T1, "recall", "not_understood"),
+        said(T1, "feedback"),
+        marked(T1, "recall", "try_again"),
+        said(T1, "present"),
+        said(T1, "guide"),
+        marked(T1, "practice", "try_again"),
+    ]
+    progress = progress_by_plan(taught, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, taught)[0].event_id
+        == "feedback"
+    )
+    after = [*taught, said(T1, "feedback")]
+    progress = progress_by_plan(after, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, after)[0].event_id
+        == "practice"
+    )
+
+
 def test_a_recall_check_failed_once_is_asked_again_after_its_feedback():
     start = [
         said(T1, "attention"),
