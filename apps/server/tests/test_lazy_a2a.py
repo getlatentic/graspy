@@ -7,6 +7,13 @@ import sys
 import textwrap
 from pathlib import Path
 
+import pytest
+from starlette.routing import Match
+
+from app.agent.a2a import a2a_routes
+from app.agent.lazy_a2a import LazyA2ARoutes
+from app.settings import Settings
+
 SRC = Path(__file__).parents[1] / "src"
 
 CHILD = textwrap.dedent(
@@ -43,3 +50,37 @@ def test_the_a2a_sdk_waits_for_the_first_a2a_request():
         ran.stdout.strip().splitlines()[-1]
         == "False False 200 True 200 graspy-tutor 401"
     )
+
+
+def _scope(path: str, root_path: str = "") -> dict:
+    return {
+        "type": "http",
+        "path": root_path + path,
+        "root_path": root_path,
+        "method": "GET",
+    }
+
+
+@pytest.mark.parametrize("root_path", ["", "/svc"])
+def test_every_path_the_sdk_registers_is_one_the_matcher_hands_over(root_path):
+    settings = Settings(
+        aws_bearer_token_bedrock="b", session_secret="s", _env_file=None
+    )
+    lazy = LazyA2ARoutes(settings.a2a_path_prefix, list)
+    registered = [route.path for route in a2a_routes(settings, object(), object())]
+
+    assert registered
+    for path in registered:
+        assert lazy.matches(_scope(path, root_path))[0] is Match.FULL, path
+
+
+def test_other_paths_are_not_taken():
+    lazy = LazyA2ARoutes("/a2a", list)
+    for path in ("/api/health", "/mcp", "/a2ab", "/"):
+        assert lazy.matches(_scope(path))[0] is Match.NONE, path
+
+
+@pytest.mark.parametrize("prefix", ["a2a", "", "/"])
+def test_a_prefix_that_is_not_a_path_is_refused_when_the_app_is_built(prefix):
+    with pytest.raises(ValueError, match="A2A path prefix"):
+        LazyA2ARoutes(prefix, list)

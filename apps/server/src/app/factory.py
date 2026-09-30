@@ -106,8 +106,7 @@ def create_app(
 
 
 def _a2a_routes(settings: Settings, tutor: Tutor, keeping: Keeping) -> list:
-    """Imported when the first A2A request arrives, not at startup or on the first request of any kind: the A2A
-    SDK and its protobuf types would take the startup snapshot over its size cap, and they take seconds to import."""
+    """The A2A routes, built, and the SDK imported, by the first A2A request."""
     from .agent.a2a import a2a_routes
 
     return a2a_routes(settings, tutor, keeping)
