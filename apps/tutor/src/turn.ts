@@ -27,6 +27,7 @@ import { STEADY_LINES } from "./lines";
 import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { heardSequence } from "./plain-sequence";
+import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import {
   markRecitation,
@@ -58,6 +59,8 @@ export type Expect =
 export interface Ask {
   /** What the child was asked to say, as the child heard it. */
   prompt: string;
+  /** What was said to the child, and how it was marked, the last times this question was tried. */
+  earlier?: Told[];
   /** What the recogniser made of the recording, or null when it heard nothing. */
   heard: string | null;
   language: string;
@@ -231,6 +234,7 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "and hearing twelve of them read out teaches nothing. Say in a few words how it went, and when",
     "some were missed, name at most one of them to say again.",
     "When nothing was heard, treat it as the phone not hearing, never as the child being wrong.",
+    ...(ask.earlier?.length ? earlierNote(ask.earlier) : []),
     "When the child spoke but did not try the question, said they do not know or spoke of something else,",
     "do not praise them: say kindly that it is all right, then help with the first small step or bring them back.",
     "The child is between three and eleven: be kind and encouraging, never mock, shame or compare them,",
@@ -239,6 +243,27 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     `Write the line in ${SPEECH[ask.language] ?? "English"}.`,
   ].join("\n");
 }
+
+const HOW_IT_WENT: Record<Verdict, string> = {
+  correct: "they got it",
+  nearly: "they were close",
+  wrong: "they tried and it was not right",
+  unheard: "the phone did not hear them",
+};
+
+/** What the teacher already said to this child about this question, so it is not said again. */
+function earlierNote(earlier: Told[]): string[] {
+  const said = earlier.map((told) => `- ${HOW_IT_WENT[told.verdict]}: "${quotable(told.line)}"`);
+  return [
+    "This question has already been tried just now. What you said to the child before, oldest first:",
+    ...said,
+    "Do not say any of it again. Say something new. If the child tried and has still not managed it",
+    "after two or more tries, make it smaller: name only the first thing yourself and ask them to say just that.",
+  ];
+}
+
+/** A line put back in a prompt keeps no quotation marks or control characters that could end the quote. */
+const quotable = (line: string): string => line.replace(/["\u0000-\u001f]+/g, " ").trim();
 
 interface ToolCall {
   id?: string;
@@ -372,6 +397,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
         linesTried += 1;
         const text = await timed("spell", spellNumbers(env, String(args.text ?? "").trim(), ask.language));
         const problems = lineProblems(text);
+        if (ask.earlier?.some((told) => sameLine(told.line, text))) problems.push("you said exactly that to this child a moment ago; say something different");
         if (problems.length > 0) {
           console.log(JSON.stringify({ part: "line-rejected", why: problems }));
           answer({ error: `A child cannot hear that line yet: ${problems.join("; ")}. Write it again.` });

@@ -8,6 +8,11 @@ export const STEADY_LINES: Record<Verdict, Record<"en" | "yo" | "pcm", string>> 
   unheard: { en: "I did not hear you. Tap and say it again.", yo: "Mi ò gbọ́ ọ. Tẹ̀ ẹ́, kí o sì tún sọ ọ́.", pcm: "I no hear you. Tap and say am again." },
 };
 
+/** Whether a line is one of the steady lines, said when no line of the teacher's own could be used. */
+export function isSteadyLine(line: string): boolean {
+  return Object.values(STEADY_LINES).some((lines) => Object.values(lines).includes(line));
+}
+
 const ONES = [
   "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
   "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
