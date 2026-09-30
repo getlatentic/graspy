@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useI18n } from "@/lib/i18n-context";
-import { isSupportedLanguage } from "@/lib/locale";
+import { isOfferedLanguage } from "@/lib/locale";
 import type { DetectedLocale } from "@/lib/locale-detector";
 import {
   onboardingSchema,
@@ -13,7 +13,7 @@ import {
 function suggestedDetails(detected: DetectedLocale): DetailsSchema {
   return {
     country: detected.country ?? "",
-    language: isSupportedLanguage(detected.language) ? detected.language : "en",
+    language: isOfferedLanguage(detected.language) ? detected.language : "en",
     system: "",
     level: "",
     school: null,

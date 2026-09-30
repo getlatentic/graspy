@@ -40,14 +40,18 @@ export interface SequenceItem {
   spoken: string[];
 }
 
-function flattened(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+/**
+ * Words as a recogniser and the curriculum may spell them alike: lower case, letters and digits only. Accents
+ * and dots under letters go first, or Yoruba's "méjì" (two) and "mẹ́jọ" (eight) would both become "m j".
+ */
+export function flattened(text: string): string {
+  return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 /** Whether these words were really in the recording, so a fact cannot be conjured up for a child. */
-function grounded(transcript: string, evidence: string): boolean {
+function grounded(flatTranscript: string, evidence: string): boolean {
   const words = flattened(evidence);
-  return words !== "" && flattened(transcript).includes(words);
+  return words !== "" && ` ${flatTranscript} `.includes(` ${words} `);
 }
 
 /**
@@ -63,8 +67,9 @@ export function markRecitation(
   transcript: string,
 ): { verdict: Verdict; result: RecitationResult } {
   const byMultiplier = new Map<number, HeardFact>();
+  const flatTranscript = flattened(transcript);
   for (const fact of heard) {
-    if (grounded(transcript, fact.evidence)) byMultiplier.set(fact.multiplier, fact);
+    if (grounded(flatTranscript, fact.evidence)) byMultiplier.set(fact.multiplier, fact);
   }
   const result: RecitationResult = {
     correct_multipliers: [],
@@ -97,8 +102,15 @@ export function markRecitation(
   return { verdict, result };
 }
 
+const NUMBER_WORD =
+  "zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|and";
+/** A number said that no item spells: counting by ones through a count in twos. */
+const NUMBER_SPOKEN = new RegExp(`^(?:\\d+|(?:${NUMBER_WORD})(?: (?:${NUMBER_WORD}))*)$`);
+
 /**
  * Mark a list said in order: days, months, counting.
+ *
+ * A number that is no item, or an item said twice, makes the list wrong: the child did not say the list.
  *
  * The model reports the words it heard, in the order it heard them. Which item each one is remains
  * a matter of matching it against the spellings the curriculum lists, so an item the child never
@@ -110,17 +122,26 @@ export function markSequence(
   transcript: string,
 ): { verdict: Verdict; result: SequenceResult } {
   const said: string[] = [];
+  let padded = false;
+  const flatTranscript = flattened(transcript);
   for (const words of heard) {
-    if (!grounded(transcript, words)) continue;
+    if (!grounded(flatTranscript, words)) continue;
     const spoken = flattened(words);
     const item = items.find((one) => one.spoken.some((alias) => flattened(alias) === spoken));
-    if (item && !said.includes(item.id)) said.push(item.id);
+    if (!item) padded ||= spoken !== "and" && NUMBER_SPOKEN.test(spoken);
+    else if (said.includes(item.id)) padded = true;
+    else said.push(item.id);
   }
   const order = items.map((item) => item.id);
   const missing = order.filter((id) => !said.includes(id));
   const inOrder = order.filter((id) => said.includes(id));
   const outOfOrder = said.filter((id, at) => id !== inOrder[at]);
-  const verdict: Verdict =
-    said.length === 0 ? "unheard" : missing.length === 0 && outOfOrder.length === 0 ? "correct" : "wrong";
+  const verdict: Verdict = padded
+    ? "wrong"
+    : said.length === 0
+      ? "unheard"
+      : missing.length === 0 && outOfOrder.length === 0
+        ? "correct"
+        : "wrong";
   return { verdict, result: { said, missing, out_of_order: outOfOrder } };
 }

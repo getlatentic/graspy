@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fitForChild, heardForPrompt, lineProblems, safeForChild } from "../src/guard";
-import { STEADY_LINES } from "../src/lines";
+import { STEADY_LINES, numberWords, ordinalWords } from "../src/lines";
 
 describe("a line a child may hear", () => {
   it("passes a short, kind line", () => {
@@ -83,5 +83,25 @@ describe("the kindness judge", () => {
     expect(await fitForChild(judgeSaying("{not json"), "eight", "...")).toBe(false);
     expect(await fitForChild(judgeSaying(undefined), "eight", "...")).toBe(false);
     expect(await fitForChild(judgeSaying('{"fit": "yes"}'), "eight", "...")).toBe(false);
+  });
+});
+
+describe("numbers as words", () => {
+  it("spells whole numbers a child counts and adds", () => {
+    expect(numberWords(0)).toBe("zero");
+    expect(numberWords(45)).toBe("forty-five");
+    expect(numberWords(60)).toBe("sixty");
+    expect(numberWords(105)).toBe("one hundred five");
+    expect(numberWords(2500)).toBe("two thousand five hundred");
+  });
+
+  it("writes numbers past four figures and ordinals", () => {
+    expect(numberWords(1_200_000)).toBe("one million two hundred thousand");
+    expect(numberWords(200_000_000)).toBe("two hundred million");
+    expect(ordinalWords(1)).toBe("first");
+    expect(ordinalWords(12)).toBe("twelfth");
+    expect(ordinalWords(20)).toBe("twentieth");
+    expect(ordinalWords(21)).toBe("twenty-first");
+    expect(ordinalWords(40)).toBe("fortieth");
   });
 });

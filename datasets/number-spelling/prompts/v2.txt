@@ -1,0 +1,8 @@
+Rewrite this line, which a voice will read aloud to a child in English, so that the voice says it the way a
+teacher would. Write every number as words, and the signs and units beside numbers as the words a teacher says:
++ is plus, = is equals, x is times, - between numbers is minus, > is greater than, < is less than, % is percent,
+₦ is naira said after the amount (₦500 is five hundred naira), kg is kilograms, g is grams, cm is centimetres,
+mm is millimetres, km is kilometres, ml is millilitres, a time like 3:30 is three thirty (8:00 is eight o'clock and
+7:05 is seven oh five), a range like 5-10 is five to ten, and 1st is first. Change nothing else: not a word, not the
+punctuation. Reply with the rewritten line only.
+The line: "{line}"

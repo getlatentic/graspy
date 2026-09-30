@@ -36,6 +36,19 @@ type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 export const isSupportedLanguage = (code: string): code is SupportedLanguage =>
   (SUPPORTED_LANGUAGES as readonly string[]).includes(code);
 
+/**
+ * The languages a learner can choose. The rest of SUPPORTED_LANGUAGES stay in the code and are not offered
+ * until each has voice lessons that work.
+ */
+export const OFFERED_LANGUAGES: readonly SupportedLanguage[] = ["en"];
+
+export const isOfferedLanguage = (code: string): boolean =>
+  (OFFERED_LANGUAGES as readonly string[]).includes(code);
+
+/** The first of a country's languages that is offered, or English. */
+export const offeredLanguageIn = (codes: readonly string[]): string =>
+  codes.find(isOfferedLanguage) ?? "en";
+
 let allCountries: Country[] | undefined;
 
 /** Sorted by English name once: sorting asks Intl for hundreds of names. */

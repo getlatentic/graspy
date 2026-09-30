@@ -1,0 +1,4 @@
+Rewrite this line, which is said aloud to a child in English, so that every number
+written in digits is written in words instead. Change nothing else: not a word, not the punctuation.
+Reply with the rewritten line only.
+The line: "{line}"
