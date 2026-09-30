@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { lineProblems } from "../src/guard";
+import { STEADY_LINES } from "../src/lines";
 import { praiseLine } from "../src/praise";
 import type { Ask } from "../src/turn";
 
@@ -21,6 +22,7 @@ describe("the praise for a right answer", () => {
   it("names the number for a fact, in words", () => {
     expect(praiseLine(fact("6x7"))).toMatch(/forty[ -]two/i);
     expect(praiseLine(fact("6x7"))).not.toMatch(/\d/);
+    expect(praiseLine(fact("6x7"))).not.toBe(STEADY_LINES.correct.en);
   });
 
   it("is a line a child may hear, whatever the number", () => {
@@ -55,10 +57,28 @@ describe("the praise for a right answer", () => {
     expect(lineProblems(again)).toEqual([]);
   });
 
-  it("falls back to a line when every line was told, and leaves other languages to the steady line", () => {
-    const all = Array.from({ length: 4 }, (_, at) => praiseLine(list(`x${at}`)) as string);
-    const told = [...new Set(all)].map((line) => ({ verdict: "correct" as const, line }));
-    expect(praiseLine({ ...list("x0"), earlier: told })).not.toBeNull();
+  it("never repeats the line just said, however many have been told", () => {
+    let earlier: NonNullable<Ask["earlier"]> = [];
+    let last = "";
+    for (let answer = 0; answer < 12; answer += 1) {
+      const line = praiseLine({ ...list("Count"), earlier }) as string;
+      expect(line).not.toBe(last);
+      earlier = [{ verdict: "correct" as const, line }, ...earlier].slice(0, 4);
+      last = line;
+    }
+  });
+
+  it("names nothing for a word answer, and never speaks digits for a number too big to say", () => {
+    const word = praiseLine(fact("triangle")) as string;
+    expect(lineProblems(word)).toEqual([]);
+    expect(word).not.toMatch(/triangle|\d/);
+    for (const item of ["1000000000", "999999999", "123456789"]) {
+      const line = praiseLine(fact(item)) as string;
+      expect(lineProblems(line), line).toEqual([]);
+    }
+  });
+
+  it("leaves other languages to the steady line", () => {
     expect(praiseLine(fact("6x7", undefined, { language: "yo" }))).toBeNull();
     expect(praiseLine(fact("6x7", undefined, { language: "pcm" }))).toBeNull();
   });
