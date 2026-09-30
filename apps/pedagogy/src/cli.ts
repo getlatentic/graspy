@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { installAudioProbe, readAudioLog } from "./audio-probe.ts";
 import { openChild } from "./browser.ts";
 import { checkRun } from "./checks.ts";
 import { ChildVoice, ENGINE_NAME, locateYarngo } from "./child-voice.ts";
@@ -67,6 +68,7 @@ async function main(): Promise<void> {
       if (args["reuse-device"]) await context.storageState({ path: state, indexedDB: true });
     }
     const strings = pageStrings(language);
+    await installAudioProbe(page);
     const observer = new LessonObserver(page, language);
     await openLesson(page, web, strings, args.lesson ?? null);
     const startedAt = new Date().toISOString();
@@ -74,7 +76,7 @@ async function main(): Promise<void> {
       page, observer, persona, learnerClass, strings, voice, key: bedrockKey(), shotsDir: join(dir, "shots"), runDir: dir,
       maxAnswers: persona.id === "silent" ? 3 : Number(args.answers),
     });
-    const run: Run = { id: runId, voice: { engine: ENGINE_NAME, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, finished, turns };
+    const run: Run = { id: runId, voice: { engine: ENGINE_NAME, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, finished, turns, audio: await readAudioLog(page) };
     const findings = checkRun(run);
     const judgement: Judgement | null = args["no-judge"] ? null : await judgedOrNull(bedrockKey(), transcriptMarkdown(run, findings, null));
     writeRun(dir, run, findings, judgement);

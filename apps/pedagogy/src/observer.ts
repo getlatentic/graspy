@@ -34,6 +34,7 @@ export function toMove(wire: WireMove, language: string): TeacherMove {
     shows: pick(wire.show),
     asksForAnswer: Boolean(wire.activity),
     reason: wire.reason ?? null,
+    offeredAt: Date.now(),
   };
 }
 
@@ -45,6 +46,7 @@ export function toMarking(wire: WireMarked): Marking {
     feedback: wire.feedback,
     provider: wire.provider,
     latencyMs: wire.latency_ms,
+    at: Date.now(),
   };
 }
 

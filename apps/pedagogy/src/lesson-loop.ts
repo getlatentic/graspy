@@ -12,6 +12,7 @@ import type { ChildTurn, Marking, Run, TeacherMove, Turn } from "./turn-log.ts";
 const STALL_MS = 90_000;
 const MARKING_MS = 60_000;
 const QUIET_TAKE_MS = 12_000;
+const REST_LINE_MS = 6_000;
 const STAYS_SILENT: ChildTurn = { said: null, isRight: null, note: "Too shy to say anything." };
 
 export interface Sitting {
@@ -36,6 +37,7 @@ interface Answered {
   marking: Marking | null;
   pageNote: string | null;
   shots: string[];
+  recordedAt: number;
 }
 
 async function screenOf(page: Page, strings: PageStrings): Promise<Screen> {
@@ -100,6 +102,7 @@ async function answer(sitting: Sitting, turn: Turn, turns: Turn[]): Promise<Answ
   const before = observer.markings.length;
   const wav = child.said ? await sitting.voice.speak(child.said, persona.pitch, index) : null;
   const audio = wav ? keepRecording(sitting.runDir, index, wav) : null;
+  const recordedAt = Date.now();
   await openTake(sitting);
   if (wav) {
     await page.waitForTimeout(persona.reactionMs);
@@ -110,7 +113,7 @@ async function answer(sitting: Sitting, turn: Turn, turns: Turn[]): Promise<Answ
   // A child who says nothing waits out the app's own listening window: that is not a slow reply.
   const replyWaitMs = wav ? Date.now() - spoke : null;
   shots.push(await shot(sitting, `${String(index).padStart(2, "0")}-result`));
-  return { child, audio, shots, replyWaitMs, ...outcome };
+  return { child, audio, shots, replyWaitMs, recordedAt, ...outcome };
 }
 
 /** Waits for the answer to be marked, or for the page to say why it was not. */
@@ -139,7 +142,7 @@ function syncMoves(turns: Turn[], moves: TeacherMove[], counted: { moves: number
 function turnToAnswer(turns: Turn[]): Turn {
   const latest = turns[turns.length - 1];
   if (!latest.child) return latest;
-  const again: Turn = { ...latest, index: turns.length + 1, child: null, answerAudio: null, marking: null, replyWaitMs: null, pageNote: null, screenshots: [] };
+  const again: Turn = { ...latest, move: { ...latest.move, offeredAt: undefined }, index: turns.length + 1, child: null, answerAudio: null, marking: null, replyWaitMs: null, pageNote: null, screenshots: [] };
   turns.push(again);
   return again;
 }
@@ -155,11 +158,15 @@ export async function playLesson(sitting: Sitting): Promise<{ turns: Turn[]; fin
     syncMoves(turns, observer.moves, counted);
     if (counted.moves !== before) lastChange = Date.now();
     const screen = await screenOf(page, strings);
-    if (screen === "rest") return { turns, finished: "rest" };
+    if (screen === "rest") {
+      // The rest line is spoken as the screen appears: the run is not over until it has been heard or has failed to be.
+      await page.waitForTimeout(REST_LINE_MS);
+      return { turns, finished: "rest" };
+    }
     if (screen === "record" && turns.length > 0) {
       const turn = turnToAnswer(turns);
       const given = await answer(sitting, turn, turns);
-      Object.assign(turn, { child: given.child, answerAudio: given.audio, marking: given.marking, replyWaitMs: given.replyWaitMs, pageNote: given.pageNote, screenshots: given.shots });
+      Object.assign(turn, { child: given.child, answerAudio: given.audio, marking: given.marking, replyWaitMs: given.replyWaitMs, pageNote: given.pageNote, screenshots: given.shots, recordedAt: given.recordedAt });
       answered++;
       lastChange = Date.now();
     }

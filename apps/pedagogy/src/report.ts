@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { Finding } from "./checks.ts";
 import type { Judgement } from "./judge.ts";
 import type { Run, Turn } from "./turn-log.ts";
+import { speechSummary } from "./speech-timing.ts";
 import { hearingFidelity } from "./words.ts";
 
 /** How faithfully the recogniser heard the child across a run, or null if nothing was said. */
@@ -51,6 +52,8 @@ export function transcriptMarkdown(run: Run, findings: Finding[], judgement: Jud
     `Recogniser fidelity to what the child meant to say: ${fidelity === null ? "n/a" : fidelity.toFixed(2)}.`,
     "## Mechanical findings",
     findingsSection(findings),
+    "## Speech timing",
+    run.audio ? speechSummary(run) : "Not measured.",
     "## Judge (a non-Anthropic model reading the transcript)",
     judgementSection(judgement),
     "## Transcript",
