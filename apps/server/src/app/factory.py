@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from .agent.lazy_a2a import LazyA2ARoutes
 from .agent.memory import ConversationStore, InMemoryConversationStore
 from .agent.tutor import Tutor
 from .api.account_routes import account_router
@@ -94,14 +95,22 @@ def create_app(
     app.include_router(account_voice_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
     app.include_router(voice_router, prefix="/api")
-    # Imported on the Worker's first request, not at startup: the A2A SDK and
-    # its protobuf types would take the startup snapshot over its size cap.
-    from .agent.a2a import a2a_routes
-
     tutor = Tutor(keeping.conversations)
-    app.routes.extend(a2a_routes(settings, tutor, keeping))
+    app.routes.append(
+        LazyA2ARoutes(
+            settings.a2a_path_prefix, lambda: _a2a_routes(settings, tutor, keeping)
+        )
+    )
     app.routes.extend(mcp_routes())
     return app
+
+
+def _a2a_routes(settings: Settings, tutor: Tutor, keeping: Keeping) -> list:
+    """Imported when the first A2A request arrives, not at startup or on the first request of any kind: the A2A
+    SDK and its protobuf types would take the startup snapshot over its size cap, and they take seconds to import."""
+    from .agent.a2a import a2a_routes
+
+    return a2a_routes(settings, tutor, keeping)
 
 
 def _bare_app(settings: Settings) -> FastAPI:
