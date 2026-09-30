@@ -28,12 +28,11 @@ describe("spellNumbers", () => {
     const logged: string[] = [];
     vi.spyOn(console, "log").mockImplementation((line: string) => void logged.push(line));
     const { env } = speller("You said forty-five. Now say fifty.");
-    (env as { SPELLER_HOST?: string }).SPELLER_HOST = "bedrock";
 
     await spellNumbers(env, "You said 45. Now say 50.", "en");
 
     const entry = JSON.parse(logged[0]) as Record<string, unknown>;
-    expect(entry).toMatchObject({ part: "spelled", host: "bedrock", verdict: "pass" });
+    expect(entry).toMatchObject({ part: "spelled", host: "workers-ai", verdict: "pass" });
     expect(typeof entry.ms).toBe("number");
     vi.restoreAllMocks();
   });
