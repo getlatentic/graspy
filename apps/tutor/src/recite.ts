@@ -51,7 +51,7 @@ export function flattened(text: string): string {
 /** Whether these words were really in the recording, so a fact cannot be conjured up for a child. */
 function grounded(flatTranscript: string, evidence: string): boolean {
   const words = flattened(evidence);
-  return words !== "" && flatTranscript.includes(words);
+  return words !== "" && ` ${flatTranscript} `.includes(` ${words} `);
 }
 
 /**
@@ -128,7 +128,7 @@ export function markSequence(
     if (!grounded(flatTranscript, words)) continue;
     const spoken = flattened(words);
     const item = items.find((one) => one.spoken.some((alias) => flattened(alias) === spoken));
-    if (!item) padded ||= NUMBER_SPOKEN.test(spoken);
+    if (!item) padded ||= spoken !== "and" && NUMBER_SPOKEN.test(spoken);
     else if (said.includes(item.id)) padded = true;
     else said.push(item.id);
   }

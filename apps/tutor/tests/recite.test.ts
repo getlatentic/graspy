@@ -125,6 +125,16 @@ describe("marking a list said in order", () => {
     expect(markSequence(DAYS, ["monday", "monday", "tuesday"], "monday monday tuesday").verdict).toBe("wrong");
   });
 
+  it("does not take a letter for a word it only sits inside", () => {
+    const letters = ["a", "b", "c", "d", "e"].map((id) => ({ id, spoken: [id] }));
+    expect(markSequence(letters, ["a", "b", "c", "d", "e"], "a b c d the").verdict).toBe("wrong");
+  });
+
+  it("still passes a list where the model reported 'and' as well as the days", () => {
+    const said = "monday and tuesday and wednesday";
+    expect(markSequence(DAYS, ["monday", "and", "tuesday", "and", "wednesday"], said).verdict).toBe("correct");
+  });
+
   it("still passes a list where the model reported a filler word that is no number", () => {
     expect(markSequence(TWOS, ["um", "2", "then", "4", "6", "8", "10"], "um 2 then 4 6 8 10").verdict).toBe("correct");
   });
