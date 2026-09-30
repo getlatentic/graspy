@@ -78,6 +78,7 @@ export function LessonStage({
       )}
       {phase.name === "result" && <TurnResult turn={phase.turn} />}
       {"move" in phase &&
+        phase.name !== "rest" &&
         phase.name !== "result" &&
         phase.name !== "moving-on" && (
           <StepWords move={phase.move} language={language} />

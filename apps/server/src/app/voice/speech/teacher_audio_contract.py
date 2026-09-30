@@ -140,21 +140,24 @@ _MOVE_TEXT = {
         "correct": "Well done!",
         "no-speech": "I could not hear you. Tap and say it again.",
         "retry-facts": "Now say only these ones again.",
-        "finished": "You have finished every table. Well done.",
+        "finished": "That is all for today. Well done.",
+        "try-tomorrow": "That is all right. We will try again tomorrow.",
     },
     "yo": {
         "try-again": "Ìgbìyànjú dára. Tún un sọ.",
         "correct": "Ó dára!",
         "no-speech": "Mi ò gbọ́ ọ. Tẹ ibi, kí o sì tún sọ.",
         "retry-facts": "Báyìí, sọ àwọn wọ̀nyí nìkan tún.",
-        "finished": "O ti parí gbogbo table. O ṣe dáadáa.",
+        "finished": "Ìyẹn ni fún òní. O ṣe dáadáa.",
+        "try-tomorrow": "Kò burú. A ó tún gbìyànjú lọ́la.",
     },
     "pcm": {
         "try-again": "Good try. Talk am again.",
         "correct": "You do well!",
         "no-speech": "I no hear you. Tap and talk am again.",
         "retry-facts": "Now talk only these ones again.",
-        "finished": "You don finish every table. Well done.",
+        "finished": "Na so e be for today. You do well.",
+        "try-tomorrow": "No wahala. We go try again tomorrow.",
     },
 }
 _TABLE_TEMPLATES["en"].update(

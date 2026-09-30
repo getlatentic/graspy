@@ -223,7 +223,7 @@ describe("a voice lesson", () => {
   it("rests when nothing is due today", () => {
     const rest: LessonMove = { kind: "rest", say: "finished" };
     expect(
-      run({ type: "start" }, { type: "loaded", move: rest }).phase.name,
-    ).toBe("rest");
+      run({ type: "start" }, { type: "loaded", move: rest }).phase,
+    ).toEqual({ name: "rest", move: rest });
   });
 });

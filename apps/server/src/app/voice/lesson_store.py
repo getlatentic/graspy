@@ -138,7 +138,7 @@ async def load_lesson_snapshot(
     language: str,
     chosen: str | None = None,
 ):
-    from .teacher import REST_MOVE, choose, event_move
+    from .teacher import choose, event_move, progress_by_plan, rest_move
 
     plans, evidence, rows, options = await load_options(
         env, learner, today, learner_class, language, chosen
@@ -150,7 +150,7 @@ async def load_lesson_snapshot(
             plan, plan.event(choice.event_id), choice.reason, choice.facts
         )
     else:
-        move = REST_MOVE
+        move = rest_move(plans, progress_by_plan(evidence, plans, today), learner_class)
     await offer_step(
         env.DB, learner, move, round(datetime.now(LAGOS).timestamp() * 1000)
     )

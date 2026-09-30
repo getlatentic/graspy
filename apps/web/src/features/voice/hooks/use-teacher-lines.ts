@@ -10,7 +10,7 @@ const NO_SPEECH = "no-speech";
 /** The line on screen now, as audio: the step's own, or her reply to the answer just marked. */
 function currentLine(state: LessonState, language: LessonLanguage) {
   const { phase } = state;
-  if (phase.name === "teaching")
+  if (phase.name === "teaching" || phase.name === "rest")
     return () => teacherAudio(phase.move.say, language);
   if (phase.name === "result") return () => replyAudio(phase.turn.sample_id);
   if (phase.name === "your-turn" && state.note === "noSpeech")

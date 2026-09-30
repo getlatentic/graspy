@@ -12,9 +12,11 @@ from app.voice.teacher import (
     decision_schema,
     event_move,
     evidence_from_rows,
+    left_for_tomorrow,
     next_options,
     parse_choice,
     progress_by_plan,
+    rest_move,
 )
 
 PLANS = load_plans()
@@ -81,7 +83,13 @@ def test_a_wrong_activity_gets_its_feedback_event_and_then_comes_round_again():
     progress = progress_by_plan(wrong_again, PLANS, DAY_1)
     assert (
         next_options(PLANS, progress, DAY_1, TABLE_CLASS, wrong_again)[0].event_id
-        == "feedback"
+        == "guide"
+    )
+    shown_again = [*wrong_again, said(T1, "guide")]
+    progress = progress_by_plan(shown_again, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, shown_again)[0].event_id
+        == "practice"
     )
     retried = [*after_feedback, marked(T1, "practice", "correct")]
     progress = progress_by_plan(retried, PLANS, DAY_1)
@@ -118,20 +126,159 @@ def test_only_the_lesson_touched_last_today_continues_and_only_within_the_class(
     assert all(option.plan_id != T2 for option in started)
 
 
-def test_a_recall_check_failed_twice_is_followed_by_the_teaching_not_asked_a_third_time():
+def taught_before_practice():
+    return [
+        said(T1, e) for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
+DATE_4 = date(2026, 9, 9)
+DATE_5 = date(2026, 9, 10)
+
+
+def taught_before_practice_on(day):
+    return [
+        said(T1, e, day)
+        for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
+def next_step(evidence, day=DAY_1):
+    progress = progress_by_plan(evidence, PLANS, day)
+    options = next_options(PLANS, progress, day, TABLE_CLASS, evidence)
+    return options[0].event_id if options else None
+
+
+def test_a_child_who_did_not_know_is_shown_it_again_not_told_what_they_skipped():
+    evidence = [*taught_before_practice(), marked(T1, "practice", "not_understood")]
+    assert next_step(evidence) == "guide"
+    evidence.append(said(T1, "guide"))
+    assert next_step(evidence) == "practice"
+
+
+def test_a_child_who_tried_and_was_wrong_hears_the_feedback_first_and_is_shown_it_again_on_a_second_miss():
+    evidence = [*taught_before_practice(), marked(T1, "practice", "try_again")]
+    assert next_step(evidence) == "feedback"
+    evidence += [said(T1, "feedback"), marked(T1, "practice", "try_again")]
+    assert next_step(evidence) == "guide"
+
+
+def test_a_lesson_whose_activity_is_failed_three_times_is_left_for_tomorrow():
+    evidence = [*taught_before_practice()]
+    for _ in range(3):
+        evidence.append(marked(T1, "practice", "not_understood"))
+        evidence.append(said(T1, "guide"))
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
+    assert rest_move(PLANS, progress, TABLE_CLASS)["say"] == "try-tomorrow"
+
+
+def test_the_day_is_over_for_a_class_once_a_lesson_of_it_is_left_for_tomorrow():
+    evidence = [*taught_before_practice(), *[marked(T1, "practice", "try_again")] * 3]
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence, chosen=T2) == []
+    assert next_options(PLANS, progress, DAY_1, "primary_1", evidence) != []
+
+
+def test_a_lesson_left_for_tomorrow_is_taken_up_again_the_next_day():
+    evidence = [*taught_before_practice(), *[marked(T1, "practice", "try_again")] * 3]
+    next_day = progress_by_plan(evidence, PLANS, DAY_2)
+    options = next_options(PLANS, next_day, DAY_2, TABLE_CLASS, evidence)
+    assert options and options[0].plan_id == T1
+
+
+def test_a_guided_practice_the_child_cannot_do_is_not_repeated_for_ever():
+    evidence = [*taught_before_practice(), marked(T1, "practice", "not_understood")]
+    for _ in range(3):
+        evidence += [marked(T1, "guide", "not_understood")]
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
+
+
+def test_a_recitation_with_some_facts_right_is_progress_not_a_miss_toward_leaving_the_lesson():
+    partial = Evidence(T2, "practice", DAY_1, "try_again", PARTIAL_RECITATION)
+    evidence = [*taught_up_to_practice(), partial, said(T2, "feedback")]
+    for _ in range(2):
+        evidence.append(answered(T2, "practice", 2, 3, "try_again"))
+    assert next_move(evidence, T2)["event"] == "provide_guidance"
+    evidence += [said(T2, "guide"), answered(T2, "practice", 2, 3, "correct")]
+    evidence.append(answered(T2, "practice", 2, 7, "try_again"))
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert not progress[T2].paused_today
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) != []
+
+
+def test_facts_missed_three_times_running_with_none_right_leave_the_lesson_for_tomorrow():
+    partial = Evidence(T2, "practice", DAY_1, "try_again", PARTIAL_RECITATION)
+    evidence = [*taught_up_to_practice(), partial]
+    evidence += [answered(T2, "practice", 2, 3, "try_again")] * 3
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert progress[T2].paused_today
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
+
+
+def test_a_review_passed_first_is_not_followed_by_the_whole_lesson_again():
+    evidence = [marked(T1, "assess", "correct")]
+    assert next_step(evidence) == "retain"
+    done = [*evidence, said(T1, "retain")]
+    progress = progress_by_plan(done, PLANS, DAY_1)
+    options = next_options(PLANS, progress, DAY_1, TABLE_CLASS, done)
+    assert all(option.plan_id != T1 for option in options)
+
+
+def test_a_check_passed_late_after_three_misses_is_a_pass_not_a_lesson_left_for_tomorrow():
+    evidence = [*taught_before_practice(), *[marked(T1, "assess", "try_again")] * 3]
+    evidence.append(marked(T1, "assess", "correct"))
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert not left_for_tomorrow(PLANS, progress, TABLE_CLASS)
+    assert next_step(evidence) == "retain"
+
+
+def test_a_lesson_left_for_tomorrow_on_three_days_comes_after_the_others_and_still_when_there_are_none():
+    def stuck(day, plan):
+        events = [
+            said(plan, e, day)
+            for e in ("attention", "objective", "recall", "present", "guide")
+        ]
+        return [*events, *[marked(plan, "practice", "try_again", day)] * 3]
+
+    evidence = [*stuck(DAY_1, T1), *stuck(DAY_2, T1), *stuck(DATE_4, T1)]
+    progress = progress_by_plan(evidence, PLANS, DATE_5)
+    options = next_options(PLANS, progress, DATE_5, TABLE_CLASS, evidence)
+    assert options and options[0].plan_id != T1
+    only = progress_by_plan(
+        [
+            *stuck(DAY_1, "mathematics.shapes.naming-shapes"),
+            *stuck(DAY_2, "mathematics.shapes.naming-shapes"),
+            *stuck(DATE_4, "mathematics.shapes.naming-shapes"),
+        ],
+        PLANS,
+        DATE_5,
+    )
+    left = next_options(PLANS, only, DATE_5, "kindergarten", [])
+    assert left and left[0].plan_id == "mathematics.shapes.naming-shapes"
+
+
+def test_when_nothing_is_due_the_rest_is_the_plain_finish():
+    progress = progress_by_plan([], PLANS, DAY_1)
+    assert rest_move(PLANS, progress, TABLE_CLASS)["say"] == "finished"
+
+
+def test_a_recall_check_nobody_answered_is_asked_again_without_feedback_then_followed_by_the_teaching():
     start = [said(T1, "attention"), said(T1, "objective")]
     first = [*start, marked(T1, "recall", "not_understood")]
-    progress = progress_by_plan(first, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, first)[0].event_id
-        == "feedback"
-    )
-    again = [*first, said(T1, "feedback"), marked(T1, "recall", "not_understood")]
-    progress = progress_by_plan(again, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, again)[0].event_id
-        == "present"
-    )
+    assert next_step(first) == "recall"
+    again = [*first, marked(T1, "recall", "not_understood")]
+    assert next_step(again) == "present"
+
+
+def test_a_recall_check_answered_wrongly_gets_its_feedback_and_is_then_followed_by_the_teaching():
+    start = [said(T1, "attention"), said(T1, "objective")]
+    first = [*start, marked(T1, "recall", "try_again")]
+    assert next_step(first) == "feedback"
+    again = [*first, said(T1, "feedback"), marked(T1, "recall", "try_again")]
+    assert next_step(again) == "present"
 
 
 def test_a_skipped_recall_leaves_no_feedback_owed_for_a_later_miss_to_spend():

@@ -20,7 +20,7 @@ export type Phase =
   | { name: "idle" }
   | { name: "loading" }
   | { name: "failed" }
-  | { name: "rest" }
+  | { name: "rest"; move: LessonMove }
   | { name: "teaching"; move: LessonMove }
   | { name: "your-turn"; move: LessonMove }
   | { name: "recording"; move: LessonMove }
@@ -133,7 +133,7 @@ function passed(state: LessonState, key: string): LessonState {
 
 function loaded(state: LessonState, move: LessonMove): LessonState {
   const phase: Phase =
-    move.kind === "rest" ? { name: "rest" } : { name: "teaching", move };
+    move.kind === "rest" ? { name: "rest", move } : { name: "teaching", move };
   return { phase, note: state.note };
 }
 
