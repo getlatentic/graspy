@@ -36,7 +36,7 @@ function StepWords({
 function StatusLine({ state }: { state: LessonState }) {
   const { t } = useI18n();
   const { name } = state.phase;
-  if (name === "teaching" || name === "result" || name === "rest")
+  if (name === "teaching" || name === "result")
     return <>{t("voice.lesson.speaking")}</>;
   if (name === "your-turn" || name === "recording")
     return <>{t("voice.lesson.yourTurn")}</>;
@@ -55,10 +55,7 @@ export function LessonStage({
 }) {
   const { t } = useI18n();
   const { phase } = state;
-  const speaking =
-    phase.name === "teaching" ||
-    phase.name === "result" ||
-    phase.name === "rest";
+  const speaking = phase.name === "teaching" || phase.name === "result";
   return (
     <Card className="flex flex-col gap-5">
       <TeacherStrip speaking={speaking} detail={<StatusLine state={state} />} />

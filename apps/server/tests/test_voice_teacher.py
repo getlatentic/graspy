@@ -217,24 +217,38 @@ def test_facts_missed_three_times_running_with_none_right_leave_the_lesson_for_t
     assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
 
 
-def test_a_child_who_passed_the_check_is_not_sent_away_because_the_replay_went_badly():
-    evidence = [marked(T1, "assess", "correct"), *taught_before_practice()]
-    evidence += [marked(T1, "practice", "try_again")] * 3
-    progress = progress_by_plan(evidence, PLANS, DAY_1)
-    assert not progress[T1].paused_today
+def test_a_review_passed_first_is_not_followed_by_the_whole_lesson_again():
+    evidence = [marked(T1, "assess", "correct")]
+    assert next_step(evidence) == "retain"
+    done = [*evidence, said(T1, "retain")]
+    progress = progress_by_plan(done, PLANS, DAY_1)
+    options = next_options(PLANS, progress, DAY_1, TABLE_CLASS, done)
+    assert all(option.plan_id != T1 for option in options)
 
 
-def test_a_lesson_left_for_tomorrow_on_three_days_is_no_longer_offered_on_its_own():
-    def stuck(day):
-        return [
-            *taught_before_practice_on(day),
-            *[marked(T1, "practice", "try_again", day)] * 3,
+def test_a_lesson_left_for_tomorrow_on_three_days_comes_after_the_others_and_still_when_there_are_none():
+    def stuck(day, plan):
+        events = [
+            said(plan, e, day)
+            for e in ("attention", "objective", "recall", "present", "guide")
         ]
+        return [*events, *[marked(plan, "practice", "try_again", day)] * 3]
 
-    evidence = [*stuck(DAY_1), *stuck(DAY_2), *stuck(DATE_4)]
+    evidence = [*stuck(DAY_1, T1), *stuck(DAY_2, T1), *stuck(DATE_4, T1)]
     progress = progress_by_plan(evidence, PLANS, DATE_5)
     options = next_options(PLANS, progress, DATE_5, TABLE_CLASS, evidence)
-    assert all(option.plan_id != T1 for option in options)
+    assert options and options[0].plan_id != T1
+    only = progress_by_plan(
+        [
+            *stuck(DAY_1, "mathematics.shapes.naming-shapes"),
+            *stuck(DAY_2, "mathematics.shapes.naming-shapes"),
+            *stuck(DATE_4, "mathematics.shapes.naming-shapes"),
+        ],
+        PLANS,
+        DATE_5,
+    )
+    left = next_options(PLANS, only, DATE_5, "kindergarten", [])
+    assert left and left[0].plan_id == "mathematics.shapes.naming-shapes"
 
 
 def test_when_nothing_is_due_the_rest_is_the_plain_finish():

@@ -29,8 +29,8 @@ PAUSE_AFTER = 3
 PAUSING_EVENTS = ("elicit_performance", "assess_performance", "provide_guidance")
 # The activities that are shown again, in the plan's guided practice, after a miss.
 RETEACH_EVENTS = ("elicit_performance", "assess_performance")
-# A lesson left for tomorrow on this many days is no longer offered on its own: the child can still open it from the
-# catalogue, and the next lesson that can be started is offered instead of the same failure again.
+# A lesson left for tomorrow on this many days comes after the other lessons that can be started, so the child is not
+# sent back to the same failure first; when there is nothing else, it is offered again.
 PAUSED_DAYS_LIMIT = 3
 
 
@@ -99,6 +99,7 @@ class PlanProgress:
     # some facts right, or a right answer, starts the count again.
     failed_today: dict[str, int] = field(default_factory=dict)
     paused_today: bool = False
+    assessed_today: bool = False
     paused_days: set[date] = field(default_factory=set)
     last_decision: dict[str, str] = field(default_factory=dict)
     facts_owed: dict[str, frozenset[int]] = field(default_factory=dict)
@@ -206,10 +207,8 @@ def progress_by_plan(
             ) - item.facts_right
         if event.event == "assess_performance" and item.decision == "correct":
             state.assessed_days.add(item.day)
+            state.assessed_today = state.assessed_today or item.day == today
         _record_attempt(state, plan, event, item, streaks, today)
-    for state in progress.values():
-        # A child who passed the check today has not been left with a lesson they cannot do.
-        state.paused_today = state.paused_today and today not in state.assessed_days
     return progress
 
 
@@ -229,23 +228,20 @@ def next_new_plan(
     """The first plan of the class never yet assessed whose prerequisites of the same class have
     each been assessed once, a lesson left for an earlier day first. A prerequisite belonging only to
     an earlier class was taught there and is taken as known. Mastery (two days) governs reviews, not
-    what may be started. A lesson left for tomorrow on PAUSED_DAYS_LIMIT days is not offered again."""
+    what may be started. A lesson left for tomorrow on PAUSED_DAYS_LIMIT days comes after the others."""
     offered = {plan.id for plan in plans_for_class(plans, learner_class)}
-    ready = []
+    ready, stuck = [], []
     for plan in plans_for_class(plans, learner_class):
         state = progress[plan.id]
         if state.assessed_days or state.paused_today:
             continue
-        if len(state.paused_days) >= PAUSED_DAYS_LIMIT:
-            continue
         needed = [p for p in plan.prerequisites if p in offered]
-        if all(progress[prerequisite].assessed_days for prerequisite in needed):
-            ready.append(plan)
+        if not all(progress[prerequisite].assessed_days for prerequisite in needed):
+            continue
+        (stuck if len(state.paused_days) >= PAUSED_DAYS_LIMIT else ready).append(plan)
     # A lesson left for tomorrow is taken up first: the child was told it would be.
-    return next(
-        (plan for plan in ready if progress[plan.id].paused_days),
-        ready[0] if ready else None,
-    )
+    first = next((plan for plan in ready if progress[plan.id].paused_days), None)
+    return first or next(iter(ready or stuck), None)
 
 
 def due_reviews(
@@ -275,10 +271,18 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
     """The first event not done today. An activity that failed today first gives the child help, the
     plan's feedback or its guided practice again (see _owe_help), then comes round again. A recall
     check failed twice is left for the teaching that follows, and a plan whose activity was failed
-    three times is left for tomorrow. None when the plan is complete or paused for today."""
+    three times is left for tomorrow. Once the child has passed the check today, only what follows
+    it is left: a review passed first is not followed by the whole lesson. None when the plan is
+    complete or paused for today."""
     if state.paused_today:
         return None
-    for event in plan.events:
+    events = plan.events
+    if state.assessed_today:
+        check = next(
+            at for at, e in enumerate(events) if e.event == "assess_performance"
+        )
+        events = events[check + 1 :]
+    for event in events:
         if (
             event.event == "stimulate_recall"
             and state.failed_today.get(event.id, 0) >= RECALL_ATTEMPTS
