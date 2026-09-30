@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
 import { STEADY_LINES } from "../src/lines";
+import { praiseLine } from "../src/praise";
 import { DEFAULT_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -179,7 +180,7 @@ describe("a turn only ever speaks a line a child may hear", () => {
 
     const reply = await takeTurn(env, ask);
 
-    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(reply.say).toBe(praiseLine(ask));
     expect(seen).toHaveLength(3);
   });
 
@@ -206,7 +207,7 @@ describe("a turn only ever speaks a line a child may hear", () => {
     const rejected = logged.mock.calls.filter((row) => String(row[0]).includes("line-rejected")).length;
     logged.mockRestore();
 
-    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(reply.say).toBe(praiseLine(ask));
     expect(rejected).toBe(2);
     expect(seen).toHaveLength(2);
   });
@@ -233,7 +234,7 @@ describe("a turn only ever speaks a line a child may hear", () => {
     const reply = await takeTurn(env, ask);
     clock.mockRestore();
 
-    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(reply.say).toBe(praiseLine(ask));
     expect(seen.length).toBeLessThan(3);
   });
 
@@ -263,7 +264,7 @@ describe("a turn only ever speaks a line a child may hear", () => {
     const reply = await takeTurn(env, ask);
 
     expect(reply.verdict).toBe("correct");
-    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(reply.say).toBe(praiseLine(ask));
   });
 
   it("gives the model what the phone heard as quoted data, never as instructions", async () => {
@@ -284,7 +285,7 @@ describe("one number, plainly said, needs no teacher", () => {
 
     expect(seen).toHaveLength(0);
     expect(reply.verdict).toBe("correct");
-    expect(reply.say).toBe(STEADY_LINES.correct.en);
+    expect(reply.say).toBe(praiseLine(ask));
   });
 
   it("marks a wrong answer the same way", async () => {
@@ -350,7 +351,7 @@ describe("a list said in order", () => {
       const reply = await takeTurn(env, counting(heard));
 
       expect(reply.verdict).toBe("correct");
-      expect(reply.say).toBe(STEADY_LINES.correct.en);
+      expect(reply.say).toBe(praiseLine(counting(heard)));
       expect(reply.result).toMatchObject({ said: ["1", "2", "3", "4", "5"], missing: [], out_of_order: [] });
       expect(calls.n).toBe(0);
     },
