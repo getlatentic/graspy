@@ -235,7 +235,7 @@
       "id": "assess",
       "event": "assess_performance",
       "say": {
-        "en": "Let us see what you remember. Forty two exercise books are shared among six pupils. How many books does each pupil get?",
+        "en": "Let us see what you remember. Forty two books are shared among six pupils. How many does each get?",
         "pcm": "Make we see wetin you remember. Forty two book share for six pupil. How many each one go get?",
         "yo": "Jẹ́ ká wo ohun tí o rántí. Ìwé forty two fún akẹ́kọ̀ọ́ six. Mélòó ni ẹnìkọ̀ọ̀kan gbà?"
       },

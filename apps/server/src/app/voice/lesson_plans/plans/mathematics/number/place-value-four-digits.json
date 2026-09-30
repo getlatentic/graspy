@@ -38,8 +38,8 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "A bus from Ibadan to Lagos costs three thousand, five hundred naira. Write that fare down and it has four digits. Each digit tells you something different.",
-        "yo": "Owó ọkọ̀ láti Ibadan dé Lagos jẹ́ naira three thousand, five hundred. Kọ owó náà sílẹ̀, ó ní digit four. Digit kọ̀ọ̀kan ń sọ nǹkan ọ̀tọ̀ọ̀tọ̀ fún ọ.",
+        "en": "A bus from Ibadan to Lagos costs three thousand, five hundred naira. Its four digits each mean something different.",
+        "yo": "Owó ọkọ̀ láti Ibadan dé Lagos jẹ́ naira three thousand, five hundred. Digit four rẹ̀ kọ̀ọ̀kan ní ìtumọ̀ tirẹ̀.",
         "pcm": "Bus from Ibadan go Lagos dey cost three thousand, five hundred naira. Write that fare down, e get four digits. Every digit dey tell you different thing."
       },
       "show": {
@@ -88,9 +88,9 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "Take four eight six two. Counting from the right, the columns are units, tens, hundreds, thousands. So the two stands for two. The six stands for sixty. The eight stands for eight hundred. The four stands for four thousand.",
-        "yo": "Mú four eight six two. Bí a ṣe ń ka láti ọwọ́ ọ̀tún, àwọn column ni units, tens, hundreds, thousands. Nítorí náà two dúró fún two. Six dúró fún sixty. Eight dúró fún eight hundred. Four dúró fún four thousand.",
-        "pcm": "Take four eight six two. As you dey count from your right hand side, the columns na units, tens, hundreds, thousands. So the two stand for two. The six stand for sixty. The eight stand for eight hundred. The four stand for four thousand."
+        "en": "Take four eight six two. The four is in the thousands: four thousand. The two is in the units: two.",
+        "yo": "Mú four eight six two. Four wà ní thousands: four thousand. Two wà ní units: two.",
+        "pcm": "Take four eight six two. The four dey the thousands: four thousand. The two dey the units: two."
       },
       "show": {
         "en": "4862 = 4000 + 800 + 60 + 2",
@@ -102,7 +102,7 @@
       "id": "guide",
       "event": "provide_guidance",
       "say": {
-        "en": "Together now. Take three two five six. Three stands for three thousand. Your turn: what is the place value of five?",
+        "en": "Together now. Take three two five six. Three stands for three thousand. What is the place value of five?",
         "yo": "Jẹ́ ká ṣe é papọ̀. Mú three two five six. Three dúró fún three thousand. Ìwọ ná: kí ni place value ti five?",
         "pcm": "Make we do am together. Take three two five six. The three stand for three thousand. Your turn: wetin be the place value of the five?"
       },
@@ -160,7 +160,7 @@
       "id": "feedback",
       "event": "provide_feedback",
       "say": {
-        "en": "If you missed it, name the columns from the right: units, tens, hundreds, thousands. Then say which column that digit sits in.",
+        "en": "Name the columns from the right: units, tens, hundreds, thousands. Then say which column your digit is in.",
         "yo": "Tí o bá ṣì í, pe àwọn column láti ọwọ́ ọ̀tún: units, tens, hundreds, thousands. Lẹ́yìn náà sọ column tí digit náà wà.",
         "pcm": "If you miss am, call the columns from your right hand side: units, tens, hundreds, thousands. Then talk which column that digit dey."
       }

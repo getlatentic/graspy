@@ -2013,7 +2013,7 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "You buy one hundred naira airtime. The network gives fifty percent bonus. Fifty percent means one half, so the bonus is another fifty naira of airtime.",
+     "en": "You buy one hundred naira airtime. The bonus is fifty percent. That is one half, so fifty naira more.",
      "pcm": "You buy one hundred naira airtime. Network give fifty percent bonus. Fifty percent mean one half, so the bonus na another fifty naira airtime.",
      "yo": "O ra airtime naira one hundred. O gba bonus fifty percent. Ó jẹ́ naira fifty sí i."
     },
@@ -2063,7 +2063,7 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "One half as a decimal is nought point five. Multiply by one hundred, so one half is fifty percent. One quarter is nought point two five. That is twenty-five percent.",
+     "en": "One half is nought point five. Multiply by one hundred and it is fifty percent. One quarter is twenty-five percent.",
      "pcm": "One half na nought point five. One half na fifty percent. One quarter na nought point two five. One quarter na twenty-five percent.",
      "yo": "Ìdajì jẹ́ nought point five. Ìdajì jẹ́ fifty percent. Ìdámẹ́rin jẹ́ nought point two five. Ìdámẹ́rin jẹ́ twenty-five percent."
     },
@@ -2100,8 +2100,8 @@ PLANS = [
     "event": "provide_guidance",
     "id": "guide",
     "say": {
-     "en": "Together now. One tenth is one part out of ten, so it is nought point one. Say one half as a decimal.",
-     "pcm": "Make we do am together. One tenth mean one part out of ten, so as decimal e be nought point one. Your turn. Say am with me: one half as decimal.",
+     "en": "Together now. One tenth is one part in ten: nought point one. Say one half as a decimal.",
+     "pcm": "Make we do am together. One tenth na one part for ten: nought point one. Talk one half as decimal.",
      "yo": "Jẹ́ ká ṣiṣẹ́ papọ̀. Ìdámẹ́wàá jẹ́ apá kan nínú mẹ́wàá. Sọ ìdajì ní decimal."
     },
     "show": {
@@ -2226,7 +2226,7 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "You see naira notes at the market: fifty, one hundred, two hundred, five hundred, one thousand naira. We count money in naira and kobo.",
+     "en": "You see naira notes at the market. They are fifty, one hundred, five hundred. We count money in naira and kobo.",
      "pcm": "You sabi the naira notes wey you see for market: fifty, one hundred, two hundred, five hundred, one thousand naira. We dey count money with naira and kobo.",
      "yo": "O rí àwọn owó bébà náírà ní ọjà: fifty, one hundred, two hundred, five hundred, one thousand naira. A ń ka owó ní náírà àti kọ́bọ̀."
     },
@@ -2354,9 +2354,9 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "One naira is one hundred kobo. Kobo coins are hard to see today. Five twenty naira notes make one hundred naira.",
+     "en": "One naira is one hundred kobo. Five twenty naira notes make one hundred naira.",
      "pcm": "One naira na one hundred kobo. Kobo coin hard to see today. Five twenty naira notes na one hundred naira.",
-     "yo": "Náírà kan jẹ́ one hundred kọ́bọ̀. Owó ẹyọ kọ́bọ̀ ṣòro láti rí lónìí. Owó bébà twenty naira márùn-ún jẹ́ one hundred naira."
+     "yo": "Náírà kan jẹ́ one hundred kọ́bọ̀. Owó bébà twenty naira márùn-ún jẹ́ one hundred naira."
     },
     "show": {
      "en": "₦1 = 100 kobo",
@@ -2432,7 +2432,7 @@ PLANS = [
     "event": "provide_feedback",
     "id": "feedback",
     "say": {
-     "en": "If the change was not right, count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. That is seventy naira.",
+     "en": "Count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. That is seventy naira.",
      "pcm": "If the change no be right, count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. Na seventy naira.",
      "yo": "Tí ìyókù kò bá tọ́, kà sókè láti thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. Ìyẹn jẹ́ seventy naira."
     }
@@ -5023,9 +5023,9 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "Look at the league table. Your team plays Saturday, then next Saturday. That is seven days. A week has seven days.",
-     "pcm": "Look the league table for newspaper. Your team dey play for Saturday, then e go play again the next Saturday. Na seven days be that. Seven days make one week.",
-     "yo": "Wo tábìlì ìdíje bọ́ọ̀lù nínú ìwé ìròyìn. Ẹgbẹ́ rẹ máa ń ṣeré ní Saturday, ó tún máa ń ṣeré ní Saturday tó tẹ̀lé e. Ọjọ́ seven ni ọ̀sẹ̀ kan."
+     "en": "Look at the league table. Your team plays Saturday, then next Saturday. That is seven days.",
+     "pcm": "Look the league table. Your team dey play Saturday, then next Saturday. Na seven days.",
+     "yo": "Wo tábìlì ìdíje. Ẹgbẹ́ rẹ ń ṣeré ní Saturday, lẹ́yìn náà Saturday tó tẹ̀lé e. Ọjọ́ seven nìyẹn."
     },
     "show": {
      "en": "7, 14, 21…",
@@ -5156,9 +5156,9 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "One week is seven days. Two weeks is fourteen days. Three weeks is twenty-one days. Every week we add seven more: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two.",
+     "en": "One week is seven days. Two weeks is fourteen days. Three weeks is twenty-one days. Add seven each week.",
      "pcm": "One week na seven days. Two weeks na fourteen days. Three weeks na twenty-one days. Every week we dey add seven more: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two.",
-     "yo": "Ọ̀sẹ̀ kan jẹ́ ọjọ́ seven. Ọ̀sẹ̀ two jẹ́ ọjọ́ fourteen. Ọ̀sẹ̀ three jẹ́ ọjọ́ twenty-one. Ní ọ̀sẹ̀ kọ̀ọ̀kan a fi seven kún un: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two."
+     "yo": "Ọ̀sẹ̀ kan jẹ́ ọjọ́ seven. Ọ̀sẹ̀ méjì jẹ́ ọjọ́ fourteen. Ọ̀sẹ̀ mẹ́ta jẹ́ ọjọ́ twenty-one. Fi seven kún un lọ́sẹ̀ kọ̀ọ̀kan."
     },
     "show": {
      "en": "7 14 21 28 35 42",
@@ -5524,9 +5524,9 @@ PLANS = [
     "event": "enhance_retention",
     "id": "retain",
     "say": {
-     "en": "Well done. Tomorrow we count in sevens once more. Soon we give the place value of every digit in a four-digit number.",
+     "en": "Well done. Tomorrow we count in sevens once more. Soon we learn place value in four-digit numbers.",
      "pcm": "You do well. Tomorrow we go count for seven seven one more time. Soon we go talk the place value of every digit inside four-digit number.",
-     "yo": "O ṣe dáadáa. Lọ́la a ó tún kà ní seven seven lẹ́ẹ̀kan sí i. Láìpẹ́ a ó sọ place value ti digit kọ̀ọ̀kan nínú nọ́ńbà tó ní digit four."
+     "yo": "O ṣe dáadáa. Lọ́la a ó tún ka ní seven seven. Láìpẹ́ a ó kọ́ place value ti nọ́ńbà digit four."
     }
    }
   ],
@@ -7865,7 +7865,7 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "Count the fingers on your two hands: one, two, three, up to ten. Now count your toes too. All of them are twenty.",
+     "en": "Count your fingers: one, two, three, up to ten. Add your toes, and all of them make twenty.",
      "pcm": "Count the finger for your two hand: one, two, three, reach ten. Now count your toe too. All of them na twenty.",
      "yo": "Ka àwọn ìka ọwọ́ rẹ méjèèjì: one, two, three, dé ten. Ka àwọn ìka ẹsẹ̀ rẹ pẹ̀lú. Gbogbo wọn jẹ́ twenty."
     },
@@ -7994,9 +7994,9 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "After ten comes eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Every number is one more than the number before it.",
+     "en": "After ten comes eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Each is one more.",
      "pcm": "After ten na eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Every number pass the one wey dey before am by one.",
-     "yo": "Lẹ́yìn ten ni eleven, twelve, thirteen, fourteen, fifteen. Lẹ́yìn náà ni sixteen, seventeen, eighteen, nineteen, twenty. Nọ́ńbà kọ̀ọ̀kan ju èyí tó ṣáájú rẹ̀ lọ ní one."
+     "yo": "Lẹ́yìn ten ni eleven, twelve, thirteen, fourteen, fifteen. Lẹ́yìn náà sixteen, seventeen, eighteen, nineteen, twenty. Ọ̀kọ̀ọ̀kan ju tẹ́lẹ̀ lọ ní ọ̀kan."
     },
     "show": {
      "en": "11, 12, 13… 20",
@@ -9025,9 +9025,9 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "The small market holds every four days. The big one holds every six days. Both meet every twelve days. Twelve is the smallest number four and six divide.",
-     "pcm": "The small market dey hold every four days. The big market dey hold every six days. Every twelve days, both markets meet. Twelve na the smallest number wey four and six fit divide.",
-     "yo": "Ọjà kékeré máa ń wáyé ní gbogbo ọjọ́ four. Ọjà ńlá máa ń wáyé ní gbogbo ọjọ́ six. Ní gbogbo ọjọ́ twelve, ọjà méjèèjì máa ń wáyé pọ̀. Twelve ni nọ́ńbà tó kéré jù tí four àti six lè pín."
+     "en": "The small market opens every four days. The big one opens every six days. Both open together every twelve days.",
+     "pcm": "The small market dey hold every four days. The big one dey hold every six days. Both meet every twelve days.",
+     "yo": "Ọjà kékeré wáyé ní gbogbo ọjọ́ four. Ọjà ńlá wáyé ní gbogbo ọjọ́ six. Wọ́n pàdé ní gbogbo ọjọ́ twelve."
     },
     "show": {
      "en": "LCM 4, 6 = 12",
@@ -9134,9 +9134,9 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "The LCM is the smallest shared multiple. Three multiples are three, six, nine, twelve. Four multiples are four, eight, twelve. Their LCM is twelve. The HCF is the biggest shared factor. Eight factors are one, two, four, eight. Ten factors are one, two, five, ten. Their HCF is two.",
-     "pcm": "LCM na the smallest shared multiple. Multiples of three na three, six, nine, twelve. Multiples of four na four, eight, twelve. Their LCM na twelve. HCF na the biggest shared factor. Factors of eight na one, two, four, eight. Factors of ten na one, two, five, ten. Their HCF na two.",
-     "yo": "LCM ni multiple tí ó kéré jù tí three àti four lè pín. Multiples ti three ni three, six, nine, twelve. Ti four ni four, eight, twelve. LCM wọn jẹ́ twelve. HCF ni factor tó tóbi jù. Factors ti eight ni one, two, four, eight. Ti ten ni one, two, five, ten. HCF wọn jẹ́ two."
+     "en": "The LCM is the smallest shared multiple: for three and four, twelve. The HCF is the biggest shared factor: for eight and ten, two.",
+     "pcm": "LCM na the smallest shared multiple: for three and four, twelve. HCF na the biggest shared factor: for eight and ten, two.",
+     "yo": "LCM ni multiple kékeré jù tí wọ́n jọ pín: fún three àti four, twelve. HCF ni factor tó tóbi jù tí wọ́n jọ ní: fún eight àti ten, two."
     },
     "show": {
      "en": "LCM 3, 4 = 12    HCF 8, 10 = 2",
@@ -9167,7 +9167,7 @@ PLANS = [
     "event": "provide_guidance",
     "id": "guide",
     "say": {
-     "en": "Together now. What is the LCM of two and five? Count multiples of five. Stop at the first one two divides.",
+     "en": "Together now. What is the LCM of two and five? Count the fives until two divides one.",
      "pcm": "Make we do am together. Wetin be the LCM of two and five? Count multiples of five. Stop for the first one two fit divide too.",
      "yo": "Jẹ́ ká ṣe é papọ̀. Kí ni LCM ti two àti five? Ka multiples ti five. Dúró ní èyí àkọ́kọ́ tí two lè pín."
     },
@@ -9208,9 +9208,9 @@ PLANS = [
     "event": "provide_feedback",
     "id": "feedback",
     "say": {
-     "en": "If you missed it, write the numbers that divide twelve: one, two, three, four, six, twelve. Then the ones that divide eighteen: one, two, three, six, nine, eighteen. The biggest number in both lists is the HCF.",
-     "pcm": "If you miss am, write the numbers wey fit divide twelve: one, two, three, four, six, twelve. Then the ones wey fit divide eighteen: one, two, three, six, nine, eighteen. The biggest number inside the two lists na the HCF.",
-     "yo": "Tí o bá ṣì í, kọ àwọn nọ́ńbà tí ó lè pín twelve: one, two, three, four, six, twelve. Lẹ́yìn náà àwọn tí ó lè pín eighteen: one, two, three, six, nine, eighteen. Nọ́ńbà tó tóbi jù nínú àkójọ méjèèjì ni HCF."
+     "en": "Write the numbers that divide twelve, then eighteen. The biggest number in both lists is the HCF.",
+     "pcm": "Write the numbers wey fit divide twelve, then eighteen. The biggest one wey dey both lists na the HCF.",
+     "yo": "Kọ àwọn nọ́ńbà tó lè pín twelve, lẹ́yìn náà eighteen. Nọ́ńbà tó tóbi jù nínú méjèèjì ni HCF."
     }
    },
    {
@@ -9291,9 +9291,9 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "A bus from Ibadan to Lagos costs three thousand, five hundred naira. Write that fare down and it has four digits. Each digit tells you something different.",
+     "en": "A bus from Ibadan to Lagos costs three thousand, five hundred naira. Its four digits each mean something different.",
      "pcm": "Bus from Ibadan go Lagos dey cost three thousand, five hundred naira. Write that fare down, e get four digits. Every digit dey tell you different thing.",
-     "yo": "Owó ọkọ̀ láti Ibadan dé Lagos jẹ́ naira three thousand, five hundred. Kọ owó náà sílẹ̀, ó ní digit four. Digit kọ̀ọ̀kan ń sọ nǹkan ọ̀tọ̀ọ̀tọ̀ fún ọ."
+     "yo": "Owó ọkọ̀ láti Ibadan dé Lagos jẹ́ naira three thousand, five hundred. Digit four rẹ̀ kọ̀ọ̀kan ní ìtumọ̀ tirẹ̀."
     },
     "show": {
      "en": "3500",
@@ -9341,9 +9341,9 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "Take four eight six two. Counting from the right, the columns are units, tens, hundreds, thousands. So the two stands for two. The six stands for sixty. The eight stands for eight hundred. The four stands for four thousand.",
-     "pcm": "Take four eight six two. As you dey count from your right hand side, the columns na units, tens, hundreds, thousands. So the two stand for two. The six stand for sixty. The eight stand for eight hundred. The four stand for four thousand.",
-     "yo": "Mú four eight six two. Bí a ṣe ń ka láti ọwọ́ ọ̀tún, àwọn column ni units, tens, hundreds, thousands. Nítorí náà two dúró fún two. Six dúró fún sixty. Eight dúró fún eight hundred. Four dúró fún four thousand."
+     "en": "Take four eight six two. The four is in the thousands: four thousand. The two is in the units: two.",
+     "pcm": "Take four eight six two. The four dey the thousands: four thousand. The two dey the units: two.",
+     "yo": "Mú four eight six two. Four wà ní thousands: four thousand. Two wà ní units: two."
     },
     "show": {
      "en": "4862 = 4000 + 800 + 60 + 2",
@@ -9373,7 +9373,7 @@ PLANS = [
     "event": "provide_guidance",
     "id": "guide",
     "say": {
-     "en": "Together now. Take three two five six. Three stands for three thousand. Your turn: what is the place value of five?",
+     "en": "Together now. Take three two five six. Three stands for three thousand. What is the place value of five?",
      "pcm": "Make we do am together. Take three two five six. The three stand for three thousand. Your turn: wetin be the place value of the five?",
      "yo": "Jẹ́ ká ṣe é papọ̀. Mú three two five six. Three dúró fún three thousand. Ìwọ ná: kí ni place value ti five?"
     },
@@ -9413,7 +9413,7 @@ PLANS = [
     "event": "provide_feedback",
     "id": "feedback",
     "say": {
-     "en": "If you missed it, name the columns from the right: units, tens, hundreds, thousands. Then say which column that digit sits in.",
+     "en": "Name the columns from the right: units, tens, hundreds, thousands. Then say which column your digit is in.",
      "pcm": "If you miss am, call the columns from your right hand side: units, tens, hundreds, thousands. Then talk which column that digit dey.",
      "yo": "Tí o bá ṣì í, pe àwọn column láti ọwọ́ ọ̀tún: units, tens, hundreds, thousands. Lẹ́yìn náà sọ column tí digit náà wà."
     }
@@ -9798,7 +9798,7 @@ PLANS = [
     "event": "provide_feedback",
     "id": "feedback",
     "say": {
-     "en": "If your number was not right, count the tens again: ten, twenty, thirty. Thirty is three tens, and four is left over.",
+     "en": "Count the tens again: ten, twenty, thirty. Thirty is three tens, and four is left over.",
      "pcm": "If your number no right, count the tens again: ten, twenty, thirty. Thirty na three tens, and four remain.",
      "yo": "Tí nọ́ńbà rẹ kò bá tọ́, tún ka tens: ten, twenty, thirty. Thirty jẹ́ three tens, four sì ṣẹ́kù."
     }
@@ -9886,9 +9886,9 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "In the market, a trader puts oranges in rows. Twelve make three rows of four. Thirteen never makes equal rows. One is left over. Thirteen is prime.",
-     "pcm": "For market, one trader dey arrange her orange for rows. Twelve orange go make three rows of four. But thirteen orange no fit make equal rows, one go always remain. Number like thirteen na prime number.",
-     "yo": "Ní ọjà, olówó ọjà kan ń to ọsàn sí ọ̀wọ̀. Ọsàn twelve lè ṣe ọ̀wọ̀ three ti four. Ṣùgbọ́n thirteen kò lè ṣe ọ̀wọ̀ tó dọ́gba. Ọ̀kan máa ń kù. Thirteen jẹ́ prime number."
+     "en": "Oranges go in rows. Twelve make three rows of four. Thirteen never makes equal rows, so it is prime.",
+     "pcm": "Orange dey go for rows. Twelve orange make three rows of four. Thirteen no fit make equal rows, so e be prime.",
+     "yo": "Ọsàn máa ń wà ní ọ̀wọ̀. Twelve ṣe ọ̀wọ̀ three ti four. Thirteen kò lè ṣe ọ̀wọ̀ tó dọ́gba, nítorí náà prime ni."
     },
     "show": {
      "en": "13: only 1 and 13",
@@ -9936,9 +9936,9 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "A prime number has two factors: one and itself. Two, three, five and seven are prime. Nine is not prime. Three times three is nine. One is not prime. It has one factor.",
-     "pcm": "Prime number get only two factors, one and the number itself. Two, three, five and seven na prime. Nine no be prime, because three times three na nine, so three fit divide am too. One no be prime, because e get only one factor.",
-     "yo": "Prime number ní factor two péré, one àti nọ́ńbà náà fúnra rẹ̀. Two, three, five àti seven jẹ́ prime. Nine kì í ṣe prime, nítorí three times three jẹ́ nine, nítorí náà three náà lè pín in. One kì í ṣe prime, nítorí ó ní factor one péré."
+     "en": "A prime number has only two factors: one and itself. Two, three, five and seven are prime. Nine is not.",
+     "pcm": "Prime number get only two factors: one and the number itself. Two, three, five and seven na prime. Nine no be.",
+     "yo": "Prime number ní factor méjì péré: one àti nọ́ńbà náà fúnra rẹ̀. Two, three, five àti seven jẹ́ prime. Nine kọ́."
     },
     "show": {
      "en": "2 3 5 7 11 13",
@@ -9968,9 +9968,9 @@ PLANS = [
     "event": "provide_guidance",
     "id": "guide",
     "say": {
-     "en": "Together now. Seven can be divided by one, and by seven, and by nothing else. So how many numbers divide seven exactly?",
-     "pcm": "Make we do am together. One fit divide seven, seven itself fit divide am, and nothing else fit divide am. So how many numbers dey divide seven complete?",
-     "yo": "Jẹ́ ká ṣe é papọ̀. One lè pín seven, seven náà lè pín in, kò sí ohun mìíràn tí ó lè pín in. Nọ́ńbà mélòó ni ó lè pín seven pátápátá?"
+     "en": "Together now. Seven divides only by one and by seven. So how many numbers divide seven exactly?",
+     "pcm": "Make we do am together. Seven fit divide only by one and by seven. So how many numbers fit divide seven exactly?",
+     "yo": "Jẹ́ ká ṣe é papọ̀. Seven pín nípa one àti seven nìkan. Nọ́ńbà mélòó ni ó pín seven dáadáa?"
     },
     "show": {
      "en": "7 ÷ 1, 7 ÷ 7",
@@ -10142,9 +10142,9 @@ PLANS = [
     "event": "provide_feedback",
     "id": "feedback",
     "say": {
-     "en": "Check the ones you missed. Try to divide each number by two, by three, by five and by seven. If none of them divides it, the number is prime.",
+     "en": "Try dividing each number you missed by two, three, five and seven. If none divides it, it is prime.",
      "pcm": "Check the ones wey you miss. Try divide every number with two, with three, with five and with seven. If none of dem divide am, that number na prime.",
-     "yo": "Ṣàyẹ̀wò àwọn tí o pàdánù. Gbìyànjú láti pín nọ́ńbà kọ̀ọ̀kan pẹ̀lú two, three, five àti seven. Tí ọ̀kankan wọn kò bá lè pín in, nọ́ńbà náà jẹ́ prime."
+     "yo": "Gbìyànjú láti pín nọ́ńbà kọ̀ọ̀kan tí o pàdánù pẹ̀lú two, three, five àti seven. Tí kò bá pín, prime ni."
     }
    },
    {
@@ -10226,9 +10226,9 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "Look at the big clock on the wall at home. Instead of one, two, three it shows I, II, III. Your textbook names its chapters the same way. Those letters are Roman numerals.",
-     "pcm": "Look the big clock wey dey wall for house. Instead of one, two, three, e dey show I, II, III. Your textbook too dey name im chapters the same way. Those letters na Roman numerals.",
-     "yo": "Wo aago ńlá tó wà lára ògiri nílé. Dípò one, two, three, ó fi I, II, III hàn. Ìwé ìkẹ́kọ̀ọ́ rẹ náà ń pe àwọn orí rẹ̀ bákan náà. Àwọn lẹ́tà wọ̀nyí ni Roman numerals."
+     "en": "The big clock at home shows I, II, III. Those letters are Roman numerals.",
+     "pcm": "The big clock for house dey show I, II, III. Those letters na Roman numerals.",
+     "yo": "Aago ńlá nílé fi I, II, III hàn. Àwọn lẹ́tà yẹn ni Roman numerals."
     },
     "show": {
      "en": "XII = 12",
@@ -10354,9 +10354,9 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "I is one. V is five. X is ten. L is fifty. C is one hundred. A letter after a bigger one is added. X I is eleven. A smaller letter before a bigger one is taken away. I X is nine.",
-     "pcm": "I na one. V na five. X na ten. L na fifty. C na one hundred. Any letter wey dey after big letter, we dey add am, so X I na eleven. Small letter wey dey before big one, we dey take am comot, so I X na nine.",
-     "yo": "I jẹ́ one. V jẹ́ five. X jẹ́ ten. L jẹ́ fifty. C jẹ́ one hundred. Lẹ́tà tí a bá kọ lẹ́yìn lẹ́tà tó tóbi jù ni a fi kún un, nítorí náà X I jẹ́ eleven. Lẹ́tà kékeré tí a bá kọ ṣáájú èyí tó tóbi ni a yọ kúrò, nítorí náà I X jẹ́ nine."
+     "en": "I is one, V is five, X is ten. A letter after a bigger one adds: X I is eleven.",
+     "pcm": "I na one, V na five, X na ten. Letter wey dey after bigger one dey add: X I na eleven.",
+     "yo": "I jẹ́ one, V jẹ́ five, X jẹ́ ten. Lẹ́tà tó tẹ̀lé èyí tó tóbi jù ń fi kún un: X I jẹ́ eleven."
     },
     "show": {
      "en": "I=1 V=5 X=10 L=50 C=100",
@@ -10385,9 +10385,9 @@ PLANS = [
     "event": "provide_guidance",
     "id": "guide",
     "say": {
-     "en": "Now the other way. Ten is X. Thirty is X X X. Your turn: say the Roman numeral for four, letter by letter?",
+     "en": "A small letter before a big one takes away: I X is nine. Your turn: what is four, letter by letter?",
      "pcm": "Now make we do am the other way, letters from number. Ten na X. Thirty na X X X. Your turn: talk the Roman numeral for four, letter by letter.",
-     "yo": "Wá ṣe é ní ọ̀nà kejì, lẹ́tà láti inú nọ́ńbà. Ten jẹ́ X. Thirty jẹ́ X X X. Ìwọ ná: sọ Roman numeral fún four, lẹ́tà kọ̀ọ̀kan."
+     "yo": "Lẹ́tà kékeré ṣáájú èyí tóbi ń yọ kúrò: I X jẹ́ nine. Ìwọ ná: sọ four, lẹ́tà lẹ́tà."
     },
     "show": {
      "en": "4 = ?",
@@ -10426,7 +10426,7 @@ PLANS = [
     "event": "provide_feedback",
     "id": "feedback",
     "say": {
-     "en": "If you missed it, take the letters one at a time. X is ten, I is one, and the second I is one more. Add them.",
+     "en": "Take the letters one at a time. X is ten, I is one, the next I is one more. Add them.",
      "pcm": "If you miss am, take the letters one by one. X na ten, I na one, and the second I na one more. Add dem together.",
      "yo": "Tí o bá ṣì í, mú àwọn lẹ́tà náà lọ́kọ̀ọ̀kan. X jẹ́ ten, I jẹ́ one, I kejì sì jẹ́ one mìíràn. Fi wọ́n kún ara wọn."
     }
@@ -10462,9 +10462,9 @@ PLANS = [
     "event": "enhance_retention",
     "id": "retain",
     "say": {
-     "en": "Well done. Tomorrow we read Roman numerals again. Soon we put whole numbers in order with less than and greater than.",
+     "en": "Well done. Tomorrow we read Roman numerals again. Soon we put numbers in order.",
      "pcm": "You do well. Tomorrow we go read Roman numerals again. Soon we go arrange whole numbers with less than and greater than.",
-     "yo": "O ṣe dáadáa. Lọ́la a ó tún ka Roman numerals. Láìpẹ́ a ó to àwọn nọ́ńbà ní ètò pẹ̀lú less than àti greater than."
+     "yo": "O ṣe dáadáa. Lọ́la a ó tún ka Roman numerals. Láìpẹ́ a ó to àwọn nọ́ńbà ní ètò."
     }
    }
   ],
@@ -11104,7 +11104,7 @@ PLANS = [
     "event": "assess_performance",
     "id": "assess",
     "say": {
-     "en": "Let us see what you remember. Forty two exercise books are shared among six pupils. How many books does each pupil get?",
+     "en": "Let us see what you remember. Forty two books are shared among six pupils. How many does each get?",
      "pcm": "Make we see wetin you remember. Forty two book share for six pupil. How many each one go get?",
      "yo": "Jẹ́ ká wo ohun tí o rántí. Ìwé forty two fún akẹ́kọ̀ọ́ six. Mélòó ni ẹnìkọ̀ọ̀kan gbà?"
     },
@@ -11256,8 +11256,8 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "Adding the same number again and again is multiplying. Two add two add two is six. Three twos make two times three.",
-     "pcm": "When you add the same number again and again, na multiplying. Two add two add two na six. Three twos na two times three. The times sign be like small cross.",
+     "en": "Adding the same number over and over is multiplying. Two add two add two is six: two times three.",
+     "pcm": "When you add the same number over and over, na multiplying. Two add two add two na six: two times three.",
      "yo": "Fífi nọ́ńbà kan náà kún ara rẹ̀ léraléra ni multiplying. Two add two add two jẹ́ six. Three twos ni two times three. Àmì times dà bí àgbélébùú kékeré."
     },
     "show": {
@@ -11598,7 +11598,7 @@ PLANS = [
     "event": "gain_attention",
     "id": "attention",
     "say": {
-     "en": "You may go to school Monday to Friday. Saturday can bring play, and Sunday worship or rest. A week has seven days.",
+     "en": "School is Monday to Friday. Saturday is for play, and Sunday for worship or rest. A week has seven days.",
      "pcm": "You fit go school Monday to Friday. Saturday fit bring play, and Sunday worship or rest. One week get seven days.",
      "yo": "O lè lọ sí ilé ìwé láti Monday dé Friday. Saturday lè jẹ́ eré, Sunday sì lè jẹ́ ìjọ́sìn tàbí ìsinmi. Ọ̀sẹ̀ kan ní ọjọ́ méje."
     },
@@ -12728,7 +12728,7 @@ PLANS = [
     "event": "present_content",
     "id": "present",
     "say": {
-     "en": "A clock has short and long hands. Short hands show hours, long hands show minutes. Twelve means o'clock, and six means half past.",
+     "en": "The short hand shows hours, the long hand minutes. Long hand on twelve is o'clock. On six, half past.",
      "pcm": "Clock get short and long hands. Short hand dey show hour, long hand dey show minutes. Twelve mean o'clock, and six mean half past.",
      "yo": "Aago ní ọwọ́ kúkúrú àti gígùn. Ọwọ́ kúkúrú ń fi wákàtí hàn, ọwọ́ gígùn sì ń fi ìṣẹ́jú hàn. Twelve túmọ̀ sí o'clock, six sì túmọ̀ sí half past."
     },

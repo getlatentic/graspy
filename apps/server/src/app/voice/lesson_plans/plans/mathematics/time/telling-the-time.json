@@ -122,7 +122,7 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "A clock has short and long hands. Short hands show hours, long hands show minutes. Twelve means o'clock, and six means half past.",
+        "en": "The short hand shows hours, the long hand minutes. Long hand on twelve is o'clock. On six, half past.",
         "pcm": "Clock get short and long hands. Short hand dey show hour, long hand dey show minutes. Twelve mean o'clock, and six mean half past.",
         "yo": "Aago ní ọwọ́ kúkúrú àti gígùn. Ọwọ́ kúkúrú ń fi wákàtí hàn, ọwọ́ gígùn sì ń fi ìṣẹ́jú hàn. Twelve túmọ̀ sí o'clock, six sì túmọ̀ sí half past."
       },

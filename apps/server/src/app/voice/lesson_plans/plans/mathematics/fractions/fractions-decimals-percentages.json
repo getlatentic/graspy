@@ -36,7 +36,7 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "You buy one hundred naira airtime. The network gives fifty percent bonus. Fifty percent means one half, so the bonus is another fifty naira of airtime.",
+        "en": "You buy one hundred naira airtime. The bonus is fifty percent. That is one half, so fifty naira more.",
         "pcm": "You buy one hundred naira airtime. Network give fifty percent bonus. Fifty percent mean one half, so the bonus na another fifty naira airtime.",
         "yo": "O ra airtime naira one hundred. O gba bonus fifty percent. Ó jẹ́ naira fifty sí i."
       },
@@ -86,7 +86,7 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "One half as a decimal is nought point five. Multiply by one hundred, so one half is fifty percent. One quarter is nought point two five. That is twenty-five percent.",
+        "en": "One half is nought point five. Multiply by one hundred and it is fifty percent. One quarter is twenty-five percent.",
         "pcm": "One half na nought point five. One half na fifty percent. One quarter na nought point two five. One quarter na twenty-five percent.",
         "yo": "Ìdajì jẹ́ nought point five. Ìdajì jẹ́ fifty percent. Ìdámẹ́rin jẹ́ nought point two five. Ìdámẹ́rin jẹ́ twenty-five percent."
       },
@@ -100,8 +100,8 @@
       "id": "guide",
       "event": "provide_guidance",
       "say": {
-        "en": "Together now. One tenth is one part out of ten, so it is nought point one. Say one half as a decimal.",
-        "pcm": "Make we do am together. One tenth mean one part out of ten, so as decimal e be nought point one. Your turn. Say am with me: one half as decimal.",
+        "en": "Together now. One tenth is one part in ten: nought point one. Say one half as a decimal.",
+        "pcm": "Make we do am together. One tenth na one part for ten: nought point one. Talk one half as decimal.",
         "yo": "Jẹ́ ká ṣiṣẹ́ papọ̀. Ìdámẹ́wàá jẹ́ apá kan nínú mẹ́wàá. Sọ ìdajì ní decimal."
       },
       "show": {
