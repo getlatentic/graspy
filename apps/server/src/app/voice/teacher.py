@@ -19,6 +19,9 @@ from .speech.teacher_audio_contract import fact_utterance_id, teacher_utterance
 MODEL = "@cf/openai/gpt-oss-120b"
 DECISION_TIMEOUT_SECONDS = 20
 MASTERY_DAYS = 2
+# A check of what the child already knows is asked this many times a day; a child who cannot say it is taught
+# next, not asked again.
+RECALL_ATTEMPTS = 2
 
 
 class TeacherChoiceError(RuntimeError):
@@ -81,6 +84,7 @@ class PlanProgress:
     done_today: set[str] = field(default_factory=set)
     retry_today: set[str] = field(default_factory=set)
     feedback_owed: set[str] = field(default_factory=set)
+    failed_today: dict[str, int] = field(default_factory=dict)
     last_decision: dict[str, str] = field(default_factory=dict)
     facts_owed: dict[str, frozenset[int]] = field(default_factory=dict)
     assessed_days: set[date] = field(default_factory=set)
@@ -133,6 +137,14 @@ def progress_by_plan(
                     plan.done_today.discard(item.event_id)
                     plan.retry_today.add(item.event_id)
                     plan.feedback_owed.add(item.event_id)
+                    plan.failed_today[item.event_id] = (
+                        plan.failed_today.get(item.event_id, 0) + 1
+                    )
+                    if (
+                        event.event == "stimulate_recall"
+                        and plan.failed_today[item.event_id] >= RECALL_ATTEMPTS
+                    ):
+                        plan.feedback_owed.discard(item.event_id)
     return progress
 
 
@@ -185,8 +197,14 @@ def due_reviews(
 
 def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
     """The first event not done today. An activity that failed today hears the plan's feedback
-    event first, then comes round again. None when the plan is complete for today."""
+    event first, then comes round again, except a recall check the child has failed twice, which
+    is left for the teaching that follows. None when the plan is complete for today."""
     for event in plan.events:
+        if (
+            event.event == "stimulate_recall"
+            and state.failed_today.get(event.id, 0) >= RECALL_ATTEMPTS
+        ):
+            continue
         owed = state.facts_owed.get(event.id) or frozenset()
         if event.id in state.retry_today or owed:
             if event.id in state.feedback_owed:
