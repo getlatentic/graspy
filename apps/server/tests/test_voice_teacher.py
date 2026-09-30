@@ -193,6 +193,13 @@ def test_a_lesson_left_for_tomorrow_is_taken_up_again_the_next_day():
     assert options and options[0].plan_id == T1
 
 
+def test_a_child_who_did_not_try_the_guided_practice_is_asked_again_not_told_what_they_skipped():
+    evidence = [*taught_before_practice()[:-1], marked(T1, "guide", "not_understood")]
+    assert next_step(evidence) == "guide"
+    tried = [*taught_before_practice()[:-1], marked(T1, "guide", "try_again")]
+    assert next_step(tried) == "feedback"
+
+
 def test_a_guided_practice_the_child_cannot_do_is_not_repeated_for_ever():
     evidence = [*taught_before_practice(), marked(T1, "practice", "not_understood")]
     for _ in range(3):
