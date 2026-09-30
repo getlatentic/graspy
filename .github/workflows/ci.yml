@@ -52,6 +52,11 @@ jobs:
         run: |
           npx tsc --noEmit
           npx vitest run
+      - name: Pedagogy test
+        working-directory: apps/pedagogy
+        run: |
+          npx tsc --noEmit
+          npx vitest run
       - name: Server admin UI
         working-directory: apps/server/ui
         run: |

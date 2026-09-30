@@ -1,0 +1,19 @@
+{
+  "name": "@graspy/pedagogy",
+  "private": true,
+  "type": "module",
+  "description": "A simulated child takes a voice lesson in the real web app; the transcript and screenshots are kept for a pedagogy review",
+  "scripts": {
+    "pedagogy": "node src/cli.ts",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "playwright-core": "^1.63.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
+  }
+}
