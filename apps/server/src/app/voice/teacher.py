@@ -274,7 +274,7 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
     three times is left for tomorrow. Once the child has passed the check today, only what follows
     it is left: a review passed first is not followed by the whole lesson. None when the plan is
     complete or paused for today."""
-    if state.paused_today:
+    if state.paused_today and not state.assessed_today:
         return None
     events = plan.events
     if state.assessed_today:

@@ -14,6 +14,7 @@ from app.voice.teacher import (
     evidence_from_rows,
     next_options,
     parse_choice,
+    left_for_tomorrow,
     progress_by_plan,
     rest_move,
 )
@@ -224,6 +225,14 @@ def test_a_review_passed_first_is_not_followed_by_the_whole_lesson_again():
     progress = progress_by_plan(done, PLANS, DAY_1)
     options = next_options(PLANS, progress, DAY_1, TABLE_CLASS, done)
     assert all(option.plan_id != T1 for option in options)
+
+
+def test_a_check_passed_late_after_three_misses_is_a_pass_not_a_lesson_left_for_tomorrow():
+    evidence = [*taught_before_practice(), *[marked(T1, "assess", "try_again")] * 3]
+    evidence.append(marked(T1, "assess", "correct"))
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert not left_for_tomorrow(PLANS, progress, TABLE_CLASS)
+    assert next_step(evidence) == "retain"
 
 
 def test_a_lesson_left_for_tomorrow_on_three_days_comes_after_the_others_and_still_when_there_are_none():
