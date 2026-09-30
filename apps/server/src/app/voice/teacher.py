@@ -110,6 +110,11 @@ class PlanProgress:
     def mastered(self) -> bool:
         return len(self.assessed_days) >= MASTERY_DAYS
 
+    @property
+    def reviewed_today(self) -> bool:
+        """Assessed today a lesson that was assessed on an earlier day too."""
+        return self.assessed_today and len(self.assessed_days) >= 2
+
 
 def _served_first(plan: LessonPlan, owed: set[str]) -> set[str]:
     """The teacher answers one miss at a time, in plan order; that one is no longer owed."""
@@ -280,6 +285,8 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
             at for at, e in enumerate(events) if e.event == "assess_performance"
         )
         events = events[check + 1 :]
+        if state.reviewed_today:
+            events = [e for e in events if e.event != "enhance_retention"]
     for event in events:
         # The plan's feedback is for a miss: it comes from the owed help below, never as the next step in order.
         if event.event == "provide_feedback":
@@ -312,8 +319,9 @@ def next_options(
 ) -> list[Option]:
     """One to three legal next steps: finish the lesson touched last today, else a due review
     and the next new plan. A lesson the learner opened themselves is the only step offered.
-    Nothing is offered once a lesson has been left for tomorrow or finished today: every lesson
-    ends by telling the child what comes tomorrow, so the day is over."""
+    Nothing is offered once a lesson has been left for tomorrow or learnt today: a lesson ends by
+    telling the child what comes tomorrow, so the day is over. A review ends without that line, so
+    it is followed by the next review or new lesson."""
     if left_for_tomorrow(plans, progress, learner_class):
         return []
     if chosen is not None:
@@ -334,7 +342,8 @@ def next_options(
             why = f"continue {plan.title['en']} at {event.event}"
             owed = progress[plan.id].facts_owed.get(event.id) or frozenset()
             return [Option(plan.id, event.id, why, tuple(sorted(owed)))]
-        return []
+        if not progress[plan.id].reviewed_today:
+            return []
     options: list[Option] = []
     for plan in due_reviews(plans, progress, today, learner_class, weakened)[:2]:
         review = plan.event_of("assess_performance")
