@@ -125,6 +125,11 @@ describe("marking a list said in order", () => {
     expect(markSequence(DAYS, ["monday", "monday", "tuesday"], "monday monday tuesday").verdict).toBe("wrong");
   });
 
+  it("counts '05' as five when the model reports it as the recogniser wrote it", () => {
+    const fives = [5, 10, 15].map((n) => ({ id: String(n), spoken: [String(n)] }));
+    expect(markSequence(fives, ["05", "10", "15"], "05, 10, 15").verdict).toBe("correct");
+  });
+
   it("does not take a letter for a word it only sits inside", () => {
     const letters = ["a", "b", "c", "d", "e"].map((id) => ({ id, spoken: [id] }));
     expect(markSequence(letters, ["a", "b", "c", "d", "e"], "a b c d the").verdict).toBe("wrong");

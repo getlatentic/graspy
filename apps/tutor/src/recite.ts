@@ -41,11 +41,14 @@ export interface SequenceItem {
 }
 
 /**
- * Words as a recogniser and the curriculum may spell them alike: lower case, letters and digits only. Accents
+ * Words as a recogniser and the curriculum may spell them alike: lower case, letters and digits only, and a single
+ * digit with a leading zero ("05") as the digit. Accents
  * and dots under letters go first, or Yoruba's "méjì" (two) and "mẹ́jọ" (eight) would both become "m j".
  */
 export function flattened(text: string): string {
-  return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const words = text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  // The recogniser writes "five" as "05" in a run of numbers.
+  return words.replace(/\b0([1-9])\b/g, "$1");
 }
 
 /** Whether these words were really in the recording, so a fact cannot be conjured up for a child. */

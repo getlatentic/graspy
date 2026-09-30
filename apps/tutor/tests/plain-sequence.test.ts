@@ -55,12 +55,17 @@ describe("heardSequence", () => {
     expect(heardSequence(letters, "a, b, um, then c")).toEqual(["a", "b", "c"]);
   });
 
+  it("reads a single digit with a leading zero as the digit, as the recogniser writes 'five' in a run of numbers", () => {
+    expect(heardSequence(fives, "05, 10, 15")).toEqual(["5", "10", "15"]);
+    expect(heardSequence(fives, "5 10 15 20 25")).toEqual(["5", "10", "15", "20", "25"]);
+  });
+
   it("is nothing heard for an empty recording", () => {
     expect(heardSequence(fives, "")).toEqual([]);
     expect(heardSequence(fives, null)).toEqual([]);
   });
 
-  it.each(["1235", "05, 10", "0510152025", "five apples", "cinq dix", "5, 10, fiftteen", "márùn-ún ten"])("declines %s, which is not plain", (said) => {
+  it.each(["1235", "0510", "0510152025", "005, 10", "five apples", "cinq dix", "5, 10, fiftteen", "márùn-ún ten"])("declines %s, which is not plain", (said) => {
     expect(heardSequence(fives, said)).toBeNull();
   });
 });

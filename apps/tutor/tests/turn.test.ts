@@ -51,6 +51,14 @@ const toolReplies = (messages: Record<string, unknown>[]) =>
   messages.filter((message) => message.role === "tool").map((message) => String(message.content));
 
 describe("a turn only ever speaks a line a child may hear", () => {
+  it("tells the teacher not to praise a child who did not try the question", async () => {
+    const { env, seen } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);
+
+    await takeTurn(env, ask);
+
+    expect(JSON.stringify(seen[0])).toContain("praise them");
+  });
+
   it("asks the teacher to think briefly, which keeps a reply to a few seconds, and the judge to think in full", async () => {
     const { env, efforts } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);
 
