@@ -92,13 +92,21 @@ export function feedbackFindings(run: Run): Finding[] {
   return found;
 }
 
-/** Lines a young child cannot hold in mind. */
+/**
+ * Lines a young child cannot hold in mind. The teacher's reply to an answer is checked as a concern, since the
+ * tutor writes it and holds it to a length. A line the lesson plan wrote is the same for every child and is
+ * content for its authors to shorten, so it is a note.
+ */
 export function lengthFindings(run: Run): Finding[] {
   return run.turns.flatMap((turn) => {
-    const words = wordsOf(turn.move.says).length;
-    return words > LONGEST_LINE_WORDS
-      ? [finding("line-too-long", "concern", turn.index, `${words} words: "${turn.move.says}".`)]
-      : [];
+    const found: Finding[] = [];
+    const reply = turn.marking?.feedback ?? "";
+    if (wordsOf(reply).length > LONGEST_LINE_WORDS)
+      found.push(finding("line-too-long", "concern", turn.index, `${wordsOf(reply).length} words: "${reply}".`));
+    const planned = wordsOf(turn.move.says).length;
+    if (planned > LONGEST_LINE_WORDS)
+      found.push(finding("plan-line-long", "note", turn.index, `The lesson plan's line is ${planned} words: "${turn.move.says}".`));
+    return found;
   });
 }
 
@@ -129,16 +137,28 @@ export function unmarkedFindings(run: Run): Finding[] {
   );
 }
 
-/** The teacher's events should follow the nine events of instruction, not jump back. */
+/**
+ * The teacher's events should follow the nine events of instruction within a lesson, not jump back. A new lesson
+ * starts the order again, and the plan's guided practice comes round again after a miss, as it should.
+ */
 export function orderFindings(run: Run): Finding[] {
   const found: Finding[] = [];
   let highest = -1;
+  let lesson: string | null = null;
+  let previous: Turn | null = null;
   for (const turn of run.turns) {
+    if (turn.move.planId !== lesson) {
+      lesson = turn.move.planId;
+      highest = -1;
+    }
     const rank = turn.move.event ? EVENT_ORDER.indexOf(turn.move.event) : -1;
-    if (rank < 0) continue;
-    if (rank < highest)
-      found.push(finding("event-out-of-order", "note", turn.index, `${turn.move.event} came after ${EVENT_ORDER[highest]}.`));
-    highest = Math.max(highest, rank);
+    if (rank >= 0) {
+      const reteach = turn.move.event === "provide_guidance" && previous?.marking && previous.marking.decision !== "correct";
+      if (rank < highest && !reteach)
+        found.push(finding("event-out-of-order", "note", turn.index, `${turn.move.event} came after ${EVENT_ORDER[highest]}.`));
+      highest = Math.max(highest, rank);
+    }
+    previous = turn;
   }
   return found;
 }
