@@ -283,6 +283,9 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
         )
         events = events[check + 1 :]
     for event in events:
+        # The plan's feedback is for a miss: it comes from the owed help below, never as the next step in order.
+        if event.event == "provide_feedback":
+            continue
         if (
             event.event == "stimulate_recall"
             and state.failed_today.get(event.id, 0) >= RECALL_ATTEMPTS
