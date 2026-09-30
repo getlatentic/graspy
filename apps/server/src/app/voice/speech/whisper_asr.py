@@ -16,7 +16,8 @@ import time
 logger = logging.getLogger(__name__)
 
 WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo"
-WHISPER_TIMEOUT_SECONDS = 10
+# Whisper answered in 1.4 s at the median and 6 s at the slowest in staging lessons; the turn has 20 s in all.
+WHISPER_TIMEOUT_SECONDS = 6
 # Workers AI answers some recordings with a decode error that a second ask does not repeat. A slow
 # answer is not asked for again: it says Whisper is slow, not that the recording was bad.
 WHISPER_TRIES = 2
