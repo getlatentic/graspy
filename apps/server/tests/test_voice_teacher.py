@@ -131,6 +131,17 @@ def taught_before_practice():
     ]
 
 
+DATE_4 = date(2026, 9, 9)
+DATE_5 = date(2026, 9, 10)
+
+
+def taught_before_practice_on(day):
+    return [
+        said(T1, e, day)
+        for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
 def next_step(evidence, day=DAY_1):
     progress = progress_by_plan(evidence, PLANS, day)
     options = next_options(PLANS, progress, day, TABLE_CLASS, evidence)
@@ -158,14 +169,15 @@ def test_a_lesson_whose_activity_is_failed_three_times_is_left_for_tomorrow():
         evidence.append(said(T1, "guide"))
     progress = progress_by_plan(evidence, PLANS, DAY_1)
     assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
-    assert rest_move(progress)["say"] == "try-tomorrow"
+    assert rest_move(PLANS, progress, TABLE_CLASS)["say"] == "try-tomorrow"
 
 
-def test_the_day_is_over_once_a_lesson_is_left_for_tomorrow_even_when_another_lesson_could_start():
+def test_the_day_is_over_for_a_class_once_a_lesson_of_it_is_left_for_tomorrow():
     evidence = [*taught_before_practice(), *[marked(T1, "practice", "try_again")] * 3]
     progress = progress_by_plan(evidence, PLANS, DAY_1)
-    assert next_options(PLANS, progress, DAY_1, "primary_1", evidence) == []
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
     assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence, chosen=T2) == []
+    assert next_options(PLANS, progress, DAY_1, "primary_1", evidence) != []
 
 
 def test_a_lesson_left_for_tomorrow_is_taken_up_again_the_next_day():
@@ -175,9 +187,59 @@ def test_a_lesson_left_for_tomorrow_is_taken_up_again_the_next_day():
     assert options and options[0].plan_id == T1
 
 
+def test_a_guided_practice_the_child_cannot_do_is_not_repeated_for_ever():
+    evidence = [*taught_before_practice(), marked(T1, "practice", "not_understood")]
+    for _ in range(3):
+        evidence += [marked(T1, "guide", "not_understood")]
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
+
+
+def test_a_recitation_with_some_facts_right_is_progress_not_a_miss_toward_leaving_the_lesson():
+    partial = Evidence(T2, "practice", DAY_1, "try_again", PARTIAL_RECITATION)
+    evidence = [*taught_up_to_practice(), partial, said(T2, "feedback")]
+    for _ in range(2):
+        evidence.append(answered(T2, "practice", 2, 3, "try_again"))
+    assert next_move(evidence, T2)["event"] == "provide_guidance"
+    evidence += [said(T2, "guide"), answered(T2, "practice", 2, 3, "correct")]
+    evidence.append(answered(T2, "practice", 2, 7, "try_again"))
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert not progress[T2].paused_today
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) != []
+
+
+def test_facts_missed_three_times_running_with_none_right_leave_the_lesson_for_tomorrow():
+    partial = Evidence(T2, "practice", DAY_1, "try_again", PARTIAL_RECITATION)
+    evidence = [*taught_up_to_practice(), partial]
+    evidence += [answered(T2, "practice", 2, 3, "try_again")] * 3
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert progress[T2].paused_today
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
+
+
+def test_a_child_who_passed_the_check_is_not_sent_away_because_the_replay_went_badly():
+    evidence = [marked(T1, "assess", "correct"), *taught_before_practice()]
+    evidence += [marked(T1, "practice", "try_again")] * 3
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert not progress[T1].paused_today
+
+
+def test_a_lesson_left_for_tomorrow_on_three_days_is_no_longer_offered_on_its_own():
+    def stuck(day):
+        return [
+            *taught_before_practice_on(day),
+            *[marked(T1, "practice", "try_again", day)] * 3,
+        ]
+
+    evidence = [*stuck(DAY_1), *stuck(DAY_2), *stuck(DATE_4)]
+    progress = progress_by_plan(evidence, PLANS, DATE_5)
+    options = next_options(PLANS, progress, DATE_5, TABLE_CLASS, evidence)
+    assert all(option.plan_id != T1 for option in options)
+
+
 def test_when_nothing_is_due_the_rest_is_the_plain_finish():
     progress = progress_by_plan([], PLANS, DAY_1)
-    assert rest_move(progress)["say"] == "finished"
+    assert rest_move(PLANS, progress, TABLE_CLASS)["say"] == "finished"
 
 
 def test_a_recall_check_nobody_answered_is_asked_again_without_feedback_then_followed_by_the_teaching():
@@ -504,14 +566,14 @@ def test_each_owed_fact_is_asked_in_turn_and_the_lesson_moves_on_when_none_are_l
     assert next_move(evidence)["event"] == "assess_performance"
 
 
-def test_an_owed_fact_answered_wrongly_twice_is_shown_it_once_more_and_asked_again():
+def test_an_owed_fact_answered_wrongly_hears_feedback_and_is_asked_again():
     partial = Evidence(T2, "practice", DAY_1, "try_again", PARTIAL_RECITATION)
     evidence = [*taught_up_to_practice(), partial, said(T2, "feedback")]
     evidence.append(answered(T2, "practice", 2, 3, "try_again"))
 
-    assert next_move(evidence)["event"] == "provide_guidance"
+    assert next_move(evidence)["event"] == "provide_feedback"
 
-    evidence.append(said(T2, "guide"))
+    evidence.append(said(T2, "feedback"))
     assert next_move(evidence)["activity"]["prompt_id"] == "mul_fact_2x3_answer"
 
 

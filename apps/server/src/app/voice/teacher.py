@@ -22,11 +22,16 @@ MASTERY_DAYS = 2
 # A check of what the child already knows is asked this many times a day; a child who cannot say it is taught
 # next, not asked again.
 RECALL_ATTEMPTS = 2
-# An activity failed this many times in a day is left for tomorrow: a child who has been shown, and shown
-# again, and still cannot do it is not helped by a fourth try.
+# An activity the child could not begin to do this many times running in a day is left for tomorrow: a child who
+# has been shown, and shown again, and still cannot do it is not helped by a fourth try.
 PAUSE_AFTER = 3
-# The activities that pause the lesson: what the child is asked to do alone.
-PAUSING_EVENTS = ("elicit_performance", "assess_performance")
+# What the child is asked to do alone, or to say after the teacher: any of these can leave the lesson for tomorrow.
+PAUSING_EVENTS = ("elicit_performance", "assess_performance", "provide_guidance")
+# The activities that are shown again, in the plan's guided practice, after a miss.
+RETEACH_EVENTS = ("elicit_performance", "assess_performance")
+# A lesson left for tomorrow on this many days is no longer offered on its own: the child can still open it from the
+# catalogue, and the next lesson that can be started is offered instead of the same failure again.
+PAUSED_DAYS_LIMIT = 3
 
 
 class TeacherChoiceError(RuntimeError):
@@ -90,9 +95,11 @@ class PlanProgress:
     retry_today: set[str] = field(default_factory=set)
     feedback_owed: set[str] = field(default_factory=set)
     guidance_owed: set[str] = field(default_factory=set)
+    # Misses in a row today per activity, counted while the child makes no progress: a wrong answer with
+    # some facts right, or a right answer, starts the count again.
     failed_today: dict[str, int] = field(default_factory=dict)
     paused_today: bool = False
-    paused_on: date | None = None
+    paused_days: set[date] = field(default_factory=set)
     last_decision: dict[str, str] = field(default_factory=dict)
     facts_owed: dict[str, frozenset[int]] = field(default_factory=dict)
     assessed_days: set[date] = field(default_factory=set)
@@ -116,75 +123,93 @@ def _owe_help(
     plan: LessonPlan,
     event: LessonEvent,
     decision: str,
-    failures: int,
+    misses: int,
 ) -> None:
     """What the child hears before trying again. One who tried and was wrong hears the plan's feedback;
-    one who did not know, or who has failed twice, is shown it once more in the plan's guided practice.
-    A recall check comes before the teaching, so it only ever gets feedback for a wrong answer, is simply
-    asked again of a child who was not heard or did not know, and failed twice is not asked again: the
-    teaching that follows is the help."""
+    one who did not know, or who has missed twice running, is shown it once more in the plan's guided
+    practice. A recall check comes before the teaching, so it only ever gets feedback for a wrong answer,
+    is simply asked again of a child who was not heard or did not know, and missed twice it is not asked
+    again: the teaching that follows is the help."""
     if event.event == "stimulate_recall" and (
-        failures >= RECALL_ATTEMPTS or decision == "not_understood"
+        misses >= RECALL_ATTEMPTS or decision == "not_understood"
     ):
         return
-    can_reteach = event.event in PAUSING_EVENTS and any(
+    can_reteach = event.event in RETEACH_EVENTS and any(
         other.event == "provide_guidance" for other in plan.events
     )
-    if can_reteach and (decision == "not_understood" or failures >= 2):
+    if can_reteach and (decision == "not_understood" or misses >= 2):
         state.guidance_owed.add(event.id)
     else:
         state.feedback_owed.add(event.id)
+
+
+def _serve_owed_help(state: PlanProgress, plan: LessonPlan, event: LessonEvent) -> None:
+    """The plan's feedback or guided practice, once said, is no longer owed for the first miss in plan order."""
+    if event.event == "provide_feedback":
+        state.feedback_owed -= _served_first(plan, state.feedback_owed)
+    if event.event == "provide_guidance":
+        state.guidance_owed -= _served_first(plan, state.guidance_owed)
+
+
+def _record_attempt(
+    state: PlanProgress,
+    plan: LessonPlan,
+    event: LessonEvent,
+    item: Evidence,
+    streaks: dict[tuple[str, str, date], int],
+    today: date,
+) -> None:
+    """One marked turn: what is owed to the child, and whether the lesson is left for tomorrow."""
+    key = (item.plan_id, item.event_id, item.day)
+    if item.decision == "correct" or item.facts_right:
+        streaks[key] = 0
+    else:
+        streaks[key] = streaks.get(key, 0) + 1
+    misses = streaks[key]
+    if event.event in PAUSING_EVENTS and misses >= PAUSE_AFTER:
+        state.paused_days.add(item.day)
+        state.paused_today = state.paused_today or item.day == today
+    if item.day != today:
+        return
+    state.failed_today[item.event_id] = misses
+    if item.decision == "correct":
+        state.retry_today.discard(item.event_id)
+        return
+    state.done_today.discard(item.event_id)
+    state.retry_today.add(item.event_id)
+    _owe_help(state, plan, event, item.decision, misses)
 
 
 def progress_by_plan(
     evidence: list[Evidence], plans: dict[str, LessonPlan], today: date
 ) -> dict[str, PlanProgress]:
     progress = {plan_id: PlanProgress() for plan_id in plans}
-    misses: dict[tuple[str, str, date], int] = {}
+    streaks: dict[tuple[str, str, date], int] = {}
     for item in evidence:
         if item.plan_id not in plans:
             continue
-        plan = progress[item.plan_id]
-        plan.last_day = (
-            item.day if plan.last_day is None else max(plan.last_day, item.day)
+        state, plan = progress[item.plan_id], plans[item.plan_id]
+        event = plan.event(item.event_id)
+        state.last_day = (
+            item.day if state.last_day is None else max(state.last_day, item.day)
         )
         if item.day == today:
-            plan.done_today.add(item.event_id)
-            kind = plans[item.plan_id].event(item.event_id).event
-            if kind == "provide_feedback":
-                plan.feedback_owed -= _served_first(
-                    plans[item.plan_id], plan.feedback_owed
-                )
-            if kind == "provide_guidance":
-                plan.guidance_owed -= _served_first(
-                    plans[item.plan_id], plan.guidance_owed
-                )
-        if item.decision is not None:
-            plan.last_decision[item.event_id] = item.decision
-            if item.day == today:
-                owed = plan.facts_owed.get(item.event_id, frozenset())
-                plan.facts_owed[item.event_id] = (
-                    owed | item.facts_wrong
-                ) - item.facts_right
-            event = plans[item.plan_id].event(item.event_id)
-            if event.event == "assess_performance" and item.decision == "correct":
-                plan.assessed_days.add(item.day)
-            if item.decision != "correct" and event.event in PAUSING_EVENTS:
-                key = (item.plan_id, item.event_id, item.day)
-                misses[key] = misses.get(key, 0) + 1
-                if misses[key] >= PAUSE_AFTER:
-                    plan.paused_on = max(plan.paused_on or item.day, item.day)
-            if item.day == today:
-                if item.decision == "correct":
-                    plan.retry_today.discard(item.event_id)
-                else:
-                    plan.done_today.discard(item.event_id)
-                    plan.retry_today.add(item.event_id)
-                    failures = plan.failed_today.get(item.event_id, 0) + 1
-                    plan.failed_today[item.event_id] = failures
-                    _owe_help(plan, plans[item.plan_id], event, item.decision, failures)
-                    if event.event in PAUSING_EVENTS and failures >= PAUSE_AFTER:
-                        plan.paused_today = True
+            state.done_today.add(item.event_id)
+            _serve_owed_help(state, plan, event)
+        if item.decision is None:
+            continue
+        state.last_decision[item.event_id] = item.decision
+        if item.day == today:
+            owed = state.facts_owed.get(item.event_id, frozenset())
+            state.facts_owed[item.event_id] = (
+                owed | item.facts_wrong
+            ) - item.facts_right
+        if event.event == "assess_performance" and item.decision == "correct":
+            state.assessed_days.add(item.day)
+        _record_attempt(state, plan, event, item, streaks, today)
+    for state in progress.values():
+        # A child who passed the check today has not been left with a lesson they cannot do.
+        state.paused_today = state.paused_today and today not in state.assessed_days
     return progress
 
 
@@ -202,19 +227,23 @@ def next_new_plan(
     learner_class: str | None,
 ):
     """The first plan of the class never yet assessed whose prerequisites of the same class have
-    each been assessed once. A prerequisite belonging only to an earlier class was taught there and
-    is taken as known. Mastery (two days) governs reviews, not what may be started."""
+    each been assessed once, a lesson left for an earlier day first. A prerequisite belonging only to
+    an earlier class was taught there and is taken as known. Mastery (two days) governs reviews, not
+    what may be started. A lesson left for tomorrow on PAUSED_DAYS_LIMIT days is not offered again."""
     offered = {plan.id for plan in plans_for_class(plans, learner_class)}
     ready = []
     for plan in plans_for_class(plans, learner_class):
-        if progress[plan.id].assessed_days or progress[plan.id].paused_today:
+        state = progress[plan.id]
+        if state.assessed_days or state.paused_today:
+            continue
+        if len(state.paused_days) >= PAUSED_DAYS_LIMIT:
             continue
         needed = [p for p in plan.prerequisites if p in offered]
         if all(progress[prerequisite].assessed_days for prerequisite in needed):
             ready.append(plan)
     # A lesson left for tomorrow is taken up first: the child was told it would be.
     return next(
-        (plan for plan in ready if progress[plan.id].paused_on is not None),
+        (plan for plan in ready if progress[plan.id].paused_days),
         ready[0] if ready else None,
     )
 
@@ -279,7 +308,7 @@ def next_options(
     """One to three legal next steps: finish the lesson touched last today, else a due review
     and the next new plan. A lesson the learner opened themselves is the only step offered.
     Nothing is offered once a lesson has been left for tomorrow: the day is over."""
-    if left_for_tomorrow(progress):
+    if left_for_tomorrow(plans, progress, learner_class):
         return []
     if chosen is not None:
         return _chosen_options(plans, progress, today, learner_class, chosen)
@@ -468,14 +497,28 @@ TOMORROW_MOVE = {
 }
 
 
-def left_for_tomorrow(progress: dict[str, PlanProgress]) -> bool:
-    """Whether a lesson was paused today after the child could not do it."""
-    return any(state.paused_today for state in progress.values())
+def left_for_tomorrow(
+    plans: dict[str, LessonPlan],
+    progress: dict[str, PlanProgress],
+    learner_class: str | None,
+) -> bool:
+    """Whether a lesson of the learner's class was paused today after the child could not do it."""
+    return any(
+        progress[plan.id].paused_today for plan in plans_for_class(plans, learner_class)
+    )
 
 
-def rest_move(progress: dict[str, PlanProgress]) -> dict:
+def rest_move(
+    plans: dict[str, LessonPlan],
+    progress: dict[str, PlanProgress],
+    learner_class: str | None,
+) -> dict:
     """The step when nothing more is offered today: a kind word about tomorrow, or that all is done."""
-    return TOMORROW_MOVE if left_for_tomorrow(progress) else REST_MOVE
+    return (
+        TOMORROW_MOVE
+        if left_for_tomorrow(plans, progress, learner_class)
+        else REST_MOVE
+    )
 
 
 def lesson_standing(plan: LessonPlan, state: PlanProgress, today: date) -> str:

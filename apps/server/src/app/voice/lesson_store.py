@@ -150,7 +150,7 @@ async def load_lesson_snapshot(
             plan, plan.event(choice.event_id), choice.reason, choice.facts
         )
     else:
-        move = rest_move(progress_by_plan(evidence, plans, today))
+        move = rest_move(plans, progress_by_plan(evidence, plans, today), learner_class)
     await offer_step(
         env.DB, learner, move, round(datetime.now(LAGOS).timestamp() * 1000)
     )
