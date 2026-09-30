@@ -172,6 +172,24 @@ bundle_without_deploying() {
   step "Dry run of $(git rev-parse --short HEAD) for $environment passed; nothing was deployed"
 }
 
+# Cloudflare refuses the API Worker's upload, with code 10013 and no detail, when its startup snapshot
+# is over a limit it does not publish; the Worker sits close to it, and the same build passes or fails
+# at random. The upload is asked again, up to four times, for that error only: any other failure stops.
+deploy_api_worker() {
+  local attempt log status
+  log="$(mktemp)"
+  for attempt in 1 2 3 4; do
+    status=0
+    # pipefail (set above) makes the pipeline's status the upload's, not tee's.
+    (cd apps/server && uv run pywrangler deploy "$wrangler_env") 2>&1 | tee "$log" || status=$?
+    [[ "$status" -eq 0 ]] && { rm -f "$log"; return 0; }
+    if ! grep -q "code: 10013" "$log"; then rm -f "$log"; return "$status"; fi
+    echo "deploy: Cloudflare refused the upload with 10013 (attempt $attempt of 4)" >&2
+  done
+  rm -f "$log"
+  return 1
+}
+
 step "Checking $(git rev-parse --short HEAD) for $environment"
 require_clean_tree
 require_firebase_config
@@ -197,7 +215,7 @@ step "Tutor Worker"
 (cd apps/tutor && npx wrangler deploy "$wrangler_env")
 
 step "API Worker"
-(cd apps/server && uv run pywrangler deploy "$wrangler_env")
+deploy_api_worker
 
 step "D1 migrations on $database"
 (cd apps/server && npx wrangler d1 migrations apply "$database" "$wrangler_env" --remote)

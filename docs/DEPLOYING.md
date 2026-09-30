@@ -35,7 +35,7 @@ Then it deploys in this order and stops at the first failure:
 3. **The API's D1 migrations**, `wrangler d1 migrations apply <database> --remote`.
 4. **The web app.**
 
-A deploy that fails with code 10013 is the startup snapshot's size cap ([Development](DEVELOPMENT.md#build-and-deploy)). Run the script again: it stopped before the migrations.
+Code 10013 is the startup snapshot's size cap ([Development](DEVELOPMENT.md#build-and-deploy)): Cloudflare refuses the API Worker's upload, and the same build passes or fails at random. The script asks for the upload again, up to four times, for that error only; any other failure stops it. If all four are refused, run the script again: it stopped before the migrations.
 
 ### Migrations
 
