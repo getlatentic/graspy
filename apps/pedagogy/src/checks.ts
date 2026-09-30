@@ -1,4 +1,5 @@
 import type { Run, Turn } from "./turn-log.ts";
+import { speechFindings } from "./speech-timing.ts";
 import { hearingFidelity, wordsOf } from "./words.ts";
 
 export interface Finding {
@@ -174,5 +175,6 @@ export function checkRun(run: Run): Finding[] {
     ...waitFindings(run),
     ...unmarkedFindings(run),
     ...orderFindings(run),
+    ...speechFindings(run),
   ];
 }

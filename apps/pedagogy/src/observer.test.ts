@@ -31,6 +31,6 @@ describe("toMarking", () => {
   it("renames the wire's fields", () => {
     expect(
       toMarking({ transcript: "fifty six", parsed_answer: 56, decision: "correct", feedback: "Well done", provider: "intron", latency_ms: 900 }),
-    ).toEqual({ heard: "fifty six", parsedAnswer: 56, decision: "correct", feedback: "Well done", provider: "intron", latencyMs: 900 });
+    ).toEqual({ heard: "fifty six", parsedAnswer: 56, decision: "correct", feedback: "Well done", provider: "intron", latencyMs: 900, at: expect.any(Number) });
   });
 });

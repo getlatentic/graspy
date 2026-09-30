@@ -13,6 +13,8 @@ export interface TeacherMove {
   shows: string | null;
   asksForAnswer: boolean;
   reason: string | null;
+  /** When the app was told about this step, on the clock the audio log uses. */
+  offeredAt?: number;
 }
 
 export interface ChildTurn {
@@ -30,6 +32,8 @@ export interface Marking {
   feedback: string;
   provider: string;
   latencyMs: number;
+  /** When the app was told the answer was marked. */
+  at?: number;
 }
 
 export interface Turn {
@@ -45,6 +49,8 @@ export interface Turn {
   /** What the page told the child under the lesson, such as "I couldn't hear you". */
   pageNote: string | null;
   screenshots: string[];
+  /** When the child's turn was opened, so it can be told whether the teacher was still speaking. */
+  recordedAt?: number;
 }
 
 /** How the child's recordings were made: they are synthetic, and any dataset built from them must say so. */
@@ -64,4 +70,6 @@ export interface Run {
   startedAt: string;
   finished: "rest" | "turn-limit" | "stalled";
   turns: Turn[];
+  /** What the page's audio elements did during the lesson. */
+  audio?: import("./audio-probe.ts").AudioEvent[];
 }
