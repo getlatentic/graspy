@@ -37,7 +37,7 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "You may go to school Monday to Friday. Saturday can bring play, and Sunday worship or rest. A week has seven days.",
+        "en": "School is Monday to Friday. Saturday is for play, and Sunday for worship or rest. A week has seven days.",
         "pcm": "You fit go school Monday to Friday. Saturday fit bring play, and Sunday worship or rest. One week get seven days.",
         "yo": "O lè lọ sí ilé ìwé láti Monday dé Friday. Saturday lè jẹ́ eré, Sunday sì lè jẹ́ ìjọ́sìn tàbí ìsinmi. Ọ̀sẹ̀ kan ní ọjọ́ méje."
       },

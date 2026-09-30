@@ -38,9 +38,9 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "The small market holds every four days. The big one holds every six days. Both meet every twelve days. Twelve is the smallest number four and six divide.",
-        "yo": "Ọjà kékeré máa ń wáyé ní gbogbo ọjọ́ four. Ọjà ńlá máa ń wáyé ní gbogbo ọjọ́ six. Ní gbogbo ọjọ́ twelve, ọjà méjèèjì máa ń wáyé pọ̀. Twelve ni nọ́ńbà tó kéré jù tí four àti six lè pín.",
-        "pcm": "The small market dey hold every four days. The big market dey hold every six days. Every twelve days, both markets meet. Twelve na the smallest number wey four and six fit divide."
+        "en": "The small market opens every four days. The big one opens every six days. Both open together every twelve days.",
+        "yo": "Ọjà kékeré wáyé ní gbogbo ọjọ́ four. Ọjà ńlá wáyé ní gbogbo ọjọ́ six. Wọ́n pàdé ní gbogbo ọjọ́ twelve.",
+        "pcm": "The small market dey hold every four days. The big one dey hold every six days. Both meet every twelve days."
       },
       "show": {
         "en": "LCM 4, 6 = 12",
@@ -147,9 +147,9 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "The LCM is the smallest shared multiple. Three multiples are three, six, nine, twelve. Four multiples are four, eight, twelve. Their LCM is twelve. The HCF is the biggest shared factor. Eight factors are one, two, four, eight. Ten factors are one, two, five, ten. Their HCF is two.",
-        "yo": "LCM ni multiple tí ó kéré jù tí three àti four lè pín. Multiples ti three ni three, six, nine, twelve. Ti four ni four, eight, twelve. LCM wọn jẹ́ twelve. HCF ni factor tó tóbi jù. Factors ti eight ni one, two, four, eight. Ti ten ni one, two, five, ten. HCF wọn jẹ́ two.",
-        "pcm": "LCM na the smallest shared multiple. Multiples of three na three, six, nine, twelve. Multiples of four na four, eight, twelve. Their LCM na twelve. HCF na the biggest shared factor. Factors of eight na one, two, four, eight. Factors of ten na one, two, five, ten. Their HCF na two."
+        "en": "The LCM is the smallest shared multiple: for three and four, twelve. The HCF is the biggest shared factor: for eight and ten, two.",
+        "yo": "LCM ni multiple kékeré jù tí wọ́n jọ pín: fún three àti four, twelve. HCF ni factor tó tóbi jù tí wọ́n jọ ní: fún eight àti ten, two.",
+        "pcm": "LCM na the smallest shared multiple: for three and four, twelve. HCF na the biggest shared factor: for eight and ten, two."
       },
       "show": {
         "en": "LCM 3, 4 = 12    HCF 8, 10 = 2",
@@ -161,7 +161,7 @@
       "id": "guide",
       "event": "provide_guidance",
       "say": {
-        "en": "Together now. What is the LCM of two and five? Count multiples of five. Stop at the first one two divides.",
+        "en": "Together now. What is the LCM of two and five? Count the fives until two divides one.",
         "yo": "Jẹ́ ká ṣe é papọ̀. Kí ni LCM ti two àti five? Ka multiples ti five. Dúró ní èyí àkọ́kọ́ tí two lè pín.",
         "pcm": "Make we do am together. Wetin be the LCM of two and five? Count multiples of five. Stop for the first one two fit divide too."
       },
@@ -221,9 +221,9 @@
       "id": "feedback",
       "event": "provide_feedback",
       "say": {
-        "en": "If you missed it, write the numbers that divide twelve: one, two, three, four, six, twelve. Then the ones that divide eighteen: one, two, three, six, nine, eighteen. The biggest number in both lists is the HCF.",
-        "yo": "Tí o bá ṣì í, kọ àwọn nọ́ńbà tí ó lè pín twelve: one, two, three, four, six, twelve. Lẹ́yìn náà àwọn tí ó lè pín eighteen: one, two, three, six, nine, eighteen. Nọ́ńbà tó tóbi jù nínú àkójọ méjèèjì ni HCF.",
-        "pcm": "If you miss am, write the numbers wey fit divide twelve: one, two, three, four, six, twelve. Then the ones wey fit divide eighteen: one, two, three, six, nine, eighteen. The biggest number inside the two lists na the HCF."
+        "en": "Write the numbers that divide twelve, then eighteen. The biggest number in both lists is the HCF.",
+        "yo": "Kọ àwọn nọ́ńbà tó lè pín twelve, lẹ́yìn náà eighteen. Nọ́ńbà tó tóbi jù nínú méjèèjì ni HCF.",
+        "pcm": "Write the numbers wey fit divide twelve, then eighteen. The biggest one wey dey both lists na the HCF."
       }
     },
     {

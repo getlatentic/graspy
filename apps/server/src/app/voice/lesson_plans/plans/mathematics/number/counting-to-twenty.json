@@ -36,7 +36,7 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "Count the fingers on your two hands: one, two, three, up to ten. Now count your toes too. All of them are twenty.",
+        "en": "Count your fingers: one, two, three, up to ten. Add your toes, and all of them make twenty.",
         "yo": "Ka àwọn ìka ọwọ́ rẹ méjèèjì: one, two, three, dé ten. Ka àwọn ìka ẹsẹ̀ rẹ pẹ̀lú. Gbogbo wọn jẹ́ twenty.",
         "pcm": "Count the finger for your two hand: one, two, three, reach ten. Now count your toe too. All of them na twenty."
       },
@@ -165,8 +165,8 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "After ten comes eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Every number is one more than the number before it.",
-        "yo": "Lẹ́yìn ten ni eleven, twelve, thirteen, fourteen, fifteen. Lẹ́yìn náà ni sixteen, seventeen, eighteen, nineteen, twenty. Nọ́ńbà kọ̀ọ̀kan ju èyí tó ṣáájú rẹ̀ lọ ní one.",
+        "en": "After ten comes eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Each is one more.",
+        "yo": "Lẹ́yìn ten ni eleven, twelve, thirteen, fourteen, fifteen. Lẹ́yìn náà sixteen, seventeen, eighteen, nineteen, twenty. Ọ̀kọ̀ọ̀kan ju tẹ́lẹ̀ lọ ní ọ̀kan.",
         "pcm": "After ten na eleven, twelve, thirteen, fourteen, fifteen. Then sixteen, seventeen, eighteen, nineteen, twenty. Every number pass the one wey dey before am by one."
       },
       "show": {

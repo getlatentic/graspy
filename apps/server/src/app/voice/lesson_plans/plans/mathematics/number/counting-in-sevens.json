@@ -39,9 +39,9 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "Look at the league table. Your team plays Saturday, then next Saturday. That is seven days. A week has seven days.",
-        "yo": "Wo tábìlì ìdíje bọ́ọ̀lù nínú ìwé ìròyìn. Ẹgbẹ́ rẹ máa ń ṣeré ní Saturday, ó tún máa ń ṣeré ní Saturday tó tẹ̀lé e. Ọjọ́ seven ni ọ̀sẹ̀ kan.",
-        "pcm": "Look the league table for newspaper. Your team dey play for Saturday, then e go play again the next Saturday. Na seven days be that. Seven days make one week."
+        "en": "Look at the league table. Your team plays Saturday, then next Saturday. That is seven days.",
+        "yo": "Wo tábìlì ìdíje. Ẹgbẹ́ rẹ ń ṣeré ní Saturday, lẹ́yìn náà Saturday tó tẹ̀lé e. Ọjọ́ seven nìyẹn.",
+        "pcm": "Look the league table. Your team dey play Saturday, then next Saturday. Na seven days."
       },
       "show": {
         "en": "7, 14, 21…",
@@ -172,8 +172,8 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "One week is seven days. Two weeks is fourteen days. Three weeks is twenty-one days. Every week we add seven more: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two.",
-        "yo": "Ọ̀sẹ̀ kan jẹ́ ọjọ́ seven. Ọ̀sẹ̀ two jẹ́ ọjọ́ fourteen. Ọ̀sẹ̀ three jẹ́ ọjọ́ twenty-one. Ní ọ̀sẹ̀ kọ̀ọ̀kan a fi seven kún un: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two.",
+        "en": "One week is seven days. Two weeks is fourteen days. Three weeks is twenty-one days. Add seven each week.",
+        "yo": "Ọ̀sẹ̀ kan jẹ́ ọjọ́ seven. Ọ̀sẹ̀ méjì jẹ́ ọjọ́ fourteen. Ọ̀sẹ̀ mẹ́ta jẹ́ ọjọ́ twenty-one. Fi seven kún un lọ́sẹ̀ kọ̀ọ̀kan.",
         "pcm": "One week na seven days. Two weeks na fourteen days. Three weeks na twenty-one days. Every week we dey add seven more: seven, fourteen, twenty-one, twenty-eight, thirty-five, forty-two."
       },
       "show": {
@@ -540,8 +540,8 @@
       "id": "retain",
       "event": "enhance_retention",
       "say": {
-        "en": "Well done. Tomorrow we count in sevens once more. Soon we give the place value of every digit in a four-digit number.",
-        "yo": "O ṣe dáadáa. Lọ́la a ó tún kà ní seven seven lẹ́ẹ̀kan sí i. Láìpẹ́ a ó sọ place value ti digit kọ̀ọ̀kan nínú nọ́ńbà tó ní digit four.",
+        "en": "Well done. Tomorrow we count in sevens once more. Soon we learn place value in four-digit numbers.",
+        "yo": "O ṣe dáadáa. Lọ́la a ó tún ka ní seven seven. Láìpẹ́ a ó kọ́ place value ti nọ́ńbà digit four.",
         "pcm": "You do well. Tomorrow we go count for seven seven one more time. Soon we go talk the place value of every digit inside four-digit number."
       }
     }

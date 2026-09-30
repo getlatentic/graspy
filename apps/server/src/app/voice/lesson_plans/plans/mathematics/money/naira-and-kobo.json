@@ -39,7 +39,7 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "You see naira notes at the market: fifty, one hundred, two hundred, five hundred, one thousand naira. We count money in naira and kobo.",
+        "en": "You see naira notes at the market. They are fifty, one hundred, five hundred. We count money in naira and kobo.",
         "pcm": "You sabi the naira notes wey you see for market: fifty, one hundred, two hundred, five hundred, one thousand naira. We dey count money with naira and kobo.",
         "yo": "O rí àwọn owó bébà náírà ní ọjà: fifty, one hundred, two hundred, five hundred, one thousand naira. A ń ka owó ní náírà àti kọ́bọ̀."
       },
@@ -167,9 +167,9 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "One naira is one hundred kobo. Kobo coins are hard to see today. Five twenty naira notes make one hundred naira.",
+        "en": "One naira is one hundred kobo. Five twenty naira notes make one hundred naira.",
         "pcm": "One naira na one hundred kobo. Kobo coin hard to see today. Five twenty naira notes na one hundred naira.",
-        "yo": "Náírà kan jẹ́ one hundred kọ́bọ̀. Owó ẹyọ kọ́bọ̀ ṣòro láti rí lónìí. Owó bébà twenty naira márùn-ún jẹ́ one hundred naira."
+        "yo": "Náírà kan jẹ́ one hundred kọ́bọ̀. Owó bébà twenty naira márùn-ún jẹ́ one hundred naira."
       },
       "show": {
         "en": "₦1 = 100 kobo",
@@ -245,7 +245,7 @@
       "id": "feedback",
       "event": "provide_feedback",
       "say": {
-        "en": "If the change was not right, count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. That is seventy naira.",
+        "en": "Count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. That is seventy naira.",
         "pcm": "If the change no be right, count up from thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. Na seventy naira.",
         "yo": "Tí ìyókù kò bá tọ́, kà sókè láti thirty: forty, fifty, sixty, seventy, eighty, ninety, one hundred. Ìyẹn jẹ́ seventy naira."
       }

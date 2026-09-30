@@ -129,8 +129,8 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "Adding the same number again and again is multiplying. Two add two add two is six. Three twos make two times three.",
-        "pcm": "When you add the same number again and again, na multiplying. Two add two add two na six. Three twos na two times three. The times sign be like small cross.",
+        "en": "Adding the same number over and over is multiplying. Two add two add two is six: two times three.",
+        "pcm": "When you add the same number over and over, na multiplying. Two add two add two na six: two times three.",
         "yo": "Fífi nọ́ńbà kan náà kún ara rẹ̀ léraléra ni multiplying. Two add two add two jẹ́ six. Three twos ni two times three. Àmì times dà bí àgbélébùú kékeré."
       },
       "show": {

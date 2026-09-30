@@ -39,9 +39,9 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "In the market, a trader puts oranges in rows. Twelve make three rows of four. Thirteen never makes equal rows. One is left over. Thirteen is prime.",
-        "yo": "Ní ọjà, olówó ọjà kan ń to ọsàn sí ọ̀wọ̀. Ọsàn twelve lè ṣe ọ̀wọ̀ three ti four. Ṣùgbọ́n thirteen kò lè ṣe ọ̀wọ̀ tó dọ́gba. Ọ̀kan máa ń kù. Thirteen jẹ́ prime number.",
-        "pcm": "For market, one trader dey arrange her orange for rows. Twelve orange go make three rows of four. But thirteen orange no fit make equal rows, one go always remain. Number like thirteen na prime number."
+        "en": "Oranges go in rows. Twelve make three rows of four. Thirteen never makes equal rows, so it is prime.",
+        "yo": "Ọsàn máa ń wà ní ọ̀wọ̀. Twelve ṣe ọ̀wọ̀ three ti four. Thirteen kò lè ṣe ọ̀wọ̀ tó dọ́gba, nítorí náà prime ni.",
+        "pcm": "Orange dey go for rows. Twelve orange make three rows of four. Thirteen no fit make equal rows, so e be prime."
       },
       "show": {
         "en": "13: only 1 and 13",
@@ -89,9 +89,9 @@
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "A prime number has two factors: one and itself. Two, three, five and seven are prime. Nine is not prime. Three times three is nine. One is not prime. It has one factor.",
-        "yo": "Prime number ní factor two péré, one àti nọ́ńbà náà fúnra rẹ̀. Two, three, five àti seven jẹ́ prime. Nine kì í ṣe prime, nítorí three times three jẹ́ nine, nítorí náà three náà lè pín in. One kì í ṣe prime, nítorí ó ní factor one péré.",
-        "pcm": "Prime number get only two factors, one and the number itself. Two, three, five and seven na prime. Nine no be prime, because three times three na nine, so three fit divide am too. One no be prime, because e get only one factor."
+        "en": "A prime number has only two factors: one and itself. Two, three, five and seven are prime. Nine is not.",
+        "yo": "Prime number ní factor méjì péré: one àti nọ́ńbà náà fúnra rẹ̀. Two, three, five àti seven jẹ́ prime. Nine kọ́.",
+        "pcm": "Prime number get only two factors: one and the number itself. Two, three, five and seven na prime. Nine no be."
       },
       "show": {
         "en": "2 3 5 7 11 13",
@@ -103,9 +103,9 @@
       "id": "guide",
       "event": "provide_guidance",
       "say": {
-        "en": "Together now. Seven can be divided by one, and by seven, and by nothing else. So how many numbers divide seven exactly?",
-        "yo": "Jẹ́ ká ṣe é papọ̀. One lè pín seven, seven náà lè pín in, kò sí ohun mìíràn tí ó lè pín in. Nọ́ńbà mélòó ni ó lè pín seven pátápátá?",
-        "pcm": "Make we do am together. One fit divide seven, seven itself fit divide am, and nothing else fit divide am. So how many numbers dey divide seven complete?"
+        "en": "Together now. Seven divides only by one and by seven. So how many numbers divide seven exactly?",
+        "yo": "Jẹ́ ká ṣe é papọ̀. Seven pín nípa one àti seven nìkan. Nọ́ńbà mélòó ni ó pín seven dáadáa?",
+        "pcm": "Make we do am together. Seven fit divide only by one and by seven. So how many numbers fit divide seven exactly?"
       },
       "show": {
         "en": "7 ÷ 1, 7 ÷ 7",
@@ -295,8 +295,8 @@
       "id": "feedback",
       "event": "provide_feedback",
       "say": {
-        "en": "Check the ones you missed. Try to divide each number by two, by three, by five and by seven. If none of them divides it, the number is prime.",
-        "yo": "Ṣàyẹ̀wò àwọn tí o pàdánù. Gbìyànjú láti pín nọ́ńbà kọ̀ọ̀kan pẹ̀lú two, three, five àti seven. Tí ọ̀kankan wọn kò bá lè pín in, nọ́ńbà náà jẹ́ prime.",
+        "en": "Try dividing each number you missed by two, three, five and seven. If none divides it, it is prime.",
+        "yo": "Gbìyànjú láti pín nọ́ńbà kọ̀ọ̀kan tí o pàdánù pẹ̀lú two, three, five àti seven. Tí kò bá pín, prime ni.",
         "pcm": "Check the ones wey you miss. Try divide every number with two, with three, with five and with seven. If none of dem divide am, that number na prime."
       }
     },

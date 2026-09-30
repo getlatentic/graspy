@@ -341,7 +341,7 @@
       "id": "feedback",
       "event": "provide_feedback",
       "say": {
-        "en": "If your number was not right, count the tens again: ten, twenty, thirty. Thirty is three tens, and four is left over.",
+        "en": "Count the tens again: ten, twenty, thirty. Thirty is three tens, and four is left over.",
         "yo": "Tí nọ́ńbà rẹ kò bá tọ́, tún ka tens: ten, twenty, thirty. Thirty jẹ́ three tens, four sì ṣẹ́kù.",
         "pcm": "If your number no right, count the tens again: ten, twenty, thirty. Thirty na three tens, and four remain."
       }
