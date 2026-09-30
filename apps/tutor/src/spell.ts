@@ -122,9 +122,12 @@ export function verdictOf(line: string, spelled: string | null): "pass" | "fail"
 /** The line with its digits written as words, or the line as it was when they cannot be trusted. */
 export async function spellNumbers(env: Env, line: string, language: string): Promise<string> {
   if (language !== "en" || !/\d/.test(line) || !checkable(line)) return line;
+  const started = Date.now();
   try {
     const spelled = asLine(await complete(env, spellingBrief(line)));
-    return verdictOf(line, spelled) === "pass" ? (spelled as string) : line;
+    const verdict = verdictOf(line, spelled);
+    console.log(JSON.stringify({ part: "spelled", host: env.SPELLER_HOST || "workers-ai", verdict, ms: Date.now() - started }));
+    return verdict === "pass" ? (spelled as string) : line;
   } catch (error) {
     console.log(JSON.stringify({ part: "spell-failed", why: String(error) }));
     return line;

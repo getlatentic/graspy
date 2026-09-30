@@ -24,6 +24,20 @@ describe("spellNumbers", () => {
     expect(calls.n).toBe(0);
   });
 
+  it("logs which host spelled a line and whether its spelling was taken, so a live lesson shows the path ran", async () => {
+    const logged: string[] = [];
+    vi.spyOn(console, "log").mockImplementation((line: string) => void logged.push(line));
+    const { env } = speller("You said forty-five. Now say fifty.");
+    (env as { SPELLER_HOST?: string }).SPELLER_HOST = "bedrock";
+
+    await spellNumbers(env, "You said 45. Now say 50.", "en");
+
+    const entry = JSON.parse(logged[0]) as Record<string, unknown>;
+    expect(entry).toMatchObject({ part: "spelled", host: "bedrock", verdict: "pass" });
+    expect(typeof entry.ms).toBe("number");
+    vi.restoreAllMocks();
+  });
+
   it("takes the model's spelling when every number comes back as its words, in order", async () => {
     const { env } = speller("You said forty-five. Now say fifty.");
     expect(await spellNumbers(env, "You said 45. Now say 50.", "en")).toBe("You said forty-five. Now say fifty.");
