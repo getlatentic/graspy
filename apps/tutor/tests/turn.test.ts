@@ -23,9 +23,11 @@ function call(name: string, args: Record<string, unknown>) {
  */
 function tutor(script: unknown[], verdicts: string[] = [], judged: boolean[] = [], read: (number | null)[] = [], spelled: string[] = []) {
   const seen: Record<string, unknown>[][] = [];
+  const efforts: unknown[] = [];
   const env = {
     AI: {
-      run: async (model: string, input: { messages: Record<string, unknown>[]; response_format?: unknown }) => {
+      run: async (model: string, input: { messages: Record<string, unknown>[]; response_format?: unknown; reasoning_effort?: unknown }) => {
+        if (model === "@cf/openai/gpt-oss-120b") efforts.push(input.reasoning_effort);
         if (model === SAFETY_MODEL) return { response: verdicts.shift() ?? "safe" };
         if (model === DEFAULT_MODEL["workers-ai"]) return { choices: [{ message: { content: spelled.shift() ?? "" } }] };
         if (model === READER_MODEL) {
@@ -41,7 +43,7 @@ function tutor(script: unknown[], verdicts: string[] = [], judged: boolean[] = [
       },
     },
   } as unknown as Env;
-  return { env, seen };
+  return { env, seen, efforts };
 }
 
 const marked = call("mark_answer", { said: "nine", sure: true });
@@ -49,6 +51,15 @@ const toolReplies = (messages: Record<string, unknown>[]) =>
   messages.filter((message) => message.role === "tool").map((message) => String(message.content));
 
 describe("a turn only ever speaks a line a child may hear", () => {
+  it("asks the teacher and the judge to think briefly, which is what keeps a reply to a few seconds", async () => {
+    const { env, efforts } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);
+
+    await takeTurn(env, ask);
+
+    expect(efforts.length).toBeGreaterThanOrEqual(3);
+    expect(efforts.every((effort) => effort === "low")).toBe(true);
+  });
+
   it("sends a line with grown-up words back, and speaks the rewrite", async () => {
     const { env, seen } = tutor([
       marked,

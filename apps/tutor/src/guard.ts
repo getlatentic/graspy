@@ -111,6 +111,7 @@ export async function fitForChild(env: Env, heard: string | null, line: string):
     response_format: { type: "json_schema", json_schema: { name: "fit", schema: JUDGE_SCHEMA, strict: true } },
     temperature: 0,
     max_tokens: 800,
+    reasoning_effort: "low",
   })) as { choices?: { message?: { content?: unknown } }[]; response?: unknown };
   const said = result.choices?.[0]?.message?.content ?? result.response;
   try {
