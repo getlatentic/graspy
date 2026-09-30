@@ -128,19 +128,17 @@ def _owe_help(
 ) -> None:
     """What the child hears before trying again. One who tried and was wrong hears the plan's feedback;
     one who did not know, or who has missed twice running, is shown it once more in the plan's guided
-    practice. A recall check comes before the teaching, so it only ever gets feedback for a wrong answer,
-    is simply asked again of a child who was not heard or did not know, and missed twice it is not asked
-    again: the teaching that follows is the help."""
-    if event.event == "stimulate_recall" and (
-        misses >= RECALL_ATTEMPTS or decision == "not_understood"
-    ):
+    practice. The plan's feedback speaks of what the child got wrong, so a child who was not heard, or who
+    did not try, is not given it: where the guided practice cannot be shown again they are simply asked
+    again. A recall check missed twice is not asked again: the teaching that follows is the help."""
+    if event.event == "stimulate_recall" and misses >= RECALL_ATTEMPTS:
         return
     can_reteach = event.event in RETEACH_EVENTS and any(
         other.event == "provide_guidance" for other in plan.events
     )
     if can_reteach and (decision == "not_understood" or misses >= 2):
         state.guidance_owed.add(event.id)
-    else:
+    elif decision != "not_understood":
         state.feedback_owed.add(event.id)
 
 
