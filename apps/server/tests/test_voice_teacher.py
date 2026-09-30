@@ -180,20 +180,20 @@ def test_when_nothing_is_due_the_rest_is_the_plain_finish():
     assert rest_move(progress)["say"] == "finished"
 
 
-def test_a_recall_check_failed_twice_is_followed_by_the_teaching_not_asked_a_third_time():
+def test_a_recall_check_nobody_answered_is_asked_again_without_feedback_then_followed_by_the_teaching():
     start = [said(T1, "attention"), said(T1, "objective")]
     first = [*start, marked(T1, "recall", "not_understood")]
-    progress = progress_by_plan(first, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, first)[0].event_id
-        == "feedback"
-    )
-    again = [*first, said(T1, "feedback"), marked(T1, "recall", "not_understood")]
-    progress = progress_by_plan(again, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, again)[0].event_id
-        == "present"
-    )
+    assert next_step(first) == "recall"
+    again = [*first, marked(T1, "recall", "not_understood")]
+    assert next_step(again) == "present"
+
+
+def test_a_recall_check_answered_wrongly_gets_its_feedback_and_is_then_followed_by_the_teaching():
+    start = [said(T1, "attention"), said(T1, "objective")]
+    first = [*start, marked(T1, "recall", "try_again")]
+    assert next_step(first) == "feedback"
+    again = [*first, said(T1, "feedback"), marked(T1, "recall", "try_again")]
+    assert next_step(again) == "present"
 
 
 def test_a_skipped_recall_leaves_no_feedback_owed_for_a_later_miss_to_spend():
