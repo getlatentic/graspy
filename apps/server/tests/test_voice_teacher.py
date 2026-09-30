@@ -12,9 +12,9 @@ from app.voice.teacher import (
     decision_schema,
     event_move,
     evidence_from_rows,
+    left_for_tomorrow,
     next_options,
     parse_choice,
-    left_for_tomorrow,
     progress_by_plan,
     rest_move,
 )

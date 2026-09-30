@@ -508,7 +508,8 @@ def left_for_tomorrow(
 ) -> bool:
     """Whether a lesson of the learner's class was paused today after the child could not do it."""
     return any(
-        progress[plan.id].paused_today for plan in plans_for_class(plans, learner_class)
+        progress[plan.id].paused_today and not progress[plan.id].assessed_today
+        for plan in plans_for_class(plans, learner_class)
     )
 
 
