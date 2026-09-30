@@ -45,6 +45,7 @@ from .speech.intron_sync import (
 )
 from .speech.language_detect import detect_spoken_language, transcription_route
 from .speech.sahara_stream import buffer_bytes, transcribe_sahara
+from .speech.whisper_asr import transcribe_english
 from .teacher import TeacherChoiceError, TeacherModel
 
 logger = logging.getLogger(__name__)
@@ -134,18 +135,27 @@ async def _current_turn(env, sample_id: str):
 async def _transcribe(
     env, exercise, audio: bytes, metadata: dict, sample_id: str, evidence
 ):
-    """Returns transcript, latency, and the language recorded for the turn (None when unknown)."""
+    """Returns transcript, latency, the language recorded for the turn (None when unknown), and the
+    recognizer that heard it."""
     api_key = str(getattr(env, "INTRON_API_KEY", ""))
     if exercise.transport is not Transport.INTRON_SYNC:
         transcript, latency = await transcribe_sahara(
             audio, metadata["language_pair"], api_key
         )
-        return transcript, latency, asr_language(metadata)
+        return transcript, latency, asr_language(metadata), "sahara"
     language, recorded = transcription_route(evidence, asr_language(metadata))
+    file_name = f"{sample_id}.wav"
+    # Only a client that says the child spoke English has Whisper hear it: a recording of unknown language
+    # keeps going to Intron, since Whisper told English would write plausible English for anything.
+    if language == "en" and metadata.get("spoken_language") == "en":
+        transcript, latency, heard_by = await transcribe_english(
+            env, audio, api_key, file_name, transcribe_intron_sync
+        )
+        return transcript, latency, recorded, heard_by
     transcript, latency = await transcribe_intron_sync(
-        audio, language, api_key, f"{sample_id}.wav"
+        audio, language, api_key, file_name
     )
-    return transcript, latency, recorded
+    return transcript, latency, recorded, "intron_sync"
 
 
 async def lesson_move(
@@ -428,9 +438,6 @@ async def evaluate_sample(env, learner: str, sample_id: str):
     token = await _claim_turn(env, sample_id)
     if token is None:
         return await _current_turn(env, sample_id)
-    provider = (
-        "intron_sync" if activity.transport is Transport.INTRON_SYNC else "sahara"
-    )
     evidence = None
     try:
         stage = _stages(sample_id)
@@ -442,7 +449,7 @@ async def evaluate_sample(env, learner: str, sample_id: str):
         if needs_detection(metadata) and getattr(env, "AI", None) is not None:
             evidence = await detect_spoken_language(env, audio)
             stage("detect_language")
-        transcript, latency_ms, language = await _transcribe(
+        transcript, latency_ms, language, provider = await _transcribe(
             env, activity, audio, metadata, sample_id, evidence
         )
         stage("transcribe")

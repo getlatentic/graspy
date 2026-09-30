@@ -31,6 +31,7 @@ The server's environment holds only what changes between deployments or is secre
 | Variable | Purpose |
 |---|---|
 | `LLM_HOST` | Where gpt-oss-120b runs: `bedrock` (default) or `workers-ai` |
+| `ENGLISH_ASR` | Who hears English in voice lessons: `whisper` (default, Workers AI, with Intron asked when it cannot answer) or `intron`. Yoruba and Pidgin are always heard by Intron |
 | `AWS_BEARER_TOKEN_BEDROCK` / `AWS_REGION` | Bedrock's API key and region (default `us-east-1`). Required for `bedrock` |
 | `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` | The account and a token with Workers AI access. Required for `workers-ai` |
 | `LLM_MODEL_ID` | Overrides the host's model id. Unset uses the host's gpt-oss-120b |

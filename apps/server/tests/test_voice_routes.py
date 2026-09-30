@@ -296,6 +296,50 @@ async def test_one_learner_cannot_reach_anothers_recording(app, env, monkeypatch
     assert env.TUTOR.actions(BO) == []
 
 
+class HearsEnglish:
+    """Workers AI with Whisper answering every recording with what it heard."""
+
+    def __init__(self, text):
+        self.text = text
+        self.asked = []
+
+    async def run(self, model, inputs):
+        self.asked.append((model, inputs))
+        return {"text": self.text}
+
+
+async def test_an_english_answer_heard_by_whisper_is_marked_and_kept_as_whisper_heard_it(
+    app, env, monkeypatch
+):
+    """The turn table has to accept the recognizer's name, or every such answer fails to save."""
+    from app.voice.speech.whisper_asr import WHISPER_MODEL
+
+    async def intron(*_):
+        raise AssertionError("Whisper heard it; Intron was not to be asked")
+
+    async def speak(*_):
+        return b"OggS", "audio/ogg", "made"
+
+    monkeypatch.setattr("app.voice.worker_evaluation.transcribe_intron_sync", intron)
+    monkeypatch.setattr("app.voice.speech.reply_audio.speak", speak)
+    env.AI = HearsEnglish("fourteen")
+    offered(env, ADA)
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http)
+        await uploaded(http, sample)
+        marked = await http.post(f"/api/voice/samples/{sample['sample_id']}/evaluation")
+
+    assert marked.status_code == 200, marked.text
+    assert marked.json()["provider"] == "whisper"
+    assert marked.json()["transcript"] == "fourteen"
+    assert [model for model, _ in env.AI.asked] == [WHISPER_MODEL]
+    stored = env.DB.db.execute(
+        "SELECT provider, transcript FROM tutoring_turns"
+    ).fetchall()
+    assert [tuple(row) for row in stored] == [("whisper", "fourteen")]
+
+
 class DownWhisper:
     """Workers AI with Whisper down: every call fails."""
 
