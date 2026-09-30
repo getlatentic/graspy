@@ -118,6 +118,40 @@ def test_only_the_lesson_touched_last_today_continues_and_only_within_the_class(
     assert all(option.plan_id != T2 for option in started)
 
 
+def test_a_recall_check_failed_twice_is_followed_by_the_teaching_not_asked_a_third_time():
+    start = [said(T1, "attention"), said(T1, "objective")]
+    first = [*start, marked(T1, "recall", "not_understood")]
+    progress = progress_by_plan(first, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, first)[0].event_id
+        == "feedback"
+    )
+    again = [*first, said(T1, "feedback"), marked(T1, "recall", "not_understood")]
+    progress = progress_by_plan(again, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, again)[0].event_id
+        == "present"
+    )
+
+
+def test_a_recall_check_failed_once_is_asked_again_after_its_feedback():
+    start = [
+        said(T1, "attention"),
+        said(T1, "objective"),
+        marked(T1, "recall", "try_again"),
+    ]
+    progress = progress_by_plan(start, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, start)[0].event_id
+        == "feedback"
+    )
+    after = [*start, said(T1, "feedback")]
+    progress = progress_by_plan(after, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, after)[0].event_id == "recall"
+    )
+
+
 def test_two_misses_in_one_day_each_hear_their_own_feedback():
     plan = PLANS[T1]
     feedback = plan.event_of("provide_feedback").id
