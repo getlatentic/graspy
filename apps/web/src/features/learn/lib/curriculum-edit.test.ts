@@ -10,6 +10,7 @@ import {
   withPath,
   withPathsFrom,
   withSubjects,
+  sameTopic,
   topicKey,
   withTopic,
 } from "./curriculum-edit";
@@ -219,5 +220,33 @@ describe("topicKey", () => {
     expect(topicKey("Ratio & Proportion")).toBe(topicKey("ratio and proportions"));
     expect(topicKey("Number Sense")).not.toBe(topicKey("Number"));
     expect(topicKey("Gas")).toBe("gas");
+  });
+});
+
+describe("sameTopic", () => {
+  it.each([
+    ["Statistical testing", "sttaical testing"],
+    ["Statistical testing", "statistcal testng"],
+    ["Decimals", "decimlas"],
+    ["Photosynthesis", "photosyntesis"],
+    ["Ratio and proportion", "ratio & proprotion"],
+  ])("takes %j and %j as one topic, for a slip of the fingers", (existing, typed) => {
+    expect(sameTopic(existing, typed)).toBe(true);
+  });
+
+  it.each([
+    ["Linear equations", "Linear inequalities"],
+    ["Algebra 1", "Algebra 2"],
+    ["Number sense", "Number sets"],
+    ["Fractions", "Fractals"],
+    ["Statistical testing", "Statistical sampling"],
+    ["Area", "Arc"],
+    ["Mean", "Mode"],
+    ["Force", "Forces and motion"],
+    ["Reproduction", "Production"],
+    ["Geometry", "Geography"],
+    ["Addition", "Subtraction"],
+  ])("keeps %j and %j apart", (existing, typed) => {
+    expect(sameTopic(existing, typed)).toBe(false);
   });
 });
