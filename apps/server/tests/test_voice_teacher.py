@@ -15,6 +15,7 @@ from app.voice.teacher import (
     next_options,
     parse_choice,
     progress_by_plan,
+    rest_move,
 )
 
 PLANS = load_plans()
@@ -81,7 +82,13 @@ def test_a_wrong_activity_gets_its_feedback_event_and_then_comes_round_again():
     progress = progress_by_plan(wrong_again, PLANS, DAY_1)
     assert (
         next_options(PLANS, progress, DAY_1, TABLE_CLASS, wrong_again)[0].event_id
-        == "feedback"
+        == "guide"
+    )
+    shown_again = [*wrong_again, said(T1, "guide")]
+    progress = progress_by_plan(shown_again, PLANS, DAY_1)
+    assert (
+        next_options(PLANS, progress, DAY_1, TABLE_CLASS, shown_again)[0].event_id
+        == "practice"
     )
     retried = [*after_feedback, marked(T1, "practice", "correct")]
     progress = progress_by_plan(retried, PLANS, DAY_1)
@@ -116,6 +123,61 @@ def test_only_the_lesson_touched_last_today_continues_and_only_within_the_class(
     progress = progress_by_plan(other_class, PLANS, DAY_1)
     started = next_options(PLANS, progress, DAY_1, "primary_1", other_class)
     assert all(option.plan_id != T2 for option in started)
+
+
+def taught_before_practice():
+    return [
+        said(T1, e) for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
+def next_step(evidence, day=DAY_1):
+    progress = progress_by_plan(evidence, PLANS, day)
+    options = next_options(PLANS, progress, day, TABLE_CLASS, evidence)
+    return options[0].event_id if options else None
+
+
+def test_a_child_who_did_not_know_is_shown_it_again_not_told_what_they_skipped():
+    evidence = [*taught_before_practice(), marked(T1, "practice", "not_understood")]
+    assert next_step(evidence) == "guide"
+    evidence.append(said(T1, "guide"))
+    assert next_step(evidence) == "practice"
+
+
+def test_a_child_who_tried_and_was_wrong_hears_the_feedback_first_and_is_shown_it_again_on_a_second_miss():
+    evidence = [*taught_before_practice(), marked(T1, "practice", "try_again")]
+    assert next_step(evidence) == "feedback"
+    evidence += [said(T1, "feedback"), marked(T1, "practice", "try_again")]
+    assert next_step(evidence) == "guide"
+
+
+def test_a_lesson_whose_activity_is_failed_three_times_is_left_for_tomorrow():
+    evidence = [*taught_before_practice()]
+    for _ in range(3):
+        evidence.append(marked(T1, "practice", "not_understood"))
+        evidence.append(said(T1, "guide"))
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence) == []
+    assert rest_move(progress)["say"] == "try-tomorrow"
+
+
+def test_the_day_is_over_once_a_lesson_is_left_for_tomorrow_even_when_another_lesson_could_start():
+    evidence = [*taught_before_practice(), *[marked(T1, "practice", "try_again")] * 3]
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, "primary_1", evidence) == []
+    assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence, chosen=T2) == []
+
+
+def test_a_lesson_left_for_tomorrow_is_taken_up_again_the_next_day():
+    evidence = [*taught_before_practice(), *[marked(T1, "practice", "try_again")] * 3]
+    next_day = progress_by_plan(evidence, PLANS, DAY_2)
+    options = next_options(PLANS, next_day, DAY_2, TABLE_CLASS, evidence)
+    assert options and options[0].plan_id == T1
+
+
+def test_when_nothing_is_due_the_rest_is_the_plain_finish():
+    progress = progress_by_plan([], PLANS, DAY_1)
+    assert rest_move(progress)["say"] == "finished"
 
 
 def test_a_recall_check_failed_twice_is_followed_by_the_teaching_not_asked_a_third_time():
@@ -442,14 +504,14 @@ def test_each_owed_fact_is_asked_in_turn_and_the_lesson_moves_on_when_none_are_l
     assert next_move(evidence)["event"] == "assess_performance"
 
 
-def test_an_owed_fact_answered_wrongly_hears_feedback_and_is_asked_again():
+def test_an_owed_fact_answered_wrongly_twice_is_shown_it_once_more_and_asked_again():
     partial = Evidence(T2, "practice", DAY_1, "try_again", PARTIAL_RECITATION)
     evidence = [*taught_up_to_practice(), partial, said(T2, "feedback")]
     evidence.append(answered(T2, "practice", 2, 3, "try_again"))
 
-    assert next_move(evidence)["event"] == "provide_feedback"
+    assert next_move(evidence)["event"] == "provide_guidance"
 
-    evidence.append(said(T2, "feedback"))
+    evidence.append(said(T2, "guide"))
     assert next_move(evidence)["activity"]["prompt_id"] == "mul_fact_2x3_answer"
 
 
