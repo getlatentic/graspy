@@ -10,6 +10,8 @@
 import { flattened, type SequenceItem } from "./recite";
 
 const FILLER = new Set(["and", "then", "um", "uh", "er", "erm", "so", "okay", "ok", "the", "is"]);
+// A recogniser writes the letters K, N and R as "okay", "and" and "er", so in a list of letters only these are fillers.
+const FILLER_AMONG_LETTERS = new Set(["then", "um", "uh", "erm"]);
 const TENS = new Set(["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]);
 const ONES = new Set(["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]);
 const ENDS_A_HUNDRED = /^(?:hundred|thousand|\d*00)$/;
@@ -24,6 +26,7 @@ const ENDS_A_HUNDRED = /^(?:hundred|thousand|\d*00)$/;
 export function heardSequence(items: SequenceItem[], transcript: string | null): string[] | null {
   const idOf = new Map(items.flatMap((item) => item.spoken.map((spelling) => [flattened(spelling), item.id] as const)));
   const longest = Math.max(1, ...[...idOf.keys()].map((spelling) => spelling.split(" ").length));
+  const filler = items.some((item) => /^[a-z]$/i.test(item.id)) ? FILLER_AMONG_LETTERS : FILLER;
   const heard: string[] = [];
   let last = "";
   for (const segment of (transcript ?? "").split(/[,;.!?]+/)) {
@@ -40,7 +43,7 @@ export function heardSequence(items: SequenceItem[], transcript: string | null):
         .map((k) => longest - k)
         .find((n) => at + n <= words.length && idOf.has(words.slice(at, at + n).join(" ")));
       if (!length) {
-        if (!FILLER.has(words[at])) return null;
+        if (!filler.has(words[at])) return null;
         if (words[at] === "and" && ENDS_A_HUNDRED.test(words[at - 1] ?? "") && at + 1 < words.length) return null;
         at += 1;
         continue;

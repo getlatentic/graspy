@@ -49,6 +49,12 @@ describe("heardSequence", () => {
     expect(heardSequence(tens, "100, 110, 120")).toEqual(["100", "110", "120"]);
   });
 
+  it("does not drop 'okay', 'and' or 'er' from an alphabet, where a recogniser writes them for K, N and R", () => {
+    expect(heardSequence(letters, "a, b, okay")).toBeNull();
+    expect(heardSequence(letters, "a and b")).toBeNull();
+    expect(heardSequence(letters, "a, b, um, then c")).toEqual(["a", "b", "c"]);
+  });
+
   it("is nothing heard for an empty recording", () => {
     expect(heardSequence(fives, "")).toEqual([]);
     expect(heardSequence(fives, null)).toEqual([]);

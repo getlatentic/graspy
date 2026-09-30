@@ -107,4 +107,25 @@ describe("marking a list said in order", () => {
   it("is unheard when nothing matched at all", () => {
     expect(markSequence(DAYS, [], "").verdict).toBe("unheard");
   });
+
+  const TWOS = [2, 4, 6, 8, 10].map((n) => ({ id: String(n), spoken: [String(n)] }));
+
+  it("fails a list that counts by ones through a count in twos, though every item was said", () => {
+    const said = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10";
+    const { verdict } = markSequence(TWOS, ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"], said);
+    expect(verdict).toBe("wrong");
+  });
+
+  it("fails a list with a number in it that is no item, and one said only wrong numbers", () => {
+    expect(markSequence(TWOS, ["2", "4", "7", "6", "8", "10"], "2 4 7 6 8 10").verdict).toBe("wrong");
+    expect(markSequence(TWOS, ["3", "5"], "3 5").verdict).toBe("wrong");
+  });
+
+  it("fails a list with an item said twice", () => {
+    expect(markSequence(DAYS, ["monday", "monday", "tuesday"], "monday monday tuesday").verdict).toBe("wrong");
+  });
+
+  it("still passes a list where the model reported a filler word that is no number", () => {
+    expect(markSequence(TWOS, ["um", "2", "then", "4", "6", "8", "10"], "um 2 then 4 6 8 10").verdict).toBe("correct");
+  });
 });
