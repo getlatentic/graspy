@@ -272,6 +272,26 @@ def test_a_lesson_left_for_tomorrow_on_three_days_comes_after_the_others_and_sti
     assert left and left[0].plan_id == "mathematics.shapes.naming-shapes"
 
 
+def test_the_day_is_over_once_a_lesson_is_finished_because_it_ends_by_naming_tomorrow():
+    evidence = lesson(COUNT_20)
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert next_options(PLANS, progress, DAY_1, "primary_1", evidence) == []
+    assert rest_move(PLANS, progress, "primary_1")["say"] == "finished"
+
+
+def test_a_lesson_finished_yesterday_does_not_end_today_before_it_starts():
+    evidence = lesson(COUNT_20, DAY_1)
+    progress = progress_by_plan(evidence, PLANS, DAY_2)
+    assert next_options(PLANS, progress, DAY_2, "primary_1", evidence)
+
+
+def test_a_child_may_still_open_another_lesson_the_day_a_lesson_was_finished():
+    evidence = lesson(COUNT_20)
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    opened = next_options(PLANS, progress, DAY_1, "primary_1", evidence, chosen=TWOS)
+    assert [option.plan_id for option in opened] == [TWOS]
+
+
 def test_when_nothing_is_due_the_rest_is_the_plain_finish():
     progress = progress_by_plan([], PLANS, DAY_1)
     assert rest_move(PLANS, progress, TABLE_CLASS)["say"] == "finished"

@@ -312,7 +312,8 @@ def next_options(
 ) -> list[Option]:
     """One to three legal next steps: finish the lesson touched last today, else a due review
     and the next new plan. A lesson the learner opened themselves is the only step offered.
-    Nothing is offered once a lesson has been left for tomorrow: the day is over."""
+    Nothing is offered once a lesson has been left for tomorrow or finished today: every lesson
+    ends by telling the child what comes tomorrow, so the day is over."""
     if left_for_tomorrow(plans, progress, learner_class):
         return []
     if chosen is not None:
@@ -333,6 +334,7 @@ def next_options(
             why = f"continue {plan.title['en']} at {event.event}"
             owed = progress[plan.id].facts_owed.get(event.id) or frozenset()
             return [Option(plan.id, event.id, why, tuple(sorted(owed)))]
+        return []
     options: list[Option] = []
     for plan in due_reviews(plans, progress, today, learner_class, weakened)[:2]:
         review = plan.event_of("assess_performance")
@@ -494,7 +496,11 @@ def event_move(
     } | (narrowed_retry(event, facts) or {})
 
 
-REST_MOVE = {"kind": "rest", "say": "finished", "reason": "nothing is due today"}
+REST_MOVE = {
+    "kind": "rest",
+    "say": "finished",
+    "reason": "a lesson was finished today, or nothing is due",
+}
 TOMORROW_MOVE = {
     "kind": "rest",
     "say": "try-tomorrow",
