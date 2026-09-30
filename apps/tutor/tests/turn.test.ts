@@ -51,13 +51,13 @@ const toolReplies = (messages: Record<string, unknown>[]) =>
   messages.filter((message) => message.role === "tool").map((message) => String(message.content));
 
 describe("a turn only ever speaks a line a child may hear", () => {
-  it("asks the teacher and the judge to think briefly, which is what keeps a reply to a few seconds", async () => {
+  it("asks the teacher to think briefly, which keeps a reply to a few seconds, and the judge to think in full", async () => {
     const { env, efforts } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);
 
     await takeTurn(env, ask);
 
-    expect(efforts.length).toBeGreaterThanOrEqual(3);
-    expect(efforts.every((effort) => effort === "low")).toBe(true);
+    expect(efforts.filter((effort) => effort === "low")).toHaveLength(2);
+    expect(efforts.filter((effort) => effort !== "low")).toEqual([undefined]);
   });
 
   it("sends a line with grown-up words back, and speaks the rewrite", async () => {

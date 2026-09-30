@@ -39,7 +39,8 @@ import {
 
 const MODEL = "@cf/openai/gpt-oss-120b";
 // Measured on the edge: low effort takes a marking round from 3.4 s to 0.9 s and the line round from 2.5 s to 1.6 s,
-// with the same tool calls and lines, and at the default a round sometimes spent all its tokens thinking.
+// with the same tool calls and lines, and at the default a round sometimes spent all its tokens thinking. The safety
+// judge is left at the default: at low effort it once let a line that compares a child with another through.
 const REASONING_EFFORT = "low";
 /** A turn is mark, say, rewrite, and a model that reaches for no tool wastes a round: room for that. */
 const ROUNDS = 5;

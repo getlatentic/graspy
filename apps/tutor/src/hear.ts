@@ -39,7 +39,6 @@ export async function hearNumber(env: Env, heard: string): Promise<number | null
     messages: [{ role: "user", content: brief(heard) }],
     temperature: 0,
     max_tokens: 200,
-    reasoning_effort: "low",
   })) as { choices?: { message: { content?: string } }[] };
   const answer = (reply.choices?.[0]?.message?.content ?? "").trim();
   return spokenNumber(answer);
