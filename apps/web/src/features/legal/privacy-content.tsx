@@ -120,7 +120,9 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           It does not receive the learner&rsquo;s saved name.
         </li>
         <li>
-          <strong>Intron</strong> turns a child&rsquo;s recording into text.{" "}
+          <strong>Cloudflare</strong> (Workers AI) turns a child&rsquo;s recording
+          in English into text; <strong>Intron</strong> does it for Yoruba and
+          Pidgin, and for English when Cloudflare cannot.{" "}
           <strong>Spitch</strong> turns the teacher&rsquo;s reply into speech;
           it receives only the teacher&rsquo;s words.
         </li>

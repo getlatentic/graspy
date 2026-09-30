@@ -1,0 +1,75 @@
+"""English recognition on Workers AI's Whisper, with Intron as the second opinion.
+
+Whisper turned a child's counted answers into what was said ("5, 10, 15, 20, 25") where Intron's English
+model wrote "0510, 2025", so a right answer failed and the child was sent away. Whisper is asked first for
+English; when it cannot answer, or hears nothing, Intron is asked as before. The voice-activity filter is
+on: without it Whisper decodes some quiet recordings to nothing and fails on others, and with it a
+recording with no speech comes back as no text instead of made-up words.
+"""
+
+import asyncio
+import base64
+import json
+import logging
+import time
+
+logger = logging.getLogger(__name__)
+
+WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo"
+WHISPER_TIMEOUT_SECONDS = 10
+# Workers AI answers some recordings with a decode error that a second ask does not repeat.
+WHISPER_TRIES = 2
+ENGLISH_ASRS = ("whisper", "intron")
+
+
+def english_asr(env) -> str:
+    """Which recognizer hears English: 'whisper' unless the deployment says 'intron'."""
+    chosen = str(getattr(env, "ENGLISH_ASR", "") or "whisper").lower()
+    return chosen if chosen in ENGLISH_ASRS else "whisper"
+
+
+def whisper_request(audio: bytes) -> dict:
+    return {
+        "audio": base64.b64encode(audio).decode("ascii"),
+        "language": "en",
+        "vad_filter": True,
+    }
+
+
+def whisper_text(reply) -> str:
+    """What Whisper heard, empty when it heard no speech."""
+    reply = reply.to_py() if hasattr(reply, "to_py") else reply
+    text = reply.get("text") if isinstance(reply, dict) else None
+    return text.strip() if isinstance(text, str) else ""
+
+
+async def heard_by_whisper(ai, audio: bytes) -> str | None:
+    """The text Whisper heard, or None when it gave no answer in its tries."""
+    for attempt in range(1, WHISPER_TRIES + 1):
+        try:
+            reply = await asyncio.wait_for(
+                ai.run(WHISPER_MODEL, whisper_request(audio)),
+                timeout=WHISPER_TIMEOUT_SECONDS,
+            )
+            return whisper_text(reply)
+        except Exception:
+            logger.warning("Whisper gave no answer (ask %s)", attempt, exc_info=True)
+    return None
+
+
+async def transcribe_english(
+    env, audio: bytes, api_key: str, file_name: str, intron
+) -> tuple[str, int, str]:
+    """Transcript, milliseconds, and the recognizer that gave it, for a recording in English.
+
+    `intron` is the Intron recognizer to ask when Whisper is not asked, gave no answer, or heard nothing."""
+    started = time.perf_counter()
+    ai = getattr(env, "AI", None)
+    if english_asr(env) == "whisper" and ai is not None:
+        text = await heard_by_whisper(ai, audio)
+        if text:
+            spent = round((time.perf_counter() - started) * 1000)
+            print(json.dumps({"asr": "whisper", "ms": spent}))
+            return text, spent, "whisper"
+    transcript, _ = await intron(audio, "en", api_key, file_name)
+    return transcript, round((time.perf_counter() - started) * 1000), "intron_sync"
