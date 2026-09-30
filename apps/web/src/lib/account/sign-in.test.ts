@@ -17,6 +17,8 @@ const wipeDevice = vi.fn(async () => undefined);
 vi.mock("@/lib/device-wipe", () => ({ wipeDevice }));
 const deleteAccount = vi.fn(async () => undefined);
 vi.mock("./learners-api", () => ({ deleteAccount }));
+const warmApi = vi.fn();
+vi.mock("@/lib/warm-api", () => ({ warmApi }));
 
 const { deleteAccountAndSignOut, signIn, signInAgain, signInProblem, signOut } =
   await import("./sign-in");
@@ -24,6 +26,18 @@ const { deleteAccountAndSignOut, signIn, signInAgain, signInProblem, signOut } =
 beforeEach(() => vi.clearAllMocks());
 
 describe("signIn", () => {
+  it("wakes the server while the popup is open, so the call after it is not the first", async () => {
+    let asked = 0;
+    google.signInWithGoogle.mockImplementationOnce(async () => {
+      asked = warmApi.mock.calls.length;
+      return { account: ACCOUNT, idToken: "id" };
+    });
+
+    await signIn();
+
+    expect(asked).toBe(1);
+  });
+
   it("exchanges Google's ID token for the account's session", async () => {
     await signIn();
 
