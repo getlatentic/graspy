@@ -17,21 +17,26 @@ export interface AudioEvent {
 export const AUDIO_PROBE = `(() => {
   const log = (window.__audioLog = []);
   const push = (kind, extra) => log.push({ at: Date.now(), kind, ...extra });
+  // The app's audio is an element that is never put in the page, so its events do not reach the document:
+  // they are listened for on the element itself, the first time it plays.
+  const watch = (element) => {
+    if (element.__probed) return;
+    element.__probed = true;
+    for (const kind of ["playing", "ended", "pause", "error"]) {
+      element.addEventListener(kind, () => {
+        const seconds = Number.isFinite(element.duration) ? element.duration : null;
+        push(kind, { seconds });
+      });
+    }
+  };
   const play = HTMLMediaElement.prototype.play;
   HTMLMediaElement.prototype.play = function (...args) {
+    watch(this);
     push("play-called", {});
     const result = play.apply(this, args);
     if (result && result.catch) result.catch((error) => push("play-rejected", { why: String(error).slice(0, 80) }));
     return result;
   };
-  for (const kind of ["playing", "ended", "pause", "error"]) {
-    document.addEventListener(kind, (event) => {
-      const element = event.target;
-      if (!(element instanceof HTMLMediaElement)) return;
-      const seconds = Number.isFinite(element.duration) ? element.duration : null;
-      push(kind, { seconds });
-    }, true);
-  }
 })();`;
 
 export async function installAudioProbe(page: Page): Promise<void> {

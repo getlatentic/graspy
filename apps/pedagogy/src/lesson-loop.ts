@@ -12,6 +12,7 @@ import type { ChildTurn, Marking, Run, TeacherMove, Turn } from "./turn-log.ts";
 const STALL_MS = 90_000;
 const MARKING_MS = 60_000;
 const QUIET_TAKE_MS = 12_000;
+const REST_LINE_MS = 6_000;
 const STAYS_SILENT: ChildTurn = { said: null, isRight: null, note: "Too shy to say anything." };
 
 export interface Sitting {
@@ -157,7 +158,11 @@ export async function playLesson(sitting: Sitting): Promise<{ turns: Turn[]; fin
     syncMoves(turns, observer.moves, counted);
     if (counted.moves !== before) lastChange = Date.now();
     const screen = await screenOf(page, strings);
-    if (screen === "rest") return { turns, finished: "rest" };
+    if (screen === "rest") {
+      // The rest line is spoken as the screen appears: the run is not over until it has been heard or has failed to be.
+      await page.waitForTimeout(REST_LINE_MS);
+      return { turns, finished: "rest" };
+    }
     if (screen === "record" && turns.length > 0) {
       const turn = turnToAnswer(turns);
       const given = await answer(sitting, turn, turns);

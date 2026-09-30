@@ -92,7 +92,12 @@ export function speechFindings(run: Run): Finding[] {
       found.push(finding("voices-overlap", "concern", null, "Two lines of the teacher's voice played at once."));
     if (previous && previous.end !== null && !previous.cutOff && line.start - previous.end > DEAD_AIR_MS) {
       const gap = line.start - previous.end;
-      const answered = run.turns.some((turn) => turn.marking?.at && turn.marking.at >= previous.end! - 50 && turn.marking.at <= line.start);
+      // Between two lines the child may be answering: that wait is theirs, and the reply's wait is measured on its own.
+      const answered = run.turns.some(
+        (turn) =>
+          (turn.marking?.at && turn.marking.at >= previous.end! - 50 && turn.marking.at <= line.start) ||
+          (turn.recordedAt && turn.recordedAt >= previous.end! - 50 && turn.recordedAt <= line.start),
+      );
       if (!answered) found.push(finding("dead-air", "note", null, `${(gap / 1000).toFixed(1)} s of silence between two lines with no answer being marked.`));
     }
   });

@@ -77,6 +77,11 @@ describe("speech timing", () => {
     expect(names(run([turn(1, 1000), turn(2, 2000)], [playing(1000), ended(4000), playing(9000), ended(12_000)]))).toContain("dead-air");
   });
 
+  it("does not call the child's own turn between two lines dead air", () => {
+    const answering = turn(1, 1000, { recordedAt: 8000 });
+    expect(names(run([answering, turn(2, 2000)], [playing(1000), ended(4000), playing(20_000), ended(23_000)]))).not.toContain("dead-air");
+  });
+
   it("says nothing when the audio was not measured, and summarises what was", () => {
     const measured = { ...run([turn(1, 1000)], []), audio: undefined };
     expect(names(measured)).toEqual([]);
