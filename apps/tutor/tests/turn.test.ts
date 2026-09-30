@@ -254,3 +254,111 @@ describe("one number, plainly said, needs no teacher", () => {
     expect(seen.length).toBeGreaterThan(0);
   });
 });
+
+describe("a list said in order", () => {
+  const items = [1, 2, 3, 4, 5].map((n) => ({ id: String(n), spoken: [String(n), ["one", "two", "three", "four", "five"][n - 1]] }));
+  const counting = (heard: string | null): Ask => ({
+    prompt: "Count from one to five.",
+    heard,
+    language: "en",
+    expect: { kind: "sequence", item: "counting", items },
+  });
+  const counted = (env: Env) => {
+    const ai = env.AI as { run: (...args: unknown[]) => Promise<unknown> };
+    const run = ai.run.bind(ai);
+    const calls = { n: 0 };
+    ai.run = async (...args: unknown[]) => {
+      calls.n += 1;
+      return run(...args);
+    };
+    return calls;
+  };
+
+  it.each(["1, 2, 3, 4, 5", "one two three four five", "um, one, two, three, four and five"])(
+    "is marked right by code, with no model, when %s is plain",
+    async (heard) => {
+      const { env } = tutor([]);
+      const calls = counted(env);
+
+      const reply = await takeTurn(env, counting(heard));
+
+      expect(reply.verdict).toBe("correct");
+      expect(reply.say).toBe(STEADY_LINES.correct.en);
+      expect(reply.result).toMatchObject({ said: ["1", "2", "3", "4", "5"], missing: [], out_of_order: [] });
+      expect(calls.n).toBe(0);
+    },
+  );
+
+  it("is unheard, with no model, when the recording carried no words", async () => {
+    const { env } = tutor([]);
+    const calls = counted(env);
+
+    const reply = await takeTurn(env, counting(null));
+
+    expect(reply.verdict).toBe("unheard");
+    expect(reply.say).toBe(STEADY_LINES.unheard.en);
+    expect(calls.n).toBe(0);
+  });
+
+  it("puts a wrong list into words in one round, the marking already given", async () => {
+    const { env, seen } = tutor([call("say_it", { text: "You missed four. Let us count again." })]);
+
+    const reply = await takeTurn(env, counting("1, 2, 3, 5"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.result).toMatchObject({ said: ["1", "2", "3", "5"], missing: ["4"], out_of_order: [] });
+    expect(reply.say).toBe("You missed four. Let us count again.");
+    expect(seen).toHaveLength(1);
+    const brief = String((seen[0][0] as { content: string }).content);
+    expect(brief).toContain("already been marked");
+    expect(brief).toContain('"missing":["4"]');
+    expect(brief).not.toContain("First call mark_sequence");
+  });
+
+  it("marks a list wrong in code when the child stopped short", async () => {
+    const { env, seen } = tutor([call("say_it", { text: "Nearly. Five comes next." })]);
+
+    const reply = await takeTurn(env, counting("1, 2, 3, 4"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.result).toMatchObject({ said: ["1", "2", "3", "4"], missing: ["5"] });
+    expect(seen).toHaveLength(1);
+  });
+
+  it("does not mark in code a list with a number that is not in it, which the teacher reads", async () => {
+    const { env } = tutor([call("mark_sequence", { said: ["1", "2", "3", "4"] }), call("say_it", { text: "Nearly. Five comes next." })]);
+
+    const reply = await takeTurn(env, counting("1, 2, 3, 4, 6"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.say).toBe("Nearly. Five comes next.");
+  });
+
+  it("keeps the marking code made, even if the model reaches for the marker", async () => {
+    const { env } = tutor([call("mark_sequence", { said: ["1", "2", "3", "4", "5"] }), call("say_it", { text: "You missed four." })]);
+
+    const reply = await takeTurn(env, counting("1, 2, 3, 5"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.result).toMatchObject({ missing: ["4"] });
+  });
+
+  it("marks an out-of-order list wrong in code", async () => {
+    const { env } = tutor([call("say_it", { text: "Nearly. Say them in order." })]);
+
+    const reply = await takeTurn(env, counting("1, 3, 2, 4, 5"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.result).toMatchObject({ out_of_order: expect.arrayContaining(["3"]) });
+  });
+
+  it("still sends a recording that is not plain to the model to be read", async () => {
+    const { env, seen } = tutor([call("mark_sequence", { said: ["one", "two"] }), call("say_it", { text: "Good try. Say all five." })]);
+
+    const reply = await takeTurn(env, counting("one two five apples"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(String((seen[0][0] as { content: string }).content)).toContain("First call mark_sequence");
+  });
+});
+
