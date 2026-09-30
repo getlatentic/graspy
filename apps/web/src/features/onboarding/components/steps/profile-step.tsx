@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { useI18n } from "@/lib/i18n-context";
-import { getAllCountries } from "@/lib/locale";
+import { getAllCountries, offeredLanguageIn } from "@/lib/locale";
 import { useLocaleOptions } from "../../hooks/use-locale-options";
 import type { SelectOption } from "../../lib/select-options";
 import type { DetailsSchema } from "../../schemas/onboarding-schema";
@@ -25,13 +25,16 @@ export default function ProfileStep({
     allCountries,
     suggestedCountry,
     watch("country"),
+    watch("language"),
   );
 
   const chooseCountry = (code: string) => {
     setValue("country", code, { shouldValidate: true });
     const chosen = allCountries.find((c) => c.code === code);
     if (chosen) {
-      setValue("language", chosen.languages[0] || "", { shouldValidate: true });
+      setValue("language", offeredLanguageIn(chosen.languages), {
+        shouldValidate: true,
+      });
     }
   };
 

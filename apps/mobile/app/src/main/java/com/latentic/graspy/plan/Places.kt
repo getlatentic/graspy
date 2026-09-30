@@ -261,6 +261,15 @@ val COUNTRY_LANGUAGES: Map<String, List<String>> = linkedMapOf(
 /** The languages any learner may choose, beyond their country's own. */
 val SUPPORTED_LANGUAGES: List<String> = listOf("ar", "en", "fr", "es", "yo", "pcm", "ha", "ig", "ps", "fa", "so", "sw", "am", "ku", "ur", "bn", "pt", "hi", "zh", "ru", "de", "it", "ja")
 
+/**
+ * The languages a learner can choose. The rest of [SUPPORTED_LANGUAGES] stay in the code and are not offered
+ * until each has voice lessons that work; the web offers the same list.
+ */
+val OFFERED_LANGUAGES: List<String> = listOf("en")
+
+/** The first of a country's languages that is offered, or English. */
+fun offeredLanguageIn(codes: List<String>): String = codes.firstOrNull(OFFERED_LANGUAGES::contains) ?: "en"
+
 // Names Android's locale data lacks, as the web names them.
 private val ENGLISH_LANGUAGE_NAMES = mapOf("pcm" to "Nigerian Pidgin")
 private val NATIVE_LANGUAGE_NAMES = mapOf("yo" to "Èdè Yorùbá", "pcm" to "Naijá")

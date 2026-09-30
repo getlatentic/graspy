@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.latentic.graspy.collection.outbox.AppGraph
 import com.latentic.graspy.collection.outbox.retrofit
 import com.latentic.graspy.plan.COUNTRY_LANGUAGES
+import com.latentic.graspy.plan.OFFERED_LANGUAGES
+import com.latentic.graspy.plan.offeredLanguageIn
 import com.latentic.graspy.plan.COURSE_MAX
 import com.latentic.graspy.plan.LearnerDetails
 import com.latentic.graspy.plan.PlanApi
@@ -52,7 +54,7 @@ class DetailsFormViewModel(private val schoolSystems: suspend (country: String) 
         started = true
         shown.value = from?.let(DetailsForm::of) ?: DetailsForm(
             country = phoneCountry?.takeIf(COUNTRY_LANGUAGES::containsKey).orEmpty(),
-            language = phoneCountry?.let(COUNTRY_LANGUAGES::get)?.let { spoken -> spoken.firstOrNull { it == phoneLanguage } ?: spoken.first() }.orEmpty(),
+            language = phoneCountry?.let(COUNTRY_LANGUAGES::get)?.let { spoken -> spoken.firstOrNull { it == phoneLanguage && it in OFFERED_LANGUAGES } ?: offeredLanguageIn(spoken) }.orEmpty(),
         )
         readSystems()
     }
@@ -65,7 +67,7 @@ class DetailsFormViewModel(private val schoolSystems: suspend (country: String) 
     }
 
     fun chooseCountry(code: String) {
-        shown.update { it.copy(country = code, language = COUNTRY_LANGUAGES[code]?.firstOrNull().orEmpty()) }
+        shown.update { it.copy(country = code, language = COUNTRY_LANGUAGES[code]?.let(::offeredLanguageIn).orEmpty()) }
         readSystems()
     }
 

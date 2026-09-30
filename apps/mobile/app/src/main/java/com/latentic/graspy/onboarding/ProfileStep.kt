@@ -29,7 +29,7 @@ import com.latentic.graspy.localization.LearnCopy
 import com.latentic.graspy.localization.PlanOnboardingProfileCopy
 import com.latentic.graspy.plan.AFTER_SCHOOL
 import com.latentic.graspy.plan.COUNTRY_LANGUAGES
-import com.latentic.graspy.plan.SUPPORTED_LANGUAGES
+import com.latentic.graspy.plan.OFFERED_LANGUAGES
 import com.latentic.graspy.plan.SchoolSystem
 import com.latentic.graspy.plan.countriesInOrder
 import com.latentic.graspy.plan.countryName
@@ -52,7 +52,7 @@ fun ProfileStep(learn: LearnCopy, form: DetailsFormViewModel, suggested: String?
     Column(verticalArrangement = Arrangement.spacedBy(space(6))) {
         SearchableSelect(words.countryLabel, values.country, countries, words.countryPlaceholder, words.noResults, onChoose = form::chooseCountry)
         SearchableSelect(
-            words.languageLabel, values.language, languageOptions(words, values.country, display), words.languagePlaceholder, words.noResults,
+            words.languageLabel, values.language, languageOptions(words, values.country, values.language, display), words.languagePlaceholder, words.noResults,
             enabled = values.country.isNotBlank(), onChoose = form::chooseLanguage,
         )
         val found = (systems as? Systems.Ready)?.systems.orEmpty()
@@ -74,10 +74,11 @@ private fun countryOptions(words: PlanOnboardingProfileCopy, suggested: String?,
         SelectOption(code, countryName(code, display), if (code == suggested) words.suggested else words.allCountries)
     }
 
-/** The country's own languages first; any other language graspy teaches in after them. */
-private fun languageOptions(words: PlanOnboardingProfileCopy, country: String, display: Locale): List<SelectOption> {
-    val spoken = COUNTRY_LANGUAGES[country].orEmpty()
-    val others = SUPPORTED_LANGUAGES.filterNot(spoken::contains)
+/** The offered languages, the country's own first. The language a plan already has stays listed so it can be edited. */
+private fun languageOptions(words: PlanOnboardingProfileCopy, country: String, current: String, display: Locale): List<SelectOption> {
+    fun listed(code: String) = code in OFFERED_LANGUAGES || code == current
+    val spoken = COUNTRY_LANGUAGES[country].orEmpty().filter(::listed)
+    val others = (OFFERED_LANGUAGES + current).filter { it.isNotEmpty() && it !in spoken }.distinct()
         .map { SelectOption(it, languageLabel(it, display), words.allLanguages) }
         .sortedBy { it.label }
     return spoken.map { SelectOption(it, languageLabel(it, display), words.suggested) } + others
