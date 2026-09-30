@@ -24,7 +24,8 @@ export function keepToldTable(sql: Sql): void {
 
 /**
  * The teacher's own lines, kept in the learner's instance so that a repeat of a question is answered
- * knowing what was said last time. The child's words are not kept here, only what was said back.
+ * knowing what was said last time. The child's words are not kept here, only what was said back, which
+ * may say their answer again; a row is let go past a day, or when the learner is forgotten.
  */
 export function toldIn(sql: Sql, now: () => number = Date.now): KeptTold {
   return {
@@ -42,4 +43,4 @@ export function toldIn(sql: Sql, now: () => number = Date.now): KeptTold {
 
 /** A line as it is compared for repeating: case, punctuation and spacing do not make it another line. */
 export const sameLine = (a: string, b: string): boolean => normal(a) === normal(b);
-const normal = (line: string) => line.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const normal = (line: string) => line.normalize("NFC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();

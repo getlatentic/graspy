@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import type { Sql } from "../src/replies";
+import { isSteadyLine, STEADY_LINES } from "../src/lines";
 import { keepToldTable, sameLine, TOLD_KEPT, TOLD_PURGE_MS, TOLD_WINDOW_MS, toldIn } from "../src/told";
 
 function stored(now: () => number) {
@@ -62,9 +63,17 @@ describe("what the teacher said to a child about a question", () => {
 });
 
 describe("a line said again", () => {
-  it("is the same line whatever its case, punctuation or spacing", () => {
-    expect(sameLine("It's all right, let's try.", "its ALL right;  lets try")).toBe(false);
+  it("is the same line whatever its case, punctuation, spacing or Unicode form", () => {
+    expect(sameLine("Ó dára, ẹ ṣé.", "Ó dára, ẹ ṣé.".normalize("NFD"))).toBe(true);
     expect(sameLine("That is all right. Let us try.", "that is ALL right,  let us try!")).toBe(true);
     expect(sameLine("Say one.", "Say two.")).toBe(false);
+  });
+});
+
+describe("the steady lines", () => {
+  it("are known, so that they are not kept as what the teacher said", () => {
+    expect(isSteadyLine(STEADY_LINES.unheard.en)).toBe(true);
+    expect(isSteadyLine(STEADY_LINES.wrong.yo)).toBe(true);
+    expect(isSteadyLine("Nearly. Say one, two.")).toBe(false);
   });
 });

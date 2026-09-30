@@ -244,16 +244,26 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
   ].join("\n");
 }
 
+const HOW_IT_WENT: Record<Verdict, string> = {
+  correct: "they got it",
+  nearly: "they were close",
+  wrong: "they tried and it was not right",
+  unheard: "the phone did not hear them",
+};
+
 /** What the teacher already said to this child about this question, so it is not said again. */
 function earlierNote(earlier: Told[]): string[] {
-  const said = earlier.map((told) => `- ${told.verdict === "correct" ? "they got it" : "they did not"}: "${told.line}"`);
+  const said = earlier.map((told) => `- ${HOW_IT_WENT[told.verdict]}: "${quotable(told.line)}"`);
   return [
     "This question has already been tried just now. What you said to the child before, oldest first:",
     ...said,
-    "Do not say any of it again. Say something new. If the child has still not managed it after two",
-    "or more tries, make it smaller: name only the first thing yourself and ask them to say just that.",
+    "Do not say any of it again. Say something new. If the child tried and has still not managed it",
+    "after two or more tries, make it smaller: name only the first thing yourself and ask them to say just that.",
   ];
 }
+
+/** A line put back in a prompt keeps no quotation marks or control characters that could end the quote. */
+const quotable = (line: string): string => line.replace(/["\u0000-\u001f]+/g, " ").trim();
 
 interface ToolCall {
   id?: string;

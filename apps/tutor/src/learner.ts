@@ -2,6 +2,7 @@ import { Agent, callable } from "agents";
 import type { Card } from "ts-fsrs";
 import type { Verdict } from "./mark";
 import { keepRepliesTable, repliesIn, TurnReplies } from "./replies";
+import { isSteadyLine } from "./lines";
 import { keepToldTable, toldIn } from "./told";
 import { takeTurn, type Ask, type Reply } from "./turn";
 import {
@@ -121,8 +122,10 @@ export class Learner extends Agent<Env> {
     return this.replies.reply(turn, async () => {
       const earlier = this.told.before(lesson, ask.prompt);
       const reply = await takeTurn(this.env, earlier.length > 0 ? { ...ask, earlier } : ask);
-      this.told.put(lesson, ask.prompt, { verdict: reply.verdict, line: reply.say });
       this.record(lesson, ask.expect.item, reply.verdict, at, turn);
+      // The steady lines are the fallback for a line the teacher could not write: telling the teacher not to
+      // repeat one would only crowd out the lines it did write.
+      if (!isSteadyLine(reply.say)) this.told.put(lesson, ask.prompt, { verdict: reply.verdict, line: reply.say });
       return reply;
     });
   }
