@@ -124,6 +124,10 @@ const SKIPPED_WORDS = new Set(["the", "a", "an", "of", "and"]);
  * another.
  */
 export function topicKey(title: string): string {
+  return topicWords(title).join(" ");
+}
+
+function topicWords(title: string): string[] {
   return title
     .normalize("NFKD")
     .replace(/\p{M}/gu, "")
@@ -132,8 +136,47 @@ export function topicKey(title: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .split(" ")
     .filter((word) => word && !SKIPPED_WORDS.has(word))
-    .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word))
-    .join(" ");
+    .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word));
+}
+
+/** Edits between two words, a swap of neighbours counting as one. */
+function editDistance(a: string, b: string): number {
+  const rows = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array<number>(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) rows[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      rows[i][j] = Math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1, rows[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        rows[i][j] = Math.min(rows[i][j], rows[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return rows[a.length][b.length];
+}
+
+/** The slips of spelling a word of this length can carry and still be the same word: none in a short one. */
+const SLIPS = (length: number): number => (length <= 4 ? 0 : length <= 7 ? 1 : length <= 10 ? 2 : 4);
+
+const isWordOf = (word: string): boolean => !/\d/.test(word);
+
+/**
+ * Whether two topic titles are the same topic, allowing for how a learner types: the same words in the same
+ * order, each spelled as it is or with a few slips, the first letter kept ("sttaical testing" is "statistical testing"), and a number
+ * is never a slip ("Algebra 1" is not "Algebra 2").
+ */
+export function sameTopic(a: string, b: string): boolean {
+  const left = topicWords(a);
+  const right = topicWords(b);
+  if (left.length === 0 || left.length !== right.length) return false;
+  return left.every((word, at) => {
+    const other = right[at];
+    if (word === other) return true;
+    if (!isWordOf(word) || !isWordOf(other)) return false;
+    // A slip of the fingers seldom changes the first letter; "reproduction" and "production" are two topics.
+    if (word[0] !== other[0]) return false;
+    return editDistance(word, other) <= SLIPS(Math.max(word.length, other.length));
+  });
 }
 
 export function withTopic(
@@ -146,8 +189,7 @@ export function withTopic(
   if (!subject || !trimmed) return null;
 
   const topics = topicsOf(curriculum, subject.slug);
-  const wanted = topicKey(trimmed);
-  const existing = topics.findIndex((topic) => topicKey(topic) === wanted);
+  const existing = topics.findIndex((topic) => sameTopic(topic, trimmed));
   if (existing >= 0) return { curriculum, index: existing };
 
   return {
