@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import {
   Check,
-  Languages,
+  GraduationCap,
   Store,
   WifiOff,
   type LucideIcon,
@@ -29,26 +29,19 @@ function Tile({
   );
 }
 
-const GREETINGS = [
-  { text: "Welcome", lang: "en" },
-  { text: "Ẹ káàbọ̀", lang: "yo" },
-  { text: "أهلاً بك", lang: "ar" },
-  { text: "How far", lang: "pcm" },
-];
+const CLASSES = ["Primary 4", "JSS 2", "SS 1"];
 
 export function StrengthTiles() {
   return (
     <ul className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Tile icon={Languages} title="In your language">
+      <Tile icon={GraduationCap} title="For your class">
         <div className="flex flex-wrap gap-2">
-          {GREETINGS.map(({ text, lang }) => (
+          {CLASSES.map((name) => (
             <span
-              key={lang}
-              lang={lang}
-              dir="auto"
+              key={name}
               className="rounded-full bg-surface px-3 py-1 text-sm font-medium text-ink"
             >
-              {text}
+              {name}
             </span>
           ))}
         </div>

@@ -59,7 +59,7 @@ export function useLocaleOptions(
     ).filter(listed);
     const suggested = t("onboarding.profile.suggested");
     const all = t("onboarding.profile.allLanguages");
-    const others = [...OFFERED_LANGUAGES, currentLanguage]
+    const others = [...new Set([...OFFERED_LANGUAGES, currentLanguage])]
       .filter((code) => code !== "" && !suggestedCodes.includes(code))
       .map((code) => option(code, all))
       .sort((a, b) => a.label.localeCompare(b.label, locale));
