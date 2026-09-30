@@ -77,7 +77,9 @@ describe("checkRun", () => {
   });
 
   it("flags a line too long for a child", () => {
-    expect(names([turn(1, { says: Array(30).fill("word").join(" ") })])).toEqual(["line-too-long"]);
+    const long = Array(30).fill("word").join(" ");
+    expect(names([turn(1, { child: { said: "fifty", isRight: false, note: "" }, marking: marking({ heard: "fifty", parsedAnswer: 50, decision: "try_again", feedback: long }) })])).toEqual(["line-too-long"]);
+    expect(checkRun(run([turn(1, { says: long })])).map((found) => [found.check, found.severity])).toEqual([["plan-line-long", "note"]]);
   });
 
   it("flags a silent child the page never answered, but not one it did", () => {
@@ -94,6 +96,13 @@ describe("checkRun", () => {
   it("flags an answer that was only kept, never marked", () => {
     const kept = turn(1, { child: { said: "fifty six", isRight: true, note: "" }, pageNote: "Saved. It'll be checked soon." });
     expect(names([kept])).toEqual(["answer-not-marked"]);
+  });
+
+  it("does not note a new lesson starting its events again, or the guided practice shown again after a miss", () => {
+    const other = (index: number, event: string) => ({ ...turn(index, { event }), move: { ...turn(index, { event }).move, planId: "q" } });
+    expect(names([turn(1, { event: "enhance_retention" }), other(2, "gain_attention")])).toEqual([]);
+    const missed = turn(1, { event: "elicit_performance", child: { said: "no", isRight: false, note: "" }, marking: marking({ heard: "no", decision: "not_understood", feedback: "Let us try." }) });
+    expect(names([missed, turn(2, { event: "provide_guidance" })])).toEqual([]);
   });
 
   it("notes an event that goes back to an earlier one", () => {

@@ -60,12 +60,27 @@ describe("heardSequence", () => {
     expect(heardSequence(fives, "5 10 15 20 25")).toEqual(["5", "10", "15", "20", "25"]);
   });
 
+  it("reads a run of digits that is exactly the list, as a recogniser writes a count it has joined up", () => {
+    expect(heardSequence(fives, "0510152025303540455055 60")).toHaveLength(12);
+    expect(heardSequence(fives, "0510 1520 25 30 3540 4550 5560")).toEqual(["5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60"]);
+    const first = [5, 10, 15, 20, 25].map((n) => ({ id: String(n), spoken: [String(n), "x"] }));
+    expect(heardSequence(first, "0510 2025")).toBeNull();
+    expect(heardSequence(first, "0510 152025")).toEqual(["5", "10", "15", "20", "25"]);
+  });
+
+  it("does not read a run of digits that is not exactly the list", () => {
+    const first = [5, 10, 15, 20, 25].map((n) => ({ id: String(n), spoken: [String(n)] }));
+    expect(heardSequence(first, "05101520")).toBeNull();
+    expect(heardSequence(first, "051015202530")).toBeNull();
+    expect(heardSequence(first, "0510 15 2026")).toBeNull();
+  });
+
   it("is nothing heard for an empty recording", () => {
     expect(heardSequence(fives, "")).toEqual([]);
     expect(heardSequence(fives, null)).toEqual([]);
   });
 
-  it.each(["1235", "0510", "0510152025", "005, 10", "five apples", "cinq dix", "5, 10, fiftteen", "márùn-ún ten"])("declines %s, which is not plain", (said) => {
+  it.each(["1235", "0510", "0510152025", "005, 10", "0714", "five apples", "cinq dix", "5, 10, fiftteen", "márùn-ún ten"])("declines %s, which is not plain", (said) => {
     expect(heardSequence(fives, said)).toBeNull();
   });
 });

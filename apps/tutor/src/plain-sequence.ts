@@ -24,6 +24,30 @@ const ENDS_A_HUNDRED = /^(?:hundred|thousand|\d*00)$/;
  * reads them. A comma or full stop ends a phrase, so "twenty, five" is two items and "twenty five" is one.
  */
 export function heardSequence(items: SequenceItem[], transcript: string | null): string[] | null {
+  return spaced(items, transcript) ?? runTogether(items, transcript);
+}
+
+/**
+ * A recogniser sometimes writes a count as one run of digits ("0510 2025" for five, ten, twenty, twenty five). It
+ * is read only when the digits are exactly the items, in order, each written plainly or, for one figure, with a
+ * leading zero: the digits of the right answer, and nothing a wrong answer could make. Anything else, "0714" for a
+ * count that went on to twenty-eight, or "1235" for one to five, is not the list and is left to the teacher.
+ */
+function runTogether(items: SequenceItem[], transcript: string | null): string[] | null {
+  if (!/^[\d\s,.;]+\d[\d\s,.;]*$/.test(transcript ?? "")) return null;
+  const digits = (transcript ?? "").replace(/[\s,.;]+/g, "");
+  const numbers = items.map((item) => item.spoken.map(flattened).find((spelling) => /^[1-9]\d*$/.test(spelling)));
+  let at = 0;
+  for (const number of numbers) {
+    if (number === undefined) return null;
+    if (digits.startsWith(number, at)) at += number.length;
+    else if (number.length === 1 && digits.startsWith(`0${number}`, at)) at += 2;
+    else return null;
+  }
+  return at === digits.length ? (numbers as string[]) : null;
+}
+
+function spaced(items: SequenceItem[], transcript: string | null): string[] | null {
   const idOf = new Map(items.flatMap((item) => item.spoken.map((spelling) => [flattened(spelling), item.id] as const)));
   const longest = Math.max(1, ...[...idOf.keys()].map((spelling) => spelling.split(" ").length));
   const filler = items.some((item) => /^[a-z]$/i.test(item.id)) ? FILLER_AMONG_LETTERS : FILLER;
