@@ -116,6 +116,26 @@ function topicsBySlug(
   );
 }
 
+const SKIPPED_WORDS = new Set(["the", "a", "an", "of", "and"]);
+
+/**
+ * A topic as it is compared with the ones already in the plan: a tutor's "Decimal Numbers", "decimal number" and
+ * "Decimal numbers!" are one topic. Case, accents, punctuation, "&", small words and a plural "s" do not make
+ * another.
+ */
+export function topicKey(title: string): string {
+  return title
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .split(" ")
+    .filter((word) => word && !SKIPPED_WORDS.has(word))
+    .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word))
+    .join(" ");
+}
+
 export function withTopic(
   curriculum: CurriculumData,
   subjectSlug: string,
@@ -126,10 +146,8 @@ export function withTopic(
   if (!subject || !trimmed) return null;
 
   const topics = topicsOf(curriculum, subject.slug);
-  const wanted = trimmed.toLocaleLowerCase();
-  const existing = topics.findIndex(
-    (topic) => topic.toLocaleLowerCase() === wanted,
-  );
+  const wanted = topicKey(trimmed);
+  const existing = topics.findIndex((topic) => topicKey(topic) === wanted);
   if (existing >= 0) return { curriculum, index: existing };
 
   return {

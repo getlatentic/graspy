@@ -1,4 +1,5 @@
 import { endAccountSession, startAccountSession } from "@/lib/api/session";
+import { warmApi } from "@/lib/warm-api";
 import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import type * as GoogleAuth from "./google-auth";
@@ -34,6 +35,8 @@ export function prepareSignIn(): void {
 
 /** Call from the tap itself. The account then asks who is learning. */
 export async function signIn(): Promise<void> {
+  // The popup takes the learner several seconds; the server wakes up meanwhile, so the call after it is not the first.
+  warmApi();
   const google = prepared ?? (await loadGoogle());
   const { account, idToken } = await google.signInWithGoogle();
   try {

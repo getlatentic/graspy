@@ -10,6 +10,7 @@ import {
   withPath,
   withPathsFrom,
   withSubjects,
+  topicKey,
   withTopic,
 } from "./curriculum-edit";
 
@@ -51,6 +52,24 @@ describe("withTopic", () => {
     const result = withTopic(before, "mathematics", "decimals");
 
     expect(result).toEqual({ curriculum: before, index: 1 });
+  });
+
+  it.each([
+    ["Decimal", 1],
+    ["  DECIMALS! ", 1],
+    ["The decimals", 1],
+    ["Décimals", 1],
+    ["fraction", 0],
+  ])("opens the topic already there for %j, which only differs in form", (title, index) => {
+    const before = plan();
+
+    expect(withTopic(before, "mathematics", title)).toEqual({ curriculum: before, index });
+  });
+
+  it("still adds a topic that is another topic: one that only contains the words of an existing one", () => {
+    const result = withTopic(plan(), "mathematics", "Decimals and percentages");
+
+    expect(result?.index).toBe(2);
   });
 
   it.each([
@@ -192,5 +211,13 @@ describe("paths across plan changes", () => {
     expect(merged.topics?.mathematics).toEqual(["New topic"]);
     expect(topicLevel(merged, path, "Limits")).toBe("SS 3");
     expect(goalIndex(merged, path.slug)).toBe(2);
+  });
+});
+
+describe("topicKey", () => {
+  it("makes one topic of its spellings, and not of different topics", () => {
+    expect(topicKey("Ratio & Proportion")).toBe(topicKey("ratio and proportions"));
+    expect(topicKey("Number Sense")).not.toBe(topicKey("Number"));
+    expect(topicKey("Gas")).toBe("gas");
   });
 });

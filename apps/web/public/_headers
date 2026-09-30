@@ -26,3 +26,7 @@
 # serve a stale app.
 /sw.js
   Cache-Control: no-cache
+
+# The school systems the app serves itself, the same for everyone.
+/education/*
+  Cache-Control: public, max-age=3600
