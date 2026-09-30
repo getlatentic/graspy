@@ -52,3 +52,18 @@ export async function judgeTranscript(key: string, transcript: string): Promise<
   const body = (await response.json()) as { choices: { message: { content: string } }[] };
   return parseJudgement(body.choices[0].message.content);
 }
+
+/**
+ * The judge's reading of a run, or null when it cannot give one. It is a pointer for a reviewer, so a reply that
+ * is not JSON, as the model sometimes gives, is asked for again once and never costs the run its transcript.
+ */
+export async function judgedOrNull(key: string, transcript: string, attempts = 2): Promise<Judgement | null> {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await judgeTranscript(key, transcript);
+    } catch (error) {
+      console.warn(`The judge did not give a reading (attempt ${attempt} of ${attempts}): ${error instanceof Error ? error.message : error}`);
+    }
+  }
+  return null;
+}

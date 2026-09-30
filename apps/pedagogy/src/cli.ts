@@ -4,7 +4,7 @@ import { parseArgs } from "node:util";
 import { openChild } from "./browser.ts";
 import { checkRun } from "./checks.ts";
 import { ChildVoice, ENGINE_NAME, locateYarngo } from "./child-voice.ts";
-import { judgeTranscript, type Judgement } from "./judge.ts";
+import { judgedOrNull, type Judgement } from "./judge.ts";
 import { LessonObserver } from "./observer.ts";
 import { openLesson } from "./open-lesson.ts";
 import { onboard, type Learner } from "./onboarding.ts";
@@ -76,7 +76,7 @@ async function main(): Promise<void> {
     });
     const run: Run = { id: runId, voice: { engine: ENGINE_NAME, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, finished, turns };
     const findings = checkRun(run);
-    const judgement: Judgement | null = args["no-judge"] ? null : await judgeTranscript(bedrockKey(), transcriptMarkdown(run, findings, null));
+    const judgement: Judgement | null = args["no-judge"] ? null : await judgedOrNull(bedrockKey(), transcriptMarkdown(run, findings, null));
     writeRun(dir, run, findings, judgement);
     console.log(`${dir}/transcript.md`);
   } finally {
