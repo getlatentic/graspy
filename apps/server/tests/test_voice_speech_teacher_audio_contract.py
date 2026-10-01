@@ -158,13 +158,14 @@ def test_the_publication_list_covers_every_table_and_language_route():
     from app.voice.curriculum import load_plans
 
     plan_events = sum(len(plan.events) for plan in load_plans().values())
-    assert len(ids) == len(set(ids)) == 8 + (12 * 5 - 3) + 6 + 144 * 2 + plan_events
+    assert len(ids) == len(set(ids)) == 8 + (12 * 5 - 3) + 7 + 144 * 2 + plan_events
     assert "plan.mathematics.multiplication.table-2.present" in ids
     present = teacher_utterance(
         "plan.mathematics.multiplication.table-2.present", "pcm"
     )
     assert "Two times three na six." in present.text
     assert "no-speech" in ids
+    assert "check-tomorrow" in ids
     assert "fact-12-12-learn" in ids and "table-9-mastered" in ids and "correct" in ids
     assert all(re.fullmatch(UTTERANCE_ID, i) for i in ids)
 

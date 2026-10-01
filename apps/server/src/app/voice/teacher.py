@@ -175,6 +175,9 @@ class PlanProgress:
     assessed_days: set[date] = field(default_factory=set)
     # The days the check was passed at the first try, with no help: the only days that show a lesson is known.
     independent_days: set[date] = field(default_factory=set)
+    # The days the check was passed only after help: progress, but not a lesson learnt, and not complete.
+    supported_days: set[date] = field(default_factory=set)
+    supported_today: bool = False
     last_day: date | None = None
 
     @property
@@ -376,6 +379,15 @@ def _got_further(
     return ids.index(now) > ids.index(before)
 
 
+def _record_supported_pass(state: PlanProgress, item: Evidence, today: date) -> None:
+    """The check was passed after the teacher helped, so it shows the child can do it with help, not alone.
+    The lesson is not complete and not learnt: it is left for today, to be checked again tomorrow."""
+    state.supported_days.add(item.day)
+    if item.day == today:
+        state.supported_today = True
+        state.paused_today = True
+
+
 def support_of(event: LessonEvent, item: Evidence, attempt: int) -> str:
     """How much help produced an answer, which says what it shows.
 
@@ -498,10 +510,12 @@ def progress_by_plan(
             attempts.get((item.plan_id, item.event_id, item.day), 0) + 1
         )
         if event.event == "assess_performance" and item.decision == "correct":
-            state.assessed_days.add(item.day)
-            state.assessed_today = state.assessed_today or item.day == today
             if support_of(event, item, tries) == "independent":
+                state.assessed_days.add(item.day)
                 state.independent_days.add(item.day)
+                state.assessed_today = state.assessed_today or item.day == today
+            else:
+                _record_supported_pass(state, item, today)
         _record_attempt(state, plan, event, item, streaks, today)
     return progress
 
@@ -838,6 +852,11 @@ REST_MOVE = {
     "say": "finished",
     "reason": "a lesson was finished today, or nothing is due",
 }
+CHECK_TOMORROW_MOVE = {
+    "kind": "rest",
+    "say": "check-tomorrow",
+    "reason": "the check was passed only with help, so it is asked again tomorrow",
+}
 TOMORROW_MOVE = {
     "kind": "rest",
     "say": "try-tomorrow",
@@ -863,11 +882,13 @@ def rest_move(
     learner_class: str | None,
 ) -> dict:
     """The step when nothing more is offered today: a kind word about tomorrow, or that all is done."""
-    return (
-        TOMORROW_MOVE
-        if left_for_tomorrow(plans, progress, learner_class)
-        else REST_MOVE
+    if not left_for_tomorrow(plans, progress, learner_class):
+        return REST_MOVE
+    helped = any(
+        progress[plan.id].supported_today
+        for plan in plans_for_class(plans, learner_class)
     )
+    return CHECK_TOMORROW_MOVE if helped else TOMORROW_MOVE
 
 
 def lesson_standing(plan: LessonPlan, state: PlanProgress, today: date) -> str:
@@ -876,7 +897,7 @@ def lesson_standing(plan: LessonPlan, state: PlanProgress, today: date) -> str:
         return "mastered"
     if state.assessed_days:
         return "learnt"
-    if state.done_today or state.last_day is not None:
+    if state.done_today or state.supported_days or state.last_day is not None:
         return "started"
     return "untouched"
 
