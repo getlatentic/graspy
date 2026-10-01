@@ -217,3 +217,48 @@ def test_every_yoruba_alias_is_authored_the_way_a_transcript_writes_it():
     ]
 
     assert unreachable == []
+
+
+def _with_support(**changes):
+    payload = json.loads(
+        (PLANS_DIR / "mathematics/number/counting-in-fives.json").read_text()
+    )
+    span = next(event for event in payload["events"] if event["id"] == "span")
+    span.update(changes)
+    return plan_from_json(payload)
+
+
+def test_a_shorter_step_is_the_start_of_the_list_it_supports():
+    plan = load_plans()["mathematics.number.counting-in-fives"]
+    span = plan.event("span")
+    assert span.support == "practice"
+    assert [item.id for item in span.activity.items] == [
+        item.id for item in plan.event("practice").activity.items
+    ][: len(span.activity.items)]
+    assert check_catalogue({plan.id: plan}) == [
+        "mathematics.number.counting-in-fives: prerequisite mathematics.number.counting-in-tens does not exist"
+    ]
+
+
+@pytest.mark.parametrize(
+    "changes,problem",
+    [
+        ({"support": "feedback"}, "is not the start of feedback's list, cut short"),
+        ({"support": "attention"}, "supports an event that does not come after it"),
+        ({"support": "nowhere"}, "supports an event that does not come after it"),
+    ],
+)
+def test_a_shorter_step_that_does_not_lead_to_its_event_is_refused(changes, problem):
+    plan = _with_support(**changes)
+    refused = [p for p in check_catalogue({plan.id: plan}) if "span" in p]
+    assert refused and problem in refused[0]
+
+
+def test_a_shorter_step_as_long_as_the_whole_list_is_refused():
+    payload = json.loads(
+        (PLANS_DIR / "mathematics/number/counting-in-fives.json").read_text()
+    )
+    events = {event["id"]: event for event in payload["events"]}
+    events["span"]["activity"]["items"] = events["practice"]["activity"]["items"]
+    plan = plan_from_json(payload)
+    assert any("cut short" in p for p in check_catalogue({plan.id: plan}))

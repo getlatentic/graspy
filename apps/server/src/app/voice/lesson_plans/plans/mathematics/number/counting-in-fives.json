@@ -269,10 +269,173 @@
       }
     },
     {
+      "id": "span",
+      "event": "elicit_performance",
+      "support": "practice",
+      "say": {
+        "en": "Let us try a shorter one. Count in fives from five to forty.",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní márùn-ún márùn-ún láti márùn-ún dé ogójì.",
+        "pcm": "Make we try shorter one. Count for five five from five reach forty."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "5",
+            "spoken": {
+              "en": [
+                "5",
+                "five"
+              ],
+              "yo": [
+                "5",
+                "five",
+                "márùn-ún",
+                "márùn",
+                "àrún"
+              ],
+              "pcm": [
+                "5",
+                "five"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "15",
+            "spoken": {
+              "en": [
+                "15",
+                "fifteen"
+              ],
+              "yo": [
+                "15",
+                "fifteen",
+                "mẹ́ẹ̀dógún",
+                "ẹ̀ẹ́dógún"
+              ],
+              "pcm": [
+                "15",
+                "fifteen"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          },
+          {
+            "id": "25",
+            "spoken": {
+              "en": [
+                "25",
+                "twenty-five"
+              ],
+              "yo": [
+                "25",
+                "twenty-five",
+                "márùndínlọ́gbọ̀n"
+              ],
+              "pcm": [
+                "25",
+                "twenty-five"
+              ]
+            }
+          },
+          {
+            "id": "30",
+            "spoken": {
+              "en": [
+                "30",
+                "thirty"
+              ],
+              "yo": [
+                "30",
+                "thirty",
+                "ọgbọ̀n"
+              ],
+              "pcm": [
+                "30",
+                "thirty"
+              ]
+            }
+          },
+          {
+            "id": "35",
+            "spoken": {
+              "en": [
+                "35",
+                "thirty-five"
+              ],
+              "yo": [
+                "35",
+                "thirty-five",
+                "márùndínlógójì"
+              ],
+              "pcm": [
+                "35",
+                "thirty-five"
+              ]
+            }
+          },
+          {
+            "id": "40",
+            "spoken": {
+              "en": [
+                "40",
+                "forty"
+              ],
+              "yo": [
+                "40",
+                "forty",
+                "ogójì"
+              ],
+              "pcm": [
+                "40",
+                "forty"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "practice",
       "event": "elicit_performance",
       "say": {
-        "en": "Your turn. Count in fives from five to sixty in one aloud.",
+        "en": "Your turn. Count in fives from five to sixty out loud.",
         "yo": "Ìwọ ná. Kà ní márùn-ún márùn-ún láti márùn-ún dé ọgọ́ta nínú aloud kan.",
         "pcm": "Na your turn. Count for five five from five reach sixty aloud."
       },

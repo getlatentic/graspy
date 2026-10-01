@@ -269,10 +269,171 @@
       }
     },
     {
+      "id": "span",
+      "event": "elicit_performance",
+      "support": "practice",
+      "say": {
+        "en": "Let us try a shorter one. Count in sevens from seven to fifty-six.",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní seven seven láti seven dé fifty-six.",
+        "pcm": "Make we try shorter one. Count for seven seven from seven reach fifty-six."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "7",
+            "spoken": {
+              "en": [
+                "7",
+                "seven"
+              ],
+              "yo": [
+                "7",
+                "seven",
+                "méje"
+              ],
+              "pcm": [
+                "7",
+                "seven"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "21",
+            "spoken": {
+              "en": [
+                "21",
+                "twenty-one"
+              ],
+              "yo": [
+                "21",
+                "twenty-one",
+                "mọ́kànlélógún"
+              ],
+              "pcm": [
+                "21",
+                "twenty-one"
+              ]
+            }
+          },
+          {
+            "id": "28",
+            "spoken": {
+              "en": [
+                "28",
+                "twenty-eight"
+              ],
+              "yo": [
+                "28",
+                "twenty-eight",
+                "méjìdínlọ́gbọ̀n"
+              ],
+              "pcm": [
+                "28",
+                "twenty-eight"
+              ]
+            }
+          },
+          {
+            "id": "35",
+            "spoken": {
+              "en": [
+                "35",
+                "thirty-five"
+              ],
+              "yo": [
+                "35",
+                "thirty-five",
+                "márùndínlógójì"
+              ],
+              "pcm": [
+                "35",
+                "thirty-five"
+              ]
+            }
+          },
+          {
+            "id": "42",
+            "spoken": {
+              "en": [
+                "42",
+                "forty-two"
+              ],
+              "yo": [
+                "42",
+                "forty-two",
+                "méjìlélógójì"
+              ],
+              "pcm": [
+                "42",
+                "forty-two"
+              ]
+            }
+          },
+          {
+            "id": "49",
+            "spoken": {
+              "en": [
+                "49",
+                "forty-nine"
+              ],
+              "yo": [
+                "49",
+                "forty-nine",
+                "mọ́kàndínláàádọ́ta",
+                "mọ́kàndínláàdọ́ta",
+                "mọ́kàndínládọ́ta"
+              ],
+              "pcm": [
+                "49",
+                "forty-nine"
+              ]
+            }
+          },
+          {
+            "id": "56",
+            "spoken": {
+              "en": [
+                "56",
+                "fifty-six"
+              ],
+              "yo": [
+                "56",
+                "fifty-six",
+                "mẹ́rìndínlọ́gọ́ta"
+              ],
+              "pcm": [
+                "56",
+                "fifty-six"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "practice",
       "event": "elicit_performance",
       "say": {
-        "en": "Your turn. Count in sevens from seven to eighty-four in one aloud.",
+        "en": "Your turn. Count in sevens from seven to eighty-four out loud.",
         "yo": "Ìwọ ná. Kà ní seven seven láti seven dé eighty-four nínú aloud kan.",
         "pcm": "Na your turn. Count for seven seven from seven reach eighty-four aloud."
       },

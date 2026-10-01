@@ -189,6 +189,96 @@
       }
     },
     {
+      "id": "span",
+      "event": "elicit_performance",
+      "support": "practice",
+      "say": {
+        "en": "Let us try a shorter one. Say Sunday to Thursday.",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Sọ Sunday dé Thursday.",
+        "pcm": "Make we try shorter one. Talk Sunday reach Thursday."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "sunday",
+            "spoken": {
+              "en": [
+                "Sunday"
+              ],
+              "yo": [
+                "Sunday",
+                "Ọjọ́ Àìkú"
+              ],
+              "pcm": [
+                "Sunday"
+              ]
+            }
+          },
+          {
+            "id": "monday",
+            "spoken": {
+              "en": [
+                "Monday"
+              ],
+              "yo": [
+                "Monday",
+                "Ọjọ́ Ajé"
+              ],
+              "pcm": [
+                "Monday"
+              ]
+            }
+          },
+          {
+            "id": "tuesday",
+            "spoken": {
+              "en": [
+                "Tuesday"
+              ],
+              "yo": [
+                "Tuesday",
+                "Ọjọ́ Ìṣẹ́gun"
+              ],
+              "pcm": [
+                "Tuesday"
+              ]
+            }
+          },
+          {
+            "id": "wednesday",
+            "spoken": {
+              "en": [
+                "Wednesday"
+              ],
+              "yo": [
+                "Wednesday",
+                "Ọjọ́rú"
+              ],
+              "pcm": [
+                "Wednesday"
+              ]
+            }
+          },
+          {
+            "id": "thursday",
+            "spoken": {
+              "en": [
+                "Thursday"
+              ],
+              "yo": [
+                "Thursday",
+                "Ọjọ́bọ"
+              ],
+              "pcm": [
+                "Thursday"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "practice",
       "event": "elicit_performance",
       "say": {

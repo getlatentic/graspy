@@ -266,6 +266,166 @@
       }
     },
     {
+      "id": "span",
+      "event": "elicit_performance",
+      "support": "practice",
+      "say": {
+        "en": "Let us try a shorter one. Count in tens from ten to eighty.",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní mẹ́wàá mẹ́wàá láti mẹ́wàá dé ọgọ́rin.",
+        "pcm": "Make we try shorter one. Count for ten ten from ten reach eighty."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "20",
+            "spoken": {
+              "en": [
+                "20",
+                "twenty"
+              ],
+              "yo": [
+                "20",
+                "twenty",
+                "ogún"
+              ],
+              "pcm": [
+                "20",
+                "twenty"
+              ]
+            }
+          },
+          {
+            "id": "30",
+            "spoken": {
+              "en": [
+                "30",
+                "thirty"
+              ],
+              "yo": [
+                "30",
+                "thirty",
+                "ọgbọ̀n"
+              ],
+              "pcm": [
+                "30",
+                "thirty"
+              ]
+            }
+          },
+          {
+            "id": "40",
+            "spoken": {
+              "en": [
+                "40",
+                "forty"
+              ],
+              "yo": [
+                "40",
+                "forty",
+                "ogójì"
+              ],
+              "pcm": [
+                "40",
+                "forty"
+              ]
+            }
+          },
+          {
+            "id": "50",
+            "spoken": {
+              "en": [
+                "50",
+                "fifty"
+              ],
+              "yo": [
+                "50",
+                "fifty",
+                "àádọ́ta"
+              ],
+              "pcm": [
+                "50",
+                "fifty"
+              ]
+            }
+          },
+          {
+            "id": "60",
+            "spoken": {
+              "en": [
+                "60",
+                "sixty"
+              ],
+              "yo": [
+                "60",
+                "sixty",
+                "ọgọ́ta"
+              ],
+              "pcm": [
+                "60",
+                "sixty"
+              ]
+            }
+          },
+          {
+            "id": "70",
+            "spoken": {
+              "en": [
+                "70",
+                "seventy"
+              ],
+              "yo": [
+                "70",
+                "seventy",
+                "àádọ́rin"
+              ],
+              "pcm": [
+                "70",
+                "seventy"
+              ]
+            }
+          },
+          {
+            "id": "80",
+            "spoken": {
+              "en": [
+                "80",
+                "eighty"
+              ],
+              "yo": [
+                "80",
+                "eighty",
+                "ọgọ́rin"
+              ],
+              "pcm": [
+                "80",
+                "eighty"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "practice",
       "event": "elicit_performance",
       "say": {

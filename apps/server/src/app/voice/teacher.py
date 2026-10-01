@@ -95,6 +95,8 @@ class PlanProgress:
     retry_today: set[str] = field(default_factory=set)
     feedback_owed: set[str] = field(default_factory=set)
     guidance_owed: set[str] = field(default_factory=set)
+    # Events missed twice running that a shorter step of the plan is owed before they are asked again.
+    rung_owed: set[str] = field(default_factory=set)
     # Misses in a row today per activity, counted while the child makes no progress: a wrong answer with
     # some facts right, or a right answer, starts the count again.
     failed_today: dict[str, int] = field(default_factory=dict)
@@ -141,14 +143,24 @@ def _owe_help(
     can_reteach = event.event in RETEACH_EVENTS and any(
         other.event == "provide_guidance" for other in plan.events
     )
-    if can_reteach and (decision == "not_understood" or misses >= 2):
+    if misses >= 2 and _rung_of(plan, event) is not None:
+        state.rung_owed.add(event.id)
+    elif can_reteach and (decision == "not_understood" or misses >= 2):
         state.guidance_owed.add(event.id)
     elif decision != "not_understood":
         state.feedback_owed.add(event.id)
 
 
+def _rung_of(plan: LessonPlan, event: LessonEvent) -> LessonEvent | None:
+    """The shorter step the plan gives towards this event, if it gives one."""
+    return next((other for other in plan.events if other.support == event.id), None)
+
+
 def _serve_owed_help(state: PlanProgress, plan: LessonPlan, event: LessonEvent) -> None:
-    """The plan's feedback or guided practice, once said, is no longer owed for the first miss in plan order."""
+    """The plan's feedback or guided practice, once said, is no longer owed for the first miss in plan order.
+    A shorter step, once asked, is no longer owed either: how it went decides what comes next."""
+    if event.support is not None:
+        state.rung_owed.discard(event.support)
     if event.event == "provide_feedback":
         state.feedback_owed -= _served_first(plan, state.feedback_owed)
     if event.event == "provide_guidance":
@@ -291,6 +303,9 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
         # The plan's feedback is for a miss: it comes from the owed help below, never as the next step in order.
         if event.event == "provide_feedback":
             continue
+        # A shorter step is asked only while it is owed or being tried again.
+        if event.support is not None and event.id not in state.retry_today:
+            continue
         if (
             event.event == "stimulate_recall"
             and state.failed_today.get(event.id, 0) >= RECALL_ATTEMPTS
@@ -302,6 +317,8 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
                 return plan.event_of("provide_guidance")
             if event.id in state.feedback_owed:
                 return plan.event_of("provide_feedback")
+            if event.id in state.rung_owed:
+                return _rung_of(plan, event)
             return event
         if event.id not in state.done_today:
             return event

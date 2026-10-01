@@ -195,6 +195,11 @@
         "activity": {
           "$ref": "#/$defs/activity"
         },
+        "support": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "elicit_performance only: the id of the later event this is a shorter step towards, asked only of a child who missed that event twice running"
+        },
         "review_after_days": {
           "type": "array",
           "items": {
