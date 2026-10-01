@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
-import { STEADY_LINES } from "../src/lines";
+import { STEADY_LINES, numberWords } from "../src/lines";
 import { praiseLine } from "../src/praise";
-import { NOT_HEARD, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "../src/phrasebook";
+import { LIST_STOPPED, NOT_HEARD, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "../src/phrasebook";
+import type { SequenceItem } from "../src/recite";
 import { DEFAULT_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -411,38 +412,49 @@ describe("a list said in order", () => {
     expect(calls.n).toBe(0);
   });
 
-  it("puts a wrong list into words in one round, the marking already given", async () => {
-    const { env, seen } = tutor([call("say_it", { text: "You missed four. Let us count again." })]);
+  it("puts a list with nothing right at its start into words in one round, the marking already given", async () => {
+    const { env, seen } = tutor([call("say_it", { text: "Let us start with one. Count with me." })]);
+
+    const reply = await takeTurn(env, counting("2, 3, 4, 5"));
+
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.result).toMatchObject({ said: ["2", "3", "4", "5"], missing: ["1"], out_of_order: [] });
+    expect(reply.say).toBe("Let us start with one. Count with me.");
+    expect(seen).toHaveLength(1);
+    const brief = String((seen[0][0] as { content: string }).content);
+    expect(brief).toContain("already been marked");
+    expect(brief).toContain('"missing":["1"]');
+    expect(brief).not.toContain("First call mark_sequence");
+  });
+
+  it("says how far the child got for a list that broke part way, marked and answered in code", async () => {
+    const { env, seen } = tutor([]);
 
     const reply = await takeTurn(env, counting("1, 2, 3, 5"));
 
     expect(reply.verdict).toBe("wrong");
     expect(reply.result).toMatchObject({ said: ["1", "2", "3", "5"], missing: ["4"], out_of_order: [] });
-    expect(reply.say).toBe("You missed four. Let us count again.");
-    expect(seen).toHaveLength(1);
-    const brief = String((seen[0][0] as { content: string }).content);
-    expect(brief).toContain("already been marked");
-    expect(brief).toContain('"missing":["4"]');
-    expect(brief).not.toContain("First call mark_sequence");
+    expect(LIST_STOPPED.map((line) => line.replaceAll("{last}", "three"))).toContain(reply.say);
+    expect(seen).toHaveLength(0);
   });
 
   it("marks a list wrong in code when the child stopped short", async () => {
-    const { env, seen } = tutor([call("say_it", { text: "Nearly. Five comes next." })]);
+    const { env, seen } = tutor([]);
 
     const reply = await takeTurn(env, counting("1, 2, 3, 4"));
 
     expect(reply.verdict).toBe("wrong");
     expect(reply.result).toMatchObject({ said: ["1", "2", "3", "4"], missing: ["5"] });
-    expect(seen).toHaveLength(1);
+    expect(seen).toHaveLength(0);
   });
 
-  it("does not mark in code a list with a number that is not in it, which the teacher reads", async () => {
-    const { env } = tutor([call("mark_sequence", { said: ["1", "2", "3", "4"] }), call("say_it", { text: "Nearly. Five comes next." })]);
+  it("marks a list with a number that is not in it wrong, and says how far the child got", async () => {
+    const { env } = tutor([]);
 
     const reply = await takeTurn(env, counting("1, 2, 3, 4, 6"));
 
     expect(reply.verdict).toBe("wrong");
-    expect(reply.say).toBe("Nearly. Five comes next.");
+    expect(LIST_STOPPED.map((line) => line.replaceAll("{last}", "four"))).toContain(reply.say);
   });
 
   it("keeps the marking code made, even if the model reaches for the marker", async () => {
@@ -539,7 +551,7 @@ describe("what a wrong number is answered with, and a list counted past its end"
 
   it("marks a count that went past the end of the list as wrong by code, naming the item left out", async () => {
     const to10 = Array.from({ length: 10 }, (_, at) => ({ id: String(at + 1), spoken: [String(at + 1), ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][at]] }));
-    const { env, seen } = tutor([call("say_it", { text: "You counted up to nine." })]);
+    const { env, seen } = tutor([]);
     const reply = await takeTurn(env, {
       prompt: "Count from one to ten.",
       heard: "1, 2, 3, 4, 5, 6, 7, 8, 9, 11",
@@ -549,7 +561,8 @@ describe("what a wrong number is answered with, and a list counted past its end"
     expect(reply.verdict).toBe("wrong");
     expect(reply.result).toMatchObject({ missing: ["10"] });
     expect(reply.heard).toBeUndefined();
-    expect(String((seen[0][0] as { content: string }).content)).toContain("already been marked");
+    expect(LIST_STOPPED.map((line) => line.replaceAll("{last}", "nine"))).toContain(reply.say);
+    expect(seen).toHaveLength(0);
   });
 });
 
@@ -615,6 +628,37 @@ describe("a child who says they do not know, once the hints are used", () => {
       expect(TOLD_NUMBER.map((line) => withNumber(line, "fifteen")), String(support)).toContain(reply.say);
       expect(reply.say).not.toMatch(/almost|not quite|not yet/i);
     }
+  });
+});
+
+describe("a list that stopped part way", () => {
+  const neverAsked = { AI: { run: async () => { throw new Error("a model was asked"); } } } as unknown as Env;
+  const to10: SequenceItem[] = Array.from({ length: 10 }, (_, at) => ({ id: String(at + 1), spoken: [numberWords(at + 1), String(at + 1)] }));
+  const ask = (heard: string, items = to10): Ask => ({ prompt: "Count to ten.", heard, language: "en", expect: { kind: "sequence", item: "count", items } });
+
+  it("is answered with how far the child got, and no model", async () => {
+    const reply = await takeTurn(neverAsked, ask("1, 2, 3, 4, 5, 6, 7, 8, 9, 11"));
+    expect(reply.verdict).toBe("wrong");
+    expect(LIST_STOPPED.map((line) => line.replaceAll("{last}", "nine"))).toContain(reply.say);
+  });
+
+  it("names a day of the week as it is said, not as it is filed", async () => {
+    const days: SequenceItem[] = ["sunday", "monday", "tuesday"].map((day) => ({ id: day, spoken: [day] }));
+    const reply = await takeTurn(neverAsked, ask("sunday monday", days));
+    expect(reply.say).toMatch(/monday/i);
+  });
+
+  it("is left to the teacher where code cannot say the item, a bare letter of the alphabet", async () => {
+    const letters: SequenceItem[] = [["a", "ay"], ["b", "bee"], ["c", "see"], ["d", "dee"]].map(([letter, name]) => ({ id: letter, spoken: [letter, name] }));
+    const { env } = tutor([call("say_it", { text: "You said a and b. Say c next." })]);
+    const reply = await takeTurn(env, ask("a b d", letters));
+    expect(reply.say).toBe("You said a and b. Say c next.");
+  });
+
+  it("is left to the teacher when nothing came right at the start", async () => {
+    const { env } = tutor([call("say_it", { text: "Let us start together. One, two." })]);
+    const reply = await takeTurn(env, ask("2, 3, 4, 5"));
+    expect(reply.say).toBe("Let us start together. One, two.");
   });
 });
 

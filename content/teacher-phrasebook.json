@@ -38,6 +38,11 @@
     "Almost. Let us look again.",
     "Not that one. I will help you."
   ],
+  "list_stopped": [
+    "You got as far as {last}.",
+    "You did well up to {last}.",
+    "That was right up to {last}."
+  ],
   "not_heard": [
     "I did not hear you. Say it again, a little louder.",
     "Sorry, I missed that. Please say it louder.",

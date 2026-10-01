@@ -1,8 +1,9 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, NOT_HEARD, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, LIST_STOPPED, NOT_HEARD, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
+import type { SequenceItem, SequenceResult } from "./recite";
 import type { Ask } from "./turn";
 
 function candidates(ask: Ask): string[] {
@@ -67,5 +68,34 @@ export function correctionLine(ask: Ask, tried = true): string | null {
   const number = spokenNumber(expectedAnswer(ask.expect.item));
   if (number === null) return null;
   const lines = (tried ? WRONG_NUMBER : TOLD_NUMBER).map((line) => withNumber(line, numberWords(number)));
+  return lines.every((line) => lineProblems(line).length === 0) ? pick(lines, ask) : null;
+}
+
+/**
+ * An item as it is said aloud, or null where code cannot tell: a name of two letters or more the plan spells out
+ * ("monday", "ten"), or the words for a number. A letter of the alphabet has spellings that sound right and read
+ * wrongly ("bee"), and the plan does not say which the teacher says, so the teacher says that line.
+ */
+function spokenWords(item: SequenceItem): string | null {
+  if (/^[a-z]$/i.test(item.id)) return null;
+  const spelled = item.spoken.find((word) => /[a-z]{2,}/i.test(word));
+  if (spelled !== undefined) return spelled;
+  const number = spokenNumber(item.id);
+  return number === null ? null : numberWords(number);
+}
+
+/**
+ * The line for a list that stopped part way: how far the child got, said back to them, which is what the
+ * teacher would say. Null where the steady line stands: another language, or nothing right at the start of what
+ * was asked.
+ */
+export function listStoppedLine(ask: Ask, result: SequenceResult): string | null {
+  if (ask.language !== "en" || ask.expect.kind !== "sequence") return null;
+  const broken = new Set([...result.missing, ...result.out_of_order]);
+  const at = ask.expect.items.findIndex((item) => broken.has(item.id));
+  if (at <= 0) return null;
+  const last = spokenWords(ask.expect.items[at - 1]);
+  if (last === null) return null;
+  const lines = LIST_STOPPED.map((line) => line.replaceAll("{last}", last));
   return lines.every((line) => lineProblems(line).length === 0) ? pick(lines, ask) : null;
 }
