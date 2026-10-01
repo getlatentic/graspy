@@ -1,0 +1,91 @@
+{"truth":"dont_know","meant":"I don't know","heard":"I don't know.","provider":"whisper"}
+{"truth":"dont_know","meant":"I don't know","heard":"Items","provider":"intron_sync"}
+{"truth":"unclear","meant":"I want football","heard":"I want football","provider":"intron_sync"}
+{"truth":"unclear","meant":"I am hungry, can I have snack?","heard":"I am hungry, can I have snack?","provider":"intron_sync"}
+{"truth":"unclear","meant":"football","heard":"Football","provider":"intron_sync"}
+{"truth":"unclear","meant":"My sister ate my lunch","heard":"My sister ate my lunch.","provider":"intron_sync"}
+{"truth":"unclear","meant":"I want a snack","heard":"I want a snack","provider":"intron_sync"}
+{"truth":"unclear","meant":"I am hungry, can I have fish balls after class?","heard":"I am hungry. Can I have fish balls after class?","provider":"intron_sync"}
+{"truth":"unclear","meant":"I forgot my shoes, can I play football after school?","heard":"I forgot my shoes. Can I play football after school?","provider":"intron_sync"}
+{"truth":"unclear","meant":"I want some akara, teacher!","heard":"I want some Akara, teacher","provider":"intron_sync"}
+{"truth":"unclear","meant":"Football is fun!","heard":"Football is fun","provider":"intron_sync"}
+{"truth":"dont_know","meant":"I don't know","heard":"Item none.","provider":"intron_sync"}
+{"truth":"unclear","meant":"My sister ate my snack","heard":"My sister ate my snack","provider":"intron_sync"}
+{"truth":"unclear","meant":"My sister is watching football on TV!","heard":"My sister is watching football on TV","provider":"intron_sync"}
+{"truth":"unclear","meant":"I think my sister likes football","heard":"I think my sister likes football.","provider":"intron_sync"}
+{"truth":"unclear","meant":"I am hungry, can I have my snack now?","heard":"I'm hungry, can I have my snack now?","provider":"intron_sync"}
+{"truth":"unclear","meant":"I want to play football after school!","heard":"I want to play football after school","provider":"intron_sync"}
+{"truth":"unclear","meant":"I'm hungry, can I have chocolate?","heard":"I'm hungry, can I have chocolate?","provider":"intron_sync"}
+{"truth":"unclear","meant":"I want some noodles after school!","heard":"I want some noodles after school.","provider":"intron_sync"}
+{"truth":"unclear","meant":"I saw a big dog playing football!","heard":"I saw a big dog playing football","provider":"intron_sync"}
+{"truth":"unclear","meant":"My sister ate my lunch and now I'm hungry!","heard":"My sister ate my lunch and now I'm hungry.","provider":"intron_sync"}
+{"truth":"dont_know","meant":"I don't know","heard":"Item non","provider":"intron_sync"}
+{"truth":"number","value":7,"meant":"seven","heard":"7.","provider":"intron_sync"}
+{"truth":"number","value":42,"meant":"forty two","heard":"42","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"ten","provider":"whisper"}
+{"truth":"number","value":40,"meant":"forty","heard":"forty","provider":"whisper"}
+{"truth":"number","value":50,"meant":"fifty","heard":"50","provider":"whisper"}
+{"truth":"dont_know","meant":"I don't know","heard":"I don't know...","provider":"whisper"}
+{"truth":"dont_know","meant":"I don't know","heard":"I don't know","provider":"whisper"}
+{"truth":"unclear","meant":"I’m hungry, can I have a snack?","heard":"I'm hungry. Can I have a snack?","provider":"intron_sync"}
+{"truth":"unclear","meant":"My sister is playing football outside.","heard":"My sister is playing football outside.","provider":"whisper"}
+{"truth":"unclear","meant":"I forgot my homework, can I borrow a pencil?","heard":"I forgot my homework, can I borrow a pencil?","provider":"whisper"}
+{"truth":"unclear","meant":"I love football!","heard":"I love football","provider":"intron_sync"}
+{"truth":"unclear","meant":"I am hungry!","heard":"I am hungry.","provider":"intron_sync"}
+{"truth":"unclear","meant":"My sister is drawing pictures!","heard":"My sister is drawing pictures","provider":"whisper"}
+{"truth":"unclear","meant":"I want to play football after school!","heard":"I want to play football after school.","provider":"whisper"}
+{"truth":"number","value":3,"meant":"three","heard":"3","provider":"whisper"}
+{"truth":"number","value":2,"meant":"two","heard":"to","provider":"whisper"}
+{"truth":"number","value":2,"meant":"two","heard":"2","provider":"whisper"}
+{"truth":"number","value":3,"meant":"three","heard":"Fiennes","provider":"whisper"}
+{"truth":"number","value":2,"meant":"two","heard":"So","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"to moon sink","provider":"whisper"}
+{"truth":"number","value":2,"meant":"two","heard":"Two, two.","provider":"whisper"}
+{"truth":"number","value":3,"meant":"three","heard":"two, three","provider":"whisper"}
+{"truth":"number","value":3,"meant":"three","heard":"Then three","provider":"whisper"}
+{"truth":"number","value":6,"meant":"six","heard":"6","provider":"whisper"}
+{"truth":"number","value":5,"meant":"five","heard":"five","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"To me, you sink.","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"Jin","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"to 10","provider":"whisper"}
+{"truth":"number","value":11,"meant":"eleven","heard":"11","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"Tim","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"10","provider":"nova"}
+{"truth":"number","value":31,"meant":"thirty one","heard":"31","provider":"whisper"}
+{"truth":"number","value":30,"meant":"thirty","heard":"30.","provider":"whisper"}
+{"truth":"number","value":39,"meant":"thirty nine","heard":"Thirty-nine.","provider":"whisper"}
+{"truth":"number","value":40,"meant":"forty","heard":"40","provider":"whisper"}
+{"truth":"number","value":9,"meant":"nine","heard":"9","provider":"nova"}
+{"truth":"number","value":5,"meant":"five","heard":"Files","provider":"whisper"}
+{"truth":"number","value":9,"meant":"nine","heard":"Nein.","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"10 and a total","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"Then","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"Premisetina","provider":"intron_sync"}
+{"truth":"number","value":31,"meant":"thirty one","heard":"Thirty-one","provider":"whisper"}
+{"truth":"number","value":30,"meant":"thirty","heard":"30","provider":"whisper"}
+{"truth":"dont_know","meant":"I don't know","heard":"I don't","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"then","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"to music.","provider":"whisper"}
+{"truth":"number","value":11,"meant":"eleven","heard":"Eleven.","provider":"whisper"}
+{"truth":"number","value":5,"meant":"five","heard":"Five.","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"Then...","provider":"whisper"}
+{"truth":"number","value":11,"meant":"eleven","heard":"Eleven","provider":"whisper"}
+{"truth":"number","value":11,"meant":"eleven","heard":"Lemon.","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"Chainsaw","provider":"whisper"}
+{"truth":"number","value":21,"meant":"twenty one","heard":"21","provider":"nova"}
+{"truth":"number","value":20,"meant":"twenty","heard":"Tinty","provider":"whisper"}
+{"truth":"number","value":20,"meant":"twenty","heard":"20","provider":"nova"}
+{"truth":"number","value":10,"meant":"ten","heard":"Zen","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"To me, sink","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"12, 10","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"Done.","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"To me, sink.","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"chin","provider":"whisper"}
+{"truth":"number","value":10,"meant":"ten","heard":"210","provider":"intron_sync"}
+{"truth":"number","value":10,"meant":"ten","heard":"Tin","provider":"intron_sync"}
+{"truth":"number","value":29,"meant":"twenty nine","heard":"29","provider":"whisper"}
+{"truth":"number","value":39,"meant":"thirty nine","heard":"39","provider":"whisper"}
+{"truth":"number","value":40,"meant":"forty","heard":"14","provider":"whisper"}
+{"truth":"dont_know","meant":"I don't know","heard":"i don't know","provider":"nova"}
+{"truth":"dont_know","meant":"I don't know","heard":"items","provider":"nova"}
+{"truth":"number","value":5,"meant":"five","heard":"5","provider":"nova"}

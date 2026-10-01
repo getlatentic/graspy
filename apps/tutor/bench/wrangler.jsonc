@@ -1,0 +1,9 @@
+{
+  // A Worker that runs the tutor's own readers on one recognised answer, for bench/run.ts. Not deployed:
+  //   npx wrangler dev --remote --config bench/wrangler.jsonc --port 8799
+  "name": "graspy-tutor-bench",
+  "main": "worker.ts",
+  "compatibility_date": "2026-09-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "ai": { "binding": "AI" }
+}

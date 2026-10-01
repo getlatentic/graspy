@@ -11,4 +11,6 @@ interface Env {
   /** Bedrock's key and region, needed only when SPELLER_HOST is bedrock. Secret and variable. */
   AWS_BEARER_TOKEN_BEDROCK?: string;
   AWS_REGION?: string;
+  /** "clef" reads what a child meant with Cloudflare's Clef decision model (src/interpret.ts); unset keeps the small reader. */
+  INTERPRETER?: string;
 }

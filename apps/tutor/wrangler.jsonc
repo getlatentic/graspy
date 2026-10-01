@@ -23,6 +23,8 @@
   "env": {
     "staging": {
       "ai": { "binding": "AI" },
+      // INTERPRETER=clef would read what a child meant with Cloudflare's Clef (src/interpret.ts). It is off: on the
+      // benchmark (bench/README.md) it does not beat the small reader.
       "vars": { "SPELLER_HOST": "bedrock" },
       "durable_objects": {
         "bindings": [{ "name": "Learner", "class_name": "Learner" }]
