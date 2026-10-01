@@ -220,6 +220,9 @@ def test_a_list_asked_again_from_where_it_broke_is_said_from_the_last_item_right
     [
         "repair.mathematics.time.days-of-the-week.practice.sunday",
         "repair.mathematics.time.days-of-the-week.practice.nowhere",
+        "repair.mathematics.time.days-of-the-week.span.friday",
+        "repair.mathematics.time.days-of-the-week.assess.friday",
+        "repair.mathematics.time.days-of-the-week.guide.monday",
         "repair.mathematics.time.days-of-the-week.attention.friday",
         "repair.no.such.plan.practice.friday",
     ],

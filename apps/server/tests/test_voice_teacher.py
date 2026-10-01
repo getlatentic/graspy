@@ -844,9 +844,70 @@ def test_a_repair_prompt_is_marked_over_the_rest_of_the_list_from_the_last_item_
     prompt = f"repair.{DAYS}.practice.friday"
     marking = expectation(exercise_by_prompt_id(prompt))
     assert marking["kind"] == "sequence"
-    assert [item["id"] for item in marking["items"]] == [
-        "thursday",
-        "friday",
-        "saturday",
-    ]
+    assert [item["id"] for item in marking["items"]] == ["friday", "saturday"]
+    assert [item["id"] for item in marking["before"]] == WEEK[:5]
+    assert marking["item"] == f"plan.{DAYS}.practice"
     assert exercise_by_prompt_id(f"repair.{DAYS}.practice.sunday") is None
+
+
+def _try(event_id, said_days, decision="try_again"):
+    missing = [day for day in WEEK if day not in said_days]
+    result = {"said": said_days, "missing": missing, "out_of_order": []}
+    return Evidence(DAYS, event_id, DAY_1, decision, result)
+
+
+def test_only_the_childs_own_try_at_a_list_is_repaired_not_the_check_the_guide_or_the_step():
+    taught = days_taught()
+    for event_id in ("guide", "assess", "span"):
+        progress = progress_by_plan([*taught, _try(event_id, WEEK[:5])], PLANS, DAY_1)
+        assert event_id not in progress[DAYS].resume_at, event_id
+    progress = progress_by_plan([*taught, _try("practice", WEEK[:5])], PLANS, DAY_1)
+    assert progress[DAYS].resume_at == {"practice": "friday"}
+
+
+def test_a_repair_try_nobody_heard_does_not_move_the_start_back():
+    evidence = [
+        *days_taught(),
+        _try("practice", WEEK[:5]),
+        _try("practice", [], "not_understood"),
+    ]
+    assert progress_by_plan(evidence, PLANS, DAY_1)[DAYS].resume_at == {
+        "practice": "friday"
+    }
+
+
+def test_a_try_that_gets_further_than_the_last_is_progress_not_a_second_miss():
+    evidence = [*days_taught(), _try("practice", WEEK[:2]), _try("practice", WEEK[:5])]
+    assert days_offer(evidence).event_id == "practice"
+    stuck = [*days_taught(), _try("practice", WEEK[:2]), _try("practice", WEEK[:2])]
+    assert days_offer(stuck).event_id == "span"
+
+
+def test_a_repair_may_be_claimed_only_for_the_event_it_repairs():
+    from app.voice.samples import _require_owning_event
+
+    def claim(event_id, prompt_id):
+        _require_owning_event(
+            {"plan_id": DAYS, "event_id": event_id, "prompt_id": prompt_id}
+        )
+
+    claim("practice", f"repair.{DAYS}.practice.friday")
+    for event_id, prompt_id in (
+        ("practice", f"repair.{DAYS}.practice.sunday"),
+        ("practice", f"repair.{DAYS}.assess.friday"),
+        ("assess", f"repair.{DAYS}.assess.friday"),
+        ("assess", f"repair.{DAYS}.practice.friday"),
+        ("guide", f"repair.{DAYS}.guide.monday"),
+        ("practice", "repair.no.such.plan.practice.friday"),
+    ):
+        with pytest.raises(ValueError):
+            claim(event_id, prompt_id)
+
+
+def test_a_repair_is_remembered_against_the_list_it_repairs():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+
+    repaired = expectation(exercise_by_prompt_id(f"repair.{DAYS}.practice.friday"))
+    whole = expectation(exercise_by_prompt_id(f"plan.{DAYS}.practice"))
+    assert repaired["item"] == whole["item"]

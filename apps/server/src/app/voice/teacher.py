@@ -18,6 +18,7 @@ from .curriculum import (
     activity_prompt_id,
     repair_target,
     repair_utterance_id,
+    repairable,
 )
 from .exercises import MULTIPLIERS, fact_prompt_id
 from .lesson_store import lesson_day
@@ -170,12 +171,20 @@ def _rung_of(plan: LessonPlan, event: LessonEvent) -> LessonEvent | None:
     return next((other for other in plan.events if other.support == event.id), None)
 
 
+def _got_further(event: LessonEvent, before: str | None, now: str | None) -> bool:
+    """Whether a wrong try of a list broke later than the one before it: some progress, not a repeat."""
+    if before is None or now is None or event.activity is None:
+        return False
+    ids = [item.id for item in event.activity.items]
+    return ids.index(now) > ids.index(before)
+
+
 def _broke_at(event: LessonEvent, result: dict | None) -> str | None:
     """The first item of a list a try left out or said out of place, when something came right before it.
 
     A child who said eleven of twelve numbers rightly needs the twelfth, not the list again; one who
     got nothing right has no start to carry on from."""
-    if event.activity is None or event.activity.kind != "sequence" or not result:
+    if not repairable(event) or not result:
         return None
     broken = set(result.get("missing", ())) | set(result.get("out_of_order", ()))
     ids = [item.id for item in event.activity.items]
@@ -201,7 +210,12 @@ def _record_attempt(
 ) -> None:
     """One marked turn: what is owed to the child, and whether the lesson is left for tomorrow."""
     key = (item.plan_id, item.event_id, item.day)
-    if item.decision == "correct" or item.facts_right:
+    broke_at = _broke_at(event, item.result)
+    if (
+        item.decision == "correct"
+        or item.facts_right
+        or _got_further(event, state.resume_at.get(item.event_id), broke_at)
+    ):
         streaks[key] = 0
     else:
         streaks[key] = streaks.get(key, 0) + 1
@@ -216,7 +230,6 @@ def _record_attempt(
         state.retry_today.discard(item.event_id)
         state.resume_at.pop(item.event_id, None)
         return
-    broke_at = _broke_at(event, item.result)
     if broke_at is not None:
         state.resume_at[item.event_id] = broke_at
     state.done_today.discard(item.event_id)
@@ -663,6 +676,11 @@ def answerable_prompts(plan: LessonPlan, event: LessonEvent) -> set[str]:
     """
     prompts = {activity_prompt_id(plan, event)}
     activity = event.activity
+    if repairable(event):
+        ids = [item.id for item in activity.items]
+        prompts |= {
+            repair_utterance_id(plan.id, event.id, item_id) for item_id in ids[1:]
+        }
     if activity is None or activity.kind != "existing":
         return prompts
     match = RECITED_TABLE.fullmatch(activity.prompt_id)

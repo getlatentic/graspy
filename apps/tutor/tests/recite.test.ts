@@ -164,3 +164,32 @@ describe("a count cut short, carried on by the child", () => {
     expect(markSequence(items, ["one", "two", "three", "four"], "one two three four").verdict).toBe("wrong");
   });
 });
+
+describe("a list asked again from where it broke", () => {
+  const word = (n: number) => ["", "one", "two", "three", "four", "five", "six"][n];
+  const item = (n: number) => ({ id: String(n), spoken: [String(n), word(n)] });
+  const before = [1, 2, 3].map(item);
+  const items = [4, 5, 6].map(item);
+
+  it("is right when the child starts at the last item they had right, or at the first, or after it", () => {
+    for (const heard of [["three", "four", "five", "six"], ["one", "two", "three", "four", "five", "six"], ["four", "five", "six"]]) {
+      expect(markSequence(items, heard, heard.join(" "), [], before).verdict, heard.join(" ")).toBe("correct");
+    }
+  });
+
+  it("is wrong when what was left out is still left out, and says which", () => {
+    const { verdict, result } = markSequence(items, ["three", "four", "six"], "three four six", [], before);
+    expect(verdict).toBe("wrong");
+    expect(result.missing).toEqual(["5"]);
+  });
+
+  it("is wrong when the earlier items come after the later ones or are said twice", () => {
+    expect(markSequence(items, ["four", "five", "six", "two"], "four five six two", [], before).verdict).toBe("wrong");
+    expect(markSequence(items, ["two", "two", "four", "five", "six"], "two two four five six", [], before).verdict).toBe("wrong");
+  });
+
+  it("is wrong, not unheard, when the child said only the earlier items", () => {
+    expect(markSequence(items, ["one", "two", "three"], "one two three", [], before).verdict).toBe("wrong");
+    expect(markSequence(items, [], "", [], before).verdict).toBe("unheard");
+  });
+});

@@ -225,7 +225,10 @@ def _asked_line(metadata: dict, language: str) -> str:
     """The words the child actually heard, so the teacher answers the question it asked."""
     prompt_id = str(metadata.get("prompt_id") or "")
     if prompt_id.startswith("repair."):
-        return teacher_utterance(prompt_id, language).text
+        try:
+            return teacher_utterance(prompt_id, language).text
+        except ValueError:
+            return ""
     plan = load_plans(language).get(str(metadata.get("plan_id")))
     event = plan and next(
         (e for e in plan.events if e.id == metadata.get("event_id")), None

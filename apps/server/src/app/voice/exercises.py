@@ -78,6 +78,11 @@ class SequenceExercise:
     # What follows a shorter step in the list it is a step towards: a child who counts on past the
     # end of the step has not said anything wrong.
     more: tuple[SequenceItem, ...] = ()
+    # The items before the required ones, when the list is asked again from where it broke: they may
+    # be said again, and need not be.
+    before: tuple[SequenceItem, ...] = ()
+    # What the learner's memory files the answer under, when that is not the prompt itself.
+    memory_item: str | None = None
     task = "recitation"
     transport = Transport.INTRON_SYNC
 
@@ -106,8 +111,14 @@ def repair_exercise(prompt_id: str, language: str = "en"):
     found = repair_target(prompt_id, load_plans(language))
     if found is None:
         return None
-    plan, _, items = found
-    return SequenceExercise(prompt_id, plan.subject, items)
+    plan, event, required, lead = found
+    return SequenceExercise(
+        prompt_id,
+        plan.subject,
+        required,
+        before=lead,
+        memory_item=event.utterance_id(plan.id),
+    )
 
 
 def plan_exercise(prompt_id: str, language: str = "en"):

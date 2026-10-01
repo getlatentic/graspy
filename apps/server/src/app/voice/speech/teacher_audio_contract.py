@@ -255,9 +255,9 @@ def _repair_text(utterance_id: str, language: str) -> str | None:
     found = repair_target(utterance_id, load_plans(language))
     if found is None:
         return None
-    items = found[2]
+    _, _, required, lead = found
     return template.format(
-        first=_item_words(items[0].id), last=_item_words(items[-1].id)
+        first=_item_words(lead[-1].id), last=_item_words(required[-1].id)
     )
 
 
