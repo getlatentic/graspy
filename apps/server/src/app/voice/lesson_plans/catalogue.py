@@ -4577,6 +4577,10 @@ PLANS = [
        "mẹ́wà"
       ]
      },
+     "hint_levels": [
+      "structure",
+      "partial_model"
+     ],
      "hints": {
       "en": [
        "One heap is five. What is five and five?",
@@ -4719,10 +4723,14 @@ PLANS = [
        "ẹ̀ẹ́dógún"
       ]
      },
+     "hint_levels": [
+      "structure",
+      "partial_model"
+     ],
      "hints": {
       "en": [
-       "Count the heaps: five, ten. What comes next?",
-       "Ten, and five more. What is that?"
+       "One heap is five. Add five for each new heap.",
+       "Five, ten. What comes next?"
       ]
      },
      "kind": "answer"
@@ -4757,10 +4765,16 @@ PLANS = [
        "30"
       ]
      },
+     "hint_levels": [
+      "cue",
+      "structure",
+      "partial_model"
+     ],
      "hints": {
       "en": [
-       "Count the heaps: five, ten, fifteen. Keep counting.",
-       "Fifteen, twenty, twenty-five. What comes next?"
+       "Each new heap adds five. Count heap by heap.",
+       "Start with one heap: five. Add five for each new heap.",
+       "Five, ten, fifteen. Keep counting."
       ]
      },
      "kind": "answer"
@@ -4803,10 +4817,16 @@ PLANS = [
        "40"
       ]
      },
+     "hint_levels": [
+      "cue",
+      "structure",
+      "partial_model"
+     ],
      "hints": {
       "en": [
-       "Count the heaps: five, ten, fifteen. Keep counting.",
-       "Twenty-five, thirty, thirty-five. What comes next?"
+       "Each new heap adds five. Count heap by heap.",
+       "Start with one heap: five. Add five for each new heap.",
+       "Five, ten, fifteen, twenty. Keep counting."
       ]
      },
      "kind": "answer"
@@ -5123,6 +5143,10 @@ PLANS = [
        "14"
       ]
      },
+     "hint_levels": [
+      "structure",
+      "partial_model"
+     ],
      "hints": {
       "en": [
        "One week is seven days. What is seven and seven?",
@@ -5164,10 +5188,16 @@ PLANS = [
        "twenty eight"
       ]
      },
+     "hint_levels": [
+      "cue",
+      "structure",
+      "partial_model"
+     ],
      "hints": {
       "en": [
-       "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
-       "Twenty-one, and seven more. What is that?"
+       "Each new week adds seven. Count week by week.",
+       "Start with one week: seven. Add seven for each new week.",
+       "Seven, fourteen. Keep counting."
       ]
      },
      "kind": "answer"
@@ -5211,10 +5241,16 @@ PLANS = [
        "méjìlélógójì"
       ]
      },
+     "hint_levels": [
+      "cue",
+      "structure",
+      "partial_model"
+     ],
      "hints": {
       "en": [
-       "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
-       "Twenty-eight, thirty-five. What comes next?"
+       "Each new week adds seven. Count week by week.",
+       "Start with one week: seven. Add seven for each new week.",
+       "Seven, fourteen, twenty-one. Keep counting."
       ]
      },
      "kind": "answer"

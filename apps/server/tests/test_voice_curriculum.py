@@ -368,11 +368,11 @@ def test_a_wrong_answer_is_met_with_the_plans_hints_least_help_first_and_only_wh
     from app.voice.expectation import expectation
 
     fives = "mathematics.number.counting-in-fives"
-    for event in ("recall", "span", "practice", "assess"):
+    for event, rungs in (("recall", 2), ("span", 2), ("practice", 3), ("assess", 3)):
         marking = expectation(exercise_by_prompt_id(f"plan.{fives}.{event}"))
-        assert len(marking["hints"]) == 2, event
+        assert len(marking["hints"]) == rungs, event
     first = expectation(exercise_by_prompt_id(f"plan.{fives}.practice"))["hints"][0]
-    assert first == "Count the heaps: five, ten, fifteen. Keep counting."
+    assert first == "Each new heap adds five. Count heap by heap."
     assert "hints" not in expectation(exercise_by_prompt_id(f"echo.{fives}.recall"))
     assert "hints" not in expectation(exercise_by_prompt_id("mul_fact_2x3_answer"))
     assert exercise_by_prompt_id(f"plan.{fives}.practice", "yo").hints == ()
@@ -386,3 +386,23 @@ def test_a_skill_whose_teaching_steps_lack_english_is_refused():
     assert not [
         p for p in check_skills(load_skills(), load_plans()) if "remediation" in p
     ]
+
+
+def test_a_ladder_of_hints_says_how_much_each_gives_and_never_gives_less_than_the_one_before():
+    from app.voice.curriculum import hint_problems
+
+    three = ("a", "b", "c")
+    assert hint_problems("x", three, ("cue", "structure", "partial_model")) == []
+    assert hint_problems("x", three, ("cue", "cue", "partial_model")) == []
+    assert hint_problems("x", three, ("cue", "structure")) != []
+    assert hint_problems("x", three, ("structure", "cue", "partial_model")) != []
+    assert hint_problems("x", three[:1], ("partial_model",)) != []
+    assert all(
+        hint_problems(
+            f"{plan.id}#{event.id}", event.activity.hints, event.activity.hint_levels
+        )
+        == []
+        for plan in load_plans().values()
+        for event in plan.events
+        if event.activity
+    )

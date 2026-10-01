@@ -43,6 +43,8 @@ class Activity:
     expected: tuple[str, ...] = ()
     # What to say to a child who answered wrongly, least help first, before the answer is told.
     hints: tuple[str, ...] = ()
+    # How much each hint gives away, in the same order (see HINT_LEVELS).
+    hint_levels: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -100,6 +102,26 @@ class LessonPlan:
         return next(event for event in self.events if event.event == kind)
 
 
+# What a hint gives away, least first: what to attend to, the way to start, part of the answer.
+HINT_LEVELS = ("cue", "structure", "partial_model")
+
+
+def hint_problems(
+    where: str, hints: tuple[str, ...], levels: tuple[str, ...]
+) -> list[str]:
+    """A ladder of hints that gives no less help each time, begins without part of the answer, and says
+    for every hint how much it gives."""
+    if len(hints) != len(levels):
+        return [f"{where}: {len(hints)} hints but {len(levels)} levels"]
+    problems = []
+    order = [HINT_LEVELS.index(level) for level in levels]
+    if order != sorted(order):
+        problems.append(f"{where}: a hint gives less than the one before it")
+    if levels and levels[0] == "partial_model":
+        problems.append(f"{where}: the first hint already says part of the answer")
+    return problems
+
+
 def _activity(payload: dict | None, language: str) -> Activity | None:
     if payload is None:
         return None
@@ -115,6 +137,7 @@ def _activity(payload: dict | None, language: str) -> Activity | None:
         "answer",
         expected=tuple(payload["expected"][language]),
         hints=tuple(payload.get("hints", {}).get(language, ())),
+        hint_levels=tuple(payload.get("hint_levels", ())),
     )
 
 
@@ -314,6 +337,14 @@ def check_catalogue(plans: dict[str, LessonPlan]) -> list[str]:
             ]
             if len(items) != len(set(items)):
                 problems.append(f"{plan.id}#{event.id}: duplicate sequence item ids")
+            if event.activity is not None:
+                problems.extend(
+                    hint_problems(
+                        f"{plan.id}#{event.id}",
+                        event.activity.hints,
+                        event.activity.hint_levels,
+                    )
+                )
         problems.extend(_support_problems(plan))
         order = [EVENTS.index(event.event) for event in plan.events]
         if order != sorted(order):

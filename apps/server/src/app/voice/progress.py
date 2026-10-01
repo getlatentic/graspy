@@ -34,6 +34,7 @@ def _owe_help(
     event: LessonEvent,
     decision: str,
     misses: int,
+    broke_at: str | None,
 ) -> None:
     """What the child hears before trying again. One who did not know, or who has missed twice running, is
     shown it once more in the plan's guided practice; one who missed twice with a shorter step in the plan
@@ -49,6 +50,15 @@ def _owe_help(
     help_after = 2 + _hints_in(event)
     if misses >= help_after and rung_of(plan, event) is not None:
         state.rung_owed.add(event.id)
+    elif (
+        event.event == "assess_performance"
+        and misses >= help_after
+        and broke_at is not None
+        and (practice := _practice_of(plan, event))
+    ):
+        # A list that came right up to a point is practised again from there, not from its start.
+        state.resume_at[practice.id] = broke_at
+        state.retry_today.add(practice.id)
     elif can_reteach and (decision == "not_understood" or misses >= help_after):
         state.guidance_owed.add(event.id)
 
@@ -114,17 +124,39 @@ def support_of(event: LessonEvent, item: Evidence, attempt: int) -> str:
     return "independent" if attempt == 1 else "after_help"
 
 
-def where_it_broke(event: LessonEvent, result: dict | None) -> str | None:
+def list_break(event: LessonEvent, result: dict | None) -> str | None:
     """The first item of a list a try left out or said out of place, when something came right before it.
 
     A child who said eleven of twelve numbers rightly needs the twelfth, not the list again; one who
     got nothing right has no start to carry on from."""
-    if not repairable(event) or not result:
+    if event.activity is None or event.activity.kind != "sequence" or not result:
         return None
     broken = set(result.get("missing", ())) | set(result.get("out_of_order", ()))
     ids = [item.id for item in event.activity.items]
     at = next((n for n, item_id in enumerate(ids) if item_id in broken), None)
     return ids[at] if at else None
+
+
+def where_it_broke(event: LessonEvent, result: dict | None) -> str | None:
+    """Where a try at the child's own list broke, for the steps that ask for it again from there."""
+    return list_break(event, result) if repairable(event) else None
+
+
+def _practice_of(plan: LessonPlan, event: LessonEvent) -> LessonEvent | None:
+    """The child's own try at the same list as a check of it, which can be asked again from a break."""
+    if event.activity is None or event.activity.kind != "sequence":
+        return None
+    items = [item.id for item in event.activity.items]
+    return next(
+        (
+            other
+            for other in plan.events
+            if other.id != event.id
+            and repairable(other)
+            and [item.id for item in other.activity.items] == items
+        ),
+        None,
+    )
 
 
 def _serve_owed_help(state: PlanProgress, plan: LessonPlan, event: LessonEvent) -> None:
@@ -178,7 +210,7 @@ def _record_attempt(
         state.resume_at[item.event_id] = broke_at
     state.done_today.discard(item.event_id)
     state.retry_today.add(item.event_id)
-    _owe_help(state, plan, event, item.decision, misses)
+    _owe_help(state, plan, event, item.decision, misses, list_break(event, item.result))
 
 
 def progress_by_plan(
