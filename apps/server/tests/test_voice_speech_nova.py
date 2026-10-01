@@ -10,6 +10,8 @@ from app.voice.speech import nova_asr
 from app.voice.speech.nova_asr import heard_by_nova, nova_text
 from app.voice.speech.whisper_asr import english_asr, transcribe_english
 
+REAL_REQUEST = nova_asr.nova_request
+
 
 class Ai:
     """Workers AI as the Worker sees it: each model answers from its own script."""
@@ -151,3 +153,50 @@ def test_a_turn_can_be_filed_under_nova_and_keeps_what_the_earlier_migrations_ad
     ).fetchall() == [("nova", "unheard", "dont_know")]
     with pytest.raises(sqlite3.IntegrityError):
         db.execute("UPDATE tutoring_turns SET provider = 'deepgram'")
+
+
+def test_the_request_is_built_as_the_workers_runtime_needs_it(monkeypatch):
+    """The runtime's objects are stood in for strictly: a Blob built from anything but a JS Array is refused
+    here as workerd refuses it, which a list of parts would be."""
+    import sys
+
+    class JsArray(list):
+        pass
+
+    class Blob:
+        def __init__(self, parts):
+            if not isinstance(parts, JsArray):
+                raise TypeError(
+                    "Failed to construct 'Blob': parameter 1 is not of type 'Array'"
+                )
+            self.parts = parts
+
+        @classmethod
+        def new(cls, parts, options):
+            return cls(parts)
+
+        def stream(self):
+            return ("stream", tuple(self.parts))
+
+    class Uint8Array:
+        @classmethod
+        def new(cls, size):
+            return cls()
+
+        def assign(self, data):
+            self.data = bytes(data)
+
+    js = SimpleNamespace(
+        Array=SimpleNamespace(of=lambda *items: JsArray(items)),
+        Blob=Blob,
+        Uint8Array=Uint8Array,
+        Object=SimpleNamespace(fromEntries=dict),
+    )
+    ffi = SimpleNamespace(to_js=lambda value, dict_converter=None: value)
+    monkeypatch.setitem(sys.modules, "js", js)
+    monkeypatch.setitem(sys.modules, "pyodide", SimpleNamespace(ffi=ffi))
+    monkeypatch.setitem(sys.modules, "pyodide.ffi", ffi)
+    sent = REAL_REQUEST(b"abc")
+    assert sent["audio"]["contentType"] == "audio/wav"
+    assert sent["audio"]["body"][0] == "stream"
+    assert sent["language"] == "en" and sent["numerals"] is True

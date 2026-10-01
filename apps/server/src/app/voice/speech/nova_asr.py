@@ -19,13 +19,15 @@ NOVA_TIMEOUT_SECONDS = 6
 def nova_request(audio: bytes):
     """The recording as a stream the model reads, which is how Workers AI takes audio for Nova-3, and the
     options that suit a child's counted answers: English, with numbers written as digits."""
-    from js import Blob, Object, Uint8Array
+    from js import Array, Blob, Object, Uint8Array
     from pyodide.ffi import to_js
 
     buffer = Uint8Array.new(len(audio))
     buffer.assign(audio)
+    # A Python list reaches JavaScript as a proxy, which Blob refuses; the parts must be a JS Array.
     blob = Blob.new(
-        [buffer], to_js({"type": "audio/wav"}, dict_converter=Object.fromEntries)
+        Array.of(buffer),
+        to_js({"type": "audio/wav"}, dict_converter=Object.fromEntries),
     )
     return to_js(
         {
