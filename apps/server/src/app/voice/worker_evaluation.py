@@ -229,13 +229,16 @@ def _was_modelled(metadata: dict) -> bool:
     event = plan and next(
         (e for e in plan.events if e.id == metadata.get("event_id")), None
     )
-    return bool(event and event.event == "provide_guidance")
+    return bool(
+        (event and event.event == "provide_guidance")
+        or str(metadata.get("prompt_id") or "").startswith("echo.")
+    )
 
 
 def _asked_line(metadata: dict, language: str) -> str:
     """The words the child actually heard, so the teacher answers the question it asked."""
     prompt_id = str(metadata.get("prompt_id") or "")
-    if prompt_id.startswith("repair."):
+    if prompt_id.startswith(("repair.", "echo.")):
         try:
             return teacher_utterance(prompt_id, language).text
         except ValueError:

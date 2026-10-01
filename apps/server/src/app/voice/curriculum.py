@@ -333,6 +333,35 @@ def repair_utterance_id(plan_id: str, event_id: str, broke_at: str) -> str:
     return f"{REPAIR_PREFIX}{plan_id}.{event_id}.{broke_at}"
 
 
+ECHO_PREFIX = "echo."
+# A check longer than this is said after the teacher only as far as this many items.
+MOST_ECHOED = 6
+
+
+def echo_utterance_id(plan_id: str, event_id: str) -> str:
+    """The prompt that says the answer to a check for the child to say after the teacher."""
+    return f"{ECHO_PREFIX}{plan_id}.{event_id}"
+
+
+def echoable(event: LessonEvent) -> bool:
+    """A check of what the lesson builds on that the plan itself defines, so its answer is known."""
+    return (
+        event.event == "stimulate_recall"
+        and event.activity is not None
+        and event.activity.kind in ("sequence", "answer")
+    )
+
+
+def echo_target(utterance_id: str, plans: dict[str, LessonPlan]):
+    """The plan and recall event an echo prompt names, or None when it names nothing the plans have."""
+    if not utterance_id.startswith(ECHO_PREFIX):
+        return None
+    plan_id, _, event_id = utterance_id.removeprefix(ECHO_PREFIX).rpartition(".")
+    plan = plans.get(plan_id)
+    event = next((e for e in plan.events if e.id == event_id), None) if plan else None
+    return (plan, event) if event is not None and echoable(event) else None
+
+
 def repairable(event: LessonEvent) -> bool:
     """Only the child's own try at a list, not the check, the guided step, the recall or a shorter step."""
     return (

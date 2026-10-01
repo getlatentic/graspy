@@ -15,6 +15,7 @@ from app.voice.lesson_store import (
     OFFER_SQL,
     RECORD_EVENT_SQL,
     WAS_OFFERED_SQL,
+    lesson_day,
     load_lesson_snapshot,
 )
 
@@ -304,3 +305,60 @@ async def test_a_list_asked_again_from_where_it_broke_is_not_an_answer_given_alo
         "prompt_id": "repair.p.practice.friday",
     }
     assert not await answered_alone(None, "owner", meta, "first", AT)
+
+
+@pytest.mark.asyncio
+async def test_the_step_the_teacher_gives_a_child_who_showed_nothing_twice_is_the_answer_said_after_her(
+    monkeypatch,
+):
+    monkeypatch.setattr(learner_memory, "_ask", AsyncMock(return_value={"due": []}))
+    plan = "mathematics.time.days-of-the-week"
+    at = 1_790_000_000_000
+
+    def tried(offset):
+        return {
+            "metadata_json": json.dumps(
+                {
+                    "plan_id": plan,
+                    "event_id": "recall",
+                    "prompt_id": f"plan.{plan}.recall",
+                }
+            ),
+            "decision": "not_understood",
+            "result_json": None,
+            "exercise_json": None,
+            "verdict": "wrong",
+            "heard_kind": None,
+            "plan_id": None,
+            "event_id": None,
+            "at": at + offset,
+        }
+
+    def heard(event_id, offset):
+        return {
+            "metadata_json": None,
+            "decision": None,
+            "result_json": None,
+            "exercise_json": None,
+            "verdict": None,
+            "heard_kind": None,
+            "plan_id": plan,
+            "event_id": event_id,
+            "at": at + offset,
+        }
+
+    rows = [heard("attention", 1), heard("objective", 2), tried(3), tried(4)]
+    env = MagicMock()
+    database = env.DB
+    database.prepare.return_value.bind.return_value.all = AsyncMock(
+        return_value={"results": rows}
+    )
+    database.prepare.return_value.bind.return_value.run = AsyncMock(return_value=None)
+    snapshot = await load_lesson_snapshot(
+        env, NoModel(), "owner", lesson_day(at + 5), "primary_2", "en"
+    )
+    move = snapshot["move"]
+    assert move["event_id"] == "recall"
+    assert move["say"] == f"echo.{plan}.recall"
+    assert move["say_text"]["en"] == "Say it after me: Sunday, Monday, Tuesday."
+    assert move["activity"]["prompt_id"] == f"echo.{plan}.recall"
