@@ -3,21 +3,21 @@ from datetime import date
 import pytest
 
 from app.voice.curriculum import load_plans
-from app.voice.teacher import (
-    Choice,
-    Evidence,
+from app.voice.evidence import Evidence, evidence_from_rows
+from app.voice.moves import event_move, rest_move
+from app.voice.progress import progress_by_plan
+from app.voice.sequencing import (
     Option,
-    TeacherChoiceError,
-    choose,
-    decision_schema,
-    event_move,
-    evidence_from_rows,
     left_for_tomorrow,
     next_new_plan,
     next_options,
+)
+from app.voice.teacher import (
+    Choice,
+    TeacherChoiceError,
+    choose,
+    decision_schema,
     parse_choice,
-    progress_by_plan,
-    rest_move,
 )
 
 PLANS = load_plans()
@@ -607,7 +607,7 @@ def test_only_a_turn_that_names_its_plan_event_is_lesson_evidence():
 
 
 def test_the_catalogue_shows_where_the_learner_stands_on_every_lesson_of_their_class():
-    from app.voice.teacher import catalogue
+    from app.voice.standing import catalogue
 
     turns = [
         *lesson(COUNT_20),
@@ -722,7 +722,7 @@ def test_the_whole_table_is_asked_first_and_a_full_recitation_is_never_narrowed(
 
 def test_a_recite_event_may_be_answered_one_fact_at_a_time_and_nothing_else():
     """The narrowed retry must pass the same ownership check as the activity it replaces."""
-    from app.voice.teacher import answerable_prompts
+    from app.voice.moves import answerable_prompts
 
     plan = PLANS[T2]
     practice = plan.event("practice")
@@ -1067,7 +1067,7 @@ def test_a_check_passed_on_a_second_try_is_progress_but_not_a_lesson_learnt():
 
 def test_what_helped_an_answer_decides_what_it_shows():
     event = PLANS[DAYS].event
-    from app.voice.teacher import support_of
+    from app.voice.progress import support_of
 
     guide, practice, span = event("guide"), event("practice"), event("span")
     answer = Evidence(DAYS, "practice", DAY_1, "correct")
@@ -1167,7 +1167,7 @@ def test_a_child_who_cannot_be_heard_again_and_again_is_sent_home_kindly_not_mar
 
 
 def test_a_lesson_passed_only_with_help_is_not_learnt_and_earns_no_day_towards_its_badge():
-    from app.voice.teacher import catalogue
+    from app.voice.standing import catalogue
 
     turns = [
         _assess(DAY_1, "try_again"),
@@ -1371,7 +1371,8 @@ def test_the_answer_said_after_the_teacher_is_marked_as_the_check_is_and_known_a
 
 
 def test_a_choice_among_several_steps_keeps_what_the_chosen_one_asks():
-    from app.voice.teacher import Option, parse_choice
+    from app.voice.sequencing import Option
+    from app.voice.teacher import parse_choice
 
     options = [
         Option(DAYS, "recall", "a", (), ("echo", "")),

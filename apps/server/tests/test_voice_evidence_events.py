@@ -1,9 +1,9 @@
 from datetime import date
 
 from app.voice.curriculum import check_skills, load_plans, load_skills
+from app.voice.evidence import Evidence
 from app.voice.evidence_events import evidence_events
 from app.voice.skill_tracing import SkillState, estimate, trace
-from app.voice.teacher import Evidence
 
 PLANS = load_plans()
 DAYS = "mathematics.time.days-of-the-week"

@@ -18,7 +18,7 @@ from starlette.responses import JSONResponse
 from .curriculum import SCHOOL_CLASSES, load_plans
 from .exercises import write_won
 from .keeping import recordings_prefix
-from .teacher import answerable_prompts
+from .moves import answerable_prompts
 
 SAMPLE_ID = r"gvm_[a-z0-9_-]+"
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
