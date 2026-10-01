@@ -59,6 +59,16 @@ class Evidence:
     exercise: dict | None = None
     # What the child was asked, when it was not the plan's own line: a list asked again from where it broke.
     prompt_id: str | None = None
+    # How it was marked, and when nothing could be marked, why (see tutoring_turns.verdict).
+    verdict: str | None = None
+    heard_kind: str | None = None
+
+    @property
+    def unheard(self) -> bool:
+        """Whether nothing could be marked and nothing says the child tried: silence, or words that were
+        no answer. It is not a try, and it says nothing about what the child knows. A child saying they do
+        not know did try."""
+        return self.verdict == "unheard" and self.heard_kind != "dont_know"
 
     @property
     def facts_right(self) -> frozenset[int]:
@@ -194,6 +204,31 @@ def _repaired_past_the_break(
     )
 
 
+# A child who cannot be heard this many times running is sent home kindly, not marked wrong.
+UNHEARD_LIMIT = 4
+
+
+def _record_unheard(
+    state: PlanProgress,
+    item: Evidence,
+    streaks: dict[tuple[str, str, date], int],
+    today: date,
+) -> None:
+    """A recording that could not be marked: the step is asked again, and nothing is held against the child.
+
+    It is no miss, it owes no feedback, and it is not a try. Only a child who cannot be heard again and
+    again leaves the lesson for tomorrow, since the lesson cannot go on without hearing them."""
+    key = (item.plan_id, f"{item.event_id}#unheard", item.day)
+    streaks[key] = streaks.get(key, 0) + 1
+    if item.day != today:
+        return
+    state.done_today.discard(item.event_id)
+    state.retry_today.add(item.event_id)
+    if streaks[key] >= UNHEARD_LIMIT:
+        state.paused_days.add(item.day)
+        state.paused_today = True
+
+
 def _got_further(
     event: LessonEvent, before: str | None, now: str | None, missed_before: bool
 ) -> bool:
@@ -254,6 +289,7 @@ def _record_attempt(
 ) -> None:
     """One marked turn: what is owed to the child, and whether the lesson is left for tomorrow."""
     key = (item.plan_id, item.event_id, item.day)
+    streaks[(item.plan_id, f"{item.event_id}#unheard", item.day)] = 0
     broke_at = _broke_at(event, item.result)
     if (
         item.decision == "correct"
@@ -306,6 +342,9 @@ def progress_by_plan(
             state.done_today.add(item.event_id)
             _serve_owed_help(state, plan, event)
         if item.decision is None:
+            continue
+        if item.unheard:
+            _record_unheard(state, item, streaks, today)
             continue
         state.last_decision[item.event_id] = item.decision
         if event.support is not None and item.day == today:
@@ -714,8 +753,9 @@ def catalogue(
             "topic": plan.topic,
             "title": plan.title,
             "standing": lesson_standing(plan, progress[plan.id], today),
-            "days_correct": len(progress[plan.id].assessed_days),
-            "days_alone": len(progress[plan.id].independent_days),
+            # The days that count towards knowing the lesson: the check passed alone. A pass that took
+            # help is "learnt" and earns none, so "one more good day" is always true.
+            "days_correct": len(progress[plan.id].independent_days),
             "current": current is not None and current.plan_id == plan.id,
         }
         for plan in plans_for_class(plans, learner_class)
@@ -818,7 +858,15 @@ def evidence_from_rows(
         day = lesson_day(int(row["at"]))
         items.append(
             Evidence(
-                plan_id, event_id, day, row.get("decision"), result, exercise, prompt_id
+                plan_id,
+                event_id,
+                day,
+                row.get("decision"),
+                result,
+                exercise,
+                prompt_id,
+                row.get("verdict"),
+                row.get("heard_kind"),
             )
         )
     return items

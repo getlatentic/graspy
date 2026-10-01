@@ -6,7 +6,7 @@ COMPLETE_TURN_SQL = (
     "UPDATE tutoring_turns SET state = 'complete', transcript = ?2, "
     "parsed_answer = ?3, decision = ?4, feedback = ?5, provider = ?12, "
     "latency_ms = ?6, exercise_json = ?7, result_json = ?8, spoken_language = ?9, "
-    "language_evidence_json = ?10, error_detail = NULL, "
+    "language_evidence_json = ?10, verdict = ?15, heard_kind = ?16, error_detail = NULL, "
     "updated_at = MAX(?11, COALESCE((SELECT MAX(t.updated_at) + 1 "
     "FROM tutoring_turns t JOIN samples s ON s.id = t.sample_id "
     "WHERE s.owner_id = ?14 AND t.state = 'complete'), 0)) "
@@ -37,11 +37,12 @@ LEARNER_TURNS_SQL = (
 
 EVIDENCE_SQL = (
     "SELECT s.metadata_json, t.decision, t.result_json, t.exercise_json, "
+    "t.verdict, t.heard_kind, "
     "NULL AS plan_id, NULL AS event_id, t.updated_at AS at "
     "FROM tutoring_turns t JOIN samples s ON s.id = t.sample_id "
     "WHERE s.owner_id = ?1 AND t.state = 'complete' "
     "UNION ALL "
-    "SELECT NULL, NULL, NULL, NULL, plan_id, event_id, at "
+    "SELECT NULL, NULL, NULL, NULL, NULL, NULL, plan_id, event_id, at "
     "FROM lesson_events WHERE owner_id = ?1 "
     "ORDER BY at"
 )
@@ -52,7 +53,8 @@ FIRST_ATTEMPT_SQL = (
     "AND json_extract(s.metadata_json, '$.plan_id') = ?2 "
     "AND json_extract(s.metadata_json, '$.event_id') = ?3 "
     "AND t.updated_at >= ?4 AND t.updated_at < ?5 "
-    "ORDER BY t.updated_at, t.sample_id LIMIT 1"
+    "AND (t.verdict IS NULL OR t.verdict != 'unheard' OR t.heard_kind = 'dont_know') "
+    "ORDER BY s.created_at, t.sample_id LIMIT 1"
 )
 
 RECORD_EVENT_SQL = (

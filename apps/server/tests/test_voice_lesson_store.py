@@ -73,6 +73,8 @@ def test_concurrent_completions_keep_both_answers_and_stale_claims_cannot_write(
                     "intron_sync",
                     token,
                     "owner",
+                    "correct",
+                    None,
                 ),
             ).rowcount
 
@@ -160,40 +162,136 @@ def _bind(sql: str) -> str:
     return sql
 
 
-class _Row(dict):
-    pass
+AT = 1_790_000_000_000  # inside a lesson day: after 04:00 in Lagos
 
 
-class _Turns:
-    """The completed turns of one step today, first to last, as the database would order them."""
+def _turns(tmp_path, turns):
+    """A real database with every migration, holding these completed turns of one learner's step.
 
-    def __init__(self, samples):
-        self.samples = samples
-        self.bound = None
+    Each is (sample id, created_at, updated_at, verdict, heard_kind, prompt_id)."""
+    db = sqlite3.connect(tmp_path / "turns.db")
+    for migration in sorted((Path(__file__).parents[1] / "migrations").glob("*.sql")):
+        db.executescript(migration.read_text())
+    for sample, created, updated, verdict, heard, prompt in turns:
+        metadata = json.dumps(
+            {"plan_id": "p", "event_id": "assess", "prompt_id": prompt}
+        )
+        db.execute(
+            "INSERT INTO samples (id, owner_id, idempotency_key, metadata_fingerprint, state, "
+            "metadata_json, created_at, audio_key, uploaded_at) VALUES (?, 'owner', ?, 'fp', 'ready', ?, ?, ?, 0)",
+            (sample, sample, metadata, created, sample),
+        )
+        db.execute(
+            "INSERT INTO tutoring_turns (sample_id, state, transcript, decision, feedback, provider, "
+            "latency_ms, updated_at, claim_token, verdict, heard_kind) "
+            "VALUES (?, 'complete', 'x', 'correct', 'f', 'whisper', 1, ?, ?, ?, ?)",
+            (sample, updated, sample, verdict, heard),
+        )
+    db.commit()
+    return db
+
+
+class _Database:
+    """The part of the Worker's database binding the lookup uses, over a real sqlite database."""
+
+    def __init__(self, db):
+        self.db, self.sql, self.args = db, None, ()
 
     def prepare(self, sql):
-        assert "ORDER BY t.updated_at, t.sample_id LIMIT 1" in sql
+        self.sql = sql
         return self
 
     def bind(self, *args):
-        self.bound = args
+        self.args = args
         return self
 
     async def first(self):
-        return _Row(sample_id=self.samples[0]) if self.samples else None
+        row = self.db.execute(self.sql, self.args).fetchone()
+        return None if row is None else {"sample_id": row[0]}
+
+
+META = {"plan_id": "p", "event_id": "assess", "prompt_id": "plan.p.assess"}
 
 
 @pytest.mark.asyncio
-async def test_only_the_first_try_at_a_step_today_is_an_answer_given_alone():
+async def test_the_first_answer_recorded_is_the_one_given_alone_even_if_marked_last(
+    tmp_path,
+):
     from app.voice.lesson_store import answered_alone
 
-    database = _Turns(["first", "second"])
-    meta = {"plan_id": "p", "event_id": "assess", "prompt_id": "plan.p.assess"}
-    at = 1_790_000_000_000
-    assert await answered_alone(database, "owner", meta, "first", at)
-    assert not await answered_alone(database, "owner", meta, "second", at)
-    first_ms, last_ms = database.bound[3], database.bound[4]
-    assert first_ms <= at < last_ms and last_ms - first_ms == 24 * 3600 * 1000
+    db = _Database(
+        _turns(
+            tmp_path,
+            [
+                ("a", AT, AT + 9000, None, None, "plan.p.assess"),
+                ("b", AT + 5, AT + 100, None, None, "plan.p.assess"),
+            ],
+        )
+    )
+    assert await answered_alone(db, "owner", META, "a", AT)
+    assert not await answered_alone(db, "owner", META, "b", AT)
+
+
+@pytest.mark.asyncio
+async def test_a_recording_nobody_could_hear_is_not_a_try_but_not_knowing_is(tmp_path):
+    from app.voice.lesson_store import answered_alone
+
+    heard_nothing = _Database(
+        _turns(
+            tmp_path,
+            [
+                ("a", AT, AT + 1, "unheard", "garbled", "plan.p.assess"),
+                ("b", AT + 5, AT + 6, None, None, "plan.p.assess"),
+            ],
+        )
+    )
+    assert await answered_alone(heard_nothing, "owner", META, "b", AT)
+    assert not await answered_alone(heard_nothing, "owner", META, "a", AT)
+
+
+@pytest.mark.asyncio
+async def test_a_child_saying_they_do_not_know_has_tried(tmp_path):
+    from app.voice.lesson_store import answered_alone
+
+    db = _Database(
+        _turns(
+            tmp_path,
+            [
+                ("a", AT, AT + 1, "unheard", "dont_know", "plan.p.assess"),
+                ("b", AT + 5, AT + 6, None, None, "plan.p.assess"),
+            ],
+        )
+    )
+    assert await answered_alone(db, "owner", META, "a", AT)
+    assert not await answered_alone(db, "owner", META, "b", AT)
+
+
+@pytest.mark.asyncio
+async def test_only_a_try_the_same_lesson_day_counts_and_the_day_turns_at_four_in_lagos(
+    tmp_path,
+):
+    from datetime import date
+
+    from app.voice.lesson_store import answered_alone, day_bounds_ms, lesson_day
+
+    first_ms, last_ms = day_bounds_ms(date(2026, 9, 30))
+    assert lesson_day(first_ms) == date(2026, 9, 30) and lesson_day(
+        first_ms - 1
+    ) == date(2026, 9, 29)
+    assert lesson_day(last_ms - 1) == date(2026, 9, 30) and lesson_day(last_ms) == date(
+        2026, 10, 1
+    )
+    yesterday = first_ms - 1
+    db = _Database(
+        _turns(
+            tmp_path,
+            [
+                ("old", yesterday - 5, yesterday, None, None, "plan.p.assess"),
+                ("new", first_ms + 5, first_ms + 6, None, None, "plan.p.assess"),
+            ],
+        )
+    )
+    assert await answered_alone(db, "owner", META, "new", first_ms + 6)
 
 
 @pytest.mark.asyncio
@@ -205,6 +303,4 @@ async def test_a_list_asked_again_from_where_it_broke_is_not_an_answer_given_alo
         "event_id": "practice",
         "prompt_id": "repair.p.practice.friday",
     }
-    assert not await answered_alone(
-        _Turns(["first"]), "owner", meta, "first", 1_790_000_000_000
-    )
+    assert not await answered_alone(None, "owner", meta, "first", AT)

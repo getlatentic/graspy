@@ -984,14 +984,12 @@ def _assess(day, decision="correct"):
 
 
 def test_a_lesson_is_known_only_when_the_check_was_passed_alone_on_two_days():
-    ids = [event.id for event in PLANS[COUNT_20].events]
     first_try = [
         Evidence(COUNT_20, "assess", DAY_1, "correct"),
         Evidence(COUNT_20, "assess", DAY_2, "correct"),
     ]
     state = progress_by_plan(first_try, PLANS, DAY_2)[COUNT_20]
     assert state.mastered and len(state.independent_days) == 2
-    assert "assess" in ids
 
 
 def test_a_check_passed_on_a_second_try_is_learnt_but_not_known():
@@ -1047,3 +1045,84 @@ def test_a_repaired_try_is_never_the_check_and_never_counts_towards_knowing_it()
         DAY_1,
     )[DAYS]
     assert state.independent_days == set() and state.assessed_days == set()
+
+
+def _unheard_try(event_id, kind="garbled", plan=COUNT_20):
+    return Evidence(
+        plan, event_id, DAY_1, "not_understood", None, None, None, "unheard", kind
+    )
+
+
+def test_a_recording_that_could_not_be_heard_before_a_pass_does_not_make_the_pass_a_helped_one():
+    state = progress_by_plan(
+        [_unheard_try("assess"), Evidence(COUNT_20, "assess", DAY_1, "correct")],
+        PLANS,
+        DAY_1,
+    )[COUNT_20]
+    assert state.independent_days == {DAY_1} and state.assessed_days == {DAY_1}
+
+
+def test_a_child_who_said_they_do_not_know_has_tried():
+    state = progress_by_plan(
+        [
+            _unheard_try("assess", "dont_know"),
+            Evidence(COUNT_20, "assess", DAY_1, "correct"),
+        ],
+        PLANS,
+        DAY_1,
+    )[COUNT_20]
+    assert state.assessed_days == {DAY_1} and state.independent_days == set()
+
+
+def test_a_recording_that_could_not_be_heard_is_no_miss_owes_no_help_and_is_asked_again():
+    taught = [
+        said(COUNT_20, e)
+        for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+    state = progress_by_plan([*taught, _unheard_try("practice")], PLANS, DAY_1)[
+        COUNT_20
+    ]
+    assert "practice" not in state.failed_today
+    assert (
+        state.feedback_owed == set()
+        and state.guidance_owed == set()
+        and state.rung_owed == set()
+    )
+    assert "practice" in state.retry_today and "practice" not in state.done_today
+    assert not state.paused_today
+
+
+def test_a_child_who_cannot_be_heard_again_and_again_is_sent_home_kindly_not_marked_wrong():
+    taught = [
+        said(COUNT_20, e)
+        for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+    three = [*taught, *[_unheard_try("practice")] * 3]
+    assert not progress_by_plan(three, PLANS, DAY_1)[COUNT_20].paused_today
+    four = [*three, _unheard_try("practice")]
+    state = progress_by_plan(four, PLANS, DAY_1)[COUNT_20]
+    assert state.paused_today and "practice" not in state.failed_today
+    heard_between = [
+        *three,
+        Evidence(COUNT_20, "practice", DAY_1, "try_again"),
+        _unheard_try("practice"),
+    ]
+    assert not progress_by_plan(heard_between, PLANS, DAY_1)[COUNT_20].paused_today
+
+
+def test_a_lesson_passed_with_help_is_learnt_and_earns_no_day_towards_its_badge():
+    from app.voice.teacher import catalogue
+
+    turns = [
+        _assess(DAY_1, "try_again"),
+        _assess(DAY_1),
+        _assess(DAY_2, "try_again"),
+        _assess(DAY_2),
+    ]
+    progress = progress_by_plan(turns, PLANS, DAY_2)
+    rows = {
+        row["plan_id"]: row
+        for row in catalogue(PLANS, progress, DAY_2, "primary_1", None)
+    }
+    assert rows[COUNT_20]["standing"] == "learnt"
+    assert rows[COUNT_20]["days_correct"] == 0

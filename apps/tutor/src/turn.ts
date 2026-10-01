@@ -79,7 +79,20 @@ export interface Reply {
   said?: string | null;
   /** Fact-level or item-level detail, where many answers were asked for at once. */
   result?: RecitationResult | SequenceResult;
+  /** When nothing could be marked, why: no words, the child saying they do not know, or words that were no answer. */
+  heard?: Heard;
   say: string;
+}
+
+export type Heard = "nothing" | "dont_know" | "garbled";
+
+const DONT_KNOW = /\b(i\s*(do\s*not|don'?t|dunno|can'?t|cannot)\b|dunno|no idea|not sure|i\s*have\s*no\s*idea)/i;
+
+/** Why a recording could not be marked: the words, if there were any, say whether the child tried. */
+export function heardKind(heard: string | null): Heard {
+  const words = heardForPrompt(heard);
+  if (words === "") return "nothing";
+  return DONT_KNOW.test(words) ? "dont_know" : "garbled";
 }
 
 const SAY_IT = {
@@ -354,6 +367,11 @@ async function timed<T>(part: string, work: Promise<T>): Promise<T> {
 }
 
 export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
+  const reply = await markAndSay(env, ask);
+  return reply.verdict === "unheard" ? { ...reply, heard: heardKind(ask.heard) } : reply;
+}
+
+async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
   const plain = await timed("read", markedFromPlainNumber(env, ask));
   if (plain !== null) return plain;

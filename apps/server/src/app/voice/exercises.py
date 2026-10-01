@@ -27,6 +27,9 @@ class TurnEvaluation:
     parsed_answer: int | None = None
     exercise: dict | None = None
     result: dict | None = None
+    # How the teacher marked it, and when nothing could be marked, why.
+    verdict: str | None = None
+    heard_kind: str | None = None
 
     @property
     def exercise_json(self) -> str | None:

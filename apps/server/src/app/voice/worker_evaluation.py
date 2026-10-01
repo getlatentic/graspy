@@ -275,6 +275,8 @@ async def _taught(env, learner, sample_id, metadata, activity, transcript, langu
         parsed_answer=int(said) if said.isdigit() else None,
         exercise=_exercise_json(activity, expect),
         result=reply.get("result"),
+        verdict=reply.get("verdict"),
+        heard_kind=reply.get("heard"),
     )
 
 
@@ -340,6 +342,8 @@ async def _complete_turn(
             provider,
             token,
             learner,
+            evaluation.verdict,
+            evaluation.heard_kind,
         )
         .run()
     )
