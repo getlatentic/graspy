@@ -1,31 +1,17 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
 import type { Ask } from "./turn";
 
-/** A right answer is praised for what it was, in a few ways, so a child who gets one after another hears more than one line. */
-const FOR_A_NUMBER = [
-  (said: string) => `Yes, ${said}.`,
-  (said: string) => `That is right: ${said}.`,
-  (said: string) => `Well done. ${said[0].toUpperCase()}${said.slice(1)}.`,
-  (said: string) => `You know it: ${said}.`,
-];
-const FOR_A_LIST = [
-  "Well done. You said them all.",
-  "That is right. Every one, in order.",
-  "Yes! All of them, in the right order.",
-  "You did it. All in order.",
-];
-const FOR_ANYTHING = ["That is right.", "Yes, that is it.", "Well done."];
-
 function candidates(ask: Ask): string[] {
-  if (ask.expect.kind === "sequence") return FOR_A_LIST;
-  if (ask.expect.kind !== "fact") return FOR_ANYTHING;
+  if (ask.expect.kind === "sequence") return RIGHT_LIST;
+  if (ask.expect.kind !== "fact") return RIGHT;
   const number = spokenNumber(expectedAnswer(ask.expect.item));
-  if (number === null) return FOR_ANYTHING;
-  const named = FOR_A_NUMBER.map((say) => say(numberWords(number)));
-  return named.every((line) => lineProblems(line).length === 0) ? named : FOR_ANYTHING;
+  if (number === null) return RIGHT;
+  const named = RIGHT_NUMBER.map((line) => withNumber(line, numberWords(number)));
+  return named.every((line) => lineProblems(line).length === 0) ? named : RIGHT;
 }
 
 /** How long ago the child heard the line for this question: 0 is the latest, and a line never heard is furthest back. */
