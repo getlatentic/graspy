@@ -648,6 +648,12 @@ describe("a list that stopped part way", () => {
     expect(reply.say).toMatch(/monday/i);
   });
 
+  it("names a letter of the alphabet as a letter, not as the bare letter or the word a", async () => {
+    const letters: SequenceItem[] = ["a", "b", "c", "d"].map((letter) => ({ id: letter, spoken: [letter] }));
+    const reply = await takeTurn(neverAsked, ask("a b d", letters));
+    expect(reply.say).toMatch(/letter B/);
+  });
+
   it("is left to the teacher when nothing came right at the start", async () => {
     const { env } = tutor([call("say_it", { text: "Let us start together. One, two." })]);
     const reply = await takeTurn(env, ask("2, 3, 4, 5"));

@@ -71,10 +71,10 @@ export function correctionLine(ask: Ask, tried = true): string | null {
   return lines.every((line) => lineProblems(line).length === 0) ? pick(lines, ask) : null;
 }
 
-/** An item as it is said aloud: its first spelling in letters, or the words for its number. */
+/** An item as it is said aloud: a letter of the alphabet as "letter B", else its first spelling in letters, or the words for its number. */
 function spokenWords(item: SequenceItem): string {
   const spelled = item.spoken.find((word) => /[a-z]/i.test(word));
-  if (spelled !== undefined) return spelled;
+  if (spelled !== undefined) return /^[a-z]$/i.test(spelled) ? `letter ${spelled.toUpperCase()}` : spelled;
   const number = spokenNumber(item.id);
   return number === null ? item.id : numberWords(number);
 }
