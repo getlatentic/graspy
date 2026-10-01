@@ -63,4 +63,15 @@ class PracticeExerciseTest {
         val exercise = PracticeExercise.fromPromptId(prompt, task = "recitation", topic = "mathematics")
         assertEquals(PracticeExercise.Planned(prompt, "recitation", "mathematics"), exercise)
     }
+
+    @Test
+    fun `the item a list broke at, asked for or said after the teacher, is a plan prompt`() {
+        for (prefix in listOf("probe", "show")) {
+            val prompt = "$prefix.mathematics.time.days-of-the-week.practice.friday"
+            assertEquals(
+                PracticeExercise.Planned(prompt, "reasoning", "mathematics"),
+                PracticeExercise.fromPromptId(prompt, task = "reasoning", topic = "mathematics"),
+            )
+        }
+    }
 }

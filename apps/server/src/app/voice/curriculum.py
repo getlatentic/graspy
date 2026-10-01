@@ -362,6 +362,39 @@ def echo_target(utterance_id: str, plans: dict[str, LessonPlan]):
     return (plan, event) if event is not None and echoable(event) else None
 
 
+PROBE_PREFIX = "probe."
+SHOW_PREFIX = "show."
+
+
+def probe_utterance_id(plan_id: str, event_id: str, broke_at: str) -> str:
+    """The question that asks a child for the item their list broke at: what comes after the last right one."""
+    return f"{PROBE_PREFIX}{plan_id}.{event_id}.{broke_at}"
+
+
+def show_utterance_id(plan_id: str, event_id: str, broke_at: str) -> str:
+    """The item their list broke at, said for the child to say after the teacher."""
+    return f"{SHOW_PREFIX}{plan_id}.{event_id}.{broke_at}"
+
+
+def item_step_target(utterance_id: str, prefix: str, plans: dict[str, LessonPlan]):
+    """The plan, event, last item right and item broken at, for a probe or show prompt; None when it
+    names nothing the plans have or the list broke at its first item (nothing came before it)."""
+    if not utterance_id.startswith(prefix):
+        return None
+    rest, _, broke_at = utterance_id.removeprefix(prefix).rpartition(".")
+    plan_id, _, event_id = rest.rpartition(".")
+    plan = plans.get(plan_id)
+    event = next((e for e in plan.events if e.id == event_id), None) if plan else None
+    if event is None or not repairable(event):
+        return None
+    items = event.activity.items
+    ids = [item.id for item in items]
+    if broke_at not in ids or ids.index(broke_at) == 0:
+        return None
+    at = ids.index(broke_at)
+    return plan, event, items[at - 1], items[at]
+
+
 def repairable(event: LessonEvent) -> bool:
     """Only the child's own try at a list, not the check, the guided step, the recall or a shorter step."""
     return (

@@ -789,15 +789,94 @@ def days_offer(evidence):
     return options[0]
 
 
-def test_a_list_that_broke_is_asked_again_from_the_last_item_said_rightly():
-    evidence = [*days_taught(), days_try(WEEK[:5])]
-    offer = days_offer(evidence)
-    assert (offer.event_id, offer.resume) == ("practice", "friday")
-    move = event_move(
-        PLANS[DAYS], PLANS[DAYS].event("practice"), offer.why, (), offer.resume
+def _asked(offer, plan=DAYS, event="practice"):
+    return event_move(
+        PLANS[plan], PLANS[plan].event(event), offer.why, (), offer.variant
     )
-    assert move["say_text"]["en"] == "Start from Thursday. Count on to Saturday."
-    assert move["activity"]["prompt_id"] == f"repair.{DAYS}.practice.friday"
+
+
+def test_a_list_that_broke_is_repaired_by_asking_for_the_item_it_broke_at_then_from_the_last_right_one():
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    offer = days_offer(broke)
+    assert (offer.event_id, offer.variant) == ("practice", ("probe", "friday"))
+    asked = _asked(offer)
+    assert asked["say_text"]["en"] == "What comes after Thursday?"
+    assert asked["activity"] == {
+        "kind": "answer",
+        "prompt_id": f"probe.{DAYS}.practice.friday",
+    }
+
+    knew = [*broke, _side("probe", "friday", "correct")]
+    offer = days_offer(knew)
+    assert offer.variant == ("repair", "friday")
+    asked = _asked(offer)
+    assert asked["say_text"]["en"] == "Start from Thursday. Count on to Saturday."
+    assert asked["activity"]["prompt_id"] == f"repair.{DAYS}.practice.friday"
+
+
+def _side(how, item, decision):
+    return Evidence(
+        DAYS, "practice", DAY_1, decision, None, None, f"{how}.{DAYS}.practice.{item}"
+    )
+
+
+def test_a_child_who_cannot_give_the_item_is_told_it_to_say_and_then_asked_the_list_from_the_last_right_one():
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    missed = [*broke, _side("probe", "friday", "try_again")]
+    offer = days_offer(missed)
+    assert offer.variant == ("show", "friday")
+    assert _asked(offer)["say_text"]["en"] == "After Thursday comes Friday. Say Friday."
+    shown = [*missed, _side("show", "friday", "correct")]
+    assert days_offer(shown).variant == ("repair", "friday")
+
+
+def test_what_is_asked_on_the_way_back_to_the_list_earns_nothing_towards_it():
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    state = progress_by_plan(
+        [*broke, _side("probe", "friday", "correct")], PLANS, DAY_1
+    )[DAYS]
+    assert "practice" in state.retry_today and "practice" not in state.assessed_days
+    state = progress_by_plan(
+        [*broke, _side("show", "friday", "correct")], PLANS, DAY_1
+    )[DAYS]
+    assert "practice" in state.retry_today and state.failed_today["practice"] == 1
+
+
+def test_an_answer_that_names_a_different_break_than_the_real_one_is_ignored():
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    state = progress_by_plan(
+        [*broke, _side("probe", "saturday", "correct")], PLANS, DAY_1
+    )[DAYS]
+    assert state.probed == {}
+    assert days_offer([*broke, _side("probe", "saturday", "correct")]).variant == (
+        "probe",
+        "friday",
+    )
+
+
+def test_a_probe_nobody_could_hear_is_asked_again_and_a_break_further_on_is_probed_anew():
+    unheard = Evidence(
+        DAYS,
+        "practice",
+        DAY_1,
+        "not_understood",
+        None,
+        None,
+        f"probe.{DAYS}.practice.friday",
+        "unheard",
+        "garbled",
+    )
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    assert days_offer([*broke, unheard]).variant == ("probe", "friday")
+    again = [*broke, _side("probe", "friday", "correct"), days_try(WEEK[:6])]
+    assert days_offer(again).variant == ("probe", "saturday")
+
+
+def test_the_whole_list_got_right_ends_the_way_back():
+    broke = [*days_taught(), days_try(WEEK[:5]), _side("probe", "friday", "correct")]
+    done = [*broke, Evidence(DAYS, "practice", DAY_1, "correct")]
+    state = progress_by_plan(done, PLANS, DAY_1)[DAYS]
+    assert state.probed == {} and state.resume_at == {} and state.shown == {}
 
 
 def test_the_plans_general_feedback_is_not_played_when_the_teacher_named_where_it_broke():
@@ -826,7 +905,7 @@ def test_after_the_shorter_step_the_list_is_asked_again_from_where_it_broke():
         Evidence(DAYS, "span", DAY_1, "correct"),
     ]
     offer = days_offer(evidence)
-    assert (offer.event_id, offer.resume) == ("practice", "wednesday")
+    assert (offer.event_id, offer.variant) == ("practice", ("probe", "wednesday"))
 
 
 def test_a_repair_prompt_is_marked_over_the_rest_of_the_list_from_the_last_item_right():
@@ -1149,7 +1228,7 @@ def test_nothing_right_twice_at_the_check_owes_the_answer_said_after_the_teacher
     offer, _ = _offer(two)
     assert (offer.event_id, offer.echo) == ("recall", True)
     move = event_move(
-        PLANS[DAYS], PLANS[DAYS].event("recall"), offer.why, (), None, True
+        PLANS[DAYS], PLANS[DAYS].event("recall"), offer.why, (), offer.variant
     )
     assert move["say_text"]["en"] == "Say it after me: Sunday, Monday, Tuesday."
     assert move["activity"] == {"kind": "sequence", "prompt_id": ECHO_DAYS}
@@ -1161,7 +1240,7 @@ def test_a_wrong_answer_is_the_same_evidence_as_not_knowing():
     offer, _ = _offer(wrong, FIVES, "primary_4")
     assert (offer.event_id, offer.echo) == ("recall", True)
     move = event_move(
-        PLANS[FIVES], PLANS[FIVES].event("recall"), offer.why, (), None, True
+        PLANS[FIVES], PLANS[FIVES].event("recall"), offer.why, (), offer.variant
     )
     assert move["say_text"]["en"] == "Listen: ten. Now you say ten."
     assert move["activity"]["kind"] == "answer"
@@ -1250,8 +1329,8 @@ def test_a_choice_among_several_steps_keeps_what_the_chosen_one_asks():
     from app.voice.teacher import Option, parse_choice
 
     options = [
-        Option(DAYS, "recall", "a", (), None, True),
-        Option(DAYS, "practice", "b", (), "friday", False),
+        Option(DAYS, "recall", "a", (), ("echo", "")),
+        Option(DAYS, "practice", "b", (), ("repair", "friday")),
     ]
 
     def said(step, reason):
@@ -1321,3 +1400,37 @@ def test_an_echo_that_arrives_late_does_not_reopen_a_check_the_child_passed():
     ]
     offer, progress = _offer(evidence)
     assert offer.event_id == "present" and not progress[DAYS].paused_today
+
+
+def test_the_item_a_list_broke_at_can_be_claimed_only_for_that_list_and_never_for_its_first_item():
+    from app.voice.samples import _require_owning_event
+
+    def claim(event_id, prompt_id):
+        _require_owning_event(
+            {"plan_id": DAYS, "event_id": event_id, "prompt_id": prompt_id}
+        )
+
+    claim("practice", f"probe.{DAYS}.practice.friday")
+    claim("practice", f"show.{DAYS}.practice.friday")
+    for event_id, prompt_id in (
+        ("practice", f"probe.{DAYS}.practice.sunday"),
+        ("assess", f"probe.{DAYS}.assess.friday"),
+        ("assess", f"probe.{DAYS}.practice.friday"),
+        ("guide", f"show.{DAYS}.guide.monday"),
+        ("practice", f"show.{DAYS}.assess.friday"),
+    ):
+        with pytest.raises(ValueError):
+            claim(event_id, prompt_id)
+
+
+def test_the_item_asked_for_is_marked_as_one_answer_and_only_what_was_shown_is_known_as_modelled():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+    from app.voice.worker_evaluation import _was_modelled
+
+    for how in ("probe", "show"):
+        marking = expectation(exercise_by_prompt_id(f"{how}.{DAYS}.practice.friday"))
+        assert marking["kind"] == "fact" and "friday" in marking["accept"]
+    meta = {"plan_id": DAYS, "event_id": "practice"}
+    assert _was_modelled(meta | {"prompt_id": f"show.{DAYS}.practice.friday"})
+    assert not _was_modelled(meta | {"prompt_id": f"probe.{DAYS}.practice.friday"})

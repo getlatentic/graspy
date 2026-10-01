@@ -195,8 +195,7 @@ async def load_lesson_snapshot(
             plan.event(choice.event_id),
             choice.reason,
             choice.facts,
-            choice.resume,
-            choice.echo,
+            choice.variant,
         )
     else:
         move = rest_move(plans, progress_by_plan(evidence, plans, today), learner_class)

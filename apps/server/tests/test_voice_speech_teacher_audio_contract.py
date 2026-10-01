@@ -261,3 +261,43 @@ def test_the_answer_to_a_check_is_said_for_the_child_to_say_after_the_teacher():
 def test_an_echo_prompt_that_names_no_check_asks_the_provider_nothing(utterance):
     with pytest.raises(ValueError, match="unsupported teacher utterance"):
         teacher_utterance(utterance, "en")
+
+
+def test_the_item_a_list_broke_at_is_asked_for_and_then_said_for_the_child_to_say_after_the_teacher():
+    days = "mathematics.time.days-of-the-week"
+    probe, show = f"probe.{days}.practice.friday", f"show.{days}.practice.friday"
+    assert teacher_utterance(probe, "en").text == "What comes after Thursday?"
+    assert (
+        teacher_utterance(show, "en").text == "After Thursday comes Friday. Say Friday."
+    )
+    assert teacher_utterance(probe, "pcm").text == "Wetin dey come after Thursday?"
+    assert (
+        teacher_utterance(show, "yo").text == "Lẹ́yìn Thursday ni Friday wà. Sọ Friday."
+    )
+    count = "mathematics.number.counting-to-twenty"
+    assert (
+        teacher_utterance(f"probe.{count}.practice.17", "en").text
+        == "What comes after sixteen?"
+    )
+    letters = "english.alphabet.saying-the-alphabet"
+    assert (
+        teacher_utterance(f"probe.{letters}.practice.m", "en").text
+        == "What comes after the letter L?"
+    )
+
+
+@pytest.mark.parametrize(
+    "utterance",
+    [
+        "probe.mathematics.time.days-of-the-week.practice.sunday",
+        "show.mathematics.time.days-of-the-week.practice.sunday",
+        "probe.mathematics.time.days-of-the-week.assess.friday",
+        "show.mathematics.time.days-of-the-week.guide.friday",
+        "probe.mathematics.time.days-of-the-week.span.friday",
+        "show.mathematics.time.days-of-the-week.practice.nowhere",
+        "probe.no.such.plan.practice.friday",
+    ],
+)
+def test_a_probe_or_show_prompt_that_names_nothing_asks_the_provider_nothing(utterance):
+    with pytest.raises(ValueError, match="unsupported teacher utterance"):
+        teacher_utterance(utterance, "en")
