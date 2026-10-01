@@ -51,6 +51,56 @@
       "title": "Find how many in groups that each hold the same number",
       "prerequisites": [
         "number-names-1-20"
+      ],
+      "remediation": [
+        {
+          "say": {
+            "en": "One heap has five oranges. How many oranges are in one heap?"
+          },
+          "expected": {
+            "en": [
+              "five",
+              "5"
+            ]
+          },
+          "hints": {
+            "en": [
+              "Look at one heap only. How many oranges are in it?"
+            ]
+          }
+        },
+        {
+          "say": {
+            "en": "Here comes another heap of five. Five, then five more. How many oranges now?"
+          },
+          "expected": {
+            "en": [
+              "ten",
+              "10"
+            ]
+          },
+          "hints": {
+            "en": [
+              "Start at five. Then count five more."
+            ]
+          }
+        },
+        {
+          "say": {
+            "en": "Good. Two heaps, five in each. How many oranges in all?"
+          },
+          "expected": {
+            "en": [
+              "ten",
+              "10"
+            ]
+          },
+          "hints": {
+            "en": [
+              "Two heaps. Five in each. What is five and five?"
+            ]
+          }
+        }
       ]
     },
     {

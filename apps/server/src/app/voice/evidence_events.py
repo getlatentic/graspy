@@ -13,6 +13,7 @@ from datetime import date
 from .curriculum import (
     ECHO_PREFIX,
     PROBE_PREFIX,
+    REMEDY_PREFIX,
     REPAIR_PREFIX,
     SHOW_PREFIX,
     LessonPlan,
@@ -68,6 +69,8 @@ def _how_asked(event, item: Evidence, attempt: int, hints: int) -> tuple[str, in
     prompt = item.prompt_id or ""
     if prompt.startswith(PROBE_PREFIX):
         return "probe", LEVEL_PROBE, "single_step"
+    if prompt.startswith(REMEDY_PREFIX):
+        return "model", LEVEL_PARTIAL, "single_step"
     if prompt.startswith((SHOW_PREFIX, ECHO_PREFIX)):
         return "model", LEVEL_TOLD, "single_step"
     if event.event == "provide_guidance":

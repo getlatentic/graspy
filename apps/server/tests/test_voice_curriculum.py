@@ -376,3 +376,13 @@ def test_a_wrong_answer_is_met_with_the_plans_hints_least_help_first_and_only_wh
     assert "hints" not in expectation(exercise_by_prompt_id(f"echo.{fives}.recall"))
     assert "hints" not in expectation(exercise_by_prompt_id("mul_fact_2x3_answer"))
     assert exercise_by_prompt_id(f"plan.{fives}.practice", "yo").hints == ()
+
+
+def test_a_skill_whose_teaching_steps_lack_english_is_refused():
+    from app.voice.curriculum import RemedyStep, Skill, check_skills
+
+    skills = {"a": Skill("a", "A", (), None, (RemedyStep({}, {}, {}),))}
+    assert any("needs English words" in p for p in check_skills(skills, load_plans()))
+    assert not [
+        p for p in check_skills(load_skills(), load_plans()) if "remediation" in p
+    ]

@@ -15,6 +15,7 @@ from .curriculum import (
     ECHO_PREFIX,
     LANGUAGES,
     PROBE_PREFIX,
+    REMEDY_PREFIX,
     REPAIR_PREFIX,
     SHOW_PREFIX,
     LessonEvent,
@@ -24,8 +25,12 @@ from .curriculum import (
     echo_utterance_id,
     echoable,
     item_step_target,
+    load_skills,
     probe_utterance_id,
     probeable,
+    remedy_steps,
+    remedy_target,
+    remedy_utterance_id,
     repair_target,
     repair_utterance_id,
     repairable,
@@ -166,6 +171,9 @@ class PlanProgress:
     probed: dict[str, str] = field(default_factory=dict)
     probe_right: dict[str, bool] = field(default_factory=dict)
     shown: dict[str, str] = field(default_factory=dict)
+    # Per check, how many of the skill's small teaching questions have been got through, and misses at this one.
+    remedy_done: dict[str, int] = field(default_factory=dict)
+    remedy_misses: dict[str, int] = field(default_factory=dict)
     # Misses in a row today per activity, counted while the child makes no progress: a wrong answer with
     # some facts right, or a right answer, starts the count again.
     failed_today: dict[str, int] = field(default_factory=dict)
@@ -304,7 +312,7 @@ def _showed_nothing(item: Evidence) -> bool:
 
 def _is_side_step(item: Evidence) -> bool:
     return bool(item.prompt_id) and item.prompt_id.startswith(
-        (ECHO_PREFIX, PROBE_PREFIX, SHOW_PREFIX)
+        (ECHO_PREFIX, PROBE_PREFIX, SHOW_PREFIX, REMEDY_PREFIX)
     )
 
 
@@ -322,9 +330,9 @@ def _record_side_step(
         return
     prompt = item.prompt_id
     broke_at = prompt.rpartition(".")[2]
-    if not prompt.startswith(ECHO_PREFIX) and broke_at != state.resume_at.get(
-        item.event_id
-    ):
+    if not prompt.startswith(
+        (ECHO_PREFIX, REMEDY_PREFIX)
+    ) and broke_at != state.resume_at.get(item.event_id):
         return
     if item.unheard:
         key = (item.plan_id, f"{item.event_id}#unheard", item.day)
@@ -336,11 +344,38 @@ def _record_side_step(
     streaks[(item.plan_id, f"{item.event_id}#unheard", item.day)] = 0
     if prompt.startswith(ECHO_PREFIX):
         _record_echo(state, item, today)
+    elif prompt.startswith(REMEDY_PREFIX):
+        _record_remedy(state, event, item, broke_at)
     elif prompt.startswith(PROBE_PREFIX):
         state.probed[item.event_id] = broke_at
         state.probe_right[item.event_id] = item.decision == "correct"
     else:
         state.shown[item.event_id] = broke_at
+
+
+def _record_remedy(
+    state: PlanProgress, event: LessonEvent, item: Evidence, claimed: str
+) -> None:
+    """One of the skill's small teaching questions was answered. A right answer goes on to the next; a wrong
+    one is met with the step's hints and then the answer, and once told, goes on too. When the last is done,
+    the check is asked again to see what that did. A question not the one being asked is ignored."""
+    steps = remedy_steps(event, load_skills())
+    done = state.remedy_done.get(item.event_id, 0)
+    if not claimed.isdigit() or int(claimed) != done or done >= len(steps):
+        return
+    if item.decision == "correct":
+        state.remedy_misses[item.event_id] = 0
+        state.remedy_done[item.event_id] = done + 1
+    else:
+        misses = state.remedy_misses.get(item.event_id, 0) + 1
+        state.remedy_misses[item.event_id] = misses
+        _, _, hints = steps[done].in_language("en")
+        if misses > len(hints):  # the hints are used and the answer has been told
+            state.remedy_misses[item.event_id] = 0
+            state.remedy_done[item.event_id] = done + 1
+    if state.remedy_done.get(item.event_id, 0) >= len(steps):
+        state.echoed.add(item.event_id)
+        state.recheck_due.add(item.event_id)
 
 
 def _record_echo(state: PlanProgress, item: Evidence, today: date) -> None:
@@ -658,6 +693,8 @@ def _variant(state: PlanProgress, event: LessonEvent) -> Variant | None:
     that broke is repaired least help first: the item it broke at is asked for, then said for them if they
     could not give it, and only then is the list asked again from the last item they had right."""
     if _echo_owed(state, event):
+        if remedy_steps(event, load_skills()):
+            return ("remedy", str(state.remedy_done.get(event.id, 0)))
         return ("echo", "")
     broke_at = state.resume_at.get(event.id) if event.id in state.retry_today else None
     if broke_at is None:
@@ -985,6 +1022,8 @@ def answerable_prompts(plan: LessonPlan, event: LessonEvent) -> set[str]:
     activity = event.activity
     if echoable(event):
         prompts.add(echo_utterance_id(plan.id, event.id))
+        for at in range(len(remedy_steps(event, load_skills()))):
+            prompts.add(remedy_utterance_id(plan.id, event.id, at))
     if repairable(event):
         ids = [item.id for item in activity.items]
         for make in (repair_utterance_id, probe_utterance_id, show_utterance_id):
@@ -1045,6 +1084,10 @@ def asked_another_way(
         utterance = echo_utterance_id(plan.id, event.id)
         found = echo_target(utterance, {plan.id: plan})
         return _another_way(plan, utterance, event.activity.kind) if found else None
+    if how == "remedy":
+        utterance = remedy_utterance_id(plan.id, event.id, int(item))
+        found = remedy_target(utterance, {plan.id: plan}, load_skills())
+        return _another_way(plan, utterance, "answer") if found else None
     makers = {
         "repair": (repair_utterance_id, "sequence", None),
         "probe": (probe_utterance_id, "answer", PROBE_PREFIX),

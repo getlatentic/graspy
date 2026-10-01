@@ -1285,15 +1285,10 @@ def test_nothing_right_twice_at_the_check_owes_the_answer_said_after_the_teacher
 
 
 def test_a_wrong_answer_is_the_same_evidence_as_not_knowing():
-    wrong = [*_opening(FIVES), _recall("try_again", plan=FIVES)] * 1
+    wrong = [*_opening(FIVES), _recall("try_again", plan=FIVES)]
     wrong = [*wrong, _recall("try_again", plan=FIVES)]
     offer, _ = _offer(wrong, FIVES, "primary_4")
-    assert (offer.event_id, offer.echo) == ("recall", True)
-    move = event_move(
-        PLANS[FIVES], PLANS[FIVES].event("recall"), offer.why, (), offer.variant
-    )
-    assert move["say_text"]["en"] == "Listen: ten. Now you say ten."
-    assert move["activity"]["kind"] == "answer"
+    assert (offer.event_id, offer.variant) == ("recall", ("remedy", "0"))
 
 
 def test_a_child_who_got_some_of_it_right_twice_is_taught_not_given_the_answer():
@@ -1652,3 +1647,115 @@ def test_a_plan_without_hints_is_helped_after_two_misses_and_sent_home_after_thr
     assert next_step(two) == "guide"
     three = [*two, said(T1, "guide"), marked(T1, "practice", "try_again")]
     assert progress_by_plan(three, PLANS, DAY_1)[T1].paused_today
+
+
+def _remedy_try(step, decision, plan=FIVES):
+    return Evidence(
+        plan, "recall", DAY_1, decision, None, None, f"remedy.{plan}.recall.{step}"
+    )
+
+
+def _blank_twice():
+    return [
+        *_opening(FIVES),
+        _recall("not_understood", plan=FIVES),
+        _recall("not_understood", plan=FIVES),
+    ]
+
+
+def test_a_child_who_has_shown_nothing_of_equal_groups_is_taught_it_a_small_question_at_a_time():
+    offer, _ = _offer(_blank_twice(), FIVES, "primary_4")
+    asked = event_move(
+        PLANS[FIVES], PLANS[FIVES].event("recall"), offer.why, (), offer.variant
+    )
+    assert (
+        asked["say_text"]["en"]
+        == "One heap has five oranges. How many oranges are in one heap?"
+    )
+    assert asked["activity"] == {
+        "kind": "answer",
+        "prompt_id": f"remedy.{FIVES}.recall.0",
+    }
+    done = [*_blank_twice(), _remedy_try(0, "correct")]
+    offer, _ = _offer(done, FIVES, "primary_4")
+    assert offer.variant == ("remedy", "1")
+    done.append(_remedy_try(1, "correct"))
+    assert _offer(done, FIVES, "primary_4")[0].variant == ("remedy", "2")
+
+
+def test_after_the_last_small_question_the_check_is_asked_again_and_a_pass_goes_on_to_the_teaching():
+    steps = [
+        _remedy_try(0, "correct"),
+        _remedy_try(1, "correct"),
+        _remedy_try(2, "correct"),
+    ]
+    offer, progress = _offer([*_blank_twice(), *steps], FIVES, "primary_4")
+    assert (offer.event_id, offer.variant) == ("recall", None)
+    passed = [*_blank_twice(), *steps, _recall("correct", plan=FIVES)]
+    offer, progress = _offer(passed, FIVES, "primary_4")
+    assert offer.event_id == "present" and not progress[FIVES].paused_today
+    failed = [*_blank_twice(), *steps, _recall("not_understood", plan=FIVES)]
+    assert _offer(failed, FIVES, "primary_4")[0] is None
+
+
+def test_a_small_question_answered_wrongly_is_asked_again_with_its_hint_and_then_gone_past_once_told():
+    first = [*_blank_twice(), _remedy_try(0, "try_again")]
+    assert _offer(first, FIVES, "primary_4")[0].variant == ("remedy", "0")
+    told = [*first, _remedy_try(0, "try_again")]
+    assert _offer(told, FIVES, "primary_4")[0].variant == ("remedy", "1")
+
+
+def test_a_small_question_that_was_not_the_one_being_asked_changes_nothing():
+    cheat = [*_blank_twice(), _remedy_try(2, "correct")]
+    assert _offer(cheat, FIVES, "primary_4")[0].variant == ("remedy", "0")
+    noise = Evidence(
+        FIVES,
+        "recall",
+        DAY_1,
+        "not_understood",
+        None,
+        None,
+        f"remedy.{FIVES}.recall.0",
+        "unheard",
+        "garbled",
+    )
+    assert _offer([*_blank_twice(), noise], FIVES, "primary_4")[0].variant == (
+        "remedy",
+        "0",
+    )
+
+
+def test_a_skill_with_no_small_questions_written_falls_back_to_the_answer_said_after_the_teacher():
+    offer, _ = _offer(
+        [*_opening(), _recall("not_understood"), _recall("not_understood")]
+    )
+    assert offer.variant == ("echo", "")
+
+
+def test_the_small_questions_can_be_claimed_only_for_the_check_that_shows_their_skill():
+    from app.voice.samples import _require_owning_event
+
+    claim = lambda event, prompt: _require_owning_event(
+        {"plan_id": FIVES, "event_id": event, "prompt_id": prompt}
+    )
+    for step in range(3):
+        claim("recall", f"remedy.{FIVES}.recall.{step}")
+    for event, prompt in (
+        ("recall", f"remedy.{FIVES}.recall.3"),
+        ("practice", f"remedy.{FIVES}.recall.0"),
+        ("practice", f"remedy.{FIVES}.practice.0"),
+        ("recall", f"remedy.{DAYS}.recall.0"),
+    ):
+        with pytest.raises(ValueError):
+            claim(event, prompt)
+
+
+def test_a_small_question_is_marked_as_one_answer_with_its_own_hints():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+
+    marking = expectation(exercise_by_prompt_id(f"remedy.{FIVES}.recall.1"))
+    assert marking["kind"] == "fact" and "ten" in marking["accept"]
+    assert marking["hints"] == ["Start at five. Then count five more."]
+    pidgin = expectation(exercise_by_prompt_id(f"remedy.{FIVES}.recall.1", "pcm"))
+    assert pidgin["hints"] == marking["hints"]

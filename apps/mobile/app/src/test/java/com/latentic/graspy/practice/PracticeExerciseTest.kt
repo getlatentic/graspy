@@ -74,4 +74,13 @@ class PracticeExerciseTest {
             )
         }
     }
+
+    @Test
+    fun `a small teaching question is a plan prompt`() {
+        val prompt = "remedy.mathematics.number.counting-in-fives.recall.0"
+        assertEquals(
+            PracticeExercise.Planned(prompt, "reasoning", "mathematics"),
+            PracticeExercise.fromPromptId(prompt, task = "reasoning", topic = "mathematics"),
+        )
+    }
 }
