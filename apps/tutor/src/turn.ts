@@ -382,7 +382,12 @@ async function timed<T>(part: string, work: Promise<T>): Promise<T> {
 
 export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   const reply = await markAndSay(env, ask);
-  if (reply.verdict === "unheard") return { ...reply, heard: heardKind(ask.heard) };
+  if (reply.verdict === "unheard") {
+    const heard = heardKind(ask.heard);
+    // A child who says they do not know has tried: they are met with the next hint as a wrong answer is.
+    const hint = heard === "dont_know" && ask.expect.kind === "fact" ? correctionLine(ask) : null;
+    return hint === null ? { ...reply, heard } : { ...reply, heard, say: hint };
+  }
   // A wrong answer is met least help first whoever found it wrong: a model's line would tell the answer at once.
   const rung = reply.verdict === "wrong" && ask.expect.kind === "fact" ? correctionLine(ask) : null;
   return rung === null ? reply : { ...reply, say: rung };

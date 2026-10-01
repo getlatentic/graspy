@@ -13491,6 +13491,56 @@ SKILLS = [
   "prerequisites": [
    "number-names-1-20"
   ],
+  "remediation": [
+   {
+    "expected": {
+     "en": [
+      "five",
+      "5"
+     ]
+    },
+    "hints": {
+     "en": [
+      "Look at one heap only. How many oranges are in it?"
+     ]
+    },
+    "say": {
+     "en": "One heap has five oranges. How many oranges are in one heap?"
+    }
+   },
+   {
+    "expected": {
+     "en": [
+      "ten",
+      "10"
+     ]
+    },
+    "hints": {
+     "en": [
+      "Start at five. Then count five more."
+     ]
+    },
+    "say": {
+     "en": "Here comes another heap of five. How many is five, then five more?"
+    }
+   },
+   {
+    "expected": {
+     "en": [
+      "ten",
+      "10"
+     ]
+    },
+    "hints": {
+     "en": [
+      "Start at five. Count five more."
+     ]
+    },
+    "say": {
+     "en": "Two heaps, five in each. How many oranges in all?"
+    }
+   }
+  ],
   "title": "Find how many in groups that each hold the same number"
  },
  {

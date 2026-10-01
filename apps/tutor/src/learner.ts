@@ -127,7 +127,7 @@ export class Learner extends Agent<Env> {
       this.record(lesson, ask.expect.item, reply.verdict, at, turn);
       // The steady lines are the fallback for a line the teacher could not write: telling the teacher not to
       // repeat one would only crowd out the lines it did write.
-      if (!isSteadyLine(reply.say)) this.told.put(lesson, ask.prompt, { verdict: reply.verdict, line: reply.say });
+      if (!isSteadyLine(reply.say)) this.told.put(lesson, ask.prompt, { verdict: reply.heard === "dont_know" ? "wrong" : reply.verdict, line: reply.say });
       return reply;
     });
   }

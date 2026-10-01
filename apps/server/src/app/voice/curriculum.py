@@ -152,6 +152,25 @@ def plan_from_json(payload: dict, language: str = "en") -> LessonPlan:
 
 
 @dataclass(frozen=True)
+class RemedyStep:
+    """One small question that teaches a skill from its start, with what to say first and what is right."""
+
+    say: dict[str, str]
+    expected: dict[str, tuple[str, ...]]
+    hints: dict[str, tuple[str, ...]]
+
+    def in_language(
+        self, language: str
+    ) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
+        """What to say, the right answers and the hints; English where a language has none written."""
+        return (
+            self.say.get(language) or self.say["en"],
+            self.expected.get(language) or self.expected["en"],
+            self.hints.get(language) or self.hints.get("en", ()),
+        )
+
+
+@dataclass(frozen=True)
 class Skill:
     """Something a child can learn to do, and the skills it needs first."""
 
@@ -159,6 +178,8 @@ class Skill:
     title: str
     prerequisites: tuple[str, ...]
     taught_by: str | None = None
+    # Small questions that teach it from the start, for a child shown to lack it.
+    remediation: tuple[RemedyStep, ...] = ()
 
 
 def load_skills() -> dict[str, Skill]:
@@ -170,6 +191,14 @@ def load_skills() -> dict[str, Skill]:
             skill["title"],
             tuple(skill["prerequisites"]),
             skill.get("taught_by"),
+            tuple(
+                RemedyStep(
+                    step["say"],
+                    {k: tuple(v) for k, v in step["expected"].items()},
+                    {k: tuple(v) for k, v in step.get("hints", {}).items()},
+                )
+                for step in skill.get("remediation", ())
+            ),
         )
         for skill in SKILLS
     }
@@ -185,6 +214,18 @@ def needs_first(skills: dict[str, Skill], skill_id: str) -> list[str]:
             seen.append(at)
             queue.extend(p for p in skills[at].prerequisites if p in skills)
     return seen
+
+
+def _remedy_problems(skills: dict[str, Skill]) -> list[str]:
+    problems = []
+    for skill in skills.values():
+        for at, step in enumerate(skill.remediation):
+            label = f"{skill.id} remediation step {at + 1}"
+            if not step.say.get("en") or not step.expected.get("en"):
+                problems.append(
+                    f"{label}: needs English words to say and answers that are right"
+                )
+    return problems
 
 
 def _needs_itself(skills: dict[str, Skill], skill_id: str) -> bool:
@@ -204,7 +245,7 @@ def _needs_itself(skills: dict[str, Skill], skill_id: str) -> bool:
 def check_skills(skills: dict[str, Skill], plans: dict[str, LessonPlan]) -> list[str]:
     """Problems no schema can see: a skill that needs one that does not exist or needs itself, a skill
     taught by a lesson that is not there, an event that names a skill that is not there."""
-    problems = []
+    problems = _remedy_problems(skills)
     for skill in skills.values():
         for needed in skill.prerequisites:
             if needed not in skills:
@@ -342,6 +383,38 @@ REPAIR_PREFIX = "repair."
 def repair_utterance_id(plan_id: str, event_id: str, broke_at: str) -> str:
     """The prompt that asks a child to carry on from where a list went wrong, rather than say it all again."""
     return f"{REPAIR_PREFIX}{plan_id}.{event_id}.{broke_at}"
+
+
+REMEDY_PREFIX = "remedy."
+
+
+def remedy_utterance_id(plan_id: str, event_id: str, step: int) -> str:
+    """The small question that teaches what a check builds on, from its start: which of the skill's steps."""
+    return f"{REMEDY_PREFIX}{plan_id}.{event_id}.{step}"
+
+
+def remedy_steps(
+    event: LessonEvent, skills: dict[str, Skill]
+) -> tuple[RemedyStep, ...]:
+    """The steps that teach the skill a check shows, or none where the registry has not written them."""
+    skill = skills.get(event.skill) if event.skill else None
+    return skill.remediation if skill is not None and echoable(event) else ()
+
+
+def remedy_target(
+    utterance_id: str, plans: dict[str, LessonPlan], skills: dict[str, Skill]
+):
+    """The plan, event, step number and step a remedy prompt names, or None when it names nothing there is."""
+    if not utterance_id.startswith(REMEDY_PREFIX):
+        return None
+    rest, _, number = utterance_id.removeprefix(REMEDY_PREFIX).rpartition(".")
+    plan_id, _, event_id = rest.rpartition(".")
+    plan = plans.get(plan_id)
+    event = next((e for e in plan.events if e.id == event_id), None) if plan else None
+    steps = remedy_steps(event, skills) if event is not None else ()
+    if not number.isdigit() or int(number) >= len(steps):
+        return None
+    return plan, event, int(number), steps[int(number)]
 
 
 ECHO_PREFIX = "echo."

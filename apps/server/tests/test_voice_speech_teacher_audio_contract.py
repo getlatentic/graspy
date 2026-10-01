@@ -339,3 +339,27 @@ def test_the_primes_are_told_not_asked_for_because_they_follow_no_rule_a_child_c
         teacher_utterance(f"show.{primes}.practice.3", "en").text
         == "After two comes three. Say three."
     )
+
+
+def test_a_small_teaching_question_is_said_in_every_language_in_english_where_none_is_written():
+    prompt = "remedy.mathematics.number.counting-in-fives.recall.0"
+    english = "One heap has five oranges. How many oranges are in one heap?"
+    assert teacher_utterance(prompt, "en").text == english
+    assert teacher_utterance(prompt, "pcm").text == english
+    assert teacher_utterance(prompt, "yo").text == english
+
+
+@pytest.mark.parametrize(
+    "utterance",
+    [
+        "remedy.mathematics.number.counting-in-fives.recall.3",
+        "remedy.mathematics.number.counting-in-fives.practice.0",
+        "remedy.mathematics.time.days-of-the-week.recall.0",
+        "remedy.no.such.plan.recall.0",
+    ],
+)
+def test_a_small_teaching_question_that_names_nothing_asks_the_provider_nothing(
+    utterance,
+):
+    with pytest.raises(ValueError, match="unsupported teacher utterance"):
+        teacher_utterance(utterance, "en")

@@ -13,11 +13,14 @@ from enum import Enum
 from .curriculum import (
     MOST_ECHOED,
     PROBE_PREFIX,
+    REMEDY_PREFIX,
     SHOW_PREFIX,
     echo_target,
     item_step_target,
     load_plans,
+    load_skills,
     plan_event_for_utterance,
+    remedy_target,
     repair_target,
 )
 from .recitation import RecitationExercise
@@ -143,6 +146,16 @@ def item_step_exercise(prompt_id: str, prefix: str, language: str = "en"):
     return SpokenAnswerExercise(prompt_id, plan.subject, tuple(broken.spoken))
 
 
+def remedy_exercise(prompt_id: str, language: str = "en"):
+    """One small question that teaches a skill from its start: one answer, and the step's own hints."""
+    found = remedy_target(prompt_id, load_plans(language), load_skills())
+    if found is None:
+        return None
+    plan, _, _, step = found
+    _, expected, hints = step.in_language(language)
+    return SpokenAnswerExercise(prompt_id, plan.subject, expected, hints)
+
+
 def echo_exercise(prompt_id: str, language: str = "en"):
     """The answer to a check of what a lesson builds on, said after the teacher: marked as the check is."""
     found = echo_target(prompt_id, load_plans(language))
@@ -234,6 +247,8 @@ def exercise_by_prompt_id(prompt_id: str, language: str = "en"):
         return repair_exercise(prompt_id, language)
     if prompt_id.startswith("echo."):
         return echo_exercise(prompt_id, language)
+    if prompt_id.startswith(REMEDY_PREFIX):
+        return remedy_exercise(prompt_id, language)
     if prompt_id.startswith((PROBE_PREFIX, SHOW_PREFIX)):
         prefix = PROBE_PREFIX if prompt_id.startswith(PROBE_PREFIX) else SHOW_PREFIX
         return item_step_exercise(prompt_id, prefix, language)

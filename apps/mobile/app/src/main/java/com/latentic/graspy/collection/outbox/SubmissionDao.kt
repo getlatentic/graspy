@@ -23,7 +23,7 @@ interface SubmissionDao {
     @Query("SELECT * FROM submissions WHERE ownerId = :ownerId AND status IN ('PENDING', 'UPLOADING') ORDER BY createdAtEpochMillis")
     fun observeIncomplete(ownerId: String): Flow<List<SubmissionEntity>>
 
-    @Query("SELECT * FROM submissions WHERE ownerId = :ownerId AND (promptId LIKE 'mul_table_%' OR promptId LIKE 'mul_fact_%' OR promptId LIKE 'plan.%' OR promptId LIKE 'repair.%' OR promptId LIKE 'echo.%' OR promptId LIKE 'probe.%' OR promptId LIKE 'show.%') ORDER BY createdAtEpochMillis, localId")
+    @Query("SELECT * FROM submissions WHERE ownerId = :ownerId AND (promptId LIKE 'mul_table_%' OR promptId LIKE 'mul_fact_%' OR promptId LIKE 'plan.%' OR promptId LIKE 'repair.%' OR promptId LIKE 'echo.%' OR promptId LIKE 'probe.%' OR promptId LIKE 'show.%' OR promptId LIKE 'remedy.%') ORDER BY createdAtEpochMillis, localId")
     fun observeLessonTurns(ownerId: String): Flow<List<SubmissionEntity>>
 
     @Query("SELECT COUNT(*) FROM submissions WHERE ownerId = :ownerId AND status IN ('PENDING', 'UPLOADING')")

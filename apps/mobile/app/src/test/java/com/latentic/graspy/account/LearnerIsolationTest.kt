@@ -45,10 +45,11 @@ class LearnerIsolationTest {
         answers.insert(answer("echo-1", ada, promptId = "echo.mathematics.time.days-of-the-week.recall"))
         answers.insert(answer("probe-1", ada, promptId = "probe.mathematics.time.days-of-the-week.practice.friday"))
         answers.insert(answer("show-1", ada, promptId = "show.mathematics.time.days-of-the-week.practice.friday"))
+        answers.insert(answer("remedy-1", ada, promptId = "remedy.mathematics.number.counting-in-fives.recall.0"))
         answers.insert(answer("other-1", ada, promptId = "mathematics.not-a-lesson"))
 
         assertEquals(
-            setOf("echo-1", "plan-1", "probe-1", "repair-1", "show-1"),
+            setOf("echo-1", "plan-1", "probe-1", "remedy-1", "repair-1", "show-1"),
             answers.observeLessonTurns(ada).first().map { it.localId }.toSet(),
         )
     }

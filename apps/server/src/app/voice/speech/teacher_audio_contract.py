@@ -7,13 +7,16 @@ from ..curriculum import (
     ECHO_PREFIX,
     MOST_ECHOED,
     PROBE_PREFIX,
+    REMEDY_PREFIX,
     REPAIR_PREFIX,
     SHOW_PREFIX,
     echo_target,
     item_step_target,
     list_step,
     load_plans,
+    load_skills,
     plan_event_for_utterance,
+    remedy_target,
     repair_target,
 )
 from ..spoken_numbers import number_words
@@ -349,6 +352,13 @@ def _item_step_text(utterance_id: str, language: str) -> str | None:
     return templates.format(anchor=a, next=b)
 
 
+def _remedy_text(utterance_id: str, language: str) -> str | None:
+    if not utterance_id.startswith(REMEDY_PREFIX):
+        return None
+    found = remedy_target(utterance_id, load_plans(language), load_skills())
+    return found[3].in_language(language)[0] if found else None
+
+
 def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
     text = (
         _TEXT.get(language, {}).get(utterance_id)
@@ -359,6 +369,7 @@ def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
         or _repair_text(utterance_id, language)
         or _echo_text(utterance_id, language)
         or _item_step_text(utterance_id, language)
+        or _remedy_text(utterance_id, language)
     )
     if text is None:
         raise ValueError("unsupported teacher utterance or language")

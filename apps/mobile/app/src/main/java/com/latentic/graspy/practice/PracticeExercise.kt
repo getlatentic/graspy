@@ -54,7 +54,7 @@ sealed interface PracticeExercise {
         }
 
         fun fromPromptId(promptId: String, task: String = "reasoning", topic: String = "multiplication"): PracticeExercise {
-            if (promptId.startsWith("plan.") || promptId.startsWith("repair.") || promptId.startsWith("echo.") || promptId.startsWith("probe.") || promptId.startsWith("show.")) return Planned(promptId, task, topic)
+            if (promptId.startsWith("plan.") || promptId.startsWith("repair.") || promptId.startsWith("echo.") || promptId.startsWith("probe.") || promptId.startsWith("show.") || promptId.startsWith("remedy.")) return Planned(promptId, task, topic)
             FACT_PROMPT.matchEntire(promptId)?.destructured?.let { (table, fact, mode) ->
                 return FactAnswer(table.toInt(), fact.toInt(), taught = mode == "say")
             }

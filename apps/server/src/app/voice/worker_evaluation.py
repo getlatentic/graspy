@@ -248,7 +248,7 @@ def _support_asked(metadata: dict) -> dict:
 def _asked_line(metadata: dict, language: str) -> str:
     """The words the child actually heard, so the teacher answers the question it asked."""
     prompt_id = str(metadata.get("prompt_id") or "")
-    if prompt_id.startswith(("repair.", "echo.", "probe.", "show.")):
+    if prompt_id.startswith(("repair.", "echo.", "probe.", "show.", "remedy.")):
         try:
             return teacher_utterance(prompt_id, language).text
         except ValueError:
