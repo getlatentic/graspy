@@ -523,7 +523,7 @@ function saidFor(verdict: Verdict, ask: Ask): string {
  * or whose words this reader cannot read, goes to the teacher below instead.
  */
 /** What a recogniser writes for a number said alone: a child answering "two" is heard as "to" often enough to matter. */
-const HOMOPHONES: Record<string, number> = { to: 2, too: 2, for: 4, fore: 4, won: 1, ate: 8, nein: 9, then: 10 };
+const HOMOPHONES: Record<string, number> = { to: 2, too: 2, for: 4, fore: 4, won: 1, ate: 8, nein: 9 };
 
 async function markedFromPlainNumber(env: Env, ask: Ask): Promise<Reply | null> {
   if (ask.expect.kind !== "fact") return null;

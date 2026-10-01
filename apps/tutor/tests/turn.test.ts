@@ -501,7 +501,7 @@ describe("a number the recogniser wrote as the word it sounds like", () => {
   const ask = (item: string, heard: string): Ask => ({ prompt: "How many?", heard, language: "en", expect: { kind: "fact", item } });
 
   it("is read as the number when it is the whole answer", async () => {
-    for (const [item, heard] of [["2", "to"], ["2", "Too."], ["4", "for"], ["1", "Won"], ["8", "ate"], ["9", "Nein."], ["10", "Then"]]) {
+    for (const [item, heard] of [["2", "to"], ["2", "Too."], ["4", "for"], ["1", "Won"], ["8", "ate"], ["9", "Nein."]]) {
       const reply = await takeTurn(tutor([]).env, ask(item, heard));
       expect(reply.verdict, `${heard} for ${item}`).toBe("correct");
     }
@@ -510,6 +510,12 @@ describe("a number the recogniser wrote as the word it sounds like", () => {
   it("is wrong, not unheard, when it is a different number from the one asked", async () => {
     const reply = await takeTurn(tutor([]).env, ask("3", "to"));
     expect(reply.verdict).toBe("wrong");
+    expect((await takeTurn(tutor([]).env, ask("3", "Nein."))).verdict).toBe("wrong");
+  });
+
+  it("is not read for a word a child says between answers, which is a pause and no number", async () => {
+    const { env } = tutor([call("mark_answer", { said: null, sure: false }), call("say_it", { text: "Take your time." })]);
+    expect((await takeTurn(env, ask("10", "Then."))).verdict).toBe("unheard");
   });
 
   it("is left to the reader when it is only part of a longer answer", async () => {
