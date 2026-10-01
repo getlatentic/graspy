@@ -3,7 +3,12 @@ import json
 from dataclasses import dataclass
 from typing import Literal
 
-from ..curriculum import load_plans, plan_event_for_utterance
+from ..curriculum import (
+    REPAIR_PREFIX,
+    load_plans,
+    plan_event_for_utterance,
+    repair_target,
+)
 from ..spoken_numbers import number_words
 
 UTTERANCE_ID = r"[a-z0-9.-]+"
@@ -229,6 +234,39 @@ def _plan_text(utterance_id: str, language: str) -> str | None:
     return found[1].say.get(language) if found else None
 
 
+_LETTER_REPAIR_TEMPLATES = {
+    "en": "Start from the letter {first}. Keep going to the letter {last}.",
+    "yo": "Bẹ̀rẹ̀ láti lẹ́tà {first}. Tẹ̀ síwájú dé lẹ́tà {last}.",
+    "pcm": "Start from letter {first}. Keep going reach letter {last}.",
+}
+_REPAIR_TEMPLATES = {
+    "en": "Start from {first}. Count on to {last}.",
+    "yo": "Bẹ̀rẹ̀ láti {first}. Tẹ̀ síwájú dé {last}.",
+    "pcm": "Start from {first}. Count go reach {last}.",
+}
+
+
+def _item_words(item_id: str) -> str:
+    """An item of a list as it is said: a number in words, a letter on its own, a day or month by name."""
+    if item_id.isdigit():
+        return number_words(int(item_id))
+    return item_id.upper() if len(item_id) == 1 else item_id.capitalize()
+
+
+def _repair_text(utterance_id: str, language: str) -> str | None:
+    template = _REPAIR_TEMPLATES.get(language)
+    if template is None or not utterance_id.startswith(REPAIR_PREFIX):
+        return None
+    found = repair_target(utterance_id, load_plans(language))
+    if found is None:
+        return None
+    _, _, required, lead = found
+    first, last = lead[-1].id, required[-1].id
+    if len(first) == 1 and len(last) == 1:
+        template = _LETTER_REPAIR_TEMPLATES[language]
+    return template.format(first=_item_words(first), last=_item_words(last))
+
+
 def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
     text = (
         _TEXT.get(language, {}).get(utterance_id)
@@ -236,6 +274,7 @@ def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
         or _table_text(utterance_id, language)
         or _fact_text(utterance_id, language)
         or _plan_text(utterance_id, language)
+        or _repair_text(utterance_id, language)
     )
     if text is None:
         raise ValueError("unsupported teacher utterance or language")

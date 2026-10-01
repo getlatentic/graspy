@@ -117,6 +117,21 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(efforts.filter((effort) => effort !== "low")).toEqual([]);
   });
 
+  it("marks by code a list asked again from where it broke, whether the child restarts or not", async () => {
+    const word = (n: number) => ["", "one", "two", "three", "four", "five"][n];
+    const item = (n: number) => ({ id: String(n), spoken: [String(n), word(n)] });
+    const { env } = tutor([]);
+    for (const heard of ["three four five", "one, two, three, four, five", "4, 5"]) {
+      const reply = await takeTurn(env, {
+        prompt: "Start from three. Count on to five.",
+        heard,
+        language: "en",
+        expect: { kind: "sequence", item: "count", items: [item(4), item(5)], before: [item(1), item(2), item(3)] },
+      });
+      expect(reply.verdict, heard).toBe("correct");
+    }
+  });
+
   it("marks by code a count cut short that the child carried on past, as right", async () => {
     const cut = [1, 2, 3].map((n) => ({ id: String(n), spoken: [String(n), ["", "one", "two", "three"][n]] }));
     const rest = [4, 5].map((n) => ({ id: String(n), spoken: [String(n), ["", "", "", "", "four", "five"][n]] }));

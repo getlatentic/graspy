@@ -617,7 +617,7 @@ def test_only_a_turn_that_names_its_plan_event_is_lesson_evidence():
     evidence = evidence_from_rows(rows, PLANS)
 
     assert evidence == [
-        Evidence(T2, "assess", DAY_1, "correct"),
+        Evidence(T2, "assess", DAY_1, "correct", None, None, "mul_fact_2x7_answer"),
         Evidence(TWOS, "present", DAY_1, None),
     ]
 
@@ -773,6 +773,194 @@ def test_opening_a_lesson_finished_today_offers_nothing_rather_than_another_less
     progress = progress_by_plan(done, PLANS, DAY_1)
 
     assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, done, chosen=T1) == []
+
+
+DAYS = "mathematics.time.days-of-the-week"
+WEEK = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+
+
+def days_taught():
+    return [
+        said(DAYS, e) for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
+def days_try(said_days, decision="try_again"):
+    missing = [day for day in WEEK if day not in said_days]
+    result = {"said": said_days, "missing": missing, "out_of_order": []}
+    return Evidence(DAYS, "practice", DAY_1, decision, result)
+
+
+def days_offer(evidence):
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    options = next_options(PLANS, progress, DAY_1, "primary_2", evidence)
+    return options[0]
+
+
+def test_a_list_that_broke_is_asked_again_from_the_last_item_said_rightly():
+    evidence = [*days_taught(), days_try(WEEK[:5])]
+    offer = days_offer(evidence)
+    assert (offer.event_id, offer.resume) == ("practice", "friday")
+    move = event_move(
+        PLANS[DAYS], PLANS[DAYS].event("practice"), offer.why, (), offer.resume
+    )
+    assert move["say_text"]["en"] == "Start from Thursday. Count on to Saturday."
+    assert move["activity"]["prompt_id"] == f"repair.{DAYS}.practice.friday"
+
+
+def test_the_plans_general_feedback_is_not_played_when_the_teacher_named_where_it_broke():
+    assert days_offer([*days_taught(), days_try(WEEK[:5])]).event_id == "practice"
+
+
+def test_a_list_with_nothing_right_is_asked_whole_and_gets_the_plans_feedback():
+    offer = days_offer([*days_taught(), days_try([])])
+    assert (offer.event_id, offer.resume) == ("feedback", None)
+
+
+def test_a_list_got_right_on_the_second_try_is_asked_whole_no_more():
+    evidence = [
+        *days_taught(),
+        days_try(WEEK[:5]),
+        Evidence(DAYS, "practice", DAY_1, "correct"),
+    ]
+    assert days_offer(evidence).event_id == "assess"
+
+
+def test_after_the_shorter_step_the_list_is_asked_again_from_where_it_broke():
+    evidence = [
+        *days_taught(),
+        days_try(WEEK[:3]),
+        days_try(WEEK[:3]),
+        Evidence(DAYS, "span", DAY_1, "correct"),
+    ]
+    offer = days_offer(evidence)
+    assert (offer.event_id, offer.resume) == ("practice", "wednesday")
+
+
+def test_a_repair_prompt_is_marked_over_the_rest_of_the_list_from_the_last_item_right():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+
+    prompt = f"repair.{DAYS}.practice.friday"
+    marking = expectation(exercise_by_prompt_id(prompt))
+    assert marking["kind"] == "sequence"
+    assert [item["id"] for item in marking["items"]] == ["friday", "saturday"]
+    assert [item["id"] for item in marking["before"]] == WEEK[:5]
+    assert marking["item"] == f"plan.{DAYS}.practice"
+    assert exercise_by_prompt_id(f"repair.{DAYS}.practice.sunday") is None
+
+
+def _try(event_id, said_days, decision="try_again"):
+    missing = [day for day in WEEK if day not in said_days]
+    result = {"said": said_days, "missing": missing, "out_of_order": []}
+    return Evidence(DAYS, event_id, DAY_1, decision, result)
+
+
+def test_only_the_childs_own_try_at_a_list_is_repaired_not_the_check_the_guide_or_the_step():
+    taught = days_taught()
+    for event_id in ("guide", "assess", "span"):
+        progress = progress_by_plan([*taught, _try(event_id, WEEK[:5])], PLANS, DAY_1)
+        assert event_id not in progress[DAYS].resume_at, event_id
+    progress = progress_by_plan([*taught, _try("practice", WEEK[:5])], PLANS, DAY_1)
+    assert progress[DAYS].resume_at == {"practice": "friday"}
+
+
+def test_a_repair_try_nobody_heard_does_not_move_the_start_back():
+    evidence = [
+        *days_taught(),
+        _try("practice", WEEK[:5]),
+        _try("practice", [], "not_understood"),
+    ]
+    assert progress_by_plan(evidence, PLANS, DAY_1)[DAYS].resume_at == {
+        "practice": "friday"
+    }
+
+
+def test_a_try_that_gets_further_than_the_last_is_progress_not_a_second_miss():
+    evidence = [*days_taught(), _try("practice", WEEK[:2]), _try("practice", WEEK[:5])]
+    assert days_offer(evidence).event_id == "practice"
+    stuck = [*days_taught(), _try("practice", WEEK[:2]), _try("practice", WEEK[:2])]
+    assert days_offer(stuck).event_id == "span"
+
+
+def test_a_repair_may_be_claimed_only_for_the_event_it_repairs():
+    from app.voice.samples import _require_owning_event
+
+    def claim(event_id, prompt_id):
+        _require_owning_event(
+            {"plan_id": DAYS, "event_id": event_id, "prompt_id": prompt_id}
+        )
+
+    claim("practice", f"repair.{DAYS}.practice.friday")
+    for event_id, prompt_id in (
+        ("practice", f"repair.{DAYS}.practice.sunday"),
+        ("practice", f"repair.{DAYS}.assess.friday"),
+        ("assess", f"repair.{DAYS}.assess.friday"),
+        ("assess", f"repair.{DAYS}.practice.friday"),
+        ("guide", f"repair.{DAYS}.guide.monday"),
+        ("practice", "repair.no.such.plan.practice.friday"),
+    ):
+        with pytest.raises(ValueError):
+            claim(event_id, prompt_id)
+
+
+def test_a_repair_is_remembered_against_the_list_it_repairs():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+
+    repaired = expectation(exercise_by_prompt_id(f"repair.{DAYS}.practice.friday"))
+    whole = expectation(exercise_by_prompt_id(f"plan.{DAYS}.practice"))
+    assert repaired["item"] == whole["item"]
+
+
+def _repair_try(claimed, said_days, missing, decision="correct"):
+    result = {"said": said_days, "missing": missing, "out_of_order": []}
+    return Evidence(
+        DAYS,
+        "practice",
+        DAY_1,
+        decision,
+        result,
+        None,
+        f"repair.{DAYS}.practice.{claimed}",
+    )
+
+
+def test_a_repair_claimed_from_later_than_the_try_broke_earns_nothing():
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    cheated = [*broke, _repair_try("saturday", ["saturday"], [])]
+    state = progress_by_plan(cheated, PLANS, DAY_1)[DAYS]
+    assert "practice" in state.retry_today and "practice" not in state.done_today
+    honest = [*broke, _repair_try("friday", ["friday", "saturday"], [])]
+    state = progress_by_plan(honest, PLANS, DAY_1)[DAYS]
+    assert "practice" not in state.retry_today and "practice" in state.done_today
+
+
+def test_a_repair_nobody_heard_leaves_the_start_where_it_was_with_the_tail_only_missing():
+    evidence = [
+        *days_taught(),
+        days_try(WEEK[:5]),
+        _repair_try("friday", [], ["friday", "saturday"], "not_understood"),
+    ]
+    assert progress_by_plan(evidence, PLANS, DAY_1)[DAYS].resume_at == {
+        "practice": "friday"
+    }
+
+
+def test_going_from_nothing_right_to_something_right_is_progress_not_a_second_miss():
+    state_after = progress_by_plan(
+        [*days_taught(), days_try([]), days_try(WEEK[:3])], PLANS, DAY_1
+    )[DAYS]
+    assert state_after.failed_today["practice"] == 0
+    assert (
+        days_offer([*days_taught(), days_try([]), days_try(WEEK[:3])]).event_id
+        != "span"
+    )
+
+
+def test_naming_where_it_broke_leaves_no_general_feedback_owed():
+    state = progress_by_plan([*days_taught(), days_try(WEEK[:5])], PLANS, DAY_1)[DAYS]
+    assert state.feedback_owed == set() and state.resume_at == {"practice": "friday"}
 
 
 def test_an_answer_to_the_guided_step_is_known_to_be_said_after_the_teacher():

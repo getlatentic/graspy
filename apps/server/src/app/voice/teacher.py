@@ -11,7 +11,16 @@ import re
 from dataclasses import dataclass, field
 from datetime import date
 
-from .curriculum import LANGUAGES, LessonEvent, LessonPlan, activity_prompt_id
+from .curriculum import (
+    LANGUAGES,
+    REPAIR_PREFIX,
+    LessonEvent,
+    LessonPlan,
+    activity_prompt_id,
+    repair_target,
+    repair_utterance_id,
+    repairable,
+)
 from .exercises import MULTIPLIERS, fact_prompt_id
 from .lesson_store import lesson_day
 from .speech.teacher_audio_contract import fact_utterance_id, teacher_utterance
@@ -48,6 +57,8 @@ class Evidence:
     decision: str | None = None
     result: dict | None = None
     exercise: dict | None = None
+    # What the child was asked, when it was not the plan's own line: a list asked again from where it broke.
+    prompt_id: str | None = None
 
     @property
     def facts_right(self) -> frozenset[int]:
@@ -79,6 +90,8 @@ class Option:
     event_id: str
     why: str
     facts: tuple[int, ...] = ()
+    # The item of a list the child's last try broke at, when the step is that list asked again from there.
+    resume: str | None = None
 
 
 @dataclass(frozen=True)
@@ -87,6 +100,7 @@ class Choice:
     event_id: str
     reason: str
     facts: tuple[int, ...] = ()
+    resume: str | None = None
 
 
 @dataclass
@@ -97,6 +111,8 @@ class PlanProgress:
     guidance_owed: set[str] = field(default_factory=set)
     # Events missed twice running that a shorter step of the plan is owed before they are asked again.
     rung_owed: set[str] = field(default_factory=set)
+    # Per list activity, the item its last wrong try broke at, after at least one item said rightly.
+    resume_at: dict[str, str] = field(default_factory=dict)
     # Misses in a row today per activity, counted while the child makes no progress: a wrong answer with
     # some facts right, or a right answer, starts the count again.
     failed_today: dict[str, int] = field(default_factory=dict)
@@ -147,13 +163,60 @@ def _owe_help(
         state.rung_owed.add(event.id)
     elif can_reteach and (decision == "not_understood" or misses >= 2):
         state.guidance_owed.add(event.id)
-    elif decision != "not_understood":
+    elif decision != "not_understood" and event.id not in state.resume_at:
+        # The teacher's own reply already named where it went wrong; the plan's general feedback
+        # would only repeat it, and says things (such as numbers skipped) that may not be so.
         state.feedback_owed.add(event.id)
 
 
 def _rung_of(plan: LessonPlan, event: LessonEvent) -> LessonEvent | None:
     """The shorter step the plan gives towards this event, if it gives one."""
     return next((other for other in plan.events if other.support == event.id), None)
+
+
+def _repaired_past_the_break(
+    event: LessonEvent, item: Evidence, state: PlanProgress
+) -> bool:
+    """Whether an answer claims a repair that starts later than the child's try broke.
+
+    Saying only the last item of a list is not doing what the step asked, so it earns nothing."""
+    if not item.prompt_id or not item.prompt_id.startswith(REPAIR_PREFIX):
+        return False
+    claimed = item.prompt_id.rpartition(".")[2]
+    broke_at = state.resume_at.get(item.event_id)
+    ids = [one.id for one in (event.activity.items if event.activity else ())]
+    return (
+        broke_at is None
+        or claimed not in ids
+        or ids.index(claimed) > ids.index(broke_at)
+    )
+
+
+def _got_further(
+    event: LessonEvent, before: str | None, now: str | None, missed_before: bool
+) -> bool:
+    """Whether a wrong try of a list got past where the one before it broke: some progress, not a repeat.
+
+    A try that had nothing right and is followed by one that has something is progress too."""
+    if now is None or event.activity is None:
+        return False
+    if before is None:
+        return missed_before
+    ids = [item.id for item in event.activity.items]
+    return ids.index(now) > ids.index(before)
+
+
+def _broke_at(event: LessonEvent, result: dict | None) -> str | None:
+    """The first item of a list a try left out or said out of place, when something came right before it.
+
+    A child who said eleven of twelve numbers rightly needs the twelfth, not the list again; one who
+    got nothing right has no start to carry on from."""
+    if not repairable(event) or not result:
+        return None
+    broken = set(result.get("missing", ())) | set(result.get("out_of_order", ()))
+    ids = [item.id for item in event.activity.items]
+    at = next((n for n, item_id in enumerate(ids) if item_id in broken), None)
+    return ids[at] if at else None
 
 
 def _serve_owed_help(state: PlanProgress, plan: LessonPlan, event: LessonEvent) -> None:
@@ -174,7 +237,17 @@ def _record_attempt(
 ) -> None:
     """One marked turn: what is owed to the child, and whether the lesson is left for tomorrow."""
     key = (item.plan_id, item.event_id, item.day)
-    if item.decision == "correct" or item.facts_right:
+    broke_at = _broke_at(event, item.result)
+    if (
+        item.decision == "correct"
+        or item.facts_right
+        or _got_further(
+            event,
+            state.resume_at.get(item.event_id),
+            broke_at,
+            streaks.get(key, 0) > 0,
+        )
+    ):
         streaks[key] = 0
     else:
         streaks[key] = streaks.get(key, 0) + 1
@@ -187,7 +260,10 @@ def _record_attempt(
     state.failed_today[item.event_id] = misses
     if item.decision == "correct":
         state.retry_today.discard(item.event_id)
+        state.resume_at.pop(item.event_id, None)
         return
+    if broke_at is not None:
+        state.resume_at[item.event_id] = broke_at
     state.done_today.discard(item.event_id)
     state.retry_today.add(item.event_id)
     _owe_help(state, plan, event, item.decision, misses)
@@ -203,6 +279,8 @@ def progress_by_plan(
             continue
         state, plan = progress[item.plan_id], plans[item.plan_id]
         event = plan.event(item.event_id)
+        if _repaired_past_the_break(event, item, state):
+            continue
         state.last_day = (
             item.day if state.last_day is None else max(state.last_day, item.day)
         )
@@ -325,6 +403,11 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
     return None
 
 
+def _resume_from(state: PlanProgress, event: LessonEvent) -> str | None:
+    """Where a list the child just got partly wrong is asked again from, while it is being retried."""
+    return state.resume_at.get(event.id) if event.id in state.retry_today else None
+
+
 def next_options(
     plans: dict[str, LessonPlan],
     progress: dict[str, PlanProgress],
@@ -358,7 +441,15 @@ def next_options(
         if event is not None:
             why = f"continue {plan.title['en']} at {event.event}"
             owed = progress[plan.id].facts_owed.get(event.id) or frozenset()
-            return [Option(plan.id, event.id, why, tuple(sorted(owed)))]
+            return [
+                Option(
+                    plan.id,
+                    event.id,
+                    why,
+                    tuple(sorted(owed)),
+                    _resume_from(progress[plan.id], event),
+                )
+            ]
         if not progress[plan.id].reviewed_today:
             return []
     options: list[Option] = []
@@ -389,7 +480,15 @@ def _chosen_options(plans, progress, today, learner_class, chosen: str) -> list[
         return []
     owed = progress[plan.id].facts_owed.get(event.id) or frozenset()
     why = f"open {plan.title['en']} at {event.event}"
-    return [Option(plan.id, event.id, why, tuple(sorted(owed)))]
+    return [
+        Option(
+            plan.id,
+            event.id,
+            why,
+            tuple(sorted(owed)),
+            _resume_from(progress[plan.id], event),
+        )
+    ]
 
 
 def decision_schema(options: list[Option]) -> dict:
@@ -452,6 +551,7 @@ def parse_choice(reply: dict, options: list[Option]) -> Choice:
         chosen.event_id,
         reason.strip() if isinstance(reason, str) else chosen.why,
         chosen.facts,
+        chosen.resume,
     )
 
 
@@ -463,7 +563,9 @@ async def choose(
         raise TeacherChoiceError("no step can be offered to this learner")
     if len(options) == 1:
         first = options[0]
-        return Choice(first.plan_id, first.event_id, first.why, first.facts)
+        return Choice(
+            first.plan_id, first.event_id, first.why, first.facts, first.resume
+        )
     prompt = decision_prompt(options, evidence, today, language)
     return parse_choice(await client.decide(prompt, decision_schema(options)), options)
 
@@ -493,7 +595,11 @@ class TeacherModel:
 
 
 def event_move(
-    plan: LessonPlan, event: LessonEvent, reason: str, facts: tuple[int, ...] = ()
+    plan: LessonPlan,
+    event: LessonEvent,
+    reason: str,
+    facts: tuple[int, ...] = (),
+    resume: str | None = None,
 ) -> dict:
     """What the app renders: the note to play, what to show, and the activity to record for."""
     activity = None
@@ -519,7 +625,7 @@ def event_move(
         "show": event.show,
         "activity": activity,
         "reason": reason,
-    } | (narrowed_retry(event, facts) or {})
+    } | (narrowed_retry(event, facts) or repaired_list(plan, event, resume) or {})
 
 
 REST_MOVE = {
@@ -604,6 +710,11 @@ def answerable_prompts(plan: LessonPlan, event: LessonEvent) -> set[str]:
     """
     prompts = {activity_prompt_id(plan, event)}
     activity = event.activity
+    if repairable(event):
+        ids = [item.id for item in activity.items]
+        prompts |= {
+            repair_utterance_id(plan.id, event.id, item_id) for item_id in ids[1:]
+        }
     if activity is None or activity.kind != "existing":
         return prompts
     match = RECITED_TABLE.fullmatch(activity.prompt_id)
@@ -638,6 +749,24 @@ def narrowed_retry(event: LessonEvent, facts: tuple[int, ...]) -> dict | None:
     }
 
 
+def repaired_list(
+    plan: LessonPlan, event: LessonEvent, broke_at: str | None
+) -> dict | None:
+    """A list asked again from the last item the child had right, in place of the whole list."""
+    if broke_at is None:
+        return None
+    utterance = repair_utterance_id(plan.id, event.id, broke_at)
+    if repair_target(utterance, {plan.id: plan}) is None:
+        return None
+    return {
+        "say": utterance,
+        "say_text": {
+            lang: teacher_utterance(utterance, lang).text for lang in LANGUAGES
+        },
+        "activity": {"kind": "sequence", "prompt_id": utterance},
+    }
+
+
 def evidence_from_rows(
     rows: list[dict], plans: dict[str, LessonPlan]
 ) -> list[Evidence]:
@@ -653,13 +782,20 @@ def evidence_from_rows(
         plan = plans.get(plan_id)
         if plan is None or not any(event.id == event_id for event in plan.events):
             continue
+        prompt_id = (
+            json.loads(row["metadata_json"]).get("prompt_id")
+            if row.get("metadata_json")
+            else None
+        )
         result = json.loads(row["result_json"]) if row.get("result_json") else None
         exercise = (
             json.loads(row["exercise_json"]) if row.get("exercise_json") else None
         )
         day = lesson_day(int(row["at"]))
         items.append(
-            Evidence(plan_id, event_id, day, row.get("decision"), result, exercise)
+            Evidence(
+                plan_id, event_id, day, row.get("decision"), result, exercise, prompt_id
+            )
         )
     return items
 

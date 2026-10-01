@@ -10,7 +10,7 @@ import secrets
 from dataclasses import dataclass
 from enum import Enum
 
-from .curriculum import load_plans, plan_event_for_utterance
+from .curriculum import load_plans, plan_event_for_utterance, repair_target
 from .recitation import RecitationExercise
 from .sequence import SequenceItem
 
@@ -78,6 +78,11 @@ class SequenceExercise:
     # What follows a shorter step in the list it is a step towards: a child who counts on past the
     # end of the step has not said anything wrong.
     more: tuple[SequenceItem, ...] = ()
+    # The items before the required ones, when the list is asked again from where it broke: they may
+    # be said again, and need not be.
+    before: tuple[SequenceItem, ...] = ()
+    # What the learner's memory files the answer under, when that is not the prompt itself.
+    memory_item: str | None = None
     task = "recitation"
     transport = Transport.INTRON_SYNC
 
@@ -99,6 +104,21 @@ class SpokenAnswerExercise:
     @property
     def topic(self) -> str:
         return self.subject
+
+
+def repair_exercise(prompt_id: str, language: str = "en"):
+    """A list asked again from the last item said rightly: the same marking, over the rest of the list."""
+    found = repair_target(prompt_id, load_plans(language))
+    if found is None:
+        return None
+    plan, event, required, lead = found
+    return SequenceExercise(
+        prompt_id,
+        plan.subject,
+        required,
+        before=lead,
+        memory_item=event.utterance_id(plan.id),
+    )
 
 
 def plan_exercise(prompt_id: str, language: str = "en"):
@@ -168,6 +188,8 @@ def _in_range(table: int, multipliers) -> bool:
 def exercise_by_prompt_id(prompt_id: str, language: str = "en"):
     if prompt_id.startswith("plan."):
         return plan_exercise(prompt_id, language)
+    if prompt_id.startswith("repair."):
+        return repair_exercise(prompt_id, language)
     if prompt_id == SEVEN_TIMES_EIGHT.prompt_id:
         return SEVEN_TIMES_EIGHT
     if match := _FULL_RECITE.fullmatch(prompt_id):

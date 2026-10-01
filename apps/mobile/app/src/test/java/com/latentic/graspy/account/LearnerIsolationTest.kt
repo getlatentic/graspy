@@ -39,6 +39,15 @@ class LearnerIsolationTest {
     }
 
     @Test
+    fun `an answer to a list asked again from where it broke is a lesson turn like any other`() = runBlocking {
+        answers.insert(answer("plan-1", ada))
+        answers.insert(answer("repair-1", ada, promptId = "repair.mathematics.time.days-of-the-week.practice.friday"))
+        answers.insert(answer("other-1", ada, promptId = "mathematics.not-a-lesson"))
+
+        assertEquals(listOf("plan-1", "repair-1"), answers.observeLessonTurns(ada).first().map { it.localId })
+    }
+
+    @Test
     fun `one learner's stored lessons and step never show for another`() = runBlocking {
         lessons.replaceCatalogue(ada, "primary_3", listOf(storedLesson(ada)))
         lessons.saveLessonMove(storedMove(ada))

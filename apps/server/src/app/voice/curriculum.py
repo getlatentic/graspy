@@ -249,6 +249,48 @@ def _support_problems(plan: LessonPlan) -> list[str]:
     return problems
 
 
+REPAIR_PREFIX = "repair."
+
+
+def repair_utterance_id(plan_id: str, event_id: str, broke_at: str) -> str:
+    """The prompt that asks a child to carry on from where a list went wrong, rather than say it all again."""
+    return f"{REPAIR_PREFIX}{plan_id}.{event_id}.{broke_at}"
+
+
+def repairable(event: LessonEvent) -> bool:
+    """Only the child's own try at a list, not the check, the guided step, the recall or a shorter step."""
+    return (
+        event.event == "elicit_performance"
+        and event.support is None
+        and event.activity is not None
+        and event.activity.kind == "sequence"
+    )
+
+
+def repair_target(utterance_id: str, plans: dict[str, LessonPlan]):
+    """The plan, event and the items a repair prompt asks for, and the items before them.
+
+    The required items run from the one the child's try broke at to the end of the list. The items
+    before it, ending with the last one said rightly, are where the child is asked to start; they may
+    be said again, and need not be. None when the id is not a repair prompt or names nothing the plans
+    have, or when nothing came before the break (there is no right start to carry on from).
+    """
+    if not utterance_id.startswith(REPAIR_PREFIX):
+        return None
+    rest, _, broke_at = utterance_id.removeprefix(REPAIR_PREFIX).rpartition(".")
+    plan_id, _, event_id = rest.rpartition(".")
+    plan = plans.get(plan_id)
+    event = next((e for e in plan.events if e.id == event_id), None) if plan else None
+    if event is None or not repairable(event):
+        return None
+    items = event.activity.items
+    ids = [item.id for item in items]
+    if broke_at not in ids or ids.index(broke_at) == 0:
+        return None
+    at = ids.index(broke_at)
+    return plan, event, items[at:], items[:at]
+
+
 def plan_event_for_utterance(utterance_id: str, plans: dict[str, LessonPlan]):
     """The plan and event an utterance id names, or None when it is not a plan utterance."""
     if not utterance_id.startswith("plan."):

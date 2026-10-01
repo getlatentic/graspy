@@ -115,7 +115,8 @@ const NUMBER_SPOKEN = new RegExp(`^(?:\\d+|(?:${NUMBER_WORD})(?: (?:${NUMBER_WOR
  *
  * A number that is no item, or an item said twice, makes the list wrong: the child did not say the list.
  * `more` is what follows the list in a longer one it was cut from: a child who counts on into it, in
- * order, has said the list and a little over.
+ * order, has said the list and a little over. `before` is what comes before the list when it is asked
+ * again from where it broke: the child may say it again from the start, or begin at the first item.
  *
  * The model reports the words it heard, in the order it heard them. Which item each one is remains
  * a matter of matching it against the spellings the curriculum lists, so an item the child never
@@ -126,9 +127,11 @@ export function markSequence(
   heard: string[],
   transcript: string,
   more: SequenceItem[] = [],
+  before: SequenceItem[] = [],
 ): { verdict: Verdict; result: SequenceResult } {
   const said: string[] = [];
   let carriedOn = 0;
+  let leadAt = -1;
   let padded = false;
   const flatTranscript = flattened(transcript);
   const matching = (spoken: string, among: SequenceItem[]) =>
@@ -138,7 +141,11 @@ export function markSequence(
     const spoken = flattened(words);
     const item = matching(spoken, items);
     const next = matching(spoken, more);
-    if (item) {
+    const lead = before.findIndex((one) => one.spoken.some((alias) => flattened(alias) === spoken));
+    if (!item && lead >= 0) {
+      if (said.length > 0 || lead <= leadAt) padded = true;
+      else leadAt = lead;
+    } else if (item) {
       if (said.includes(item.id)) padded = true;
       else said.push(item.id);
     } else if (next) {
@@ -154,7 +161,7 @@ export function markSequence(
   const verdict: Verdict = padded || wentOn
     ? "wrong"
     : said.length === 0
-      ? carriedOn > 0 ? "wrong" : "unheard"
+      ? carriedOn > 0 || leadAt >= 0 ? "wrong" : "unheard"
       : missing.length === 0 && outOfOrder.length === 0
         ? "correct"
         : "wrong";

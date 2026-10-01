@@ -35,12 +35,13 @@ def expectation(activity) -> dict:
     if isinstance(activity, SequenceExercise):
         listed = {
             "kind": "sequence",
-            "item": activity.prompt_id,
+            "item": activity.memory_item or activity.prompt_id,
             "items": [_item(item) for item in activity.items],
         }
-        return listed | (
-            {"more": [_item(item) for item in activity.more]} if activity.more else {}
-        )
+        for name in ("more", "before"):
+            if getattr(activity, name):
+                listed[name] = [_item(item) for item in getattr(activity, name)]
+        return listed
     if isinstance(activity, SpokenAnswerExercise):
         return {
             "kind": "fact",

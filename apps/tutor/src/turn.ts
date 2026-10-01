@@ -56,7 +56,7 @@ const LINE_BUDGET_MS = 10_000;
 export type Expect =
   | { kind: "fact"; item: string; accept?: string[] }
   | { kind: "recitation"; item: string; table: number; multipliers: number[] }
-  | { kind: "sequence"; item: string; items: SequenceItem[]; more?: SequenceItem[] };
+  | { kind: "sequence"; item: string; items: SequenceItem[]; more?: SequenceItem[]; before?: SequenceItem[] };
 
 export interface Ask {
   /** What the child was asked to say, as the child heard it. */
@@ -237,6 +237,12 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "hear it again; if they gave a list, do not say the list.",
     "Ask nothing more of a child who was right: the lesson moves on by itself straight after your",
     "line, so a request to say it again would be one they are never given the turn to answer.",
+    ...(ask.expect.kind === "sequence" && ask.expect.before?.length
+      ? [
+          "If a list broke part of the way, say only how far they got. Do not say the next item and do not say",
+          "the list again: the lesson asks them to carry on from the last one they had right.",
+        ]
+      : []),
     "When they were wrong, say the true one plainly as the teacher saying it, then ask them to say",
     "it after you. Never tell a child their answer was right and wrong in the same breath.",
     "Never read the facts or the list back to the child. They are on the screen in front of them,",
@@ -328,7 +334,7 @@ async function mark(
   }
   if (name === "mark_sequence" && expect.kind === "sequence") {
     const said = Array.isArray(args.said) ? (args.said as string[]) : [];
-    return markSequence(expect.items, said, transcript, expect.more);
+    return markSequence(expect.items, said, transcript, expect.more, expect.before);
   }
   return null;
 }
@@ -454,9 +460,9 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
  */
 function markedFromPlainSequence(ask: Ask): { verdict: Verdict; result: SequenceResult } | null {
   if (ask.expect.kind !== "sequence") return null;
-  const heard = heardSequence([...ask.expect.items, ...(ask.expect.more ?? [])], ask.heard);
+  const heard = heardSequence([...(ask.expect.before ?? []), ...ask.expect.items, ...(ask.expect.more ?? [])], ask.heard);
   if (heard === null) return null;
-  return markSequence(ask.expect.items, heard, ask.heard ?? "", ask.expect.more);
+  return markSequence(ask.expect.items, heard, ask.heard ?? "", ask.expect.more, ask.expect.before);
 }
 
 function steadyLine(verdict: Verdict, language: string): string {

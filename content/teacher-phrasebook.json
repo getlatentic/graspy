@@ -28,6 +28,10 @@
       "Almost! Listen, then say it: one, two, three, four, five.",
       "Nearly there. Listen again, then you try."
     ],
+    "when a list broke part of the way": [
+      "You got as far as fifty-five.",
+      "Good, you counted up to Thursday."
+    ],
     "when they got it wrong": [
       "Not yet. Listen, then say it: five, ten, fifteen.",
       "Listen: seven times three is twenty-one. Say it after me."

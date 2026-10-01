@@ -189,3 +189,47 @@ def test_fact_utterances_teach_and_ask_in_every_language():
     assert done == "Well done. We will check the four times table again tomorrow."
     with pytest.raises(ValueError):
         teacher_utterance("fact-13-1-learn", "en")
+
+
+def test_a_list_asked_again_from_where_it_broke_is_said_from_the_last_item_right():
+    from app.voice.curriculum import repair_utterance_id
+
+    twenty = repair_utterance_id(
+        "mathematics.number.counting-to-twenty", "practice", "17"
+    )
+    assert (
+        teacher_utterance(twenty, "en").text
+        == "Start from sixteen. Count on to twenty."
+    )
+    letters = repair_utterance_id(
+        "english.alphabet.saying-the-alphabet", "practice", "m"
+    )
+    assert (
+        teacher_utterance(letters, "en").text
+        == "Start from the letter L. Keep going to the letter Z."
+    )
+    days = repair_utterance_id(
+        "mathematics.time.days-of-the-week", "practice", "friday"
+    )
+    assert (
+        teacher_utterance(days, "pcm").text
+        == "Start from Thursday. Count go reach Saturday."
+    )
+    assert teacher_utterance(days, "yo").text.startswith("Bẹ̀rẹ̀ láti Thursday")
+
+
+@pytest.mark.parametrize(
+    "utterance",
+    [
+        "repair.mathematics.time.days-of-the-week.practice.sunday",
+        "repair.mathematics.time.days-of-the-week.practice.nowhere",
+        "repair.mathematics.time.days-of-the-week.span.friday",
+        "repair.mathematics.time.days-of-the-week.assess.friday",
+        "repair.mathematics.time.days-of-the-week.guide.monday",
+        "repair.mathematics.time.days-of-the-week.attention.friday",
+        "repair.no.such.plan.practice.friday",
+    ],
+)
+def test_a_repair_prompt_that_names_nothing_asks_the_provider_nothing(utterance):
+    with pytest.raises(ValueError, match="unsupported teacher utterance"):
+        teacher_utterance(utterance, "en")

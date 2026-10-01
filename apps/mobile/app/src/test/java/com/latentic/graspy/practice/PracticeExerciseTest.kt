@@ -48,4 +48,12 @@ class PracticeExerciseTest {
     fun `seven times eight keeps the single answer contract`() {
         assertEquals("mul_7x8_explain", PracticeExercise.SevenTimesEight.promptId)
     }
+
+    @Test
+    fun `a list asked again from where it broke is a plan prompt, not an unknown one`() {
+        val prompt = "repair.mathematics.time.days-of-the-week.practice.friday"
+        val exercise = PracticeExercise.fromPromptId(prompt, task = "recitation", topic = "mathematics")
+        assertEquals(PracticeExercise.Planned(prompt, "recitation", "mathematics"), exercise)
+        assertEquals(exercise, PracticeExercise.forActivity(LessonActivity("sequence", prompt), "mathematics"))
+    }
 }
