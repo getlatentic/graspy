@@ -31,6 +31,7 @@ import { exampleBlock } from "./phrasebook";
 import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
+import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
   markRecitation,
   markSequence,
@@ -383,9 +384,10 @@ async function timed<T>(part: string, work: Promise<T>): Promise<T> {
 export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   const reply = await markAndSay(env, ask);
   // An answer that is no number, marked wrong because "I don't know" is not the word, is a child who tried nothing.
-  const notKnown = reply.verdict === "wrong" && ask.expect.kind === "fact" && heardKind(ask.heard) === "dont_know";
+  const kind = reply.heard ?? heardKind(ask.heard);
+  const notKnown = reply.verdict === "wrong" && ask.expect.kind === "fact" && kind === "dont_know";
   if (reply.verdict === "unheard" || notKnown) {
-    const heard = heardKind(ask.heard);
+    const heard = kind;
     // A child who says they do not know has tried: they are met with the next hint as a wrong answer is.
     const hint = heard === "dont_know" && ask.expect.kind === "fact" ? correctionLine(ask, false) : null;
     const unheard = { ...reply, verdict: "unheard" as const };
@@ -532,39 +534,41 @@ function saidFor(verdict: Verdict, ask: Ask): string {
  * One number, plainly said, marked without the teacher: the reader says which number the child gave,
  * code checks they said it and works out whether it is right. A child who only said the question back,
  * or whose words this reader cannot read, goes to the teacher below instead.
+ *
+ * Where the deployment sets `INTERPRETER` to clef, the reader is Cloudflare's Clef (see interpret.ts), which also
+ * says when the child did not know or the words cannot be told; where Clef gives no answer, the reader below is used.
  */
-/** What a recogniser writes for a number said alone: a child answering "two" is heard as "to" often enough to matter. */
-const HOMOPHONES: Record<string, number> = { to: 2, too: 2, for: 4, fore: 4, won: 1, ate: 8, nein: 9 };
-
 async function markedFromPlainNumber(env: Env, ask: Ask): Promise<Reply | null> {
   if (ask.expect.kind !== "fact") return null;
   const expected = spokenNumber(expectedAnswer(ask.expect.item));
   if (expected === null) return null;
   const heard = heardForPrompt(ask.heard);
   if (heard === "") return marked(markAnswer(ask.expect.item, null), ask);
-  const answer = HOMOPHONES[heard.toLowerCase().replace(/[^a-z]/g, "")] ?? (await answerHeard(env, heard));
-  if (answer === null) return null;
+  const homophone = HOMOPHONES[heard.toLowerCase().replace(/[^a-z]/g, "")];
+  if (homophone === undefined && env.INTERPRETER === "clef" && expected <= LARGEST_NUMBER) {
+    const reading = await timed("clef", readWithClef(env, heard)).catch(() => null);
+    if (reading !== null) return markedFromReading(reading, ask, expected);
+  }
+  const answer = homophone ?? (await answerHeard(env, heard));
+  return answer === null ? null : markedNumber(answer, ask, expected);
+}
+
+function markedNumber(answer: number, ask: Ask, expected: number): Reply | null {
+  if (ask.expect.kind !== "fact") return null;
   if (answer !== expected && factOperands(ask.expect.item).includes(answer)) return null;
   return marked(markAnswer(ask.expect.item, String(answer), true, ask.expect.accept ?? []), ask);
 }
 
-/**
- * Whether the child said nothing but that they do not know. Anything more ("I don't know, is it a triangle",
- * "not sure, fiften") may be an answer, and goes to be read and marked.
- */
-const ONLY_NOT_KNOWING =
-  /^(?:(?:um+|uh+|er+|erm|well|sorry)\s+)*(?:i\s+)?(?:really\s+)?(?:(?:do\s*not|don'?t|dont|can'?t|cannot|cant)\s+(?:know|remember)(?:\s+it)?|dunno|have\s+no\s+idea|no\s+idea|(?:i'?m\s+)?not\s+sure|forgot)(?:\s+(?:miss|sir|ma'?am|auntie|teacher))?$/;
-
-function saidOnlyThatTheyDoNotKnow(heard: string | null): boolean {
-  const plain = heardForPrompt(heard).toLowerCase().replace(/[^a-z' ]+/g, " ").replace(/\s+/g, " ").trim();
-  return ONLY_NOT_KNOWING.test(plain);
-}
-
-/** The most words of a recording that nobody could read for which the phrasebook's "say it again" still fits; more is a child saying something else. */
-const MOST_WORDS_ASKED_AGAIN = 3;
-
-function fewWords(heard: string | null): boolean {
-  return heardForPrompt(heard).split(/[^\p{L}\p{N}']+/u).filter((word) => word !== "").length <= MOST_WORDS_ASKED_AGAIN;
+/** What Clef read: a number is marked as any is; not knowing is met with the next hint; words that cannot be told, when they are few, are asked again, and more is left to the teacher. */
+function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply | null {
+  if (ask.expect.kind !== "fact") return null;
+  if (reading.kind === "number") return markedNumber(reading.value, ask, expected);
+  const unheard = markAnswer(ask.expect.item, null);
+  if (reading.kind === "dont_know") {
+    const line = correctionLine(ask, false);
+    return line === null ? null : { ...unheard, heard: "dont_know", say: line };
+  }
+  return fewWords(ask.heard) ? { ...unheard, heard: "garbled", say: notHeardLine(ask) ?? steadyLine("unheard", ask.language) } : null;
 }
 
 /**

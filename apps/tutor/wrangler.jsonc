@@ -23,7 +23,8 @@
   "env": {
     "staging": {
       "ai": { "binding": "AI" },
-      "vars": { "SPELLER_HOST": "bedrock" },
+      // INTERPRETER=clef reads what a child meant with Cloudflare's Clef (src/interpret.ts); on in staging first.
+      "vars": { "SPELLER_HOST": "bedrock", "INTERPRETER": "clef" },
       "durable_objects": {
         "bindings": [{ "name": "Learner", "class_name": "Learner" }]
       }
