@@ -17,7 +17,12 @@ export function exampleBlock(): string[] {
   return Object.entries(book.examples).flatMap(([moment, lines]) => lines.map((line) => `- ${moment}: "${line}"`));
 }
 
+/** An example with its <slots> filled by a short word, for checking it as a line. */
+export function withoutSlots(line: string): string {
+  return line.replace(/<[^>]+>/g, "seven");
+}
+
 /** Every line the phrasebook can say, with a number filled in where it takes one, for checking them all. */
 export function allLines(numberWords: string): string[] {
-  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat()];
+  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat().map(withoutSlots)];
 }

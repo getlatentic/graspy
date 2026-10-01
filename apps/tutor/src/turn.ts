@@ -209,6 +209,8 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "answered out loud. This is how you sound. Say it in this plain classroom way, with these words and",
     "this rhythm, about this answer:",
     ...exampleBlock(),
+    "These show how you sound only. Never use their words or numbers for this child: the <slots> are the",
+    "child's own list, answer or first step, and you fill them with what this question is about.",
     "",
     `You asked: ${ask.prompt}`,
     asked(ask.expect),
