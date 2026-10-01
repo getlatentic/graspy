@@ -78,12 +78,11 @@ async def test_nova_answers_and_nothing_else_is_asked():
 
 
 @pytest.mark.asyncio
-async def test_whisper_is_asked_when_nova_cannot_answer():
-    ai = Ai(nova=[RuntimeError("5006")], whisper=[{"text": "ten"}])
-    text, _, heard_by = await transcribe_english(
-        env(ai), b"a", "key", "s.wav", intron()
-    )
-    assert (text, heard_by) == ("ten", "whisper")
+async def test_intron_is_asked_when_nova_cannot_answer_and_whisper_never_is():
+    ai, ask = Ai(nova=[RuntimeError("5006")]), intron("ten")
+    text, _, heard_by = await transcribe_english(env(ai), b"a", "key", "s.wav", ask)
+    assert (text, heard_by) == ("ten", "intron_sync")
+    assert ai.asked == [nova_asr.NOVA_MODEL]
 
 
 @pytest.mark.asyncio

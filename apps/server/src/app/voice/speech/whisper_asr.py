@@ -1,7 +1,7 @@
 """English recognition on Workers AI, with Intron as the second opinion.
 
-The deployment's `ENGLISH_ASR` says who is asked first: Whisper, Deepgram's Nova-3 (with Whisper when it
-cannot answer), or Intron alone. Whisper turned a child's counted answers into what was said ("5, 10, 15, 20, 25") where Intron's English
+The deployment's `ENGLISH_ASR` says who is asked first: Whisper, Deepgram's Nova-3, or Intron alone. Nova-3
+is followed by Intron and never by Whisper. Whisper turned a child's counted answers into what was said ("5, 10, 15, 20, 25") where Intron's English
 model wrote "0510, 2025", so a right answer failed and the child was sent away. Whisper is asked first for
 English; when it cannot answer, or hears nothing, Intron is asked as before. The voice-activity filter is
 on: without it Whisper decodes some quiet recordings to nothing and fails on others, and with it a
@@ -86,15 +86,13 @@ async def _intron_reading(
 
 async def _heard_first(env, audio: bytes) -> tuple[str | None, str]:
     """What the deployment's first-choice recognizer heard, and its name: empty text for no speech, None for
-    no answer. Nova-3 failing to answer is followed by Whisper; Whisper failing is left to Intron."""
+    no answer, which is left to Intron."""
     ai = getattr(env, "AI", None)
     engine = english_asr(env)
     if ai is None or engine == "intron":
         return None, "intron_sync"
     if engine == "nova":
-        text = await heard_by_nova(ai, audio)
-        if text is not None:
-            return text, "nova"
+        return await heard_by_nova(ai, audio), "nova"
     return await heard_by_whisper(ai, audio), "whisper"
 
 
