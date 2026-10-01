@@ -4579,7 +4579,7 @@ PLANS = [
      },
      "hint_levels": [
       "structure",
-      "partial_model"
+      "structure"
      ],
      "hints": {
       "en": [
@@ -5145,7 +5145,7 @@ PLANS = [
      },
      "hint_levels": [
       "structure",
-      "partial_model"
+      "structure"
      ],
      "hints": {
       "en": [

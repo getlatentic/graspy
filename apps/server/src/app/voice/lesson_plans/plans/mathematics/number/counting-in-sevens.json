@@ -303,7 +303,7 @@
         },
         "hint_levels": [
           "structure",
-          "partial_model"
+          "structure"
         ]
       },
       "skill": "weeks-to-days",

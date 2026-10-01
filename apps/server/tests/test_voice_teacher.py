@@ -1223,6 +1223,19 @@ def test_a_child_who_needed_help_on_two_days_is_not_held_on_that_check_but_goes_
     assert after_one[COUNT_20].owes_a_check
 
 
+def test_the_second_day_helped_closes_the_day_without_promising_a_check_tomorrow():
+    twice = [
+        _assess(DAY_1, "try_again"),
+        _assess(DAY_1),
+        _assess(DAY_2, "try_again"),
+        _assess(DAY_2),
+    ]
+    one = progress_by_plan(twice[:2], PLANS, DAY_1)
+    assert rest_move(PLANS, one, "primary_1")["say"] == "check-tomorrow"
+    two = progress_by_plan(twice, PLANS, DAY_2)
+    assert rest_move(PLANS, two, "primary_1")["say"] == "finished"
+
+
 def test_the_day_after_a_check_passed_with_help_the_check_is_asked_again_on_its_own_and_not_the_lesson():
     helped = [*lesson(COUNT_20, DAY_1, "try_again"), _assess(DAY_1)]
     progress = progress_by_plan(helped, PLANS, DAY_2)

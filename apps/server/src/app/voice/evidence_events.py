@@ -92,7 +92,9 @@ def _how_asked(event, item: Evidence, attempt: int) -> tuple[str, int, str]:
             if event.support is not None
             else ("none", LEVEL_INDEPENDENT, scope)
         )
-    levels = event.activity.hint_levels if event.activity else ()
+    levels = (
+        event.activity.hint_levels if event.activity and event.activity.hints else ()
+    )
     after_wrong = attempt - 1
     if after_wrong <= len(levels):
         support_type, level = HINT_SUPPORT[levels[after_wrong - 1]]
