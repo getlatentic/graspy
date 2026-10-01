@@ -184,12 +184,17 @@ async def transcribe_intron_sync(
     language: str,
     api_key: str,
     file_name: str = "voice-note.wav",
+    hedge: bool = True,
 ) -> tuple[str, int]:
+    """The transcript and the milliseconds it took. A `hedge` of False asks once: a failed ask is then
+    reported at once, not after the wait that a second ask would have started."""
     if not api_key:
         raise RuntimeError("INTRON_API_KEY is not configured")
     padded = with_silent_tail(audio)
     started = time.perf_counter()
-    transcript = await first_transcript(
-        lambda: _ask_intron(padded, language, api_key, file_name)
-    )
+
+    def ask():
+        return _ask_intron(padded, language, api_key, file_name)
+
+    transcript = await (first_transcript(ask) if hedge else ask())
     return transcript, round((time.perf_counter() - started) * 1000)

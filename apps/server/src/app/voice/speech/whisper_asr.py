@@ -13,6 +13,8 @@ import json
 import logging
 import time
 
+from .second_opinion import reads_as_a_number
+
 logger = logging.getLogger(__name__)
 
 WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo"
@@ -21,6 +23,9 @@ WHISPER_TIMEOUT_SECONDS = 6
 # Workers AI answers some recordings with a decode error that a second ask does not repeat. A slow
 # answer is not asked for again: it says Whisper is slow, not that the recording was bad.
 WHISPER_TRIES = 2
+# Intron answers in under two seconds as a rule; a second opinion that takes longer is not waited for, since
+# Whisper's own reading stands without it, and it is asked once, so a rate limit is not asked twice.
+SECOND_OPINION_SECONDS = 4
 ENGLISH_ASRS = ("whisper", "intron")
 
 
@@ -62,16 +67,43 @@ async def heard_by_whisper(ai, audio: bytes) -> str | None:
     return None
 
 
+async def _intron_reading(
+    intron, audio: bytes, api_key: str, file_name: str
+) -> str | None:
+    """What Intron heard when it was asked for a second opinion, or None: that ask failing is not the child's."""
+    try:
+        transcript, _ = await asyncio.wait_for(
+            intron(audio, "en", api_key, file_name, hedge=False),
+            timeout=SECOND_OPINION_SECONDS,
+        )
+    except Exception:
+        logger.warning("Intron gave no second opinion", exc_info=True)
+        return None
+    return transcript if reads_as_a_number(transcript) else None
+
+
 async def transcribe_english(
-    env, audio: bytes, api_key: str, file_name: str, intron
+    env, audio: bytes, api_key: str, file_name: str, intron, second_opinion=None
 ) -> tuple[str, int, str]:
     """Transcript, milliseconds, and the recognizer that gave it, for a recording in English.
 
-    `intron` is the Intron recognizer to ask when Whisper is not asked, gave no answer, or heard nothing."""
+    `intron` is the Intron recognizer to ask when Whisper is not asked, gave no answer, or heard nothing.
+    `second_opinion` says, of what Whisper heard, whether Intron is asked too; Intron's reading then stands
+    only if it is a number."""
     started = time.perf_counter()
     ai = getattr(env, "AI", None)
     if english_asr(env) == "whisper" and ai is not None:
         text = await heard_by_whisper(ai, audio)
+        if text and second_opinion is not None and second_opinion(text):
+            better = await _intron_reading(intron, audio, api_key, file_name)
+            spent = round((time.perf_counter() - started) * 1000)
+            print(
+                json.dumps(
+                    {"asr": "second_opinion", "ms": spent, "used": better is not None}
+                )
+            )
+            if better is not None:
+                return better, spent, "intron_sync"
         if text:
             spent = round((time.perf_counter() - started) * 1000)
             print(json.dumps({"asr": "whisper", "ms": spent}))

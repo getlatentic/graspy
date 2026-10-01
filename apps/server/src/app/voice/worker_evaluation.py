@@ -47,6 +47,7 @@ from .speech.intron_sync import (
 )
 from .speech.language_detect import detect_spoken_language, transcription_route
 from .speech.sahara_stream import buffer_bytes, transcribe_sahara
+from .speech.second_opinion import wants_a_second_opinion
 from .speech.teacher_audio_contract import teacher_utterance
 from .speech.whisper_asr import transcribe_english
 from .teacher import TeacherChoiceError, TeacherModel
@@ -152,7 +153,12 @@ async def _transcribe(
     # keeps going to Intron, since Whisper told English would write plausible English for anything.
     if language == "en" and metadata.get("spoken_language") == "en":
         transcript, latency, heard_by = await transcribe_english(
-            env, audio, api_key, file_name, transcribe_intron_sync
+            env,
+            audio,
+            api_key,
+            file_name,
+            transcribe_intron_sync,
+            lambda text: wants_a_second_opinion(exercise, text),
         )
         return transcript, latency, recorded, heard_by
     transcript, latency = await transcribe_intron_sync(
