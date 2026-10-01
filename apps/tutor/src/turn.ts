@@ -31,6 +31,7 @@ import { exampleBlock } from "./phrasebook";
 import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
+import { holdsANumber, repliedTo, routeUtterance } from "./router";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
   markRecitation,
@@ -85,11 +86,13 @@ export interface Reply {
   /** Fact-level or item-level detail, where many answers were asked for at once. */
   result?: RecitationResult | SequenceResult;
   /** When nothing could be marked, why: no words, the child saying they do not know, or words that were no answer. */
-  heard?: Heard;
+  heard?: Unmarked;
   say: string;
 }
 
 export type Heard = "nothing" | "dont_know" | "garbled";
+/** What a turn that could not be marked was, for the server: a child who cannot be heard is counted, and one who is only talking is not. */
+export type Unmarked = Heard | "conversation";
 
 const DONT_KNOW = /\b(i\s*(do\s*not|don'?t|dunno|can'?t|cannot)\b|dunno|no idea|not sure|i\s*have\s*no\s*idea)/i;
 
@@ -402,6 +405,8 @@ async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
   const unsure = unsureReply(ask);
   if (unsure !== null) return unsure;
+  const routed = await routedReply(env, ask);
+  if (routed !== null) return routed;
   const plain = await timed("read", markedFromPlainNumber(env, ask));
   if (plain !== null) return plain;
   const listed = markedFromPlainSequence(ask);
@@ -570,6 +575,21 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
   if (reading.kind !== "dont_know") return null;
   const line = correctionLine(ask, false);
   return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "dont_know", say: line };
+}
+
+/**
+ * What a child said that is no number, answered as a conversation: where the deployment sets `ROUTER` to on, the words
+ * are routed to one action (see router.ts). Null where that is off, the words hold a number or are a sound-alike for one
+ * (marking reads and checks those), or nothing could say, which leaves the usual marking.
+ */
+async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
+  if (env.ROUTER !== "on" || ask.language !== "en" || ask.expect.kind !== "fact" || ask.prompt.trim() === "") return null;
+  // Only a question whose answer is a number: a shape or a letter is a word the router has no way to know is right.
+  if (spokenNumber(expectedAnswer(ask.expect.item)) === null) return null;
+  const heard = heardForPrompt(ask.heard);
+  if (heard === "" || holdsANumber(heard) || HOMOPHONES[heard.toLowerCase().replace(/[^a-z]/g, "")] !== undefined) return null;
+  const route = await timed("route", routeUtterance(env, ask)).catch(() => null);
+  return route === null ? null : repliedTo(env, ask, route).catch(() => null);
 }
 
 /**

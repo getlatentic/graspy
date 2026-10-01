@@ -13,4 +13,8 @@ interface Env {
   AWS_REGION?: string;
   /** "clef" reads what a child meant with Cloudflare's Clef decision model (src/interpret.ts); unset keeps the small reader. */
   INTERPRETER?: string;
+  /** "on" routes what a child said that is no number to an action (src/router.ts); unset leaves the usual marking. */
+  ROUTER?: string;
+  /** The Bedrock model that routes when Clef is not sure; google.gemma-4-26b-a4b by default. */
+  ROUTER_MODEL?: string;
 }

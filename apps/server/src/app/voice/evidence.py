@@ -32,6 +32,13 @@ class Evidence:
         return self.verdict == "unheard" and self.heard_kind != "dont_know"
 
     @property
+    def conversational(self) -> bool:
+        """The child was talking, not answering: asking to hear the question again, or saying something else.
+        It is no try and no miss, and it shows they can be heard, so it does not count towards a child who
+        cannot be."""
+        return self.verdict == "unheard" and self.heard_kind == "conversation"
+
+    @property
     def facts_right(self) -> frozenset[int]:
         if self.result is not None:
             return frozenset(self.result.get("correct_multipliers", ()))

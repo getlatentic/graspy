@@ -1148,6 +1148,35 @@ def test_a_recording_that_could_not_be_heard_is_no_miss_owes_no_help_and_is_aske
     assert not state.paused_today
 
 
+def _talking(kind="conversation"):
+    return Evidence(
+        COUNT_20, "practice", DAY_1, "not_understood", None, None, None, "unheard", kind
+    )
+
+
+def test_a_child_who_asks_to_hear_the_question_again_and_again_is_not_sent_home_as_one_who_cannot_be_heard():
+    taught = [
+        said(COUNT_20, e)
+        for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+    many = [*taught, *[_talking()] * 6]
+    state = progress_by_plan(many, PLANS, DAY_1)[COUNT_20]
+    assert not state.paused_today and "practice" in state.retry_today
+
+
+def test_a_child_who_talks_between_recordings_nobody_could_hear_starts_the_count_again():
+    taught = [
+        said(COUNT_20, e)
+        for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+    three = [*taught, *[_unheard_try("practice")] * 3]
+    assert not progress_by_plan(three, PLANS, DAY_1)[COUNT_20].paused_today
+    talked = [*three, _talking(), _unheard_try("practice")]
+    assert not progress_by_plan(talked, PLANS, DAY_1)[COUNT_20].paused_today
+    four = [*three, _unheard_try("practice")]
+    assert progress_by_plan(four, PLANS, DAY_1)[COUNT_20].paused_today
+
+
 def test_a_child_who_cannot_be_heard_again_and_again_is_sent_home_kindly_not_marked_wrong():
     taught = [
         said(COUNT_20, e)

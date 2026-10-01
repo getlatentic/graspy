@@ -1,5 +1,6 @@
 import { HOMOPHONES, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "../src/interpret";
 import { answerHeard } from "../src/read";
+import { routeUtterance } from "../src/router";
 
 /**
  * What the tutor reads for a recognised answer, without the question, in the order turn.ts tries: a plain
@@ -25,6 +26,11 @@ async function timed<T>(work: Promise<T>): Promise<[T, number]> {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    if (new URL(request.url).pathname === "/route") {
+      const { heard, prompt } = (await request.json()) as { heard: string; prompt: string };
+      const [route, ms] = await timed(routeUtterance(env, { prompt, heard, language: "en", expect: { kind: "fact", item: "10" } }).catch(() => null));
+      return Response.json({ route, ms });
+    }
     const { heard } = (await request.json()) as { heard: string };
     const [legacy, legacyMs] = await timed(reading(env, heard, false));
     const [clef, clefMs] = await timed(reading(env, heard, true));
