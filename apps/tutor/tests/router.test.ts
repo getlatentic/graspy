@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CLEF_MODEL } from "../src/interpret";
 import { JUDGE_MODEL, SAFETY_MODEL } from "../src/guard";
-import { NOT_HEARD } from "../src/phrasebook";
+import { NEEDS_HELP, NOT_HEARD } from "../src/phrasebook";
 import { READER_MODEL } from "../src/read";
 import { ROUTE_MIN, holdsANumber } from "../src/router";
 import { takeTurn, type Ask } from "../src/turn";
@@ -46,7 +46,7 @@ function setup(script: Script, router = "on") {
 afterEach(() => vi.unstubAllGlobals());
 
 const sure = (action: string): Record<string, number> => {
-  const others = ["mark_answer", "ask_again", "not_know", "repeat_question", "answer_child"].filter((name) => name !== action);
+  const others = ["mark_answer", "ask_again", "not_know", "repeat_question", "needs_help", "answer_child"].filter((name) => name !== action);
   return { ...Object.fromEntries(others.map((name) => [name, 0.025])), [action]: 0.9 };
 };
 const ask = (heard: string, hints?: string[]): Ask => ({
@@ -75,6 +75,19 @@ describe("a child who is not giving a number", () => {
     const reply = await takeTurn(env, ask("my chain saw hot sink to me"));
     expect([reply.verdict, reply.heard]).toEqual(["unheard", "garbled"]);
     expect(NOT_HEARD).toContain(reply.say);
+  });
+
+  it("who needs the toilet is let go in the teacher's own words, with no condition and no model-written line", async () => {
+    const { env, bedrock } = setup({ clef: sure("needs_help") });
+    const reply = await takeTurn(env, ask("I want to use the toilet please"));
+    expect([reply.verdict, reply.heard]).toEqual(["unheard", "conversation"]);
+    expect(NEEDS_HELP).toContain(reply.say);
+    expect(bedrock).not.toHaveBeenCalled();
+  });
+
+  it("who needs the toilet in a word or two is let go too, since that cannot lose a right answer", async () => {
+    const { env } = setup({ clef: sure("needs_help") });
+    expect(NEEDS_HELP).toContain((await takeTurn(env, ask("toilet please"))).say);
   });
 
   it("who says something else is answered by the language model in one kind line, once the checks pass", async () => {
@@ -178,7 +191,7 @@ describe("what the review found the router must not do", () => {
     const sent = JSON.parse(init.body);
     expect(url).toContain("bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions");
     expect(init.headers.authorization).toBe("Bearer test");
-    expect(sent.tools.map((tool: { function: { name: string } }) => tool.function.name)).toEqual(["mark_answer", "ask_again", "not_know", "repeat_question", "answer_child"]);
+    expect(sent.tools.map((tool: { function: { name: string } }) => tool.function.name)).toEqual(["mark_answer", "ask_again", "not_know", "repeat_question", "needs_help", "answer_child"]);
     expect(JSON.stringify(sent.messages)).not.toMatch(/"10"|\bten\b/);
     vi.stubGlobal("fetch", vi.fn(async () => new Response("no", { status: 500 })));
     await expect(takeTurn(env, ask("Can I go to the toilet?"))).rejects.toThrow("the teacher was asked");

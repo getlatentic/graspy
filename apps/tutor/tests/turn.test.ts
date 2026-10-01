@@ -3,7 +3,7 @@ import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
 import { STEADY_LINES, numberWords } from "../src/lines";
 import { praiseLine } from "../src/praise";
-import { LIST_STOPPED, NOT_HEARD, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "../src/phrasebook";
+import { LIST_STOPPED, LIST_WENT_ON, NOT_HEARD, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "../src/phrasebook";
 import type { SequenceItem } from "../src/recite";
 import { DEFAULT_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
@@ -640,6 +640,12 @@ describe("a list that stopped part way", () => {
     const reply = await takeTurn(neverAsked, ask("1, 2, 3, 4, 5, 6, 7, 8, 9, 11"));
     expect(reply.verdict).toBe("wrong");
     expect(LIST_STOPPED.map((line) => line.replaceAll("{last}", "nine"))).toContain(reply.say);
+  });
+
+  it("says they said it all, and where it stops, for a count that went on past the end of the list", async () => {
+    const reply = await takeTurn(neverAsked, ask("1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11", to10));
+    expect(reply.verdict).toBe("wrong");
+    expect(LIST_WENT_ON.map((line) => line.replaceAll("{last}", "ten"))).toContain(reply.say);
   });
 
   it("names a day of the week as it is said, not as it is filed", async () => {
