@@ -67,6 +67,8 @@ export interface Ask {
   heard: string | null;
   language: string;
   expect: Expect;
+  /** "modelled" when the child said it straight after the teacher: that shows they can repeat it, not that they know it. */
+  support?: "modelled";
 }
 
 export interface Reply {
@@ -228,6 +230,9 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     `The line must be at most ${MOST_SENTENCES} short sentences of ${MOST_WORDS} words or fewer each, must write every`,
     "number as a word and never as digits, and must never use school or computer words:",
     "no answer, correct, incorrect, final number, recording, system, verdict or attempt.",
+    ...(ask.support === "modelled"
+      ? ["The child was repeating after you. Say they said it with you; do not praise it as knowing it."]
+      : []),
     "When they were right, tell them so warmly. If they gave one number or one fact, say it so they",
     "hear it again; if they gave a list, do not say the list.",
     "Ask nothing more of a child who was right: the lesson moves on by itself straight after your",
