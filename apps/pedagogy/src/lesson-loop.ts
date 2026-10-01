@@ -31,10 +31,10 @@ export interface Sitting {
 /** An answer the app could not mark is no part of the lesson, so it does not use up the sitting's answers; a run still ends at this many times the answers asked for. */
 const MOST_ANSWERS_PER_COUNTED = 2;
 
-/** Whether the child meant to answer and the page could not mark it. Saying they do not know is an answer. */
+/** Whether the child meant to answer and the page could not mark it. Saying they do not know, or that they forgot, is an answer; saying nothing is not one. */
 function lostToTheRecogniser(turn: Turn): boolean {
-  const meant = turn.child?.said ?? "";
-  if (/don'?t know|do not know/i.test(meant)) return false;
+  const meant = turn.child?.said ?? null;
+  if (meant === null || /don['’]?t (know|remember)|do not (know|remember)|forgot|not sure|no idea|can['’]?t/i.test(meant)) return false;
   return turn.marking === null || turn.marking.decision === "not_understood";
 }
 
