@@ -14,7 +14,7 @@ Nothing here runs in production. It needs the local stack from [docs/DEVELOPMENT
 ## Run
 
 ```bash
-npm run pedagogy -w @graspy/pedagogy -- --persona unsure --answers 8
+npm run pedagogy -w @graspy/pedagogy -- --persona unsure --answers 8   # answers the page marked; an answer it could not hear does not count
 npm run pedagogy -w @graspy/pedagogy -- --help
 ```
 

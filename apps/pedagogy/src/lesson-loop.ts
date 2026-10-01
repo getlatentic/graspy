@@ -28,6 +28,16 @@ export interface Sitting {
   maxAnswers: number;
 }
 
+/** An answer the app could not mark is no part of the lesson, so it does not use up the sitting's answers; a run still ends at this many times the answers asked for. */
+const MOST_ANSWERS_PER_COUNTED = 2;
+
+/** Whether the child meant to answer and the page could not mark it. Saying they do not know, or that they forgot, is an answer; saying nothing is not one. */
+function lostToTheRecogniser(turn: Turn): boolean {
+  const meant = turn.child?.said ?? null;
+  if (meant === null || /don['’]?t (know|remember)|do not (know|remember)|forgot|not sure|no idea|can['’]?t/i.test(meant)) return false;
+  return turn.marking === null || turn.marking.decision === "not_understood";
+}
+
 type Screen = "record" | "kept" | "rest" | "failed" | "waiting";
 
 interface Answered {
@@ -152,8 +162,9 @@ export async function playLesson(sitting: Sitting): Promise<{ turns: Turn[]; fin
   const turns: Turn[] = [];
   const counted = { moves: 0 };
   let answered = 0;
+  let sat = 0;
   let lastChange = Date.now();
-  while (answered < sitting.maxAnswers) {
+  while (answered < sitting.maxAnswers && sat < sitting.maxAnswers * MOST_ANSWERS_PER_COUNTED) {
     const before = counted.moves;
     syncMoves(turns, observer.moves, counted);
     if (counted.moves !== before) lastChange = Date.now();
@@ -167,7 +178,8 @@ export async function playLesson(sitting: Sitting): Promise<{ turns: Turn[]; fin
       const turn = turnToAnswer(turns);
       const given = await answer(sitting, turn, turns);
       Object.assign(turn, { child: given.child, answerAudio: given.audio, marking: given.marking, replyWaitMs: given.replyWaitMs, pageNote: given.pageNote, screenshots: given.shots, recordedAt: given.recordedAt });
-      answered++;
+      sat++;
+      if (!lostToTheRecogniser(turn)) answered++;
       lastChange = Date.now();
     }
     if (screen === "kept") await page.getByRole("button", { name: strings.continue }).click();
