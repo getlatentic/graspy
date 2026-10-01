@@ -76,11 +76,12 @@ async function main(): Promise<void> {
       page, observer, persona, learnerClass, strings, voice, key: bedrockKey(), shotsDir: join(dir, "shots"), runDir: dir,
       maxAnswers: persona.id === "silent" ? 3 : Number(args.answers),
     });
-    const run: Run = { id: runId, voice: { engine: ENGINE_NAME, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, finished, turns, audio: await readAudioLog(page) };
+    const run: Run = { id: runId, voice: { engine: ENGINE_NAME, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, site: web, finished, turns, audio: await readAudioLog(page) };
     const findings = checkRun(run);
     const judgement: Judgement | null = args["no-judge"] ? null : await judgedOrNull(bedrockKey(), transcriptMarkdown(run, findings, null));
     writeRun(dir, run, findings, judgement);
     console.log(`${dir}/transcript.md`);
+    console.log(`${dir}/script.md`);
   } finally {
     voice.close();
     await browser.close();

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { Finding } from "./checks.ts";
 import type { Judgement } from "./judge.ts";
 import type { Run, Turn } from "./turn-log.ts";
+import { lessonScript } from "./script.ts";
 import { speechSummary } from "./speech-timing.ts";
 import { hearingFidelity } from "./words.ts";
 
@@ -64,5 +65,6 @@ export function transcriptMarkdown(run: Run, findings: Finding[], judgement: Jud
 export function writeRun(dir: string, run: Run, findings: Finding[], judgement: Judgement | null): void {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "transcript.md"), transcriptMarkdown(run, findings, judgement));
+  writeFileSync(join(dir, "script.md"), lessonScript(run));
   writeFileSync(join(dir, "run.json"), JSON.stringify({ run, findings, judgement }, null, 2));
 }
