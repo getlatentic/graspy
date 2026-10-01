@@ -1,0 +1,95 @@
+{
+  "_about": "The skills the lessons build, and what each needs first. A lesson event names the skill its activity shows; the controller reasons over this graph, not over lesson order. DRAFT: written by Claude, not yet checked by a Nigerian teacher.",
+  "skills": [
+    {
+      "id": "number-names-1-10",
+      "title": "Say the number names from one to ten in order",
+      "prerequisites": [],
+      "taught_by": "mathematics.number.counting-to-ten"
+    },
+    {
+      "id": "number-names-1-20",
+      "title": "Say the number names from one to twenty in order",
+      "prerequisites": [
+        "number-names-1-10"
+      ],
+      "taught_by": "mathematics.number.counting-to-twenty"
+    },
+    {
+      "id": "skip-count-2",
+      "title": "Count in twos",
+      "prerequisites": [
+        "number-names-1-20"
+      ],
+      "taught_by": "mathematics.number.counting-in-twos"
+    },
+    {
+      "id": "skip-count-10",
+      "title": "Count in tens",
+      "prerequisites": [
+        "number-names-1-20"
+      ],
+      "taught_by": "mathematics.number.counting-in-tens"
+    },
+    {
+      "id": "skip-count-5",
+      "title": "Count in fives",
+      "prerequisites": [
+        "number-names-1-20",
+        "skip-count-10"
+      ]
+    },
+    {
+      "id": "skip-count-7",
+      "title": "Count in sevens",
+      "prerequisites": [
+        "skip-count-5"
+      ]
+    },
+    {
+      "id": "equal-groups",
+      "title": "Find how many in groups that each hold the same number",
+      "prerequisites": [
+        "number-names-1-20"
+      ]
+    },
+    {
+      "id": "groups-of-five",
+      "title": "Use groups of five to find how many",
+      "prerequisites": [
+        "skip-count-5",
+        "equal-groups"
+      ],
+      "taught_by": "mathematics.number.counting-in-fives"
+    },
+    {
+      "id": "days-of-the-week",
+      "title": "Say the days of the week in order",
+      "prerequisites": [],
+      "taught_by": "mathematics.time.days-of-the-week"
+    },
+    {
+      "id": "weeks-to-days",
+      "title": "Change weeks into days",
+      "prerequisites": [
+        "skip-count-7",
+        "days-of-the-week"
+      ],
+      "taught_by": "mathematics.number.counting-in-sevens"
+    },
+    {
+      "id": "months-of-the-year",
+      "title": "Say the months of the year in order",
+      "prerequisites": [
+        "days-of-the-week"
+      ],
+      "taught_by": "mathematics.time.months-of-the-year"
+    },
+    {
+      "id": "alphabet-order",
+      "title": "Say the letters of the alphabet in order",
+      "prerequisites": [],
+      "taught_by": "english.alphabet.saying-the-alphabet"
+    }
+  ]
+}

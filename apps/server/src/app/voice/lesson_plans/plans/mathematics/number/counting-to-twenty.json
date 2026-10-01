@@ -159,7 +159,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "number-names-1-10"
     },
     {
       "id": "present",
@@ -372,7 +373,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "number-names-1-20"
     },
     {
       "id": "span",
@@ -665,7 +667,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "number-names-1-20"
     },
     {
       "id": "practice",
@@ -1047,7 +1050,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "number-names-1-20"
     },
     {
       "id": "feedback",
@@ -1438,7 +1442,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "number-names-1-20"
     },
     {
       "id": "retain",

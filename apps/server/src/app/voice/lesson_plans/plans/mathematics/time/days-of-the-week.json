@@ -113,7 +113,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "days-of-the-week"
     },
     {
       "id": "present",
@@ -186,7 +187,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "days-of-the-week"
     },
     {
       "id": "span",
@@ -276,7 +278,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "days-of-the-week"
     },
     {
       "id": "practice",
@@ -395,7 +398,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "days-of-the-week"
     },
     {
       "id": "feedback",
@@ -523,7 +527,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "days-of-the-week"
     },
     {
       "id": "retain",

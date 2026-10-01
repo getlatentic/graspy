@@ -195,6 +195,11 @@
         "activity": {
           "$ref": "#/$defs/activity"
         },
+        "skill": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "the skill, from skills.json, this event's activity shows when it is done well"
+        },
         "support": {
           "type": "string",
           "pattern": "^[a-z0-9-]+$",
