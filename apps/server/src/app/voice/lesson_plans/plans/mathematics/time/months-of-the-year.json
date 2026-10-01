@@ -190,6 +190,111 @@
       }
     },
     {
+      "id": "span",
+      "event": "elicit_performance",
+      "support": "practice",
+      "say": {
+        "en": "Let us try a shorter one. Say January to June.",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Sọ January dé June.",
+        "pcm": "Make we try shorter one. Talk January reach June."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "january",
+            "spoken": {
+              "en": [
+                "January"
+              ],
+              "yo": [
+                "January",
+                "Ṣẹ́rẹ́"
+              ],
+              "pcm": [
+                "January"
+              ]
+            }
+          },
+          {
+            "id": "february",
+            "spoken": {
+              "en": [
+                "February"
+              ],
+              "yo": [
+                "February",
+                "Èrèlé"
+              ],
+              "pcm": [
+                "February"
+              ]
+            }
+          },
+          {
+            "id": "march",
+            "spoken": {
+              "en": [
+                "March"
+              ],
+              "yo": [
+                "March",
+                "Ẹrẹ̀nà"
+              ],
+              "pcm": [
+                "March"
+              ]
+            }
+          },
+          {
+            "id": "april",
+            "spoken": {
+              "en": [
+                "April"
+              ],
+              "yo": [
+                "April",
+                "Ìgbé"
+              ],
+              "pcm": [
+                "April"
+              ]
+            }
+          },
+          {
+            "id": "may",
+            "spoken": {
+              "en": [
+                "May"
+              ],
+              "yo": [
+                "May",
+                "Ẹ̀bibi"
+              ],
+              "pcm": [
+                "May"
+              ]
+            }
+          },
+          {
+            "id": "june",
+            "spoken": {
+              "en": [
+                "June"
+              ],
+              "yo": [
+                "June",
+                "Òkúdu"
+              ],
+              "pcm": [
+                "June"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "practice",
       "event": "elicit_performance",
       "say": {

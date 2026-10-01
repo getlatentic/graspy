@@ -263,10 +263,170 @@
       }
     },
     {
+      "id": "span",
+      "event": "elicit_performance",
+      "support": "practice",
+      "say": {
+        "en": "Let us try a shorter one. Count in twos from two to sixteen.",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní méjì méjì láti méjì dé mẹ́rìndínlógún.",
+        "pcm": "Make we try shorter one. Count for two two from two reach sixteen."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "2",
+            "spoken": {
+              "en": [
+                "2",
+                "two"
+              ],
+              "yo": [
+                "2",
+                "two",
+                "méjì"
+              ],
+              "pcm": [
+                "2",
+                "two"
+              ]
+            }
+          },
+          {
+            "id": "4",
+            "spoken": {
+              "en": [
+                "4",
+                "four"
+              ],
+              "yo": [
+                "4",
+                "four",
+                "mẹ́rin"
+              ],
+              "pcm": [
+                "4",
+                "four"
+              ]
+            }
+          },
+          {
+            "id": "6",
+            "spoken": {
+              "en": [
+                "6",
+                "six"
+              ],
+              "yo": [
+                "6",
+                "six",
+                "mẹ́fà"
+              ],
+              "pcm": [
+                "6",
+                "six"
+              ]
+            }
+          },
+          {
+            "id": "8",
+            "spoken": {
+              "en": [
+                "8",
+                "eight"
+              ],
+              "yo": [
+                "8",
+                "eight",
+                "mẹ́jọ"
+              ],
+              "pcm": [
+                "8",
+                "eight"
+              ]
+            }
+          },
+          {
+            "id": "10",
+            "spoken": {
+              "en": [
+                "10",
+                "ten"
+              ],
+              "yo": [
+                "10",
+                "ten",
+                "mẹ́wàá",
+                "mẹ́wà"
+              ],
+              "pcm": [
+                "10",
+                "ten"
+              ]
+            }
+          },
+          {
+            "id": "12",
+            "spoken": {
+              "en": [
+                "12",
+                "twelve"
+              ],
+              "yo": [
+                "12",
+                "twelve",
+                "méjìlá"
+              ],
+              "pcm": [
+                "12",
+                "twelve"
+              ]
+            }
+          },
+          {
+            "id": "14",
+            "spoken": {
+              "en": [
+                "14",
+                "fourteen"
+              ],
+              "yo": [
+                "14",
+                "fourteen",
+                "mẹ́rìnlá"
+              ],
+              "pcm": [
+                "14",
+                "fourteen"
+              ]
+            }
+          },
+          {
+            "id": "16",
+            "spoken": {
+              "en": [
+                "16",
+                "sixteen"
+              ],
+              "yo": [
+                "16",
+                "sixteen",
+                "mẹ́rìndínlógún"
+              ],
+              "pcm": [
+                "16",
+                "sixteen"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "practice",
       "event": "elicit_performance",
       "say": {
-        "en": "Your turn. Count in twos from two to twenty-four in one aloud.",
+        "en": "Your turn. Count in twos from two to twenty-four out loud.",
         "yo": "Ìwọ ná. Kà ní méjì méjì láti méjì dé mẹ́rìnlélógún nínú aloud kan.",
         "pcm": "Na your turn. Count for two two from two reach twenty-four aloud."
       },

@@ -75,6 +75,9 @@ class SequenceExercise:
     prompt_id: str
     subject: str
     items: tuple[SequenceItem, ...]
+    # What follows a shorter step in the list it is a step towards: a child who counts on past the
+    # end of the step has not said anything wrong.
+    more: tuple[SequenceItem, ...] = ()
     task = "recitation"
     transport = Transport.INTRON_SYNC
 
@@ -107,8 +110,18 @@ def plan_exercise(prompt_id: str, language: str = "en"):
     if activity is None or activity.kind == "existing":
         return None
     if activity.kind == "sequence":
-        return SequenceExercise(prompt_id, plan.subject, activity.items)
+        return SequenceExercise(
+            prompt_id, plan.subject, activity.items, _carried_on(plan, event)
+        )
     return SpokenAnswerExercise(prompt_id, plan.subject, activity.expected)
+
+
+def _carried_on(plan, event) -> tuple[SequenceItem, ...]:
+    """The rest of the list a shorter step was cut from, or nothing for a step that is not one."""
+    if event.support is None:
+        return ()
+    target = plan.event(event.support).activity
+    return target.items[len(event.activity.items) :] if target else ()
 
 
 SEVEN_TIMES_EIGHT = SingleAnswerExercise("mul_7x8_explain")

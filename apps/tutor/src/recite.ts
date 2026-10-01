@@ -114,6 +114,8 @@ const NUMBER_SPOKEN = new RegExp(`^(?:\\d+|(?:${NUMBER_WORD})(?: (?:${NUMBER_WOR
  * Mark a list said in order: days, months, counting.
  *
  * A number that is no item, or an item said twice, makes the list wrong: the child did not say the list.
+ * `more` is what follows the list in a longer one it was cut from: a child who counts on into it, in
+ * order, has said the list and a little over.
  *
  * The model reports the words it heard, in the order it heard them. Which item each one is remains
  * a matter of matching it against the spellings the curriculum lists, so an item the child never
@@ -123,26 +125,36 @@ export function markSequence(
   items: SequenceItem[],
   heard: string[],
   transcript: string,
+  more: SequenceItem[] = [],
 ): { verdict: Verdict; result: SequenceResult } {
   const said: string[] = [];
+  let carriedOn = 0;
   let padded = false;
   const flatTranscript = flattened(transcript);
+  const matching = (spoken: string, among: SequenceItem[]) =>
+    among.find((one) => one.spoken.some((alias) => flattened(alias) === spoken));
   for (const words of heard) {
     if (!grounded(flatTranscript, words)) continue;
     const spoken = flattened(words);
-    const item = items.find((one) => one.spoken.some((alias) => flattened(alias) === spoken));
-    if (!item) padded ||= spoken !== "and" && NUMBER_SPOKEN.test(spoken);
-    else if (said.includes(item.id)) padded = true;
-    else said.push(item.id);
+    const item = matching(spoken, items);
+    const next = matching(spoken, more);
+    if (item) {
+      if (said.includes(item.id)) padded = true;
+      else said.push(item.id);
+    } else if (next) {
+      if (next.id === more[carriedOn]?.id) carriedOn += 1;
+      else padded = true;
+    } else padded ||= spoken !== "and" && NUMBER_SPOKEN.test(spoken);
   }
   const order = items.map((item) => item.id);
   const missing = order.filter((id) => !said.includes(id));
   const inOrder = order.filter((id) => said.includes(id));
   const outOfOrder = said.filter((id, at) => id !== inOrder[at]);
-  const verdict: Verdict = padded
+  const wentOn = carriedOn > 0 && missing.length > 0;
+  const verdict: Verdict = padded || wentOn
     ? "wrong"
     : said.length === 0
-      ? "unheard"
+      ? carriedOn > 0 ? "wrong" : "unheard"
       : missing.length === 0 && outOfOrder.length === 0
         ? "correct"
         : "wrong";

@@ -144,3 +144,23 @@ describe("marking a list said in order", () => {
     expect(markSequence(TWOS, ["um", "2", "then", "4", "6", "8", "10"], "um 2 then 4 6 8 10").verdict).toBe("correct");
   });
 });
+
+describe("a count cut short, carried on by the child", () => {
+  const spoken = (words: string[]) => words.map((word, at) => ({ id: String(at + 1), spoken: [word, String(at + 1)] }));
+  const items = spoken(["one", "two", "three"]);
+  const more = [4, 5, 6].map((n) => ({ id: String(n), spoken: [["", "four", "five", "six"][n - 3], String(n)] }));
+
+  it("is right when the child counts on past the end, in order", () => {
+    expect(markSequence(items, ["one", "two", "three", "four", "five"], "one two three four five", more).verdict).toBe("correct");
+    expect(markSequence(items, ["one", "two", "three"], "one two three", more).verdict).toBe("correct");
+  });
+
+  it("is wrong when an item of the step was left out, however far the child went", () => {
+    expect(markSequence(items, ["one", "three", "four"], "one three four", more).verdict).toBe("wrong");
+  });
+
+  it("is wrong when the child jumps ahead or repeats, and a count with no more is as strict as before", () => {
+    expect(markSequence(items, ["one", "two", "three", "five"], "one two three five", more).verdict).toBe("wrong");
+    expect(markSequence(items, ["one", "two", "three", "four"], "one two three four").verdict).toBe("wrong");
+  });
+});

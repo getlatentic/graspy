@@ -117,6 +117,21 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(efforts.filter((effort) => effort !== "low")).toEqual([]);
   });
 
+  it("marks by code a count cut short that the child carried on past, as right", async () => {
+    const cut = [1, 2, 3].map((n) => ({ id: String(n), spoken: [String(n), ["", "one", "two", "three"][n]] }));
+    const rest = [4, 5].map((n) => ({ id: String(n), spoken: [String(n), ["", "", "", "", "four", "five"][n]] }));
+    const { env } = tutor([]);
+
+    const reply = await takeTurn(env, {
+      prompt: "Count from one to three.",
+      heard: "one two three four five",
+      language: "en",
+      expect: { kind: "sequence", item: "short", items: cut, more: rest },
+    });
+
+    expect(reply.verdict).toBe("correct");
+  });
+
   it("keeps the marked answer and says the steady line when a check cannot run", async () => {
     const { env } = tutor([marked, call("say_it", { text: "Well done! You said nine." }), call("say_it", { text: "Well done! Nine." })]);
     const failing = {

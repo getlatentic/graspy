@@ -1188,6 +1188,280 @@ PLANS = [
          "enn"
         ]
        }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Say A to N.",
+     "pcm": "Make we try shorter one. Talk A reach N.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Sọ A dé N."
+    },
+    "support": "practice"
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "a",
+       "spoken": {
+        "en": [
+         "a",
+         "ay"
+        ],
+        "pcm": [
+         "a",
+         "ay"
+        ],
+        "yo": [
+         "a",
+         "ay"
+        ]
+       }
+      },
+      {
+       "id": "b",
+       "spoken": {
+        "en": [
+         "b",
+         "bee"
+        ],
+        "pcm": [
+         "b",
+         "bee"
+        ],
+        "yo": [
+         "b",
+         "bee"
+        ]
+       }
+      },
+      {
+       "id": "c",
+       "spoken": {
+        "en": [
+         "c",
+         "see"
+        ],
+        "pcm": [
+         "c",
+         "see"
+        ],
+        "yo": [
+         "c",
+         "see"
+        ]
+       }
+      },
+      {
+       "id": "d",
+       "spoken": {
+        "en": [
+         "d",
+         "dee"
+        ],
+        "pcm": [
+         "d",
+         "dee"
+        ],
+        "yo": [
+         "d",
+         "dee"
+        ]
+       }
+      },
+      {
+       "id": "e",
+       "spoken": {
+        "en": [
+         "e",
+         "ee"
+        ],
+        "pcm": [
+         "e",
+         "ee"
+        ],
+        "yo": [
+         "e",
+         "ee"
+        ]
+       }
+      },
+      {
+       "id": "f",
+       "spoken": {
+        "en": [
+         "f",
+         "ef",
+         "eff"
+        ],
+        "pcm": [
+         "f",
+         "ef",
+         "eff"
+        ],
+        "yo": [
+         "f",
+         "ef",
+         "eff"
+        ]
+       }
+      },
+      {
+       "id": "g",
+       "spoken": {
+        "en": [
+         "g",
+         "gee",
+         "jee"
+        ],
+        "pcm": [
+         "g",
+         "gee",
+         "jee"
+        ],
+        "yo": [
+         "g",
+         "gee",
+         "jee"
+        ]
+       }
+      },
+      {
+       "id": "h",
+       "spoken": {
+        "en": [
+         "h",
+         "aitch",
+         "haitch",
+         "aych"
+        ],
+        "pcm": [
+         "h",
+         "aitch",
+         "haitch",
+         "aych"
+        ],
+        "yo": [
+         "h",
+         "aitch",
+         "haitch",
+         "aych"
+        ]
+       }
+      },
+      {
+       "id": "i",
+       "spoken": {
+        "en": [
+         "i",
+         "eye",
+         "ai"
+        ],
+        "pcm": [
+         "i",
+         "eye",
+         "ai"
+        ],
+        "yo": [
+         "i",
+         "eye",
+         "ai"
+        ]
+       }
+      },
+      {
+       "id": "j",
+       "spoken": {
+        "en": [
+         "j",
+         "jay"
+        ],
+        "pcm": [
+         "j",
+         "jay"
+        ],
+        "yo": [
+         "j",
+         "jay"
+        ]
+       }
+      },
+      {
+       "id": "k",
+       "spoken": {
+        "en": [
+         "k",
+         "kay"
+        ],
+        "pcm": [
+         "k",
+         "kay"
+        ],
+        "yo": [
+         "k",
+         "kay"
+        ]
+       }
+      },
+      {
+       "id": "l",
+       "spoken": {
+        "en": [
+         "l",
+         "el",
+         "ell"
+        ],
+        "pcm": [
+         "l",
+         "el",
+         "ell"
+        ],
+        "yo": [
+         "l",
+         "el",
+         "ell"
+        ]
+       }
+      },
+      {
+       "id": "m",
+       "spoken": {
+        "en": [
+         "m",
+         "em"
+        ],
+        "pcm": [
+         "m",
+         "em"
+        ],
+        "yo": [
+         "m",
+         "em"
+        ]
+       }
+      },
+      {
+       "id": "n",
+       "spoken": {
+        "en": [
+         "n",
+         "en",
+         "enn"
+        ],
+        "pcm": [
+         "n",
+         "en",
+         "enn"
+        ],
+        "yo": [
+         "n",
+         "en",
+         "enn"
+        ]
+       }
       },
       {
        "id": "o",
@@ -4640,6 +4914,169 @@ PLANS = [
          "ogójì"
         ]
        }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Count in fives from five to forty.",
+     "pcm": "Make we try shorter one. Count for five five from five reach forty.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní márùn-ún márùn-ún láti márùn-ún dé ogójì."
+    },
+    "support": "practice"
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "5",
+       "spoken": {
+        "en": [
+         "5",
+         "five"
+        ],
+        "pcm": [
+         "5",
+         "five"
+        ],
+        "yo": [
+         "5",
+         "five",
+         "márùn-ún",
+         "márùn",
+         "àrún"
+        ]
+       }
+      },
+      {
+       "id": "10",
+       "spoken": {
+        "en": [
+         "10",
+         "ten"
+        ],
+        "pcm": [
+         "10",
+         "ten"
+        ],
+        "yo": [
+         "10",
+         "ten",
+         "mẹ́wàá",
+         "mẹ́wà"
+        ]
+       }
+      },
+      {
+       "id": "15",
+       "spoken": {
+        "en": [
+         "15",
+         "fifteen"
+        ],
+        "pcm": [
+         "15",
+         "fifteen"
+        ],
+        "yo": [
+         "15",
+         "fifteen",
+         "mẹ́ẹ̀dógún",
+         "ẹ̀ẹ́dógún"
+        ]
+       }
+      },
+      {
+       "id": "20",
+       "spoken": {
+        "en": [
+         "20",
+         "twenty"
+        ],
+        "pcm": [
+         "20",
+         "twenty"
+        ],
+        "yo": [
+         "20",
+         "twenty",
+         "ogún"
+        ]
+       }
+      },
+      {
+       "id": "25",
+       "spoken": {
+        "en": [
+         "25",
+         "twenty-five"
+        ],
+        "pcm": [
+         "25",
+         "twenty-five"
+        ],
+        "yo": [
+         "25",
+         "twenty-five",
+         "márùndínlọ́gbọ̀n"
+        ]
+       }
+      },
+      {
+       "id": "30",
+       "spoken": {
+        "en": [
+         "30",
+         "thirty"
+        ],
+        "pcm": [
+         "30",
+         "thirty"
+        ],
+        "yo": [
+         "30",
+         "thirty",
+         "ọgbọ̀n"
+        ]
+       }
+      },
+      {
+       "id": "35",
+       "spoken": {
+        "en": [
+         "35",
+         "thirty-five"
+        ],
+        "pcm": [
+         "35",
+         "thirty-five"
+        ],
+        "yo": [
+         "35",
+         "thirty-five",
+         "márùndínlógójì"
+        ]
+       }
+      },
+      {
+       "id": "40",
+       "spoken": {
+        "en": [
+         "40",
+         "forty"
+        ],
+        "pcm": [
+         "40",
+         "forty"
+        ],
+        "yo": [
+         "40",
+         "forty",
+         "ogójì"
+        ]
+       }
       },
       {
        "id": "45",
@@ -4721,7 +5158,7 @@ PLANS = [
     "event": "elicit_performance",
     "id": "practice",
     "say": {
-     "en": "Your turn. Count in fives from five to sixty in one aloud.",
+     "en": "Your turn. Count in fives from five to sixty out loud.",
      "pcm": "Na your turn. Count for five five from five reach sixty aloud.",
      "yo": "Ìwọ ná. Kà ní márùn-ún márùn-ún láti márùn-ún dé ọgọ́ta nínú aloud kan."
     }
@@ -5400,6 +5837,167 @@ PLANS = [
          "mẹ́rìndínlọ́gọ́ta"
         ]
        }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Count in sevens from seven to fifty-six.",
+     "pcm": "Make we try shorter one. Count for seven seven from seven reach fifty-six.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní seven seven láti seven dé fifty-six."
+    },
+    "support": "practice"
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "7",
+       "spoken": {
+        "en": [
+         "7",
+         "seven"
+        ],
+        "pcm": [
+         "7",
+         "seven"
+        ],
+        "yo": [
+         "7",
+         "seven",
+         "méje"
+        ]
+       }
+      },
+      {
+       "id": "14",
+       "spoken": {
+        "en": [
+         "14",
+         "fourteen"
+        ],
+        "pcm": [
+         "14",
+         "fourteen"
+        ],
+        "yo": [
+         "14",
+         "fourteen",
+         "mẹ́rìnlá"
+        ]
+       }
+      },
+      {
+       "id": "21",
+       "spoken": {
+        "en": [
+         "21",
+         "twenty-one"
+        ],
+        "pcm": [
+         "21",
+         "twenty-one"
+        ],
+        "yo": [
+         "21",
+         "twenty-one",
+         "mọ́kànlélógún"
+        ]
+       }
+      },
+      {
+       "id": "28",
+       "spoken": {
+        "en": [
+         "28",
+         "twenty-eight"
+        ],
+        "pcm": [
+         "28",
+         "twenty-eight"
+        ],
+        "yo": [
+         "28",
+         "twenty-eight",
+         "méjìdínlọ́gbọ̀n"
+        ]
+       }
+      },
+      {
+       "id": "35",
+       "spoken": {
+        "en": [
+         "35",
+         "thirty-five"
+        ],
+        "pcm": [
+         "35",
+         "thirty-five"
+        ],
+        "yo": [
+         "35",
+         "thirty-five",
+         "márùndínlógójì"
+        ]
+       }
+      },
+      {
+       "id": "42",
+       "spoken": {
+        "en": [
+         "42",
+         "forty-two"
+        ],
+        "pcm": [
+         "42",
+         "forty-two"
+        ],
+        "yo": [
+         "42",
+         "forty-two",
+         "méjìlélógójì"
+        ]
+       }
+      },
+      {
+       "id": "49",
+       "spoken": {
+        "en": [
+         "49",
+         "forty-nine"
+        ],
+        "pcm": [
+         "49",
+         "forty-nine"
+        ],
+        "yo": [
+         "49",
+         "forty-nine",
+         "mọ́kàndínláàádọ́ta",
+         "mọ́kàndínláàdọ́ta",
+         "mọ́kàndínládọ́ta"
+        ]
+       }
+      },
+      {
+       "id": "56",
+       "spoken": {
+        "en": [
+         "56",
+         "fifty-six"
+        ],
+        "pcm": [
+         "56",
+         "fifty-six"
+        ],
+        "yo": [
+         "56",
+         "fifty-six",
+         "mẹ́rìndínlọ́gọ́ta"
+        ]
+       }
       },
       {
        "id": "63",
@@ -5479,7 +6077,7 @@ PLANS = [
     "event": "elicit_performance",
     "id": "practice",
     "say": {
-     "en": "Your turn. Count in sevens from seven to eighty-four in one aloud.",
+     "en": "Your turn. Count in sevens from seven to eighty-four out loud.",
      "pcm": "Na your turn. Count for seven seven from seven reach eighty-four aloud.",
      "yo": "Ìwọ ná. Kà ní seven seven láti seven dé eighty-four nínú aloud kan."
     }
@@ -5797,6 +6395,166 @@ PLANS = [
      "pcm": "Talk with me: ten twenty thirty forty.",
      "yo": "Wá sọ pẹ̀lú mi: mẹ́wàá, ogún, ọgbọ̀n, ogójì."
     }
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "10",
+       "spoken": {
+        "en": [
+         "10",
+         "ten"
+        ],
+        "pcm": [
+         "10",
+         "ten"
+        ],
+        "yo": [
+         "10",
+         "ten",
+         "mẹ́wàá",
+         "mẹ́wà"
+        ]
+       }
+      },
+      {
+       "id": "20",
+       "spoken": {
+        "en": [
+         "20",
+         "twenty"
+        ],
+        "pcm": [
+         "20",
+         "twenty"
+        ],
+        "yo": [
+         "20",
+         "twenty",
+         "ogún"
+        ]
+       }
+      },
+      {
+       "id": "30",
+       "spoken": {
+        "en": [
+         "30",
+         "thirty"
+        ],
+        "pcm": [
+         "30",
+         "thirty"
+        ],
+        "yo": [
+         "30",
+         "thirty",
+         "ọgbọ̀n"
+        ]
+       }
+      },
+      {
+       "id": "40",
+       "spoken": {
+        "en": [
+         "40",
+         "forty"
+        ],
+        "pcm": [
+         "40",
+         "forty"
+        ],
+        "yo": [
+         "40",
+         "forty",
+         "ogójì"
+        ]
+       }
+      },
+      {
+       "id": "50",
+       "spoken": {
+        "en": [
+         "50",
+         "fifty"
+        ],
+        "pcm": [
+         "50",
+         "fifty"
+        ],
+        "yo": [
+         "50",
+         "fifty",
+         "àádọ́ta"
+        ]
+       }
+      },
+      {
+       "id": "60",
+       "spoken": {
+        "en": [
+         "60",
+         "sixty"
+        ],
+        "pcm": [
+         "60",
+         "sixty"
+        ],
+        "yo": [
+         "60",
+         "sixty",
+         "ọgọ́ta"
+        ]
+       }
+      },
+      {
+       "id": "70",
+       "spoken": {
+        "en": [
+         "70",
+         "seventy"
+        ],
+        "pcm": [
+         "70",
+         "seventy"
+        ],
+        "yo": [
+         "70",
+         "seventy",
+         "àádọ́rin"
+        ]
+       }
+      },
+      {
+       "id": "80",
+       "spoken": {
+        "en": [
+         "80",
+         "eighty"
+        ],
+        "pcm": [
+         "80",
+         "eighty"
+        ],
+        "yo": [
+         "80",
+         "eighty",
+         "ọgọ́rin"
+        ]
+       }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Count in tens from ten to eighty.",
+     "pcm": "Make we try shorter one. Count for ten ten from ten reach eighty.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní mẹ́wàá mẹ́wàá láti mẹ́wàá dé ọgọ́rin."
+    },
+    "support": "practice"
    },
    {
     "activity": {
@@ -6697,6 +7455,166 @@ PLANS = [
          "mẹ́rìndínlógún"
         ]
        }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Count in twos from two to sixteen.",
+     "pcm": "Make we try shorter one. Count for two two from two reach sixteen.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní méjì méjì láti méjì dé mẹ́rìndínlógún."
+    },
+    "support": "practice"
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "2",
+       "spoken": {
+        "en": [
+         "2",
+         "two"
+        ],
+        "pcm": [
+         "2",
+         "two"
+        ],
+        "yo": [
+         "2",
+         "two",
+         "méjì"
+        ]
+       }
+      },
+      {
+       "id": "4",
+       "spoken": {
+        "en": [
+         "4",
+         "four"
+        ],
+        "pcm": [
+         "4",
+         "four"
+        ],
+        "yo": [
+         "4",
+         "four",
+         "mẹ́rin"
+        ]
+       }
+      },
+      {
+       "id": "6",
+       "spoken": {
+        "en": [
+         "6",
+         "six"
+        ],
+        "pcm": [
+         "6",
+         "six"
+        ],
+        "yo": [
+         "6",
+         "six",
+         "mẹ́fà"
+        ]
+       }
+      },
+      {
+       "id": "8",
+       "spoken": {
+        "en": [
+         "8",
+         "eight"
+        ],
+        "pcm": [
+         "8",
+         "eight"
+        ],
+        "yo": [
+         "8",
+         "eight",
+         "mẹ́jọ"
+        ]
+       }
+      },
+      {
+       "id": "10",
+       "spoken": {
+        "en": [
+         "10",
+         "ten"
+        ],
+        "pcm": [
+         "10",
+         "ten"
+        ],
+        "yo": [
+         "10",
+         "ten",
+         "mẹ́wàá",
+         "mẹ́wà"
+        ]
+       }
+      },
+      {
+       "id": "12",
+       "spoken": {
+        "en": [
+         "12",
+         "twelve"
+        ],
+        "pcm": [
+         "12",
+         "twelve"
+        ],
+        "yo": [
+         "12",
+         "twelve",
+         "méjìlá"
+        ]
+       }
+      },
+      {
+       "id": "14",
+       "spoken": {
+        "en": [
+         "14",
+         "fourteen"
+        ],
+        "pcm": [
+         "14",
+         "fourteen"
+        ],
+        "yo": [
+         "14",
+         "fourteen",
+         "mẹ́rìnlá"
+        ]
+       }
+      },
+      {
+       "id": "16",
+       "spoken": {
+        "en": [
+         "16",
+         "sixteen"
+        ],
+        "pcm": [
+         "16",
+         "sixteen"
+        ],
+        "yo": [
+         "16",
+         "sixteen",
+         "mẹ́rìndínlógún"
+        ]
+       }
       },
       {
        "id": "18",
@@ -6776,7 +7694,7 @@ PLANS = [
     "event": "elicit_performance",
     "id": "practice",
     "say": {
-     "en": "Your turn. Count in twos from two to twenty-four in one aloud.",
+     "en": "Your turn. Count in twos from two to twenty-four out loud.",
      "pcm": "Na your turn. Count for two two from two reach twenty-four aloud.",
      "yo": "Ìwọ ná. Kà ní méjì méjì láti méjì dé mẹ́rìnlélógún nínú aloud kan."
     }
@@ -8483,6 +9401,299 @@ PLANS = [
          "ẹ̀ẹ́dógún"
         ]
        }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Count from one to fifteen.",
+     "pcm": "Make we try shorter one. Count from one reach fifteen.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà láti one dé fifteen."
+    },
+    "support": "practice"
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "1",
+       "spoken": {
+        "en": [
+         "1",
+         "one"
+        ],
+        "pcm": [
+         "1",
+         "one"
+        ],
+        "yo": [
+         "1",
+         "one",
+         "ọ̀kan"
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "spoken": {
+        "en": [
+         "2",
+         "two"
+        ],
+        "pcm": [
+         "2",
+         "two"
+        ],
+        "yo": [
+         "2",
+         "two",
+         "méjì"
+        ]
+       }
+      },
+      {
+       "id": "3",
+       "spoken": {
+        "en": [
+         "3",
+         "three"
+        ],
+        "pcm": [
+         "3",
+         "three"
+        ],
+        "yo": [
+         "3",
+         "three",
+         "mẹ́ta"
+        ]
+       }
+      },
+      {
+       "id": "4",
+       "spoken": {
+        "en": [
+         "4",
+         "four"
+        ],
+        "pcm": [
+         "4",
+         "four"
+        ],
+        "yo": [
+         "4",
+         "four",
+         "mẹ́rin"
+        ]
+       }
+      },
+      {
+       "id": "5",
+       "spoken": {
+        "en": [
+         "5",
+         "five"
+        ],
+        "pcm": [
+         "5",
+         "five"
+        ],
+        "yo": [
+         "5",
+         "five",
+         "márùn-ún",
+         "márùn",
+         "àrún"
+        ]
+       }
+      },
+      {
+       "id": "6",
+       "spoken": {
+        "en": [
+         "6",
+         "six"
+        ],
+        "pcm": [
+         "6",
+         "six"
+        ],
+        "yo": [
+         "6",
+         "six",
+         "mẹ́fà"
+        ]
+       }
+      },
+      {
+       "id": "7",
+       "spoken": {
+        "en": [
+         "7",
+         "seven"
+        ],
+        "pcm": [
+         "7",
+         "seven"
+        ],
+        "yo": [
+         "7",
+         "seven",
+         "méje"
+        ]
+       }
+      },
+      {
+       "id": "8",
+       "spoken": {
+        "en": [
+         "8",
+         "eight"
+        ],
+        "pcm": [
+         "8",
+         "eight"
+        ],
+        "yo": [
+         "8",
+         "eight",
+         "mẹ́jọ"
+        ]
+       }
+      },
+      {
+       "id": "9",
+       "spoken": {
+        "en": [
+         "9",
+         "nine"
+        ],
+        "pcm": [
+         "9",
+         "nine"
+        ],
+        "yo": [
+         "9",
+         "nine",
+         "mẹ́sàn-án",
+         "mẹ́sàn",
+         "ẹ̀sán"
+        ]
+       }
+      },
+      {
+       "id": "10",
+       "spoken": {
+        "en": [
+         "10",
+         "ten"
+        ],
+        "pcm": [
+         "10",
+         "ten"
+        ],
+        "yo": [
+         "10",
+         "ten",
+         "mẹ́wàá",
+         "mẹ́wà"
+        ]
+       }
+      },
+      {
+       "id": "11",
+       "spoken": {
+        "en": [
+         "11",
+         "eleven"
+        ],
+        "pcm": [
+         "11",
+         "eleven"
+        ],
+        "yo": [
+         "11",
+         "eleven",
+         "mọ́kànlá"
+        ]
+       }
+      },
+      {
+       "id": "12",
+       "spoken": {
+        "en": [
+         "12",
+         "twelve"
+        ],
+        "pcm": [
+         "12",
+         "twelve"
+        ],
+        "yo": [
+         "12",
+         "twelve",
+         "méjìlá"
+        ]
+       }
+      },
+      {
+       "id": "13",
+       "spoken": {
+        "en": [
+         "13",
+         "thirteen"
+        ],
+        "pcm": [
+         "13",
+         "thirteen"
+        ],
+        "yo": [
+         "13",
+         "thirteen",
+         "mẹ́tàlá"
+        ]
+       }
+      },
+      {
+       "id": "14",
+       "spoken": {
+        "en": [
+         "14",
+         "fourteen"
+        ],
+        "pcm": [
+         "14",
+         "fourteen"
+        ],
+        "yo": [
+         "14",
+         "fourteen",
+         "mẹ́rìnlá"
+        ]
+       }
+      },
+      {
+       "id": "15",
+       "spoken": {
+        "en": [
+         "15",
+         "fifteen"
+        ],
+        "pcm": [
+         "15",
+         "fifteen"
+        ],
+        "yo": [
+         "15",
+         "fifteen",
+         "mẹ́ẹ̀ẹ́dógún",
+         "mẹ́ẹ̀dógún",
+         "mẹ́dógún",
+         "ẹ̀ẹ́dógún"
+        ]
+       }
       },
       {
        "id": "16",
@@ -8580,7 +9791,7 @@ PLANS = [
     "event": "elicit_performance",
     "id": "practice",
     "say": {
-     "en": "Your turn. Count from one to twenty in one aloud.",
+     "en": "Your turn. Count from one to twenty out loud.",
      "pcm": "Na your turn. Count from one reach twenty aloud.",
      "yo": "Ìwọ ná. Kà láti one dé twenty nínú aloud kan."
     }
@@ -11826,6 +13037,96 @@ PLANS = [
          "Ọjọ́bọ"
         ]
        }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Say Sunday to Thursday.",
+     "pcm": "Make we try shorter one. Talk Sunday reach Thursday.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Sọ Sunday dé Thursday."
+    },
+    "support": "practice"
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "sunday",
+       "spoken": {
+        "en": [
+         "Sunday"
+        ],
+        "pcm": [
+         "Sunday"
+        ],
+        "yo": [
+         "Sunday",
+         "Ọjọ́ Àìkú"
+        ]
+       }
+      },
+      {
+       "id": "monday",
+       "spoken": {
+        "en": [
+         "Monday"
+        ],
+        "pcm": [
+         "Monday"
+        ],
+        "yo": [
+         "Monday",
+         "Ọjọ́ Ajé"
+        ]
+       }
+      },
+      {
+       "id": "tuesday",
+       "spoken": {
+        "en": [
+         "Tuesday"
+        ],
+        "pcm": [
+         "Tuesday"
+        ],
+        "yo": [
+         "Tuesday",
+         "Ọjọ́ Ìṣẹ́gun"
+        ]
+       }
+      },
+      {
+       "id": "wednesday",
+       "spoken": {
+        "en": [
+         "Wednesday"
+        ],
+        "pcm": [
+         "Wednesday"
+        ],
+        "yo": [
+         "Wednesday",
+         "Ọjọ́rú"
+        ]
+       }
+      },
+      {
+       "id": "thursday",
+       "spoken": {
+        "en": [
+         "Thursday"
+        ],
+        "pcm": [
+         "Thursday"
+        ],
+        "yo": [
+         "Thursday",
+         "Ọjọ́bọ"
+        ]
+       }
       },
       {
        "id": "friday",
@@ -12195,6 +13496,111 @@ PLANS = [
      "pcm": "Say am with me. January, February, March. Na your turn now.",
      "yo": "Sọ oṣù mẹ́ta pẹ̀lú mi. January, February, March. Ìwọ náà báyìí."
     }
+   },
+   {
+    "activity": {
+     "items": [
+      {
+       "id": "january",
+       "spoken": {
+        "en": [
+         "January"
+        ],
+        "pcm": [
+         "January"
+        ],
+        "yo": [
+         "January",
+         "Ṣẹ́rẹ́"
+        ]
+       }
+      },
+      {
+       "id": "february",
+       "spoken": {
+        "en": [
+         "February"
+        ],
+        "pcm": [
+         "February"
+        ],
+        "yo": [
+         "February",
+         "Èrèlé"
+        ]
+       }
+      },
+      {
+       "id": "march",
+       "spoken": {
+        "en": [
+         "March"
+        ],
+        "pcm": [
+         "March"
+        ],
+        "yo": [
+         "March",
+         "Ẹrẹ̀nà"
+        ]
+       }
+      },
+      {
+       "id": "april",
+       "spoken": {
+        "en": [
+         "April"
+        ],
+        "pcm": [
+         "April"
+        ],
+        "yo": [
+         "April",
+         "Ìgbé"
+        ]
+       }
+      },
+      {
+       "id": "may",
+       "spoken": {
+        "en": [
+         "May"
+        ],
+        "pcm": [
+         "May"
+        ],
+        "yo": [
+         "May",
+         "Ẹ̀bibi"
+        ]
+       }
+      },
+      {
+       "id": "june",
+       "spoken": {
+        "en": [
+         "June"
+        ],
+        "pcm": [
+         "June"
+        ],
+        "yo": [
+         "June",
+         "Òkúdu"
+        ]
+       }
+      }
+     ],
+     "kind": "sequence"
+    },
+    "event": "elicit_performance",
+    "id": "span",
+    "say": {
+     "en": "Let us try a shorter one. Say January to June.",
+     "pcm": "Make we try shorter one. Talk January reach June.",
+     "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Sọ January dé June."
+    },
+    "support": "practice"
    },
    {
     "activity": {

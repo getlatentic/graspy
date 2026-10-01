@@ -49,6 +49,9 @@ class LessonEvent:
     say: dict[str, str]
     show: dict[str, str] | None
     activity: Activity | None
+    # The id of the event this one is a shorter step towards: offered only to a child who has missed that
+    # event twice running, and left behind once it is done.
+    support: str | None = None
 
     def utterance_id(self, plan_id: str) -> str:
         return f"plan.{plan_id}.{self.id}"
@@ -113,6 +116,7 @@ def plan_from_json(payload: dict, language: str = "en") -> LessonPlan:
             say=event["say"],
             show=event.get("show"),
             activity=_activity(event.get("activity"), language),
+            support=event.get("support"),
         )
         for event in payload["events"]
     )
@@ -182,6 +186,7 @@ def check_catalogue(plans: dict[str, LessonPlan]) -> list[str]:
             ]
             if len(items) != len(set(items)):
                 problems.append(f"{plan.id}#{event.id}: duplicate sequence item ids")
+        problems.extend(_support_problems(plan))
         order = [EVENTS.index(event.event) for event in plan.events]
         if order != sorted(order):
             problems.append(f"{plan.id}: events are not in Gagné order")
@@ -199,6 +204,33 @@ def check_catalogue(plans: dict[str, LessonPlan]) -> list[str]:
             if event.event == "assess_performance"
         ):
             problems.append(f"{plan.id}: assess_performance has no activity to mark")
+    return problems
+
+
+def _support_problems(plan: LessonPlan) -> list[str]:
+    """A shorter step must lead to the event it supports: earlier in the plan, and the same list cut short."""
+    problems = []
+    ids = [event.id for event in plan.events]
+    for event in plan.events:
+        if event.support is None:
+            continue
+        label = f"{plan.id}#{event.id}"
+        if event.event != "elicit_performance":
+            problems.append(
+                f"{label}: only an elicit_performance event can be a shorter step"
+            )
+        if sum(other.support == event.support for other in plan.events) > 1:
+            problems.append(f"{label}: {event.support} has more than one shorter step")
+        if event.support not in ids or ids.index(event.support) <= ids.index(event.id):
+            problems.append(f"{label}: supports an event that does not come after it")
+            continue
+        target = plan.event(event.support)
+        own = [item.id for item in (event.activity.items if event.activity else ())]
+        full = [item.id for item in (target.activity.items if target.activity else ())]
+        if not own or len(own) >= len(full) or full[: len(own)] != own:
+            problems.append(
+                f"{label}: is not the start of {event.support}'s list, cut short"
+            )
     return problems
 
 

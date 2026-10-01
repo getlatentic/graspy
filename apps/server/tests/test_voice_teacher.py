@@ -271,6 +271,80 @@ def test_a_lesson_left_for_tomorrow_on_three_days_comes_after_the_others_and_sti
     assert left and left[0].plan_id == "mathematics.shapes.naming-shapes"
 
 
+def fives_next(evidence):
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    options = next_options(PLANS, progress, DAY_1, "primary_4", evidence)
+    return options[0].event_id if options else None
+
+
+def fives_taught():
+    return [
+        said(FIVES, e) for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
+def test_a_child_who_misses_the_full_count_twice_is_given_a_shorter_count_before_the_full_one_again():
+    evidence = [*fives_taught(), marked(FIVES, "practice", "not_understood")]
+    assert fives_next(evidence) == "guide"
+    evidence += [said(FIVES, "guide"), marked(FIVES, "practice", "not_understood")]
+    assert fives_next(evidence) == "span"
+    evidence.append(marked(FIVES, "span", "correct"))
+    assert fives_next(evidence) == "practice"
+
+
+def test_a_shorter_count_heard_but_not_answered_is_still_owed():
+    evidence = [
+        *fives_taught(),
+        marked(FIVES, "practice", "not_understood"),
+        said(FIVES, "guide"),
+        marked(FIVES, "practice", "not_understood"),
+        said(FIVES, "span"),
+    ]
+    assert fives_next(evidence) == "span"
+
+
+def test_a_child_who_does_the_full_count_first_time_is_never_asked_the_shorter_one():
+    evidence = [*fives_taught(), marked(FIVES, "practice", "correct")]
+    assert fives_next(evidence) == "assess"
+
+
+def test_a_child_who_cannot_do_the_shorter_count_is_helped_with_it_and_not_sent_back_to_the_full_one():
+    evidence = [
+        *fives_taught(),
+        marked(FIVES, "practice", "try_again"),
+        said(FIVES, "feedback"),
+        marked(FIVES, "practice", "try_again"),
+        marked(FIVES, "span", "not_understood"),
+    ]
+    assert fives_next(evidence) == "guide"
+    evidence.append(said(FIVES, "guide"))
+    assert fives_next(evidence) == "span"
+
+
+def test_a_child_who_still_misses_the_full_count_after_the_shorter_one_is_left_for_tomorrow():
+    evidence = [
+        *fives_taught(),
+        marked(FIVES, "practice", "not_understood"),
+        said(FIVES, "guide"),
+        marked(FIVES, "practice", "not_understood"),
+        marked(FIVES, "span", "correct"),
+        marked(FIVES, "practice", "not_understood"),
+    ]
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert left_for_tomorrow(PLANS, progress, "primary_4")
+    assert fives_next(evidence) is None
+
+
+def test_a_plan_with_no_shorter_step_helps_a_second_miss_as_before():
+    evidence = [
+        *taught_before_practice(),
+        marked(T1, "practice", "not_understood"),
+        said(T1, "guide"),
+        marked(T1, "practice", "not_understood"),
+    ]
+    assert next_step(evidence) == "guide"
+
+
 def test_the_day_is_over_once_a_lesson_is_finished_because_it_ends_by_naming_tomorrow():
     evidence = lesson(COUNT_20)
     progress = progress_by_plan(evidence, PLANS, DAY_1)

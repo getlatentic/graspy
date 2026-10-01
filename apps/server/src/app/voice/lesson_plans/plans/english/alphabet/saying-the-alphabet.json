@@ -685,6 +685,280 @@
       }
     },
     {
+      "id": "span",
+      "event": "elicit_performance",
+      "support": "practice",
+      "say": {
+        "en": "Let us try a shorter one. Say A to N.",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Sọ A dé N.",
+        "pcm": "Make we try shorter one. Talk A reach N."
+      },
+      "activity": {
+        "kind": "sequence",
+        "items": [
+          {
+            "id": "a",
+            "spoken": {
+              "en": [
+                "a",
+                "ay"
+              ],
+              "yo": [
+                "a",
+                "ay"
+              ],
+              "pcm": [
+                "a",
+                "ay"
+              ]
+            }
+          },
+          {
+            "id": "b",
+            "spoken": {
+              "en": [
+                "b",
+                "bee"
+              ],
+              "yo": [
+                "b",
+                "bee"
+              ],
+              "pcm": [
+                "b",
+                "bee"
+              ]
+            }
+          },
+          {
+            "id": "c",
+            "spoken": {
+              "en": [
+                "c",
+                "see"
+              ],
+              "yo": [
+                "c",
+                "see"
+              ],
+              "pcm": [
+                "c",
+                "see"
+              ]
+            }
+          },
+          {
+            "id": "d",
+            "spoken": {
+              "en": [
+                "d",
+                "dee"
+              ],
+              "yo": [
+                "d",
+                "dee"
+              ],
+              "pcm": [
+                "d",
+                "dee"
+              ]
+            }
+          },
+          {
+            "id": "e",
+            "spoken": {
+              "en": [
+                "e",
+                "ee"
+              ],
+              "yo": [
+                "e",
+                "ee"
+              ],
+              "pcm": [
+                "e",
+                "ee"
+              ]
+            }
+          },
+          {
+            "id": "f",
+            "spoken": {
+              "en": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "yo": [
+                "f",
+                "ef",
+                "eff"
+              ],
+              "pcm": [
+                "f",
+                "ef",
+                "eff"
+              ]
+            }
+          },
+          {
+            "id": "g",
+            "spoken": {
+              "en": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "yo": [
+                "g",
+                "gee",
+                "jee"
+              ],
+              "pcm": [
+                "g",
+                "gee",
+                "jee"
+              ]
+            }
+          },
+          {
+            "id": "h",
+            "spoken": {
+              "en": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "yo": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ],
+              "pcm": [
+                "h",
+                "aitch",
+                "haitch",
+                "aych"
+              ]
+            }
+          },
+          {
+            "id": "i",
+            "spoken": {
+              "en": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "yo": [
+                "i",
+                "eye",
+                "ai"
+              ],
+              "pcm": [
+                "i",
+                "eye",
+                "ai"
+              ]
+            }
+          },
+          {
+            "id": "j",
+            "spoken": {
+              "en": [
+                "j",
+                "jay"
+              ],
+              "yo": [
+                "j",
+                "jay"
+              ],
+              "pcm": [
+                "j",
+                "jay"
+              ]
+            }
+          },
+          {
+            "id": "k",
+            "spoken": {
+              "en": [
+                "k",
+                "kay"
+              ],
+              "yo": [
+                "k",
+                "kay"
+              ],
+              "pcm": [
+                "k",
+                "kay"
+              ]
+            }
+          },
+          {
+            "id": "l",
+            "spoken": {
+              "en": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "yo": [
+                "l",
+                "el",
+                "ell"
+              ],
+              "pcm": [
+                "l",
+                "el",
+                "ell"
+              ]
+            }
+          },
+          {
+            "id": "m",
+            "spoken": {
+              "en": [
+                "m",
+                "em"
+              ],
+              "yo": [
+                "m",
+                "em"
+              ],
+              "pcm": [
+                "m",
+                "em"
+              ]
+            }
+          },
+          {
+            "id": "n",
+            "spoken": {
+              "en": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "yo": [
+                "n",
+                "en",
+                "enn"
+              ],
+              "pcm": [
+                "n",
+                "en",
+                "enn"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "practice",
       "event": "elicit_performance",
       "say": {
