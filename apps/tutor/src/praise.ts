@@ -1,11 +1,12 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, withNumber } from "./phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
 import type { Ask } from "./turn";
 
 function candidates(ask: Ask): string[] {
+  if (ask.support === "modelled") return RIGHT_WITH_YOU;
   if (ask.expect.kind === "sequence") return RIGHT_LIST;
   if (ask.expect.kind !== "fact") return RIGHT;
   const number = spokenNumber(expectedAnswer(ask.expect.item));
