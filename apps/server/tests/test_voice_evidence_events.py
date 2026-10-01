@@ -199,3 +199,15 @@ def test_a_small_teaching_question_is_help_not_proof():
         event.task_scope,
         event.independent,
     ) == ("model", 4, "single_step", False)
+
+
+def test_a_small_teaching_question_is_not_a_try_at_the_check_it_serves():
+    miss = Evidence(FIVES, "recall", D1, "not_understood")
+    taught = Evidence(
+        FIVES, "recall", D1, "correct", None, None, f"remedy.{FIVES}.recall.0"
+    )
+    again = Evidence(FIVES, "recall", D1, "correct")
+    attempts = [
+        event.attempt for event in evidence_events([miss, taught, again], PLANS)
+    ]
+    assert attempts == [1, 1, 2]

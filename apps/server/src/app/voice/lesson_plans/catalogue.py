@@ -13521,7 +13521,7 @@ SKILLS = [
      ]
     },
     "say": {
-     "en": "Here comes another heap of five. Five, then five more. How many oranges now?"
+     "en": "Here comes another heap of five. How many is five, then five more?"
     }
    },
    {
@@ -13533,11 +13533,11 @@ SKILLS = [
     },
     "hints": {
      "en": [
-      "Two heaps. Five in each. What is five and five?"
+      "Start at five. Count five more."
      ]
     },
     "say": {
-     "en": "Good. Two heaps, five in each. How many oranges in all?"
+     "en": "Two heaps, five in each. How many oranges in all?"
     }
    }
   ],

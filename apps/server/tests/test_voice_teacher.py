@@ -1725,6 +1725,45 @@ def test_a_small_question_that_was_not_the_one_being_asked_changes_nothing():
     )
 
 
+def test_recordings_nobody_could_hear_at_a_step_not_being_asked_do_not_send_the_child_home():
+    stray = Evidence(
+        FIVES,
+        "recall",
+        DAY_1,
+        "not_understood",
+        None,
+        None,
+        f"remedy.{FIVES}.recall.2",
+        "unheard",
+        "garbled",
+    )
+    done = [*_blank_twice(), *[stray] * 5]
+    assert not progress_by_plan(done, PLANS, DAY_1)[FIVES].paused_today
+    asked = Evidence(
+        FIVES,
+        "recall",
+        DAY_1,
+        "not_understood",
+        None,
+        None,
+        f"remedy.{FIVES}.recall.0",
+        "unheard",
+        "garbled",
+    )
+    gone = [*_blank_twice(), *[asked] * 4]
+    assert progress_by_plan(gone, PLANS, DAY_1)[FIVES].paused_today
+
+
+def test_what_was_asked_in_a_small_teaching_question_is_what_the_tutor_is_told_it_was():
+    from app.voice.worker_evaluation import _asked_line
+
+    assert (
+        _asked_line({"prompt_id": f"remedy.{FIVES}.recall.1"}, "en")
+        == "Here comes another heap of five. How many is five, then five more?"
+    )
+    assert _asked_line({"prompt_id": f"remedy.{FIVES}.recall.9"}, "en") == ""
+
+
 def test_a_skill_with_no_small_questions_written_falls_back_to_the_answer_said_after_the_teacher():
     offer, _ = _offer(
         [*_opening(), _recall("not_understood"), _recall("not_understood")]

@@ -330,9 +330,12 @@ def _record_side_step(
         return
     prompt = item.prompt_id
     broke_at = prompt.rpartition(".")[2]
-    if not prompt.startswith(
-        (ECHO_PREFIX, REMEDY_PREFIX)
-    ) and broke_at != state.resume_at.get(item.event_id):
+    if prompt.startswith(REMEDY_PREFIX):
+        if not _remedy_step_asked(state, item.event_id, broke_at):
+            return
+    elif not prompt.startswith(ECHO_PREFIX) and broke_at != state.resume_at.get(
+        item.event_id
+    ):
         return
     if item.unheard:
         key = (item.plan_id, f"{item.event_id}#unheard", item.day)
@@ -345,7 +348,7 @@ def _record_side_step(
     if prompt.startswith(ECHO_PREFIX):
         _record_echo(state, item, today)
     elif prompt.startswith(REMEDY_PREFIX):
-        _record_remedy(state, event, item, broke_at)
+        _record_remedy(state, event, item)
     elif prompt.startswith(PROBE_PREFIX):
         state.probed[item.event_id] = broke_at
         state.probe_right[item.event_id] = item.decision == "correct"
@@ -353,15 +356,22 @@ def _record_side_step(
         state.shown[item.event_id] = broke_at
 
 
-def _record_remedy(
-    state: PlanProgress, event: LessonEvent, item: Evidence, claimed: str
-) -> None:
+def _remedy_step_asked(state: PlanProgress, event_id: str, claimed: str) -> bool:
+    """Whether a remedy question names the step being asked now, before the check is asked again."""
+    return (
+        claimed.isdigit()
+        and int(claimed) == state.remedy_done.get(event_id, 0)
+        and event_id not in state.rechecked
+    )
+
+
+def _record_remedy(state: PlanProgress, event: LessonEvent, item: Evidence) -> None:
     """One of the skill's small teaching questions was answered. A right answer goes on to the next; a wrong
     one is met with the step's hints and then the answer, and once told, goes on too. When the last is done,
     the check is asked again to see what that did. A question not the one being asked is ignored."""
     steps = remedy_steps(event, load_skills())
     done = state.remedy_done.get(item.event_id, 0)
-    if not claimed.isdigit() or int(claimed) != done or done >= len(steps):
+    if done >= len(steps):
         return
     if item.decision == "correct":
         state.remedy_misses[item.event_id] = 0

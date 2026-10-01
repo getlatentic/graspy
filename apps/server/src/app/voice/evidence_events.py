@@ -110,7 +110,7 @@ def evidence_events(
         key = (item.plan_id, item.event_id, item.day)
         hints = len(getattr(event.activity, "hints", ())) if event.activity else 0
         side = (item.prompt_id or "").startswith(
-            (PROBE_PREFIX, SHOW_PREFIX, ECHO_PREFIX)
+            (PROBE_PREFIX, SHOW_PREFIX, ECHO_PREFIX, REMEDY_PREFIX)
         )
         noise = item.unheard
         attempt = tries.get(key, 0) + (0 if side or noise else 1)

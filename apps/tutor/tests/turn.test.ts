@@ -573,6 +573,25 @@ describe("a wrong number, least help first", () => {
   });
 });
 
+describe("a child who says they do not know, on a question with hints", () => {
+  const hints = ["Count the heaps: five, ten. What comes next?", "Ten, and five more. What is that?"];
+  const ask = (earlier: Ask["earlier"]): Ask => ({
+    prompt: "Three heaps of five. How many?",
+    heard: "I don't know",
+    language: "en",
+    earlier,
+    expect: { kind: "fact", item: "15", hints },
+  });
+  const unsure = () => tutor([call("mark_answer", { said: null, sure: false }), call("say_it", { text: "That is all right." })]).env;
+
+  it("is given the next hint as a wrong answer is, and is still a recording nobody could mark", async () => {
+    const first = await takeTurn(unsure(), ask([]));
+    expect([first.verdict, first.heard, first.say]).toEqual(["unheard", "dont_know", hints[0]]);
+    const second = await takeTurn(unsure(), ask([{ verdict: "wrong", line: hints[0] }]));
+    expect(second.say).toBe(hints[1]);
+  });
+});
+
 describe("the ladder where the answer was found wrong by a model", () => {
   const hints = ["Count the heaps: five, ten. What comes next?", "Ten, and five more. What is that?"];
 
