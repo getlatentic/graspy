@@ -12,6 +12,11 @@ describe("the teacher's phrasebook", () => {
     }
   });
 
+  it("shows the model how she sounds with no numbers of its own, so it has none to repeat", () => {
+    const NUMBER = /\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|sixty|hundred)\b/i;
+    for (const example of exampleBlock()) expect(example.replace(/<[^>]+>/g, ""), example).not.toMatch(NUMBER);
+  });
+
   it("writes the number in, and starts a sentence with it capitalised", () => {
     expect(withNumber("Yes, {number}! Very good.", "forty-two")).toBe("Yes, forty-two! Very good.");
     expect(withNumber("{Number}! Excellent.", "forty-two")).toBe("Forty-two! Excellent.");
