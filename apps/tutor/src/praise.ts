@@ -1,6 +1,6 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, NOT_HEARD, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
 import type { Ask } from "./turn";
@@ -44,6 +44,11 @@ function pick(lines: string[], ask: Ask): string {
  */
 export function praiseLine(ask: Ask): string | null {
   return ask.language !== "en" ? null : pick(candidates(ask), ask);
+}
+
+/** The line for a recording that could not be read as an answer, or null where the steady line stands. */
+export function notHeardLine(ask: Ask): string | null {
+  return ask.language !== "en" ? null : pick(NOT_HEARD, ask);
 }
 
 /**

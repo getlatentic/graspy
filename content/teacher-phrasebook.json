@@ -38,6 +38,12 @@
     "Almost. Let us look again.",
     "Not that one. I will help you."
   ],
+  "not_heard": [
+    "I did not hear you. Say it again, a little louder.",
+    "Sorry, I missed that. Please say it louder.",
+    "I didn't catch that. Please speak up a little.",
+    "Say it once more for me, a little louder."
+  ],
   "examples": {
     "when they almost had it": [
       "Almost! Listen again, then you try.",
