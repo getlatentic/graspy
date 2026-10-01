@@ -89,7 +89,11 @@
             "One heap is five. What is five and five?",
             "Five, then five more. Count on from five."
           ]
-        }
+        },
+        "hint_levels": [
+          "structure",
+          "structure"
+        ]
       },
       "skill": "equal-groups"
     },
@@ -229,10 +233,14 @@
         },
         "hints": {
           "en": [
-            "Count the heaps: five, ten. What comes next?",
-            "Ten, and five more. What is that?"
+            "One heap is five. Add five for each new heap.",
+            "Five, ten. What comes next?"
           ]
-        }
+        },
+        "hint_levels": [
+          "structure",
+          "partial_model"
+        ]
       },
       "skill": "groups-of-five",
       "supporting_skills": [
@@ -266,10 +274,16 @@
         },
         "hints": {
           "en": [
-            "Count the heaps: five, ten, fifteen. Keep counting.",
-            "Fifteen, twenty, twenty-five. What comes next?"
+            "Each new heap adds five. Count heap by heap.",
+            "Start with one heap: five. Add five for each new heap.",
+            "Five, ten, fifteen. Keep counting."
           ]
-        }
+        },
+        "hint_levels": [
+          "cue",
+          "structure",
+          "partial_model"
+        ]
       },
       "skill": "groups-of-five",
       "supporting_skills": [
@@ -312,10 +326,16 @@
         },
         "hints": {
           "en": [
-            "Count the heaps: five, ten, fifteen. Keep counting.",
-            "Twenty-five, thirty, thirty-five. What comes next?"
+            "Each new heap adds five. Count heap by heap.",
+            "Start with one heap: five. Add five for each new heap.",
+            "Five, ten, fifteen, twenty. Keep counting."
           ]
-        }
+        },
+        "hint_levels": [
+          "cue",
+          "structure",
+          "partial_model"
+        ]
       },
       "skill": "groups-of-five",
       "supporting_skills": [

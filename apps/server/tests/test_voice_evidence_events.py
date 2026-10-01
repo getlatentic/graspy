@@ -211,3 +211,11 @@ def test_a_small_teaching_question_is_not_a_try_at_the_check_it_serves():
         event.attempt for event in evidence_events([miss, taught, again], PLANS)
     ]
     assert attempts == [1, 1, 2]
+
+
+def test_an_answer_after_a_hint_is_as_helped_as_that_hint_declares():
+    sevens = "mathematics.number.counting-in-sevens"
+    tries = [Evidence(sevens, "practice", D1, "try_again") for _ in range(3)]
+    tries.append(Evidence(sevens, "practice", D1, "correct"))
+    levels = [(e.support_type, e.support_level) for e in evidence_events(tries, PLANS)]
+    assert levels == [("none", 0), ("cue", 2), ("hint", 3), ("model", 4)]

@@ -300,7 +300,11 @@
             "One week is seven days. What is seven and seven?",
             "Seven, then seven more. Count on from seven."
           ]
-        }
+        },
+        "hint_levels": [
+          "structure",
+          "structure"
+        ]
       },
       "skill": "weeks-to-days",
       "supporting_skills": [
@@ -337,10 +341,16 @@
         },
         "hints": {
           "en": [
-            "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
-            "Twenty-one, and seven more. What is that?"
+            "Each new week adds seven. Count week by week.",
+            "Start with one week: seven. Add seven for each new week.",
+            "Seven, fourteen. Keep counting."
           ]
-        }
+        },
+        "hint_levels": [
+          "cue",
+          "structure",
+          "partial_model"
+        ]
       },
       "skill": "weeks-to-days",
       "supporting_skills": [
@@ -384,10 +394,16 @@
         },
         "hints": {
           "en": [
-            "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
-            "Twenty-eight, thirty-five. What comes next?"
+            "Each new week adds seven. Count week by week.",
+            "Start with one week: seven. Add seven for each new week.",
+            "Seven, fourteen, twenty-one. Keep counting."
           ]
-        }
+        },
+        "hint_levels": [
+          "cue",
+          "structure",
+          "partial_model"
+        ]
       },
       "skill": "weeks-to-days",
       "supporting_skills": [

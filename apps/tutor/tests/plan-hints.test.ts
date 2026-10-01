@@ -52,3 +52,26 @@ describe("what a hint may say", () => {
     expect(withAnswers.length).toBeGreaterThanOrEqual(7);
   });
 });
+
+describe("how much each hint gives away", () => {
+  const NUMBER = /\b(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)\b/gi;
+  const ladders = planFiles(PLANS).flatMap((file) => {
+    const plan = JSON.parse(readFileSync(file, "utf8")) as { id: string; events: { id: string; activity?: { hints?: Record<string, string[]>; hint_levels?: string[] } }[] };
+    return plan.events.flatMap((event) =>
+      event.activity?.hints ? [{ where: `${plan.id}#${event.id}`, hints: event.activity.hints.en, levels: event.activity.hint_levels ?? [] }] : [],
+    );
+  });
+
+  it("is said for every hint", () => {
+    for (const { where, hints, levels } of ladders) expect(levels.length, where).toBe(hints.length);
+  });
+
+  it("lets a cue name at most one number, and the first hint never say part of the answer", () => {
+    for (const { where, hints, levels } of ladders) {
+      expect(levels[0], where).not.toBe("partial_model");
+      hints.forEach((hint, at) => {
+        if (levels[at] === "cue") expect(hint.match(NUMBER)?.length ?? 0, `${where}: ${hint}`).toBeLessThanOrEqual(1);
+      });
+    }
+  });
+});

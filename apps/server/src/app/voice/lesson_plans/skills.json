@@ -67,6 +67,9 @@
             "en": [
               "Look at one heap only. How many oranges are in it?"
             ]
+          },
+          "show": {
+            "en": "● ● ● ● ●"
           }
         },
         {
@@ -83,6 +86,9 @@
             "en": [
               "Start at five. Then count five more."
             ]
+          },
+          "show": {
+            "en": "● ● ● ● ●   ● ● ● ● ●"
           }
         },
         {
@@ -99,6 +105,9 @@
             "en": [
               "Start at five. Count five more."
             ]
+          },
+          "show": {
+            "en": "● ● ● ● ●   ● ● ● ● ●"
           }
         }
       ]

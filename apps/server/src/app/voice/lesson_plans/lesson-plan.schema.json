@@ -391,7 +391,24 @@
                 }
               },
               "description": "what the teacher says to a child who answered wrongly, least help first: a cue, then a hint; only after these is the answer told. English is required; a language with none gets the steady line"
+            },
+            "hint_levels": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "cue",
+                  "structure",
+                  "partial_model"
+                ]
+              },
+              "description": "how much each hint gives away, one per hint and in the same order: a cue names what to attend to, a structure gives the way to start, a partial model says part of the answer. The first may not be a partial model, and none comes after one that gives more"
             }
+          },
+          "dependentRequired": {
+            "hints": [
+              "hint_levels"
+            ]
           }
         }
       ]

@@ -288,7 +288,7 @@ def test_a_child_who_misses_the_question_after_its_hints_is_given_a_smaller_one_
     assert fives_next(evidence) == "guide"
     evidence = [
         *fives_taught(),
-        *_missed_and_shown(3),
+        *_missed_and_shown(4),
         marked(FIVES, "practice", "not_understood"),
     ]
     assert fives_next(evidence) == "span"
@@ -299,7 +299,7 @@ def test_a_child_who_misses_the_question_after_its_hints_is_given_a_smaller_one_
 def test_a_shorter_count_heard_but_not_answered_is_still_owed():
     evidence = [
         *fives_taught(),
-        *_missed_and_shown(3),
+        *_missed_and_shown(4),
         marked(FIVES, "practice", "not_understood"),
         said(FIVES, "span"),
     ]
@@ -314,7 +314,7 @@ def test_a_child_who_does_the_full_count_first_time_is_never_asked_the_shorter_o
 def test_a_child_who_cannot_do_the_shorter_count_is_helped_with_it_and_not_sent_back_to_the_full_one():
     evidence = [
         *fives_taught(),
-        *[marked(FIVES, "practice", "try_again")] * 4,
+        *[marked(FIVES, "practice", "try_again")] * 5,
         marked(FIVES, "span", "not_understood"),
     ]
     assert fives_next(evidence) == "guide"
@@ -325,7 +325,7 @@ def test_a_child_who_cannot_do_the_shorter_count_is_helped_with_it_and_not_sent_
 def test_a_child_who_still_misses_the_full_count_after_the_shorter_one_is_left_for_tomorrow():
     evidence = [
         *fives_taught(),
-        *_missed_and_shown(3),
+        *_missed_and_shown(4),
         marked(FIVES, "practice", "not_understood"),
         marked(FIVES, "span", "correct"),
         marked(FIVES, "practice", "not_understood"),
@@ -1208,6 +1208,34 @@ def test_a_lesson_passed_only_with_help_unlocks_the_lesson_that_needs_it_only_af
     assert next_new_plan(PLANS, open_, "primary_1").id == place
 
 
+def test_a_child_who_needed_help_on_two_days_is_not_held_on_that_check_but_goes_on_to_the_next_lesson():
+    helped = [_assess(DAY_1, "try_again"), _assess(DAY_1)]
+    twice = [*helped, _assess(DAY_2, "try_again"), _assess(DAY_2)]
+    learnt_elsewhere = [e for plan in (TWOS, TENS) for e in lesson(plan, DAY_1)]
+    evidence = [*twice, *learnt_elsewhere]
+    progress = progress_by_plan(evidence, PLANS, DAY_3)
+    assert not progress[COUNT_20].owes_a_check and progress[COUNT_20].unlocks
+    options = next_options(PLANS, progress, DAY_3, "primary_1", evidence)
+    assert [o.plan_id for o in options] == [
+        "mathematics.number.place-value-tens-and-units"
+    ]
+    after_one = progress_by_plan(helped, PLANS, DAY_2)
+    assert after_one[COUNT_20].owes_a_check
+
+
+def test_the_second_day_helped_closes_the_day_without_promising_a_check_tomorrow():
+    twice = [
+        _assess(DAY_1, "try_again"),
+        _assess(DAY_1),
+        _assess(DAY_2, "try_again"),
+        _assess(DAY_2),
+    ]
+    one = progress_by_plan(twice[:2], PLANS, DAY_1)
+    assert rest_move(PLANS, one, "primary_1")["say"] == "check-tomorrow"
+    two = progress_by_plan(twice, PLANS, DAY_2)
+    assert rest_move(PLANS, two, "primary_1")["say"] == "finished"
+
+
 def test_the_day_after_a_check_passed_with_help_the_check_is_asked_again_on_its_own_and_not_the_lesson():
     helped = [*lesson(COUNT_20, DAY_1, "try_again"), _assess(DAY_1)]
     progress = progress_by_plan(helped, PLANS, DAY_2)
@@ -1618,7 +1646,7 @@ def _wrong(event, n=1):
 
 def test_each_miss_where_the_plan_has_hints_is_asked_again_until_the_answer_has_been_told():
     taught = _fives_taught()
-    for misses in (1, 2, 3):
+    for misses in (1, 2, 3, 4):
         evidence = [*taught, *_wrong("practice", misses)]
         progress = progress_by_plan(evidence, PLANS, DAY_1)
         assert not progress[FIVES].paused_today, misses
@@ -1628,12 +1656,12 @@ def test_each_miss_where_the_plan_has_hints_is_asked_again_until_the_answer_has_
 
 def test_after_the_answer_was_told_a_child_who_misses_again_is_given_the_shorter_step_then_sent_home():
     taught = _fives_taught()
-    four = [*taught, *_wrong("practice", 4)]
-    progress = progress_by_plan(four, PLANS, DAY_1)
-    offer = next_options(PLANS, progress, DAY_1, "primary_4", four)[0]
-    assert offer.event_id == "span"
     five = [*taught, *_wrong("practice", 5)]
-    assert progress_by_plan(five, PLANS, DAY_1)[FIVES].paused_today
+    progress = progress_by_plan(five, PLANS, DAY_1)
+    offer = next_options(PLANS, progress, DAY_1, "primary_4", five)[0]
+    assert offer.event_id == "span"
+    six = [*taught, *_wrong("practice", 6)]
+    assert progress_by_plan(six, PLANS, DAY_1)[FIVES].paused_today
 
 
 def test_a_plan_without_hints_is_helped_after_two_misses_and_sent_home_after_three_as_before():
@@ -1682,6 +1710,19 @@ def test_a_child_who_has_shown_nothing_of_equal_groups_is_taught_it_a_small_ques
     assert offer.variant == ("remedy", "1")
     done.append(_remedy_try(1, "correct"))
     assert _offer(done, FIVES, "primary_4")[0].variant == ("remedy", "2")
+
+
+def test_the_small_questions_about_equal_groups_show_the_heaps_they_ask_about():
+    plan = PLANS[FIVES]
+    shown = [
+        event_move(plan, plan.event("recall"), "x", (), ("remedy", str(step)))["show"][
+            "en"
+        ]
+        for step in range(3)
+    ]
+    assert shown == ["● ● ● ● ●", "● ● ● ● ●   ● ● ● ● ●", "● ● ● ● ●   ● ● ● ● ●"]
+    own = event_move(plan, plan.event("recall"), "x", (), None)
+    assert "● " not in str(own["show"])
 
 
 def test_after_the_last_small_question_the_check_is_asked_again_and_a_pass_goes_on_to_the_teaching():
@@ -1799,3 +1840,49 @@ def test_a_small_question_is_marked_as_one_answer_with_its_own_hints():
     assert marking["hints"] == ["Start at five. Then count five more."]
     pidgin = expectation(exercise_by_prompt_id(f"remedy.{FIVES}.recall.1", "pcm"))
     assert pidgin["hints"] == marking["hints"]
+
+
+def _count_check(missing, decision="try_again"):
+    result = {"missing": missing, "out_of_order": []}
+    return Evidence(COUNT_20, "assess", DAY_1, decision, result)
+
+
+def _count_taught():
+    return [
+        said(COUNT_20, e)
+        for e in (
+            "attention",
+            "objective",
+            "recall",
+            "present",
+            "guide",
+            "span",
+            "practice",
+        )
+    ]
+
+
+def test_a_check_missed_twice_late_in_the_list_is_practised_again_from_the_break_not_from_the_start():
+    taught = _count_taught()
+    one = [*taught, _count_check(["20"])]
+    assert (
+        next_options(
+            PLANS, progress_by_plan(one, PLANS, DAY_1), DAY_1, "primary_1", one
+        )[0].event_id
+        == "assess"
+    )
+    two = [*one, _count_check(["20"])]
+    state = progress_by_plan(two, PLANS, DAY_1)[COUNT_20]
+    assert state.guidance_owed == set() and state.resume_at == {"practice": "20"}
+    offer = next_options(
+        PLANS, progress_by_plan(two, PLANS, DAY_1), DAY_1, "primary_1", two
+    )[0]
+    assert (offer.event_id, offer.variant) == ("practice", ("probe", "20"))
+
+
+def test_a_check_with_nothing_right_at_the_start_is_still_taught_again_from_the_guided_step():
+    taught = _count_taught()
+    nothing = _count_check(["1", "2", "3"], "not_understood")
+    two = [*taught, nothing, nothing]
+    state = progress_by_plan(two, PLANS, DAY_1)[COUNT_20]
+    assert state.resume_at == {} and state.guidance_owed == {"assess"}

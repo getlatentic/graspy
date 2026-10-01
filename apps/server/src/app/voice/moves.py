@@ -90,11 +90,11 @@ def rest_move(
     """The step when nothing more is offered today: a kind word about tomorrow, or that all is done."""
     if not left_for_tomorrow(plans, progress, learner_class):
         return REST_MOVE
-    helped = any(
-        progress[plan.id].supported_today
-        for plan in plans_for_class(plans, learner_class)
-    )
-    return CHECK_TOMORROW_MOVE if helped else TOMORROW_MOVE
+    own = [progress[plan.id] for plan in plans_for_class(plans, learner_class)]
+    if any(state.supported_today and state.owes_a_check for state in own):
+        return CHECK_TOMORROW_MOVE
+    # A pass with help that already lets the next lesson begin is not followed by a check tomorrow.
+    return REST_MOVE if any(state.supported_today for state in own) else TOMORROW_MOVE
 
 
 RECITED_TABLE = re.compile(r"mul_table_(\d+)_recite_.*")
@@ -176,7 +176,13 @@ def asked_another_way(
     if how == "remedy":
         utterance = remedy_utterance_id(plan.id, event.id, int(item))
         found = remedy_target(utterance, {plan.id: plan}, load_skills())
-        return _another_way(plan, utterance, "answer") if found else None
+        if not found:
+            return None
+        step = found[3]
+        picture = {"show": {lang: step.shown_in(lang) for lang in LANGUAGES}}
+        return _another_way(plan, utterance, "answer") | (
+            picture if step.shown_in("en") else {}
+        )
     makers = {
         "repair": (repair_utterance_id, "sequence", None),
         "probe": (probe_utterance_id, "answer", PROBE_PREFIX),

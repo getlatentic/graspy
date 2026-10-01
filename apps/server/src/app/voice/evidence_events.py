@@ -65,7 +65,14 @@ def _outcome(item: Evidence) -> str:
     return "correct" if item.decision == "correct" else "wrong"
 
 
-def _how_asked(event, item: Evidence, attempt: int, hints: int) -> tuple[str, int, str]:
+HINT_SUPPORT = {
+    "cue": ("cue", LEVEL_CUE),
+    "structure": ("hint", LEVEL_HINT),
+    "partial_model": ("model", LEVEL_PARTIAL),
+}
+
+
+def _how_asked(event, item: Evidence, attempt: int) -> tuple[str, int, str]:
     """The kind of help behind the answer, its level, and how much of the task was asked."""
     prompt = item.prompt_id or ""
     if prompt.startswith(PROBE_PREFIX):
@@ -85,13 +92,13 @@ def _how_asked(event, item: Evidence, attempt: int, hints: int) -> tuple[str, in
             if event.support is not None
             else ("none", LEVEL_INDEPENDENT, scope)
         )
+    levels = (
+        event.activity.hint_levels if event.activity and event.activity.hints else ()
+    )
     after_wrong = attempt - 1
-    if after_wrong <= hints:
-        return (
-            ("cue", LEVEL_CUE, scope)
-            if after_wrong == 1
-            else ("hint", LEVEL_HINT, scope)
-        )
+    if after_wrong <= len(levels):
+        support_type, level = HINT_SUPPORT[levels[after_wrong - 1]]
+        return support_type, level, scope
     return "model", LEVEL_TOLD, scope
 
 
@@ -109,13 +116,12 @@ def evidence_events(
             continue
         event = plan.event(item.event_id)
         key = (item.plan_id, item.event_id, item.day)
-        hints = len(getattr(event.activity, "hints", ())) if event.activity else 0
         side = (item.prompt_id or "").startswith(
             (PROBE_PREFIX, SHOW_PREFIX, ECHO_PREFIX, REMEDY_PREFIX)
         )
         noise = item.unheard
         attempt = tries.get(key, 0) + (0 if side or noise else 1)
-        support_type, level, scope = _how_asked(event, item, attempt or 1, hints)
+        support_type, level, scope = _how_asked(event, item, attempt or 1)
         events.append(
             EvidenceEvent(
                 plan_id=item.plan_id,

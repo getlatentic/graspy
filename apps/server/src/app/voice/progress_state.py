@@ -68,8 +68,10 @@ class PlanProgress:
 
     @property
     def owes_a_check(self) -> bool:
-        """Passed with help on an earlier day and never alone: its check is asked again, on its own."""
-        return bool(self.supported_days) and not self.assessed_days
+        """Passed with help on an earlier day, not yet on enough days to let the next lesson begin, and never
+        alone: its check is asked again, on its own. Once the next lesson is unlocked the lesson is only a
+        review candidate, which the memory brings round sooner for having needed help."""
+        return bool(self.supported_days) and not self.unlocks
 
     @property
     def unlocks(self) -> bool:
