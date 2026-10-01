@@ -292,6 +292,17 @@ def test_a_child_who_misses_the_full_count_twice_is_given_a_shorter_count_before
     assert fives_next(evidence) == "practice"
 
 
+def test_a_shorter_count_heard_but_not_answered_is_still_owed():
+    evidence = [
+        *fives_taught(),
+        marked(FIVES, "practice", "not_understood"),
+        said(FIVES, "guide"),
+        marked(FIVES, "practice", "not_understood"),
+        said(FIVES, "span"),
+    ]
+    assert fives_next(evidence) == "span"
+
+
 def test_a_child_who_does_the_full_count_first_time_is_never_asked_the_shorter_one():
     evidence = [*fives_taught(), marked(FIVES, "practice", "correct")]
     assert fives_next(evidence) == "assess"

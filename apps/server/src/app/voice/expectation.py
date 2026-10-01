@@ -33,13 +33,14 @@ def expectation(activity) -> dict:
             "multipliers": list(recitation.multipliers),
         }
     if isinstance(activity, SequenceExercise):
-        return {
+        listed = {
             "kind": "sequence",
             "item": activity.prompt_id,
-            "items": [
-                {"id": item.id, "spoken": list(item.spoken)} for item in activity.items
-            ],
+            "items": [_item(item) for item in activity.items],
         }
+        return listed | (
+            {"more": [_item(item) for item in activity.more]} if activity.more else {}
+        )
     if isinstance(activity, SpokenAnswerExercise):
         return {
             "kind": "fact",
@@ -53,6 +54,10 @@ def expectation(activity) -> dict:
             ),
         }
     raise ValueError(f"no marking is defined for {type(activity).__name__}")
+
+
+def _item(item) -> dict:
+    return {"id": item.id, "spoken": list(item.spoken)}
 
 
 def _fact(table: int, multiplier: int) -> dict:

@@ -215,6 +215,12 @@ def _support_problems(plan: LessonPlan) -> list[str]:
         if event.support is None:
             continue
         label = f"{plan.id}#{event.id}"
+        if event.event != "elicit_performance":
+            problems.append(
+                f"{label}: only an elicit_performance event can be a shorter step"
+            )
+        if sum(other.support == event.support for other in plan.events) > 1:
+            problems.append(f"{label}: {event.support} has more than one shorter step")
         if event.support not in ids or ids.index(event.support) <= ids.index(event.id):
             problems.append(f"{label}: supports an event that does not come after it")
             continue

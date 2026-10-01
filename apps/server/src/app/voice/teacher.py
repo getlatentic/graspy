@@ -157,10 +157,7 @@ def _rung_of(plan: LessonPlan, event: LessonEvent) -> LessonEvent | None:
 
 
 def _serve_owed_help(state: PlanProgress, plan: LessonPlan, event: LessonEvent) -> None:
-    """The plan's feedback or guided practice, once said, is no longer owed for the first miss in plan order.
-    A shorter step, once asked, is no longer owed either: how it went decides what comes next."""
-    if event.support is not None:
-        state.rung_owed.discard(event.support)
+    """The plan's feedback or guided practice, once said, is no longer owed for the first miss in plan order."""
     if event.event == "provide_feedback":
         state.feedback_owed -= _served_first(plan, state.feedback_owed)
     if event.event == "provide_guidance":
@@ -215,6 +212,9 @@ def progress_by_plan(
         if item.decision is None:
             continue
         state.last_decision[item.event_id] = item.decision
+        if event.support is not None and item.day == today:
+            # Answered, not just heard: how it went decides what comes next.
+            state.rung_owed.discard(event.support)
         if item.day == today:
             owed = state.facts_owed.get(item.event_id, frozenset())
             state.facts_owed[item.event_id] = (
