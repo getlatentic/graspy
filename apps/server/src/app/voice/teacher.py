@@ -153,8 +153,10 @@ def _owe_help(
     one who did not know, or who has missed twice running, is shown it once more in the plan's guided
     practice. The plan's feedback speaks of what the child got wrong, so a child who was not heard, or who
     did not try, is not given it: where the guided practice cannot be shown again they are simply asked
-    again. A recall check missed twice is not asked again: the teaching that follows is the help."""
-    if event.event == "stimulate_recall" and misses >= RECALL_ATTEMPTS:
+    again. A recall check is asked again without feedback, for the plan's feedback speaks of its own
+    practice, not of what it builds on; one missed twice is not asked again: the teaching that follows is
+    the help."""
+    if event.event == "stimulate_recall":
         return
     can_reteach = event.event in RETEACH_EVENTS and any(
         other.event == "provide_guidance" for other in plan.events
