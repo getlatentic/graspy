@@ -54,7 +54,7 @@ const LINE_BUDGET_MS = 10_000;
 
 /** What the child was asked for, and therefore how their answer is judged. */
 export type Expect =
-  | { kind: "fact"; item: string; accept?: string[] }
+  | { kind: "fact"; item: string; accept?: string[]; hints?: string[] }
   | { kind: "recitation"; item: string; table: number; multipliers: number[] }
   | { kind: "sequence"; item: string; items: SequenceItem[]; more?: SequenceItem[]; before?: SequenceItem[] };
 
@@ -382,7 +382,10 @@ async function timed<T>(part: string, work: Promise<T>): Promise<T> {
 
 export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   const reply = await markAndSay(env, ask);
-  return reply.verdict === "unheard" ? { ...reply, heard: heardKind(ask.heard) } : reply;
+  if (reply.verdict === "unheard") return { ...reply, heard: heardKind(ask.heard) };
+  // A wrong answer is met least help first whoever found it wrong: a model's line would tell the answer at once.
+  const rung = reply.verdict === "wrong" && ask.expect.kind === "fact" ? correctionLine(ask) : null;
+  return rung === null ? reply : { ...reply, say: rung };
 }
 
 async function markAndSay(env: Env, ask: Ask): Promise<Reply> {

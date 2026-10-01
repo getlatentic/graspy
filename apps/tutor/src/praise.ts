@@ -47,12 +47,17 @@ export function praiseLine(ask: Ask): string | null {
 }
 
 /**
- * The line for a number answered wrongly: the right one, said for the child to say after the teacher. Null
- * where another language, or an answer that is not a number, leaves the steady line.
+ * The line for a number answered wrongly, least help first: the plan's cue, then its hint, and only then the
+ * right number said for the child to say after the teacher. Which rung it is comes from how many times this
+ * child has already been answered wrongly on this question. Null where another language, or an answer that is
+ * not a number, leaves the steady line.
  */
 export function correctionLine(ask: Ask): string | null {
   if (ask.language !== "en" || ask.expect.kind !== "fact") return null;
   if (ask.support === "probed") return pick(NOT_QUITE, ask);
+  const wrongBefore = ask.earlier?.filter((told) => told.verdict === "wrong").length ?? 0;
+  const hint = ask.expect.hints?.[wrongBefore];
+  if (hint !== undefined && lineProblems(hint).length === 0) return hint;
   const number = spokenNumber(expectedAnswer(ask.expect.item));
   if (number === null) return null;
   const lines = WRONG_NUMBER.map((line) => withNumber(line, numberWords(number)));

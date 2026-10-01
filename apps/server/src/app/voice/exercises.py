@@ -110,6 +110,7 @@ class SpokenAnswerExercise:
     prompt_id: str
     subject: str
     expected: tuple[str, ...]
+    hints: tuple[str, ...] = ()
     task = "reasoning"
     transport = Transport.INTRON_SYNC
 
@@ -172,7 +173,9 @@ def plan_exercise(prompt_id: str, language: str = "en"):
         return SequenceExercise(
             prompt_id, plan.subject, activity.items, _carried_on(plan, event)
         )
-    return SpokenAnswerExercise(prompt_id, plan.subject, activity.expected)
+    return SpokenAnswerExercise(
+        prompt_id, plan.subject, activity.expected, activity.hints
+    )
 
 
 def _carried_on(plan, event) -> tuple[SequenceItem, ...]:

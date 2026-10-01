@@ -4577,6 +4577,12 @@ PLANS = [
        "mẹ́wà"
       ]
      },
+     "hints": {
+      "en": [
+       "One heap is five. What is five and five?",
+       "Five, then five more. Count on from five."
+      ]
+     },
      "kind": "answer"
     },
     "event": "stimulate_recall",
@@ -4713,6 +4719,12 @@ PLANS = [
        "ẹ̀ẹ́dógún"
       ]
      },
+     "hints": {
+      "en": [
+       "Count the heaps: five, ten. What comes next?",
+       "Ten, and five more. What is that?"
+      ]
+     },
      "kind": "answer"
     },
     "event": "elicit_performance",
@@ -4743,6 +4755,12 @@ PLANS = [
       "yo": [
        "thirty",
        "30"
+      ]
+     },
+     "hints": {
+      "en": [
+       "Count the heaps: five, ten, fifteen. Keep counting.",
+       "Fifteen, twenty, twenty-five. What comes next?"
       ]
      },
      "kind": "answer"
@@ -4783,6 +4801,12 @@ PLANS = [
       "yo": [
        "forty",
        "40"
+      ]
+     },
+     "hints": {
+      "en": [
+       "Count the heaps: five, ten, fifteen. Keep counting.",
+       "Twenty-five, thirty, thirty-five. What comes next?"
       ]
      },
      "kind": "answer"
@@ -5099,6 +5123,12 @@ PLANS = [
        "14"
       ]
      },
+     "hints": {
+      "en": [
+       "One week is seven days. What is seven and seven?",
+       "Seven, then seven more. Count on from seven."
+      ]
+     },
      "kind": "answer"
     },
     "event": "elicit_performance",
@@ -5132,6 +5162,12 @@ PLANS = [
        "twenty-eight",
        "28",
        "twenty eight"
+      ]
+     },
+     "hints": {
+      "en": [
+       "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
+       "Twenty-one, and seven more. What is that?"
       ]
      },
      "kind": "answer"
@@ -5173,6 +5209,12 @@ PLANS = [
        "forty-two",
        "42",
        "méjìlélógójì"
+      ]
+     },
+     "hints": {
+      "en": [
+       "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
+       "Twenty-eight, thirty-five. What comes next?"
       ]
      },
      "kind": "answer"

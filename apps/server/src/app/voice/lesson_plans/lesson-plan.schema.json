@@ -357,6 +357,40 @@
                   }
                 }
               }
+            },
+            "hints": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en"
+              ],
+              "properties": {
+                "en": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "yo": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "pcm": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "description": "what the teacher says to a child who answered wrongly, least help first: a cue, then a hint; only after these is the answer told. English is required; a language with none gets the steady line"
             }
           }
         }

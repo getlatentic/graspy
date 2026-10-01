@@ -43,7 +43,7 @@ def expectation(activity) -> dict:
                 listed[name] = [_item(item) for item in getattr(activity, name)]
         return listed
     if isinstance(activity, SpokenAnswerExercise):
-        return {
+        marking = {
             "kind": "fact",
             "item": activity.expected[0],
             "accept": sorted(
@@ -54,6 +54,7 @@ def expectation(activity) -> dict:
                 }
             ),
         }
+        return marking | ({"hints": list(activity.hints)} if activity.hints else {})
     raise ValueError(f"no marking is defined for {type(activity).__name__}")
 
 
