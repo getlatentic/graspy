@@ -638,6 +638,18 @@ describe("a child who says they do not know again and again", () => {
   });
 });
 
+describe("a child who says they do not know to a question whose answer is no number", () => {
+  it("is a child who tried nothing, not one who answered wrongly", async () => {
+    const { env } = tutor([call("mark_answer", { said: "I don't know", sure: true }), call("say_it", { text: "That is all right. Look at the shape." })]);
+    const reply = await takeTurn(env, { prompt: "Say the shape.", heard: "I don't know", language: "en", expect: { kind: "fact", item: "triangle" } });
+    expect([reply.verdict, reply.heard]).toEqual(["unheard", "dont_know"]);
+  });
+
+  it("is told in every one of the phrasebook's told-number lines without almost or not quite", () => {
+    for (const line of TOLD_NUMBER) expect(withNumber(line, "thirty")).not.toMatch(/almost|not quite|not yet/i);
+  });
+});
+
 describe("the ladder where the answer was found wrong by a model", () => {
   const hints = ["Count the heaps: five, ten. What comes next?", "Ten, and five more. What is that?"];
 
