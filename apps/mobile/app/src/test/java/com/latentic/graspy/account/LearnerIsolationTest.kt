@@ -45,7 +45,7 @@ class LearnerIsolationTest {
         answers.insert(answer("echo-1", ada, promptId = "echo.mathematics.time.days-of-the-week.recall"))
         answers.insert(answer("other-1", ada, promptId = "mathematics.not-a-lesson"))
 
-        assertEquals(listOf("plan-1", "repair-1", "echo-1"), answers.observeLessonTurns(ada).first().map { it.localId })
+        assertEquals(listOf("echo-1", "plan-1", "repair-1"), answers.observeLessonTurns(ada).first().map { it.localId })
     }
 
     @Test
