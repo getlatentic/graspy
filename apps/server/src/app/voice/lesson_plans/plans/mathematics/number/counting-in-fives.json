@@ -84,7 +84,8 @@
             "10"
           ]
         }
-      }
+      },
+      "skill": "equal-groups"
     },
     {
       "id": "present",
@@ -188,7 +189,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "skip-count-5"
     },
     {
       "id": "span",
@@ -219,7 +221,8 @@
             "15"
           ]
         }
-      }
+      },
+      "skill": "groups-of-five"
     },
     {
       "id": "practice",
@@ -245,7 +248,8 @@
             "30"
           ]
         }
-      }
+      },
+      "skill": "groups-of-five"
     },
     {
       "id": "feedback",
@@ -280,7 +284,8 @@
             "40"
           ]
         }
-      }
+      },
+      "skill": "groups-of-five"
     },
     {
       "id": "retain",
