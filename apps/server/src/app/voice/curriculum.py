@@ -57,6 +57,8 @@ class LessonEvent:
     support: str | None = None
     # The skill, from the skills registry, that doing this event's activity well shows.
     skill: str | None = None
+    # Other skills the activity also needs, so one answer can speak for several.
+    supporting_skills: tuple[str, ...] = ()
 
     def utterance_id(self, plan_id: str) -> str:
         return f"plan.{plan_id}.{self.id}"
@@ -127,6 +129,7 @@ def plan_from_json(payload: dict, language: str = "en") -> LessonPlan:
             activity=_activity(event.get("activity"), language),
             support=event.get("support"),
             skill=event.get("skill"),
+            supporting_skills=tuple(event.get("supporting_skills", ())),
         )
         for event in payload["events"]
     )
@@ -214,10 +217,11 @@ def check_skills(skills: dict[str, Skill], plans: dict[str, LessonPlan]) -> list
             )
     for plan in plans.values():
         for event in plan.events:
-            if event.skill is not None and event.skill not in skills:
-                problems.append(
-                    f"{plan.id}#{event.id}: names the skill {event.skill}, which does not exist"
-                )
+            for named in (event.skill, *event.supporting_skills):
+                if named is not None and named not in skills:
+                    problems.append(
+                        f"{plan.id}#{event.id}: names the skill {named}, which does not exist"
+                    )
     return problems
 
 

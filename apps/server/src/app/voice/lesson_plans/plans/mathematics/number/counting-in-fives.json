@@ -234,7 +234,11 @@
           ]
         }
       },
-      "skill": "groups-of-five"
+      "skill": "groups-of-five",
+      "supporting_skills": [
+        "equal-groups",
+        "skip-count-5"
+      ]
     },
     {
       "id": "practice",
@@ -267,7 +271,11 @@
           ]
         }
       },
-      "skill": "groups-of-five"
+      "skill": "groups-of-five",
+      "supporting_skills": [
+        "equal-groups",
+        "skip-count-5"
+      ]
     },
     {
       "id": "feedback",
@@ -309,7 +317,11 @@
           ]
         }
       },
-      "skill": "groups-of-five"
+      "skill": "groups-of-five",
+      "supporting_skills": [
+        "equal-groups",
+        "skip-count-5"
+      ]
     },
     {
       "id": "retain",

@@ -212,6 +212,15 @@
             "minimum": 1
           },
           "description": "enhance_retention only: when this lesson comes back for a check"
+        },
+        "supporting_skills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "description": "other skills, from skills.json, this event's activity also needs; `skill` is the one it shows when done well"
         }
       }
     },

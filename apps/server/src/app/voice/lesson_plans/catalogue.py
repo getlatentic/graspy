@@ -4735,7 +4735,11 @@ PLANS = [
      "yo": "Jẹ́ ká gbìyànjú èyí tó kéré. Mama ní òkìtì mẹ́ta, ọsàn márùn-ún nínú kọ̀ọ̀kan. Ọsàn mélòó ni?"
     },
     "skill": "groups-of-five",
-    "support": "practice"
+    "support": "practice",
+    "supporting_skills": [
+     "equal-groups",
+     "skip-count-5"
+    ]
    },
    {
     "activity": {
@@ -4768,7 +4772,11 @@ PLANS = [
      "pcm": "Na your turn. Mama get six heaps, five orange inside each. How many orange?",
      "yo": "Ìwọ náà báyìí. Mama ní òkìtì mẹ́fà, ọsàn márùn-ún nínú kọ̀ọ̀kan. Ọsàn mélòó ni?"
     },
-    "skill": "groups-of-five"
+    "skill": "groups-of-five",
+    "supporting_skills": [
+     "equal-groups",
+     "skip-count-5"
+    ]
    },
    {
     "event": "provide_feedback",
@@ -4810,7 +4818,11 @@ PLANS = [
      "pcm": "Make we see wetin you remember. Eight heaps of yam, five yam inside each. How many yam?",
      "yo": "Jẹ́ ká wo ohun tí o rántí. Òkìtì ẹ̀gbọ́ mẹ́jọ, ẹ̀gbọ́ márùn-ún nínú kọ̀ọ̀kan. Mélòó ni?"
     },
-    "skill": "groups-of-five"
+    "skill": "groups-of-five",
+    "supporting_skills": [
+     "equal-groups",
+     "skip-count-5"
+    ]
    },
    {
     "event": "enhance_retention",
@@ -5127,7 +5139,11 @@ PLANS = [
      "yo": "Jẹ́ ká gbìyànjú èyí tó kéré. Ọ̀sẹ̀ méjì. Ọjọ́ mélòó ni?"
     },
     "skill": "weeks-to-days",
-    "support": "practice"
+    "support": "practice",
+    "supporting_skills": [
+     "skip-count-7",
+     "days-of-the-week"
+    ]
    },
    {
     "activity": {
@@ -5163,7 +5179,11 @@ PLANS = [
      "pcm": "Na your turn. Four weeks. How many days?",
      "yo": "Ìwọ náà báyìí. Ọ̀sẹ̀ mẹ́rin. Ọjọ́ mélòó ni?"
     },
-    "skill": "weeks-to-days"
+    "skill": "weeks-to-days",
+    "supporting_skills": [
+     "skip-count-7",
+     "days-of-the-week"
+    ]
    },
    {
     "event": "provide_feedback",
@@ -5206,7 +5226,11 @@ PLANS = [
      "pcm": "Make we see wetin you remember. How many days dey inside six weeks?",
      "yo": "Jẹ́ ká wo ohun tí o rántí. Ọjọ́ mélòó ni ó wà ní ọ̀sẹ̀ mẹ́fà?"
     },
-    "skill": "weeks-to-days"
+    "skill": "weeks-to-days",
+    "supporting_skills": [
+     "skip-count-7",
+     "days-of-the-week"
+    ]
    },
    {
     "event": "enhance_retention",
