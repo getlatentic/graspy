@@ -18,7 +18,8 @@ from .curriculum import (
     SHOW_PREFIX,
     LessonPlan,
 )
-from .teacher import Evidence, _broke_at
+from .evidence import Evidence
+from .progress import where_it_broke
 
 # How much help sat behind an answer, from none to the answer said for the child to repeat.
 LEVEL_INDEPENDENT, LEVEL_PROBE, LEVEL_CUE, LEVEL_HINT, LEVEL_PARTIAL, LEVEL_TOLD = (
@@ -130,7 +131,7 @@ def evidence_events(
                 task_scope=scope,
                 previous_help=key in helped,
                 attempt=attempt or 1,
-                error_at=_broke_at(event, item.result),
+                error_at=where_it_broke(event, item.result),
                 hearing="heard"
                 if item.verdict != "unheard"
                 else (item.heard_kind or "garbled"),

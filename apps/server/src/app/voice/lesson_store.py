@@ -140,8 +140,10 @@ async def load_options(
 
     The one network call sits here so the choosing itself stays a plain function of what is known.
     """
+    from .evidence import evidence_from_rows
     from .learner_memory import weakened_lessons
-    from .teacher import evidence_from_rows, next_options, progress_by_plan
+    from .progress import progress_by_plan
+    from .sequencing import next_options
 
     plans = load_plans(language)
     response = await env.DB.prepare(EVIDENCE_SQL).bind(learner).all()
@@ -159,7 +161,8 @@ async def load_options(
 
 async def load_catalogue(env, learner: str, today: date, learner_class, language: str):
     """What the learner has done across every lesson of their class, and which one is next."""
-    from .teacher import catalogue, progress_by_plan
+    from .progress import progress_by_plan
+    from .standing import catalogue
 
     plans, evidence, _, options = await load_options(
         env, learner, today, learner_class, language
@@ -182,7 +185,9 @@ async def load_lesson_snapshot(
     language: str,
     chosen: str | None = None,
 ):
-    from .teacher import choose, event_move, progress_by_plan, rest_move
+    from .moves import event_move, rest_move
+    from .progress import progress_by_plan
+    from .teacher import choose
 
     plans, evidence, rows, options = await load_options(
         env, learner, today, learner_class, language, chosen
