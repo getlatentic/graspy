@@ -3,7 +3,7 @@ import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
 import { STEADY_LINES } from "../src/lines";
 import { praiseLine } from "../src/praise";
-import { WRONG_NUMBER, withNumber } from "../src/phrasebook";
+import { TOLD_NUMBER, WRONG_NUMBER, withNumber } from "../src/phrasebook";
 import { DEFAULT_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -595,6 +595,26 @@ describe("a child who says they do not know, on a question with hints", () => {
     expect([first.verdict, first.heard, first.say]).toEqual(["unheard", "dont_know", hints[0]]);
     const second = await takeTurn(unsure(), ask([{ verdict: "wrong", line: hints[0] }]));
     expect(second.say).toBe(hints[1]);
+  });
+});
+
+describe("a child who says they do not know, once the hints are used", () => {
+  const ask = (support?: "probed"): Ask => ({
+    prompt: "Three heaps of five. How many?",
+    heard: "I don't know",
+    language: "en",
+    support,
+    earlier: [{ verdict: "wrong", line: "a" }, { verdict: "wrong", line: "b" }],
+    expect: { kind: "fact", item: "15", hints: ["a", "b"] },
+  });
+  const unsure = () => tutor([call("mark_answer", { said: null, sure: false }), call("say_it", { text: "That is all right." })]).env;
+
+  it("is told the number without almost or not quite, and without being told they were wrong", async () => {
+    for (const support of [undefined, "probed" as const]) {
+      const reply = await takeTurn(unsure(), ask(support));
+      expect(TOLD_NUMBER.map((line) => withNumber(line, "fifteen")), String(support)).toContain(reply.say);
+      expect(reply.say).not.toMatch(/almost|not quite|not yet/i);
+    }
   });
 });
 
