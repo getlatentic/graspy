@@ -124,7 +124,6 @@ class Choice:
 class PlanProgress:
     done_today: set[str] = field(default_factory=set)
     retry_today: set[str] = field(default_factory=set)
-    feedback_owed: set[str] = field(default_factory=set)
     guidance_owed: set[str] = field(default_factory=set)
     # Events missed twice running that a shorter step of the plan is owed before they are asked again.
     rung_owed: set[str] = field(default_factory=set)
@@ -174,13 +173,11 @@ def _owe_help(
     decision: str,
     misses: int,
 ) -> None:
-    """What the child hears before trying again. One who tried and was wrong hears the plan's feedback;
-    one who did not know, or who has missed twice running, is shown it once more in the plan's guided
-    practice. The plan's feedback speaks of what the child got wrong, so a child who was not heard, or who
-    did not try, is not given it: where the guided practice cannot be shown again they are simply asked
-    again. A recall check is asked again without feedback, for the plan's feedback speaks of its own
-    practice, not of what it builds on; one missed twice is not asked again: the teaching that follows is
-    the help."""
+    """What the child hears before trying again. One who did not know, or who has missed twice running, is
+    shown it once more in the plan's guided practice; one who missed twice with a shorter step in the plan
+    is given that step. The teacher's own reply already speaks of what this child got wrong, so the plan's
+    general feedback line, written about one example, is never played. A recall check is asked again
+    without help: one missed twice is not asked again, and the teaching that follows is the help."""
     if event.event == "stimulate_recall":
         return
     can_reteach = event.event in RETEACH_EVENTS and any(
@@ -190,10 +187,6 @@ def _owe_help(
         state.rung_owed.add(event.id)
     elif can_reteach and (decision == "not_understood" or misses >= 2):
         state.guidance_owed.add(event.id)
-    elif decision != "not_understood" and event.id not in state.resume_at:
-        # The teacher's own reply already named where it went wrong; the plan's general feedback
-        # would only repeat it, and says things (such as numbers skipped) that may not be so.
-        state.feedback_owed.add(event.id)
 
 
 def _rung_of(plan: LessonPlan, event: LessonEvent) -> LessonEvent | None:
@@ -343,8 +336,6 @@ def _broke_at(event: LessonEvent, result: dict | None) -> str | None:
 
 def _serve_owed_help(state: PlanProgress, plan: LessonPlan, event: LessonEvent) -> None:
     """The plan's feedback or guided practice, once said, is no longer owed for the first miss in plan order."""
-    if event.event == "provide_feedback":
-        state.feedback_owed -= _served_first(plan, state.feedback_owed)
     if event.event == "provide_guidance":
         state.guidance_owed -= _served_first(plan, state.guidance_owed)
 
@@ -531,8 +522,6 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
         if event.id in state.retry_today or owed:
             if event.id in state.guidance_owed:
                 return plan.event_of("provide_guidance")
-            if event.id in state.feedback_owed:
-                return plan.event_of("provide_feedback")
             if event.id in state.rung_owed:
                 return _rung_of(plan, event)
             return event
