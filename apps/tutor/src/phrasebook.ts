@@ -12,6 +12,8 @@ export const WRONG_NUMBER: string[] = book.wrong_number;
 export const TOLD_NUMBER: string[] = book.told_number;
 /** When a recording could not be read as an answer: said again, in other words each time it happens. */
 export const NOT_HEARD: string[] = book.not_heard;
+/** When a list stopped part way: how far the child got, said back to them. */
+export const LIST_STOPPED: string[] = book.list_stopped;
 /** When the child was asked for the next item before being told it and was wrong: only that it was not it. */
 export const NOT_QUITE: string[] = book.not_quite;
 
@@ -40,5 +42,5 @@ export function withoutSlots(line: string): string {
 
 /** Every line the phrasebook can say, with a number filled in where it takes one, for checking them all. */
 export function allLines(numberWords: string): string[] {
-  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...WRONG_NUMBER.map((line) => withNumber(line, numberWords)), ...TOLD_NUMBER.map((line) => withNumber(line, numberWords)), ...NOT_HEARD, ...NOT_QUITE, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat().map(withoutSlots)];
+  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...WRONG_NUMBER.map((line) => withNumber(line, numberWords)), ...TOLD_NUMBER.map((line) => withNumber(line, numberWords)), ...LIST_STOPPED.map((line) => line.replaceAll("{last}", numberWords)), ...NOT_HEARD, ...NOT_QUITE, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat().map(withoutSlots)];
 }

@@ -28,7 +28,7 @@ import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { heardSequence } from "./plain-sequence";
 import { exampleBlock } from "./phrasebook";
-import { correctionLine, notHeardLine, praiseLine } from "./praise";
+import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import {
@@ -404,6 +404,10 @@ async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   if (plain !== null) return plain;
   const listed = markedFromPlainSequence(ask);
   if (listed !== null && listed.verdict !== "wrong") return { ...listed, say: saidFor(listed.verdict, ask) };
+  // A list that stopped part way is answered with how far the child got, which the code knows: a model asked
+  // to write it takes seconds, often past the time a line is waited for.
+  const stopped = listed === null ? null : listStoppedLine(ask, listed.result);
+  if (listed !== null && stopped !== null) return { ...listed, say: stopped };
 
   // A list marked by code needs only the teacher's words for what was missed.
   const premarked: Marked | null = listed;
