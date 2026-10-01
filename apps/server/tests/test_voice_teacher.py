@@ -778,8 +778,14 @@ def test_opening_a_lesson_finished_today_offers_nothing_rather_than_another_less
 def test_an_answer_to_the_guided_step_is_known_to_be_said_after_the_teacher():
     from app.voice.worker_evaluation import _was_modelled
 
-    assert _was_modelled({"plan_id": DAYS, "event_id": "guide"})
-    assert not _was_modelled({"plan_id": DAYS, "event_id": "practice"})
-    assert not _was_modelled({"plan_id": DAYS, "event_id": "assess"})
+    assert _was_modelled(
+        {"plan_id": "mathematics.time.days-of-the-week", "event_id": "guide"}
+    )
+    assert not _was_modelled(
+        {"plan_id": "mathematics.time.days-of-the-week", "event_id": "practice"}
+    )
+    assert not _was_modelled(
+        {"plan_id": "mathematics.time.days-of-the-week", "event_id": "assess"}
+    )
     assert not _was_modelled({"plan_id": "no.such.plan", "event_id": "guide"})
     assert not _was_modelled({})
