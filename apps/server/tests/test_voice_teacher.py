@@ -1244,3 +1244,80 @@ def test_the_answer_said_after_the_teacher_is_marked_as_the_check_is_and_known_a
     assert not _was_modelled(
         {"plan_id": DAYS, "event_id": "recall", "prompt_id": f"plan.{DAYS}.recall"}
     )
+
+
+def test_a_choice_among_several_steps_keeps_what_the_chosen_one_asks():
+    from app.voice.teacher import Option, parse_choice
+
+    options = [
+        Option(DAYS, "recall", "a", (), None, True),
+        Option(DAYS, "practice", "b", (), "friday", False),
+    ]
+
+    def said(step, reason):
+        return {"choices": [{"message": {"content": {"step": step, "reason": reason}}}]}
+
+    first = parse_choice(said(1, "x"), options)
+    second = parse_choice(said(2, "y"), options)
+    assert (first.echo, first.resume) == (True, None)
+    assert (second.echo, second.resume) == (False, "friday")
+
+
+def test_what_was_asked_of_the_child_is_what_the_tutor_is_told_it_was():
+    from app.voice.worker_evaluation import _asked_line
+
+    assert (
+        _asked_line({"prompt_id": ECHO_DAYS}, "en")
+        == "Say it after me: Sunday, Monday, Tuesday."
+    )
+    repair = f"repair.{DAYS}.practice.friday"
+    assert (
+        _asked_line({"prompt_id": repair}, "en")
+        == "Start from Thursday. Count on to Saturday."
+    )
+    assert _asked_line({"prompt_id": "echo.no.such.recall"}, "en") == ""
+
+
+def test_an_echoed_check_longer_than_the_teacher_says_lets_the_child_count_on():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+
+    place = "mathematics.number.place-value-tens-and-units"
+    marking = expectation(exercise_by_prompt_id(f"echo.{place}.recall"))
+    assert [item["id"] for item in marking["items"]] == ["1", "2", "3", "4", "5", "6"]
+    assert [item["id"] for item in marking["more"]] == ["7", "8", "9", "10"]
+
+
+def test_what_the_child_showed_yesterday_is_not_held_against_them_today():
+    yesterday = [
+        Evidence(DAYS, "recall", DAY_1, "not_understood"),
+        Evidence(DAYS, "recall", DAY_1, "not_understood"),
+    ]
+    progress = progress_by_plan(yesterday, PLANS, DAY_2)
+    assert progress[DAYS].blank_recall == {}
+    options = next_options(PLANS, progress, DAY_2, "primary_2", yesterday)
+    assert options and not options[0].echo
+
+
+def test_a_right_answer_ends_a_run_of_nothing_right():
+    evidence = [
+        *_opening(),
+        _recall("not_understood"),
+        _recall("correct", ["sunday", "monday", "tuesday"]),
+        _recall("not_understood"),
+    ]
+    offer, _ = _offer(evidence)
+    assert offer.echo is False
+
+
+def test_an_echo_that_arrives_late_does_not_reopen_a_check_the_child_passed():
+    evidence = [
+        *_opening(),
+        _recall("not_understood"),
+        _recall("not_understood"),
+        _recall("correct", WEEK[:3], prompt_id=ECHO_DAYS),
+        _recall("correct", WEEK[:3]),
+        _recall("correct", WEEK[:3], prompt_id=ECHO_DAYS),
+    ]
+    offer, progress = _offer(evidence)
+    assert offer.event_id == "present" and not progress[DAYS].paused_today

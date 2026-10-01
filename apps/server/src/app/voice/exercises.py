@@ -142,6 +142,7 @@ def echo_exercise(prompt_id: str, language: str = "en"):
             prompt_id,
             plan.subject,
             activity.items[:MOST_ECHOED],
+            more=activity.items[MOST_ECHOED:],
             memory_item=event.utterance_id(plan.id),
         )
     return SpokenAnswerExercise(prompt_id, plan.subject, activity.expected)

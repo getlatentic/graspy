@@ -32,8 +32,8 @@ from .speech.teacher_audio_contract import fact_utterance_id, teacher_utterance
 MODEL = "@cf/openai/gpt-oss-120b"
 DECISION_TIMEOUT_SECONDS = 20
 MASTERY_DAYS = 2
-# A check of what the child already knows is asked this many times a day; a child who cannot say it is taught
-# next, not asked again.
+# A check of what the child already knows is asked this many times a day. A child who tried and got some of it
+# is taught next; one who showed nothing of it is given the answer to say after the teacher, and asked once more.
 RECALL_ATTEMPTS = 2
 # An activity the child could not begin to do this many times running in a day is left for tomorrow: a child who
 # has been shown, and shown again, and still cannot do it is not helped by a fourth try.
@@ -500,8 +500,9 @@ def due_reviews(
 def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
     """The first event not done today. An activity that failed today first gives the child help, the
     plan's feedback or its guided practice again (see _owe_help), then comes round again. A recall
-    check failed twice is left for the teaching that follows, and a plan whose activity was failed
-    three times is left for tomorrow. Once the child has passed the check today, only what follows
+    check failed twice is left for the teaching that follows, unless the child showed nothing of it: then its
+    answer is said after the teacher and it is asked once more (see _record_recall). A plan whose activity
+    was failed three times is left for tomorrow. Once the child has passed the check today, only what follows
     it is left: a review passed first is not followed by the whole lesson. None when the plan is
     complete or paused for today."""
     if state.paused_today and not state.assessed_today:
