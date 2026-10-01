@@ -544,9 +544,23 @@ async function markedFromPlainNumber(env: Env, ask: Ask): Promise<Reply | null> 
   return marked(markAnswer(ask.expect.item, String(answer), true, ask.expect.accept ?? []), ask);
 }
 
-/** Whether any word the child said is a number, which an "I do not know, ten" would be answering with. */
-function mentionsANumber(heard: string | null): boolean {
-  return (heard ?? "").split(/[^a-z0-9]+/i).some((word) => word !== "" && spokenNumber(word) !== null);
+/**
+ * Whether the child said nothing but that they do not know. Anything more ("I don't know, is it a triangle",
+ * "not sure, fiften") may be an answer, and goes to be read and marked.
+ */
+const ONLY_NOT_KNOWING =
+  /^(?:(?:um+|uh+|er+|erm|well|sorry)\s+)*(?:i\s+)?(?:really\s+)?(?:(?:do\s*not|don'?t|dont|can'?t|cannot|cant)\s+(?:know|remember)(?:\s+it)?|dunno|have\s+no\s+idea|no\s+idea|(?:i'?m\s+)?not\s+sure|forgot)(?:\s+(?:miss|sir|ma'?am|auntie|teacher))?$/;
+
+function saidOnlyThatTheyDoNotKnow(heard: string | null): boolean {
+  const plain = heardForPrompt(heard).toLowerCase().replace(/[^a-z' ]+/g, " ").replace(/\s+/g, " ").trim();
+  return ONLY_NOT_KNOWING.test(plain);
+}
+
+/** The most words of a recording that nobody could read for which the phrasebook's "say it again" still fits; more is a child saying something else. */
+const MOST_WORDS_ASKED_AGAIN = 3;
+
+function fewWords(heard: string | null): boolean {
+  return heardForPrompt(heard).split(/[^\p{L}\p{N}']+/u).filter((word) => word !== "").length <= MOST_WORDS_ASKED_AGAIN;
 }
 
 /**
@@ -554,7 +568,7 @@ function mentionsANumber(heard: string | null): boolean {
  * are the plan's and the phrasebook's. Null where there is no such line to say, which the teacher then writes.
  */
 function unsureReply(ask: Ask): Reply | null {
-  if (ask.expect.kind !== "fact" || heardKind(ask.heard) !== "dont_know" || mentionsANumber(ask.heard)) return null;
+  if (ask.expect.kind !== "fact" || !saidOnlyThatTheyDoNotKnow(ask.heard)) return null;
   const line = correctionLine(ask, false);
   return line === null ? null : { ...markAnswer(ask.expect.item, null), say: line };
 }
@@ -565,7 +579,7 @@ function unsureReply(ask: Ask): Reply | null {
  * would take seconds to write a line that is put aside; the child is waiting.
  */
 function lineWrittenByCode(marking: Marked, ask: Ask): string | null {
-  if (marking.verdict === "unheard") return heardKind(ask.heard) === "dont_know" ? null : notHeardLine(ask);
+  if (marking.verdict === "unheard") return heardKind(ask.heard) === "dont_know" || !fewWords(ask.heard) ? null : notHeardLine(ask);
   return marking.verdict === "wrong" && ask.expect.kind === "fact" ? correctionLine(ask) : null;
 }
 
