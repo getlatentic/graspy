@@ -495,3 +495,25 @@ describe("why a recording could not be marked", () => {
     expect(reply.heard).toBeUndefined();
   });
 });
+
+describe("a number the recogniser wrote as the word it sounds like", () => {
+  const ask = (item: string, heard: string): Ask => ({ prompt: "How many?", heard, language: "en", expect: { kind: "fact", item } });
+
+  it("is read as the number when it is the whole answer", async () => {
+    for (const [item, heard] of [["2", "to"], ["2", "Too."], ["4", "for"], ["1", "Won"], ["8", "ate"]]) {
+      const reply = await takeTurn(tutor([]).env, ask(item, heard));
+      expect(reply.verdict, `${heard} for ${item}`).toBe("correct");
+    }
+  });
+
+  it("is wrong, not unheard, when it is a different number from the one asked", async () => {
+    const reply = await takeTurn(tutor([]).env, ask("3", "to"));
+    expect(reply.verdict).toBe("wrong");
+  });
+
+  it("is left to the reader when it is only part of a longer answer", async () => {
+    const { env } = tutor([], [], [], [3]);
+    const reply = await takeTurn(env, ask("3", "it is to go three"));
+    expect(reply.verdict).toBe("correct");
+  });
+});

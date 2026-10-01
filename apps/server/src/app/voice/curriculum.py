@@ -52,6 +52,8 @@ class LessonEvent:
     # The id of the event this one is a shorter step towards: offered only to a child who has missed that
     # event twice running, and left behind once it is done.
     support: str | None = None
+    # The skill, from the skills registry, that doing this event's activity well shows.
+    skill: str | None = None
 
     def utterance_id(self, plan_id: str) -> str:
         return f"plan.{plan_id}.{self.id}"
@@ -117,6 +119,7 @@ def plan_from_json(payload: dict, language: str = "en") -> LessonPlan:
             show=event.get("show"),
             activity=_activity(event.get("activity"), language),
             support=event.get("support"),
+            skill=event.get("skill"),
         )
         for event in payload["events"]
     )
@@ -136,6 +139,79 @@ def plan_from_json(payload: dict, language: str = "en") -> LessonPlan:
         else None,
         events=events,
     )
+
+
+@dataclass(frozen=True)
+class Skill:
+    """Something a child can learn to do, and the skills it needs first."""
+
+    id: str
+    title: str
+    prerequisites: tuple[str, ...]
+    taught_by: str | None = None
+
+
+def load_skills() -> dict[str, Skill]:
+    from .lesson_plans.catalogue import SKILLS
+
+    return {
+        skill["id"]: Skill(
+            skill["id"],
+            skill["title"],
+            tuple(skill["prerequisites"]),
+            skill.get("taught_by"),
+        )
+        for skill in SKILLS
+    }
+
+
+def needs_first(skills: dict[str, Skill], skill_id: str) -> list[str]:
+    """Every skill this one rests on, the nearest first, each once. A skill that needs itself is not in its own list."""
+    seen: list[str] = []
+    queue = [p for p in skills[skill_id].prerequisites if p in skills]
+    while queue:
+        at = queue.pop(0)
+        if at not in seen and at != skill_id:
+            seen.append(at)
+            queue.extend(p for p in skills[at].prerequisites if p in skills)
+    return seen
+
+
+def _needs_itself(skills: dict[str, Skill], skill_id: str) -> bool:
+    """Whether following what a skill needs leads back to it."""
+    stack = [p for p in skills[skill_id].prerequisites if p in skills]
+    visited: set[str] = set()
+    while stack:
+        at = stack.pop()
+        if at == skill_id:
+            return True
+        if at not in visited:
+            visited.add(at)
+            stack.extend(p for p in skills[at].prerequisites if p in skills)
+    return False
+
+
+def check_skills(skills: dict[str, Skill], plans: dict[str, LessonPlan]) -> list[str]:
+    """Problems no schema can see: a skill that needs one that does not exist or needs itself, a skill
+    taught by a lesson that is not there, an event that names a skill that is not there."""
+    problems = []
+    for skill in skills.values():
+        for needed in skill.prerequisites:
+            if needed not in skills:
+                problems.append(f"{skill.id}: needs {needed}, which does not exist")
+        if _needs_itself(skills, skill.id):
+            problems.append(f"{skill.id}: needs itself")
+        if skill.taught_by is not None and skill.taught_by not in plans:
+            problems.append(
+                f"{skill.id}: taught by {skill.taught_by}, which does not exist"
+            )
+    for plan in plans.values():
+        for event in plan.events:
+            if event.skill is not None and event.skill not in skills:
+                problems.append(
+                    f"{plan.id}#{event.id}: names the skill {event.skill}, which does not exist"
+                )
+    return problems
 
 
 def load_plans(language: str = "en") -> dict[str, LessonPlan]:

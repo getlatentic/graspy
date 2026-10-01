@@ -312,3 +312,52 @@ def test_a_shorter_question_leads_to_a_question_of_the_same_kind():
         "is not the same kind of activity" in p
         for p in check_catalogue({unlike.id: unlike})
     )
+
+
+from app.voice.curriculum import Skill, check_skills, load_skills, needs_first
+
+
+def test_the_skills_the_lessons_name_form_a_graph_with_nothing_missing_and_no_loop():
+    skills, plans = load_skills(), load_plans()
+    assert check_skills(skills, plans) == []
+    assert len(skills) >= 12
+
+
+def test_what_a_skill_rests_on_is_found_nearest_first_across_the_whole_graph():
+    skills = load_skills()
+    assert needs_first(skills, "groups-of-five") == [
+        "skip-count-5",
+        "equal-groups",
+        "number-names-1-20",
+        "skip-count-10",
+        "number-names-1-10",
+    ]
+    assert needs_first(skills, "number-names-1-10") == []
+
+
+def test_every_activity_of_a_lesson_that_has_skills_names_one():
+    plans = load_plans()
+    for plan_id in (
+        "mathematics.number.counting-in-fives",
+        "mathematics.number.counting-in-sevens",
+    ):
+        for event in plans[plan_id].events:
+            assert (event.skill is not None) == (event.activity is not None), (
+                plan_id,
+                event.id,
+            )
+
+
+def test_a_broken_graph_is_refused():
+    plans = load_plans()
+    loop = {
+        "a": Skill("a", "A", ("b",)),
+        "b": Skill("b", "B", ("a",)),
+        "c": Skill("c", "C", ("nowhere",), "no.such.plan"),
+    }
+    problems = check_skills(loop, plans)
+    assert "a: needs itself" in problems and "b: needs itself" in problems
+    assert "c: needs nowhere, which does not exist" in problems
+    assert "c: taught by no.such.plan, which does not exist" in problems
+    stray = {"a": Skill("a", "A", ())}
+    assert any("names the skill" in p for p in check_skills(stray, plans))

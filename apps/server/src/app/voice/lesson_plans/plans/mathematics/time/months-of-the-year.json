@@ -114,7 +114,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "months-of-the-year"
     },
     {
       "id": "present",
@@ -187,7 +188,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "months-of-the-year"
     },
     {
       "id": "span",
@@ -292,7 +294,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "months-of-the-year"
     },
     {
       "id": "practice",
@@ -486,7 +489,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "months-of-the-year"
     },
     {
       "id": "feedback",
@@ -689,7 +693,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "months-of-the-year"
     },
     {
       "id": "retain",

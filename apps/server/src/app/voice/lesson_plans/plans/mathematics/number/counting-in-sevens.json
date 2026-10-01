@@ -166,7 +166,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "skip-count-5"
     },
     {
       "id": "present",
@@ -266,7 +267,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "skip-count-7"
     },
     {
       "id": "span",
@@ -293,7 +295,8 @@
             "14"
           ]
         }
-      }
+      },
+      "skill": "weeks-to-days"
     },
     {
       "id": "practice",
@@ -322,7 +325,8 @@
             "twenty eight"
           ]
         }
-      }
+      },
+      "skill": "weeks-to-days"
     },
     {
       "id": "feedback",
@@ -358,7 +362,8 @@
             "42"
           ]
         }
-      }
+      },
+      "skill": "weeks-to-days"
     },
     {
       "id": "retain",

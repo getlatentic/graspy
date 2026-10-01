@@ -155,7 +155,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "alphabet-order"
     },
     {
       "id": "present",
@@ -682,7 +683,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "alphabet-order"
     },
     {
       "id": "span",
@@ -956,7 +958,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "alphabet-order"
     },
     {
       "id": "practice",
@@ -1469,7 +1472,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "alphabet-order"
     },
     {
       "id": "feedback",
@@ -1991,7 +1995,8 @@
             }
           }
         ]
-      }
+      },
+      "skill": "alphabet-order"
     },
     {
       "id": "retain",

@@ -387,11 +387,11 @@ def test_a_recall_check_nobody_answered_is_asked_again_without_feedback_then_fol
     assert next_step(again) == "present"
 
 
-def test_a_recall_check_answered_wrongly_gets_its_feedback_and_is_then_followed_by_the_teaching():
+def test_a_recall_check_answered_wrongly_is_asked_again_without_the_plans_feedback_then_the_teaching_follows():
     start = [said(T1, "attention"), said(T1, "objective")]
     first = [*start, marked(T1, "recall", "try_again")]
-    assert next_step(first) == "feedback"
-    again = [*first, said(T1, "feedback"), marked(T1, "recall", "try_again")]
+    assert next_step(first) == "recall"
+    again = [*first, marked(T1, "recall", "try_again")]
     assert next_step(again) == "present"
 
 
@@ -419,22 +419,14 @@ def test_a_skipped_recall_leaves_no_feedback_owed_for_a_later_miss_to_spend():
     )
 
 
-def test_a_recall_check_failed_once_is_asked_again_after_its_feedback():
+def test_the_plans_feedback_speaks_of_its_own_practice_so_a_recall_miss_never_owes_it():
     start = [
         said(T1, "attention"),
         said(T1, "objective"),
         marked(T1, "recall", "try_again"),
     ]
-    progress = progress_by_plan(start, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, start)[0].event_id
-        == "feedback"
-    )
-    after = [*start, said(T1, "feedback")]
-    progress = progress_by_plan(after, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, after)[0].event_id == "recall"
-    )
+    state = progress_by_plan(start, PLANS, DAY_1)[T1]
+    assert state.feedback_owed == set() and state.guidance_owed == set()
 
 
 def test_two_misses_in_one_day_each_hear_their_own_feedback():
@@ -442,7 +434,7 @@ def test_two_misses_in_one_day_each_hear_their_own_feedback():
     feedback = plan.event_of("provide_feedback").id
     before = [said(T1, e) for e in ("attention", "objective")]
     failed_recall = [*before, marked(T1, "recall", "try_again")]
-    heard = [*failed_recall, said(T1, feedback), marked(T1, "recall", "correct")]
+    heard = [*failed_recall, marked(T1, "recall", "correct")]
     taught = [*heard, said(T1, "present"), said(T1, "guide")]
     failed_practice = [*taught, marked(T1, "practice", "try_again")]
     progress = progress_by_plan(failed_practice, PLANS, DAY_1)

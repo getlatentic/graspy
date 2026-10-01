@@ -222,6 +222,8 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "answered out loud. This is how you sound. Say it in this plain classroom way, with these words and",
     "this rhythm, about this answer:",
     ...exampleBlock(),
+    "These show how you sound only. Never use their words or numbers for this child: the <slots> are the",
+    "child's own list, answer or first step, and you fill them with what this question is about.",
     "",
     `You asked: ${ask.prompt}`,
     asked(ask.expect),
@@ -498,13 +500,16 @@ function saidFor(verdict: Verdict, ask: Ask): string {
  * code checks they said it and works out whether it is right. A child who only said the question back,
  * or whose words this reader cannot read, goes to the teacher below instead.
  */
+/** What a recogniser writes for a number said alone: a child answering "two" is heard as "to" often enough to matter. */
+const HOMOPHONES: Record<string, number> = { to: 2, too: 2, for: 4, fore: 4, won: 1, ate: 8 };
+
 async function markedFromPlainNumber(env: Env, ask: Ask): Promise<Reply | null> {
   if (ask.expect.kind !== "fact") return null;
   const expected = spokenNumber(expectedAnswer(ask.expect.item));
   if (expected === null) return null;
   const heard = heardForPrompt(ask.heard);
   if (heard === "") return marked(markAnswer(ask.expect.item, null), ask);
-  const answer = await answerHeard(env, heard);
+  const answer = HOMOPHONES[heard.toLowerCase().replace(/[^a-z]/g, "")] ?? (await answerHeard(env, heard));
   if (answer === null) return null;
   if (answer !== expected && factOperands(ask.expect.item).includes(answer)) return null;
   return marked(markAnswer(ask.expect.item, String(answer), true, ask.expect.accept ?? []), ask);
