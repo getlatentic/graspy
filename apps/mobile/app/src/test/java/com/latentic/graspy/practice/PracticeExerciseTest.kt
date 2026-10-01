@@ -56,4 +56,11 @@ class PracticeExerciseTest {
         assertEquals(PracticeExercise.Planned(prompt, "recitation", "mathematics"), exercise)
         assertEquals(exercise, PracticeExercise.forActivity(LessonActivity("sequence", prompt), "mathematics"))
     }
+
+    @Test
+    fun `the answer to a check said after the teacher is a plan prompt too`() {
+        val prompt = "echo.mathematics.time.days-of-the-week.recall"
+        val exercise = PracticeExercise.fromPromptId(prompt, task = "recitation", topic = "mathematics")
+        assertEquals(PracticeExercise.Planned(prompt, "recitation", "mathematics"), exercise)
+    }
 }

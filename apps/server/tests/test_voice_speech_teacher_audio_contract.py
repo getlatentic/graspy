@@ -233,3 +233,31 @@ def test_a_list_asked_again_from_where_it_broke_is_said_from_the_last_item_right
 def test_a_repair_prompt_that_names_nothing_asks_the_provider_nothing(utterance):
     with pytest.raises(ValueError, match="unsupported teacher utterance"):
         teacher_utterance(utterance, "en")
+
+
+def test_the_answer_to_a_check_is_said_for_the_child_to_say_after_the_teacher():
+    days = "echo.mathematics.time.days-of-the-week.recall"
+    assert (
+        teacher_utterance(days, "en").text
+        == "Say it after me: Sunday, Monday, Tuesday."
+    )
+    assert (
+        teacher_utterance(days, "pcm").text
+        == "Talk am after me: Sunday, Monday, Tuesday."
+    )
+    fives = "echo.mathematics.number.counting-in-fives.recall"
+    assert teacher_utterance(fives, "en").text == "Listen: ten. Now you say ten."
+    assert teacher_utterance(fives, "yo").text == "Gbọ́: ten. Ìwọ náà sọ ten."
+
+
+@pytest.mark.parametrize(
+    "utterance",
+    [
+        "echo.mathematics.time.days-of-the-week.practice",
+        "echo.mathematics.time.days-of-the-week.nowhere",
+        "echo.no.such.plan.recall",
+    ],
+)
+def test_an_echo_prompt_that_names_no_check_asks_the_provider_nothing(utterance):
+    with pytest.raises(ValueError, match="unsupported teacher utterance"):
+        teacher_utterance(utterance, "en")

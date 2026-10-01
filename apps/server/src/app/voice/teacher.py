@@ -12,11 +12,15 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from .curriculum import (
+    ECHO_PREFIX,
     LANGUAGES,
     REPAIR_PREFIX,
     LessonEvent,
     LessonPlan,
     activity_prompt_id,
+    echo_target,
+    echo_utterance_id,
+    echoable,
     repair_target,
     repair_utterance_id,
     repairable,
@@ -102,6 +106,8 @@ class Option:
     facts: tuple[int, ...] = ()
     # The item of a list the child's last try broke at, when the step is that list asked again from there.
     resume: str | None = None
+    # Whether the step is the check's answer said for the child to say after the teacher.
+    echo: bool = False
 
 
 @dataclass(frozen=True)
@@ -111,6 +117,7 @@ class Choice:
     reason: str
     facts: tuple[int, ...] = ()
     resume: str | None = None
+    echo: bool = False
 
 
 @dataclass
@@ -123,6 +130,12 @@ class PlanProgress:
     rung_owed: set[str] = field(default_factory=set)
     # Per list activity, the item its last wrong try broke at, after at least one item said rightly.
     resume_at: dict[str, str] = field(default_factory=dict)
+    # Per check of what the lesson builds on, how many tries in a row drew nothing right from the child.
+    blank_recall: dict[str, int] = field(default_factory=dict)
+    # The checks whose answer was said after the teacher, and those asked again since and not yet answered.
+    echoed: set[str] = field(default_factory=set)
+    recheck_due: set[str] = field(default_factory=set)
+    rechecked: set[str] = field(default_factory=set)
     # Misses in a row today per activity, counted while the child makes no progress: a wrong answer with
     # some facts right, or a right answer, starts the count again.
     failed_today: dict[str, int] = field(default_factory=dict)
@@ -231,6 +244,61 @@ def _record_unheard(
         state.paused_today = True
 
 
+def _showed_nothing(item: Evidence) -> bool:
+    """Whether a try drew nothing right from the child: not knowing and a wrong answer are the same
+    evidence that the skill is not there. A recording nobody could hear is not a try, and never gets here."""
+    return (
+        item.decision != "correct"
+        and not item.facts_right
+        and not (item.result or {}).get("said")
+    )
+
+
+def _record_echo(state: PlanProgress, item: Evidence, today: date) -> None:
+    """The check's answer was said after the teacher: it is asked again, to see what that did."""
+    if (
+        item.day == today
+        and item.decision is not None
+        and item.event_id not in state.rechecked
+    ):
+        state.echoed.add(item.event_id)
+        state.recheck_due.add(item.event_id)
+
+
+def _record_recall(
+    state: PlanProgress,
+    event: LessonEvent,
+    item: Evidence,
+    streaks: dict[tuple[str, str, date], int],
+    today: date,
+) -> None:
+    """What a try at the check of what the lesson builds on says about that skill.
+
+    Nothing right twice running owes the child the answer said after the teacher. A try after that
+    which still draws nothing leaves the lesson for tomorrow: the child is not taught on top of a
+    skill they do not have, and is not sent away with a failure either."""
+    key = (item.plan_id, f"{item.event_id}#blank", item.day)
+    blank = _showed_nothing(item)
+    streaks[key] = streaks.get(key, 0) + 1 if blank else 0
+    if item.day != today:
+        return
+    state.blank_recall[item.event_id] = streaks[key]
+    if item.event_id in state.recheck_due:
+        state.recheck_due.discard(item.event_id)
+        state.rechecked.add(item.event_id)
+        if blank:
+            state.paused_days.add(item.day)
+            state.paused_today = True
+
+
+def _echo_owed(state: PlanProgress, event: LessonEvent) -> bool:
+    return (
+        echoable(event)
+        and state.blank_recall.get(event.id, 0) >= RECALL_ATTEMPTS
+        and event.id not in state.echoed
+    )
+
+
 def _got_further(
     event: LessonEvent, before: str | None, now: str | None, missed_before: bool
 ) -> bool:
@@ -310,6 +378,8 @@ def _record_attempt(
     if event.event in PAUSING_EVENTS and misses >= PAUSE_AFTER:
         state.paused_days.add(item.day)
         state.paused_today = state.paused_today or item.day == today
+    if event.event == "stimulate_recall":
+        _record_recall(state, event, item, streaks, today)
     if item.day != today:
         return
     state.failed_today[item.event_id] = misses
@@ -336,6 +406,9 @@ def progress_by_plan(
         state, plan = progress[item.plan_id], plans[item.plan_id]
         event = plan.event(item.event_id)
         if _repaired_past_the_break(event, item, state):
+            continue
+        if item.prompt_id and item.prompt_id.startswith(ECHO_PREFIX):
+            _record_echo(state, item, today)
             continue
         state.last_day = (
             item.day if state.last_day is None else max(state.last_day, item.day)
@@ -448,11 +521,11 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
         # A shorter step is asked only while it is owed or being tried again.
         if event.support is not None and event.id not in state.retry_today:
             continue
-        if (
-            event.event == "stimulate_recall"
-            and state.failed_today.get(event.id, 0) >= RECALL_ATTEMPTS
-        ):
-            continue
+        if event.event == "stimulate_recall":
+            if event.id in state.recheck_due or _echo_owed(state, event):
+                return event
+            if state.failed_today.get(event.id, 0) >= RECALL_ATTEMPTS:
+                continue
         owed = state.facts_owed.get(event.id) or frozenset()
         if event.id in state.retry_today or owed:
             if event.id in state.guidance_owed:
@@ -465,6 +538,22 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
         if event.id not in state.done_today:
             return event
     return None
+
+
+def _step(
+    plan: LessonPlan, event: LessonEvent, why: str, state: PlanProgress
+) -> Option:
+    """One step of a lesson as it is offered now: with what is owed on it, asked again from where a list
+    broke, or as the check's answer said after the teacher."""
+    owed = state.facts_owed.get(event.id) or frozenset()
+    return Option(
+        plan.id,
+        event.id,
+        why,
+        tuple(sorted(owed)),
+        _resume_from(state, event),
+        _echo_owed(state, event),
+    )
 
 
 def _resume_from(state: PlanProgress, event: LessonEvent) -> str | None:
@@ -504,16 +593,7 @@ def next_options(
         event = next_event_in(plan, progress[plan.id])
         if event is not None:
             why = f"continue {plan.title['en']} at {event.event}"
-            owed = progress[plan.id].facts_owed.get(event.id) or frozenset()
-            return [
-                Option(
-                    plan.id,
-                    event.id,
-                    why,
-                    tuple(sorted(owed)),
-                    _resume_from(progress[plan.id], event),
-                )
-            ]
+            return [_step(plan, event, why, progress[plan.id])]
         if not progress[plan.id].reviewed_today:
             return []
     options: list[Option] = []
@@ -542,17 +622,8 @@ def _chosen_options(plans, progress, today, learner_class, chosen: str) -> list[
     event = next_event_in(plan, progress[plan.id])
     if event is None:
         return []
-    owed = progress[plan.id].facts_owed.get(event.id) or frozenset()
     why = f"open {plan.title['en']} at {event.event}"
-    return [
-        Option(
-            plan.id,
-            event.id,
-            why,
-            tuple(sorted(owed)),
-            _resume_from(progress[plan.id], event),
-        )
-    ]
+    return [_step(plan, event, why, progress[plan.id])]
 
 
 def decision_schema(options: list[Option]) -> dict:
@@ -616,6 +687,7 @@ def parse_choice(reply: dict, options: list[Option]) -> Choice:
         reason.strip() if isinstance(reason, str) else chosen.why,
         chosen.facts,
         chosen.resume,
+        chosen.echo,
     )
 
 
@@ -628,7 +700,12 @@ async def choose(
     if len(options) == 1:
         first = options[0]
         return Choice(
-            first.plan_id, first.event_id, first.why, first.facts, first.resume
+            first.plan_id,
+            first.event_id,
+            first.why,
+            first.facts,
+            first.resume,
+            first.echo,
         )
     prompt = decision_prompt(options, evidence, today, language)
     return parse_choice(await client.decide(prompt, decision_schema(options)), options)
@@ -664,6 +741,7 @@ def event_move(
     reason: str,
     facts: tuple[int, ...] = (),
     resume: str | None = None,
+    echo: bool = False,
 ) -> dict:
     """What the app renders: the note to play, what to show, and the activity to record for."""
     activity = None
@@ -689,7 +767,12 @@ def event_move(
         "show": event.show,
         "activity": activity,
         "reason": reason,
-    } | (narrowed_retry(event, facts) or repaired_list(plan, event, resume) or {})
+    } | (
+        narrowed_retry(event, facts)
+        or repaired_list(plan, event, resume)
+        or echoed_check(plan, event, echo)
+        or {}
+    )
 
 
 REST_MOVE = {
@@ -776,6 +859,8 @@ def answerable_prompts(plan: LessonPlan, event: LessonEvent) -> set[str]:
     """
     prompts = {activity_prompt_id(plan, event)}
     activity = event.activity
+    if echoable(event):
+        prompts.add(echo_utterance_id(plan.id, event.id))
     if repairable(event):
         ids = [item.id for item in activity.items]
         prompts |= {
@@ -830,6 +915,22 @@ def repaired_list(
             lang: teacher_utterance(utterance, lang).text for lang in LANGUAGES
         },
         "activity": {"kind": "sequence", "prompt_id": utterance},
+    }
+
+
+def echoed_check(plan: LessonPlan, event: LessonEvent, echo: bool) -> dict | None:
+    """The answer to a check said for the child to say after the teacher, in place of asking it again."""
+    if not echo:
+        return None
+    utterance = echo_utterance_id(plan.id, event.id)
+    if echo_target(utterance, {plan.id: plan}) is None:
+        return None
+    return {
+        "say": utterance,
+        "say_text": {
+            lang: teacher_utterance(utterance, lang).text for lang in LANGUAGES
+        },
+        "activity": {"kind": event.activity.kind, "prompt_id": utterance},
     }
 
 

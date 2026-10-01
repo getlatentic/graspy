@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from typing import Literal
 
 from ..curriculum import (
+    ECHO_PREFIX,
+    MOST_ECHOED,
     REPAIR_PREFIX,
+    echo_target,
     load_plans,
     plan_event_for_utterance,
     repair_target,
@@ -267,6 +270,30 @@ def _repair_text(utterance_id: str, language: str) -> str | None:
     return template.format(first=_item_words(first), last=_item_words(last))
 
 
+_ECHO_TEMPLATES = {
+    "en": ("Say it after me: {words}.", "Listen: {answer}. Now you say {answer}."),
+    "yo": ("Sọ ọ́ lẹ́yìn mi: {words}.", "Gbọ́: {answer}. Ìwọ náà sọ {answer}."),
+    "pcm": ("Talk am after me: {words}.", "Listen: {answer}. Now you talk {answer}."),
+}
+
+
+def _echo_text(utterance_id: str, language: str) -> str | None:
+    template = _ECHO_TEMPLATES.get(language)
+    if template is None or not utterance_id.startswith(ECHO_PREFIX):
+        return None
+    found = echo_target(utterance_id, load_plans(language))
+    if found is None:
+        return None
+    activity = found[1].activity
+    if activity.kind == "sequence":
+        words = ", ".join(_item_words(item.id) for item in activity.items[:MOST_ECHOED])
+        return template[0].format(words=words)
+    answer = activity.expected[0]
+    return template[1].format(
+        answer=number_words(int(answer)) if answer.isdigit() else answer
+    )
+
+
 def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
     text = (
         _TEXT.get(language, {}).get(utterance_id)
@@ -275,6 +302,7 @@ def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
         or _fact_text(utterance_id, language)
         or _plan_text(utterance_id, language)
         or _repair_text(utterance_id, language)
+        or _echo_text(utterance_id, language)
     )
     if text is None:
         raise ValueError("unsupported teacher utterance or language")

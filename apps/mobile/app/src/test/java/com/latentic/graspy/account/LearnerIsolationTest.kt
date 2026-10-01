@@ -42,9 +42,10 @@ class LearnerIsolationTest {
     fun `an answer to a list asked again from where it broke is a lesson turn like any other`() = runBlocking {
         answers.insert(answer("plan-1", ada))
         answers.insert(answer("repair-1", ada, promptId = "repair.mathematics.time.days-of-the-week.practice.friday"))
+        answers.insert(answer("echo-1", ada, promptId = "echo.mathematics.time.days-of-the-week.recall"))
         answers.insert(answer("other-1", ada, promptId = "mathematics.not-a-lesson"))
 
-        assertEquals(listOf("plan-1", "repair-1"), answers.observeLessonTurns(ada).first().map { it.localId })
+        assertEquals(listOf("plan-1", "repair-1", "echo-1"), answers.observeLessonTurns(ada).first().map { it.localId })
     }
 
     @Test

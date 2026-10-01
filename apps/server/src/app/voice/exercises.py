@@ -10,7 +10,13 @@ import secrets
 from dataclasses import dataclass
 from enum import Enum
 
-from .curriculum import load_plans, plan_event_for_utterance, repair_target
+from .curriculum import (
+    MOST_ECHOED,
+    echo_target,
+    load_plans,
+    plan_event_for_utterance,
+    repair_target,
+)
 from .recitation import RecitationExercise
 from .sequence import SequenceItem
 
@@ -124,6 +130,23 @@ def repair_exercise(prompt_id: str, language: str = "en"):
     )
 
 
+def echo_exercise(prompt_id: str, language: str = "en"):
+    """The answer to a check of what a lesson builds on, said after the teacher: marked as the check is."""
+    found = echo_target(prompt_id, load_plans(language))
+    if found is None:
+        return None
+    plan, event = found
+    activity = event.activity
+    if activity.kind == "sequence":
+        return SequenceExercise(
+            prompt_id,
+            plan.subject,
+            activity.items[:MOST_ECHOED],
+            memory_item=event.utterance_id(plan.id),
+        )
+    return SpokenAnswerExercise(prompt_id, plan.subject, activity.expected)
+
+
 def plan_exercise(prompt_id: str, language: str = "en"):
     found = plan_event_for_utterance(prompt_id, load_plans(language))
     if found is None:
@@ -193,6 +216,8 @@ def exercise_by_prompt_id(prompt_id: str, language: str = "en"):
         return plan_exercise(prompt_id, language)
     if prompt_id.startswith("repair."):
         return repair_exercise(prompt_id, language)
+    if prompt_id.startswith("echo."):
+        return echo_exercise(prompt_id, language)
     if prompt_id == SEVEN_TIMES_EIGHT.prompt_id:
         return SEVEN_TIMES_EIGHT
     if match := _FULL_RECITE.fullmatch(prompt_id):
