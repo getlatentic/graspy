@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { lineProblems } from "../src/guard";
 import { numberWords } from "../src/lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, allLines, exampleBlock, withNumber } from "../src/phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, allLines, exampleBlock, withNumber } from "../src/phrasebook";
 import { praiseLine } from "../src/praise";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -54,5 +54,31 @@ describe("the teacher's phrasebook", () => {
     const brief = seen.find((call) => call.includes("class teacher")) ?? "";
     for (const example of exampleBlock()) expect(brief).toContain(example.replace(/"/g, '\\"'));
     expect(exampleBlock().length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe("an answer said straight after the teacher", () => {
+  it("is acknowledged as said with her, never praised as known", () => {
+    const echoed: Ask = {
+      prompt: "Say it with me.",
+      heard: "five ten fifteen twenty",
+      language: "en",
+      support: "modelled",
+      expect: { kind: "sequence", item: "c", items: [{ id: "5", spoken: ["5", "five"] }] },
+    };
+    for (const prompt of ["a", "b", "c", "d", "e", "f"]) {
+      const line = praiseLine({ ...echoed, prompt }) as string;
+      expect(RIGHT_WITH_YOU).toContain(line);
+      expect(line).not.toMatch(/excellent|very good|every one|you know/i);
+    }
+  });
+
+  it("is told to the model so a reply it writes says the same", async () => {
+    const seen: string[] = [];
+    const env = {
+      AI: { run: async (_m: string, input: { messages: { content: string }[] }) => (seen.push(JSON.stringify(input.messages)), { choices: [{ message: { content: "", tool_calls: [] } }] }) },
+    } as unknown as Env;
+    await takeTurn(env, { prompt: "Say five.", heard: "five", language: "en", support: "modelled", expect: { kind: "fact", item: "5" } }).catch(() => undefined);
+    expect(seen.find((call) => call.includes("class teacher"))).toContain("repeating after you");
   });
 });

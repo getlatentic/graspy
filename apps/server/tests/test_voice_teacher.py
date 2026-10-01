@@ -961,3 +961,19 @@ def test_going_from_nothing_right_to_something_right_is_progress_not_a_second_mi
 def test_naming_where_it_broke_leaves_no_general_feedback_owed():
     state = progress_by_plan([*days_taught(), days_try(WEEK[:5])], PLANS, DAY_1)[DAYS]
     assert state.feedback_owed == set() and state.resume_at == {"practice": "friday"}
+
+
+def test_an_answer_to_the_guided_step_is_known_to_be_said_after_the_teacher():
+    from app.voice.worker_evaluation import _was_modelled
+
+    assert _was_modelled(
+        {"plan_id": "mathematics.time.days-of-the-week", "event_id": "guide"}
+    )
+    assert not _was_modelled(
+        {"plan_id": "mathematics.time.days-of-the-week", "event_id": "practice"}
+    )
+    assert not _was_modelled(
+        {"plan_id": "mathematics.time.days-of-the-week", "event_id": "assess"}
+    )
+    assert not _was_modelled({"plan_id": "no.such.plan", "event_id": "guide"})
+    assert not _was_modelled({})

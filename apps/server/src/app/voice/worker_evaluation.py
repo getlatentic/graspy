@@ -221,6 +221,15 @@ async def lesson_event_heard(env, learner: str, payload: dict):
     return _json({"plan_id": plan.id, "event_id": event_id})
 
 
+def _was_modelled(metadata: dict) -> bool:
+    """Whether the step was the teacher saying the words first for the child to say after her."""
+    plan = load_plans().get(str(metadata.get("plan_id")))
+    event = plan and next(
+        (e for e in plan.events if e.id == metadata.get("event_id")), None
+    )
+    return bool(event and event.event == "provide_guidance")
+
+
 def _asked_line(metadata: dict, language: str) -> str:
     """The words the child actually heard, so the teacher answers the question it asked."""
     prompt_id = str(metadata.get("prompt_id") or "")
@@ -254,6 +263,7 @@ async def _taught(env, learner, sample_id, metadata, activity, transcript, langu
             "heard": transcript,
             "language": language,
             "expect": expect,
+            **({"support": "modelled"} if _was_modelled(metadata) else {}),
         },
     )
     said = reply.get("said") or ""

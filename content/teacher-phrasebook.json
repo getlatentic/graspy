@@ -18,6 +18,11 @@
     "Yes! You said them all.",
     "Well done, my dear!"
   ],
+  "right_with_you": [
+    "Good, you said it with me.",
+    "That is it. Now you try it on your own.",
+    "Yes, with me. Now by yourself."
+  ],
   "examples": {
     "when they almost had it": [
       "Almost! Listen, then say it: one, two, three, four, five.",
