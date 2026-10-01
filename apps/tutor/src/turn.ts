@@ -67,8 +67,12 @@ export interface Ask {
   heard: string | null;
   language: string;
   expect: Expect;
-  /** "modelled" when the child said it straight after the teacher: that shows they can repeat it, not that they know it. */
-  support?: "modelled";
+  /**
+   * "modelled" when the child said it straight after the teacher: that shows they can repeat it, not that they
+   * know it. "probed" when they were asked for the next item before being told it: a wrong answer is not
+   * corrected here, for the next step says it.
+   */
+  support?: "modelled" | "probed";
 }
 
 export interface Reply {
@@ -249,6 +253,9 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "no answer, correct, incorrect, final number, recording, system, verdict or attempt.",
     ...(ask.support === "modelled"
       ? ["The child was repeating after you. Say they said it with you; do not praise it as knowing it."]
+      : []),
+    ...(ask.support === "probed"
+      ? ["You asked the child for the next one before telling them. If they were wrong, do not say it: say only that it was not it, and that you will help next."]
       : []),
     "When they were right, tell them so warmly. If they gave one number or one fact, say it so they",
     "hear it again; if they gave a list, do not say the list.",

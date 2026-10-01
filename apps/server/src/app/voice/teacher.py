@@ -14,16 +14,22 @@ from datetime import date
 from .curriculum import (
     ECHO_PREFIX,
     LANGUAGES,
+    PROBE_PREFIX,
     REPAIR_PREFIX,
+    SHOW_PREFIX,
     LessonEvent,
     LessonPlan,
     activity_prompt_id,
     echo_target,
     echo_utterance_id,
     echoable,
+    item_step_target,
+    probe_utterance_id,
+    probeable,
     repair_target,
     repair_utterance_id,
     repairable,
+    show_utterance_id,
 )
 from .exercises import MULTIPLIERS, fact_prompt_id
 from .lesson_store import lesson_day
@@ -98,16 +104,27 @@ class Evidence:
         return frozenset({multiplier})
 
 
+# How a step is asked when it is not the plan's own line: a list asked again from where it broke ("repair"),
+# the item it broke at asked for ("probe") or said after the teacher ("show"), or the check's answer said
+# after the teacher ("echo"). The second part is the item the list broke at, empty for an echo.
+Variant = tuple[str, str]
+
+
 @dataclass(frozen=True)
 class Option:
     plan_id: str
     event_id: str
     why: str
     facts: tuple[int, ...] = ()
-    # The item of a list the child's last try broke at, when the step is that list asked again from there.
-    resume: str | None = None
-    # Whether the step is the check's answer said for the child to say after the teacher.
-    echo: bool = False
+    variant: Variant | None = None
+
+    @property
+    def resume(self) -> str | None:
+        return self.variant[1] if self.variant and self.variant[0] == "repair" else None
+
+    @property
+    def echo(self) -> bool:
+        return bool(self.variant and self.variant[0] == "echo")
 
 
 @dataclass(frozen=True)
@@ -116,8 +133,15 @@ class Choice:
     event_id: str
     reason: str
     facts: tuple[int, ...] = ()
-    resume: str | None = None
-    echo: bool = False
+    variant: Variant | None = None
+
+    @property
+    def resume(self) -> str | None:
+        return self.variant[1] if self.variant and self.variant[0] == "repair" else None
+
+    @property
+    def echo(self) -> bool:
+        return bool(self.variant and self.variant[0] == "echo")
 
 
 @dataclass
@@ -135,6 +159,11 @@ class PlanProgress:
     echoed: set[str] = field(default_factory=set)
     recheck_due: set[str] = field(default_factory=set)
     rechecked: set[str] = field(default_factory=set)
+    # Per list activity, the item the child was last asked for before being told it ("probed"), whether they
+    # had it, and the item that was then said for them to say after the teacher ("shown").
+    probed: dict[str, str] = field(default_factory=dict)
+    probe_right: dict[str, bool] = field(default_factory=dict)
+    shown: dict[str, str] = field(default_factory=dict)
     # Misses in a row today per activity, counted while the child makes no progress: a wrong answer with
     # some facts right, or a right answer, starts the count again.
     failed_today: dict[str, int] = field(default_factory=dict)
@@ -245,6 +274,47 @@ def _showed_nothing(item: Evidence) -> bool:
         and not item.facts_right
         and not (item.result or {}).get("said")
     )
+
+
+def _is_side_step(item: Evidence) -> bool:
+    return bool(item.prompt_id) and item.prompt_id.startswith(
+        (ECHO_PREFIX, PROBE_PREFIX, SHOW_PREFIX)
+    )
+
+
+def _record_side_step(
+    state: PlanProgress,
+    event: LessonEvent,
+    item: Evidence,
+    streaks: dict[tuple[str, str, date], int],
+    today: date,
+) -> None:
+    """An answer to a question asked on the way back to the plan's own. It earns nothing towards the event,
+    changes nothing about it (it is not done, not owed, not a try), and only says how the way back is going.
+    One that names a break the child's list did not have is ignored: it was claimed, not asked."""
+    if item.day != today or item.decision is None:
+        return
+    prompt = item.prompt_id
+    broke_at = prompt.rpartition(".")[2]
+    if not prompt.startswith(ECHO_PREFIX) and broke_at != state.resume_at.get(
+        item.event_id
+    ):
+        return
+    if item.unheard:
+        key = (item.plan_id, f"{item.event_id}#unheard", item.day)
+        streaks[key] = streaks.get(key, 0) + 1
+        if streaks[key] >= UNHEARD_LIMIT:
+            state.paused_days.add(item.day)
+            state.paused_today = True
+        return
+    streaks[(item.plan_id, f"{item.event_id}#unheard", item.day)] = 0
+    if prompt.startswith(ECHO_PREFIX):
+        _record_echo(state, item, today)
+    elif prompt.startswith(PROBE_PREFIX):
+        state.probed[item.event_id] = broke_at
+        state.probe_right[item.event_id] = item.decision == "correct"
+    else:
+        state.shown[item.event_id] = broke_at
 
 
 def _record_echo(state: PlanProgress, item: Evidence, today: date) -> None:
@@ -377,6 +447,9 @@ def _record_attempt(
     if item.decision == "correct":
         state.retry_today.discard(item.event_id)
         state.resume_at.pop(item.event_id, None)
+        state.probed.pop(item.event_id, None)
+        state.probe_right.pop(item.event_id, None)
+        state.shown.pop(item.event_id, None)
         return
     if broke_at is not None:
         state.resume_at[item.event_id] = broke_at
@@ -398,8 +471,8 @@ def progress_by_plan(
         event = plan.event(item.event_id)
         if _repaired_past_the_break(event, item, state):
             continue
-        if item.prompt_id and item.prompt_id.startswith(ECHO_PREFIX):
-            _record_echo(state, item, today)
+        if _is_side_step(item):
+            _record_side_step(state, event, item, streaks, today)
             continue
         state.last_day = (
             item.day if state.last_day is None else max(state.last_day, item.day)
@@ -533,22 +606,25 @@ def next_event_in(plan: LessonPlan, state: PlanProgress) -> LessonEvent | None:
 def _step(
     plan: LessonPlan, event: LessonEvent, why: str, state: PlanProgress
 ) -> Option:
-    """One step of a lesson as it is offered now: with what is owed on it, asked again from where a list
-    broke, or as the check's answer said after the teacher."""
+    """One step of a lesson as it is offered now: with what is owed on it, and how it is asked."""
     owed = state.facts_owed.get(event.id) or frozenset()
-    return Option(
-        plan.id,
-        event.id,
-        why,
-        tuple(sorted(owed)),
-        _resume_from(state, event),
-        _echo_owed(state, event),
-    )
+    return Option(plan.id, event.id, why, tuple(sorted(owed)), _variant(state, event))
 
 
-def _resume_from(state: PlanProgress, event: LessonEvent) -> str | None:
-    """Where a list the child just got partly wrong is asked again from, while it is being retried."""
-    return state.resume_at.get(event.id) if event.id in state.retry_today else None
+def _variant(state: PlanProgress, event: LessonEvent) -> Variant | None:
+    """How the step is asked now. A check the child showed nothing of is answered for them first. A list
+    that broke is repaired least help first: the item it broke at is asked for, then said for them if they
+    could not give it, and only then is the list asked again from the last item they had right."""
+    if _echo_owed(state, event):
+        return ("echo", "")
+    broke_at = state.resume_at.get(event.id) if event.id in state.retry_today else None
+    if broke_at is None:
+        return None
+    if probeable(event) and state.probed.get(event.id) != broke_at:
+        return ("probe", broke_at)
+    if not state.probe_right.get(event.id) and state.shown.get(event.id) != broke_at:
+        return ("show", broke_at)
+    return ("repair", broke_at)
 
 
 def next_options(
@@ -676,8 +752,7 @@ def parse_choice(reply: dict, options: list[Option]) -> Choice:
         chosen.event_id,
         reason.strip() if isinstance(reason, str) else chosen.why,
         chosen.facts,
-        chosen.resume,
-        chosen.echo,
+        chosen.variant,
     )
 
 
@@ -694,8 +769,7 @@ async def choose(
             first.event_id,
             first.why,
             first.facts,
-            first.resume,
-            first.echo,
+            first.variant,
         )
     prompt = decision_prompt(options, evidence, today, language)
     return parse_choice(await client.decide(prompt, decision_schema(options)), options)
@@ -730,8 +804,7 @@ def event_move(
     event: LessonEvent,
     reason: str,
     facts: tuple[int, ...] = (),
-    resume: str | None = None,
-    echo: bool = False,
+    variant: Variant | None = None,
 ) -> dict:
     """What the app renders: the note to play, what to show, and the activity to record for."""
     activity = None
@@ -757,12 +830,7 @@ def event_move(
         "show": event.show,
         "activity": activity,
         "reason": reason,
-    } | (
-        narrowed_retry(event, facts)
-        or repaired_list(plan, event, resume)
-        or echoed_check(plan, event, echo)
-        or {}
-    )
+    } | (narrowed_retry(event, facts) or asked_another_way(plan, event, variant) or {})
 
 
 REST_MOVE = {
@@ -853,9 +921,8 @@ def answerable_prompts(plan: LessonPlan, event: LessonEvent) -> set[str]:
         prompts.add(echo_utterance_id(plan.id, event.id))
     if repairable(event):
         ids = [item.id for item in activity.items]
-        prompts |= {
-            repair_utterance_id(plan.id, event.id, item_id) for item_id in ids[1:]
-        }
+        for make in (repair_utterance_id, probe_utterance_id, show_utterance_id):
+            prompts |= {make(plan.id, event.id, item_id) for item_id in ids[1:]}
     if activity is None or activity.kind != "existing":
         return prompts
     match = RECITED_TABLE.fullmatch(activity.prompt_id)
@@ -890,38 +957,43 @@ def narrowed_retry(event: LessonEvent, facts: tuple[int, ...]) -> dict | None:
     }
 
 
-def repaired_list(
-    plan: LessonPlan, event: LessonEvent, broke_at: str | None
+def _another_way(plan: LessonPlan, utterance: str, kind: str) -> dict:
+    """A step asked in a way the plan did not write: the line to say, in every language, and what it asks for."""
+    return {
+        "say": utterance,
+        "say_text": {
+            lang: teacher_utterance(utterance, lang).text for lang in LANGUAGES
+        },
+        "activity": {"kind": kind, "prompt_id": utterance},
+    }
+
+
+def asked_another_way(
+    plan: LessonPlan, event: LessonEvent, variant: Variant | None
 ) -> dict | None:
-    """A list asked again from the last item the child had right, in place of the whole list."""
-    if broke_at is None:
+    """The step as the variant asks it, or None when the plans do not have what the variant names."""
+    if variant is None:
         return None
-    utterance = repair_utterance_id(plan.id, event.id, broke_at)
-    if repair_target(utterance, {plan.id: plan}) is None:
-        return None
-    return {
-        "say": utterance,
-        "say_text": {
-            lang: teacher_utterance(utterance, lang).text for lang in LANGUAGES
-        },
-        "activity": {"kind": "sequence", "prompt_id": utterance},
+    how, item = variant
+    if how == "echo":
+        utterance = echo_utterance_id(plan.id, event.id)
+        found = echo_target(utterance, {plan.id: plan})
+        return _another_way(plan, utterance, event.activity.kind) if found else None
+    makers = {
+        "repair": (repair_utterance_id, "sequence", None),
+        "probe": (probe_utterance_id, "answer", PROBE_PREFIX),
+        "show": (show_utterance_id, "answer", SHOW_PREFIX),
     }
-
-
-def echoed_check(plan: LessonPlan, event: LessonEvent, echo: bool) -> dict | None:
-    """The answer to a check said for the child to say after the teacher, in place of asking it again."""
-    if not echo:
+    if how not in makers:
         return None
-    utterance = echo_utterance_id(plan.id, event.id)
-    if echo_target(utterance, {plan.id: plan}) is None:
-        return None
-    return {
-        "say": utterance,
-        "say_text": {
-            lang: teacher_utterance(utterance, lang).text for lang in LANGUAGES
-        },
-        "activity": {"kind": event.activity.kind, "prompt_id": utterance},
-    }
+    make, kind, prefix = makers[how]
+    utterance = make(plan.id, event.id, item)
+    found = (
+        repair_target(utterance, {plan.id: plan})
+        if prefix is None
+        else item_step_target(utterance, prefix, {plan.id: plan})
+    )
+    return _another_way(plan, utterance, kind) if found else None
 
 
 def evidence_from_rows(

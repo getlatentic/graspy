@@ -1,6 +1,6 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, WRONG_NUMBER, withNumber } from "./phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, NOT_QUITE, WRONG_NUMBER, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
 import type { Ask } from "./turn";
@@ -52,6 +52,7 @@ export function praiseLine(ask: Ask): string | null {
  */
 export function correctionLine(ask: Ask): string | null {
   if (ask.language !== "en" || ask.expect.kind !== "fact") return null;
+  if (ask.support === "probed") return pick(NOT_QUITE, ask);
   const number = spokenNumber(expectedAnswer(ask.expect.item));
   if (number === null) return null;
   const lines = WRONG_NUMBER.map((line) => withNumber(line, numberWords(number)));

@@ -261,3 +261,80 @@ def test_the_answer_to_a_check_is_said_for_the_child_to_say_after_the_teacher():
 def test_an_echo_prompt_that_names_no_check_asks_the_provider_nothing(utterance):
     with pytest.raises(ValueError, match="unsupported teacher utterance"):
         teacher_utterance(utterance, "en")
+
+
+def test_the_item_a_list_broke_at_is_asked_for_and_then_said_for_the_child_to_say_after_the_teacher():
+    days = "mathematics.time.days-of-the-week"
+    probe, show = f"probe.{days}.practice.friday", f"show.{days}.practice.friday"
+    assert teacher_utterance(probe, "en").text == "What comes after Thursday?"
+    assert (
+        teacher_utterance(show, "en").text == "After Thursday comes Friday. Say Friday."
+    )
+    assert teacher_utterance(probe, "pcm").text == "Wetin dey come after Thursday?"
+    assert (
+        teacher_utterance(show, "yo").text == "Lẹ́yìn Thursday ni Friday wà. Sọ Friday."
+    )
+    count = "mathematics.number.counting-to-twenty"
+    assert (
+        teacher_utterance(f"probe.{count}.practice.17", "en").text
+        == "What comes after sixteen?"
+    )
+    letters = "english.alphabet.saying-the-alphabet"
+    assert (
+        teacher_utterance(f"probe.{letters}.practice.m", "en").text
+        == "What comes after the letter L?"
+    )
+
+
+@pytest.mark.parametrize(
+    "utterance",
+    [
+        "probe.mathematics.time.days-of-the-week.practice.sunday",
+        "show.mathematics.time.days-of-the-week.practice.sunday",
+        "probe.mathematics.time.days-of-the-week.assess.friday",
+        "show.mathematics.time.days-of-the-week.guide.friday",
+        "probe.mathematics.time.days-of-the-week.span.friday",
+        "show.mathematics.time.days-of-the-week.practice.nowhere",
+        "probe.no.such.plan.practice.friday",
+    ],
+)
+def test_a_probe_or_show_prompt_that_names_nothing_asks_the_provider_nothing(utterance):
+    with pytest.raises(ValueError, match="unsupported teacher utterance"):
+        teacher_utterance(utterance, "en")
+
+
+def test_a_probe_for_a_number_never_calls_it_a_letter_and_names_the_step_when_counting_in_steps():
+    ten = "mathematics.number.counting-to-ten"
+    assert (
+        teacher_utterance(f"probe.{ten}.practice.3", "en").text
+        == "What comes after two?"
+    )
+    assert (
+        teacher_utterance(f"probe.{ten}.practice.3", "pcm").text
+        == "Wetin dey come after two?"
+    )
+    twos = "mathematics.number.counting-in-twos"
+    assert (
+        teacher_utterance(f"probe.{twos}.practice.4", "en").text
+        == "Counting in twos, what comes after two?"
+    )
+    tens = "mathematics.number.counting-in-tens"
+    assert (
+        teacher_utterance(f"probe.{tens}.practice.20", "en").text
+        == "Counting in tens, what comes after ten?"
+    )
+    letters = "english.alphabet.saying-the-alphabet"
+    assert (
+        teacher_utterance(f"probe.{letters}.practice.c", "en").text
+        == "What comes after the letter B?"
+    )
+
+
+def test_the_primes_are_told_not_asked_for_because_they_follow_no_rule_a_child_could_use():
+    primes = "mathematics.number.prime-numbers"
+    with pytest.raises(ValueError, match="unsupported teacher utterance"):
+        teacher_utterance(f"probe.{primes}.practice.3", "en")
+    assert (
+        teacher_utterance(f"show.{primes}.practice.3", "en").text
+        == "After two comes three. Say three."
+    )

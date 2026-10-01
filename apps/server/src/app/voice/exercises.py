@@ -12,7 +12,10 @@ from enum import Enum
 
 from .curriculum import (
     MOST_ECHOED,
+    PROBE_PREFIX,
+    SHOW_PREFIX,
     echo_target,
+    item_step_target,
     load_plans,
     plan_event_for_utterance,
     repair_target,
@@ -130,6 +133,15 @@ def repair_exercise(prompt_id: str, language: str = "en"):
     )
 
 
+def item_step_exercise(prompt_id: str, prefix: str, language: str = "en"):
+    """The item a list broke at, asked for or said after the teacher: one answer, the item's own spellings."""
+    found = item_step_target(prompt_id, prefix, load_plans(language))
+    if found is None:
+        return None
+    plan, _, _, broken = found
+    return SpokenAnswerExercise(prompt_id, plan.subject, tuple(broken.spoken))
+
+
 def echo_exercise(prompt_id: str, language: str = "en"):
     """The answer to a check of what a lesson builds on, said after the teacher: marked as the check is."""
     found = echo_target(prompt_id, load_plans(language))
@@ -219,6 +231,9 @@ def exercise_by_prompt_id(prompt_id: str, language: str = "en"):
         return repair_exercise(prompt_id, language)
     if prompt_id.startswith("echo."):
         return echo_exercise(prompt_id, language)
+    if prompt_id.startswith((PROBE_PREFIX, SHOW_PREFIX)):
+        prefix = PROBE_PREFIX if prompt_id.startswith(PROBE_PREFIX) else SHOW_PREFIX
+        return item_step_exercise(prompt_id, prefix, language)
     if prompt_id == SEVEN_TIMES_EIGHT.prompt_id:
         return SEVEN_TIMES_EIGHT
     if match := _FULL_RECITE.fullmatch(prompt_id):

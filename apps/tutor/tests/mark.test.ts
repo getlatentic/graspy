@@ -88,3 +88,17 @@ describe("a reading that is not an answer at all", () => {
     expect(markAnswer("ball", "bat").verdict).toBe("wrong");
   });
 });
+
+describe("a word answer", () => {
+  it("is the same however the recogniser punctuated it or led into it", () => {
+    for (const said of ["Friday.", "friday!", "It's Friday", "it is friday", "on Friday", " FRIDAY "]) {
+      expect(markAnswer("friday", said, true, ["friday"]).verdict, said).toBe("correct");
+    }
+    expect(markAnswer("b", "Bee.", true, ["b", "bee"]).verdict).toBe("correct");
+  });
+
+  it("is still wrong when it is another word, or has more in it than the answer", () => {
+    expect(markAnswer("friday", "Saturday.", true, ["friday"]).verdict).toBe("wrong");
+    expect(markAnswer("friday", "friday saturday", true, ["friday"]).verdict).toBe("wrong");
+  });
+});

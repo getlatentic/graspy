@@ -231,14 +231,24 @@ def _was_modelled(metadata: dict) -> bool:
     )
     return bool(
         (event and event.event == "provide_guidance")
-        or str(metadata.get("prompt_id") or "").startswith("echo.")
+        or str(metadata.get("prompt_id") or "").startswith(("echo.", "show."))
     )
+
+
+def _support_asked(metadata: dict) -> dict:
+    """What the tutor is told about the help behind the question: said first for the child to say after her,
+    or the next item asked for before it is said."""
+    if _was_modelled(metadata):
+        return {"support": "modelled"}
+    if str(metadata.get("prompt_id") or "").startswith("probe."):
+        return {"support": "probed"}
+    return {}
 
 
 def _asked_line(metadata: dict, language: str) -> str:
     """The words the child actually heard, so the teacher answers the question it asked."""
     prompt_id = str(metadata.get("prompt_id") or "")
-    if prompt_id.startswith(("repair.", "echo.")):
+    if prompt_id.startswith(("repair.", "echo.", "probe.", "show.")):
         try:
             return teacher_utterance(prompt_id, language).text
         except ValueError:
@@ -268,7 +278,7 @@ async def _taught(env, learner, sample_id, metadata, activity, transcript, langu
             "heard": transcript,
             "language": language,
             "expect": expect,
-            **({"support": "modelled"} if _was_modelled(metadata) else {}),
+            **_support_asked(metadata),
         },
     )
     said = reply.get("said") or ""

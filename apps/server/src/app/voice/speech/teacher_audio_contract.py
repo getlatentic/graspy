@@ -6,8 +6,12 @@ from typing import Literal
 from ..curriculum import (
     ECHO_PREFIX,
     MOST_ECHOED,
+    PROBE_PREFIX,
     REPAIR_PREFIX,
+    SHOW_PREFIX,
     echo_target,
+    item_step_target,
+    list_step,
     load_plans,
     plan_event_for_utterance,
     repair_target,
@@ -294,6 +298,54 @@ def _echo_text(utterance_id: str, language: str) -> str | None:
     )
 
 
+_PROBE_TEMPLATES = {
+    "en": (
+        "What comes after {anchor}?",
+        "What comes after the letter {anchor}?",
+        "Counting in {step}, what comes after {anchor}?",
+    ),
+    "yo": (
+        "Kí ló tẹ̀lé {anchor}?",
+        "Kí ló tẹ̀lé lẹ́tà {anchor}?",
+        "Tí a bá ń ka {step}, kí ló tẹ̀lé {anchor}?",
+    ),
+    "pcm": (
+        "Wetin dey come after {anchor}?",
+        "Wetin dey come after letter {anchor}?",
+        "If we dey count {step}, wetin dey come after {anchor}?",
+    ),
+}
+_SHOW_TEMPLATES = {
+    "en": "After {anchor} comes {next}. Say {next}.",
+    "yo": "Lẹ́yìn {anchor} ni {next} wà. Sọ {next}.",
+    "pcm": "After {anchor} na {next} dey come. Talk {next}.",
+}
+
+
+def _item_step_text(utterance_id: str, language: str) -> str | None:
+    if utterance_id.startswith(PROBE_PREFIX):
+        prefix, templates = PROBE_PREFIX, _PROBE_TEMPLATES.get(language)
+    elif utterance_id.startswith(SHOW_PREFIX):
+        prefix, templates = SHOW_PREFIX, _SHOW_TEMPLATES.get(language)
+    else:
+        return None
+    if templates is None:
+        return None
+    found = item_step_target(utterance_id, prefix, load_plans(language))
+    if found is None:
+        return None
+    _, _, anchor, broken = found
+    a, b = _item_words(anchor.id), _item_words(broken.id)
+    if prefix == PROBE_PREFIX:
+        step = list_step(found[1].activity.items)
+        if step is not None and step != 1:
+            return templates[2].format(anchor=a, step=f"{number_words(step)}s")
+        return templates[
+            1 if anchor.id.isalpha() and len(anchor.id) == 1 else 0
+        ].format(anchor=a)
+    return templates.format(anchor=a, next=b)
+
+
 def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
     text = (
         _TEXT.get(language, {}).get(utterance_id)
@@ -303,6 +355,7 @@ def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:
         or _plan_text(utterance_id, language)
         or _repair_text(utterance_id, language)
         or _echo_text(utterance_id, language)
+        or _item_step_text(utterance_id, language)
     )
     if text is None:
         raise ValueError("unsupported teacher utterance or language")

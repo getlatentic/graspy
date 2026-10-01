@@ -74,9 +74,16 @@ export function expectedAnswer(item: string): string {
 export function sameAnswer(said: string, expected: string): boolean {
   const wanted = spokenNumber(expected);
   if (wanted !== null) return spokenNumber(said) === wanted;
-  return said.trim().toLowerCase().split(/\s+/).join(" ")
-    === expected.trim().toLowerCase().split(/\s+/).join(" ");
+  const plain = (text: string) => {
+    const words = text.toLowerCase().replace(/['\u2019]/g, "").replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
+    const kept = words.filter((word) => !LEADING_FILLER.has(word));
+    return (kept.length > 0 ? kept : words).join(" ");
+  };
+  return plain(said) === plain(expected);
 }
+
+/** A word answer is the same however the recogniser punctuated it, and "it's Friday" is Friday. */
+const LEADING_FILLER = new Set(["it", "its", "is", "the", "um", "uh", "er", "erm", "on", "a"]);
 
 /**
  * Judge one spoken answer against one item.
