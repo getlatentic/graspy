@@ -108,13 +108,25 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(JSON.stringify(seen[0])).toContain("praise them");
   });
 
-  it("asks the teacher to think briefly, which keeps a reply to a few seconds, and the judge to think in full", async () => {
+  it("asks the teacher and the kindness judge to think briefly, which keeps a reply to a few seconds", async () => {
     const { env, efforts } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);
 
     await takeTurn(env, ask);
 
-    expect(efforts.filter((effort) => effort === "low")).toHaveLength(2);
-    expect(efforts.filter((effort) => effort !== "low")).toEqual([undefined]);
+    expect(efforts.filter((effort) => effort === "low")).toHaveLength(3);
+    expect(efforts.filter((effort) => effort !== "low")).toEqual([]);
+  });
+
+  it("keeps the marked answer and says the steady line when a check cannot run", async () => {
+    const { env } = tutor([marked, call("say_it", { text: "Well done! You said nine." }), call("say_it", { text: "Well done! Nine." })]);
+    const failing = {
+      AI: { run: (model: string, input: never) => (model === SAFETY_MODEL ? Promise.reject(new Error("guard is down")) : (env.AI as { run: Function }).run(model, input)) },
+    } as unknown as Env;
+
+    const reply = await takeTurn(failing, ask);
+
+    expect(reply.verdict).toBe("correct");
+    expect(reply.say).toBe(praiseLine(ask));
   });
 
   it("sends a line with grown-up words back, and speaks the rewrite", async () => {

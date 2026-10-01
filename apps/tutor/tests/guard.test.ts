@@ -78,6 +78,15 @@ describe("the kindness judge", () => {
     expect(await fitForChild(judgeSaying({ fit: true, reason: "kind" }, "response"), "nine", "Well done!")).toBe(true);
   });
 
+  it("asks for little reasoning, since a yes or no is all it gives", async () => {
+    const asked: Record<string, unknown>[] = [];
+    const env = {
+      AI: { run: async (_model: string, input: Record<string, unknown>) => (asked.push(input), { choices: [{ message: { content: '{"fit": true}' } }] }) },
+    } as unknown as Env;
+    await fitForChild(env, "nine", "Well done!");
+    expect(asked[0].reasoning_effort).toBe("low");
+  });
+
   it("refuses an unfit line and any reply it cannot read", async () => {
     expect(await fitForChild(judgeSaying('{"fit": false, "reason": "shaming"}'), "eight", "...")).toBe(false);
     expect(await fitForChild(judgeSaying("{not json"), "eight", "...")).toBe(false);
