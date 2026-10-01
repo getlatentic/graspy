@@ -40,12 +40,21 @@ NUMBER_WORDS = frozenset(
         "eighty",
         "ninety",
         "hundred",
+        "thousand",
+        "million",
+        "nought",
+        "nil",
+        "dozen",
     ]
 )
+JOINING = frozenset({"and", "point"})
 # A single spoken number is a word or two; anything longer is a sentence, which Whisper reads well.
 MOST_WORDS = 4
+MOST_NUMBER_WORDS = 6
+# The child saying they cannot or will not, and what Whisper writes for silence: not an answer to be reread.
 NOT_AN_ANSWER = re.compile(
-    r"\b(know|remember|forgot|sure|idea|can'?t|cannot|don'?t|no)\b", re.IGNORECASE
+    r"\b(know|remember|forgot|sure|idea|can'?t|cannot|don'?t|no|thanks?|okay|ok|hello|hi)\b",
+    re.IGNORECASE,
 )
 
 
@@ -55,6 +64,17 @@ def _words(text: str) -> list[str]:
 
 def carries_a_number(text: str) -> bool:
     return any(word.isdigit() or word in NUMBER_WORDS for word in _words(text))
+
+
+def reads_as_a_number(text: str) -> bool:
+    """Only a few words, every one of them a number or what joins one ("twenty one", "10", "one hundred and
+    five"): a sentence that happens to hold a number word ("one more time") is no reading of a number."""
+    words = _words(text)
+    return (
+        0 < len(words) <= MOST_NUMBER_WORDS
+        and all(w.isdigit() or w in NUMBER_WORDS or w in JOINING for w in words)
+        and carries_a_number(text)
+    )
 
 
 def expects_a_number(exercise) -> bool:

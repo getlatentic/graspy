@@ -13,7 +13,7 @@ import json
 import logging
 import time
 
-from .second_opinion import carries_a_number
+from .second_opinion import reads_as_a_number
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,9 @@ WHISPER_TIMEOUT_SECONDS = 6
 # Workers AI answers some recordings with a decode error that a second ask does not repeat. A slow
 # answer is not asked for again: it says Whisper is slow, not that the recording was bad.
 WHISPER_TRIES = 2
+# Intron answers in under two seconds as a rule; a second opinion that takes longer is not waited for, since
+# Whisper's own reading stands without it, and it is asked once, so a rate limit is not asked twice.
+SECOND_OPINION_SECONDS = 4
 ENGLISH_ASRS = ("whisper", "intron")
 
 
@@ -69,11 +72,14 @@ async def _intron_reading(
 ) -> str | None:
     """What Intron heard when it was asked for a second opinion, or None: that ask failing is not the child's."""
     try:
-        transcript, _ = await intron(audio, "en", api_key, file_name)
+        transcript, _ = await asyncio.wait_for(
+            intron(audio, "en", api_key, file_name, hedge=False),
+            timeout=SECOND_OPINION_SECONDS,
+        )
     except Exception:
         logger.warning("Intron gave no second opinion", exc_info=True)
         return None
-    return transcript if carries_a_number(transcript) else None
+    return transcript if reads_as_a_number(transcript) else None
 
 
 async def transcribe_english(

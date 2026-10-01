@@ -1,5 +1,6 @@
 """English is heard by Whisper first, with Intron as the second opinion."""
 
+import asyncio
 from types import SimpleNamespace
 
 import pytest
@@ -34,7 +35,7 @@ class Ai:
 def intron(text="1, 2, 3"):
     calls = []
 
-    async def ask(audio, language, api_key, file_name):
+    async def ask(audio, language, api_key, file_name, hedge=True):
         calls.append((language, api_key, file_name))
         return text, 900
 
@@ -227,7 +228,7 @@ async def test_whispers_reading_stands_when_intron_read_no_number_or_could_not_b
     )
     assert (text, heard_by) == ("Then", "whisper")
 
-    async def fails(audio, language, key, name):
+    async def fails(audio, language, key, name, hedge=True):
         raise RuntimeError("HTTP 429")
 
     text, _, heard_by = await transcribe_english(
@@ -242,3 +243,83 @@ async def test_intron_is_not_asked_when_no_second_opinion_is_wanted():
     text, _, heard_by = await transcribe_english(env(ai), b"a", "key", "s.wav", ask)
     assert (text, heard_by) == ("Then", "whisper")
     assert ask.calls == []
+
+
+@pytest.mark.asyncio
+async def test_a_sentence_with_a_number_word_in_it_is_no_second_reading_of_a_number():
+    for said in (
+        "one more time please",
+        "I need to go to the toilet number one",
+        "say it one more time",
+    ):
+        text, _, heard_by = await transcribe_english(
+            env(Ai({"text": "Then"})),
+            b"a",
+            "key",
+            "s.wav",
+            intron(said),
+            _numbers_wanted,
+        )
+        assert (text, heard_by) == ("Then", "whisper"), said
+    for said in ("twenty one", "10.", "one hundred and five", "02"):
+        _, _, heard_by = await transcribe_english(
+            env(Ai({"text": "Then"})),
+            b"a",
+            "key",
+            "s.wav",
+            intron(said),
+            _numbers_wanted,
+        )
+        assert heard_by == "intron_sync", said
+
+
+@pytest.mark.asyncio
+async def test_a_second_opinion_that_is_slow_is_not_waited_for_and_is_asked_once(
+    monkeypatch,
+):
+    monkeypatch.setattr(whisper_asr, "SECOND_OPINION_SECONDS", 0.01)
+    asked = []
+
+    async def hangs(audio, language, key, name, hedge=True):
+        asked.append(hedge)
+        await asyncio.sleep(1)
+
+    text, _, heard_by = await transcribe_english(
+        env(Ai({"text": "Then"})), b"a", "key", "s.wav", hangs, _numbers_wanted
+    )
+    assert (text, heard_by) == ("Then", "whisper")
+    assert asked == [False]
+
+
+@pytest.mark.asyncio
+async def test_a_recording_intron_finds_no_speech_in_leaves_whispers_reading():
+    from app.voice.speech.intron_sync import NoSpeechError
+
+    async def silent(audio, language, key, name, hedge=True):
+        raise NoSpeechError("no speech")
+
+    text, _, heard_by = await transcribe_english(
+        env(Ai({"text": "Then"})), b"a", "key", "s.wav", silent, _numbers_wanted
+    )
+    assert (text, heard_by) == ("Then", "whisper")
+
+
+@pytest.mark.asyncio
+async def test_intron_asked_once_reports_a_refusal_at_once_and_is_not_asked_again(
+    monkeypatch,
+):
+    from app.voice.speech import intron_sync
+
+    asks = []
+
+    async def refused(audio, language, key, name):
+        asks.append(1)
+        raise RuntimeError("HTTP 429")
+
+    monkeypatch.setattr(intron_sync, "_ask_intron", refused)
+    monkeypatch.setattr(intron_sync, "with_silent_tail", lambda audio: audio)
+    with pytest.raises(RuntimeError):
+        await intron_sync.transcribe_intron_sync(
+            b"a", "en", "key", "s.wav", hedge=False
+        )
+    assert asks == [1]
