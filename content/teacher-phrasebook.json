@@ -1,0 +1,38 @@
+{
+  "_about": "How the teacher sounds to a child in English: the one place to edit her words. DRAFT written by Claude and not yet checked by a Nigerian teacher; replace any line. Every line must pass the tutor's line rules (two sentences at most, ten words or fewer each, no digits, no grown-up words). {number} is the number the child said, in words; {Number} starts a sentence.",
+  "right": [
+    "Very good! Clap for yourself.",
+    "Excellent!",
+    "Yes, that is it!",
+    "Well done, my dear!"
+  ],
+  "right_number": [
+    "Yes, {number}! Very good.",
+    "{Number}! Excellent.",
+    "That is it. {Number}!",
+    "Very good! {Number}."
+  ],
+  "right_list": [
+    "Excellent! Every one.",
+    "Very good! Clap for yourself.",
+    "Yes! You said them all.",
+    "Well done, my dear!"
+  ],
+  "examples": {
+    "when they almost had it": [
+      "Almost! Listen, then say it: one, two, three, four, five.",
+      "Nearly there. Listen again, then you try."
+    ],
+    "when they got it wrong": [
+      "Not yet. Listen, then say it: five, ten, fifteen.",
+      "Listen: seven times three is twenty-one. Say it after me."
+    ],
+    "when they said they do not know": [
+      "No problem. Say it after me: one, two, three.",
+      "It is fine, we start small. Say five."
+    ],
+    "when the phone did not hear them": [
+      "I did not hear you. Say it again, a little louder."
+    ]
+  }
+}

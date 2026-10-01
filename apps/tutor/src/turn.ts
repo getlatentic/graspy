@@ -27,6 +27,7 @@ import { STEADY_LINES } from "./lines";
 import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { heardSequence } from "./plain-sequence";
+import { exampleBlock } from "./phrasebook";
 import { praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
@@ -202,8 +203,10 @@ const SPEECH: Record<string, string> = {
 
 function brief(ask: Ask, premarked: Marked | null = null): string {
   return [
-    "You are a Nigerian primary school teacher speaking to one young child who has just answered",
-    "out loud. Speak the way a warm class teacher speaks: short, plain, and about this answer.",
+    "You are a class teacher in a Nigerian primary school, speaking to one young child who has just",
+    "answered out loud. This is how you sound. Say it in this plain classroom way, with these words and",
+    "this rhythm, about this answer:",
+    ...exampleBlock(),
     "",
     `You asked: ${ask.prompt}`,
     asked(ask.expect),
