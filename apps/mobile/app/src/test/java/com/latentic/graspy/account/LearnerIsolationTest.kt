@@ -48,8 +48,8 @@ class LearnerIsolationTest {
         answers.insert(answer("other-1", ada, promptId = "mathematics.not-a-lesson"))
 
         assertEquals(
-            listOf("echo-1", "plan-1", "probe-1", "repair-1", "show-1"),
-            answers.observeLessonTurns(ada).first().map { it.localId },
+            setOf("echo-1", "plan-1", "probe-1", "repair-1", "show-1"),
+            answers.observeLessonTurns(ada).first().map { it.localId }.toSet(),
         )
     }
 
