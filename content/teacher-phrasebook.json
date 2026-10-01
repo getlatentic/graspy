@@ -28,6 +28,11 @@
     "Almost, it is {number}. Say {number} after me.",
     "Listen to me: {number}. Say {number}."
   ],
+  "not_quite": [
+    "Not quite. We will look at it together.",
+    "Almost. Let us look again.",
+    "Not that one. I will help you."
+  ],
   "examples": {
     "when they almost had it": [
       "Almost! Listen again, then you try.",

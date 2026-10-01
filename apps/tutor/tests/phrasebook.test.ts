@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { lineProblems } from "../src/guard";
 import { numberWords } from "../src/lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, allLines, exampleBlock, withNumber } from "../src/phrasebook";
+import { RIGHT, RIGHT_LIST, NOT_QUITE, RIGHT_NUMBER, RIGHT_WITH_YOU, allLines, exampleBlock, withNumber } from "../src/phrasebook";
 import { praiseLine } from "../src/praise";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -99,5 +99,25 @@ describe("an answer said straight after the teacher", () => {
     } as unknown as Env;
     await takeTurn(env, { prompt: "Say five.", heard: "five", language: "en", support: "modelled", expect: { kind: "fact", item: "5" } }).catch(() => undefined);
     expect(seen.find((call) => call.includes("class teacher"))).toContain("repeating after you");
+  });
+});
+
+describe("a child asked for the next item before being told it", () => {
+  it("is not given the answer when they are wrong, only that it was not it", async () => {
+    const ask: Ask = { prompt: "What comes after sixteen?", heard: "eighteen", language: "en", support: "probed", expect: { kind: "fact", item: "17" } };
+    const env = { AI: { run: async () => ({ choices: [{ message: { content: JSON.stringify({ answer: 18 }) } }] }) } } as unknown as Env;
+    const reply = await takeTurn(env, ask);
+    expect(reply.verdict).toBe("wrong");
+    expect(NOT_QUITE).toContain(reply.say);
+    expect(reply.say).not.toMatch(/seventeen/i);
+  });
+
+  it("is told so in the brief when a model writes the line", async () => {
+    const seen: string[] = [];
+    const env = {
+      AI: { run: async (_m: string, input: { messages: { content: string }[] }) => (seen.push(JSON.stringify(input.messages)), { choices: [{ message: { content: "", tool_calls: [] } }] }) },
+    } as unknown as Env;
+    await takeTurn(env, { prompt: "What comes after Thursday?", heard: "Wednesday", language: "en", support: "probed", expect: { kind: "fact", item: "friday", accept: ["friday"] } }).catch(() => undefined);
+    expect(seen.find((call) => call.includes("class teacher"))).toContain("do not say it");
   });
 });
