@@ -46,6 +46,15 @@ EVIDENCE_SQL = (
     "ORDER BY at"
 )
 
+FIRST_ATTEMPT_SQL = (
+    "SELECT t.sample_id FROM tutoring_turns t JOIN samples s ON s.id = t.sample_id "
+    "WHERE s.owner_id = ?1 AND t.state = 'complete' "
+    "AND json_extract(s.metadata_json, '$.plan_id') = ?2 "
+    "AND json_extract(s.metadata_json, '$.event_id') = ?3 "
+    "AND t.updated_at >= ?4 AND t.updated_at < ?5 "
+    "ORDER BY t.updated_at, t.sample_id LIMIT 1"
+)
+
 RECORD_EVENT_SQL = (
     "INSERT INTO lesson_events (owner_id, plan_id, event_id, reason, at) "
     "VALUES (?1, ?2, ?3, ?4, ?5)"
@@ -59,6 +68,39 @@ OFFER_SQL = (
 WAS_OFFERED_SQL = (
     "SELECT 1 FROM lesson_offers WHERE owner_id = ?1 AND plan_id = ?2 AND event_id = ?3"
 )
+
+
+def day_bounds_ms(day: date) -> tuple[int, int]:
+    """The first millisecond of a lesson day and of the day after it."""
+    start = datetime(day.year, day.month, day.day, DAY_STARTS_AT_HOUR, tzinfo=LAGOS)
+    return (
+        round(start.timestamp() * 1000),
+        round((start + timedelta(days=1)).timestamp() * 1000),
+    )
+
+
+async def answered_alone(
+    database, learner: str, metadata: dict, sample_id: str, at_ms: int
+) -> bool:
+    """Whether this answer was the child's first try at that step today, at the plan's own question.
+
+    A later try, or an answer to a list asked again from where it broke, came after help and shows
+    less: it is the answer that decides whether a lesson is known, so it is told apart."""
+    if str(metadata.get("prompt_id") or "").startswith("repair."):
+        return False
+    first_ms, last_ms = day_bounds_ms(lesson_day(at_ms))
+    first = (
+        await database.prepare(FIRST_ATTEMPT_SQL)
+        .bind(
+            learner,
+            str(metadata.get("plan_id")),
+            str(metadata.get("event_id")),
+            first_ms,
+            last_ms,
+        )
+        .first()
+    )
+    return first is not None and first["sample_id"] == sample_id
 
 
 async def offer_step(database, learner: str, move: dict, at_ms: int) -> None:

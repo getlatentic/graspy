@@ -1,6 +1,5 @@
 import { Agent, callable } from "agents";
 import type { Card } from "ts-fsrs";
-import type { Verdict } from "./mark";
 import { keepRepliesTable, repliesIn, TurnReplies } from "./replies";
 import { isSteadyLine } from "./lines";
 import { keepToldTable, toldIn } from "./told";
@@ -12,6 +11,7 @@ import {
   retrievability,
   type ItemMemory,
   type Sitting,
+  type Remembered,
 } from "./schedule";
 
 /**
@@ -88,7 +88,7 @@ export class Learner extends Agent<Env> {
   record(
     lesson: string,
     item: string,
-    verdict: Verdict,
+    verdict: Remembered,
     at?: string,
     turn?: string,
   ): { stability: number; applied: boolean } {
@@ -142,7 +142,7 @@ export class Learner extends Agent<Env> {
       lesson?: string;
       items?: string[];
       item?: string;
-      verdict?: Verdict;
+      verdict?: Remembered;
       at?: string;
       turn?: string;
       ask?: Ask;

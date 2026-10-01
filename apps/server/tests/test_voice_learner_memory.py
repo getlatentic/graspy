@@ -69,3 +69,17 @@ async def test_a_learner_with_no_class_has_no_lessons_to_review(monkeypatch):
     monkeypatch.setattr(learner_memory, "_ask", asked)
     assert await weakened_lessons(MagicMock(), "owner", None) == ()
     asked.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_a_check_passed_only_with_help_reaches_the_memory_as_helped(monkeypatch):
+    asked = AsyncMock(return_value={"stability": 1.0, "applied": True})
+    monkeypatch.setattr(learner_memory, "_ask", asked)
+    await remember_assessment(
+        MagicMock(), "owner", "gvm_1", turn("assess"), "correct", alone=False
+    )
+    assert asked.await_args.args[3]["verdict"] == "helped"
+    await remember_assessment(
+        MagicMock(), "owner", "gvm_2", turn("assess"), "try_again", alone=False
+    )
+    assert asked.await_args.args[3]["verdict"] == "wrong"

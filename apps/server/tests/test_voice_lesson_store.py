@@ -158,3 +158,53 @@ def _bind(sql: str) -> str:
     for token in ("?1", "?2", "?3", "?4"):
         sql = sql.replace(token, "?")
     return sql
+
+
+class _Row(dict):
+    pass
+
+
+class _Turns:
+    """The completed turns of one step today, first to last, as the database would order them."""
+
+    def __init__(self, samples):
+        self.samples = samples
+        self.bound = None
+
+    def prepare(self, sql):
+        assert "ORDER BY t.updated_at, t.sample_id LIMIT 1" in sql
+        return self
+
+    def bind(self, *args):
+        self.bound = args
+        return self
+
+    async def first(self):
+        return _Row(sample_id=self.samples[0]) if self.samples else None
+
+
+@pytest.mark.asyncio
+async def test_only_the_first_try_at_a_step_today_is_an_answer_given_alone():
+    from app.voice.lesson_store import answered_alone
+
+    database = _Turns(["first", "second"])
+    meta = {"plan_id": "p", "event_id": "assess", "prompt_id": "plan.p.assess"}
+    at = 1_790_000_000_000
+    assert await answered_alone(database, "owner", meta, "first", at)
+    assert not await answered_alone(database, "owner", meta, "second", at)
+    first_ms, last_ms = database.bound[3], database.bound[4]
+    assert first_ms <= at < last_ms and last_ms - first_ms == 24 * 3600 * 1000
+
+
+@pytest.mark.asyncio
+async def test_a_list_asked_again_from_where_it_broke_is_not_an_answer_given_alone():
+    from app.voice.lesson_store import answered_alone
+
+    meta = {
+        "plan_id": "p",
+        "event_id": "practice",
+        "prompt_id": "repair.p.practice.friday",
+    }
+    assert not await answered_alone(
+        _Turns(["first"]), "owner", meta, "first", 1_790_000_000_000
+    )

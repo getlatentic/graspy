@@ -977,3 +977,73 @@ def test_an_answer_to_the_guided_step_is_known_to_be_said_after_the_teacher():
     )
     assert not _was_modelled({"plan_id": "no.such.plan", "event_id": "guide"})
     assert not _was_modelled({})
+
+
+def _assess(day, decision="correct"):
+    return Evidence(COUNT_20, "assess", day, decision)
+
+
+def test_a_lesson_is_known_only_when_the_check_was_passed_alone_on_two_days():
+    ids = [event.id for event in PLANS[COUNT_20].events]
+    first_try = [
+        Evidence(COUNT_20, "assess", DAY_1, "correct"),
+        Evidence(COUNT_20, "assess", DAY_2, "correct"),
+    ]
+    state = progress_by_plan(first_try, PLANS, DAY_2)[COUNT_20]
+    assert state.mastered and len(state.independent_days) == 2
+    assert "assess" in ids
+
+
+def test_a_check_passed_on_a_second_try_is_learnt_but_not_known():
+    missed_then_right = [
+        _assess(DAY_1, "try_again"),
+        _assess(DAY_1),
+        _assess(DAY_2, "try_again"),
+        _assess(DAY_2),
+    ]
+    state = progress_by_plan(missed_then_right, PLANS, DAY_2)[COUNT_20]
+    assert len(state.assessed_days) == 2
+    assert state.independent_days == set()
+    assert not state.mastered
+
+
+def test_what_helped_an_answer_decides_what_it_shows():
+    event = PLANS[DAYS].event
+    from app.voice.teacher import support_of
+
+    guide, practice, span = event("guide"), event("practice"), event("span")
+    answer = Evidence(DAYS, "practice", DAY_1, "correct")
+    repaired = Evidence(
+        DAYS, "practice", DAY_1, "correct", None, None, f"repair.{DAYS}.practice.friday"
+    )
+    assert support_of(guide, answer, 1) == "modelled"
+    assert support_of(span, answer, 1) == "reduced"
+    assert support_of(practice, repaired, 1) == "narrowed"
+    assert support_of(practice, answer, 2) == "after_help"
+    assert support_of(practice, answer, 1) == "independent"
+
+
+def test_a_repaired_try_is_never_the_check_and_never_counts_towards_knowing_it():
+    state = progress_by_plan(
+        [
+            Evidence(
+                DAYS,
+                "practice",
+                DAY_1,
+                "try_again",
+                {"said": WEEK[:5], "missing": WEEK[5:], "out_of_order": []},
+            ),
+            Evidence(
+                DAYS,
+                "practice",
+                DAY_1,
+                "correct",
+                None,
+                None,
+                f"repair.{DAYS}.practice.friday",
+            ),
+        ],
+        PLANS,
+        DAY_1,
+    )[DAYS]
+    assert state.independent_days == set() and state.assessed_days == set()

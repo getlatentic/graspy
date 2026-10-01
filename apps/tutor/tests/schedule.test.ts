@@ -43,6 +43,17 @@ describe("what a verdict does to an item", () => {
   });
 });
 
+describe("an answer that took help", () => {
+  it("is remembered as weaker than one given alone, and as a pass", () => {
+    const helped = remember(newMemory("A", start), "helped", start);
+    const alone = remember(newMemory("A", start), "correct", start);
+    const missed = remember(newMemory("A", start), "wrong", start);
+
+    expect(helped.card.stability).toBeLessThan(alone.card.stability);
+    expect(helped.card.stability).toBeGreaterThan(missed.card.stability);
+  });
+});
+
 describe("choosing a sitting", () => {
   it("gives a child who has never practised only new material", () => {
     const { due, fresh } = chooseSitting([], LETTERS, start);

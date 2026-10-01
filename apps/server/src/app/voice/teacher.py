@@ -122,11 +122,13 @@ class PlanProgress:
     last_decision: dict[str, str] = field(default_factory=dict)
     facts_owed: dict[str, frozenset[int]] = field(default_factory=dict)
     assessed_days: set[date] = field(default_factory=set)
+    # The days the check was passed at the first try, with no help: the only days that show a lesson is known.
+    independent_days: set[date] = field(default_factory=set)
     last_day: date | None = None
 
     @property
     def mastered(self) -> bool:
-        return len(self.assessed_days) >= MASTERY_DAYS
+        return len(self.independent_days) >= MASTERY_DAYS
 
     @property
     def reviewed_today(self) -> bool:
@@ -206,6 +208,21 @@ def _got_further(
     return ids.index(now) > ids.index(before)
 
 
+def support_of(event: LessonEvent, item: Evidence, attempt: int) -> str:
+    """How much help produced an answer, which says what it shows.
+
+    An answer said after the teacher, to a shorter step, or to a list asked again from where it broke,
+    or on a later try, shows that the child can do it with help. Only a first try at the plan's own
+    question shows that they can do it alone."""
+    if event.event == "provide_guidance":
+        return "modelled"
+    if item.prompt_id and item.prompt_id.startswith(REPAIR_PREFIX):
+        return "narrowed"
+    if event.support is not None:
+        return "reduced"
+    return "independent" if attempt == 1 else "after_help"
+
+
 def _broke_at(event: LessonEvent, result: dict | None) -> str | None:
     """The first item of a list a try left out or said out of place, when something came right before it.
 
@@ -274,6 +291,7 @@ def progress_by_plan(
 ) -> dict[str, PlanProgress]:
     progress = {plan_id: PlanProgress() for plan_id in plans}
     streaks: dict[tuple[str, str, date], int] = {}
+    attempts: dict[tuple[str, str, date], int] = {}
     for item in evidence:
         if item.plan_id not in plans:
             continue
@@ -298,9 +316,14 @@ def progress_by_plan(
             state.facts_owed[item.event_id] = (
                 owed | item.facts_wrong
             ) - item.facts_right
+        tries = attempts[(item.plan_id, item.event_id, item.day)] = (
+            attempts.get((item.plan_id, item.event_id, item.day), 0) + 1
+        )
         if event.event == "assess_performance" and item.decision == "correct":
             state.assessed_days.add(item.day)
             state.assessed_today = state.assessed_today or item.day == today
+            if support_of(event, item, tries) == "independent":
+                state.independent_days.add(item.day)
         _record_attempt(state, plan, event, item, streaks, today)
     return progress
 
@@ -692,6 +715,7 @@ def catalogue(
             "title": plan.title,
             "standing": lesson_standing(plan, progress[plan.id], today),
             "days_correct": len(progress[plan.id].assessed_days),
+            "days_alone": len(progress[plan.id].independent_days),
             "current": current is not None and current.plan_id == plan.id,
         }
         for plan in plans_for_class(plans, learner_class)
