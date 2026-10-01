@@ -3,7 +3,7 @@ import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
 import { STEADY_LINES } from "../src/lines";
 import { praiseLine } from "../src/praise";
-import { TOLD_NUMBER, WRONG_NUMBER, withNumber } from "../src/phrasebook";
+import { NOT_HEARD, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "../src/phrasebook";
 import { DEFAULT_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -615,6 +615,67 @@ describe("a child who says they do not know, once the hints are used", () => {
       expect(TOLD_NUMBER.map((line) => withNumber(line, "fifteen")), String(support)).toContain(reply.say);
       expect(reply.say).not.toMatch(/almost|not quite|not yet/i);
     }
+  });
+});
+
+describe("a reply the code can write is not waited for from a model", () => {
+  const neverAsked = { AI: { run: async () => { throw new Error("a model was asked"); } } } as unknown as Env;
+  const hints = ["Each new heap adds five. Count heap by heap.", "Five, ten, fifteen. Keep counting."];
+  const fact = (heard: string, earlier: Ask["earlier"] = []): Ask => ({ prompt: "Six heaps of five. How many?", heard, language: "en", earlier, expect: { kind: "fact", item: "30", hints } });
+
+  it("is the next hint, with no model, for a child who says they do not know", async () => {
+    const reply = await takeTurn(neverAsked, fact("I don't know"));
+    expect([reply.verdict, reply.heard, reply.say]).toEqual(["unheard", "dont_know", hints[0]]);
+  });
+
+  it("is not used for a child who hedges and answers, which is read and marked", async () => {
+    const word = { prompt: "Say the shape.", language: "en" as const, expect: { kind: "fact" as const, item: "triangle", hints } };
+    const { env } = tutor([call("mark_answer", { said: "triangle", sure: true }), call("say_it", { text: "Yes, a triangle." })]);
+    expect((await takeTurn(env, { ...word, heard: "I don't know, is it a triangle?" })).verdict).toBe("correct");
+    for (const heard of ["I don't know, fiften", "not sure, fiften"]) {
+      const { env: asked } = tutor([call("mark_answer", { said: "fifteen", sure: true }), call("say_it", { text: "Yes, fifteen." })]);
+      const reply = await takeTurn(asked, { ...fact(heard), expect: { kind: "fact", item: "15", hints } });
+      expect(reply.verdict, heard).toBe("correct");
+    }
+  });
+
+  it("is used for every plain way of saying they do not know", async () => {
+    for (const heard of ["I don't know.", "I do not know", "Um, I don't know, sir.", "dunno", "no idea", "I'm not sure", "I can't remember", "I forgot"]) {
+      const reply = await takeTurn(neverAsked, fact(heard));
+      expect(reply.say, heard).toBe(hints[0]);
+    }
+  });
+
+  it("asks a recording that was a few words and no answer again from the phrasebook, and leaves a longer one to the teacher", async () => {
+    const { env } = tutor([call("mark_answer", { said: null, sure: false })]);
+    expect(NOT_HEARD).toContain((await takeTurn(env, fact("To me, sink."))).say);
+    const { env: talking } = tutor([call("mark_answer", { said: null, sure: false }), call("say_it", { text: "That is all right, Ade. Let us count." })]);
+    const reply = await takeTurn(talking, fact("my name is Ade and I want to go"));
+    expect(reply.say).toBe("That is all right, Ade. Let us count.");
+  });
+
+  it("is not used for a child who says they do not know and then gives the number", async () => {
+    const reply = await takeTurn(tutor([], [], [], [30]).env, fact("I don't know, thirty"));
+    expect(reply.verdict).toBe("correct");
+  });
+
+  it("is a phrasebook line asked again, after the model has only marked it, for a recording that was no answer", async () => {
+    const { env } = tutor([call("mark_answer", { said: null, sure: false })]);
+    const reply = await takeTurn(env, fact("Tinty"));
+    expect(reply.verdict).toBe("unheard");
+    expect(NOT_HEARD).toContain(reply.say);
+  });
+
+  it("is the plan's next hint, after the model has only marked it, for a wrong answer in words", async () => {
+    const { env } = tutor([call("mark_answer", { said: "twelve", sure: true })]);
+    const reply = await takeTurn(env, fact("um, twelve I think"));
+    expect([reply.verdict, reply.say]).toEqual(["wrong", hints[0]]);
+  });
+
+  it("is still written by the teacher where the code has no line: another language, or an answer that is no number", async () => {
+    const { env } = tutor([call("mark_answer", { said: null, sure: false }), call("say_it", { text: "Ẹ jọ̀wọ́, sọ ọ́ lẹ́ẹ̀kan sí i." })]);
+    const reply = await takeTurn(env, { ...fact("Tinty"), language: "yo" });
+    expect(reply.say).toBe("Ẹ jọ̀wọ́, sọ ọ́ lẹ́ẹ̀kan sí i.");
   });
 });
 

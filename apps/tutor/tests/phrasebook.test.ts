@@ -50,7 +50,7 @@ describe("the teacher's phrasebook", () => {
     const env = {
       AI: { run: async (_m: string, input: { messages: { content: string }[] }) => (seen.push(JSON.stringify(input.messages)), { choices: [{ message: { content: "", tool_calls: [] } }] }) },
     } as unknown as Env;
-    await takeTurn(env, { prompt: "Say five.", heard: "I don't know.", language: "en", expect: { kind: "fact", item: "5" } }).catch(() => undefined);
+    await takeTurn(env, { prompt: "Say the shape.", heard: "I don't know.", language: "en", expect: { kind: "fact", item: "triangle" } }).catch(() => undefined);
     const brief = seen.find((call) => call.includes("class teacher")) ?? "";
     expect(brief).toContain("said they do not know");
     expect(brief).toContain("Never say you did not hear them");

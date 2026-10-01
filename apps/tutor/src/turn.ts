@@ -28,7 +28,7 @@ import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { heardSequence } from "./plain-sequence";
 import { exampleBlock } from "./phrasebook";
-import { correctionLine, praiseLine } from "./praise";
+import { correctionLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import {
@@ -398,6 +398,8 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
 
 async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
+  const unsure = unsureReply(ask);
+  if (unsure !== null) return unsure;
   const plain = await timed("read", markedFromPlainNumber(env, ask));
   if (plain !== null) return plain;
   const listed = markedFromPlainSequence(ask);
@@ -488,6 +490,8 @@ async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
       }
       marked = outcome;
       answer(outcome);
+      const line = lineWrittenByCode(marked, ask);
+      if (line !== null) return { ...marked, say: line };
     }
   }
   // The child's answer is marked either way; only her own words for it are missing, so she says a
@@ -538,6 +542,45 @@ async function markedFromPlainNumber(env: Env, ask: Ask): Promise<Reply | null> 
   if (answer === null) return null;
   if (answer !== expected && factOperands(ask.expect.item).includes(answer)) return null;
   return marked(markAnswer(ask.expect.item, String(answer), true, ask.expect.accept ?? []), ask);
+}
+
+/**
+ * Whether the child said nothing but that they do not know. Anything more ("I don't know, is it a triangle",
+ * "not sure, fiften") may be an answer, and goes to be read and marked.
+ */
+const ONLY_NOT_KNOWING =
+  /^(?:(?:um+|uh+|er+|erm|well|sorry)\s+)*(?:i\s+)?(?:really\s+)?(?:(?:do\s*not|don'?t|dont|can'?t|cannot|cant)\s+(?:know|remember)(?:\s+it)?|dunno|have\s+no\s+idea|no\s+idea|(?:i'?m\s+)?not\s+sure|forgot)(?:\s+(?:miss|sir|ma'?am|auntie|teacher))?$/;
+
+function saidOnlyThatTheyDoNotKnow(heard: string | null): boolean {
+  const plain = heardForPrompt(heard).toLowerCase().replace(/[^a-z' ]+/g, " ").replace(/\s+/g, " ").trim();
+  return ONLY_NOT_KNOWING.test(plain);
+}
+
+/** The most words of a recording that nobody could read for which the phrasebook's "say it again" still fits; more is a child saying something else. */
+const MOST_WORDS_ASKED_AGAIN = 3;
+
+function fewWords(heard: string | null): boolean {
+  return heardForPrompt(heard).split(/[^\p{L}\p{N}']+/u).filter((word) => word !== "").length <= MOST_WORDS_ASKED_AGAIN;
+}
+
+/**
+ * A child who says they do not know needs no model to be marked or answered: the next hint, or the number told,
+ * are the plan's and the phrasebook's. Null where there is no such line to say, which the teacher then writes.
+ */
+function unsureReply(ask: Ask): Reply | null {
+  if (ask.expect.kind !== "fact" || !saidOnlyThatTheyDoNotKnow(ask.heard)) return null;
+  const line = correctionLine(ask, false);
+  return line === null ? null : { ...markAnswer(ask.expect.item, null), say: line };
+}
+
+/**
+ * The line for an answer just marked, where the code already has it: a recording nobody could read is asked
+ * for again from the phrasebook, and a wrong number gets the plan's next hint. A model asked to write these
+ * would take seconds to write a line that is put aside; the child is waiting.
+ */
+function lineWrittenByCode(marking: Marked, ask: Ask): string | null {
+  if (marking.verdict === "unheard") return heardKind(ask.heard) === "dont_know" || !fewWords(ask.heard) ? null : notHeardLine(ask);
+  return marking.verdict === "wrong" && ask.expect.kind === "fact" ? correctionLine(ask) : null;
 }
 
 function marked(marking: Marking, ask: Ask): Reply {
