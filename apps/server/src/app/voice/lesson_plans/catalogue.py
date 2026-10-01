@@ -5150,8 +5150,8 @@ PLANS = [
      },
      "hints": {
       "en": [
-       "Count the weeks: seven, fourteen. What comes next?",
-       "Fourteen, and seven more. What is that?"
+       "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
+       "Twenty-one, and seven more. What is that?"
       ]
      },
      "kind": "answer"

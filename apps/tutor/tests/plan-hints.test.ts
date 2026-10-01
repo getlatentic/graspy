@@ -32,3 +32,23 @@ describe("the hints a plan gives for a wrong answer", () => {
     }
   });
 });
+
+describe("what a hint may say", () => {
+  const withAnswers = planFiles(PLANS).flatMap((file) => {
+    const plan = JSON.parse(readFileSync(file, "utf8")) as { id: string; events: { id: string; activity?: { kind: string; expected?: Record<string, string[]>; hints?: Record<string, string[]> } }[] };
+    return plan.events.flatMap((event) =>
+      event.activity?.hints && event.activity.expected ? [{ where: `${plan.id}#${event.id}`, answers: event.activity.expected.en, hints: event.activity.hints.en }] : [],
+    );
+  });
+
+  it("never gives the answer to the question it is a hint for", () => {
+    for (const { where, answers, hints } of withAnswers) {
+      for (const hint of hints) {
+        for (const answer of answers.filter((one) => /[a-z]/i.test(one))) {
+          expect(hint.toLowerCase(), `${where}: "${hint}" gives "${answer}"`).not.toMatch(new RegExp(`\\b${answer.replace(/-/g, "[- ]")}\\b`));
+        }
+      }
+    }
+    expect(withAnswers.length).toBeGreaterThanOrEqual(7);
+  });
+});

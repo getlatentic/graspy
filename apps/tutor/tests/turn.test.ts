@@ -572,3 +572,16 @@ describe("a wrong number, least help first", () => {
     expect(await say(ask([{ verdict: "unheard", line: "I did not hear you." }]))).toBe(hints[0]);
   });
 });
+
+describe("the ladder where the answer was found wrong by a model", () => {
+  const hints = ["Count the heaps: five, ten. What comes next?", "Ten, and five more. What is that?"];
+
+  it("is the same ladder, and a hint that breaks the line rules is never said", async () => {
+    const model = [call("mark_answer", { said: "twelve", sure: true }), call("say_it", { text: "It is fifteen. Say fifteen." })];
+    const ask: Ask = { prompt: "Three heaps of five. How many?", heard: "tweny fife", language: "en", earlier: [], expect: { kind: "fact", item: "15", hints } };
+    expect((await takeTurn(tutor(model).env, ask)).say).toBe(hints[0]);
+    const broken: Ask = { ...ask, expect: { kind: "fact", item: "15", hints: ["Count 5 10 15. Keep going!"] } };
+    const reply = await takeTurn(tutor([call("mark_answer", { said: "twelve", sure: true }), call("say_it", { text: "It is fifteen. Say fifteen." })]).env, broken);
+    expect(reply.say).not.toContain("5 10");
+  });
+});

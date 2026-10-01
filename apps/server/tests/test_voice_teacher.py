@@ -272,10 +272,22 @@ def fives_taught():
     ]
 
 
-def test_a_child_who_misses_the_full_count_twice_is_given_a_shorter_count_before_the_full_one_again():
+def _missed_and_shown(times):
+    """A child who could not begin, shown the guided practice after each miss."""
+    out = []
+    for _ in range(times):
+        out += [marked(FIVES, "practice", "not_understood"), said(FIVES, "guide")]
+    return out
+
+
+def test_a_child_who_misses_the_question_after_its_hints_is_given_a_smaller_one_before_it_again():
     evidence = [*fives_taught(), marked(FIVES, "practice", "not_understood")]
     assert fives_next(evidence) == "guide"
-    evidence += [said(FIVES, "guide"), marked(FIVES, "practice", "not_understood")]
+    evidence = [
+        *fives_taught(),
+        *_missed_and_shown(3),
+        marked(FIVES, "practice", "not_understood"),
+    ]
     assert fives_next(evidence) == "span"
     evidence.append(marked(FIVES, "span", "correct"))
     assert fives_next(evidence) == "practice"
@@ -284,8 +296,7 @@ def test_a_child_who_misses_the_full_count_twice_is_given_a_shorter_count_before
 def test_a_shorter_count_heard_but_not_answered_is_still_owed():
     evidence = [
         *fives_taught(),
-        marked(FIVES, "practice", "not_understood"),
-        said(FIVES, "guide"),
+        *_missed_and_shown(3),
         marked(FIVES, "practice", "not_understood"),
         said(FIVES, "span"),
     ]
@@ -300,9 +311,7 @@ def test_a_child_who_does_the_full_count_first_time_is_never_asked_the_shorter_o
 def test_a_child_who_cannot_do_the_shorter_count_is_helped_with_it_and_not_sent_back_to_the_full_one():
     evidence = [
         *fives_taught(),
-        marked(FIVES, "practice", "try_again"),
-        said(FIVES, "feedback"),
-        marked(FIVES, "practice", "try_again"),
+        *[marked(FIVES, "practice", "try_again")] * 4,
         marked(FIVES, "span", "not_understood"),
     ]
     assert fives_next(evidence) == "guide"
@@ -313,8 +322,7 @@ def test_a_child_who_cannot_do_the_shorter_count_is_helped_with_it_and_not_sent_
 def test_a_child_who_still_misses_the_full_count_after_the_shorter_one_is_left_for_tomorrow():
     evidence = [
         *fives_taught(),
-        marked(FIVES, "practice", "not_understood"),
-        said(FIVES, "guide"),
+        *_missed_and_shown(3),
         marked(FIVES, "practice", "not_understood"),
         marked(FIVES, "span", "correct"),
         marked(FIVES, "practice", "not_understood"),
@@ -1532,3 +1540,47 @@ def test_yesterdays_probe_is_not_counted_today():
     )
     progress = progress_by_plan([*broke, yesterday], PLANS, DAY_2)
     assert progress[DAYS].probed == {}
+
+
+def _fives_taught():
+    return [
+        said(FIVES, e) for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
+def _wrong(event, n=1):
+    return [Evidence(FIVES, event, DAY_1, "try_again") for _ in range(n)]
+
+
+def test_each_miss_where_the_plan_has_hints_is_asked_again_until_the_answer_has_been_told():
+    taught = _fives_taught()
+    for misses in (1, 2, 3):
+        evidence = [*taught, *_wrong("practice", misses)]
+        progress = progress_by_plan(evidence, PLANS, DAY_1)
+        assert not progress[FIVES].paused_today, misses
+        offer = next_options(PLANS, progress, DAY_1, "primary_4", evidence)[0]
+        assert offer.event_id == "practice", misses
+
+
+def test_after_the_answer_was_told_a_child_who_misses_again_is_given_the_shorter_step_then_sent_home():
+    taught = _fives_taught()
+    four = [*taught, *_wrong("practice", 4)]
+    progress = progress_by_plan(four, PLANS, DAY_1)
+    offer = next_options(PLANS, progress, DAY_1, "primary_4", four)[0]
+    assert offer.event_id == "span"
+    five = [*taught, *_wrong("practice", 5)]
+    assert progress_by_plan(five, PLANS, DAY_1)[FIVES].paused_today
+
+
+def test_a_plan_without_hints_is_helped_after_two_misses_and_sent_home_after_three_as_before():
+    taught = [
+        said(T1, e) for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+    two = [
+        *taught,
+        marked(T1, "practice", "try_again"),
+        marked(T1, "practice", "try_again"),
+    ]
+    assert next_step(two) == "guide"
+    three = [*two, said(T1, "guide"), marked(T1, "practice", "try_again")]
+    assert progress_by_plan(three, PLANS, DAY_1)[T1].paused_today

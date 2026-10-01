@@ -195,6 +195,11 @@ def _served_first(plan: LessonPlan, owed: set[str]) -> set[str]:
     return set()
 
 
+def _hints_in(event: LessonEvent) -> int:
+    """How many cues and hints the plan gives a wrong answer before the answer is told."""
+    return len(event.activity.hints) if event.activity else 0
+
+
 def _owe_help(
     state: PlanProgress,
     plan: LessonPlan,
@@ -212,9 +217,11 @@ def _owe_help(
     can_reteach = event.event in RETEACH_EVENTS and any(
         other.event == "provide_guidance" for other in plan.events
     )
-    if misses >= 2 and _rung_of(plan, event) is not None:
+    # The plan's hints come first: each is a miss answered with a cue, and the answer is told after them.
+    help_after = 2 + _hints_in(event)
+    if misses >= help_after and _rung_of(plan, event) is not None:
         state.rung_owed.add(event.id)
-    elif can_reteach and (decision == "not_understood" or misses >= 2):
+    elif can_reteach and (decision == "not_understood" or misses >= help_after):
         state.guidance_owed.add(event.id)
 
 
@@ -436,7 +443,7 @@ def _record_attempt(
     else:
         streaks[key] = streaks.get(key, 0) + 1
     misses = streaks[key]
-    if event.event in PAUSING_EVENTS and misses >= PAUSE_AFTER:
+    if event.event in PAUSING_EVENTS and misses >= PAUSE_AFTER + _hints_in(event):
         state.paused_days.add(item.day)
         state.paused_today = state.paused_today or item.day == today
     if event.event == "stimulate_recall":

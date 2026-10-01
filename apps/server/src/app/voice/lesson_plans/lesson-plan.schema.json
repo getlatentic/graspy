@@ -381,7 +381,7 @@
                   }
                 }
               },
-              "description": "what the teacher says to a child who answered wrongly, least help first: a cue, then a hint; only after these is the answer told. English is required; a language with none is told the answer at once"
+              "description": "what the teacher says to a child who answered wrongly, least help first: a cue, then a hint; only after these is the answer told. English is required; a language with none gets the steady line"
             }
           }
         }
