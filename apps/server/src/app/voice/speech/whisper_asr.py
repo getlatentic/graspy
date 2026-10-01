@@ -1,6 +1,7 @@
-"""English recognition on Workers AI's Whisper, with Intron as the second opinion.
+"""English recognition on Workers AI, with Intron as the second opinion.
 
-Whisper turned a child's counted answers into what was said ("5, 10, 15, 20, 25") where Intron's English
+The deployment's `ENGLISH_ASR` says who is asked first: Whisper, Deepgram's Nova-3 (with Whisper when it
+cannot answer), or Intron alone. Whisper turned a child's counted answers into what was said ("5, 10, 15, 20, 25") where Intron's English
 model wrote "0510, 2025", so a right answer failed and the child was sent away. Whisper is asked first for
 English; when it cannot answer, or hears nothing, Intron is asked as before. The voice-activity filter is
 on: without it Whisper decodes some quiet recordings to nothing and fails on others, and with it a
@@ -13,6 +14,7 @@ import json
 import logging
 import time
 
+from .nova_asr import heard_by_nova
 from .second_opinion import reads_as_a_number
 
 logger = logging.getLogger(__name__)
@@ -26,11 +28,11 @@ WHISPER_TRIES = 2
 # Intron answers in under two seconds as a rule; a second opinion that takes longer is not waited for, since
 # Whisper's own reading stands without it, and it is asked once, so a rate limit is not asked twice.
 SECOND_OPINION_SECONDS = 4
-ENGLISH_ASRS = ("whisper", "intron")
+ENGLISH_ASRS = ("whisper", "nova", "intron")
 
 
 def english_asr(env) -> str:
-    """Which recognizer hears English: 'whisper' unless the deployment says 'intron'."""
+    """Which recognizer hears English first: 'whisper' unless the deployment says 'nova' or 'intron'."""
     chosen = str(getattr(env, "ENGLISH_ASR", "") or "whisper").lower()
     return chosen if chosen in ENGLISH_ASRS else "whisper"
 
@@ -82,31 +84,43 @@ async def _intron_reading(
     return transcript if reads_as_a_number(transcript) else None
 
 
+async def _heard_first(env, audio: bytes) -> tuple[str | None, str]:
+    """What the deployment's first-choice recognizer heard, and its name: empty text for no speech, None for
+    no answer. Nova-3 failing to answer is followed by Whisper; Whisper failing is left to Intron."""
+    ai = getattr(env, "AI", None)
+    engine = english_asr(env)
+    if ai is None or engine == "intron":
+        return None, "intron_sync"
+    if engine == "nova":
+        text = await heard_by_nova(ai, audio)
+        if text is not None:
+            return text, "nova"
+    return await heard_by_whisper(ai, audio), "whisper"
+
+
 async def transcribe_english(
     env, audio: bytes, api_key: str, file_name: str, intron, second_opinion=None
 ) -> tuple[str, int, str]:
     """Transcript, milliseconds, and the recognizer that gave it, for a recording in English.
 
-    `intron` is the Intron recognizer to ask when Whisper is not asked, gave no answer, or heard nothing.
-    `second_opinion` says, of what Whisper heard, whether Intron is asked too; Intron's reading then stands
+    `intron` is the Intron recognizer to ask when no other is asked, gave no answer, or heard nothing.
+    `second_opinion` says, of what the first recognizer heard, whether Intron is asked too; Intron's reading then stands
     only if it is a number."""
     started = time.perf_counter()
-    ai = getattr(env, "AI", None)
-    if english_asr(env) == "whisper" and ai is not None:
-        text = await heard_by_whisper(ai, audio)
-        if text and second_opinion is not None and second_opinion(text):
-            better = await _intron_reading(intron, audio, api_key, file_name)
-            spent = round((time.perf_counter() - started) * 1000)
-            print(
-                json.dumps(
-                    {"asr": "second_opinion", "ms": spent, "used": better is not None}
-                )
+    text, heard_by = await _heard_first(env, audio)
+    if text and second_opinion is not None and second_opinion(text):
+        better = await _intron_reading(intron, audio, api_key, file_name)
+        spent = round((time.perf_counter() - started) * 1000)
+        print(
+            json.dumps(
+                {"asr": "second_opinion", "ms": spent, "used": better is not None}
             )
-            if better is not None:
-                return better, spent, "intron_sync"
-        if text:
-            spent = round((time.perf_counter() - started) * 1000)
-            print(json.dumps({"asr": "whisper", "ms": spent}))
-            return text, spent, "whisper"
+        )
+        if better is not None:
+            return better, spent, "intron_sync"
+    if text:
+        spent = round((time.perf_counter() - started) * 1000)
+        print(json.dumps({"asr": heard_by, "ms": spent}))
+        return text, spent, heard_by
     transcript, _ = await intron(audio, "en", api_key, file_name)
     return transcript, round((time.perf_counter() - started) * 1000), "intron_sync"
