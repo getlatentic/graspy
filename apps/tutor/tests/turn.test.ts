@@ -648,10 +648,11 @@ describe("a list that stopped part way", () => {
     expect(reply.say).toMatch(/monday/i);
   });
 
-  it("names a letter of the alphabet as a letter, not as the bare letter or the word a", async () => {
-    const letters: SequenceItem[] = ["a", "b", "c", "d"].map((letter) => ({ id: letter, spoken: [letter] }));
-    const reply = await takeTurn(neverAsked, ask("a b d", letters));
-    expect(reply.say).toMatch(/letter B/);
+  it("is left to the teacher where code cannot say the item, a bare letter of the alphabet", async () => {
+    const letters: SequenceItem[] = [["a", "ay"], ["b", "bee"], ["c", "see"], ["d", "dee"]].map(([letter, name]) => ({ id: letter, spoken: [letter, name] }));
+    const { env } = tutor([call("say_it", { text: "You said a and b. Say c next." })]);
+    const reply = await takeTurn(env, ask("a b d", letters));
+    expect(reply.say).toBe("You said a and b. Say c next.");
   });
 
   it("is left to the teacher when nothing came right at the start", async () => {

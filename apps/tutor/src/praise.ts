@@ -71,12 +71,17 @@ export function correctionLine(ask: Ask, tried = true): string | null {
   return lines.every((line) => lineProblems(line).length === 0) ? pick(lines, ask) : null;
 }
 
-/** An item as it is said aloud: a letter of the alphabet as "letter B", else its first spelling in letters, or the words for its number. */
-function spokenWords(item: SequenceItem): string {
-  const spelled = item.spoken.find((word) => /[a-z]/i.test(word));
-  if (spelled !== undefined) return /^[a-z]$/i.test(spelled) ? `letter ${spelled.toUpperCase()}` : spelled;
+/**
+ * An item as it is said aloud, or null where code cannot tell: a name of two letters or more the plan spells out
+ * ("monday", "ten"), or the words for a number. A letter of the alphabet has spellings that sound right and read
+ * wrongly ("bee"), and the plan does not say which the teacher says, so the teacher says that line.
+ */
+function spokenWords(item: SequenceItem): string | null {
+  if (/^[a-z]$/i.test(item.id)) return null;
+  const spelled = item.spoken.find((word) => /[a-z]{2,}/i.test(word));
+  if (spelled !== undefined) return spelled;
   const number = spokenNumber(item.id);
-  return number === null ? item.id : numberWords(number);
+  return number === null ? null : numberWords(number);
 }
 
 /**
@@ -90,6 +95,7 @@ export function listStoppedLine(ask: Ask, result: SequenceResult): string | null
   const at = ask.expect.items.findIndex((item) => broken.has(item.id));
   if (at <= 0) return null;
   const last = spokenWords(ask.expect.items[at - 1]);
+  if (last === null) return null;
   const lines = LIST_STOPPED.map((line) => line.replaceAll("{last}", last));
   return lines.every((line) => lineProblems(line).length === 0) ? pick(lines, ask) : null;
 }
