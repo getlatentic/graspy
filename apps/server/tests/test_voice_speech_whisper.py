@@ -172,3 +172,73 @@ class TestWhichRecognizerHearsWhich:
             )
             assert (text, language, provider) == ("via intron", spoken, "intron_sync")
             assert ai.asked == []
+
+
+def _numbers_wanted(text):
+    from app.voice.exercises import SpokenAnswerExercise
+    from app.voice.speech.second_opinion import wants_a_second_opinion
+
+    return wants_a_second_opinion(SpokenAnswerExercise("p", "m", ("ten", "10")), text)
+
+
+def test_a_number_asked_for_and_written_as_words_that_are_none_is_worth_a_second_opinion():
+    for heard in ("Then", "Tim", "Jin", "To me, sink.", "Chainsaw", "Tinty"):
+        assert _numbers_wanted(heard), heard
+
+
+def test_a_second_opinion_is_not_asked_for_what_whisper_read_as_a_number_or_a_sentence_or_no_answer():
+    for heard in (
+        "ten",
+        "10",
+        "twenty one",
+        "To me, you sink and then",
+        "I don't know",
+        "I forgot",
+        "no",
+        "",
+    ):
+        assert not _numbers_wanted(heard), heard
+
+
+def test_a_second_opinion_is_asked_only_where_a_number_was_asked_for():
+    from app.voice.exercises import FactAnswerExercise, SpokenAnswerExercise
+    from app.voice.speech.second_opinion import wants_a_second_opinion
+
+    assert wants_a_second_opinion(FactAnswerExercise("p", 2, 3), "then")
+    assert not wants_a_second_opinion(
+        SpokenAnswerExercise("p", "m", ("friday",)), "then"
+    )
+
+
+@pytest.mark.asyncio
+async def test_introns_reading_stands_when_whisper_wrote_no_number_and_intron_read_one():
+    ai, ask = Ai({"text": "Then"}), intron("10.")
+    text, _, heard_by = await transcribe_english(
+        env(ai), b"a", "key", "s.wav", ask, _numbers_wanted
+    )
+    assert (text, heard_by) == ("10.", "intron_sync")
+
+
+@pytest.mark.asyncio
+async def test_whispers_reading_stands_when_intron_read_no_number_or_could_not_be_asked():
+    ai, ask = Ai({"text": "Then"}), intron("To recent.")
+    text, _, heard_by = await transcribe_english(
+        env(ai), b"a", "key", "s.wav", ask, _numbers_wanted
+    )
+    assert (text, heard_by) == ("Then", "whisper")
+
+    async def fails(audio, language, key, name):
+        raise RuntimeError("HTTP 429")
+
+    text, _, heard_by = await transcribe_english(
+        env(Ai({"text": "Then"})), b"a", "key", "s.wav", fails, _numbers_wanted
+    )
+    assert (text, heard_by) == ("Then", "whisper")
+
+
+@pytest.mark.asyncio
+async def test_intron_is_not_asked_when_no_second_opinion_is_wanted():
+    ai, ask = Ai({"text": "Then"}), intron("10.")
+    text, _, heard_by = await transcribe_english(env(ai), b"a", "key", "s.wav", ask)
+    assert (text, heard_by) == ("Then", "whisper")
+    assert ask.calls == []
