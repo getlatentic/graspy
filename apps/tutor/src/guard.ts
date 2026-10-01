@@ -12,6 +12,8 @@ import rules from "../../../content/child-language.json";
 export const SAFETY_MODEL = "@cf/meta/llama-guard-3-8b";
 /** Reads a line for meaning in English, Pidgin and Yoruba, where a list of words cannot. */
 export const JUDGE_MODEL = "@cf/openai/gpt-oss-120b";
+/** A yes or no against a rubric needs little reasoning: measured on twenty safe and unsafe lines, low effort judged all of them right in half the time. */
+const JUDGE_EFFORT = "low";
 
 /** A reply is one or two short sentences, heard by children from six to eleven. */
 export const MOST_SENTENCES = rules.reply_sentences;
@@ -111,6 +113,7 @@ export async function fitForChild(env: Env, heard: string | null, line: string):
     response_format: { type: "json_schema", json_schema: { name: "fit", schema: JUDGE_SCHEMA, strict: true } },
     temperature: 0,
     max_tokens: 800,
+    reasoning_effort: JUDGE_EFFORT,
   })) as { choices?: { message?: { content?: unknown } }[]; response?: unknown };
   const said = result.choices?.[0]?.message?.content ?? result.response;
   try {

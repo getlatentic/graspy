@@ -108,13 +108,13 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(JSON.stringify(seen[0])).toContain("praise them");
   });
 
-  it("asks the teacher to think briefly, which keeps a reply to a few seconds, and the judge to think in full", async () => {
+  it("asks the teacher and the kindness judge to think briefly, which keeps a reply to a few seconds", async () => {
     const { env, efforts } = tutor([marked, call("say_it", { text: "Well done! You said nine." })]);
 
     await takeTurn(env, ask);
 
-    expect(efforts.filter((effort) => effort === "low")).toHaveLength(2);
-    expect(efforts.filter((effort) => effort !== "low")).toEqual([undefined]);
+    expect(efforts.filter((effort) => effort === "low")).toHaveLength(3);
+    expect(efforts.filter((effort) => effort !== "low")).toEqual([]);
   });
 
   it("sends a line with grown-up words back, and speaks the rewrite", async () => {
