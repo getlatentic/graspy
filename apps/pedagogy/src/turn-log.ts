@@ -68,6 +68,8 @@ export interface Run {
   learnerClass: string;
   plan: string | null;
   startedAt: string;
+  /** The app the lesson was taken in. */
+  site?: string;
   finished: "rest" | "turn-limit" | "stalled";
   turns: Turn[];
   /** What the page's audio elements did during the lesson. */
