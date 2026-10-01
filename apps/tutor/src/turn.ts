@@ -31,6 +31,7 @@ import { exampleBlock } from "./phrasebook";
 import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
+import { holdsANumber, repliedTo, routeUtterance } from "./router";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
   markRecitation,
@@ -402,6 +403,8 @@ async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
   const unsure = unsureReply(ask);
   if (unsure !== null) return unsure;
+  const routed = await routedReply(env, ask);
+  if (routed !== null) return routed;
   const plain = await timed("read", markedFromPlainNumber(env, ask));
   if (plain !== null) return plain;
   const listed = markedFromPlainSequence(ask);
@@ -570,6 +573,19 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
   if (reading.kind !== "dont_know") return null;
   const line = correctionLine(ask, false);
   return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "dont_know", say: line };
+}
+
+/**
+ * What a child said that is no number, answered as a conversation: where the deployment sets `ROUTER` to on, the words
+ * are routed to one action (see router.ts). Null where that is off, the words hold a number or are a sound-alike for one
+ * (marking reads and checks those), or nothing could say, which leaves the usual marking.
+ */
+async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
+  if (env.ROUTER !== "on" || ask.language !== "en" || ask.expect.kind !== "fact") return null;
+  const heard = heardForPrompt(ask.heard);
+  if (heard === "" || holdsANumber(heard) || HOMOPHONES[heard.toLowerCase().replace(/[^a-z]/g, "")] !== undefined) return null;
+  const route = await timed("route", routeUtterance(env, ask)).catch(() => null);
+  return route === null ? null : repliedTo(env, ask, route).catch(() => null);
 }
 
 /**

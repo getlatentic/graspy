@@ -25,7 +25,8 @@
       "ai": { "binding": "AI" },
       // INTERPRETER=clef would read what a child meant with Cloudflare's Clef (src/interpret.ts). It is off: on the
       // benchmark (bench/README.md) it does not beat the small reader.
-      "vars": { "SPELLER_HOST": "bedrock" },
+      // ROUTER=on answers a child who is not giving a number as a conversation (src/router.ts); on in staging first.
+      "vars": { "SPELLER_HOST": "bedrock", "ROUTER": "on" },
       "durable_objects": {
         "bindings": [{ "name": "Learner", "class_name": "Learner" }]
       }
