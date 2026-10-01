@@ -3,6 +3,7 @@ import { SAFETY_MODEL } from "../src/guard";
 import { READER_MODEL } from "../src/read";
 import { STEADY_LINES } from "../src/lines";
 import { praiseLine } from "../src/praise";
+import { WRONG_NUMBER, withNumber } from "../src/phrasebook";
 import { DEFAULT_MODEL } from "../src/speller-host";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -515,5 +516,33 @@ describe("a number the recogniser wrote as the word it sounds like", () => {
     const { env } = tutor([], [], [], [3]);
     const reply = await takeTurn(env, ask("3", "it is to go three"));
     expect(reply.verdict).toBe("correct");
+  });
+});
+
+describe("what a wrong number is answered with, and a list counted past its end", () => {
+  const fact = (heard: string): Ask => ({ prompt: "What is three times three?", heard, language: "en", expect: { kind: "fact", item: "3x3" } });
+
+  it("says the right number for the child to say after the teacher, without asking a model", async () => {
+    const { env } = tutor([], [], [], [6]);
+    const reply = await takeTurn(env, fact("six"));
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.say).toMatch(/\bnine\b/i);
+    expect(reply.say).not.toBe(STEADY_LINES.wrong.en);
+    expect(WRONG_NUMBER.map((line) => withNumber(line, "nine"))).toContain(reply.say);
+  });
+
+  it("marks a count that went past the end of the list as wrong by code, naming the item left out", async () => {
+    const to10 = Array.from({ length: 10 }, (_, at) => ({ id: String(at + 1), spoken: [String(at + 1), ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][at]] }));
+    const { env, seen } = tutor([call("say_it", { text: "You counted up to nine." })]);
+    const reply = await takeTurn(env, {
+      prompt: "Count from one to ten.",
+      heard: "1, 2, 3, 4, 5, 6, 7, 8, 9, 11",
+      language: "en",
+      expect: { kind: "sequence", item: "count", items: to10 },
+    });
+    expect(reply.verdict).toBe("wrong");
+    expect(reply.result).toMatchObject({ missing: ["10"] });
+    expect(reply.heard).toBeUndefined();
+    expect(String((seen[0][0] as { content: string }).content)).toContain("already been marked");
   });
 });

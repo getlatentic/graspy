@@ -84,3 +84,19 @@ describe("heardSequence", () => {
     expect(heardSequence(fives, said)).toBeNull();
   });
 });
+
+describe("a number past the end of the list", () => {
+  const to10 = Array.from({ length: 10 }, (_, at) => ({ id: String(at + 1), spoken: [String(at + 1), ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][at]] }));
+
+  it("is read as said only when asked for, so a child who counted on is marked and not guessed at", () => {
+    const counted = "1, 2, 3, 4, 5, 6, 7, 8, 9, 11";
+    expect(heardSequence(to10, counted)).toBeNull();
+    expect(heardSequence(to10, counted, true)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "11"]);
+  });
+
+  it("is still left to the teacher when the number falls inside the list and is no item, or is a garbled run", () => {
+    expect(heardSequence(fives, "5, 10, 15, 21", true)).toBeNull();
+    expect(heardSequence(fives, "twenty five sixty five", true)).toBeNull();
+    expect(heardSequence(to10, "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1235", true)).toBeNull();
+  });
+});
