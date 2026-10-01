@@ -296,7 +296,11 @@
           ]
         }
       },
-      "skill": "weeks-to-days"
+      "skill": "weeks-to-days",
+      "supporting_skills": [
+        "skip-count-7",
+        "days-of-the-week"
+      ]
     },
     {
       "id": "practice",
@@ -326,7 +330,11 @@
           ]
         }
       },
-      "skill": "weeks-to-days"
+      "skill": "weeks-to-days",
+      "supporting_skills": [
+        "skip-count-7",
+        "days-of-the-week"
+      ]
     },
     {
       "id": "feedback",
@@ -363,7 +371,11 @@
           ]
         }
       },
-      "skill": "weeks-to-days"
+      "skill": "weeks-to-days",
+      "supporting_skills": [
+        "skip-count-7",
+        "days-of-the-week"
+      ]
     },
     {
       "id": "retain",
