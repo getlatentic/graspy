@@ -28,6 +28,11 @@
     "Almost, it is {number}. Say {number} after me.",
     "Listen to me: {number}. Say {number}."
   ],
+  "told_number": [
+    "That is all right. It is {number}, say it after me.",
+    "No problem. Listen: {number}, now say it.",
+    "Let me help you. It is {number}, say it."
+  ],
   "not_quite": [
     "Not quite. We will look at it together.",
     "Almost. Let us look again.",

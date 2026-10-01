@@ -1,6 +1,6 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, NOT_QUITE, WRONG_NUMBER, withNumber } from "./phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
 import type { Ask } from "./turn";
@@ -50,16 +50,17 @@ export function praiseLine(ask: Ask): string | null {
  * The line for a number answered wrongly, least help first: the plan's cue, then its hint, and only then the
  * right number said for the child to say after the teacher. Which rung it is comes from how many times this
  * child has already been answered wrongly on this question. Null where another language, or an answer that is
- * not a number, leaves the steady line.
+ * not a number, leaves the steady line. A child who said they did not know has given nothing to be almost
+ * right, so the number is told without "almost" or "not quite".
  */
-export function correctionLine(ask: Ask): string | null {
+export function correctionLine(ask: Ask, tried = true): string | null {
   if (ask.language !== "en" || ask.expect.kind !== "fact") return null;
-  if (ask.support === "probed") return pick(NOT_QUITE, ask);
+  if (ask.support === "probed" && tried) return pick(NOT_QUITE, ask);
   const wrongBefore = ask.earlier?.filter((told) => told.verdict === "wrong").length ?? 0;
   const hint = ask.expect.hints?.[wrongBefore];
   if (hint !== undefined && lineProblems(hint).length === 0) return hint;
   const number = spokenNumber(expectedAnswer(ask.expect.item));
   if (number === null) return null;
-  const lines = WRONG_NUMBER.map((line) => withNumber(line, numberWords(number)));
+  const lines = (tried ? WRONG_NUMBER : TOLD_NUMBER).map((line) => withNumber(line, numberWords(number)));
   return lines.every((line) => lineProblems(line).length === 0) ? pick(lines, ask) : null;
 }

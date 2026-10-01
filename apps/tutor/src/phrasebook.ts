@@ -8,6 +8,8 @@ export const RIGHT_LIST: string[] = book.right_list;
 export const RIGHT_WITH_YOU: string[] = book.right_with_you;
 /** When a number was asked for and the child gave another: the right one, said for them to say after the teacher. */
 export const WRONG_NUMBER: string[] = book.wrong_number;
+/** When a number was asked for and the child said they did not know it: no "almost", for they tried nothing. */
+export const TOLD_NUMBER: string[] = book.told_number;
 /** When the child was asked for the next item before being told it and was wrong: only that it was not it. */
 export const NOT_QUITE: string[] = book.not_quite;
 
@@ -36,5 +38,5 @@ export function withoutSlots(line: string): string {
 
 /** Every line the phrasebook can say, with a number filled in where it takes one, for checking them all. */
 export function allLines(numberWords: string): string[] {
-  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...WRONG_NUMBER.map((line) => withNumber(line, numberWords)), ...NOT_QUITE, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat().map(withoutSlots)];
+  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...WRONG_NUMBER.map((line) => withNumber(line, numberWords)), ...TOLD_NUMBER.map((line) => withNumber(line, numberWords)), ...NOT_QUITE, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat().map(withoutSlots)];
 }
