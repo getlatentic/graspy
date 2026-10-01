@@ -405,10 +405,14 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
           continue;
         }
         // The two checks run side by side, so the child waits for the slower, not for both.
+        // A check that cannot run is a no: the line is not spoken, and the child keeps the marked answer.
         const [safe, fit] = await timed("guard", Promise.all([
           safeForChild(env, ask.heard, text),
           fitForChild(env, ask.heard, text),
-        ]));
+        ]).catch((error: unknown) => {
+          console.log(JSON.stringify({ part: "guard-failed", why: String(error) }));
+          return [false, false];
+        }));
         if (!safe || !fit) {
           console.log(JSON.stringify({ part: "line-rejected", why: { safe, fit } }));
           answer({ error: "That line is not right for a child. Write one kind, simple line about how they did." });

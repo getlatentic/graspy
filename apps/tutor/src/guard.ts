@@ -12,7 +12,7 @@ import rules from "../../../content/child-language.json";
 export const SAFETY_MODEL = "@cf/meta/llama-guard-3-8b";
 /** Reads a line for meaning in English, Pidgin and Yoruba, where a list of words cannot. */
 export const JUDGE_MODEL = "@cf/openai/gpt-oss-120b";
-/** A yes or no against a rubric needs little reasoning: measured on twenty safe and unsafe lines, low effort judged all of them right in half the time. */
+/** A yes or no against a rubric needs little reasoning: measured on twenty safe and unsafe English lines, low effort judged all of them right in half the time. */
 const JUDGE_EFFORT = "low";
 
 /** A reply is one or two short sentences, heard by children from six to eleven. */

@@ -117,6 +117,18 @@ describe("a turn only ever speaks a line a child may hear", () => {
     expect(efforts.filter((effort) => effort !== "low")).toEqual([]);
   });
 
+  it("keeps the marked answer and says the steady line when a check cannot run", async () => {
+    const { env } = tutor([marked, call("say_it", { text: "Well done! You said nine." }), call("say_it", { text: "Well done! Nine." })]);
+    const failing = {
+      AI: { run: (model: string, input: never) => (model === SAFETY_MODEL ? Promise.reject(new Error("guard is down")) : (env.AI as { run: Function }).run(model, input)) },
+    } as unknown as Env;
+
+    const reply = await takeTurn(failing, ask);
+
+    expect(reply.verdict).toBe("correct");
+    expect(reply.say).toBe(praiseLine(ask));
+  });
+
   it("sends a line with grown-up words back, and speaks the rewrite", async () => {
     const { env, seen } = tutor([
       marked,
