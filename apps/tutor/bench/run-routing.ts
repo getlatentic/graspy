@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 const URL_ = process.argv[2] ?? "http://localhost:8799";
 const PROMPT = "One heap has five oranges. How many oranges are in two heaps?";
 const rows = readFileSync(new URL("./routing.jsonl", import.meta.url).pathname, "utf8").trim().split("\n").map((l) => JSON.parse(l) as { heard: string; expect: string });
-const SAFE_FOR_FEW_WORDS = ["not_know", "repeat_question"];
+const SAFE_FOR_FEW_WORDS = ["not_know", "repeat_question", "needs_help"];
 const fewWords = (heard: string) => heard.split(/[^\p{L}\p{N}']+/u).filter(Boolean).length <= 3;
 const holdsANumber = (heard: string) => /\d|\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)\b/i.test(heard);
 

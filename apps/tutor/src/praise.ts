@@ -1,6 +1,6 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, LIST_STOPPED, NOT_HEARD, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, LIST_STOPPED, LIST_WENT_ON, NEEDS_HELP, NOT_HEARD, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
 import type { SequenceItem, SequenceResult } from "./recite";
@@ -92,10 +92,18 @@ function spokenWords(item: SequenceItem): string | null {
 export function listStoppedLine(ask: Ask, result: SequenceResult): string | null {
   if (ask.language !== "en" || ask.expect.kind !== "sequence") return null;
   const broken = new Set([...result.missing, ...result.out_of_order]);
-  const at = ask.expect.items.findIndex((item) => broken.has(item.id));
-  if (at <= 0) return null;
-  const last = spokenWords(ask.expect.items[at - 1]);
+  const items = ask.expect.items;
+  const at = items.findIndex((item) => broken.has(item.id));
+  // Every item said in order, and more after the last: they went on past the end.
+  const wentOn = at === -1 && items.every((item) => result.said.includes(item.id));
+  if (at === 0 || (at === -1 && !wentOn)) return null;
+  const last = spokenWords(items[wentOn ? items.length - 1 : at - 1]);
   if (last === null) return null;
-  const lines = LIST_STOPPED.map((line) => line.replaceAll("{last}", last));
+  const lines = (wentOn ? LIST_WENT_ON : LIST_STOPPED).map((line) => line.replaceAll("{last}", last));
   return lines.every((line) => lineProblems(line).length === 0) ? pick(lines, ask) : null;
+}
+
+/** The line for a child who needs the toilet, water or help: let go with no condition. Never written by a model. */
+export function needsHelpLine(ask: Ask): string | null {
+  return ask.language !== "en" ? null : pick(NEEDS_HELP, ask);
 }

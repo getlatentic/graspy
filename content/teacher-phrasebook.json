@@ -43,6 +43,16 @@
     "You did well up to {last}.",
     "That was right up to {last}."
   ],
+  "list_went_on": [
+    "You said them all. We stop at {last}.",
+    "That is every one. We stop at {last}.",
+    "You counted them all. We stop at {last}."
+  ],
+  "needs_help": [
+    "Of course. Go, and come back when you are ready.",
+    "Yes, go now. We will wait for you.",
+    "That is all right. Go, then come back to me."
+  ],
   "not_heard": [
     "I did not hear you. Say it again, a little louder.",
     "Sorry, I missed that. Please say it louder.",
