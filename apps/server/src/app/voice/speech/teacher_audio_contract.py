@@ -234,6 +234,11 @@ def _plan_text(utterance_id: str, language: str) -> str | None:
     return found[1].say.get(language) if found else None
 
 
+_LETTER_REPAIR_TEMPLATES = {
+    "en": "Start from the letter {first}. Keep going to the letter {last}.",
+    "yo": "Bẹ̀rẹ̀ láti lẹ́tà {first}. Tẹ̀ síwájú dé lẹ́tà {last}.",
+    "pcm": "Start from letter {first}. Keep going reach letter {last}.",
+}
 _REPAIR_TEMPLATES = {
     "en": "Start from {first}. Count on to {last}.",
     "yo": "Bẹ̀rẹ̀ láti {first}. Tẹ̀ síwájú dé {last}.",
@@ -256,9 +261,10 @@ def _repair_text(utterance_id: str, language: str) -> str | None:
     if found is None:
         return None
     _, _, required, lead = found
-    return template.format(
-        first=_item_words(lead[-1].id), last=_item_words(required[-1].id)
-    )
+    first, last = lead[-1].id, required[-1].id
+    if len(first) == 1 and len(last) == 1:
+        template = _LETTER_REPAIR_TEMPLATES[language]
+    return template.format(first=_item_words(first), last=_item_words(last))
 
 
 def teacher_utterance(utterance_id: str, language: str) -> TeacherUtterance:

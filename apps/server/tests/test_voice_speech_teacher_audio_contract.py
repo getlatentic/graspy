@@ -204,7 +204,10 @@ def test_a_list_asked_again_from_where_it_broke_is_said_from_the_last_item_right
     letters = repair_utterance_id(
         "english.alphabet.saying-the-alphabet", "practice", "m"
     )
-    assert teacher_utterance(letters, "en").text == "Start from L. Count on to Z."
+    assert (
+        teacher_utterance(letters, "en").text
+        == "Start from the letter L. Keep going to the letter Z."
+    )
     days = repair_utterance_id(
         "mathematics.time.days-of-the-week", "practice", "friday"
     )

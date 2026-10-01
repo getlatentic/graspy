@@ -617,7 +617,7 @@ def test_only_a_turn_that_names_its_plan_event_is_lesson_evidence():
     evidence = evidence_from_rows(rows, PLANS)
 
     assert evidence == [
-        Evidence(T2, "assess", DAY_1, "correct"),
+        Evidence(T2, "assess", DAY_1, "correct", None, None, "mul_fact_2x7_answer"),
         Evidence(TWOS, "present", DAY_1, None),
     ]
 
@@ -911,3 +911,53 @@ def test_a_repair_is_remembered_against_the_list_it_repairs():
     repaired = expectation(exercise_by_prompt_id(f"repair.{DAYS}.practice.friday"))
     whole = expectation(exercise_by_prompt_id(f"plan.{DAYS}.practice"))
     assert repaired["item"] == whole["item"]
+
+
+def _repair_try(claimed, said_days, missing, decision="correct"):
+    result = {"said": said_days, "missing": missing, "out_of_order": []}
+    return Evidence(
+        DAYS,
+        "practice",
+        DAY_1,
+        decision,
+        result,
+        None,
+        f"repair.{DAYS}.practice.{claimed}",
+    )
+
+
+def test_a_repair_claimed_from_later_than_the_try_broke_earns_nothing():
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    cheated = [*broke, _repair_try("saturday", ["saturday"], [])]
+    state = progress_by_plan(cheated, PLANS, DAY_1)[DAYS]
+    assert "practice" in state.retry_today and "practice" not in state.done_today
+    honest = [*broke, _repair_try("friday", ["friday", "saturday"], [])]
+    state = progress_by_plan(honest, PLANS, DAY_1)[DAYS]
+    assert "practice" not in state.retry_today and "practice" in state.done_today
+
+
+def test_a_repair_nobody_heard_leaves_the_start_where_it_was_with_the_tail_only_missing():
+    evidence = [
+        *days_taught(),
+        days_try(WEEK[:5]),
+        _repair_try("friday", [], ["friday", "saturday"], "not_understood"),
+    ]
+    assert progress_by_plan(evidence, PLANS, DAY_1)[DAYS].resume_at == {
+        "practice": "friday"
+    }
+
+
+def test_going_from_nothing_right_to_something_right_is_progress_not_a_second_miss():
+    state_after = progress_by_plan(
+        [*days_taught(), days_try([]), days_try(WEEK[:3])], PLANS, DAY_1
+    )[DAYS]
+    assert state_after.failed_today["practice"] == 0
+    assert (
+        days_offer([*days_taught(), days_try([]), days_try(WEEK[:3])]).event_id
+        != "span"
+    )
+
+
+def test_naming_where_it_broke_leaves_no_general_feedback_owed():
+    state = progress_by_plan([*days_taught(), days_try(WEEK[:5])], PLANS, DAY_1)[DAYS]
+    assert state.feedback_owed == set() and state.resume_at == {"practice": "friday"}

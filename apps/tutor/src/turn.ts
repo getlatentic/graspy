@@ -232,7 +232,7 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "hear it again; if they gave a list, do not say the list.",
     "Ask nothing more of a child who was right: the lesson moves on by itself straight after your",
     "line, so a request to say it again would be one they are never given the turn to answer.",
-    ...(ask.expect.kind === "sequence"
+    ...(ask.expect.kind === "sequence" && ask.expect.before?.length
       ? [
           "If a list broke part of the way, say only how far they got. Do not say the next item and do not say",
           "the list again: the lesson asks them to carry on from the last one they had right.",

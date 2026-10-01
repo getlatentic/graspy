@@ -14,6 +14,7 @@ fun answer(
     localId: String,
     ownerId: String?,
     status: SubmissionStatus = SubmissionStatus.PENDING,
+    promptId: String = "plan.mathematics.table-2.ask",
 ) = SubmissionEntity(
     localId = localId,
     ownerId = ownerId,
@@ -25,7 +26,7 @@ fun answer(
     spokenLanguage = null,
     task = "lesson",
     topic = "multiplication",
-    promptId = "plan.mathematics.table-2.ask",
+    promptId = promptId,
     consentScope = "voice_lesson",
     status = status.name,
     serverSampleId = null,

@@ -25,14 +25,19 @@ describe("the teacher's phrasebook", () => {
     expect(RIGHT).toContain(praiseLine(fact("triangle")));
   });
 
-  it("tells the model, for a list, to name only how far the child got", async () => {
-    const seen: string[] = [];
-    const env = {
-      AI: { run: async (_m: string, input: { messages: { content: string }[] }) => (seen.push(JSON.stringify(input.messages)), { choices: [{ message: { content: "", tool_calls: [] } }] }) },
-    } as unknown as Env;
-    const items = [{ id: "1", spoken: ["1", "one"] }, { id: "2", spoken: ["2", "two"] }];
-    await takeTurn(env, { prompt: "Count.", heard: "one three", language: "en", expect: { kind: "sequence", item: "c", items } }).catch(() => undefined);
-    expect(seen.find((call) => call.includes("class teacher"))).toContain("say only how far they got");
+  it("tells the model, for a list asked again from where it broke, to name only how far the child got", async () => {
+    const brief = async (expect: object) => {
+      const seen: string[] = [];
+      const env = {
+        AI: { run: async (_m: string, input: { messages: { content: string }[] }) => (seen.push(JSON.stringify(input.messages)), { choices: [{ message: { content: "", tool_calls: [] } }] }) },
+      } as unknown as Env;
+      await takeTurn(env, { prompt: "Count.", heard: "one three", language: "en", expect } as Ask).catch(() => undefined);
+      return seen.find((call) => call.includes("class teacher")) ?? "";
+    };
+    const items = [{ id: "2", spoken: ["2", "two"] }, { id: "3", spoken: ["3", "three"] }];
+    const before = [{ id: "1", spoken: ["1", "one"] }];
+    expect(await brief({ kind: "sequence", item: "c", items, before })).toContain("say only how far they got");
+    expect(await brief({ kind: "sequence", item: "c", items })).not.toContain("say only how far they got");
   });
 
   it("is shown to the model as how the teacher sounds", async () => {

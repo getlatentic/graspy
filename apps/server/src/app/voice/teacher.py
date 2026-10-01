@@ -13,6 +13,7 @@ from datetime import date
 
 from .curriculum import (
     LANGUAGES,
+    REPAIR_PREFIX,
     LessonEvent,
     LessonPlan,
     activity_prompt_id,
@@ -56,6 +57,8 @@ class Evidence:
     decision: str | None = None
     result: dict | None = None
     exercise: dict | None = None
+    # What the child was asked, when it was not the plan's own line: a list asked again from where it broke.
+    prompt_id: str | None = None
 
     @property
     def facts_right(self) -> frozenset[int]:
@@ -171,10 +174,34 @@ def _rung_of(plan: LessonPlan, event: LessonEvent) -> LessonEvent | None:
     return next((other for other in plan.events if other.support == event.id), None)
 
 
-def _got_further(event: LessonEvent, before: str | None, now: str | None) -> bool:
-    """Whether a wrong try of a list broke later than the one before it: some progress, not a repeat."""
-    if before is None or now is None or event.activity is None:
+def _repaired_past_the_break(
+    event: LessonEvent, item: Evidence, state: PlanProgress
+) -> bool:
+    """Whether an answer claims a repair that starts later than the child's try broke.
+
+    Saying only the last item of a list is not doing what the step asked, so it earns nothing."""
+    if not item.prompt_id or not item.prompt_id.startswith(REPAIR_PREFIX):
         return False
+    claimed = item.prompt_id.rpartition(".")[2]
+    broke_at = state.resume_at.get(item.event_id)
+    ids = [one.id for one in (event.activity.items if event.activity else ())]
+    return (
+        broke_at is None
+        or claimed not in ids
+        or ids.index(claimed) > ids.index(broke_at)
+    )
+
+
+def _got_further(
+    event: LessonEvent, before: str | None, now: str | None, missed_before: bool
+) -> bool:
+    """Whether a wrong try of a list got past where the one before it broke: some progress, not a repeat.
+
+    A try that had nothing right and is followed by one that has something is progress too."""
+    if now is None or event.activity is None:
+        return False
+    if before is None:
+        return missed_before
     ids = [item.id for item in event.activity.items]
     return ids.index(now) > ids.index(before)
 
@@ -214,7 +241,12 @@ def _record_attempt(
     if (
         item.decision == "correct"
         or item.facts_right
-        or _got_further(event, state.resume_at.get(item.event_id), broke_at)
+        or _got_further(
+            event,
+            state.resume_at.get(item.event_id),
+            broke_at,
+            streaks.get(key, 0) > 0,
+        )
     ):
         streaks[key] = 0
     else:
@@ -247,6 +279,8 @@ def progress_by_plan(
             continue
         state, plan = progress[item.plan_id], plans[item.plan_id]
         event = plan.event(item.event_id)
+        if _repaired_past_the_break(event, item, state):
+            continue
         state.last_day = (
             item.day if state.last_day is None else max(state.last_day, item.day)
         )
@@ -748,13 +782,20 @@ def evidence_from_rows(
         plan = plans.get(plan_id)
         if plan is None or not any(event.id == event_id for event in plan.events):
             continue
+        prompt_id = (
+            json.loads(row["metadata_json"]).get("prompt_id")
+            if row.get("metadata_json")
+            else None
+        )
         result = json.loads(row["result_json"]) if row.get("result_json") else None
         exercise = (
             json.loads(row["exercise_json"]) if row.get("exercise_json") else None
         )
         day = lesson_day(int(row["at"]))
         items.append(
-            Evidence(plan_id, event_id, day, row.get("decision"), result, exercise)
+            Evidence(
+                plan_id, event_id, day, row.get("decision"), result, exercise, prompt_id
+            )
         )
     return items
 
