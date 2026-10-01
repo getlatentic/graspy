@@ -83,6 +83,12 @@
             "ten",
             "10"
           ]
+        },
+        "hints": {
+          "en": [
+            "One heap is five. What is five and five?",
+            "Five, then five more. Count on from five."
+          ]
         }
       },
       "skill": "equal-groups"
@@ -220,6 +226,12 @@
             "fifteen",
             "15"
           ]
+        },
+        "hints": {
+          "en": [
+            "Count the heaps: five, ten. What comes next?",
+            "Ten, and five more. What is that?"
+          ]
         }
       },
       "skill": "groups-of-five"
@@ -246,6 +258,12 @@
           "pcm": [
             "thirty",
             "30"
+          ]
+        },
+        "hints": {
+          "en": [
+            "Count the heaps: five, ten, fifteen. Keep counting.",
+            "Fifteen, twenty, twenty-five. What comes next?"
           ]
         }
       },
@@ -282,6 +300,12 @@
           "pcm": [
             "forty",
             "40"
+          ]
+        },
+        "hints": {
+          "en": [
+            "Count the heaps: five, ten, fifteen. Keep counting.",
+            "Twenty-five, thirty, thirty-five. What comes next?"
           ]
         }
       },

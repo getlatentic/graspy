@@ -361,3 +361,18 @@ def test_a_broken_graph_is_refused():
     assert "c: taught by no.such.plan, which does not exist" in problems
     stray = {"a": Skill("a", "A", ())}
     assert any("names the skill" in p for p in check_skills(stray, plans))
+
+
+def test_a_wrong_answer_is_met_with_the_plans_hints_least_help_first_and_only_where_it_wrote_them():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+
+    fives = "mathematics.number.counting-in-fives"
+    for event in ("recall", "span", "practice", "assess"):
+        marking = expectation(exercise_by_prompt_id(f"plan.{fives}.{event}"))
+        assert len(marking["hints"]) == 2, event
+    first = expectation(exercise_by_prompt_id(f"plan.{fives}.practice"))["hints"][0]
+    assert first == "Count the heaps: five, ten, fifteen. Keep counting."
+    assert "hints" not in expectation(exercise_by_prompt_id(f"echo.{fives}.recall"))
+    assert "hints" not in expectation(exercise_by_prompt_id("mul_fact_2x3_answer"))
+    assert exercise_by_prompt_id(f"plan.{fives}.practice", "yo").hints == ()

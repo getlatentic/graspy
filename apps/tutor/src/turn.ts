@@ -54,7 +54,7 @@ const LINE_BUDGET_MS = 10_000;
 
 /** What the child was asked for, and therefore how their answer is judged. */
 export type Expect =
-  | { kind: "fact"; item: string; accept?: string[] }
+  | { kind: "fact"; item: string; accept?: string[]; hints?: string[] }
   | { kind: "recitation"; item: string; table: number; multipliers: number[] }
   | { kind: "sequence"; item: string; items: SequenceItem[]; more?: SequenceItem[]; before?: SequenceItem[] };
 

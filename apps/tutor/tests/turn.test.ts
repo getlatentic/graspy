@@ -546,3 +546,29 @@ describe("what a wrong number is answered with, and a list counted past its end"
     expect(String((seen[0][0] as { content: string }).content)).toContain("already been marked");
   });
 });
+
+describe("a wrong number, least help first", () => {
+  const hints = ["Count the heaps: five, ten. What comes next?", "Ten, and five more. What is that?"];
+  const ask = (earlier: Ask["earlier"], withHints = true): Ask => ({
+    prompt: "Three heaps of five. How many?",
+    heard: "twelve",
+    language: "en",
+    earlier,
+    expect: { kind: "fact", item: "15", ...(withHints ? { hints } : {}) },
+  });
+  const wrong = { verdict: "wrong" as const, line: "x" };
+  const say = async (a: Ask) => (await takeTurn(tutor([], [], [], [12]).env, a)).say;
+
+  it("cues first, then hints, and only then says the number", async () => {
+    expect(await say(ask([]))).toBe(hints[0]);
+    expect(await say(ask([{ ...wrong, line: hints[0] }]))).toBe(hints[1]);
+    const told = await say(ask([{ ...wrong, line: hints[0] }, { ...wrong, line: hints[1] }]));
+    expect(told).toMatch(/\bfifteen\b/i);
+    expect(WRONG_NUMBER.map((line) => withNumber(line, "fifteen"))).toContain(told);
+  });
+
+  it("says the number at once where the plan gave no hints, and never moves a rung for a recording nobody heard", async () => {
+    expect(await say(ask([], false))).toMatch(/\bfifteen\b/i);
+    expect(await say(ask([{ verdict: "unheard", line: "I did not hear you." }]))).toBe(hints[0]);
+  });
+});

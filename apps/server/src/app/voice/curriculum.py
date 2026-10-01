@@ -41,6 +41,8 @@ class Activity:
     prompt_id: str | None = None
     items: tuple[SequenceItem, ...] = ()
     expected: tuple[str, ...] = ()
+    # What to say to a child who answered wrongly, least help first, before the answer is told.
+    hints: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -107,7 +109,11 @@ def _activity(payload: dict | None, language: str) -> Activity | None:
             for item in payload["items"]
         )
         return Activity("sequence", items=items)
-    return Activity("answer", expected=tuple(payload["expected"][language]))
+    return Activity(
+        "answer",
+        expected=tuple(payload["expected"][language]),
+        hints=tuple(payload.get("hints", {}).get(language, ())),
+    )
 
 
 def plan_from_json(payload: dict, language: str = "en") -> LessonPlan:

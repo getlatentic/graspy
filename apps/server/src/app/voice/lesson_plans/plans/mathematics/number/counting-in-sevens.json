@@ -294,6 +294,12 @@
             "fourteen",
             "14"
           ]
+        },
+        "hints": {
+          "en": [
+            "One week is seven days. What is seven and seven?",
+            "Seven, then seven more. Count on from seven."
+          ]
         }
       },
       "skill": "weeks-to-days"
@@ -323,6 +329,12 @@
             "twenty-eight",
             "28",
             "twenty eight"
+          ]
+        },
+        "hints": {
+          "en": [
+            "Count the weeks: seven, fourteen. What comes next?",
+            "Fourteen, and seven more. What is that?"
           ]
         }
       },
@@ -360,6 +372,12 @@
           "pcm": [
             "forty-two",
             "42"
+          ]
+        },
+        "hints": {
+          "en": [
+            "Count the weeks: seven, fourteen, twenty-one. Keep counting.",
+            "Twenty-eight, thirty-five. What comes next?"
           ]
         }
       },
