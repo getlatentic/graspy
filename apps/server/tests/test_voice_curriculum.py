@@ -221,7 +221,7 @@ def test_every_yoruba_alias_is_authored_the_way_a_transcript_writes_it():
 
 def _with_support(**changes):
     payload = json.loads(
-        (PLANS_DIR / "mathematics/number/counting-in-fives.json").read_text()
+        (PLANS_DIR / "mathematics/time/days-of-the-week.json").read_text()
     )
     span = next(event for event in payload["events"] if event["id"] == "span")
     span.update(changes)
@@ -229,21 +229,19 @@ def _with_support(**changes):
 
 
 def test_a_shorter_step_is_the_start_of_the_list_it_supports():
-    plan = load_plans()["mathematics.number.counting-in-fives"]
+    plan = load_plans()["mathematics.time.days-of-the-week"]
     span = plan.event("span")
     assert span.support == "practice"
     assert [item.id for item in span.activity.items] == [
         item.id for item in plan.event("practice").activity.items
     ][: len(span.activity.items)]
-    assert check_catalogue({plan.id: plan}) == [
-        "mathematics.number.counting-in-fives: prerequisite mathematics.number.counting-in-tens does not exist"
-    ]
+    assert [p for p in check_catalogue({plan.id: plan}) if "span" in p] == []
 
 
 @pytest.mark.parametrize(
     "changes,problem",
     [
-        ({"support": "feedback"}, "is not the start of feedback's list, cut short"),
+        ({"support": "feedback"}, "has no activity to compare with feedback's"),
         ({"support": "attention"}, "supports an event that does not come after it"),
         ({"support": "nowhere"}, "supports an event that does not come after it"),
     ],
@@ -256,7 +254,7 @@ def test_a_shorter_step_that_does_not_lead_to_its_event_is_refused(changes, prob
 
 def test_a_shorter_step_as_long_as_the_whole_list_is_refused():
     payload = json.loads(
-        (PLANS_DIR / "mathematics/number/counting-in-fives.json").read_text()
+        (PLANS_DIR / "mathematics/time/days-of-the-week.json").read_text()
     )
     events = {event["id"]: event for event in payload["events"]}
     events["span"]["activity"]["items"] = events["practice"]["activity"]["items"]
@@ -268,21 +266,16 @@ def test_a_shorter_count_is_marked_against_its_own_items_and_told_what_follows()
     from app.voice.exercises import plan_exercise
     from app.voice.expectation import expectation
 
-    step = expectation(plan_exercise("plan.mathematics.number.counting-in-fives.span"))
-    full = expectation(
-        plan_exercise("plan.mathematics.number.counting-in-fives.practice")
-    )
+    step = expectation(plan_exercise("plan.mathematics.time.days-of-the-week.span"))
+    full = expectation(plan_exercise("plan.mathematics.time.days-of-the-week.practice"))
     assert [item["id"] for item in step["items"]] == [
-        "5",
-        "10",
-        "15",
-        "20",
-        "25",
-        "30",
-        "35",
-        "40",
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
     ]
-    assert [item["id"] for item in step["more"]] == ["45", "50", "55", "60"]
+    assert [item["id"] for item in step["more"]] == ["friday", "saturday"]
     assert "more" not in full
 
 
@@ -290,11 +283,32 @@ def test_a_shorter_step_must_be_an_elicit_performance_and_the_only_one_for_its_e
     plan = _with_support(event="provide_guidance")
     assert any("elicit_performance" in p for p in check_catalogue({plan.id: plan}))
     payload = json.loads(
-        (PLANS_DIR / "mathematics/number/counting-in-fives.json").read_text()
+        (PLANS_DIR / "mathematics/time/days-of-the-week.json").read_text()
     )
     twin = dict(next(e for e in payload["events"] if e["id"] == "span"), id="span-two")
     payload["events"].insert(5, twin)
     two = plan_from_json(payload)
     assert any(
         "more than one shorter step" in p for p in check_catalogue({two.id: two})
+    )
+
+
+def test_a_shorter_question_leads_to_a_question_of_the_same_kind():
+    plans = load_plans()
+    fives = plans["mathematics.number.counting-in-fives"]
+    assert fives.event("span").support == "practice"
+    assert fives.event("span").activity.kind == fives.event("practice").activity.kind
+    assert [p for p in check_catalogue({fives.id: fives}) if "span" in p] == []
+    payload = json.loads(
+        (PLANS_DIR / "mathematics/number/counting-in-fives.json").read_text()
+    )
+    span = next(e for e in payload["events"] if e["id"] == "span")
+    span["activity"] = {
+        "kind": "sequence",
+        "items": [{"id": "5", "spoken": {"en": ["5"], "yo": ["5"], "pcm": ["5"]}}],
+    }
+    unlike = plan_from_json(payload)
+    assert any(
+        "is not the same kind of activity" in p
+        for p in check_catalogue({unlike.id: unlike})
     )
