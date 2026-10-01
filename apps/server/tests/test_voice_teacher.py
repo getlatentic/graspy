@@ -1185,13 +1185,60 @@ def test_the_check_passed_alone_the_next_day_completes_a_lesson_that_was_only_pa
     assert not state.supported_today and state.supported_days == {DAY_1}
 
 
-def test_a_lesson_passed_only_with_help_does_not_unlock_the_lesson_that_needs_it():
+def test_a_lesson_passed_only_with_help_unlocks_the_lesson_that_needs_it_only_after_two_such_days():
     helped = [_assess(DAY_1, "try_again"), _assess(DAY_1)]
-    progress = progress_by_plan(helped, PLANS, DAY_2)
-    assert next_new_plan(PLANS, progress, "primary_1").id != TWOS
+    assert not progress_by_plan(helped, PLANS, DAY_2)[COUNT_20].unlocks
+    twice = [*helped, _assess(DAY_2, "try_again"), _assess(DAY_2)]
+    assert progress_by_plan(twice, PLANS, DAY_3)[COUNT_20].unlocks
     alone = [*helped, Evidence(COUNT_20, "assess", DAY_2, "correct")]
-    after = progress_by_plan(alone, PLANS, DAY_3)
-    assert next_new_plan(PLANS, after, "primary_1") is not None
+    assert progress_by_plan(alone, PLANS, DAY_3)[COUNT_20].unlocks
+    place = "mathematics.number.place-value-tens-and-units"
+    learnt_elsewhere = [e for plan in (TWOS, TENS) for e in lesson(plan, DAY_1)]
+    blocked = progress_by_plan([*helped, *learnt_elsewhere], PLANS, DAY_2)
+    assert next_new_plan(PLANS, blocked, "primary_1").id != place
+    open_ = progress_by_plan([*twice, *learnt_elsewhere], PLANS, DAY_3)
+    assert next_new_plan(PLANS, open_, "primary_1").id == place
+
+
+def test_the_day_after_a_check_passed_with_help_the_check_is_asked_again_on_its_own_and_not_the_lesson():
+    helped = [*lesson(COUNT_20, DAY_1, "try_again"), _assess(DAY_1)]
+    progress = progress_by_plan(helped, PLANS, DAY_2)
+    options = next_options(PLANS, progress, DAY_2, "primary_1", helped)
+    assert [(o.plan_id, o.event_id) for o in options] == [(COUNT_20, "assess")]
+    weak = next_options(
+        PLANS, progress, DAY_2, "primary_1", helped, weakened=(COUNT_20,)
+    )
+    assert [(o.plan_id, o.event_id) for o in weak] == [(COUNT_20, "assess")]
+
+
+def test_one_miss_and_then_a_pass_at_the_check_closes_the_day_with_a_check_tomorrow():
+    taught = [
+        said(COUNT_20, e)
+        for e in (
+            "attention",
+            "objective",
+            "recall",
+            "present",
+            "guide",
+            "span",
+            "practice",
+        )
+    ]
+    evidence = [*taught, _assess(DAY_1, "try_again"), _assess(DAY_1)]
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    assert progress[COUNT_20].paused_today and progress[COUNT_20].paused_days == set()
+    assert next_options(PLANS, progress, DAY_1, "primary_1", evidence) == []
+    assert rest_move(PLANS, progress, "primary_1")["say"] == "check-tomorrow"
+
+
+def test_a_review_of_a_lesson_learnt_before_that_took_a_second_try_does_not_end_the_day():
+    learnt = lesson(COUNT_20, DAY_1)
+    review = [*learnt, _assess(DAY_2, "try_again"), _assess(DAY_2)]
+    progress = progress_by_plan(review, PLANS, DAY_2)
+    state = progress[COUNT_20]
+    assert state.assessed_today and not state.paused_today
+    assert DAY_2 in state.assessed_days and DAY_2 not in state.independent_days
+    assert not left_for_tomorrow(PLANS, progress, "primary_1")
 
 
 ECHO_DAYS = f"echo.{DAYS}.recall"

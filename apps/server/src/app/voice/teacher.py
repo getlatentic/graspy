@@ -38,6 +38,8 @@ from .speech.teacher_audio_contract import fact_utterance_id, teacher_utterance
 MODEL = "@cf/openai/gpt-oss-120b"
 DECISION_TIMEOUT_SECONDS = 20
 MASTERY_DAYS = 2
+# A lesson passed only with help, on this many days, lets the lesson that needs it begin.
+SUPPORTED_DAYS_TO_UNLOCK = 2
 # A check of what the child already knows is asked this many times a day. A child who tried and got some of it
 # is taught next; one who showed nothing of it is given the answer to say after the teacher, and asked once more.
 RECALL_ATTEMPTS = 2
@@ -183,6 +185,20 @@ class PlanProgress:
     @property
     def mastered(self) -> bool:
         return len(self.independent_days) >= MASTERY_DAYS
+
+    @property
+    def owes_a_check(self) -> bool:
+        """Passed with help on an earlier day and never alone: its check is asked again, on its own."""
+        return bool(self.supported_days) and not self.assessed_days
+
+    @property
+    def unlocks(self) -> bool:
+        """Whether a lesson that needs this one may be started: passed alone, or with help on two days, so a
+        child who always needs a second try is slowed down, not stopped."""
+        return (
+            bool(self.assessed_days)
+            or len(self.supported_days) >= SUPPORTED_DAYS_TO_UNLOCK
+        )
 
     @property
     def reviewed_today(self) -> bool:
@@ -514,6 +530,11 @@ def progress_by_plan(
                 state.assessed_days.add(item.day)
                 state.independent_days.add(item.day)
                 state.assessed_today = state.assessed_today or item.day == today
+            elif state.assessed_days:
+                # A review of a lesson learnt before, passed with help: it is still a review passed, and the
+                # memory is told it took help, so it comes round sooner.
+                state.assessed_days.add(item.day)
+                state.assessed_today = state.assessed_today or item.day == today
             else:
                 _record_supported_pass(state, item, today)
         _record_attempt(state, plan, event, item, streaks, today)
@@ -541,10 +562,10 @@ def next_new_plan(
     ready, stuck = [], []
     for plan in plans_for_class(plans, learner_class):
         state = progress[plan.id]
-        if state.assessed_days or state.paused_today:
+        if state.assessed_days or state.paused_today or state.supported_days:
             continue
         needed = [p for p in plan.prerequisites if p in offered]
-        if not all(progress[prerequisite].assessed_days for prerequisite in needed):
+        if not all(progress[prerequisite].unlocks for prerequisite in needed):
             continue
         (stuck if len(state.paused_days) >= PAUSED_DAYS_LIMIT else ready).append(plan)
     # A lesson left for tomorrow is taken up first: the child was told it would be.
@@ -676,6 +697,23 @@ def next_options(
             return [_step(plan, event, why, progress[plan.id])]
         if not progress[plan.id].reviewed_today:
             return []
+    owed = [
+        plan
+        for plan in plans_for_class(plans, learner_class)
+        if progress[plan.id].owes_a_check
+        and not progress[plan.id].paused_today
+        and not progress[plan.id].supported_today
+    ]
+    if owed:
+        # A lesson passed only with help is checked again before anything else: nothing new is added to it.
+        check = owed[0]
+        return [
+            Option(
+                check.id,
+                check.event_of("assess_performance").id,
+                f"check {check.title['en']} again, alone",
+            )
+        ]
     options: list[Option] = []
     for plan in due_reviews(plans, progress, today, learner_class, weakened)[:2]:
         review = plan.event_of("assess_performance")
@@ -918,7 +956,7 @@ def catalogue(
             "title": plan.title,
             "standing": lesson_standing(plan, progress[plan.id], today),
             # The days that count towards knowing the lesson: the check passed alone. A pass that took
-            # help is "learnt" and earns none, so "one more good day" is always true.
+            # help earns none, so "one more good day" is always true.
             "days_correct": len(progress[plan.id].independent_days),
             "current": current is not None and current.plan_id == plan.id,
         }
