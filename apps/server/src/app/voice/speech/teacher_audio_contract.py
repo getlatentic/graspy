@@ -154,6 +154,7 @@ _MOVE_TEXT = {
         "retry-facts": "Now say only these ones again.",
         "finished": "That is all for today. Well done.",
         "try-tomorrow": "That is all right. We will try again tomorrow.",
+        "check-tomorrow": "Good work today. We will check it again tomorrow.",
     },
     "yo": {
         "try-again": "Ìgbìyànjú dára. Tún un sọ.",
@@ -162,6 +163,7 @@ _MOVE_TEXT = {
         "retry-facts": "Báyìí, sọ àwọn wọ̀nyí nìkan tún.",
         "finished": "Ìyẹn ni fún òní. O ṣe dáadáa.",
         "try-tomorrow": "Kò burú. A ó tún gbìyànjú lọ́la.",
+        "check-tomorrow": "Ó dára lónìí. A ó tún yẹ̀ ẹ́ wò lọ́la.",
     },
     "pcm": {
         "try-again": "Good try. Talk am again.",
@@ -170,6 +172,7 @@ _MOVE_TEXT = {
         "retry-facts": "Now talk only these ones again.",
         "finished": "Na so e be for today. You do well.",
         "try-tomorrow": "No wahala. We go try again tomorrow.",
+        "check-tomorrow": "You do well today. We go check am again tomorrow.",
     },
 }
 _TABLE_TEMPLATES["en"].update(
