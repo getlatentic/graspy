@@ -45,6 +45,20 @@ describe("the teacher's phrasebook", () => {
     expect(await brief({ kind: "sequence", item: "c", items })).not.toContain("say only how far they got");
   });
 
+  it("shows a child who was heard saying they do not know no example of not being heard, and says they were heard", async () => {
+    const seen: string[] = [];
+    const env = {
+      AI: { run: async (_m: string, input: { messages: { content: string }[] }) => (seen.push(JSON.stringify(input.messages)), { choices: [{ message: { content: "", tool_calls: [] } }] }) },
+    } as unknown as Env;
+    await takeTurn(env, { prompt: "Say five.", heard: "I don't know.", language: "en", expect: { kind: "fact", item: "5" } }).catch(() => undefined);
+    const brief = seen.find((call) => call.includes("class teacher")) ?? "";
+    expect(brief).toContain("said they do not know");
+    expect(brief).toContain("Never say you did not hear them");
+    expect(brief).not.toContain("I did not hear you");
+    expect(exampleBlock("nothing").join("\n")).toContain("I did not hear you");
+    expect(exampleBlock("nothing").join("\n")).not.toContain("Almost");
+  });
+
   it("is shown to the model as how the teacher sounds", async () => {
     const seen: string[] = [];
     const env = {

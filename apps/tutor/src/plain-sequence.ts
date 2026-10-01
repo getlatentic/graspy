@@ -7,6 +7,7 @@
  * that is neither, a garbled number, an extra number or another language, means the plain reading cannot be
  * trusted, and the answer goes to the teacher model as before.
  */
+import { spokenNumber } from "./mark";
 import { flattened, type SequenceItem } from "./recite";
 
 const FILLER = new Set(["and", "then", "um", "uh", "er", "erm", "so", "okay", "ok", "the", "is"]);
@@ -23,8 +24,17 @@ const ENDS_A_HUNDRED = /^(?:hundred|thousand|\d*00)$/;
  * may have said something other than the list, or a recogniser that has split a number; the teacher model
  * reads them. A comma or full stop ends a phrase, so "twenty, five" is two items and "twenty five" is one.
  */
-export function heardSequence(items: SequenceItem[], transcript: string | null): string[] | null {
-  return spaced(items, transcript) ?? runTogether(items, transcript);
+export function heardSequence(items: SequenceItem[], transcript: string | null, pastEnd = false): string[] | null {
+  return spaced(items, transcript, pastEnd) ?? runTogether(items, transcript);
+}
+
+/** Whether a word is a number larger than every number the list holds: a child counting on, or past, the last item. */
+function pastTheEnd(word: string, items: SequenceItem[]): boolean {
+  // A run of digits a recogniser has joined up ("1235", "0714") is a garble, not a number the child said.
+  if (/^\d{4,}$|^0\d/.test(word)) return false;
+  const value = spokenNumber(word);
+  const largest = Math.max(-1, ...items.flatMap((item) => item.spoken.map((spelling) => (/^\d+$/.test(spelling) ? Number(spelling) : -1))));
+  return value !== null && largest >= 0 && value > largest;
 }
 
 /**
@@ -47,7 +57,7 @@ function runTogether(items: SequenceItem[], transcript: string | null): string[]
   return at === digits.length ? (numbers as string[]) : null;
 }
 
-function spaced(items: SequenceItem[], transcript: string | null): string[] | null {
+function spaced(items: SequenceItem[], transcript: string | null, pastEnd: boolean): string[] | null {
   const idOf = new Map(items.flatMap((item) => item.spoken.map((spelling) => [flattened(spelling), item.id] as const)));
   const longest = Math.max(1, ...[...idOf.keys()].map((spelling) => spelling.split(" ").length));
   const filler = items.some((item) => /^[a-z]$/i.test(item.id)) ? FILLER_AMONG_LETTERS : FILLER;
@@ -67,6 +77,13 @@ function spaced(items: SequenceItem[], transcript: string | null): string[] | nu
         .map((k) => longest - k)
         .find((n) => at + n <= words.length && idOf.has(words.slice(at, at + n).join(" ")));
       if (!length) {
+        // With `pastEnd`, a number past the end of the list is read as said, for the marker to count against the
+        // child; a number inside the list that is no item is a count by ones or a garble, and is left to the teacher.
+        if (pastEnd && !filler.has(words[at]) && pastTheEnd(words[at], items) && !(TENS.has(words[at]) && ONES.has(words[at + 1] ?? ""))) {
+          heard.push(words[at]);
+          at += 1;
+          continue;
+        }
         if (!filler.has(words[at])) return null;
         if (words[at] === "and" && ENDS_A_HUNDRED.test(words[at - 1] ?? "") && at + 1 < words.length) return null;
         at += 1;
@@ -79,6 +96,6 @@ function spaced(items: SequenceItem[], transcript: string | null): string[] | nu
     }
     if (words.length > 0) last = words[words.length - 1];
   }
-  const ids = heard.map((spelling) => idOf.get(spelling));
+  const ids = heard.filter((spelling) => idOf.has(spelling)).map((spelling) => idOf.get(spelling));
   return new Set(ids).size === ids.length ? heard : null;
 }
