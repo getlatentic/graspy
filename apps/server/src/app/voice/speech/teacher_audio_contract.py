@@ -11,6 +11,7 @@ from ..curriculum import (
     SHOW_PREFIX,
     echo_target,
     item_step_target,
+    list_step,
     load_plans,
     plan_event_for_utterance,
     repair_target,
@@ -298,9 +299,21 @@ def _echo_text(utterance_id: str, language: str) -> str | None:
 
 
 _PROBE_TEMPLATES = {
-    "en": ("What comes after {anchor}?", "What comes after the letter {anchor}?"),
-    "yo": ("Kí ló tẹ̀lé {anchor}?", "Kí ló tẹ̀lé lẹ́tà {anchor}?"),
-    "pcm": ("Wetin dey come after {anchor}?", "Wetin dey come after letter {anchor}?"),
+    "en": (
+        "What comes after {anchor}?",
+        "What comes after the letter {anchor}?",
+        "Counting in {step}, what comes after {anchor}?",
+    ),
+    "yo": (
+        "Kí ló tẹ̀lé {anchor}?",
+        "Kí ló tẹ̀lé lẹ́tà {anchor}?",
+        "Tí a bá ń ka {step}, kí ló tẹ̀lé {anchor}?",
+    ),
+    "pcm": (
+        "Wetin dey come after {anchor}?",
+        "Wetin dey come after letter {anchor}?",
+        "If we dey count {step}, wetin dey come after {anchor}?",
+    ),
 }
 _SHOW_TEMPLATES = {
     "en": "After {anchor} comes {next}. Say {next}.",
@@ -324,7 +337,12 @@ def _item_step_text(utterance_id: str, language: str) -> str | None:
     _, _, anchor, broken = found
     a, b = _item_words(anchor.id), _item_words(broken.id)
     if prefix == PROBE_PREFIX:
-        return templates[1 if len(anchor.id) == 1 else 0].format(anchor=a)
+        step = list_step(found[1].activity.items)
+        if step is not None and step != 1:
+            return templates[2].format(anchor=a, step=f"{number_words(step)}s")
+        return templates[
+            1 if anchor.id.isalpha() and len(anchor.id) == 1 else 0
+        ].format(anchor=a)
     return templates.format(anchor=a, next=b)
 
 

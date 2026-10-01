@@ -1434,3 +1434,127 @@ def test_the_item_asked_for_is_marked_as_one_answer_and_only_what_was_shown_is_k
     meta = {"plan_id": DAYS, "event_id": "practice"}
     assert _was_modelled(meta | {"prompt_id": f"show.{DAYS}.practice.friday"})
     assert not _was_modelled(meta | {"prompt_id": f"probe.{DAYS}.practice.friday"})
+
+
+PRIMES = "mathematics.number.prime-numbers"
+
+
+def test_a_list_with_no_rule_to_ask_by_goes_straight_to_being_told():
+    from app.voice.curriculum import probeable
+
+    assert not probeable(PLANS[PRIMES].event("practice"))
+    assert probeable(PLANS[DAYS].event("practice"))
+    assert probeable(PLANS[COUNT_20].event("practice"))
+    broke = {
+        "said": ["2", "3"],
+        "missing": ["5", "7", "11", "13", "17", "19"],
+        "out_of_order": [],
+    }
+    evidence = [
+        *[
+            said(PRIMES, e)
+            for e in ("attention", "objective", "recall", "present", "guide")
+        ],
+        Evidence(PRIMES, "practice", DAY_1, "try_again", broke),
+    ]
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    options = next_options(PLANS, progress, DAY_1, "primary_5", evidence)
+    assert options[0].variant == ("show", "5")
+
+
+def test_a_probe_nobody_asked_changes_nothing_about_the_event():
+    forged = [*days_taught(), _side("probe", "friday", "correct")]
+    state = progress_by_plan(forged, PLANS, DAY_1)[DAYS]
+    assert "practice" not in state.done_today or state.done_today == {
+        "attention",
+        "objective",
+        "recall",
+        "present",
+        "guide",
+    }
+    assert days_offer(forged).event_id == "practice"
+    done = [*days_taught(), Evidence(DAYS, "practice", DAY_1, "correct")]
+    after = [
+        *done,
+        Evidence(
+            DAYS,
+            "practice",
+            DAY_1,
+            "not_understood",
+            None,
+            None,
+            f"show.{DAYS}.practice.friday",
+            "unheard",
+            "garbled",
+        ),
+    ]
+    assert days_offer(after).event_id == "assess"
+
+
+def test_an_echo_nobody_could_hear_does_not_reopen_a_check_that_was_passed():
+    passed = [*_opening(), _recall("correct", WEEK[:3])]
+    noise = Evidence(
+        DAYS,
+        "recall",
+        DAY_1,
+        "not_understood",
+        None,
+        None,
+        ECHO_DAYS,
+        "unheard",
+        "garbled",
+    )
+    offer, _ = _offer([*passed, noise])
+    assert offer.event_id == "present"
+
+
+def test_a_heard_probe_ends_the_run_of_recordings_nobody_could_hear():
+    def noise():
+        return Evidence(
+            DAYS,
+            "practice",
+            DAY_1,
+            "not_understood",
+            None,
+            None,
+            f"probe.{DAYS}.practice.friday",
+            "unheard",
+            "garbled",
+        )
+
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    heard = [
+        *broke,
+        noise(),
+        noise(),
+        noise(),
+        _side("probe", "friday", "try_again"),
+        noise(),
+    ]
+    assert not progress_by_plan(heard, PLANS, DAY_1)[DAYS].paused_today
+    four = [*broke, noise(), noise(), noise(), noise()]
+    assert progress_by_plan(four, PLANS, DAY_1)[DAYS].paused_today
+
+
+def test_what_the_child_was_asked_is_what_the_tutor_is_told_it_was_for_a_probe_and_a_show():
+    from app.voice.worker_evaluation import _asked_line, _support_asked
+
+    probe, show = f"probe.{DAYS}.practice.friday", f"show.{DAYS}.practice.friday"
+    assert _asked_line({"prompt_id": probe}, "en") == "What comes after Thursday?"
+    assert (
+        _asked_line({"prompt_id": show}, "en")
+        == "After Thursday comes Friday. Say Friday."
+    )
+    meta = {"plan_id": DAYS, "event_id": "practice"}
+    assert _support_asked(meta | {"prompt_id": probe}) == {"support": "probed"}
+    assert _support_asked(meta | {"prompt_id": show}) == {"support": "modelled"}
+    assert _support_asked(meta | {"prompt_id": f"plan.{DAYS}.practice"}) == {}
+
+
+def test_yesterdays_probe_is_not_counted_today():
+    broke = [*days_taught(), days_try(WEEK[:5])]
+    yesterday = Evidence(
+        DAYS, "practice", DAY_1, "correct", None, None, f"probe.{DAYS}.practice.friday"
+    )
+    progress = progress_by_plan([*broke, yesterday], PLANS, DAY_2)
+    assert progress[DAYS].probed == {}

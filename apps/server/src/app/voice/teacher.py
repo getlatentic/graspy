@@ -25,6 +25,7 @@ from .curriculum import (
     echoable,
     item_step_target,
     probe_utterance_id,
+    probeable,
     repair_target,
     repair_utterance_id,
     repairable,
@@ -282,25 +283,45 @@ def _showed_nothing(item: Evidence) -> bool:
     )
 
 
+def _is_side_step(item: Evidence) -> bool:
+    return bool(item.prompt_id) and item.prompt_id.startswith(
+        (ECHO_PREFIX, PROBE_PREFIX, SHOW_PREFIX)
+    )
+
+
 def _record_side_step(
-    state: PlanProgress, event: LessonEvent, item: Evidence, today: date
-) -> bool:
-    """An answer to a question asked on the way back to the plan's own: it earns nothing towards the
-    event, and only says how the way back is going. True when that is what it was."""
-    prompt = item.prompt_id or ""
+    state: PlanProgress,
+    event: LessonEvent,
+    item: Evidence,
+    streaks: dict[tuple[str, str, date], int],
+    today: date,
+) -> None:
+    """An answer to a question asked on the way back to the plan's own. It earns nothing towards the event,
+    changes nothing about it (it is not done, not owed, not a try), and only says how the way back is going.
+    One that names a break the child's list did not have is ignored: it was claimed, not asked."""
+    if item.day != today or item.decision is None:
+        return
+    prompt = item.prompt_id
+    broke_at = prompt.rpartition(".")[2]
+    if not prompt.startswith(ECHO_PREFIX) and broke_at != state.resume_at.get(
+        item.event_id
+    ):
+        return
+    if item.unheard:
+        key = (item.plan_id, f"{item.event_id}#unheard", item.day)
+        streaks[key] = streaks.get(key, 0) + 1
+        if streaks[key] >= UNHEARD_LIMIT:
+            state.paused_days.add(item.day)
+            state.paused_today = True
+        return
+    streaks[(item.plan_id, f"{item.event_id}#unheard", item.day)] = 0
     if prompt.startswith(ECHO_PREFIX):
         _record_echo(state, item, today)
-        return True
-    if prompt.startswith((PROBE_PREFIX, SHOW_PREFIX)) and item.day == today:
-        broke_at = prompt.rpartition(".")[2]
-        if broke_at == state.resume_at.get(item.event_id):
-            if prompt.startswith(PROBE_PREFIX):
-                state.probed[item.event_id] = broke_at
-                state.probe_right[item.event_id] = item.decision == "correct"
-            else:
-                state.shown[item.event_id] = broke_at
-        return True
-    return prompt.startswith((PROBE_PREFIX, SHOW_PREFIX))
+    elif prompt.startswith(PROBE_PREFIX):
+        state.probed[item.event_id] = broke_at
+        state.probe_right[item.event_id] = item.decision == "correct"
+    else:
+        state.shown[item.event_id] = broke_at
 
 
 def _record_echo(state: PlanProgress, item: Evidence, today: date) -> None:
@@ -459,6 +480,9 @@ def progress_by_plan(
         event = plan.event(item.event_id)
         if _repaired_past_the_break(event, item, state):
             continue
+        if _is_side_step(item):
+            _record_side_step(state, event, item, streaks, today)
+            continue
         state.last_day = (
             item.day if state.last_day is None else max(state.last_day, item.day)
         )
@@ -469,8 +493,6 @@ def progress_by_plan(
             continue
         if item.unheard:
             _record_unheard(state, item, streaks, today)
-            continue
-        if _record_side_step(state, event, item, today):
             continue
         state.last_decision[item.event_id] = item.decision
         if event.support is not None and item.day == today:
@@ -609,7 +631,7 @@ def _variant(state: PlanProgress, event: LessonEvent) -> Variant | None:
     broke_at = state.resume_at.get(event.id) if event.id in state.retry_today else None
     if broke_at is None:
         return None
-    if state.probed.get(event.id) != broke_at:
+    if probeable(event) and state.probed.get(event.id) != broke_at:
         return ("probe", broke_at)
     if not state.probe_right.get(event.id) and state.shown.get(event.id) != broke_at:
         return ("show", broke_at)

@@ -1,6 +1,7 @@
 """Lesson plans as data: Gagné's nine events, from the catalogue module the Worker ships."""
 
 from dataclasses import dataclass
+from itertools import pairwise
 
 from .sequence import SequenceItem
 
@@ -376,6 +377,22 @@ def show_utterance_id(plan_id: str, event_id: str, broke_at: str) -> str:
     return f"{SHOW_PREFIX}{plan_id}.{event_id}.{broke_at}"
 
 
+def list_step(items) -> int | None:
+    """The size of the step between a list's numbers, when they are numbers counted in equal steps (twos,
+    tens, one by one); None when they are not numbers or the steps are not equal."""
+    if len(items) < 2 or not all(item.id.isdigit() for item in items):
+        return None
+    steps = {int(b.id) - int(a.id) for a, b in pairwise(items)}
+    return steps.pop() if len(steps) == 1 else None
+
+
+def probeable(event: LessonEvent) -> bool:
+    """Whether "what comes after X?" has one answer: names, letters and numbers counted in equal steps. The
+    primes have no rule to ask by, so they are told, not asked for."""
+    items = event.activity.items
+    return not all(item.id.isdigit() for item in items) or list_step(items) is not None
+
+
 def item_step_target(utterance_id: str, prefix: str, plans: dict[str, LessonPlan]):
     """The plan, event, last item right and item broken at, for a probe or show prompt; None when it
     names nothing the plans have or the list broke at its first item (nothing came before it)."""
@@ -386,6 +403,8 @@ def item_step_target(utterance_id: str, prefix: str, plans: dict[str, LessonPlan
     plan = plans.get(plan_id)
     event = next((e for e in plan.events if e.id == event_id), None) if plan else None
     if event is None or not repairable(event):
+        return None
+    if prefix == PROBE_PREFIX and not probeable(event):
         return None
     items = event.activity.items
     ids = [item.id for item in items]
