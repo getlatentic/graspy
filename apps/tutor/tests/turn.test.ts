@@ -618,6 +618,26 @@ describe("a child who says they do not know, once the hints are used", () => {
   });
 });
 
+describe("a child who says they do not know again and again", () => {
+  const hints = ["Each new heap adds five. Count heap by heap.", "Start with one heap: five. Add five for each new heap.", "Five, ten, fifteen. Keep counting."];
+  const unsure = () => tutor([call("mark_answer", { said: null, sure: false }), call("say_it", { text: "That is all right." })]).env;
+
+  it("is given each hint in turn, then the number told without almost, and each is kept as an answer that was wrong", async () => {
+    const earlier: NonNullable<Ask["earlier"]> = [];
+    const said: string[] = [];
+    for (let again = 0; again < 4; again += 1) {
+      const ask: Ask = { prompt: "Six heaps of five. How many?", heard: "I don't know", language: "en", earlier: [...earlier], expect: { kind: "fact", item: "30", hints } };
+      const reply = await takeTurn(unsure(), ask);
+      expect([reply.verdict, reply.heard]).toEqual(["unheard", "dont_know"]);
+      said.push(reply.say);
+      earlier.push({ verdict: "wrong", line: reply.say });
+    }
+    expect(said.slice(0, 3)).toEqual(hints);
+    expect(TOLD_NUMBER.map((line) => withNumber(line, "thirty"))).toContain(said[3]);
+    expect(said[3]).not.toMatch(/almost|not quite|not yet/i);
+  });
+});
+
 describe("the ladder where the answer was found wrong by a model", () => {
   const hints = ["Count the heaps: five, ten. What comes next?", "Ten, and five more. What is that?"];
 
