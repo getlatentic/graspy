@@ -1,6 +1,5 @@
 import { Agent, callable } from "agents";
 import type { Card } from "ts-fsrs";
-import type { Verdict } from "./mark";
 import { keepRepliesTable, repliesIn, TurnReplies } from "./replies";
 import { isSteadyLine } from "./lines";
 import { keepToldTable, toldIn } from "./told";
@@ -12,6 +11,7 @@ import {
   retrievability,
   type ItemMemory,
   type Sitting,
+  type Remembered,
 } from "./schedule";
 
 /**
@@ -20,6 +20,8 @@ import {
  * An instance holds a single child, so their rows never mix with a sibling's on a shared phone,
  * and the state lives beside the scheduling that reads it rather than in a table a request away.
  */
+const REMEMBERED: Remembered[] = ["correct", "nearly", "wrong", "unheard", "helped"];
+
 export class Learner extends Agent<Env> {
   private ready = false;
   private readonly replies = new TurnReplies(
@@ -88,7 +90,7 @@ export class Learner extends Agent<Env> {
   record(
     lesson: string,
     item: string,
-    verdict: Verdict,
+    verdict: Remembered,
     at?: string,
     turn?: string,
   ): { stability: number; applied: boolean } {
@@ -142,7 +144,7 @@ export class Learner extends Agent<Env> {
       lesson?: string;
       items?: string[];
       item?: string;
-      verdict?: Verdict;
+      verdict?: Remembered;
       at?: string;
       turn?: string;
       ask?: Ask;
@@ -166,6 +168,7 @@ export class Learner extends Agent<Env> {
     }
     if (action === "record") {
       if (!body.item || !body.verdict) return json({ detail: "item and verdict are required" }, 400);
+      if (!REMEMBERED.includes(body.verdict)) return json({ detail: "verdict is not one the memory knows" }, 400);
       return json(this.record(lesson, body.item, body.verdict, body.at, body.turn));
     }
     if (action === "standing") {

@@ -25,11 +25,13 @@ from .exercises import (
 from .expectation import expectation
 from .learner_memory import (
     LearnerMemoryError,
+    assessed_plan,
     remember_assessment,
     teach_turn,
 )
 from .lesson_store import (
     COMPLETE_TURN_SQL,
+    answered_alone,
     lesson_day,
     load_catalogue,
     load_lesson_snapshot,
@@ -273,6 +275,8 @@ async def _taught(env, learner, sample_id, metadata, activity, transcript, langu
         parsed_answer=int(said) if said.isdigit() else None,
         exercise=_exercise_json(activity, expect),
         result=reply.get("result"),
+        verdict=reply.get("verdict"),
+        heard_kind=reply.get("heard"),
     )
 
 
@@ -297,6 +301,13 @@ async def _answers_a_taught_step(env, learner: str, metadata: dict) -> bool:
     if plan_id is None:
         return True
     return await was_offered(env.DB, learner, plan_id, event_id)
+
+
+async def _was_alone(env, learner, sample_id, metadata, decision, at_ms) -> bool:
+    """Only a passed check can be a pass that took help, so only that is looked up."""
+    if decision != "correct" or assessed_plan(metadata) is None:
+        return True
+    return await answered_alone(env.DB, learner, metadata, sample_id, at_ms)
 
 
 async def _complete_turn(
@@ -331,13 +342,24 @@ async def _complete_turn(
             provider,
             token,
             learner,
+            evaluation.verdict,
+            evaluation.heard_kind,
         )
         .run()
     )
     if not write_won(written):
         return await _current_turn(env, sample_id)
     await settle_audio(env, sample_id)
-    await remember_assessment(env, learner, sample_id, metadata, evaluation.decision)
+    await remember_assessment(
+        env,
+        learner,
+        sample_id,
+        metadata,
+        evaluation.decision,
+        await _was_alone(
+            env, learner, sample_id, metadata, evaluation.decision, updated_at
+        ),
+    )
     return _json(
         turn_payload(
             {
@@ -445,7 +467,19 @@ async def evaluate_sample(env, learner: str, sample_id: str):
             await settle_audio(env, sample_id)
         if existing["state"] == "complete":
             await remember_assessment(
-                env, learner, sample_id, metadata, existing["decision"]
+                env,
+                learner,
+                sample_id,
+                metadata,
+                existing["decision"],
+                await _was_alone(
+                    env,
+                    learner,
+                    sample_id,
+                    metadata,
+                    existing["decision"],
+                    existing["updated_at"],
+                ),
             )
         return _turn_response(existing, now)
     if sample["audio_deleted_at"] is not None:

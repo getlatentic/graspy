@@ -62,17 +62,24 @@ def assessed_plan(metadata: dict, language: str = "en") -> str | None:
 
 
 async def remember_assessment(
-    env, learner: str, sample_id: str, metadata: dict, decision: str
+    env,
+    learner: str,
+    sample_id: str,
+    metadata: dict,
+    decision: str,
+    alone: bool = True,
 ) -> None:
     """Tell the agent how an assessment went, so the lesson's next review moves with it.
 
-    The sample names the answer, and one answer moves a lesson once however often this is called,
+    A pass that took help is remembered as that, not as knowing it: the lesson is due for review sooner. The sample names the answer, and one answer moves a lesson once however often this is called,
     so a turn re-requested after a lost reply is repaired rather than counted twice.
     """
     plan_id = assessed_plan(metadata)
     verdict = VERDICT_OF.get(decision)
     if plan_id is None or verdict is None:
         return
+    if verdict == "correct" and not alone:
+        verdict = "helped"
     await _ask(
         env,
         learner,

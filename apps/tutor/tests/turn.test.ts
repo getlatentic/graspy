@@ -473,6 +473,29 @@ describe("a list said in order", () => {
 });
 
 
+describe("why a recording could not be marked", () => {
+  const fact = (heard: string | null): Ask => ({ prompt: "What is three times three?", heard, language: "en", expect: { kind: "fact", item: "3x3" } });
+
+  it("says nothing was heard, that the child does not know, or that the words were no answer", async () => {
+    const { env } = tutor([]);
+    expect((await takeTurn(env, fact(null))).heard).toBe("nothing");
+    expect((await takeTurn(env, fact("   "))).heard).toBe("nothing");
+    for (const heard of ["I don't know.", "I do not know", "no idea", "dunno", "I can't", "not sure"]) {
+      const { env: scripted } = tutor([call("mark_answer", { said: null, sure: false }), call("say_it", { text: "That is all right. Say three with me." })]);
+      const reply = await takeTurn(scripted, fact(heard));
+      expect(reply.verdict, heard).toBe("unheard");
+      expect(reply.heard, heard).toBe("dont_know");
+    }
+  });
+
+  it("says nothing of it when the answer was marked", async () => {
+    const { env } = tutor([], [], [], [9]);
+    const reply = await takeTurn(env, fact("nine"));
+    expect(reply.verdict).toBe("correct");
+    expect(reply.heard).toBeUndefined();
+  });
+});
+
 describe("a number the recogniser wrote as the word it sounds like", () => {
   const ask = (item: string, heard: string): Ask => ({ prompt: "How many?", heard, language: "en", expect: { kind: "fact", item } });
 

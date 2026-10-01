@@ -1,4 +1,7 @@
 import type { Verdict } from "./mark";
+
+/** What the memory is told about an answer: how it was marked, or that it passed only with help. */
+export type Remembered = Verdict | "helped";
 import {
   createEmptyCard,
   fsrs,
@@ -39,13 +42,16 @@ export function retrievability(memory: ItemMemory, now: Date): number {
 /**
  * A verdict moves an item along the spacing, or back to the start, or nowhere at all.
  *
+ * A pass that took help is rated Hard: the item comes back sooner than one known alone. A near miss in
+ * how it was said is still a pass.
+ *
  * Unheard returns the memory untouched on purpose: silence and dropped provider calls say
  * something about the microphone, never about the child, and writing a failure for one is the
  * bug that visibly punishes a learner who was right.
  */
-export function remember(memory: ItemMemory, verdict: Verdict, now: Date): ItemMemory {
+export function remember(memory: ItemMemory, verdict: Remembered, now: Date): ItemMemory {
   if (verdict === "unheard") return memory;
-  const rating = verdict === "wrong" ? Rating.Again : Rating.Good;
+  const rating = verdict === "wrong" ? Rating.Again : verdict === "helped" ? Rating.Hard : Rating.Good;
   return { item: memory.item, card: scheduler.next(memory.card, now, rating).card };
 }
 

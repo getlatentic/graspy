@@ -6,7 +6,7 @@ COMPLETE_TURN_SQL = (
     "UPDATE tutoring_turns SET state = 'complete', transcript = ?2, "
     "parsed_answer = ?3, decision = ?4, feedback = ?5, provider = ?12, "
     "latency_ms = ?6, exercise_json = ?7, result_json = ?8, spoken_language = ?9, "
-    "language_evidence_json = ?10, error_detail = NULL, "
+    "language_evidence_json = ?10, verdict = ?15, heard_kind = ?16, error_detail = NULL, "
     "updated_at = MAX(?11, COALESCE((SELECT MAX(t.updated_at) + 1 "
     "FROM tutoring_turns t JOIN samples s ON s.id = t.sample_id "
     "WHERE s.owner_id = ?14 AND t.state = 'complete'), 0)) "
@@ -37,13 +37,24 @@ LEARNER_TURNS_SQL = (
 
 EVIDENCE_SQL = (
     "SELECT s.metadata_json, t.decision, t.result_json, t.exercise_json, "
+    "t.verdict, t.heard_kind, "
     "NULL AS plan_id, NULL AS event_id, t.updated_at AS at "
     "FROM tutoring_turns t JOIN samples s ON s.id = t.sample_id "
     "WHERE s.owner_id = ?1 AND t.state = 'complete' "
     "UNION ALL "
-    "SELECT NULL, NULL, NULL, NULL, plan_id, event_id, at "
+    "SELECT NULL, NULL, NULL, NULL, NULL, NULL, plan_id, event_id, at "
     "FROM lesson_events WHERE owner_id = ?1 "
     "ORDER BY at"
+)
+
+FIRST_ATTEMPT_SQL = (
+    "SELECT t.sample_id FROM tutoring_turns t JOIN samples s ON s.id = t.sample_id "
+    "WHERE s.owner_id = ?1 AND t.state = 'complete' "
+    "AND json_extract(s.metadata_json, '$.plan_id') = ?2 "
+    "AND json_extract(s.metadata_json, '$.event_id') = ?3 "
+    "AND t.updated_at >= ?4 AND t.updated_at < ?5 "
+    "AND (t.verdict IS NULL OR t.verdict != 'unheard' OR t.heard_kind = 'dont_know') "
+    "ORDER BY s.created_at, t.sample_id LIMIT 1"
 )
 
 RECORD_EVENT_SQL = (
@@ -59,6 +70,39 @@ OFFER_SQL = (
 WAS_OFFERED_SQL = (
     "SELECT 1 FROM lesson_offers WHERE owner_id = ?1 AND plan_id = ?2 AND event_id = ?3"
 )
+
+
+def day_bounds_ms(day: date) -> tuple[int, int]:
+    """The first millisecond of a lesson day and of the day after it."""
+    start = datetime(day.year, day.month, day.day, DAY_STARTS_AT_HOUR, tzinfo=LAGOS)
+    return (
+        round(start.timestamp() * 1000),
+        round((start + timedelta(days=1)).timestamp() * 1000),
+    )
+
+
+async def answered_alone(
+    database, learner: str, metadata: dict, sample_id: str, at_ms: int
+) -> bool:
+    """Whether this answer was the child's first try at that step today, at the plan's own question.
+
+    A later try, or an answer to a list asked again from where it broke, came after help and shows
+    less: it is the answer that decides whether a lesson is known, so it is told apart."""
+    if str(metadata.get("prompt_id") or "").startswith("repair."):
+        return False
+    first_ms, last_ms = day_bounds_ms(lesson_day(at_ms))
+    first = (
+        await database.prepare(FIRST_ATTEMPT_SQL)
+        .bind(
+            learner,
+            str(metadata.get("plan_id")),
+            str(metadata.get("event_id")),
+            first_ms,
+            last_ms,
+        )
+        .first()
+    )
+    return first is not None and first["sample_id"] == sample_id
 
 
 async def offer_step(database, learner: str, move: dict, at_ms: int) -> None:
