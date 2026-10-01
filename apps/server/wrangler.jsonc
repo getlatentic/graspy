@@ -54,7 +54,8 @@
   "vars": {
     "APP_ENV": "production",
     "LLM_HOST": "bedrock",
-    // Who hears English: "whisper" (Workers AI), with Intron asked when it cannot answer, or "intron".
+    // Who hears English, always with Intron asked when the first cannot answer or hears nothing: "whisper",
+    // "nova" (Deepgram Nova-3, never followed by Whisper), or "intron" alone. Nova-3 is on in staging first.
     "ENGLISH_ASR": "whisper",
     "AWS_REGION": "us-east-1",
     "PUBLIC_BASE_URL": "https://graspy-api.getlatentic.com",
@@ -117,7 +118,7 @@
       "vars": {
         "APP_ENV": "staging",
         "LLM_HOST": "bedrock",
-        "ENGLISH_ASR": "whisper",
+        "ENGLISH_ASR": "nova",
         "AWS_REGION": "us-east-1",
         "PUBLIC_BASE_URL": "https://graspy-api-staging.getlatentic.com",
         "A2A_PATH_PREFIX": "/a2a",
