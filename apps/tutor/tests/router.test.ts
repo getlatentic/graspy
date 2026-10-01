@@ -67,12 +67,12 @@ describe("a child who is not giving a number", () => {
   it("who asks for the question again hears it again, and it is no try", async () => {
     const { env } = setup({ clef: sure("repeat_question") });
     const reply = await takeTurn(env, ask("Say am again"));
-    expect([reply.verdict, reply.heard, reply.say]).toEqual(["unheard", "nothing", "One heap has five oranges. How many oranges are in two heaps?"]);
+    expect([reply.verdict, reply.heard, reply.say]).toEqual(["unheard", "conversation", "One heap has five oranges. How many oranges are in two heaps?"]);
   });
 
-  it("whose words are garbled is asked again from the phrasebook", async () => {
+  it("whose words are garbled, and more than a word or two, is asked again from the phrasebook", async () => {
     const { env } = setup({ clef: sure("ask_again") });
-    const reply = await takeTurn(env, ask("Chainsaw"));
+    const reply = await takeTurn(env, ask("my chain saw hot sink to me"));
     expect([reply.verdict, reply.heard]).toEqual(["unheard", "garbled"]);
     expect(NOT_HEARD).toContain(reply.say);
   });
@@ -80,7 +80,7 @@ describe("a child who is not giving a number", () => {
   it("who says something else is answered by the language model in one kind line, once the checks pass", async () => {
     const { env, asked } = setup({ clef: sure("answer_child"), tool: { name: "answer_child", args: { reply: "Yes, we can go soon. How many oranges in two heaps?" } } });
     const reply = await takeTurn(env, ask("Can I go to the toilet?"));
-    expect([reply.verdict, reply.say]).toEqual(["unheard", "Yes, we can go soon. How many oranges in two heaps?"]);
+    expect([reply.verdict, reply.heard, reply.say]).toEqual(["unheard", "conversation", "Yes, we can go soon. How many oranges in two heaps?"]);
     expect(asked).toContain(SAFETY_MODEL);
   });
 
@@ -124,7 +124,63 @@ describe("where the router stays out of the way", () => {
     await expect(takeTurn(env, ask("Chainsaw"))).rejects.toThrow("the teacher was asked");
   });
 
-  it("takes Clef's choice only at the threshold", () => {
-    expect(ROUTE_MIN).toBeGreaterThan(0.5);
+  it("takes Clef's choice at the threshold and not below it", async () => {
+    const at = (p: number) => ({ not_know: p, mark_answer: (1 - p) / 4, ask_again: (1 - p) / 4, repeat_question: (1 - p) / 4, answer_child: (1 - p) / 4 });
+    const above = setup({ clef: at(ROUTE_MIN), tool: { name: "not_know" } });
+    await takeTurn(above.env, ask("I no sabi", ["Think of two heaps."]));
+    expect(above.bedrock).not.toHaveBeenCalled();
+    const below = setup({ clef: at(ROUTE_MIN - 0.01), tool: { name: "not_know" } });
+    await takeTurn(below.env, ask("I no sabi", ["Think of two heaps."]));
+    expect(below.bedrock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("what the review found the router must not do", () => {
+  const stayed = async (script: Script, turn: Ask) => {
+    const { env, asked, bedrock } = setup(script);
+    await takeTurn(env, turn).catch(() => undefined);
+    return { asked, bedrock };
+  };
+
+  it("does not route a question whose answer is a word, such as a shape or a letter", async () => {
+    const { asked } = await stayed({ clef: sure("ask_again") }, { ...ask("Circle."), expect: { kind: "fact", item: "circle" } });
+    expect(asked).not.toContain(CLEF_MODEL);
+  });
+
+  it("does not route when there is no question to answer", async () => {
+    const { asked } = await stayed({ clef: sure("repeat_question") }, { ...ask("what"), prompt: "  " });
+    expect(asked).not.toContain(CLEF_MODEL);
+  });
+
+  it("leaves a word or two that is called garbled or something else to the marking, which can read a sound-alike", async () => {
+    for (const action of ["ask_again", "answer_child", "mark_answer"]) {
+      const { env } = setup({ clef: sure(action), tool: { name: action, args: { reply: "Good try. How many?" } } });
+      await expect(takeTurn(env, ask("tin")), action).rejects.toThrow("the teacher was asked");
+    }
+  });
+
+  it("does not give a child the answer in a kind reply", async () => {
+    for (const reply of ["It is ten, say ten.", "The answer is 10.", "Five and five make ten, my dear."]) {
+      const { env } = setup({ clef: sure("answer_child"), tool: { name: "answer_child", args: { reply } } });
+      await expect(takeTurn(env, ask("What is the answer?")), reply).rejects.toThrow("the teacher was asked");
+    }
+  });
+
+  it("is not fooled by a tool name that is a property of every object", async () => {
+    const { env } = setup({ clef: sure("answer_child"), tool: { name: "constructor" } });
+    await expect(takeTurn(env, ask("Can I go to the toilet?"))).rejects.toThrow("the teacher was asked");
+  });
+
+  it("asks the language model with the key, the tools and no answer, and leaves a refusal to the usual marking", async () => {
+    const { env, bedrock } = setup({ clef: sure("answer_child"), tool: { name: "answer_child", args: { reply: "Yes, soon. How many oranges?" } } });
+    await takeTurn(env, ask("Can I go to the toilet?"));
+    const [url, init] = bedrock.mock.calls[0] as unknown as [string, { headers: Record<string, string>; body: string }];
+    const sent = JSON.parse(init.body);
+    expect(url).toContain("bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions");
+    expect(init.headers.authorization).toBe("Bearer test");
+    expect(sent.tools.map((tool: { function: { name: string } }) => tool.function.name)).toEqual(["mark_answer", "ask_again", "not_know", "repeat_question", "answer_child"]);
+    expect(JSON.stringify(sent.messages)).not.toMatch(/"10"|\bten\b/);
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("no", { status: 500 })));
+    await expect(takeTurn(env, ask("Can I go to the toilet?"))).rejects.toThrow("the teacher was asked");
   });
 });

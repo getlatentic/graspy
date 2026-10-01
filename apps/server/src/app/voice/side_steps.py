@@ -19,6 +19,11 @@ from .evidence import Evidence
 from .progress_state import RECALL_ATTEMPTS, UNHEARD_LIMIT, PlanProgress
 
 
+def unheard_streak(item: Evidence, streak: int) -> int:
+    """How many recordings in a row nobody could hear, after this one: a child who is talking can be heard."""
+    return 0 if item.conversational else streak + 1
+
+
 def record_unheard(
     state: PlanProgress,
     item: Evidence,
@@ -30,7 +35,7 @@ def record_unheard(
     It is no miss, it owes no feedback, and it is not a try. Only a child who cannot be heard again and
     again leaves the lesson for tomorrow, since the lesson cannot go on without hearing them."""
     key = (item.plan_id, f"{item.event_id}#unheard", item.day)
-    streaks[key] = streaks.get(key, 0) + 1
+    streaks[key] = unheard_streak(item, streaks.get(key, 0))
     if item.day != today:
         return
     state.done_today.discard(item.event_id)
@@ -79,7 +84,7 @@ def record_side_step(
         return
     if item.unheard:
         key = (item.plan_id, f"{item.event_id}#unheard", item.day)
-        streaks[key] = streaks.get(key, 0) + 1
+        streaks[key] = unheard_streak(item, streaks.get(key, 0))
         if streaks[key] >= UNHEARD_LIMIT:
             state.paused_days.add(item.day)
             state.paused_today = True

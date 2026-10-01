@@ -49,7 +49,7 @@ class EvidenceEvent:
     previous_help: bool
     attempt: int
     error_at: str | None  # the item a list broke at
-    hearing: str  # heard | nothing | garbled | dont_know
+    hearing: str  # heard | nothing | garbled | dont_know | conversation
 
 
 def _skills(event) -> tuple[SkillUse, ...]:

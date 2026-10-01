@@ -34,3 +34,17 @@ because the prompt listed mishearings taken from this corpus: that was in-sample
 stays off. Two limits on the verdict: 85 of the 91 rows were written by Whisper or Intron, not Nova-3 (now the English
 recogniser, whose errors are mostly "no number" and not a different one), and none is a child. Run it again on Nova-3's
 errors, and on real children's, before the verdict is trusted either way.
+
+## Routing (what a child says that is no number)
+
+`run-routing.ts` scores `src/router.ts` on `routing.jsonl` (62 hand-written cases: answers, sound-alike answers, garbled
+words, "I don't know" in English and Pidgin, requests to hear the question again, questions, off-topic). It needs the
+bench Worker with `AWS_BEARER_TOKEN_BEDROCK` in the git-ignored `bench/.dev.vars`. It applies the rules turn.ts applies:
+words with a number or a table sound-alike are left to the marking, and a word or two is acted on only as not knowing or
+asking to hear it again.
+
+On 2026-10-01: 62 cases, 21 handled by the router and right, 40 left to the marking (safe, and slower), 1 wrong action
+("I don tire", Pidgin for being tired, read as not knowing), median about 1.3 s through the laptop and remote preview for
+Clef then the model. Before the gates, a word or two called "garbled" or "something else" was taken, which would have
+thrown away right answers written as sound-alikes (tin, tim, sicks); the cases are the same, and that is why they are gated.
+The cases were written by the person who wrote the router.

@@ -1,0 +1,62 @@
+{"heard": "ten", "expect": "mark_answer"}
+{"heard": "10", "expect": "mark_answer"}
+{"heard": "It is ten.", "expect": "mark_answer"}
+{"heard": "I think it is ten", "expect": "mark_answer"}
+{"heard": "five and five is ten", "expect": "mark_answer"}
+{"heard": "eleven", "expect": "mark_answer"}
+{"heard": "Fifteen.", "expect": "mark_answer"}
+{"heard": "twenty", "expect": "mark_answer"}
+{"heard": "Then", "expect": "mark_answer"}
+{"heard": "Tim", "expect": "mark_answer"}
+{"heard": "tin", "expect": "mark_answer"}
+{"heard": "Teen.", "expect": "mark_answer"}
+{"heard": "Nein.", "expect": "mark_answer"}
+{"heard": "to", "expect": "mark_answer"}
+{"heard": "sicks", "expect": "mark_answer"}
+{"heard": "fifty sicks", "expect": "mark_answer"}
+{"heard": "To me, sink.", "expect": "ask_again"}
+{"heard": "can you sit", "expect": "ask_again"}
+{"heard": "Chainsaw", "expect": "ask_again"}
+{"heard": "To recent.", "expect": "ask_again"}
+{"heard": "Premisetina", "expect": "ask_again"}
+{"heard": "Lemon.", "expect": "ask_again"}
+{"heard": "Jin", "expect": "ask_again"}
+{"heard": "Files", "expect": "ask_again"}
+{"heard": "I don't know", "expect": "not_know"}
+{"heard": "I do not know.", "expect": "not_know"}
+{"heard": "I no know", "expect": "not_know"}
+{"heard": "I no sabi", "expect": "not_know"}
+{"heard": "hmm I'm not sure", "expect": "not_know"}
+{"heard": "I forgot", "expect": "not_know"}
+{"heard": "I can't do it", "expect": "not_know"}
+{"heard": "Items none", "expect": "not_know"}
+{"heard": "Can you say that again?", "expect": "repeat_question"}
+{"heard": "what?", "expect": "repeat_question"}
+{"heard": "Sorry, I did not hear you", "expect": "repeat_question"}
+{"heard": "Abeg, say am again", "expect": "repeat_question"}
+{"heard": "What is five?", "expect": "answer_child"}
+{"heard": "Is it a big number?", "expect": "answer_child"}
+{"heard": "Can I go to the toilet?", "expect": "answer_child"}
+{"heard": "I am hungry", "expect": "answer_child"}
+{"heard": "My sister ate my lunch", "expect": "answer_child"}
+{"heard": "I want to play football", "expect": "answer_child"}
+{"heard": "Teacher, I like oranges", "expect": "answer_child"}
+{"heard": "Why are the oranges in heaps?", "expect": "answer_child"}
+{"heard": "tree", "expect": "mark_answer"}
+{"heard": "free", "expect": "mark_answer"}
+{"heard": "Aid", "expect": "mark_answer"}
+{"heard": "fife", "expect": "mark_answer"}
+{"heard": "seben", "expect": "mark_answer"}
+{"heard": "nain", "expect": "mark_answer"}
+{"heard": "a dozen", "expect": "mark_answer"}
+{"heard": "ten oranges", "expect": "mark_answer"}
+{"heard": "twenty two", "expect": "mark_answer"}
+{"heard": "Yes it is ten", "expect": "mark_answer"}
+{"heard": "I no sabi o", "expect": "not_know"}
+{"heard": "e no dey my head", "expect": "not_know"}
+{"heard": "Abeg make you repeat the question", "expect": "repeat_question"}
+{"heard": "What did you say", "expect": "repeat_question"}
+{"heard": "hello", "expect": "answer_child"}
+{"heard": "Good morning teacher", "expect": "answer_child"}
+{"heard": "I don tire", "expect": "answer_child"}
+{"heard": "The oranges are many", "expect": "answer_child"}
