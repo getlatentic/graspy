@@ -39,138 +39,60 @@
       "id": "attention",
       "event": "gain_attention",
       "say": {
-        "en": "Open one hand. It has five fingers. Open the other. It has ten fingers. We count in fives.",
-        "yo": "Ṣí ọwọ́ kan. Ìka márùn-ún. Ṣí ọwọ́ kejì. Ìka mẹ́wàá. Lónìí a ó kà ní márùn-ún márùn-ún.",
-        "pcm": "Open one hand. Five fingers. Open the other hand. Ten fingers. Today we go count for five five."
+        "en": "Mama Ngozi sells oranges at the market. She puts five oranges in every heap.",
+        "yo": "Mama Ngozi ń ta ọsàn ní ọjà. Ó máa ń fi ọsàn márùn-ún sí òkìtì kọ̀ọ̀kan.",
+        "pcm": "Mama Ngozi dey sell orange for market. She dey put five orange for every heap."
       },
       "show": {
-        "en": "5, 10, 15…",
-        "yo": "5, 10, 15…",
-        "pcm": "5, 10, 15…"
+        "en": "5   5   5",
+        "yo": "5   5   5",
+        "pcm": "5   5   5"
       }
     },
     {
       "id": "objective",
       "event": "inform_objectives",
       "say": {
-        "en": "Today you will count in fives from five to sixty by yourself.",
-        "yo": "Lónìí, ìwọ fúnra rẹ yóò kà ní márùn-ún márùn-ún láti márùn-ún dé ọgọ́ta.",
-        "pcm": "Today you go fit count for five five from five reach sixty by yourself."
+        "en": "Today we count her oranges, heap by heap.",
+        "yo": "Lónìí a ó ka àwọn ọsàn rẹ̀, òkìtì kọ̀ọ̀kan.",
+        "pcm": "Today we go count her orange, heap by heap."
       }
     },
     {
       "id": "recall",
       "event": "stimulate_recall",
       "say": {
-        "en": "First, plain counting. Count from one to five.",
-        "yo": "Ní àkọ́kọ́, kíkà lásán. Kà láti ọ̀kan dé márùn-ún.",
-        "pcm": "First, normal counting. Count from one reach five."
+        "en": "One heap has five oranges. How many oranges are in two heaps?",
+        "yo": "Òkìtì kan ní ọsàn márùn-ún. Ọsàn mélòó ni ó wà ní òkìtì méjì?",
+        "pcm": "One heap get five orange. How many orange dey inside two heaps?"
       },
       "activity": {
-        "kind": "sequence",
-        "items": [
-          {
-            "id": "1",
-            "spoken": {
-              "en": [
-                "1",
-                "one"
-              ],
-              "yo": [
-                "1",
-                "one",
-                "ọ̀kan"
-              ],
-              "pcm": [
-                "1",
-                "one"
-              ]
-            }
-          },
-          {
-            "id": "2",
-            "spoken": {
-              "en": [
-                "2",
-                "two"
-              ],
-              "yo": [
-                "2",
-                "two",
-                "méjì"
-              ],
-              "pcm": [
-                "2",
-                "two"
-              ]
-            }
-          },
-          {
-            "id": "3",
-            "spoken": {
-              "en": [
-                "3",
-                "three"
-              ],
-              "yo": [
-                "3",
-                "three",
-                "mẹ́ta"
-              ],
-              "pcm": [
-                "3",
-                "three"
-              ]
-            }
-          },
-          {
-            "id": "4",
-            "spoken": {
-              "en": [
-                "4",
-                "four"
-              ],
-              "yo": [
-                "4",
-                "four",
-                "mẹ́rin"
-              ],
-              "pcm": [
-                "4",
-                "four"
-              ]
-            }
-          },
-          {
-            "id": "5",
-            "spoken": {
-              "en": [
-                "5",
-                "five"
-              ],
-              "yo": [
-                "5",
-                "five",
-                "márùn-ún",
-                "márùn",
-                "àrún"
-              ],
-              "pcm": [
-                "5",
-                "five"
-              ]
-            }
-          }
-        ]
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "ten",
+            "10"
+          ],
+          "yo": [
+            "ten",
+            "10",
+            "mẹ́wàá",
+            "mẹ́wà"
+          ],
+          "pcm": [
+            "ten",
+            "10"
+          ]
+        }
       }
     },
     {
       "id": "present",
       "event": "present_content",
       "say": {
-        "en": "Five, ten, fifteen, twenty. Each time we add five more. Five and five make ten. Ten and five make fifteen.",
-        "yo": "Márùn-ún, mẹ́wàá, mẹ́ẹ̀dógún, ogún. Nígbà kọ̀ọ̀kan a fi márùn-ún kún un. Márùn-ún àti márùn-ún jẹ́ mẹ́wàá. Mẹ́wàá àti márùn-ún jẹ́ mẹ́ẹ̀dógún.",
-        "pcm": "Five, ten, fifteen, twenty. Every time we add five more. Five and five na ten. Ten and five na fifteen."
+        "en": "Three heaps. Five, ten, fifteen. Every heap adds five more.",
+        "yo": "Òkìtì mẹ́ta. Márùn-ún, mẹ́wàá, mẹ́ẹ̀dógún. Fi márùn-ún kún un.",
+        "pcm": "Three heaps. Five, ten, fifteen. Every heap add five more."
       },
       "show": {
         "en": "5, 10, 15, 20…",
@@ -273,652 +195,100 @@
       "event": "elicit_performance",
       "support": "practice",
       "say": {
-        "en": "Let us try a shorter one. Count in fives from five to forty.",
-        "yo": "Jẹ́ ká gbìyànjú èyí tó kúrú. Kà ní márùn-ún márùn-ún láti márùn-ún dé ogójì.",
-        "pcm": "Make we try shorter one. Count for five five from five reach forty."
+        "en": "Let us try a smaller one. Mama has three heaps, five oranges in each. How many oranges?",
+        "yo": "Jẹ́ ká gbìyànjú èyí tó kéré. Mama ní òkìtì mẹ́ta, ọsàn márùn-ún nínú kọ̀ọ̀kan. Ọsàn mélòó ni?",
+        "pcm": "Make we try smaller one. Mama get three heaps, five orange inside each. How many orange?"
       },
       "activity": {
-        "kind": "sequence",
-        "items": [
-          {
-            "id": "5",
-            "spoken": {
-              "en": [
-                "5",
-                "five"
-              ],
-              "yo": [
-                "5",
-                "five",
-                "márùn-ún",
-                "márùn",
-                "àrún"
-              ],
-              "pcm": [
-                "5",
-                "five"
-              ]
-            }
-          },
-          {
-            "id": "10",
-            "spoken": {
-              "en": [
-                "10",
-                "ten"
-              ],
-              "yo": [
-                "10",
-                "ten",
-                "mẹ́wàá",
-                "mẹ́wà"
-              ],
-              "pcm": [
-                "10",
-                "ten"
-              ]
-            }
-          },
-          {
-            "id": "15",
-            "spoken": {
-              "en": [
-                "15",
-                "fifteen"
-              ],
-              "yo": [
-                "15",
-                "fifteen",
-                "mẹ́ẹ̀dógún",
-                "ẹ̀ẹ́dógún"
-              ],
-              "pcm": [
-                "15",
-                "fifteen"
-              ]
-            }
-          },
-          {
-            "id": "20",
-            "spoken": {
-              "en": [
-                "20",
-                "twenty"
-              ],
-              "yo": [
-                "20",
-                "twenty",
-                "ogún"
-              ],
-              "pcm": [
-                "20",
-                "twenty"
-              ]
-            }
-          },
-          {
-            "id": "25",
-            "spoken": {
-              "en": [
-                "25",
-                "twenty-five"
-              ],
-              "yo": [
-                "25",
-                "twenty-five",
-                "márùndínlọ́gbọ̀n"
-              ],
-              "pcm": [
-                "25",
-                "twenty-five"
-              ]
-            }
-          },
-          {
-            "id": "30",
-            "spoken": {
-              "en": [
-                "30",
-                "thirty"
-              ],
-              "yo": [
-                "30",
-                "thirty",
-                "ọgbọ̀n"
-              ],
-              "pcm": [
-                "30",
-                "thirty"
-              ]
-            }
-          },
-          {
-            "id": "35",
-            "spoken": {
-              "en": [
-                "35",
-                "thirty-five"
-              ],
-              "yo": [
-                "35",
-                "thirty-five",
-                "márùndínlógójì"
-              ],
-              "pcm": [
-                "35",
-                "thirty-five"
-              ]
-            }
-          },
-          {
-            "id": "40",
-            "spoken": {
-              "en": [
-                "40",
-                "forty"
-              ],
-              "yo": [
-                "40",
-                "forty",
-                "ogójì"
-              ],
-              "pcm": [
-                "40",
-                "forty"
-              ]
-            }
-          }
-        ]
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "fifteen",
+            "15"
+          ],
+          "yo": [
+            "fifteen",
+            "15",
+            "mẹ́ẹ̀ẹ́dógún",
+            "mẹ́ẹ̀dógún",
+            "mẹ́dógún",
+            "ẹ̀ẹ́dógún"
+          ],
+          "pcm": [
+            "fifteen",
+            "15"
+          ]
+        }
       }
     },
     {
       "id": "practice",
       "event": "elicit_performance",
       "say": {
-        "en": "Your turn. Count in fives from five to sixty out loud.",
-        "yo": "Ìwọ ná. Kà ní márùn-ún márùn-ún láti márùn-ún dé ọgọ́ta nínú aloud kan.",
-        "pcm": "Na your turn. Count for five five from five reach sixty aloud."
+        "en": "Now you. Mama has six heaps, five oranges in each. How many oranges?",
+        "yo": "Ìwọ náà báyìí. Mama ní òkìtì mẹ́fà, ọsàn márùn-ún nínú kọ̀ọ̀kan. Ọsàn mélòó ni?",
+        "pcm": "Na your turn. Mama get six heaps, five orange inside each. How many orange?"
       },
       "activity": {
-        "kind": "sequence",
-        "items": [
-          {
-            "id": "5",
-            "spoken": {
-              "en": [
-                "5",
-                "five"
-              ],
-              "yo": [
-                "5",
-                "five",
-                "márùn-ún",
-                "márùn",
-                "àrún"
-              ],
-              "pcm": [
-                "5",
-                "five"
-              ]
-            }
-          },
-          {
-            "id": "10",
-            "spoken": {
-              "en": [
-                "10",
-                "ten"
-              ],
-              "yo": [
-                "10",
-                "ten",
-                "mẹ́wàá",
-                "mẹ́wà"
-              ],
-              "pcm": [
-                "10",
-                "ten"
-              ]
-            }
-          },
-          {
-            "id": "15",
-            "spoken": {
-              "en": [
-                "15",
-                "fifteen"
-              ],
-              "yo": [
-                "15",
-                "fifteen",
-                "mẹ́ẹ̀dógún",
-                "ẹ̀ẹ́dógún"
-              ],
-              "pcm": [
-                "15",
-                "fifteen"
-              ]
-            }
-          },
-          {
-            "id": "20",
-            "spoken": {
-              "en": [
-                "20",
-                "twenty"
-              ],
-              "yo": [
-                "20",
-                "twenty",
-                "ogún"
-              ],
-              "pcm": [
-                "20",
-                "twenty"
-              ]
-            }
-          },
-          {
-            "id": "25",
-            "spoken": {
-              "en": [
-                "25",
-                "twenty-five"
-              ],
-              "yo": [
-                "25",
-                "twenty-five",
-                "márùndínlọ́gbọ̀n"
-              ],
-              "pcm": [
-                "25",
-                "twenty-five"
-              ]
-            }
-          },
-          {
-            "id": "30",
-            "spoken": {
-              "en": [
-                "30",
-                "thirty"
-              ],
-              "yo": [
-                "30",
-                "thirty",
-                "ọgbọ̀n"
-              ],
-              "pcm": [
-                "30",
-                "thirty"
-              ]
-            }
-          },
-          {
-            "id": "35",
-            "spoken": {
-              "en": [
-                "35",
-                "thirty-five"
-              ],
-              "yo": [
-                "35",
-                "thirty-five",
-                "márùndínlógójì"
-              ],
-              "pcm": [
-                "35",
-                "thirty-five"
-              ]
-            }
-          },
-          {
-            "id": "40",
-            "spoken": {
-              "en": [
-                "40",
-                "forty"
-              ],
-              "yo": [
-                "40",
-                "forty",
-                "ogójì"
-              ],
-              "pcm": [
-                "40",
-                "forty"
-              ]
-            }
-          },
-          {
-            "id": "45",
-            "spoken": {
-              "en": [
-                "45",
-                "forty-five"
-              ],
-              "yo": [
-                "45",
-                "forty-five",
-                "márùndínláàádọ́ta",
-                "márùndínláàdọ́ta",
-                "márùndínládọ́ta"
-              ],
-              "pcm": [
-                "45",
-                "forty-five"
-              ]
-            }
-          },
-          {
-            "id": "50",
-            "spoken": {
-              "en": [
-                "50",
-                "fifty"
-              ],
-              "yo": [
-                "50",
-                "fifty",
-                "àádọ́ta"
-              ],
-              "pcm": [
-                "50",
-                "fifty"
-              ]
-            }
-          },
-          {
-            "id": "55",
-            "spoken": {
-              "en": [
-                "55",
-                "fifty-five"
-              ],
-              "yo": [
-                "55",
-                "fifty-five",
-                "márùndínlọ́gọ́ta"
-              ],
-              "pcm": [
-                "55",
-                "fifty-five"
-              ]
-            }
-          },
-          {
-            "id": "60",
-            "spoken": {
-              "en": [
-                "60",
-                "sixty"
-              ],
-              "yo": [
-                "60",
-                "sixty",
-                "ọgọ́ta"
-              ],
-              "pcm": [
-                "60",
-                "sixty"
-              ]
-            }
-          }
-        ]
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "thirty",
+            "30"
+          ],
+          "yo": [
+            "thirty",
+            "30"
+          ],
+          "pcm": [
+            "thirty",
+            "30"
+          ]
+        }
       }
     },
     {
       "id": "feedback",
       "event": "provide_feedback",
       "say": {
-        "en": "Listen to the numbers you skipped. We count them again.",
-        "yo": "Gbọ́ nọ́ńbà tí o fò. A ó tún kà pọ̀.",
-        "pcm": "Hear the numbers wey you jump. We go count dem again."
+        "en": "Count the heaps one by one. Five, ten, fifteen. Then try again.",
+        "yo": "Ka àwọn òkìtì ní ọ̀kọ̀ọ̀kan. Márùn-ún, mẹ́wàá, mẹ́ẹ̀dógún. Lẹ́yìn náà tún gbìyànjú.",
+        "pcm": "Count the heaps one by one. Five, ten, fifteen. Then try again."
       }
     },
     {
       "id": "assess",
       "event": "assess_performance",
       "say": {
-        "en": "Let us see what you remember. Count in fives from five to sixty without help.",
-        "yo": "Jẹ́ ká wo ohun tí o rántí. Kà ní márùn-ún márùn-ún láti márùn-ún dé ọgọ́ta láìsí ìrànlọ́wọ́.",
-        "pcm": "Make we see wetin you remember. Count for five five from five reach sixty without help."
+        "en": "Let us see what you remember. Eight heaps of yams, five yams in each. How many yams?",
+        "yo": "Jẹ́ ká wo ohun tí o rántí. Òkìtì ẹ̀gbọ́ mẹ́jọ, ẹ̀gbọ́ márùn-ún nínú kọ̀ọ̀kan. Mélòó ni?",
+        "pcm": "Make we see wetin you remember. Eight heaps of yam, five yam inside each. How many yam?"
       },
       "activity": {
-        "kind": "sequence",
-        "items": [
-          {
-            "id": "5",
-            "spoken": {
-              "en": [
-                "5",
-                "five"
-              ],
-              "yo": [
-                "5",
-                "five",
-                "márùn-ún",
-                "márùn",
-                "àrún"
-              ],
-              "pcm": [
-                "5",
-                "five"
-              ]
-            }
-          },
-          {
-            "id": "10",
-            "spoken": {
-              "en": [
-                "10",
-                "ten"
-              ],
-              "yo": [
-                "10",
-                "ten",
-                "mẹ́wàá",
-                "mẹ́wà"
-              ],
-              "pcm": [
-                "10",
-                "ten"
-              ]
-            }
-          },
-          {
-            "id": "15",
-            "spoken": {
-              "en": [
-                "15",
-                "fifteen"
-              ],
-              "yo": [
-                "15",
-                "fifteen",
-                "mẹ́ẹ̀dógún",
-                "ẹ̀ẹ́dógún"
-              ],
-              "pcm": [
-                "15",
-                "fifteen"
-              ]
-            }
-          },
-          {
-            "id": "20",
-            "spoken": {
-              "en": [
-                "20",
-                "twenty"
-              ],
-              "yo": [
-                "20",
-                "twenty",
-                "ogún"
-              ],
-              "pcm": [
-                "20",
-                "twenty"
-              ]
-            }
-          },
-          {
-            "id": "25",
-            "spoken": {
-              "en": [
-                "25",
-                "twenty-five"
-              ],
-              "yo": [
-                "25",
-                "twenty-five",
-                "márùndínlọ́gbọ̀n"
-              ],
-              "pcm": [
-                "25",
-                "twenty-five"
-              ]
-            }
-          },
-          {
-            "id": "30",
-            "spoken": {
-              "en": [
-                "30",
-                "thirty"
-              ],
-              "yo": [
-                "30",
-                "thirty",
-                "ọgbọ̀n"
-              ],
-              "pcm": [
-                "30",
-                "thirty"
-              ]
-            }
-          },
-          {
-            "id": "35",
-            "spoken": {
-              "en": [
-                "35",
-                "thirty-five"
-              ],
-              "yo": [
-                "35",
-                "thirty-five",
-                "márùndínlógójì"
-              ],
-              "pcm": [
-                "35",
-                "thirty-five"
-              ]
-            }
-          },
-          {
-            "id": "40",
-            "spoken": {
-              "en": [
-                "40",
-                "forty"
-              ],
-              "yo": [
-                "40",
-                "forty",
-                "ogójì"
-              ],
-              "pcm": [
-                "40",
-                "forty"
-              ]
-            }
-          },
-          {
-            "id": "45",
-            "spoken": {
-              "en": [
-                "45",
-                "forty-five"
-              ],
-              "yo": [
-                "45",
-                "forty-five",
-                "márùndínláàádọ́ta",
-                "márùndínláàdọ́ta",
-                "márùndínládọ́ta"
-              ],
-              "pcm": [
-                "45",
-                "forty-five"
-              ]
-            }
-          },
-          {
-            "id": "50",
-            "spoken": {
-              "en": [
-                "50",
-                "fifty"
-              ],
-              "yo": [
-                "50",
-                "fifty",
-                "àádọ́ta"
-              ],
-              "pcm": [
-                "50",
-                "fifty"
-              ]
-            }
-          },
-          {
-            "id": "55",
-            "spoken": {
-              "en": [
-                "55",
-                "fifty-five"
-              ],
-              "yo": [
-                "55",
-                "fifty-five",
-                "márùndínlọ́gọ́ta"
-              ],
-              "pcm": [
-                "55",
-                "fifty-five"
-              ]
-            }
-          },
-          {
-            "id": "60",
-            "spoken": {
-              "en": [
-                "60",
-                "sixty"
-              ],
-              "yo": [
-                "60",
-                "sixty",
-                "ọgọ́ta"
-              ],
-              "pcm": [
-                "60",
-                "sixty"
-              ]
-            }
-          }
-        ]
+        "kind": "answer",
+        "expected": {
+          "en": [
+            "forty",
+            "40"
+          ],
+          "yo": [
+            "forty",
+            "40"
+          ],
+          "pcm": [
+            "forty",
+            "40"
+          ]
+        }
       }
     },
     {
       "id": "retain",
       "event": "enhance_retention",
       "say": {
-        "en": "Well done. Tomorrow we count in fives once more, then we count in tens.",
-        "yo": "O ṣe dáadáa. Lọ́la a ó tún kà ní márùn-ún, lẹ́yìn náà ní mẹ́wàá.",
-        "pcm": "You do well. Tomorrow we go count for five five one more time, then we go count for ten ten."
+        "en": "Very good today! Tomorrow we count days and weeks.",
+        "yo": "Ó dára púpọ̀ lónìí! Ní ọ̀la a ó ka ọjọ́ àti ọ̀sẹ̀.",
+        "pcm": "Very good today! Tomorrow we go count days and weeks."
       }
     }
   ]

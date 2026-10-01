@@ -207,8 +207,26 @@ def check_catalogue(plans: dict[str, LessonPlan]) -> list[str]:
     return problems
 
 
+def _unlike(step: LessonEvent, target: LessonEvent) -> str | None:
+    """Why a shorter step is not a smaller version of the event it supports, if it is not."""
+    if step.activity is None or target.activity is None:
+        return f"has no activity to compare with {target.id}'s"
+    if target.activity.kind != "sequence":
+        return (
+            None
+            if step.activity.kind == target.activity.kind
+            else f"is not the same kind of activity as {target.id}"
+        )
+    own = [item.id for item in step.activity.items]
+    full = [item.id for item in target.activity.items]
+    if not own or len(own) >= len(full) or full[: len(own)] != own:
+        return f"is not the start of {target.id}'s list, cut short"
+    return None
+
+
 def _support_problems(plan: LessonPlan) -> list[str]:
-    """A shorter step must lead to the event it supports: earlier in the plan, and the same list cut short."""
+    """A shorter step must lead to the event it supports: earlier in the plan, the same list cut short, or
+    a smaller question of the same kind."""
     problems = []
     ids = [event.id for event in plan.events]
     for event in plan.events:
@@ -225,12 +243,9 @@ def _support_problems(plan: LessonPlan) -> list[str]:
             problems.append(f"{label}: supports an event that does not come after it")
             continue
         target = plan.event(event.support)
-        own = [item.id for item in (event.activity.items if event.activity else ())]
-        full = [item.id for item in (target.activity.items if target.activity else ())]
-        if not own or len(own) >= len(full) or full[: len(own)] != own:
-            problems.append(
-                f"{label}: is not the start of {event.support}'s list, cut short"
-            )
+        problem = _unlike(event, target)
+        if problem:
+            problems.append(f"{label}: {problem}")
     return problems
 
 
