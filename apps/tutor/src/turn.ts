@@ -28,7 +28,7 @@ import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { heardSequence } from "./plain-sequence";
 import { exampleBlock } from "./phrasebook";
-import { praiseLine } from "./praise";
+import { correctionLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import {
@@ -217,11 +217,13 @@ const SPEECH: Record<string, string> = {
 };
 
 function brief(ask: Ask, premarked: Marked | null = null): string {
+  const kind = heardKind(ask.heard);
+  const heardAs = kind === "garbled" ? "words" : kind;
   return [
     "You are a class teacher in a Nigerian primary school, speaking to one young child who has just",
     "answered out loud. This is how you sound. Say it in this plain classroom way, with these words and",
     "this rhythm, about this answer:",
-    ...exampleBlock(),
+    ...exampleBlock(heardAs),
     "These show how you sound only. Never use their words or numbers for this child: the <slots> are the",
     "child's own list, answer or first step, and you fill them with what this question is about.",
     "",
@@ -264,6 +266,9 @@ function brief(ask: Ask, premarked: Marked | null = null): string {
     "and hearing twelve of them read out teaches nothing. Say in a few words how it went, and when",
     "some were missed, name at most one of them to say again.",
     "When nothing was heard, treat it as the phone not hearing, never as the child being wrong.",
+    ...(kind === "dont_know"
+      ? ["The child was heard, and said they do not know. Never say you did not hear them: say it is fine, and help with the first small step."]
+      : []),
     ...(ask.earlier?.length ? earlierNote(ask.earlier) : []),
     "When the child spoke but did not try the question, said they do not know or spoke of something else,",
     "do not praise them: say kindly that it is all right, then help with the first small step or bring them back.",
@@ -480,7 +485,8 @@ async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
  */
 function markedFromPlainSequence(ask: Ask): { verdict: Verdict; result: SequenceResult } | null {
   if (ask.expect.kind !== "sequence") return null;
-  const heard = heardSequence([...(ask.expect.before ?? []), ...ask.expect.items, ...(ask.expect.more ?? [])], ask.heard);
+  const everything = [...(ask.expect.before ?? []), ...ask.expect.items, ...(ask.expect.more ?? [])];
+  const heard = heardSequence(everything, ask.heard) ?? heardSequence(everything, ask.heard, true);
   if (heard === null) return null;
   return markSequence(ask.expect.items, heard, ask.heard ?? "", ask.expect.more, ask.expect.before);
 }
@@ -490,9 +496,10 @@ function steadyLine(verdict: Verdict, language: string): string {
   return lines[language as keyof typeof lines] ?? lines.en;
 }
 
-/** What is said with a verdict code has reached alone: a right answer is praised for what it was, the rest have a steady line. */
+/** What is said with a verdict code has reached alone: a right answer is praised for what it was, a wrong number is said right, the rest have a steady line. */
 function saidFor(verdict: Verdict, ask: Ask): string {
-  return (verdict === "correct" ? praiseLine(ask) : null) ?? steadyLine(verdict, ask.language);
+  const own = verdict === "correct" ? praiseLine(ask) : verdict === "wrong" ? correctionLine(ask) : null;
+  return own ?? steadyLine(verdict, ask.language);
 }
 
 /**
