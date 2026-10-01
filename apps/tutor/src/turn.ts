@@ -545,12 +545,16 @@ async function markedFromPlainNumber(env: Env, ask: Ask): Promise<Reply | null> 
   const heard = heardForPrompt(ask.heard);
   if (heard === "") return marked(markAnswer(ask.expect.item, null), ask);
   const homophone = HOMOPHONES[heard.toLowerCase().replace(/[^a-z]/g, "")];
+  let unclear = false;
   if (homophone === undefined && env.INTERPRETER === "clef" && expected <= LARGEST_NUMBER) {
-    const reading = await timed("clef", readWithClef(env, heard)).catch(() => null);
-    if (reading !== null) return markedFromReading(reading, ask, expected);
+    const reading = await timed("clef", readWithClef(env, heard, ask.language)).catch(() => null);
+    if (reading !== null && reading.kind !== "unclear") return markedFromReading(reading, ask, expected);
+    unclear = reading !== null;
   }
   const answer = homophone ?? (await answerHeard(env, heard));
-  return answer === null ? null : markedNumber(answer, ask, expected);
+  if (answer !== null) return markedNumber(answer, ask, expected);
+  // Clef could not tell what a few words were, and nor could the small reader: asked again, which is no try.
+  return unclear && fewWords(ask.heard) ? { ...markAnswer(ask.expect.item, null), say: notHeardLine(ask) ?? steadyLine("unheard", ask.language) } : null;
 }
 
 function markedNumber(answer: number, ask: Ask, expected: number): Reply | null {
@@ -559,16 +563,13 @@ function markedNumber(answer: number, ask: Ask, expected: number): Reply | null 
   return marked(markAnswer(ask.expect.item, String(answer), true, ask.expect.accept ?? []), ask);
 }
 
-/** What Clef read: a number is marked as any is; not knowing is met with the next hint; words that cannot be told, when they are few, are asked again, and more is left to the teacher. */
+/** What Clef was sure of: a number is marked as any is, and not knowing is met with the next hint as a try. */
 function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply | null {
   if (ask.expect.kind !== "fact") return null;
   if (reading.kind === "number") return markedNumber(reading.value, ask, expected);
-  const unheard = markAnswer(ask.expect.item, null);
-  if (reading.kind === "dont_know") {
-    const line = correctionLine(ask, false);
-    return line === null ? null : { ...unheard, heard: "dont_know", say: line };
-  }
-  return fewWords(ask.heard) ? { ...unheard, heard: "garbled", say: notHeardLine(ask) ?? steadyLine("unheard", ask.language) } : null;
+  if (reading.kind !== "dont_know") return null;
+  const line = correctionLine(ask, false);
+  return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "dont_know", say: line };
 }
 
 /**

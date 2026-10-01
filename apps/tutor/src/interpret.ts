@@ -8,8 +8,9 @@
  * "unclear", which is asked again, never marked. Marking is still code's: the number is compared with the right
  * answer afterwards.
  *
- * The thresholds were chosen on the staging rig's recognised answers (apps/tutor/bench): at these, 3 of 70 were
- * read as a wrong answer, none as not knowing, and 26 asked again.
+ * It is asked only about a word or two (a longer sentence holds a number the small reader can check against the
+ * words), and only in English. The thresholds were chosen on the staging rig's recognised answers
+ * (apps/tutor/bench); see its README for what they score.
  */
 
 import { heardForPrompt } from "./guard";
@@ -18,6 +19,10 @@ export const CLEF_MODEL = "@cf/cloudflare/clef";
 /** How sure Clef must be of what the child did, and then of which number. */
 export const KIND_MIN = 0.8;
 export const VALUE_MIN = 0.5;
+/** And how far the number must lead the next most likely, "no number" included: a near tie is a child who said another. */
+export const VALUE_LEAD = 0.2;
+/** A reading that is not given within this is left to the small reader; Clef answers in well under a second as a rule. */
+const CLEF_TIMEOUT_MS = 4000;
 /** The numbers Clef is offered as the child's answer: a times table ends at 12 x 12. A question whose answer is larger goes to the small reader, which reads up to 999. */
 export const LARGEST_NUMBER = 150;
 
@@ -46,10 +51,9 @@ export function fewWords(heard: string | null): boolean {
 }
 
 const INSTRUCTIONS =
-  "A young Nigerian child answered a maths question out loud and a speech recogniser wrote down what it heard, often wrongly. " +
-  "Judge only from how the written words sound read aloud; you are not told the question. Recognisers mishear Nigerian " +
-  "children in regular ways: Aid/ate = 8, tree/free = 3, to/too = 2, sicks = 6, tin/teen/tim/then = 10, nein/nain = 9, " +
-  "faif = 5, seben = 7.";
+  "A young Nigerian child answered a maths question out loud and a speech recogniser wrote down what it heard, often " +
+  "wrongly: a number word is often written as another word that sounds like it. Judge only from how the written words " +
+  "would sound read aloud by a child; you are not told the question or the answer.";
 
 const KINDS = {
   number: "said a number",
@@ -64,28 +68,44 @@ interface ClefReply {
   answers?: { kind?: { probabilities?: Probabilities }; value?: { probabilities?: Probabilities } };
 }
 
-function top(probabilities: Probabilities | undefined): [string, number] | null {
+/** The two most likely options of an answer, or null where the numbers are no probabilities: a few options, none negative, adding up to one. */
+function lead(probabilities: Probabilities | undefined): [[string, number], number] | null {
   const entries = Object.entries(probabilities ?? {});
-  return entries.length === 0 ? null : entries.reduce((best, entry) => (entry[1] > best[1] ? entry : best));
+  const total = entries.reduce((sum, [, p]) => sum + p, 0);
+  if (entries.length === 0 || entries.some(([, p]) => !(p >= 0)) || Math.abs(total - 1) > 0.1) return null;
+  const [first, second] = [...entries].sort((a, b) => b[1] - a[1]);
+  return [first, first[1] - (second?.[1] ?? 0)];
 }
 
-/** The reading of what the recogniser wrote, or null when the model gave no usable answer, which the caller answers another way. */
-export async function readWithClef(env: Env, heard: string): Promise<Reading | null> {
-  const reply = (await env.AI.run(CLEF_MODEL, {
-    model: "clef",
-    state: `The recogniser wrote: ${heard}`,
-    questions: {
-      kind: { type: "choice", instructions: `${INSTRUCTIONS} What did the child do?`, criteria: KINDS },
-      value: { type: "choice", instructions: `${INSTRUCTIONS} Which number did the child say, if any?`, criteria: VALUES },
-    },
-  })) as ClefReply;
-  const kind = top(reply.answers?.kind?.probabilities);
+function afterTimeout<T>(work: Promise<T>): Promise<T | null> {
+  return Promise.race([work, new Promise<null>((resolve) => setTimeout(() => resolve(null), CLEF_TIMEOUT_MS))]);
+}
+
+/**
+ * The reading of what the recogniser wrote, or null when it is not to be used: another language, more than a few
+ * words, no answer in time, or an answer that is no probability. The caller then reads it another way.
+ */
+export async function readWithClef(env: Env, heard: string, language = "en"): Promise<Reading | null> {
+  if (language !== "en" || !fewWords(heard)) return null;
+  const reply = (await afterTimeout(
+    env.AI.run(CLEF_MODEL, {
+      model: "clef",
+      state: `The recogniser wrote: ${heard}`,
+      questions: {
+        kind: { type: "choice", instructions: `${INSTRUCTIONS} What did the child do?`, criteria: KINDS },
+        value: { type: "choice", instructions: `${INSTRUCTIONS} Which number did the child say, if any?`, criteria: VALUES },
+      },
+    }),
+  )) as ClefReply | null;
+  const kind = lead(reply?.answers?.kind?.probabilities);
   if (kind === null) return null;
-  const [what, sure] = kind;
+  const [[what, sure]] = kind;
   if (sure < KIND_MIN) return { kind: "unclear" };
   if (what === "dont_know") return { kind: "dont_know" };
   if (what !== "number") return { kind: "unclear" };
-  const value = top(reply.answers?.value?.probabilities);
-  if (value === null || value[0] === "none" || value[1] < VALUE_MIN) return { kind: "unclear" };
-  return { kind: "number", value: Number(value[0]) };
+  const value = lead(reply?.answers?.value?.probabilities);
+  if (value === null) return null;
+  const [[number, p], margin] = value;
+  if (!/^\d+$/.test(number) || p < VALUE_MIN || margin < VALUE_LEAD) return { kind: "unclear" };
+  return { kind: "number", value: Number(number) };
 }

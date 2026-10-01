@@ -1,11 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { CLEF_MODEL, KIND_MIN, VALUE_MIN, readWithClef } from "../src/interpret";
+import { describe, expect, it, vi } from "vitest";
+import { CLEF_MODEL, KIND_MIN, VALUE_LEAD, VALUE_MIN, readWithClef } from "../src/interpret";
 import { NOT_HEARD } from "../src/phrasebook";
 import { READER_MODEL } from "../src/read";
 import { takeTurn, type Ask } from "../src/turn";
 
 type Probabilities = Record<string, number>;
 interface Script {
+  hang?: boolean;
   kind?: Probabilities;
   value?: Probabilities;
   clefFails?: boolean;
@@ -22,6 +23,7 @@ function tutor(script: Script, interpreter = "clef") {
         asked.push(model);
         if (model === CLEF_MODEL) {
           if (script.clefFails) throw new Error("5006");
+          if (script.hang) return new Promise(() => undefined);
           return { answers: { kind: { probabilities: script.kind }, value: { probabilities: script.value } } };
         }
         if (model === READER_MODEL) return { choices: [{ message: { content: JSON.stringify({ answer: script.reader ?? null }) } }] };
@@ -60,7 +62,56 @@ describe("what Clef read, and how sure it had to be", () => {
   });
 });
 
+describe("when what Clef read is not used", () => {
+  it("is not asked about more than a few words, which hold a number the small reader can check", async () => {
+    const { env, asked } = tutor(number(0.95, "10", 0.8));
+    expect(await readWithClef(env, "I think it is the ten sir")).toBeNull();
+    expect(asked).toEqual([]);
+  });
+
+  it("is not asked for another language", async () => {
+    const { env, asked } = tutor(number(0.95, "10", 0.8));
+    expect(await readWithClef(env, "Tim", "yo")).toBeNull();
+    expect(asked).toEqual([]);
+  });
+
+  it("is unclear when the number does not lead the next most likely by enough, or is no key of the numbers", async () => {
+    const near = tutor({ kind: { number: 0.95, dont_know: 0.03, unclear: 0.02 }, value: { "10": 0.5, "11": 0.5 - VALUE_LEAD / 2 + 0.01, none: VALUE_LEAD / 2 - 0.01 } });
+    expect(await readWithClef(near.env, "Ten")).toEqual({ kind: "unclear" });
+    const odd = tutor({ kind: { number: 0.95, dont_know: 0.03, unclear: 0.02 }, value: { seven: 0.9, none: 0.1 } });
+    expect(await readWithClef(odd.env, "Ten")).toEqual({ kind: "unclear" });
+  });
+
+  it("is nothing where the numbers are no probabilities, so the small reader is used", async () => {
+    expect(await readWithClef(tutor({ kind: { number: 90, unclear: 5 } }).env, "Tim")).toBeNull();
+  });
+
+  it("is given up on after a few seconds, and the small reader answers", async () => {
+    vi.useFakeTimers();
+    try {
+      const { env, asked } = tutor({ hang: true, reader: 10 });
+      const turn = takeTurn(env, ask("ten"));
+      await vi.advanceTimersByTimeAsync(4100);
+      expect((await turn).verdict).toBe("correct");
+      expect(asked).toEqual([CLEF_MODEL, READER_MODEL]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe("a number answered where Clef reads what the child meant", () => {
+  it("tries the small reader when Clef cannot tell, before asking again", async () => {
+    const { env } = tutor({ kind: { number: KIND_MIN - 0.1, dont_know: 0.1, unclear: 0.2 }, reader: 10 });
+    expect((await takeTurn(env, ask("ten please"))).verdict).toBe("correct");
+  });
+
+  it("leaves a plain I can't as not knowing, and so a try, when Clef could not tell", async () => {
+    const { env } = tutor({ kind: { number: 0.3, dont_know: 0.2, unclear: 0.5 } });
+    const reply = await takeTurn(env, ask("I can't", "10", ["Think of two heaps."]));
+    expect([reply.heard, reply.say]).toEqual(["dont_know", "Think of two heaps."]);
+  });
+
   it("marks the number Clef read as any is, a right one correct and a wrong one wrong", async () => {
     expect((await takeTurn(tutor(number(0.95, "10", 0.8)).env, ask("Tim"))).verdict).toBe("correct");
     const wrong = await takeTurn(tutor(number(0.95, "11", 0.8)).env, ask("Lemon", "10", ["Count on from five."]));

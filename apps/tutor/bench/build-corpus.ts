@@ -8,7 +8,7 @@ const RUNS = new URL("../../pedagogy/runs/", import.meta.url).pathname;
 const OUT = new URL("./interpretation.jsonl", import.meta.url).pathname;
 
 const ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split(" ");
-const TENS = "x x twenty thirty forty fifty sixty seventy eighty ninety".split(" ");
+const TENS = "- - twenty thirty forty fifty sixty seventy eighty ninety".split(" ");
 const NOT_KNOWING = /don'?t (know|remember)|do not (know|remember)|dunno|no idea|not sure|forgot/i;
 
 function numberOf(said: string): number | null {
