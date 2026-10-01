@@ -64,7 +64,7 @@ def test_a_plan_in_progress_today_continues_at_its_next_event():
     )
 
 
-def test_a_wrong_activity_gets_its_feedback_event_and_then_comes_round_again():
+def test_a_wrong_activity_comes_round_again_at_once_because_the_teachers_reply_was_the_feedback():
     taught = [
         said(T1, e) for e in ("attention", "objective", "recall", "present", "guide")
     ]
@@ -72,14 +72,9 @@ def test_a_wrong_activity_gets_its_feedback_event_and_then_comes_round_again():
     progress = progress_by_plan(evidence, PLANS, DAY_1)
     assert (
         next_options(PLANS, progress, DAY_1, TABLE_CLASS, evidence)[0].event_id
-        == "feedback"
-    )
-    after_feedback = [*evidence, said(T1, "feedback")]
-    progress = progress_by_plan(after_feedback, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, after_feedback)[0].event_id
         == "practice"
     )
+    after_feedback = evidence
     wrong_again = [*after_feedback, marked(T1, "practice", "not_understood")]
     progress = progress_by_plan(wrong_again, PLANS, DAY_1)
     assert (
@@ -102,12 +97,6 @@ def test_a_wrong_activity_gets_its_feedback_event_and_then_comes_round_again():
     progress = progress_by_plan(wrong_check, PLANS, DAY_1)
     assert (
         next_options(PLANS, progress, DAY_1, TABLE_CLASS, wrong_check)[0].event_id
-        == "feedback"
-    )
-    checked_again = [*wrong_check, said(T1, "feedback")]
-    progress = progress_by_plan(checked_again, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, checked_again)[0].event_id
         == "assess"
     )
 
@@ -162,10 +151,10 @@ def test_a_child_who_did_not_know_is_shown_it_again_not_told_what_they_skipped()
     assert next_step(evidence) == "practice"
 
 
-def test_a_child_who_tried_and_was_wrong_hears_the_feedback_first_and_is_shown_it_again_on_a_second_miss():
+def test_a_child_who_tried_and_was_wrong_is_asked_again_and_is_shown_it_again_on_a_second_miss():
     evidence = [*taught_before_practice(), marked(T1, "practice", "try_again")]
-    assert next_step(evidence) == "feedback"
-    evidence += [said(T1, "feedback"), marked(T1, "practice", "try_again")]
+    assert next_step(evidence) == "practice"
+    evidence += [marked(T1, "practice", "try_again")]
     assert next_step(evidence) == "guide"
 
 
@@ -198,7 +187,7 @@ def test_a_child_who_did_not_try_the_guided_practice_is_asked_again_not_told_wha
     evidence = [*taught_before_practice()[:-1], marked(T1, "guide", "not_understood")]
     assert next_step(evidence) == "guide"
     tried = [*taught_before_practice()[:-1], marked(T1, "guide", "try_again")]
-    assert next_step(tried) == "feedback"
+    assert next_step(tried) == "guide"
 
 
 def test_a_guided_practice_the_child_cannot_do_is_not_repeated_for_ever():
@@ -395,12 +384,11 @@ def test_a_recall_check_answered_wrongly_is_asked_again_without_the_plans_feedba
     assert next_step(again) == "present"
 
 
-def test_a_skipped_recall_leaves_no_feedback_owed_for_a_later_miss_to_spend():
+def test_misses_at_the_check_are_not_held_against_the_practice_that_follows():
     taught = [
         said(T1, "attention"),
         said(T1, "objective"),
         marked(T1, "recall", "not_understood"),
-        said(T1, "feedback"),
         marked(T1, "recall", "try_again"),
         said(T1, "present"),
         said(T1, "guide"),
@@ -409,29 +397,22 @@ def test_a_skipped_recall_leaves_no_feedback_owed_for_a_later_miss_to_spend():
     progress = progress_by_plan(taught, PLANS, DAY_1)
     assert (
         next_options(PLANS, progress, DAY_1, TABLE_CLASS, taught)[0].event_id
-        == "feedback"
-    )
-    after = [*taught, said(T1, "feedback")]
-    progress = progress_by_plan(after, PLANS, DAY_1)
-    assert (
-        next_options(PLANS, progress, DAY_1, TABLE_CLASS, after)[0].event_id
         == "practice"
     )
+    assert progress[T1].failed_today["practice"] == 1
 
 
-def test_the_plans_feedback_speaks_of_its_own_practice_so_a_recall_miss_never_owes_it():
+def test_a_recall_miss_owes_the_child_no_help_but_asking_again():
     start = [
         said(T1, "attention"),
         said(T1, "objective"),
         marked(T1, "recall", "try_again"),
     ]
     state = progress_by_plan(start, PLANS, DAY_1)[T1]
-    assert state.feedback_owed == set() and state.guidance_owed == set()
+    assert state.guidance_owed == set() and state.rung_owed == set()
 
 
-def test_two_misses_in_one_day_each_hear_their_own_feedback():
-    plan = PLANS[T1]
-    feedback = plan.event_of("provide_feedback").id
+def test_a_miss_after_a_passed_check_is_asked_again_at_once():
     before = [said(T1, e) for e in ("attention", "objective")]
     failed_recall = [*before, marked(T1, "recall", "try_again")]
     heard = [*failed_recall, marked(T1, "recall", "correct")]
@@ -439,7 +420,7 @@ def test_two_misses_in_one_day_each_hear_their_own_feedback():
     failed_practice = [*taught, marked(T1, "practice", "try_again")]
     progress = progress_by_plan(failed_practice, PLANS, DAY_1)
     offered = next_options(PLANS, progress, DAY_1, TABLE_CLASS, failed_practice)
-    assert offered[0].event_id == feedback
+    assert offered[0].event_id == "practice"
 
 
 def test_mastery_needs_two_assessed_days_and_a_weakened_lesson_comes_before_new_material():
@@ -697,14 +678,11 @@ def test_each_owed_fact_is_asked_in_turn_and_the_lesson_moves_on_when_none_are_l
     assert next_move(evidence)["event"] == "assess_performance"
 
 
-def test_an_owed_fact_answered_wrongly_hears_feedback_and_is_asked_again():
+def test_an_owed_fact_answered_wrongly_is_asked_again_at_once():
     partial = Evidence(T2, "practice", DAY_1, "try_again", PARTIAL_RECITATION)
-    evidence = [*taught_up_to_practice(), partial, said(T2, "feedback")]
+    evidence = [*taught_up_to_practice(), partial]
     evidence.append(answered(T2, "practice", 2, 3, "try_again"))
 
-    assert next_move(evidence)["event"] == "provide_feedback"
-
-    evidence.append(said(T2, "feedback"))
     assert next_move(evidence)["activity"]["prompt_id"] == "mul_fact_2x3_answer"
 
 
@@ -804,9 +782,9 @@ def test_the_plans_general_feedback_is_not_played_when_the_teacher_named_where_i
     assert days_offer([*days_taught(), days_try(WEEK[:5])]).event_id == "practice"
 
 
-def test_a_list_with_nothing_right_is_asked_whole_and_gets_the_plans_feedback():
+def test_a_list_with_nothing_right_is_asked_whole_again():
     offer = days_offer([*days_taught(), days_try([])])
-    assert (offer.event_id, offer.resume) == ("feedback", None)
+    assert (offer.event_id, offer.resume) == ("practice", None)
 
 
 def test_a_list_got_right_on_the_second_try_is_asked_whole_no_more():
@@ -950,9 +928,9 @@ def test_going_from_nothing_right_to_something_right_is_progress_not_a_second_mi
     )
 
 
-def test_naming_where_it_broke_leaves_no_general_feedback_owed():
+def test_naming_where_it_broke_records_the_item_it_broke_at():
     state = progress_by_plan([*days_taught(), days_try(WEEK[:5])], PLANS, DAY_1)[DAYS]
-    assert state.feedback_owed == set() and state.resume_at == {"practice": "friday"}
+    assert state.resume_at == {"practice": "friday"}
 
 
 def test_an_answer_to_the_guided_step_is_known_to_be_said_after_the_teacher():
@@ -1075,11 +1053,7 @@ def test_a_recording_that_could_not_be_heard_is_no_miss_owes_no_help_and_is_aske
         COUNT_20
     ]
     assert "practice" not in state.failed_today
-    assert (
-        state.feedback_owed == set()
-        and state.guidance_owed == set()
-        and state.rung_owed == set()
-    )
+    assert state.guidance_owed == set() and state.rung_owed == set()
     assert "practice" in state.retry_today and "practice" not in state.done_today
     assert not state.paused_today
 
