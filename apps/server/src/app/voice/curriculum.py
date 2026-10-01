@@ -249,6 +249,34 @@ def _support_problems(plan: LessonPlan) -> list[str]:
     return problems
 
 
+REPAIR_PREFIX = "repair."
+
+
+def repair_utterance_id(plan_id: str, event_id: str, broke_at: str) -> str:
+    """The prompt that asks a child to carry on from where a list went wrong, rather than say it all again."""
+    return f"{REPAIR_PREFIX}{plan_id}.{event_id}.{broke_at}"
+
+
+def repair_target(utterance_id: str, plans: dict[str, LessonPlan]):
+    """The plan, event and the items a repair prompt asks for: the last item said rightly, then the rest of the list.
+
+    None when the id is not a repair prompt or names nothing the plans have, or when nothing came
+    before the break (there is no right start to carry on from).
+    """
+    if not utterance_id.startswith(REPAIR_PREFIX):
+        return None
+    rest, _, broke_at = utterance_id.removeprefix(REPAIR_PREFIX).rpartition(".")
+    plan_id, _, event_id = rest.rpartition(".")
+    plan = plans.get(plan_id)
+    event = next((e for e in plan.events if e.id == event_id), None) if plan else None
+    if event is None or event.activity is None or event.activity.kind != "sequence":
+        return None
+    ids = [item.id for item in event.activity.items]
+    if broke_at not in ids or ids.index(broke_at) == 0:
+        return None
+    return plan, event, event.activity.items[ids.index(broke_at) - 1 :]
+
+
 def plan_event_for_utterance(utterance_id: str, plans: dict[str, LessonPlan]):
     """The plan and event an utterance id names, or None when it is not a plan utterance."""
     if not utterance_id.startswith("plan."):

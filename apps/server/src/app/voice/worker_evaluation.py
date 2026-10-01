@@ -45,6 +45,7 @@ from .speech.intron_sync import (
 )
 from .speech.language_detect import detect_spoken_language, transcription_route
 from .speech.sahara_stream import buffer_bytes, transcribe_sahara
+from .speech.teacher_audio_contract import teacher_utterance
 from .speech.whisper_asr import transcribe_english
 from .teacher import TeacherChoiceError, TeacherModel
 
@@ -222,6 +223,9 @@ async def lesson_event_heard(env, learner: str, payload: dict):
 
 def _asked_line(metadata: dict, language: str) -> str:
     """The words the child actually heard, so the teacher answers the question it asked."""
+    prompt_id = str(metadata.get("prompt_id") or "")
+    if prompt_id.startswith("repair."):
+        return teacher_utterance(prompt_id, language).text
     plan = load_plans(language).get(str(metadata.get("plan_id")))
     event = plan and next(
         (e for e in plan.events if e.id == metadata.get("event_id")), None

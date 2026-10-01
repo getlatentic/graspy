@@ -147,7 +147,11 @@ async def load_lesson_snapshot(
         choice = await choose(teacher_client, options, evidence, today, language)
         plan = plans[choice.plan_id]
         move = event_move(
-            plan, plan.event(choice.event_id), choice.reason, choice.facts
+            plan,
+            plan.event(choice.event_id),
+            choice.reason,
+            choice.facts,
+            choice.resume,
         )
     else:
         move = rest_move(plans, progress_by_plan(evidence, plans, today), learner_class)

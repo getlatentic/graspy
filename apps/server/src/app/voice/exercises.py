@@ -10,7 +10,7 @@ import secrets
 from dataclasses import dataclass
 from enum import Enum
 
-from .curriculum import load_plans, plan_event_for_utterance
+from .curriculum import load_plans, plan_event_for_utterance, repair_target
 from .recitation import RecitationExercise
 from .sequence import SequenceItem
 
@@ -101,6 +101,15 @@ class SpokenAnswerExercise:
         return self.subject
 
 
+def repair_exercise(prompt_id: str, language: str = "en"):
+    """A list asked again from the last item said rightly: the same marking, over the rest of the list."""
+    found = repair_target(prompt_id, load_plans(language))
+    if found is None:
+        return None
+    plan, _, items = found
+    return SequenceExercise(prompt_id, plan.subject, items)
+
+
 def plan_exercise(prompt_id: str, language: str = "en"):
     found = plan_event_for_utterance(prompt_id, load_plans(language))
     if found is None:
@@ -168,6 +177,8 @@ def _in_range(table: int, multipliers) -> bool:
 def exercise_by_prompt_id(prompt_id: str, language: str = "en"):
     if prompt_id.startswith("plan."):
         return plan_exercise(prompt_id, language)
+    if prompt_id.startswith("repair."):
+        return repair_exercise(prompt_id, language)
     if prompt_id == SEVEN_TIMES_EIGHT.prompt_id:
         return SEVEN_TIMES_EIGHT
     if match := _FULL_RECITE.fullmatch(prompt_id):

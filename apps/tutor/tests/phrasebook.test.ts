@@ -25,6 +25,16 @@ describe("the teacher's phrasebook", () => {
     expect(RIGHT).toContain(praiseLine(fact("triangle")));
   });
 
+  it("tells the model, for a list, to name only how far the child got", async () => {
+    const seen: string[] = [];
+    const env = {
+      AI: { run: async (_m: string, input: { messages: { content: string }[] }) => (seen.push(JSON.stringify(input.messages)), { choices: [{ message: { content: "", tool_calls: [] } }] }) },
+    } as unknown as Env;
+    const items = [{ id: "1", spoken: ["1", "one"] }, { id: "2", spoken: ["2", "two"] }];
+    await takeTurn(env, { prompt: "Count.", heard: "one three", language: "en", expect: { kind: "sequence", item: "c", items } }).catch(() => undefined);
+    expect(seen.find((call) => call.includes("class teacher"))).toContain("say only how far they got");
+  });
+
   it("is shown to the model as how the teacher sounds", async () => {
     const seen: string[] = [];
     const env = {

@@ -773,3 +773,80 @@ def test_opening_a_lesson_finished_today_offers_nothing_rather_than_another_less
     progress = progress_by_plan(done, PLANS, DAY_1)
 
     assert next_options(PLANS, progress, DAY_1, TABLE_CLASS, done, chosen=T1) == []
+
+
+DAYS = "mathematics.time.days-of-the-week"
+WEEK = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+
+
+def days_taught():
+    return [
+        said(DAYS, e) for e in ("attention", "objective", "recall", "present", "guide")
+    ]
+
+
+def days_try(said_days, decision="try_again"):
+    missing = [day for day in WEEK if day not in said_days]
+    result = {"said": said_days, "missing": missing, "out_of_order": []}
+    return Evidence(DAYS, "practice", DAY_1, decision, result)
+
+
+def days_offer(evidence):
+    progress = progress_by_plan(evidence, PLANS, DAY_1)
+    options = next_options(PLANS, progress, DAY_1, "primary_2", evidence)
+    return options[0]
+
+
+def test_a_list_that_broke_is_asked_again_from_the_last_item_said_rightly():
+    evidence = [*days_taught(), days_try(WEEK[:5])]
+    offer = days_offer(evidence)
+    assert (offer.event_id, offer.resume) == ("practice", "friday")
+    move = event_move(
+        PLANS[DAYS], PLANS[DAYS].event("practice"), offer.why, (), offer.resume
+    )
+    assert move["say_text"]["en"] == "Start from Thursday. Count on to Saturday."
+    assert move["activity"]["prompt_id"] == f"repair.{DAYS}.practice.friday"
+
+
+def test_the_plans_general_feedback_is_not_played_when_the_teacher_named_where_it_broke():
+    assert days_offer([*days_taught(), days_try(WEEK[:5])]).event_id == "practice"
+
+
+def test_a_list_with_nothing_right_is_asked_whole_and_gets_the_plans_feedback():
+    offer = days_offer([*days_taught(), days_try([])])
+    assert (offer.event_id, offer.resume) == ("feedback", None)
+
+
+def test_a_list_got_right_on_the_second_try_is_asked_whole_no_more():
+    evidence = [
+        *days_taught(),
+        days_try(WEEK[:5]),
+        Evidence(DAYS, "practice", DAY_1, "correct"),
+    ]
+    assert days_offer(evidence).event_id == "assess"
+
+
+def test_after_the_shorter_step_the_list_is_asked_again_from_where_it_broke():
+    evidence = [
+        *days_taught(),
+        days_try(WEEK[:3]),
+        days_try(WEEK[:3]),
+        Evidence(DAYS, "span", DAY_1, "correct"),
+    ]
+    offer = days_offer(evidence)
+    assert (offer.event_id, offer.resume) == ("practice", "wednesday")
+
+
+def test_a_repair_prompt_is_marked_over_the_rest_of_the_list_from_the_last_item_right():
+    from app.voice.exercises import exercise_by_prompt_id
+    from app.voice.expectation import expectation
+
+    prompt = f"repair.{DAYS}.practice.friday"
+    marking = expectation(exercise_by_prompt_id(prompt))
+    assert marking["kind"] == "sequence"
+    assert [item["id"] for item in marking["items"]] == [
+        "thursday",
+        "friday",
+        "saturday",
+    ]
+    assert exercise_by_prompt_id(f"repair.{DAYS}.practice.sunday") is None
