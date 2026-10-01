@@ -1,6 +1,6 @@
 """Lesson plans as data: Gagné's nine events, from the catalogue module the Worker ships."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import pairwise
 
 from .sequence import SequenceItem
@@ -181,6 +181,11 @@ class RemedyStep:
     say: dict[str, str]
     expected: dict[str, tuple[str, ...]]
     hints: dict[str, tuple[str, ...]]
+    # What the screen shows while the question is asked: the heaps, for a child who cannot yet picture them.
+    show: dict[str, str] = field(default_factory=dict)
+
+    def shown_in(self, language: str) -> str | None:
+        return self.show.get(language) or self.show.get("en")
 
     def in_language(
         self, language: str
@@ -219,6 +224,7 @@ def load_skills() -> dict[str, Skill]:
                     step["say"],
                     {k: tuple(v) for k, v in step["expected"].items()},
                     {k: tuple(v) for k, v in step.get("hints", {}).items()},
+                    step.get("show", {}),
                 )
                 for step in skill.get("remediation", ())
             ),

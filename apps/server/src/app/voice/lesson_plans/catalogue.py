@@ -13542,6 +13542,9 @@ SKILLS = [
     },
     "say": {
      "en": "One heap has five oranges. How many oranges are in one heap?"
+    },
+    "show": {
+     "en": "● ● ● ● ●"
     }
    },
    {
@@ -13558,6 +13561,9 @@ SKILLS = [
     },
     "say": {
      "en": "Here comes another heap of five. How many is five, then five more?"
+    },
+    "show": {
+     "en": "● ● ● ● ●   ● ● ● ● ●"
     }
    },
    {
@@ -13574,6 +13580,9 @@ SKILLS = [
     },
     "say": {
      "en": "Two heaps, five in each. How many oranges in all?"
+    },
+    "show": {
+     "en": "● ● ● ● ●   ● ● ● ● ●"
     }
    }
   ],

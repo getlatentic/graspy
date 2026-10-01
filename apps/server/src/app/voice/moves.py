@@ -176,7 +176,13 @@ def asked_another_way(
     if how == "remedy":
         utterance = remedy_utterance_id(plan.id, event.id, int(item))
         found = remedy_target(utterance, {plan.id: plan}, load_skills())
-        return _another_way(plan, utterance, "answer") if found else None
+        if not found:
+            return None
+        step = found[3]
+        picture = {"show": {lang: step.shown_in(lang) for lang in LANGUAGES}}
+        return _another_way(plan, utterance, "answer") | (
+            picture if step.shown_in("en") else {}
+        )
     makers = {
         "repair": (repair_utterance_id, "sequence", None),
         "probe": (probe_utterance_id, "answer", PROBE_PREFIX),

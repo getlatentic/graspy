@@ -1699,6 +1699,19 @@ def test_a_child_who_has_shown_nothing_of_equal_groups_is_taught_it_a_small_ques
     assert _offer(done, FIVES, "primary_4")[0].variant == ("remedy", "2")
 
 
+def test_the_small_questions_about_equal_groups_show_the_heaps_they_ask_about():
+    plan = PLANS[FIVES]
+    shown = [
+        event_move(plan, plan.event("recall"), "x", (), ("remedy", str(step)))["show"][
+            "en"
+        ]
+        for step in range(3)
+    ]
+    assert shown == ["● ● ● ● ●", "● ● ● ● ●   ● ● ● ● ●", "● ● ● ● ●   ● ● ● ● ●"]
+    own = event_move(plan, plan.event("recall"), "x", (), None)
+    assert "● " not in str(own["show"])
+
+
 def test_after_the_last_small_question_the_check_is_asked_again_and_a_pass_goes_on_to_the_teaching():
     steps = [
         _remedy_try(0, "correct"),
