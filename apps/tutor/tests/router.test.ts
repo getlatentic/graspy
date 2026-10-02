@@ -118,7 +118,7 @@ describe("every utterance is read by one model that chooses an action", () => {
   });
 
   it("marks the answer asked for even where the model took its misheard word for a need", async () => {
-    for (const [tool, heard] of [["needs_grownup", "pain"], ["needs_help", "it is water"]]) {
+    for (const [tool, heard] of [["needs_grownup", "pain"], ["needs_help", "tummy"]]) {
       const { reply } = await calls(tool, undefined, heard);
       expect(reply.verdict, heard).toBe("correct");
     }
