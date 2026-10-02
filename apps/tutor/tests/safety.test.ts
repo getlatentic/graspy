@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { numberWords } from "../src/lines";
 import { needFor } from "../src/safety";
 
 describe("what a child's words ask for", () => {
@@ -134,5 +135,39 @@ describe("what a child's words ask for", () => {
     expect(needFor("my belly", 10)).toBe("needs_grownup");
     expect(needFor("I feel sick", 6)).toBe("needs_grownup");
     expect(needFor("I need water", 3)).toBe("needs_help");
+  });
+});
+
+describe("no right answer is a need", () => {
+  const forms = [
+    (n: string) => n,
+    (n: string) => `it is ${n}`,
+    (n: string) => `I think ${n}`,
+    (n: string) => `the answer is ${n}`,
+    (n: string) => `na ${n}`,
+    (n: string) => `e be ${n}`,
+    (n: string) => `I get ${n}`,
+    (n: string) => `me I see ${n}`,
+    (n: string) => `let me get it ${n}`,
+    (n: string) => `let me go first, ${n}`,
+    (n: string) => `${n} cups of water`,
+    (n: string) => `${n} please sir`,
+    (n: string) => `I cut my cake into ${n}`,
+    (n: string) => `${n} sweets, I hit my friend`,
+    (n: string) => `abeg ${n}`,
+    (n: string) => `I am afraid I do not know, is it ${n}`,
+  ];
+
+  it("for 1 to 100 said in sixteen ways, spoken or in digits", () => {
+    const needs: string[] = [];
+    for (let n = 1; n <= 100; n += 1) {
+      for (const say of forms) {
+        for (const spoken of [numberWords(n), String(n)]) {
+          const heard = say(spoken);
+          if (needFor(heard, n) !== null) needs.push(heard);
+        }
+      }
+    }
+    expect(needs).toEqual([]);
   });
 });
