@@ -107,7 +107,7 @@ export async function answerHeard(env: Env, heard: string): Promise<number | nul
     response_format: { type: "json_schema", json_schema: { name: "answer", schema: SCHEMA, strict: true } },
     temperature: 0,
     max_tokens: 200,
-  });
+  }, { part: "reader-model-failed" });
   const said = reply?.choices?.[0]?.message?.content ?? reply?.response;
   try {
     const reading = (typeof said === "string" ? JSON.parse(said) : said) as { answer?: unknown };

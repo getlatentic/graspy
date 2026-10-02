@@ -12,7 +12,6 @@
  * settled afterwards, by comparison, in code.
  */
 
-import { runAi } from "./hedge";
 import { spokenNumber } from "./mark";
 
 const MODEL = "@cf/openai/gpt-oss-120b";
@@ -36,11 +35,11 @@ function brief(heard: string): string {
 
 /** The number behind a mangled recognition, or null when there is no number in it. */
 export async function hearNumber(env: Env, heard: string): Promise<number | null> {
-  const reply = await runAi<{ choices?: { message: { content?: string } }[] }>(env, MODEL, {
+  const reply = (await env.AI.run(MODEL, {
     messages: [{ role: "user", content: brief(heard) }],
     temperature: 0,
     max_tokens: 200,
-  });
-  const answer = (reply?.choices?.[0]?.message?.content ?? "").trim();
+  })) as { choices?: { message: { content?: string } }[] };
+  const answer = (reply.choices?.[0]?.message?.content ?? "").trim();
   return spokenNumber(answer);
 }

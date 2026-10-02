@@ -70,7 +70,7 @@ export async function safeForChild(env: Env, heard: string | null, line: string)
     ],
     temperature: 0,
     max_tokens: 20,
-  });
+  }, { part: "safety-model-failed" });
   const verdict = result?.response;
   // Traced on Workers AI: "\n\nsafe" or "\n\nunsafe\nS7".
   if (typeof verdict === "string") return verdict.trim().toLowerCase() === "safe";

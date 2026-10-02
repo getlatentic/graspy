@@ -37,7 +37,7 @@ async function complete(env: Env, request: Request, extra: object): Promise<Mess
       return null;
     }
     return ((await response.json()) as { choices?: { message?: Message }[] }).choices?.[0]?.message ?? null;
-  }, request.hedgeAfterMs ?? HEDGE_AFTER_MS, request.timeoutMs);
+  }, request.hedgeAfterMs ?? HEDGE_AFTER_MS, request.timeoutMs, request.part);
 }
 
 const objectOf = (text: string | null | undefined, part: string): Record<string, unknown> | null => {
