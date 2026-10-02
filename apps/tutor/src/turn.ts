@@ -31,6 +31,7 @@ import { exampleBlock } from "./phrasebook";
 import { correctionLine, listStoppedLine, needsGrownupLine, needsHelpLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
+import { observedRoute } from "./observer";
 import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
 import { isOnlyTheAnswer, needFor, wordsOfTheAnswer } from "./safety";
 import { isBareNumber, soundsLike } from "./sounds-like";
@@ -595,12 +596,14 @@ function repliedToNeed(ask: Ask): Reply | null {
 
 /**
  * What a child said, answered as a conversation: where the deployment sets `ROUTER` to on, every utterance is read in the
- * context of the question by one model that chooses an action (see router.ts). A number it reports is checked against
- * the words by sound before it is marked. Null where that is off, nothing could say, or the number is not one the
- * words could be, which leaves the usual marking.
+ * context of the question by one model that chooses an action (see router.ts); where it sets `OBSERVER` to on, by one model
+ * that reports independent judgments which the policy decides on (see observer.ts), and then it is the observer that is
+ * used. A number reported is checked against the words by sound before it is marked. Null where both are off, nothing
+ * could say, or the number is not one the words could be, which leaves the usual marking.
  */
 async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
-  if (env.ROUTER !== "on" || ask.language !== "en" || ask.expect.kind !== "fact" || ask.prompt.trim() === "") return null;
+  const observing = env.OBSERVER === "on";
+  if ((env.ROUTER !== "on" && !observing) || ask.language !== "en" || ask.expect.kind !== "fact" || ask.prompt.trim() === "") return null;
   // A step asked as an echo or a probe has the answer in its question, and a model told it could give it back.
   if (ask.support !== undefined) return null;
   // Only a question whose answer is a number: a shape or a letter is a word the router has no way to know is right.
@@ -608,15 +611,17 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   const heard = heardForPrompt(ask.heard);
   // Nothing but a number is an answer, with nothing to route.
   if (expected === null || heard === "" || isBareNumber(heard)) return null;
-  const route = await timed("route", routeUtterance(env, ask)).catch(() => null);
+  const route = await timed("route", observing ? observedRoute(env, ask) : routeUtterance(env, ask)).catch(() => null);
   if (route === null) return null;
   if (route.action === "mark_answer") {
-    return route.said !== undefined && soundsLike(heard, route.said) ? markedNumber(route.said, ask, expected) : null;
+    return route.said !== undefined && (soundsLike(heard, route.said) || isOnlyTheAnswer(heard, route.said)) ? markedNumber(route.said, ask, expected) : null;
   }
-  // Anything but an answer, said of words that may be one, would throw a right answer away: a need the safety rule did not
-  // find in them is left to the marking too, unless they are one word, the answer misheard.
-  if (isOnlyTheAnswer(heard, expected) && route.action.startsWith("needs_")) return markedNumber(expected, ask, expected);
-  if (mayBeAnAnswer(heard)) return null;
+  // An observation has said whether there was an answer beside the rest, and the policy has put it in order; the router's one
+  // choice has not, so anything but an answer, said of words that may be one, would throw a right answer away.
+  if (!observing) {
+    if (isOnlyTheAnswer(heard, expected) && route.action.startsWith("needs_")) return markedNumber(expected, ask, expected);
+    if (mayBeAnAnswer(heard)) return null;
+  }
   return repliedTo(env, ask, route).catch(() => null);
 }
 

@@ -74,3 +74,49 @@ On the 82 cases (the first 71 plus eleven with a need beside an answer, a word f
 | Clef-flash at 0.7 | 50 | 32 | 0 |
 
 The one Gemma wrong action is "To me, sink." read as a need to go.
+
+## The observation boundary (2026-10-02)
+
+The router chooses one of seven actions, which cannot say that a child is ill and gave a number. An observation reports independent
+judgments (the number read, not knowing, asking again, a question or something else, garbled, the toilet, water, illness, injury, fear,
+asking for a grown-up), each a probability; `src/policy.ts` decides in a fixed order with a threshold per judgment (safety, a need,
+a usable answer, not knowing, asking again, a question or something else, garbled). The model is not told the answer to the question;
+code applies it (a lone word that is the number asked for, misheard as a word for a need, is the answer).
+
+`bench/observation.jsonl` labels 132 cases by what the child communicated, not by an action: the 82 of the router bench, and 50 more
+that overlap on purpose (ill and a number, thirsty and a number, "number two" as an answer and as a need, "pain", "sick", "pee",
+"I am afraid it is five" and "I am afraid because someone hit me", ten litres of water, "I fell down", Pidgin). One in three is the
+`test` split; thresholds for Clef were tuned on `dev` only (the "router's 82" rows span both splits). `run-observation.ts <url>
+<gemma|clef|clef-flash> [dev|test|routing|all] [thresholds]` scores each judgment (precision and recall at its threshold), the number
+read, and what the controller decides against the order above, after the rule turn.ts applies to a word or two called garbled or
+something else (left to the marking). The router is scored by `run-routing.ts` with the same rules, so the two tables are comparable.
+
+| as decided | right | left to marking | need or safety missed | wrong number | marked a non-answer | wrong action | no observation | median |
+|---|---|---|---|---|---|---|---|---|
+| observation, Gemma 26B: dev (88) | 64 | 16 | 0 | 0 | 0 | 2 | 6 | 1.0 s |
+| observation, Gemma 26B: test (44) | 31 | 9 | 0 | 0 | 1 | 3 | 0 | 0.9 s |
+| observation, Gemma 26B: the router's 82 | 55 | 21 | 0 | 0 | 1 | 2 | 3 | 0.9 s |
+| the router, Gemma 26B: the same 82 (PR 116) | 56 | 25 | 0 | 0 | | 1 | 0 | 0.5 s |
+| observation, Clef (talk and garbled at 0.8): test (44) | 25 | 16 | 0 | 0 | 0 | 3 | 0 | 0.9 s |
+| observation, Clef: the router's 82 | 47 | 33 | 0 | 0 | 0 | 2 | 0 | 0.8 s |
+
+Read plainly: on these cases the observation is not more accurate than the router once both go through the same gates, and it is
+slower and sometimes empty. What it has that the router cannot: a child who is ill and gave a number, or who needs the toilet and
+thinks it is ten, is handled (a test per case), every judgment can be scored and thresholded alone, and a fine-tuned model has
+labelled fields to learn. It never missed a need or safety concern and never marked a wrong number.
+
+- "No observation" is the 3 s call timing out under the bench's load (no non-OK status and no bad JSON was logged): 0 to 7% of calls,
+  p50 1.0 s, p90 1.5 s. A timeout leaves the usual marking, as the router's does, but costs the child 3 s.
+- Its mistakes are "garbled" against "something else" (a different line, no try either way), two garbled turns it read as a number
+  (`To recent.`, `What is five?`), and safety false positives on lone words that may be an answer (`pain`, `tummy`, `sicks`): the safe direction.
+- The number asked for is credited only where it is written in the words and no other number was read (a sound-alike is never credited
+  with it: "tree" is three, though it is a "ten" to the sound check); a number the question holds, said by a child who is asking, is the
+  child's echo of it; water in a question about water is its subject.
+- Gemma's tool arguments fall apart when a dozen scores sit flat in one tool (keys wrapped in quotes, repetition to the token limit: 4
+  of 6 valid with the flat tool, 2 of 6 with it reordered, 6 of 6 nested). Structured output with the nested shape is 8 of 8, so it is what is used.
+  Leaving out what is not true (a sparse shape) collapses to empty objects.
+- Clef at the default 0.5 reads 6 more on dev for 8 more wrong actions (its probabilities for "garbled" and "something else" are too
+  high to use there); it writes no reply, so a child who says something else costs a second model's call.
+- `OBSERVER=on` turns the observation on. The router stays the default; the next step is the output cost (about 90 tokens of scores),
+  by fewer or terser fields or a smaller model, and fine-tuned judgments on the labelled data.
+- A whole set sent at once is throttled by the hosts (7% empty and the latency measured was the queue's); the scorer sends four at a time.

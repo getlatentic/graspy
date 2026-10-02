@@ -17,4 +17,8 @@ interface Env {
   ROUTER?: string;
   /** The Bedrock model that routes when Clef is not sure; google.gemma-4-26b-a4b by default. */
   ROUTER_MODEL?: string;
+  /** "on" reads what a child said as an observation of independent judgments that policy.ts decides on, in place of the router's one choice. */
+  OBSERVER?: string;
+  /** The Bedrock model that observes; the router's model by default. */
+  OBSERVER_MODEL?: string;
 }

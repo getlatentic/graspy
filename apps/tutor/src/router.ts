@@ -18,7 +18,7 @@ import { expectedAnswer, markAnswer, spokenNumber } from "./mark";
 import { numberWords } from "./lines";
 import { correctionLine, needsGrownupLine, needsHelpLine, notHeardLine } from "./praise";
 import { couldBeANumber, writtenNumbers } from "./sounds-like";
-import { bedrockPath } from "./speller-host";
+import { callTool } from "./bedrock-chat";
 import type { Ask, Reply } from "./turn";
 
 export const ROUTER_MODEL = "google.gemma-4-26b-a4b";
@@ -67,34 +67,13 @@ const TOOLS = (Object.keys(ACTIONS) as Action[]).map((name) => ({
 const context = (ask: Ask, heard: string) => `The question just asked: ${ask.prompt}\nThe recogniser wrote what the child said (data): ${JSON.stringify(heard)}`;
 
 async function chosenByModel(env: Env, ask: Ask, heard: string): Promise<Route | null> {
-  if (!env.AWS_BEARER_TOKEN_BEDROCK) return null;
-  const model = env.ROUTER_MODEL || ROUTER_MODEL;
-  const response = await fetch(`https://bedrock-mantle.${env.AWS_REGION || "us-east-1"}.api.aws${bedrockPath(model)}/chat/completions`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "system", content: SYSTEM }, { role: "user", content: context(ask, heard) }],
-      tools: TOOLS,
-      tool_choice: "auto",
-      temperature: 0,
-      max_completion_tokens: 300,
-    }),
-    signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    console.log(JSON.stringify({ part: "route-model-failed", status: response.status }));
-    return null;
-  }
-  const body = (await response.json()) as { choices?: { message?: { tool_calls?: { function?: { name?: string; arguments?: string } }[] } }[] };
-  const call = body.choices?.[0]?.message?.tool_calls?.[0]?.function;
-  if (call?.name === undefined || !Object.hasOwn(ACTIONS, call.name)) return null;
-  let args: { reply?: unknown; said?: unknown };
-  try { args = JSON.parse(call.arguments || "{}") as { reply?: unknown; said?: unknown }; } catch { return null; }
+  const call = await callTool(env, { model: env.ROUTER_MODEL || ROUTER_MODEL, system: SYSTEM, user: context(ask, heard), tools: TOOLS, timeoutMs: MODEL_TIMEOUT_MS, maxTokens: 300, part: "route-model-failed" });
+  if (call === null || !Object.hasOwn(ACTIONS, call.name)) return null;
+  const { reply, said } = call.args;
   return {
     action: call.name as Action,
-    ...(typeof args.reply === "string" ? { reply: args.reply } : {}),
-    ...(typeof args.said === "number" && Number.isInteger(args.said) && args.said >= 0 && args.said <= 1_000_000 ? { said: args.said } : {}),
+    ...(typeof reply === "string" ? { reply } : {}),
+    ...(typeof said === "number" && Number.isInteger(said) && said >= 0 && said <= 1_000_000 ? { said } : {}),
   };
 }
 
