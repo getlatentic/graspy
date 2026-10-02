@@ -28,5 +28,5 @@ export async function observedRoute(env: Env, ask: Ask): Promise<Route | null> {
   const observation = await observe(env, ask);
   if (observation === null) return null;
   const expected = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
-  return decide(observation, { words: heardForPrompt(ask.heard), expected });
+  return decide(observation, { words: heardForPrompt(ask.heard), expected, question: ask.prompt });
 }

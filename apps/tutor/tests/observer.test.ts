@@ -54,6 +54,12 @@ describe("what a child said, observed and then decided", () => {
     expect((await takeTurn(env, ask("pain"))).verdict).toBe("correct");
   });
 
+  it("marks a lone word for six that is the answer on the observed path as on the router's", async () => {
+    const { env } = setup({ safety: { illness: 0.9 } });
+    const six: Ask = { ...ask("it is sick"), expect: { kind: "fact", item: "6" } };
+    expect((await takeTurn(env, six)).verdict).toBe("correct");
+  });
+
   it("does not mark a number the words could not be, however sure the model is", async () => {
     const { env } = setup({ answer: { value: 7, confidence: 0.99 } });
     await expect(takeTurn(env, ask("Lemon lemon lemon"))).rejects.toThrow("the teacher was asked");

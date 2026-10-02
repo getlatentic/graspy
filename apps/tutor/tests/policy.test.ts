@@ -43,6 +43,33 @@ describe("the policy decides in order, on independent judgments", () => {
     expect(decide(seen({ answer: { value: 10, confidence: 0.9 } }), words("Then"))).toEqual({ action: "mark_answer", said: 10 });
     expect(decide(seen({ answer: { value: 7, confidence: 0.99 } }), words("Lemon"))).toBeNull();
     expect(decide(seen({ answer: { value: 10, confidence: 0.4 } }), words("Then"))).toBeNull();
+    expect(decide(seen({ answer: { value: 10, confidence: 0.4 } }), words("my friend has a funny hat"))).toBeNull();
+  });
+
+  it("marks the number the words sound like although the model took them for something else, where the question's answer is theirs", () => {
+    expect(decide(seen({ answer: { value: 10, confidence: 0.5 }, communication: { child_question: 0.9 } }), words("teacher is it ten or not"))).toEqual({ action: "mark_answer", said: 10 });
+    expect(decide(seen({ communication: { dont_know: 0.9 } }), words("ten I am not sure"))).toEqual({ action: "mark_answer", said: 10 });
+    expect(decide(seen({ answer: { value: 10, confidence: 0.4 }, communication: { off_topic: 0.9 } }), words("ten and I like football"))).toEqual({ action: "mark_answer", said: 10 });
+  });
+
+  it("never credits the answer asked for to a sound-alike the model read as another number", () => {
+    expect(decide(seen({ answer: { value: 3, confidence: 0.4 } }), words("tree"))).toBeNull();
+    expect(decide(seen({ answer: { value: 3, confidence: 0.9 } }), words("tree"))).toEqual({ action: "mark_answer", said: 3 });
+    expect(decide(seen({}), words("tree"))).toBeNull();
+  });
+
+  it("leaves a number the question holds unmarked when it is said by a child asking, but not the answer asked for", () => {
+    const question = "One heap has five oranges. How many oranges are in two heaps?";
+    const asking = seen({ answer: { value: 5, confidence: 0.8 }, communication: { child_question: 0.8 } });
+    expect(decide(asking, { words: "is it five oranges teacher", expected: 10, question })).toEqual({ action: "answer_child" });
+    expect(decide(seen({ answer: { value: 10, confidence: 0.8 }, communication: { child_question: 0.8 } }), { words: "is it ten teacher", expected: 10, question })).toEqual({ action: "mark_answer", said: 10 });
+  });
+
+  it("does not take water for a request where the question is about water and the child gave a number", () => {
+    const question = "A jug holds five litres of water. How many litres of water in two jugs?";
+    const observation = seen({ answer: { value: 10, confidence: 0.95 }, physicalNeed: { water: 0.6 } });
+    expect(decide(observation, { words: "ten litres of water", expected: 10, question })).toEqual({ action: "mark_answer", said: 10 });
+    expect(decide(seen({ physicalNeed: { water: 0.6 } }), { words: "I want water", expected: 10, question })).toEqual({ action: "needs_help" });
   });
 
   it("takes one word that is the answer asked for, misheard as a word for a need, for the answer", () => {
@@ -74,6 +101,11 @@ describe("what the model reports is checked before it is used", () => {
   it("scores everything 0 for a report in no shape, and an answer with no confidence as half sure", () => {
     expect(parseObservation({ communication: "yes", safety: [1] }).safety.illness).toBe(0);
     expect(parseObservation({ answer: { value: 4 } }).answer).toEqual({ value: 4, confidence: 0.5 });
+  });
+
+  it("reads numbers written as strings, as a model sometimes does", () => {
+    const observation = parseObservation({ answer: { value: "10", confidence: "0.9" }, safety: { illness: "0.9" } });
+    expect([observation.answer, observation.safety.illness]).toEqual([{ value: 10, confidence: 0.9 }, 0.9]);
   });
 
   it.each([[10.5], ["ten"], [-1], [2_000_000], [null], [undefined]])("leaves out an answer of %s", (value) => {

@@ -38,13 +38,15 @@ async function complete(env: Env, request: Request, extra: object): Promise<Mess
   return body.choices?.[0]?.message ?? null;
 }
 
-const objectOf = (text: string | null | undefined): Record<string, unknown> | null => {
+const objectOf = (text: string | null | undefined, part: string): Record<string, unknown> | null => {
   try {
     const value = JSON.parse(text || "{}") as unknown;
-    return typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) return value as Record<string, unknown>;
   } catch {
-    return null;
+    // Reported below with the rest: the words are the child's and are not logged.
   }
+  console.log(JSON.stringify({ part, error: "the reply was not a JSON object" }));
+  return null;
 };
 
 /**
@@ -54,7 +56,7 @@ const objectOf = (text: string | null | undefined): Record<string, unknown> | nu
 export async function callTool(env: Env, request: Request & { tools: object[] }): Promise<ToolCall | null> {
   const { tools, ...rest } = request;
   const call = (await complete(env, rest, { tools, tool_choice: "auto" }))?.tool_calls?.[0]?.function;
-  const args = call?.name === undefined ? null : objectOf(call.arguments);
+  const args = call?.name === undefined ? null : objectOf(call.arguments, request.part);
   return call?.name === undefined || args === null ? null : { name: call.name, args };
 }
 
@@ -64,5 +66,6 @@ export async function callTool(env: Env, request: Request & { tools: object[] })
  */
 export async function callJson(env: Env, request: Request & { schema: object; name: string }): Promise<Record<string, unknown> | null> {
   const { schema, name, ...rest } = request;
-  return objectOf((await complete(env, rest, { response_format: { type: "json_schema", json_schema: { name, schema, strict: false } } }))?.content);
+  const message = await complete(env, rest, { response_format: { type: "json_schema", json_schema: { name, schema, strict: false } } });
+  return message === null ? null : objectOf(message.content, request.part);
 }

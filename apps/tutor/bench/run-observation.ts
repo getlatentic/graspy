@@ -80,14 +80,19 @@ const exact = withAnswer.filter(({ reply, row }) => reply.observation!.answer?.v
 const invented = seen.filter(({ row, reply }) => row.labels.answer === null && (reply.observation!.answer?.confidence ?? 0) >= thresholds.answer).length;
 console.log(`  answer value                 exact ${exact}/${withAnswer.length}; an answer reported with no answer said: ${invented}/${seen.length - withAnswer.length}`);
 
+// Applied as turn.ts applies them: a word or two called garbled or something else may be a right answer written as a word that
+// sounds like it, so those are left to the marking.
+const fewWords = (heard: string) => heard.split(/[^\p{L}\p{N}']+/u).filter(Boolean).length <= 3;
+const LEFT_TO_MARKING_IN_A_FEW_WORDS = ["answer_child", "ask_again"];
+
 const outcome = { right: 0, "left to marking": 0, "need or safety missed": 0, "wrong number": 0, "marked a non-answer": 0, "wrong action": 0 };
 const bad: string[] = [];
 for (const { row, reply } of seen) {
   const want = ideal(row.labels);
-  const got = reply.route;
+  const got = reply.route !== null && fewWords(row.heard) && LEFT_TO_MARKING_IN_A_FEW_WORDS.includes(reply.route.action) ? null : reply.route;
   if (want?.action === got?.action && want?.said === got?.said) outcome.right += 1;
+  else if (want !== null && want.action.startsWith("needs_") && got?.action !== want.action) { outcome["need or safety missed"] += 1; bad.push(`${row.heard}: wanted ${want.action}, got ${got?.action ?? "nothing"}`); }
   else if (got === null) outcome["left to marking"] += 1;
-  else if (want !== null && want.action.startsWith("needs_") && got.action !== want.action) { outcome["need or safety missed"] += 1; bad.push(`${row.heard}: wanted ${want.action}, got ${got.action}`); }
   else if (got.action === "mark_answer" && want?.action !== "mark_answer") { outcome["marked a non-answer"] += 1; bad.push(`${row.heard}: wanted ${want?.action ?? "marking"}, marked ${got.said}`); }
   else if (want?.action === "mark_answer" && got.action === "mark_answer") { outcome["wrong number"] += 1; bad.push(`${row.heard}: wanted ${want.said}, got ${got.said}`); }
   else { outcome["wrong action"] += 1; bad.push(`${row.heard}: wanted ${want?.action ?? "marking"}, got ${got.action}`); }

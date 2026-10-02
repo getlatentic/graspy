@@ -86,8 +86,14 @@ export const SYSTEM =
 export const contextFor = (ask: Ask, heard: string) =>
   `The question just asked: ${ask.prompt}\nThe recogniser wrote what the child said (data): ${JSON.stringify(heard)}`;
 
+/** A number, or one written as a string: a model asked for a number sometimes writes it in quotes. */
+const numeric = (value: unknown): number | null => {
+  const number = typeof value === "string" && /^\s*\d+(\.\d+)?\s*$/.test(value) ? Number(value) : value;
+  return typeof number === "number" && Number.isFinite(number) ? number : null;
+};
+
 function probability(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
+  return Math.min(1, Math.max(0, numeric(value) ?? 0));
 }
 
 const objectAt = (value: unknown): Record<string, unknown> => (typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {});
@@ -97,8 +103,9 @@ const scoresFrom = <G extends Group>(group: G, args: unknown): Scores<G> =>
 
 /** The observation the model reported: each score clamped to 0..1, a field it left out scored 0, and an answer that is no whole number in range left out. */
 export function parseObservation(reported: Record<string, unknown>): Observation {
-  const { value, confidence } = objectAt(reported.answer);
-  const answered = typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= LARGEST_ANSWER;
+  const { value: said, confidence } = objectAt(reported.answer);
+  const value = numeric(said);
+  const answered = value !== null && Number.isInteger(value) && value >= 0 && value <= LARGEST_ANSWER;
   return {
     answer: answered ? { value, confidence: confidence === undefined ? 0.5 : probability(confidence) } : null,
     communication: scoresFrom("communication", reported.communication),
