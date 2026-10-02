@@ -23,18 +23,26 @@ export const HEDGE_AFTER_MS = 1200;
 
 /**
  * The first answer of an attempt and, if it has not answered by `afterMs`, a second identical one, with the slower given up
- * on; null where neither answers within `timeoutMs`. An attempt that fails quickly does not end the wait for the other.
+ * on; null where neither answers within `timeoutMs`. An attempt that fails at once starts the second at once.
  */
 async function hedged<T>(attempt: (signal: AbortSignal) => Promise<T | null>, afterMs: number, timeoutMs: number): Promise<T | null> {
   const stops = [new AbortController(), new AbortController()];
   const deadline = AbortSignal.timeout(timeoutMs);
   const run = (at: 0 | 1) => attempt(AbortSignal.any([stops[at].signal, deadline])).then((value) => value ?? Promise.reject(new Error("no answer")));
+  const first = run(0);
   let timer: ReturnType<typeof setTimeout> | undefined;
   const second = new Promise<T>((resolve, reject) => {
-    timer = setTimeout(() => run(1).then(resolve, reject), afterMs);
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      run(1).then(resolve, reject);
+    };
+    timer = setTimeout(start, Math.min(afterMs, timeoutMs));
+    first.catch(start);
   });
   try {
-    return await Promise.any([run(0), second]);
+    return await Promise.any([first, second]);
   } catch {
     return null;
   } finally {

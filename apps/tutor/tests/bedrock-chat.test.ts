@@ -6,7 +6,11 @@ const request = { model: "google.gemma-4-26b-a4b", system: "s", user: "u", timeo
 const reply = (message: object, status = 200) => new Response(JSON.stringify({ choices: [{ message }] }), { status });
 const json = (body: object) => reply({ content: JSON.stringify(body) });
 /** A request that never answers, and fails when it is given up on. */
-const hangs = (_url: unknown, init?: { signal?: AbortSignal }) => new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))));
+const hangs = (_url: unknown, init?: { signal?: AbortSignal }) =>
+  new Promise<Response>((_, reject) => {
+    if (init?.signal?.aborted) reject(new Error("aborted"));
+    init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+  });
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -30,12 +34,22 @@ describe("a model call is hedged against the host's slow ones", () => {
     expect(signals[0].aborted).toBe(true);
   });
 
-  it("waits for the other where one fails at once, and is null where both do", async () => {
+  it("sends the second at once where the first fails at once, and is null where both do", async () => {
     let calls = 0;
     vi.stubGlobal("fetch", vi.fn(async () => (calls++ === 0 ? reply({}, 500) : json({ ok: 3 }))));
-    expect(await callJson(env, { ...request, hedgeAfterMs: 5, schema: {}, name: "x" })).toEqual({ ok: 3 });
+    const started = Date.now();
+    expect(await callJson(env, { ...request, hedgeAfterMs: 400, schema: {}, name: "x" })).toEqual({ ok: 3 });
+    expect(Date.now() - started).toBeLessThan(300);
+    expect(calls).toBe(2);
     vi.stubGlobal("fetch", vi.fn(async () => reply({}, 500)));
     expect(await callJson(env, { ...request, hedgeAfterMs: 5, schema: {}, name: "x" })).toBeNull();
+  });
+
+  it("is null at the time given even where the hedge was set later than that", async () => {
+    vi.stubGlobal("fetch", vi.fn(hangs));
+    const started = Date.now();
+    expect(await callTool(env, { ...request, timeoutMs: 60, hedgeAfterMs: 5000, tools: [] })).toBeNull();
+    expect(Date.now() - started).toBeLessThan(400);
   });
 
   it("is null where neither answers within the time given", async () => {
