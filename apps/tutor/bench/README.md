@@ -69,8 +69,8 @@ On the 82 cases (the first 71 plus eleven with a need beside an answer, a word f
 | router | right | left to marking | wrong action |
 |---|---|---|---|
 | Gemma 26B, about 0.5 s | 56 | 25 | 1 |
-| Clef at 0.7 | 42 | 40 | 0 |
+| Clef at 0.7 | 41 | 41 | 0 |
 | Clef at 0.5 | 49 | 32 | 1 |
-| Clef-flash at 0.7 | 51 | 31 | 0 |
+| Clef-flash at 0.7 | 50 | 32 | 0 |
 
 The one Gemma wrong action is "To me, sink." read as a need to go.

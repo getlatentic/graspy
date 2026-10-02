@@ -23,10 +23,11 @@ const out = await Promise.all(rows.map(async (row) => {
   // but a need, which an answer would have marked instead of letting the child go.
   if (action === "mark_answer" && MODEL !== "gemma") return { taken: row.expect === "mark_answer" || row.expect.startsWith("needs_") ? "mark_answer" : "marking", ms: r.ms };
   if (action === "mark_answer") return { taken: r.accepted && (row.value === undefined || r.route?.said === row.value) ? "mark_answer" : r.accepted ? "wrong number" : "marking", ms: r.ms };
-  // A need found in words that are no more than the answer misheard is marked as the answer, as turn.ts does.
-  if (action.startsWith("needs_") && r.soundsLikeTheAnswer && !r.foundBySafetyRule) return { taken: "mark_answer", ms: r.ms };
-  // Anything but an answer, said of words that may be one, is left to the marking.
-  if (r.mayBeAnAnswer && !action.startsWith("needs_")) return { taken: "marking", ms: r.ms };
+  // A need the safety rule did not find is, in words that are only the answer misheard, the answer; in words that may be one, left to the marking.
+  if (action.startsWith("needs_") && !r.foundBySafetyRule) {
+    if (r.soundsLikeTheAnswer) return { taken: "mark_answer", ms: r.ms };
+    if (r.mayBeAnAnswer) return { taken: "marking", ms: r.ms };
+  } else if (r.mayBeAnAnswer && !action.startsWith("needs_")) return { taken: "marking", ms: r.ms };
   return { taken: fewWords(row.heard) && !SAFE_FOR_FEW_WORDS.includes(action) ? "marking" : action, ms: r.ms };
 }));
 

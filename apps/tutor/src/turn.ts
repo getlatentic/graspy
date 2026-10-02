@@ -588,7 +588,7 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
 function repliedToNeed(ask: Ask): Reply | null {
   if (ask.language !== "en") return null;
   const answer = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
-  const need = needFor(heardForPrompt(ask.heard), answer);
+  const need = needFor(heardForPrompt(ask.heard), answer, ask.prompt);
   const line = need === "needs_help" ? needsHelpLine(ask) : need === "needs_grownup" ? needsGrownupLine(ask) : null;
   return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "conversation", say: line };
 }
@@ -613,12 +613,10 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (route.action === "mark_answer") {
     return route.said !== undefined && soundsLike(heard, route.said) ? markedNumber(route.said, ask, expected) : null;
   }
-  // Anything but an answer, said of words that may be one, would throw a right answer away. A need the model found in
-  // words that are no more than the answer asked for, misheard, is left to the marking too: the words for a need that
-  // the safety rule has not found are not one.
-  const aNeed = route.action === "needs_help" || route.action === "needs_grownup";
-  if (aNeed && isOnlyTheAnswer(heard, expected)) return markedNumber(expected, ask, expected);
-  if (!aNeed && mayBeAnAnswer(heard)) return null;
+  // Anything but an answer, said of words that may be one, would throw a right answer away: a need the safety rule did not
+  // find in them is left to the marking too, unless they are one word, the answer misheard.
+  if (isOnlyTheAnswer(heard, expected) && route.action.startsWith("needs_")) return markedNumber(expected, ask, expected);
+  if (mayBeAnAnswer(heard)) return null;
   return repliedTo(env, ask, route).catch(() => null);
 }
 

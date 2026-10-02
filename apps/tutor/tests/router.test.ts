@@ -132,6 +132,13 @@ describe("every utterance is read by one model that chooses an action", () => {
     }
   });
 
+  it("leaves a water word problem to the marking where the model took it for a need", async () => {
+    for (const [tool, item, heard] of [["needs_help", "10", "ten litres of water"], ["needs_help", "5", "five bottles of water"], ["needs_grownup", "3", "three buckets of water please"]]) {
+      const { env } = setup({ tool: { name: tool } });
+      await expect(takeTurn(env, { ...ask(heard), expect: { kind: "fact", item } }), heard).rejects.toThrow("the teacher was asked");
+    }
+  });
+
   it("lets a child go or sends them on in any kind of step, with nothing marked", async () => {
     const recitation: Ask["expect"] = { kind: "recitation", item: "table", table: 2, multipliers: [1, 2, 3] };
     const { env } = setup({});
