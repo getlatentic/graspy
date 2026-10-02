@@ -117,9 +117,27 @@ describe("what a child's words ask for", () => {
   });
 
   it("takes no two words for need as one number, and no number that is not said as it is written", () => {
-    for (const [heard, answer] of [["tummy pain", 20], ["pain tummy", 20], ["pain and tummy", 20], ["sick pain", 16], ["tummy poo", 12], ["pain two", 12], ["sick seven", 13], ["pain pain", 10], ["sick sick sick", 6]] as const) {
+    for (const [heard, answer] of [["tummy pain", 20], ["pain tummy", 20], ["pain and tummy", 20], ["sick pain", 16], ["tummy poo", 12], ["pain two", 12], ["sick seven", 13]] as const) {
       expect(needFor(heard, answer), `${heard} for ${answer}`).not.toBeNull();
     }
+  });
+
+  it("keeps a table or a count whole around a connector, and still hears a need said with it", () => {
+    for (const run of ["two times five equals pain", "2 times 5 makes pain", "pain times two is twenty", "five plus five equals pain", "eight nine and pain", "ten twenty and thirsty"]) {
+      expect(needFor(run, null), run).toBeNull();
+    }
+    for (const tail of ["I don sick", "I be sick", "so sick", "e pain me"]) {
+      expect(needFor(`one two three four five ${tail}`, null), tail).not.toBeNull();
+    }
+  });
+
+  it("reads a word said twice as said once, asks for help only when that is what was said, and not for a bare 'I want'", () => {
+    expect(needFor("pain pain", 10)).toBeNull();
+    expect(needFor("I need help with this", 10)).toBeNull();
+    expect(needFor("I need help", 10)).toBe("needs_grownup");
+    expect(needFor("abeg help me", 10)).toBe("needs_grownup");
+    expect(needFor("I want", 10)).toBeNull();
+    expect(needFor("abeg", 10)).toBeNull();
   });
 
   it("reads ordinary words around the misheard answer as the answer", () => {
@@ -142,7 +160,7 @@ describe("what a child's words ask for", () => {
     for (const heard of ["I want to go outside", "I need to go outside", "I wet my pants", "I have wet my trousers", "I am pressed", "I want to go and drink water", "can I drink", "let me drink water", "I want to get water", "let me take water", "I wan go out", "make I go out", "call of nature", "I need the potty"]) {
       expect(needFor(heard, 10), heard).toBe("needs_help");
     }
-    for (const heard of ["mom", "mum", "dad", "I want my mom", "I want my dad", "mom help me", "I need a grown-up", "there is blood", "I see blood", "I fell off my chair", "I slipped and fell", "I feel faint", "I am fainting", "I was bitten by a dog", "I broke my arm", "I have malaria", "I swallowed a coin", "he is touching me", "he is slapping me", "he is punching me", "he is pinching me", "he is troubling me", "I got beaten", "I have been beaten", "he is fighting me", "I dey fear", "I want my parents", "I want to see my mummy", "I need the nurse", "I need help", "abeg help me", "I want a grown up"]) {
+    for (const heard of ["mom", "mum", "dad", "I want my mom", "I want my dad", "mom help me", "I need a grown-up", "there is blood", "I see blood", "I fell off my chair", "I slipped and fell", "I feel faint", "I am fainting", "I was bitten by a dog", "I broke my arm", "I have malaria", "I swallowed a coin", "he is touching me", "he is slapping me", "he is punching me", "he is pinching me", "he is troubling me", "I got beaten", "I have been beaten", "he is fighting me", "I dey fear", "I want my parents", "I want to see my mummy", "I need the nurse", "abeg help me", "I want a grown up"]) {
       expect(needFor(heard, 10), heard).toBe("needs_grownup");
     }
   });

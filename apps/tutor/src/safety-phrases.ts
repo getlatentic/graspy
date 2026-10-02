@@ -38,7 +38,7 @@ export const HURT = any([
   "(don't|do not|dont) feel (good|fine|well)", "(am not|im not|i'm not) (feeling )?well", "(am|is|im|i'm|feel|feeling|been) ill",
   `(${HARM}) me`, "(got|been|was) (beaten|hit|slapped|pushed|kicked|flogged)",
   "(want|call|need|bring) (my )?(mummy|mommy|mum|mom|mama|daddy|dad|papa|mother|father|grown[- ]?up)", "(call|bring|get) (my |the )?teacher",
-  "i (need|want) (a |the )?(nurse|grown[- ]?up)", "(need|want) help", "(fight|fighting|bully|bullying) me", "pulled my hair", "i (dey )?fear",
+  "i (need|want) (a |the )?(nurse|grown[- ]?up)", "(fight|fighting|bully|bullying) me", "pulled my hair", "i (dey )?fear",
   "(want to (see|go to)|miss|where is) (my )?(mummy|mommy|mum|mom|mama|daddy|dad|papa|parents?)", "(want|call|need|bring) (my )?parents?",
 ]);
 

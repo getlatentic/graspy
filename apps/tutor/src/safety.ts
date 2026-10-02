@@ -23,7 +23,10 @@ const FILLER = new Set([
   "ma", "madam", "o", "oh", "na", "e", "be", "don", "teacher", "aunty", "auntie", "that", "thats", "so", "okay", "ok", "my", "thank",
   "thanks", "you",
 ]);
-const CALL = new Set(["help", "me", "somebody", "someone", "mummy", "mommy", "mum", "mom", "mama", "mother", "father", "daddy", "dad", "papa", "abeg", "need", "want"]);
+const ASKS_FOR_A_GROWNUP = new Set(["help", "mummy", "mommy", "mum", "mom", "mama", "mother", "father", "daddy", "dad", "papa"]);
+const CALL = new Set([...ASKS_FOR_A_GROWNUP, "me", "somebody", "someone", "abeg", "need", "want"]);
+/** Words between a need word and a number that do not make it less the next number. */
+const BETWEEN = new Set(["is", "are", "and", "plus", "times", "equals", "make", "makes", "then", "please", "sir", "ma", "madam", "o", "oh", "teacher", "aunty", "auntie", "thank", "thanks", "you", "um", "uh", "er", "ehm", "umm", "hmm", "ok", "okay"]);
 
 function words(heard: string): string[] {
   return heard.toLowerCase().replace(/['’]/g, "").split(/[^a-z0-9]+/).filter((word) => word !== "");
@@ -36,7 +39,7 @@ const unfilled = (heard: string) => words(heard).filter((word) => !FILLER.has(wo
  * the number written as it is said, so "forty poo" is forty-two and "tummy five", "pain poo" and "pain two" are no number.
  */
 export function isOnlyTheAnswer(heard: string, answer: number | null): boolean {
-  const tokens = unfilled(heard);
+  const tokens = unfilled(heard).filter((word, at, all) => !(word in STANDS_FOR && all[at - 1] === word));
   if (answer === null || tokens.filter((word) => word in STANDS_FOR).length !== 1) return false;
   const spoken = tokens.map((word) => STANDS_FOR[word] ?? word).join(" ");
   return spokenNumber(spoken) === answer && numberWords(answer).replace(/-/g, " ") === spoken;
@@ -58,7 +61,7 @@ function isTheRun(tokens: string[], at: number, found: string, answerWords: read
   const odd = (word: string) => word in STANDS_FOR || answerWords.includes(word);
   const inRun = (word: string | undefined) => word !== undefined && (spokenNumber(word) !== null || odd(word));
   const near = (step: 1 | -1) => {
-    for (let to = at + step; to >= 0 && to < tokens.length; to += step) if (!FILLER.has(tokens[to])) return tokens[to];
+    for (let to = at + step; to >= 0 && to < tokens.length; to += step) if (!BETWEEN.has(tokens[to])) return tokens[to];
     return undefined;
   };
   return found === tokens[at] && odd(found) && (inRun(near(-1)) || inRun(near(1)));
@@ -84,7 +87,7 @@ export function needFor(heard: string, answer: number | null = null, question = 
   if (isOnlyTheAnswer(heard, answer)) return null;
   const said = unfilled(heard);
   if (said.length > 0 && said.every((word) => answerWords.includes(word))) return null;
-  if (said.length > 0 && said.every((word) => CALL.has(word)) && said.some((word) => word !== "me")) return "needs_grownup";
+  if (said.length > 0 && said.every((word) => CALL.has(word)) && said.some((word) => ASKS_FOR_A_GROWNUP.has(word))) return "needs_grownup";
   const tokens = words(heard);
   const runs = answer === null;
   if (holds([HURT], tokens, answerWords, runs)) return "needs_grownup";
