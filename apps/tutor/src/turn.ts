@@ -32,6 +32,7 @@ import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./pra
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
+import { needFor } from "./safety";
 import { isBareNumber, soundsLike } from "./sounds-like";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
@@ -404,6 +405,8 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
 
 async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
+  const needed = await repliedToNeed(env, ask);
+  if (needed !== null) return needed;
   const routed = await routedReply(env, ask);
   if (routed !== null) return routed;
   const unsure = unsureReply(ask);
@@ -584,6 +587,13 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
  * the words by sound before it is marked. Null where that is off, nothing could say, or the number is not one the
  * words could be, which leaves the usual marking.
  */
+/** A child who needs the toilet or is hurt is answered as such before anything is marked, router or no router. */
+async function repliedToNeed(env: Env, ask: Ask): Promise<Reply | null> {
+  const answer = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
+  const need = ask.language === "en" ? needFor(heardForPrompt(ask.heard), answer) : null;
+  return need === null ? null : repliedTo(env, ask, { action: need }).catch(() => null);
+}
+
 async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (env.ROUTER !== "on" || ask.language !== "en" || ask.expect.kind !== "fact" || ask.prompt.trim() === "") return null;
   // A step asked as an echo or a probe has the answer in its question, and a model told it could give it back.
@@ -598,8 +608,12 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (route.action === "mark_answer") {
     return route.said !== undefined && soundsLike(heard, route.said) ? markedNumber(route.said, ask, expected) : null;
   }
-  // Anything but an answer, said of words that may be one, would throw a right answer away.
-  if (route.action !== "needs_help" && route.action !== "needs_grownup" && mayBeAnAnswer(heard)) return null;
+  // Anything but an answer, said of words that may be one, would throw a right answer away. A need the model found in
+  // words that are no more than the answer asked for, misheard, is left to the marking too: the words for a need that
+  // the safety rule has not found are not one.
+  const aNeed = route.action === "needs_help" || route.action === "needs_grownup";
+  if (aNeed && soundsLike(heard, expected)) return markedNumber(expected, ask, expected);
+  if (!aNeed && mayBeAnAnswer(heard)) return null;
   return repliedTo(env, ask, route).catch(() => null);
 }
 

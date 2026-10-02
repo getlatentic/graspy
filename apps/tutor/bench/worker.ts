@@ -1,6 +1,7 @@
 import { HOMOPHONES, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "../src/interpret";
 import { answerHeard } from "../src/read";
-import { ACTIONS, SETTING, mayBeAnAnswer, routeUtterance, withSafety, type Action, type Route } from "../src/router";
+import { needFor } from "../src/safety";
+import { ACTIONS, SETTING, mayBeAnAnswer, routeUtterance, type Action, type Route } from "../src/router";
 import { soundsLike } from "../src/sounds-like";
 
 /**
@@ -30,7 +31,7 @@ async function routeWithClef(env: Env, model: "clef" | "clef-flash", prompt: str
   const entries = Object.entries(reply?.answers?.action?.probabilities ?? {});
   if (entries.length === 0) return null;
   const [action, p] = entries.reduce((best, entry) => (entry[1] > best[1] ? entry : best));
-  return withSafety(p >= threshold ? { action: action as Action } : null, heard);
+  return p >= threshold ? { action: action as Action } : null;
 }
 
 async function timed<T>(work: Promise<T>): Promise<[T, number]> {
@@ -52,10 +53,12 @@ async function handle(request: Request, env: Env): Promise<Response> {
   {
     if (new URL(request.url).pathname === "/route") {
       const { heard, prompt, model = "gemma", threshold = 0.7 } = (await request.json()) as { heard: string; prompt: string; model?: "gemma" | "clef" | "clef-flash"; threshold?: number };
-      const [route, ms] = await timed(model === "gemma" ? routeUtterance(env, { prompt, heard, language: "en", expect: { kind: "fact", item: "10" } }).catch(() => null) : routeWithClef(env, model, prompt, heard, threshold));
+      const [chosen, ms] = await timed(model === "gemma" ? routeUtterance(env, { prompt, heard, language: "en", expect: { kind: "fact", item: "10" } }).catch(() => null) : routeWithClef(env, model, prompt, heard, threshold));
+      const need = needFor(heard, 10);
+      const route = need === null ? chosen : { action: need };
       // Clef has no number to give and no reply to write; Gemma's answer is checked by sound.
       const accepted = model === "gemma" && route?.action === "mark_answer" && route.said !== undefined && soundsLike(heard, route.said);
-      return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard) });
+      return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard), soundsLikeTheAnswer: soundsLike(heard, 10), foundBySafetyRule: need !== null });
     }
     const { heard } = (await request.json()) as { heard: string };
     const [legacy, legacyMs] = await timed(reading(env, heard, false));

@@ -98,30 +98,9 @@ async function chosenByModel(env: Env, ask: Ask, heard: string): Promise<Route |
   };
 }
 
-/**
- * Words that mean a child needs the toilet or water, or is hurt, ill or frightened. A model asked what to do with them
- * has said to finish the question first, so this one choice is not left to it: whatever else it chose but an answer,
- * these words make it a child who is let go or sent to a grown-up.
- */
-const TOILET_WORDS = /\b(toilet|bathroom|latrine|pee|poo|poop|wee|urinate|thirsty|water)\b/i;
-const HURT_WORDS = /\b(hurt|hurts|hurting|pain|paining|painful|vomit|vomiting|dizzy|headache|stomach|tummy|bleeding|bleed|scared|afraid|frightened)\b/i;
-
-/**
- * Safety comes before everything the model chose, an answer included: a child who says "I feel sick and I think it is
- * ten" is sent to a grown-up, not marked. Pain, bleeding and fear send the child to a grown-up; the toilet or water lets
- * them go.
- */
-export function withSafety(route: Route | null, heard: string): Route | null {
-  if (route === null || route.action === "needs_grownup") return route;
-  if (HURT_WORDS.test(heard)) return { action: "needs_grownup" };
-  if (route.action !== "needs_help" && TOILET_WORDS.test(heard)) return { action: "needs_help" };
-  return route;
-}
-
 /** The action for what the child said, from the language model; null where it could not say, which leaves the usual marking. */
 export async function routeUtterance(env: Env, ask: Ask): Promise<Route | null> {
-  const heard = heardForPrompt(ask.heard);
-  return withSafety(await chosenByModel(env, ask, heard).catch(() => null), heard);
+  return chosenByModel(env, ask, heardForPrompt(ask.heard)).catch(() => null);
 }
 
 /**

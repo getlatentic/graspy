@@ -8,19 +8,22 @@ import { readFileSync } from "node:fs";
 const URL_ = process.argv[2] ?? "http://localhost:8799";
 const MODEL = process.argv[3] ?? "gemma";
 const THRESHOLD = Number(process.argv[4] ?? 0.7);
+if (!Number.isFinite(THRESHOLD)) throw new Error(`threshold must be a number, not ${process.argv[4]}`);
 const PROMPT = "One heap has five oranges. How many oranges are in two heaps?";
 const rows = readFileSync(new URL("./routing.jsonl", import.meta.url).pathname, "utf8").trim().split("\n").map((l) => JSON.parse(l) as { heard: string; expect: string; value?: number });
 const SAFE_FOR_FEW_WORDS = ["not_know", "repeat_question", "needs_help", "needs_grownup"];
 const fewWords = (heard: string) => heard.split(/[^\p{L}\p{N}']+/u).filter(Boolean).length <= 3;
 
 const out = await Promise.all(rows.map(async (row) => {
-  const r = (await (await fetch(URL_ + "/route", { method: "POST", body: JSON.stringify({ heard: row.heard, prompt: PROMPT, model: MODEL, threshold: THRESHOLD }) })).json()) as { route: { action: string; said?: number } | null; ms: number; accepted: boolean; mayBeAnAnswer: boolean };
+  const r = (await (await fetch(URL_ + "/route", { method: "POST", body: JSON.stringify({ heard: row.heard, prompt: PROMPT, model: MODEL, threshold: THRESHOLD }) })).json()) as { route: { action: string; said?: number } | null; ms: number; accepted: boolean; mayBeAnAnswer: boolean; soundsLikeTheAnswer: boolean; foundBySafetyRule: boolean };
   const action = r.route?.action ?? null;
   if (action === null) return { taken: "marking", ms: r.ms };
   // An answer is marked only when the number it reports sounds like the words, and is then right only if it is the number said.
   // Clef gives no number: "an answer" goes to the usual reading, which is right to do for an answer and harmless for anything else.
   if (action === "mark_answer" && MODEL !== "gemma") return { taken: row.expect === "mark_answer" ? "mark_answer" : "marking", ms: r.ms };
   if (action === "mark_answer") return { taken: r.accepted && (row.value === undefined || r.route?.said === row.value) ? "mark_answer" : r.accepted ? "wrong number" : "marking", ms: r.ms };
+  // A need found in words that are no more than the answer misheard is marked as the answer, as turn.ts does.
+  if (action.startsWith("needs_") && r.soundsLikeTheAnswer && !r.foundBySafetyRule) return { taken: "mark_answer", ms: r.ms };
   // Anything but an answer, said of words that may be one, is left to the marking.
   if (r.mayBeAnAnswer && !action.startsWith("needs_")) return { taken: "marking", ms: r.ms };
   return { taken: fewWords(row.heard) && !SAFE_FOR_FEW_WORDS.includes(action) ? "marking" : action, ms: r.ms };

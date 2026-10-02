@@ -103,6 +103,38 @@ describe("every utterance is read by one model that chooses an action", () => {
     expect(NEEDS_HELP).toContain(reply.say);
   });
 
+  it("sends a child who says they feel sick, or ill, to a grown-up before any answer is marked", async () => {
+    for (const heard of ["I feel sick and I think it is ten", "I am ill, ten", "my leg is aching, ten"]) {
+      const { reply } = await calls("mark_answer", { said: 10 }, heard);
+      expect(NEEDS_GROWNUP, heard).toContain(reply.say);
+    }
+  });
+
+  it("marks a right answer that is only the number asked for misheard as a word for a need, or has water in a word problem", async () => {
+    for (const heard of ["pain", "tummy", "ten glasses of water", "it is pain"]) {
+      const { reply } = await calls("mark_answer", { said: 10 }, heard);
+      expect(reply.verdict, heard).toBe("correct");
+    }
+  });
+
+  it("marks the answer asked for even where the model took its misheard word for a need", async () => {
+    for (const [tool, heard] of [["needs_grownup", "pain"], ["needs_help", "it is water"]]) {
+      const { reply } = await calls(tool, undefined, heard);
+      expect(reply.verdict, heard).toBe("correct");
+    }
+  });
+
+  it("answers a need with no router at all: the router off, or it fails, or the step has the answer in it", async () => {
+    const heard = "my head is bleeding";
+    const off = setup({}, "off");
+    expect(NEEDS_GROWNUP).toContain((await takeTurn(off.env, ask(heard))).say);
+    expect(off.bedrock).not.toHaveBeenCalled();
+    const failed = setup({ refuse: true });
+    expect(NEEDS_GROWNUP).toContain((await takeTurn(failed.env, ask(heard))).say);
+    const support = setup({});
+    expect(NEEDS_GROWNUP).toContain((await takeTurn(support.env, { ...ask(heard), support: "modelled" as const })).say);
+  });
+
   it("asks garbled words, of more than a few, again from the phrasebook", async () => {
     const { reply } = await calls("ask_again", undefined, "my chain saw hot sink to me");
     expect([reply.verdict, reply.heard]).toEqual(["unheard", "garbled"]);
@@ -211,7 +243,7 @@ describe("where the router is not used", () => {
   });
 
   it("asks Bedrock with the key and all the tools, and never the answer", async () => {
-    const { reply, bedrock } = await calls("answer_child", { reply: "Soon. How many oranges?" }, "Can I go to the toilet?");
+    const { reply, bedrock } = await calls("answer_child", { reply: "Soon. How many oranges?" }, "Can I eat after this?");
     expect(reply.heard).toBe("conversation");
     const [url, init] = bedrock.mock.calls[0] as unknown as [string, { headers: Record<string, string>; body: string }];
     const sent = JSON.parse(init.body);
