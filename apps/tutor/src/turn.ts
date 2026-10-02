@@ -32,7 +32,7 @@ import { correctionLine, listStoppedLine, needsGrownupLine, needsHelpLine, notHe
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
-import { isOnlyTheAnswer, needFor } from "./safety";
+import { isOnlyTheAnswer, needFor, wordsOfTheAnswer } from "./safety";
 import { isBareNumber, soundsLike } from "./sounds-like";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
@@ -588,7 +588,7 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
 function repliedToNeed(ask: Ask): Reply | null {
   if (ask.language !== "en") return null;
   const answer = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
-  const need = needFor(heardForPrompt(ask.heard), answer, ask.prompt);
+  const need = needFor(heardForPrompt(ask.heard), answer, ask.prompt, wordsOfTheAnswer(ask.expect));
   const line = need === "needs_help" ? needsHelpLine(ask) : need === "needs_grownup" ? needsGrownupLine(ask) : null;
   return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "conversation", say: line };
 }
