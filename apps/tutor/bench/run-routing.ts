@@ -7,18 +7,17 @@ import { readFileSync } from "node:fs";
 
 const URL_ = process.argv[2] ?? "http://localhost:8799";
 const PROMPT = "One heap has five oranges. How many oranges are in two heaps?";
-const rows = readFileSync(new URL("./routing.jsonl", import.meta.url).pathname, "utf8").trim().split("\n").map((l) => JSON.parse(l) as { heard: string; expect: string });
+const rows = readFileSync(new URL("./routing.jsonl", import.meta.url).pathname, "utf8").trim().split("\n").map((l) => JSON.parse(l) as { heard: string; expect: string; value?: number });
 const SAFE_FOR_FEW_WORDS = ["not_know", "repeat_question", "needs_help"];
 const fewWords = (heard: string) => heard.split(/[^\p{L}\p{N}']+/u).filter(Boolean).length <= 3;
-const holdsANumber = (heard: string) => /\d|\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)\b/i.test(heard);
 
-const SOUND_ALIKES = ["to", "too", "for", "fore", "won", "ate", "nein"];
 const out = await Promise.all(rows.map(async (row) => {
-  if (holdsANumber(row.heard) || SOUND_ALIKES.includes(row.heard.toLowerCase().replace(/[^a-z]/g, ""))) return { taken: "marking", ms: 0 };
-  const r = (await (await fetch(URL_ + "/route", { method: "POST", body: JSON.stringify({ heard: row.heard, prompt: PROMPT }) })).json()) as { route: { action: string } | null; ms: number };
+  const r = (await (await fetch(URL_ + "/route", { method: "POST", body: JSON.stringify({ heard: row.heard, prompt: PROMPT }) })).json()) as { route: { action: string; said?: number } | null; ms: number; accepted: boolean };
   const action = r.route?.action ?? null;
-  const taken = action === null || action === "mark_answer" || (fewWords(row.heard) && !SAFE_FOR_FEW_WORDS.includes(action)) ? "marking" : action;
-  return { taken, ms: r.ms };
+  if (action === null) return { taken: "marking", ms: r.ms };
+  // An answer is marked only when the number it reports sounds like the words, and is then right only if it is the number said.
+  if (action === "mark_answer") return { taken: r.accepted && (row.value === undefined || r.route?.said === row.value) ? "mark_answer" : r.accepted ? "wrong number" : "marking", ms: r.ms };
+  return { taken: fewWords(row.heard) && !SAFE_FOR_FEW_WORDS.includes(action) ? "marking" : action, ms: r.ms };
 }));
 
 const counts = { right: 0, "left to marking": 0, "wrong action": 0 };

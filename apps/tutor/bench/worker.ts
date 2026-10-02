@@ -1,6 +1,7 @@
 import { HOMOPHONES, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "../src/interpret";
 import { answerHeard } from "../src/read";
 import { routeUtterance } from "../src/router";
+import { soundsLike } from "../src/sounds-like";
 
 /**
  * What the tutor reads for a recognised answer, without the question, in the order turn.ts tries: a plain
@@ -29,7 +30,8 @@ export default {
     if (new URL(request.url).pathname === "/route") {
       const { heard, prompt } = (await request.json()) as { heard: string; prompt: string };
       const [route, ms] = await timed(routeUtterance(env, { prompt, heard, language: "en", expect: { kind: "fact", item: "10" } }).catch(() => null));
-      return Response.json({ route, ms });
+      const accepted = route?.action === "mark_answer" && route.said !== undefined && soundsLike(heard, route.said);
+      return Response.json({ route, ms, accepted });
     }
     const { heard } = (await request.json()) as { heard: string };
     const [legacy, legacyMs] = await timed(reading(env, heard, false));
