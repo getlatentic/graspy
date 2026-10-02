@@ -1,19 +1,19 @@
-{"heard": "ten", "expect": "mark_answer"}
-{"heard": "10", "expect": "mark_answer"}
-{"heard": "It is ten.", "expect": "mark_answer"}
-{"heard": "I think it is ten", "expect": "mark_answer"}
-{"heard": "five and five is ten", "expect": "mark_answer"}
-{"heard": "eleven", "expect": "mark_answer"}
-{"heard": "Fifteen.", "expect": "mark_answer"}
-{"heard": "twenty", "expect": "mark_answer"}
-{"heard": "Then", "expect": "mark_answer"}
-{"heard": "Tim", "expect": "mark_answer"}
-{"heard": "tin", "expect": "mark_answer"}
-{"heard": "Teen.", "expect": "mark_answer"}
-{"heard": "Nein.", "expect": "mark_answer"}
-{"heard": "to", "expect": "mark_answer"}
-{"heard": "sicks", "expect": "mark_answer"}
-{"heard": "fifty sicks", "expect": "mark_answer"}
+{"heard": "ten", "expect": "mark_answer", "value": 10}
+{"heard": "10", "expect": "mark_answer", "value": 10}
+{"heard": "It is ten.", "expect": "mark_answer", "value": 10}
+{"heard": "I think it is ten", "expect": "mark_answer", "value": 10}
+{"heard": "five and five is ten", "expect": "mark_answer", "value": 10}
+{"heard": "eleven", "expect": "mark_answer", "value": 11}
+{"heard": "Fifteen.", "expect": "mark_answer", "value": 15}
+{"heard": "twenty", "expect": "mark_answer", "value": 20}
+{"heard": "Then", "expect": "mark_answer", "value": 10}
+{"heard": "Tim", "expect": "mark_answer", "value": 10}
+{"heard": "tin", "expect": "mark_answer", "value": 10}
+{"heard": "Teen.", "expect": "mark_answer", "value": 10}
+{"heard": "Nein.", "expect": "mark_answer", "value": 9}
+{"heard": "to", "expect": "mark_answer", "value": 2}
+{"heard": "sicks", "expect": "mark_answer", "value": 6}
+{"heard": "fifty sicks", "expect": "mark_answer", "value": 56}
 {"heard": "To me, sink.", "expect": "ask_again"}
 {"heard": "can you sit", "expect": "ask_again"}
 {"heard": "Chainsaw", "expect": "ask_again"}
@@ -42,16 +42,16 @@
 {"heard": "I want to play football", "expect": "answer_child"}
 {"heard": "Teacher, I like oranges", "expect": "answer_child"}
 {"heard": "Why are the oranges in heaps?", "expect": "answer_child"}
-{"heard": "tree", "expect": "mark_answer"}
-{"heard": "free", "expect": "mark_answer"}
-{"heard": "Aid", "expect": "mark_answer"}
-{"heard": "fife", "expect": "mark_answer"}
-{"heard": "seben", "expect": "mark_answer"}
-{"heard": "nain", "expect": "mark_answer"}
-{"heard": "a dozen", "expect": "mark_answer"}
-{"heard": "ten oranges", "expect": "mark_answer"}
-{"heard": "twenty two", "expect": "mark_answer"}
-{"heard": "Yes it is ten", "expect": "mark_answer"}
+{"heard": "tree", "expect": "mark_answer", "value": 3}
+{"heard": "free", "expect": "mark_answer", "value": 3}
+{"heard": "Aid", "expect": "mark_answer", "value": 8}
+{"heard": "fife", "expect": "mark_answer", "value": 5}
+{"heard": "seben", "expect": "mark_answer", "value": 7}
+{"heard": "nain", "expect": "mark_answer", "value": 9}
+{"heard": "a dozen", "expect": "mark_answer", "value": 12}
+{"heard": "ten oranges", "expect": "mark_answer", "value": 10}
+{"heard": "twenty two", "expect": "mark_answer", "value": 22}
+{"heard": "Yes it is ten", "expect": "mark_answer", "value": 10}
 {"heard": "I no sabi o", "expect": "not_know"}
 {"heard": "e no dey my head", "expect": "not_know"}
 {"heard": "Abeg make you repeat the question", "expect": "repeat_question"}
@@ -61,8 +61,11 @@
 {"heard": "I don tire", "expect": "answer_child"}
 {"heard": "The oranges are many", "expect": "answer_child"}
 {"heard": "I want to use the toilet", "expect": "needs_help"}
-{"heard": "my stomach is hurting", "expect": "needs_help"}
-{"heard": "I am scared", "expect": "needs_help"}
+{"heard": "my stomach is hurting", "expect": "needs_grownup"}
+{"heard": "I am scared", "expect": "needs_grownup"}
 {"heard": "Teacher I need water", "expect": "needs_help"}
-{"heard": "I am not feeling well", "expect": "needs_help"}
-{"heard": "call my mummy", "expect": "needs_help"}
+{"heard": "I am not feeling well", "expect": "needs_grownup"}
+{"heard": "call my mummy", "expect": "needs_grownup"}
+{"heard": "chin", "expect": "ask_again"}
+{"heard": "Zen", "expect": "ask_again"}
+{"heard": "So", "expect": "ask_again"}

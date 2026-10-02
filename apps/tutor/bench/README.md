@@ -35,16 +35,22 @@ stays off. Two limits on the verdict: 85 of the 91 rows were written by Whisper 
 recogniser, whose errors are mostly "no number" and not a different one), and none is a child. Run it again on Nova-3's
 errors, and on real children's, before the verdict is trusted either way.
 
-## Routing (what a child says that is no number)
+## Routing (what a child said)
 
-`run-routing.ts` scores `src/router.ts` on `routing.jsonl` (62 hand-written cases: answers, sound-alike answers, garbled
-words, "I don't know" in English and Pidgin, requests to hear the question again, questions, off-topic). It needs the
-bench Worker with `AWS_BEARER_TOKEN_BEDROCK` in the git-ignored `bench/.dev.vars`. It applies the rules turn.ts applies:
-words with a number or a table sound-alike are left to the marking, and a word or two is acted on only as not knowing or
-asking to hear it again.
+`run-routing.ts` scores `src/router.ts` on `routing.jsonl` (71 hand-written cases: answers, sound-alike answers,
+garbled words, "I don't know" in English and Pidgin, requests to hear the question again, needing the toilet or water,
+questions, off-topic). Every utterance goes to one model (Gemma 26B on Bedrock) that chooses a tool. For an answer the model reports the number, and
+the Worker checks it against the words by sound (`src/sounds-like.ts`) before it counts as marked. It needs the bench Worker with
+`AWS_BEARER_TOKEN_BEDROCK` in the git-ignored `bench/.dev.vars`. A word or two is acted on only as not knowing, asking to hear it
+again or needing help; anything else is left to the marking.
 
-On 2026-10-01: 62 cases, 21 handled by the router and right, 40 left to the marking (safe, and slower), 1 wrong action
-("I don tire", Pidgin for being tired, read as not knowing), median about 1.3 s through the laptop and remote preview for
-Clef then the model. Before the gates, a word or two called "garbled" or "something else" was taken, which would have
-thrown away right answers written as sound-alikes (tin, tim, sicks); the cases are the same, and that is why they are gated.
-The cases were written by the person who wrote the router.
+On 2026-10-02, after review fixes: 71 cases, 46 right, 24 left to the marking (safe, and slower), 1 wrong action (a garbled
+phrase read as needing help, which lets the child go), median about 0.65 s for the one call through the laptop and remote
+preview. Clef, tried first on 2026-10-01, gave 0 false answers but could not write a reply and added a second call; one model is
+simpler. The cases were written by the person who wrote the router.
+
+The sound check (`src/sounds-like.ts`) accepts a word as a number only when it is about as long, with the same first and last
+sounds and at most one sound different. Over a 210,000-word dictionary, 0.1 to 3.5 percent of words pass for any one
+number (before the length bound and the last-sound rule it was up to 28 percent). Some common words still do: "play", "ball", "fun",
+"water" and "done" pass for three and ten, and "don't" and "toilet" for twenty and forty. The check is a net under the model, which is told
+never to answer the sum; it does not replace that.

@@ -31,7 +31,8 @@ import { exampleBlock } from "./phrasebook";
 import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
-import { holdsANumber, repliedTo, routeUtterance } from "./router";
+import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
+import { isBareNumber, soundsLike } from "./sounds-like";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
   markRecitation,
@@ -403,10 +404,10 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
 
 async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
-  const unsure = unsureReply(ask);
-  if (unsure !== null) return unsure;
   const routed = await routedReply(env, ask);
   if (routed !== null) return routed;
+  const unsure = unsureReply(ask);
+  if (unsure !== null) return unsure;
   const plain = await timed("read", markedFromPlainNumber(env, ask));
   if (plain !== null) return plain;
   const listed = markedFromPlainSequence(ask);
@@ -578,18 +579,28 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
 }
 
 /**
- * What a child said that is no number, answered as a conversation: where the deployment sets `ROUTER` to on, the words
- * are routed to one action (see router.ts). Null where that is off, the words hold a number or are a sound-alike for one
- * (marking reads and checks those), or nothing could say, which leaves the usual marking.
+ * What a child said, answered as a conversation: where the deployment sets `ROUTER` to on, every utterance is read in the
+ * context of the question by one model that chooses an action (see router.ts). A number it reports is checked against
+ * the words by sound before it is marked. Null where that is off, nothing could say, or the number is not one the
+ * words could be, which leaves the usual marking.
  */
 async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (env.ROUTER !== "on" || ask.language !== "en" || ask.expect.kind !== "fact" || ask.prompt.trim() === "") return null;
+  // A step asked as an echo or a probe has the answer in its question, and a model told it could give it back.
+  if (ask.support !== undefined) return null;
   // Only a question whose answer is a number: a shape or a letter is a word the router has no way to know is right.
-  if (spokenNumber(expectedAnswer(ask.expect.item)) === null) return null;
+  const expected = spokenNumber(expectedAnswer(ask.expect.item));
   const heard = heardForPrompt(ask.heard);
-  if (heard === "" || holdsANumber(heard) || HOMOPHONES[heard.toLowerCase().replace(/[^a-z]/g, "")] !== undefined) return null;
+  // Nothing but a number is an answer, with nothing to route.
+  if (expected === null || heard === "" || isBareNumber(heard)) return null;
   const route = await timed("route", routeUtterance(env, ask)).catch(() => null);
-  return route === null ? null : repliedTo(env, ask, route).catch(() => null);
+  if (route === null) return null;
+  if (route.action === "mark_answer") {
+    return route.said !== undefined && soundsLike(heard, route.said) ? markedNumber(route.said, ask, expected) : null;
+  }
+  // Anything but an answer, said of words that may be one, would throw a right answer away.
+  if (route.action !== "needs_help" && route.action !== "needs_grownup" && mayBeAnAnswer(heard)) return null;
+  return repliedTo(env, ask, route).catch(() => null);
 }
 
 /**

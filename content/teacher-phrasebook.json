@@ -53,6 +53,11 @@
     "Yes, go now. We will wait for you.",
     "That is all right. Go, then come back to me."
   ],
+  "needs_grownup": [
+    "Please tell your teacher or a grown-up now. We can stop.",
+    "Tell a grown-up right now. We can stop for today.",
+    "Go to your teacher now. We will stop here."
+  ],
   "not_heard": [
     "I did not hear you. Say it again, a little louder.",
     "Sorry, I missed that. Please say it louder.",
