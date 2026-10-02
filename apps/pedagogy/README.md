@@ -18,7 +18,7 @@ npm run pedagogy -w @graspy/pedagogy -- --persona unsure --answers 8   # answers
 npm run pedagogy -w @graspy/pedagogy -- --help
 ```
 
-The personas are `sure`, `unsure`, `stuck`, `silent`, `offtopic` and `pidgin` (`src/personas.ts`). The Bedrock key is read from `AWS_BEARER_TOKEN_BEDROCK`, or from `apps/server/.dev.vars`.
+The personas are `sure`, `unsure`, `stuck`, `silent`, `offtopic`, `needy` (the toilet, a drink), `unwell` (ill or frightened, once with the answer) and `pidgin` (`src/personas.ts`). The Bedrock key is read from `AWS_BEARER_TOKEN_BEDROCK`, or from `apps/server/.dev.vars`.
 
 A run writes `runs/<id>/transcript.md` (open it in any Markdown viewer that shows images), `run.json` and `shots/`. `runs/` is not committed.
 

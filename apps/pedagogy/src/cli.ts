@@ -17,7 +17,7 @@ import { pageStrings } from "./strings.ts";
 import type { Run } from "./turn-log.ts";
 
 const USAGE = `Usage: npm run pedagogy -w @graspy/pedagogy -- [options]
-  --persona <id>     sure | unsure | stuck | silent | offtopic | pidgin   (default sure)
+  --persona <id>     sure | unsure | stuck | silent | offtopic | needy | unwell | pidgin   (default sure)
   --class <id>       the learner's class, such as primary_4 or nursery_1 (default primary_4)
   --language <id>    the lesson language: en | yo | pcm                  (default the persona's)
   --lesson <title>   the lesson's title as Voice lessons lists it        (default the one marked Start here)
