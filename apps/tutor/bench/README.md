@@ -54,3 +54,14 @@ sounds and at most one sound different. Over a 210,000-word dictionary, 0.1 to 3
 number (before the length bound and the last-sound rule it was up to 28 percent). Some common words still do: "play", "ball", "fun",
 "water" and "done" pass for three and ten, and "don't" and "toilet" for twenty and forty. The check is a net under the model, which is told
 never to answer the sum; it does not replace that.
+
+## Clef as the router (2026-10-02)
+
+`run-clef-routing.ts` scores Clef and Clef-flash on the same 71 cases with a router-only schema (one `action` question, no number
+question). Raw top choice: Clef 53 right, Clef-flash 45. At a threshold of 0.7: Clef 39 right with 4 wrong and 28 handed on; Clef-flash
+36 right with 2 wrong and 33 handed on. At 0.85 neither is wrong, and 49 to 58 of 71 are handed on. At its top choice Clef-flash sent 13
+non-answers to "mark this" and missed 2 of the hurt-child cases: its probabilities are flat. Latency inside the Worker under `wrangler dev
+--remote`: Clef 0.92 s median, Clef-flash 0.55 s, against about 0.6 s for the Gemma call; Cloudflare's post gives 209 ms and 39 ms, which this
+setup did not reproduce and which the deployed Worker may. A model that decides and a model that writes are separate jobs, and six of the seven
+actions need no written line, but at these numbers a Clef router would hand a third to a half of utterances on to a second model. Re-run this when
+Clef is fine-tuned on routed turns, or when its latency is measured in the deployed Worker.

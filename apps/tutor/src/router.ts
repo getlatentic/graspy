@@ -33,7 +33,7 @@ export interface Route {
   reply?: string;
 }
 
-const ACTIONS: Record<Action, string> = {
+export const ACTIONS: Record<Action, string> = {
   mark_answer: "the child gave a number as their answer, possibly written as a similar-sounding word",
   ask_again: "the words are garbled, not real words, or make no sense as speech, so nothing can be told; a clear sentence about something else is answer_child",
   not_know: "the child says they do not know, cannot remember or are not sure, in English or Nigerian Pidgin",
@@ -43,7 +43,7 @@ const ACTIONS: Record<Action, string> = {
   answer_child: "the child asked a question or said a clear sentence about something else, such as being hungry, wanting to play or needing the toilet",
 };
 
-const SETTING =
+export const SETTING =
   "A young Nigerian child is talking with their teacher, and a speech recogniser wrote down what the child said, often wrongly: " +
   "a number word may be written as another word that sounds like it. ";
 
