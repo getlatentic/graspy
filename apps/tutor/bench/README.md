@@ -74,3 +74,41 @@ On the 82 cases (the first 71 plus eleven with a need beside an answer, a word f
 | Clef-flash at 0.7 | 50 | 32 | 0 |
 
 The one Gemma wrong action is "To me, sink." read as a need to go.
+
+## The observation boundary (2026-10-02)
+
+The router chooses one of seven actions, which cannot say that a child is ill and gave a number. An observation reports independent
+judgments (the number read, not knowing, asking again, a question or something else, garbled, the toilet, water, illness, injury, fear,
+asking for a grown-up), each a probability; `src/policy.ts` decides in a fixed order with a threshold per judgment (safety, a need,
+a usable answer, not knowing, asking again, a question or something else, garbled). The model is not told the answer to the question;
+code applies it (a lone word that is the number asked for, misheard as a word for a need, is the answer).
+
+`bench/observation.jsonl` labels 132 cases by what the child communicated, not by an action: the 82 of the router bench, and 50 more
+that overlap on purpose (ill and a number, thirsty and a number, "number two" as an answer and as a need, "pain", "sick", "pee",
+"I am afraid it is five" and "I am afraid because someone hit me", ten litres of water, "I fell down", Pidgin). One in three is the
+`test` split; thresholds are tuned on `dev` only. `run-observation.ts <url> <gemma|clef|clef-flash> [dev|test|routing|all] [thresholds]`
+scores each judgment (precision and recall at its threshold), the number read, and what the controller decides, against the order above.
+
+| as decided | right | left to marking | need or safety missed | wrong number | marked a non-answer | wrong action | median |
+|---|---|---|---|---|---|---|---|
+| Gemma 26B, dev (88) | 77 | 6 | 0 | 0 | 1 | 4 | 1.2 s |
+| Gemma 26B, test (44) | 34 | 4 | 0 | 0 | 1 | 4 | 1.3 s |
+| Gemma 26B, the router's 82 | 64 | 9 | 0 | 0 | 2 | 7 | 1.1 s |
+| the router on those 82 (PR 116) | 56 | 25 | 0 | 0 | | 1 | 0.5 s |
+| Clef at 0.8 for talk and garbled, test (44) | 27 | 14 | 0 | 0 | 0 | 3 | 0.8 s |
+| Clef at 0.8, the router's 82 | 53 | 27 | 0 | 0 | 0 | 2 | 0.8 s |
+
+Clef at the default 0.5 trades 10 wrong actions for 6 more rights on dev (its probabilities for "garbled" and "something else" are
+too high to use there); it writes no reply, and a child who says something else costs a second model's call.
+
+What it showed:
+- No need or safety judgment was missed by any observer, and no wrong number was marked.
+- The observation reads more answers than the router (64 against 56 on the same cases, 9 left to marking against 25) and is slower
+  (1.1 s against 0.5 s) because it writes 15 scores; the cost is in the output tokens.
+- Its mistakes are in "garbled" against "something else" (a different line, no try either way), two garbled turns it marked as a number
+  (`To recent.`, `What is five?`) and safety false positives on lone words that may be an answer (`pain`, `tummy`, `sicks`): the safe direction.
+- Gemma's tool arguments fall apart when a dozen scores sit flat in one tool (keys wrapped in quotes, repetition to the token limit: 4
+  of 6 valid with the flat tool, 2 of 6 with it reordered, 6 of 6 nested). Structured output with the nested shape is 8 of 8, so it is what is used.
+  `OBSERVER=on` turns it on; the router stays the default until the observation has been run on the staging persona rig.
+- A whole set sent at once is throttled by the hosts (7% of observations came back empty, and the latency measured was the queue's);
+  the scorer sends four at a time.

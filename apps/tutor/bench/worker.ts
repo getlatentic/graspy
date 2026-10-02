@@ -3,6 +3,9 @@ import { answerHeard } from "../src/read";
 import { isOnlyTheAnswer, needFor } from "../src/safety";
 import { ACTIONS, SETTING, mayBeAnAnswer, routeUtterance, type Action, type Route } from "../src/router";
 import { soundsLike } from "../src/sounds-like";
+import { observe } from "../src/observer";
+import { decide, THRESHOLD } from "../src/policy";
+import { observeWithClef } from "./clef-observer";
 
 /**
  * What the tutor reads for a recognised answer, without the question, in the order turn.ts tries: a plain
@@ -59,6 +62,13 @@ async function handle(request: Request, env: Env): Promise<Response> {
       // Clef has no number to give and no reply to write; Gemma's answer is checked by sound.
       const accepted = model === "gemma" && route?.action === "mark_answer" && route.said !== undefined && soundsLike(heard, route.said);
       return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard), soundsLikeTheAnswer: isOnlyTheAnswer(heard, 10), foundBySafetyRule: need !== null });
+    }
+    if (new URL(request.url).pathname === "/observe") {
+      const { heard, prompt, expected, model = "gemma", thresholds } = (await request.json()) as { heard: string; prompt: string; expected: number; model?: "gemma" | "clef" | "clef-flash"; thresholds?: Partial<typeof THRESHOLD> };
+      const at = { ...THRESHOLD, ...thresholds };
+      const [observation, ms] = await timed(model === "gemma" ? observe(env, { prompt, heard, language: "en", expect: { kind: "fact", item: String(expected) } }).catch(() => null) : observeWithClef(env, model, prompt, heard));
+      const route = observation === null ? null : decide(observation, { words: heard, expected }, at);
+      return Response.json({ observation, route, ms, thresholds: at });
     }
     const { heard } = (await request.json()) as { heard: string };
     const [legacy, legacyMs] = await timed(reading(env, heard, false));
