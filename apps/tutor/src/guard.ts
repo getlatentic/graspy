@@ -8,6 +8,7 @@
  * never spoken.
  */
 import rules from "../../../content/child-language.json";
+import { runAi } from "./hedge";
 
 export const SAFETY_MODEL = "@cf/meta/llama-guard-3-8b";
 /** Reads a line for meaning in English, Pidgin and Yoruba, where a list of words cannot. */
@@ -62,15 +63,15 @@ export function heardForPrompt(heard: string | null): string {
  * reply it cannot vouch for is not spoken.
  */
 export async function safeForChild(env: Env, heard: string | null, line: string): Promise<boolean> {
-  const result = (await env.AI.run(SAFETY_MODEL, {
+  const result = await runAi<{ response?: unknown }>(env, SAFETY_MODEL, {
     messages: [
       { role: "user", content: heardForPrompt(heard) || "(the child said nothing)" },
       { role: "assistant", content: line },
     ],
     temperature: 0,
     max_tokens: 20,
-  })) as { response?: unknown };
-  const verdict = result.response;
+  });
+  const verdict = result?.response;
   // Traced on Workers AI: "\n\nsafe" or "\n\nunsafe\nS7".
   if (typeof verdict === "string") return verdict.trim().toLowerCase() === "safe";
   if (typeof verdict === "object" && verdict !== null && "safe" in verdict) {
