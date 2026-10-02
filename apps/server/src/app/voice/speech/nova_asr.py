@@ -18,7 +18,8 @@ NOVA_TIMEOUT_SECONDS = 6
 
 def nova_request(audio: bytes):
     """The recording as a stream the model reads, which is how Workers AI takes audio for Nova-3, and the
-    options that suit a child's counted answers: English, with numbers written as digits."""
+    options that suit a child's counted answers: English, with numbers written as digits, and opted out of
+    Deepgram's model-improvement programme."""
     from js import Array, Blob, Object, Uint8Array
     from pyodide.ffi import to_js
 
@@ -34,6 +35,8 @@ def nova_request(audio: bytes):
             "audio": {"body": blob.stream(), "contentType": "audio/wav"},
             "language": "en",
             "numerals": True,
+            # Children's recordings are not offered to Deepgram's model-improvement programme.
+            "mip_opt_out": True,
         },
         dict_converter=Object.fromEntries,
     )
