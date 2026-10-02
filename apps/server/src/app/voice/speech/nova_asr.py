@@ -12,8 +12,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 NOVA_MODEL = "@cf/deepgram/nova-3"
-# Nova-3 answered in about 0.5 s on staging recordings; it is not waited for longer than Whisper is.
-NOVA_TIMEOUT_SECONDS = 6
+# Nova-3 answers in 0.1 to 0.3 s on staging, and about one turn in seven once, just after a deploy, gave nothing in
+# six seconds; Intron answers in under two, so a child waits three seconds for Nova-3 at most.
+NOVA_TIMEOUT_SECONDS = 3
 
 
 def nova_request(audio: bytes):
