@@ -1,3 +1,4 @@
+import { HEDGE_AFTER_MS, hedged } from "./hedge";
 import { bedrockPath } from "./speller-host";
 
 export interface ToolCall {
@@ -18,39 +19,6 @@ interface Request {
 
 type Message = { content?: string | null; tool_calls?: { function?: { name?: string; arguments?: string } }[] };
 
-/** A second request is sent when the first has not answered by then: the host's slow calls are a few in ten, not the next one. */
-export const HEDGE_AFTER_MS = 1200;
-
-/**
- * The first answer of an attempt and, if it has not answered by `afterMs`, a second identical one, with the slower given up
- * on; null where neither answers within `timeoutMs`. An attempt that fails at once starts the second at once.
- */
-async function hedged<T>(attempt: (signal: AbortSignal) => Promise<T | null>, afterMs: number, timeoutMs: number): Promise<T | null> {
-  const stops = [new AbortController(), new AbortController()];
-  const deadline = AbortSignal.timeout(timeoutMs);
-  const run = (at: 0 | 1) => attempt(AbortSignal.any([stops[at].signal, deadline])).then((value) => value ?? Promise.reject(new Error("no answer")));
-  const first = run(0);
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const second = new Promise<T>((resolve, reject) => {
-    let started = false;
-    const start = () => {
-      if (started) return;
-      started = true;
-      run(1).then(resolve, reject);
-    };
-    timer = setTimeout(start, Math.min(afterMs, timeoutMs));
-    first.catch(start);
-  });
-  try {
-    return await Promise.any([first, second]);
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer ?? null);
-    stops.forEach((stop) => stop.abort());
-  }
-}
-
 async function complete(env: Env, request: Request, extra: object): Promise<Message | null> {
   if (!env.AWS_BEARER_TOKEN_BEDROCK) return null;
   const url = `https://bedrock-mantle.${env.AWS_REGION || "us-east-1"}.api.aws${bedrockPath(request.model)}/chat/completions`;
@@ -69,7 +37,7 @@ async function complete(env: Env, request: Request, extra: object): Promise<Mess
       return null;
     }
     return ((await response.json()) as { choices?: { message?: Message }[] }).choices?.[0]?.message ?? null;
-  }, request.hedgeAfterMs ?? HEDGE_AFTER_MS, request.timeoutMs);
+  }, request.hedgeAfterMs ?? HEDGE_AFTER_MS, request.timeoutMs, request.part);
 }
 
 const objectOf = (text: string | null | undefined, part: string): Record<string, unknown> | null => {

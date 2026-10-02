@@ -13,6 +13,8 @@
  * including Yoruba number words this model cannot.
  */
 
+import { runAi } from "./hedge";
+
 export const READER_MODEL = "@cf/meta/llama-3.2-3b-instruct";
 
 const SCHEMA = {
@@ -100,13 +102,13 @@ function brief(heard: string): string {
 
 /** The number this child answered with, or null when nothing in their words can be taken as one. */
 export async function answerHeard(env: Env, heard: string): Promise<number | null> {
-  const reply = (await env.AI.run(READER_MODEL, {
+  const reply = await runAi<{ choices?: { message?: { content?: unknown } }[]; response?: unknown }>(env, READER_MODEL, {
     messages: [{ role: "user", content: brief(heard) }],
     response_format: { type: "json_schema", json_schema: { name: "answer", schema: SCHEMA, strict: true } },
     temperature: 0,
     max_tokens: 200,
-  })) as { choices?: { message?: { content?: unknown } }[]; response?: unknown };
-  const said = reply.choices?.[0]?.message?.content ?? reply.response;
+  }, { part: "reader-model-failed" });
+  const said = reply?.choices?.[0]?.message?.content ?? reply?.response;
   try {
     const reading = (typeof said === "string" ? JSON.parse(said) : said) as { answer?: unknown };
     return saidNumber(heard, typeof reading?.answer === "number" ? reading.answer : null);
