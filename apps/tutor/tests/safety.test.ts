@@ -98,11 +98,26 @@ describe("what a child's words ask for", () => {
     expect(needFor("I am afraid I do not know", 10)).toBeNull();
   });
 
+  it("leaves the ordinary lead-ins and narration of an answer alone", () => {
+    for (const heard of ["let me get it nine", "let me go first", "let me get my pencil", "I cut my cake into nine", "I hit my friend", "nine I fell", "I am afraid I do not know", "the answer is number two"]) {
+      expect(needFor(heard, 9), heard).toBeNull();
+    }
+  });
+
+  it("hears a call for help said however it is dressed, and the euphemisms for the toilet, and a real fear", () => {
+    for (const heard of ["help me please", "help me help me", "teacher help me", "somebody help me", "mummy help me", "mummy mummy", "oh mummy", "help help"]) {
+      expect(needFor(heard, 10), heard).toBe("needs_grownup");
+    }
+    for (const heard of ["I want to do number two", "I want to do a number one", "I cut my finger", "I hit my head", "I am afraid I will be beaten", "I fell down"]) {
+      expect(needFor(heard, 10), heard).not.toBeNull();
+    }
+  });
+
   it("answers the phrasings a child uses for being unwell, hit, or needing out", () => {
     for (const heard of ["I don't feel well", "I am not well", "I feel unwell", "I fainted", "I am choking", "toothache", "he punched me", "I was beaten", "my belly", "help me", "I want my mummy"]) {
       expect(needFor(heard, 10), heard).toBe("needs_grownup");
     }
-    for (const heard of ["may I go out", "can I go outside", "please let me go", "may I drink water", "let me drink water", "can I go and get water", "I hit my head", "I cut my finger", "a bee stung me", "ants are biting me", "I want my mother", "I do not feel good", "I have vomited", "he is disturbing me"]) {
+    for (const heard of ["may I go out", "can I go outside", "may I drink water", "let me drink water", "can I go and get water", "I hit my head", "I cut my finger", "a bee stung me", "ants are biting me", "I want my mother", "I do not feel good", "I have vomited", "he is disturbing me"]) {
       expect(needFor(heard, 10), heard).not.toBeNull();
     }
     for (const heard of ["I want to throw up", "I wan ease", "I want to pass urine", "I need the washroom", "nature is calling", "I want to go out"]) {

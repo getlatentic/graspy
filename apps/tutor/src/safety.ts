@@ -21,7 +21,7 @@ const TOILET = new RegExp(
       "toilets?", "bathrooms?", "restrooms?", "washrooms?", "loo", "latrine", "pee", "peed", "peeing", "piss", "pissing",
       "poo", "pooh", "poop", "shit", "wee", "urinate", "diarrhoea", "diarrhea", "thirsty", "thirst", "puke", "throw up",
       "ease myself", "wan ease", "wet myself", "pass urine", "(short|long) call", "nature is calling",
-      "(want|wan|need) to go out", "(may|can|could) i (be excused|go out(side)?)", "let me go", "please let me go",
+      "(want|wan|need) to go out", "(may|can|could) i (be excused|go out(side)?)", "let me go out", "(do|doing|need to do|want to do|go for) (a )?number (one|two)",
     ].join("|") +
     ")\\b",
   "i",
@@ -31,14 +31,14 @@ const DRINK = [
   "\\b(can|may|could) i (have|get|drink|take|go and (drink|get))\\s+(some |a |the |my )?(water|drink)\\b",
   "\\b(bring|give|fetch) me\\s+(some |a |the |my )?water\\b",
   "\\babeg\\s+(some |a )?water\\b",
-  "\\blet me (go and )?(drink|get)\\b",
+  "\\blet me (go and )?(drink|get)\\s+(some |a |the |my )?(water|drink)\\b",
 ].map((source) => new RegExp(source, "i"));
 const HURT = new RegExp(
   "\\b(" +
     [
       "hurt", "hurts", "hurting", "pain", "paining", "painful", "ache", "aching", "aches", "toothache", "fever", "vomit",
       "vomiting", "dizzy", "sick", "headache", "bleeding", "bleed", "scared", "afraid", "frightened", "unwell", "injured",
-      "fainted", "choking", "belly", "(can't|cannot|cant) breathe", "cut myself", "stung me", "biting me", "scratched me", "disturbing me", "i fell", "vomited", "(hit|cut|burnt|burned|banged|bumped|scratched) my", "(don't|do not|dont) feel (good|fine)", "not feeling (fine|good)", "not feeling well", "no well",
+      "fainted", "choking", "belly", "(can't|cannot|cant) breathe", "cut myself", "stung me", "biting me", "scratched me", "disturbing me", "i fell (down|over)", "vomited", "(hit|cut|burnt|burned|banged|bumped|scratched) my (head|hand|hands|leg|legs|foot|feet|finger|fingers|arm|arms|eye|eyes|knee|knees|toe|toes|face|nose|mouth|back|neck|ear|ears|body)", "(don't|do not|dont) feel (good|fine)", "not feeling (fine|good)", "not feeling well", "no well",
       "(don't|do not|dont|am not|im not|i'm not) (feel )?well", "(am|is|im|feel|feeling|been) ill", "feel bad",
       "(hit|hits|hitting|beat|beating|beats|slap|slapped|push|pushed|pushing|kick|kicked|kicking|bit|bite|bites|punched|stabbed|touched|flogged|pinched) me",
       "i was (beaten|hit|slapped|pushed|kicked)", "(want|call|need|bring) (my )?(mummy|mommy|mum|mama|daddy|papa|mother|father|teacher)",
@@ -55,8 +55,9 @@ const FILLER = new Set([
   "o", "oh", "na", "teacher", "aunty", "auntie",
 ]);
 const CONNECTORS = new Set(["and", "plus", "times", "equals", "make", "makes", "is", "are", "then"]);
-const NOT_FEAR = /\b(i am|i['’]?m) afraid (it|that|its|this|i|the|we|you|he|she|they|there)\b/gi;
-const ONLY_A_CALL = /^\s*(please\s+)?(help( me)?|mummy|mommy|mama|mother|father|daddy)\s*[.!]?\s*$/i;
+const NOT_FEAR =
+  /\b(i am|i['’]?m) afraid (it|that|its|this|the answer|i (do not|don't|dont|cannot|can't|cant|have to|think|am not|did not|didn't|forgot)|we (do not|don't|dont|cannot|can't|cant))\b/gi;
+const CALL = new Set(["help", "me", "somebody", "someone", "mummy", "mommy", "mama", "mother", "father", "daddy", "papa"]);
 
 function words(heard: string): string[] {
   return heard.toLowerCase().replace(/['’]/g, "").split(/[^a-z0-9]+/).filter((word) => word !== "");
@@ -99,7 +100,7 @@ export function needFor(heard: string, answer: number | null = null, question = 
   if (isOnlyTheAnswer(heard, answer) || amongNumbers(heard, answer)) return null;
   const spoken = said(heard);
   if (spoken.length > 0 && spoken.every((word) => answerWords.includes(word))) return null;
-  if (ONLY_A_CALL.test(heard)) return "needs_grownup";
+  if (spoken.length > 0 && spoken.every((word) => CALL.has(word)) && spoken.some((word) => word !== "me")) return "needs_grownup";
   const text = heard.replace(NOT_FEAR, " ");
   if (HURT.test(text)) return "needs_grownup";
   const water = /\bwater\b/i.test(question) ? false : said(text).join(" ") === "water";
