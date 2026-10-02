@@ -14,6 +14,16 @@ describe("what a child's words ask for", () => {
     ["please let me go for a short call", "needs_help"],
     ["I want to drink water", "needs_help"],
     ["I am peeing myself, ten", "needs_help"],
+    ["I wan piss", "needs_help"],
+    ["I need the restroom", "needs_help"],
+    ["I want to use the loo", "needs_help"],
+    ["I wet myself", "needs_help"],
+    ["water", "needs_help"],
+    ["he is hitting me", "needs_grownup"],
+    ["he pushed me", "needs_grownup"],
+    ["I am not feeling well", "needs_grownup"],
+    ["I can't breathe", "needs_grownup"],
+    ["I see blood", "needs_grownup"],
   ])("%s is %s", (heard, need) => expect(needFor(heard)).toBe(need));
 
   it.each([
@@ -23,6 +33,9 @@ describe("what a child's words ask for", () => {
     "ten cups of water",
     "it is the week after next",
     "seven weeks",
+    "five bottles of water please",
+    "ten bottles of water I want ten",
+    "I'm afraid it is five",
   ])("%s asks for nothing", (heard) => expect(needFor(heard)).toBeNull());
 
   it.each([

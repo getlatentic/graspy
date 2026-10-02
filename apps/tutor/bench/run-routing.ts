@@ -19,8 +19,9 @@ const out = await Promise.all(rows.map(async (row) => {
   const action = r.route?.action ?? null;
   if (action === null) return { taken: "marking", ms: r.ms };
   // An answer is marked only when the number it reports sounds like the words, and is then right only if it is the number said.
-  // Clef gives no number: "an answer" goes to the usual reading, which is right to do for an answer and harmless for anything else.
-  if (action === "mark_answer" && MODEL !== "gemma") return { taken: row.expect === "mark_answer" ? "mark_answer" : "marking", ms: r.ms };
+  // Clef gives no number: "an answer" goes to the usual reading, which is right for an answer and harmless for anything
+  // but a need, which an answer would have marked instead of letting the child go.
+  if (action === "mark_answer" && MODEL !== "gemma") return { taken: row.expect === "mark_answer" || row.expect.startsWith("needs_") ? "mark_answer" : "marking", ms: r.ms };
   if (action === "mark_answer") return { taken: r.accepted && (row.value === undefined || r.route?.said === row.value) ? "mark_answer" : r.accepted ? "wrong number" : "marking", ms: r.ms };
   // A need found in words that are no more than the answer misheard is marked as the answer, as turn.ts does.
   if (action.startsWith("needs_") && r.soundsLikeTheAnswer && !r.foundBySafetyRule) return { taken: "mark_answer", ms: r.ms };

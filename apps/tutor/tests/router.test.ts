@@ -124,6 +124,23 @@ describe("every utterance is read by one model that chooses an action", () => {
     }
   });
 
+  it("does not mark a need as the answer because a word in it sounds like the number asked for", async () => {
+    for (const [item, heard] of [["2", "I need to go out"], ["4", "I need it for my friend"], ["1", "I won it, I need to go"]]) {
+      const { env } = setup({ tool: { name: "needs_help" } });
+      const reply = await takeTurn(env, { ...ask(heard), expect: { kind: "fact", item } });
+      expect(NEEDS_HELP, heard).toContain(reply.say);
+    }
+  });
+
+  it("lets a child go or sends them on in any kind of step, with nothing marked", async () => {
+    const recitation: Ask["expect"] = { kind: "recitation", item: "table", table: 2, multipliers: [1, 2, 3] };
+    const { env } = setup({});
+    const toilet = await takeTurn(env, { ...ask("I need the toilet"), expect: recitation });
+    expect(NEEDS_HELP).toContain(toilet.say);
+    const hurt = await takeTurn(env, { ...ask("my stomach is paining me"), expect: recitation });
+    expect([NEEDS_GROWNUP.includes(hurt.say), hurt.verdict]).toEqual([true, "unheard"]);
+  });
+
   it("answers a need with no router at all: the router off, or it fails, or the step has the answer in it", async () => {
     const heard = "my head is bleeding";
     const off = setup({}, "off");

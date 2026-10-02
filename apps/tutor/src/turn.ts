@@ -28,11 +28,11 @@ import { spellNumbers } from "./spell";
 import { expectedAnswer, factOperands, markAnswer, spokenNumber, type Marking, type Verdict } from "./mark";
 import { heardSequence } from "./plain-sequence";
 import { exampleBlock } from "./phrasebook";
-import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./praise";
+import { correctionLine, listStoppedLine, needsGrownupLine, needsHelpLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
-import { needFor } from "./safety";
+import { isOnlyTheAnswer, needFor } from "./safety";
 import { isBareNumber, soundsLike } from "./sounds-like";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
@@ -405,7 +405,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
 
 async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
-  const needed = await repliedToNeed(env, ask);
+  const needed = repliedToNeed(ask);
   if (needed !== null) return needed;
   const routed = await routedReply(env, ask);
   if (routed !== null) return routed;
@@ -582,18 +582,23 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
 }
 
 /**
+ * A child who needs the toilet or is hurt is answered as such before anything is marked, router or no router, in any
+ * kind of step: it is no try, and the question is asked again when they are back.
+ */
+function repliedToNeed(ask: Ask): Reply | null {
+  if (ask.language !== "en") return null;
+  const answer = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
+  const need = needFor(heardForPrompt(ask.heard), answer);
+  const line = need === "needs_help" ? needsHelpLine(ask) : need === "needs_grownup" ? needsGrownupLine(ask) : null;
+  return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "conversation", say: line };
+}
+
+/**
  * What a child said, answered as a conversation: where the deployment sets `ROUTER` to on, every utterance is read in the
  * context of the question by one model that chooses an action (see router.ts). A number it reports is checked against
  * the words by sound before it is marked. Null where that is off, nothing could say, or the number is not one the
  * words could be, which leaves the usual marking.
  */
-/** A child who needs the toilet or is hurt is answered as such before anything is marked, router or no router. */
-async function repliedToNeed(env: Env, ask: Ask): Promise<Reply | null> {
-  const answer = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
-  const need = ask.language === "en" ? needFor(heardForPrompt(ask.heard), answer) : null;
-  return need === null ? null : repliedTo(env, ask, { action: need }).catch(() => null);
-}
-
 async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (env.ROUTER !== "on" || ask.language !== "en" || ask.expect.kind !== "fact" || ask.prompt.trim() === "") return null;
   // A step asked as an echo or a probe has the answer in its question, and a model told it could give it back.
@@ -612,7 +617,7 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   // words that are no more than the answer asked for, misheard, is left to the marking too: the words for a need that
   // the safety rule has not found are not one.
   const aNeed = route.action === "needs_help" || route.action === "needs_grownup";
-  if (aNeed && soundsLike(heard, expected)) return markedNumber(expected, ask, expected);
+  if (aNeed && isOnlyTheAnswer(heard, expected)) return markedNumber(expected, ask, expected);
   if (!aNeed && mayBeAnAnswer(heard)) return null;
   return repliedTo(env, ask, route).catch(() => null);
 }

@@ -1,6 +1,6 @@
 import { HOMOPHONES, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "../src/interpret";
 import { answerHeard } from "../src/read";
-import { needFor } from "../src/safety";
+import { isOnlyTheAnswer, needFor } from "../src/safety";
 import { ACTIONS, SETTING, mayBeAnAnswer, routeUtterance, type Action, type Route } from "../src/router";
 import { soundsLike } from "../src/sounds-like";
 
@@ -58,7 +58,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
       const route = need === null ? chosen : { action: need };
       // Clef has no number to give and no reply to write; Gemma's answer is checked by sound.
       const accepted = model === "gemma" && route?.action === "mark_answer" && route.said !== undefined && soundsLike(heard, route.said);
-      return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard), soundsLikeTheAnswer: soundsLike(heard, 10), foundBySafetyRule: need !== null });
+      return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard), soundsLikeTheAnswer: isOnlyTheAnswer(heard, 10), foundBySafetyRule: need !== null });
     }
     const { heard } = (await request.json()) as { heard: string };
     const [legacy, legacyMs] = await timed(reading(env, heard, false));

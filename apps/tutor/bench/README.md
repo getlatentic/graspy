@@ -60,17 +60,17 @@ never to answer the sum; it does not replace that.
 `run-routing.ts <url> <gemma|clef|clef-flash> [threshold]` runs each router through the same rules `turn.ts` applies: the safety words
 (src/safety.ts) before every action, an action that is not an answer left to the marking where the words may be one, a word or two acted on
 only as not knowing, asking again or a need, and a need the model found in words that are no more than the answer misheard marked as the answer.
-A Clef "answer" goes to the usual reading, which gives no number, so it is counted right for an answer row without a number check; Gemma's is
+A Clef "answer" goes to the usual reading, which gives no number, so it is counted right for an answer row without a number check, and a wrong action on a row that expects a need (the child would not be let go); Gemma's is
 right only if the number it reports sounds like the words and is the one said. Clef writes no reply, so a child who says something else costs a
 second call to a language model. Latency is inside the remote preview and varies run to run (Clef 0.4 to 1.0 s).
 
-On the 79 cases (the first 71 plus eight with a need beside an answer, or a word for a need that is the answer misheard):
+On the 82 cases (the first 71 plus eleven with a need beside an answer, a word for a need that is the answer misheard, or a need in other words):
 
 | router | right | left to marking | wrong action |
 |---|---|---|---|
-| Gemma 26B, about 0.5 s | 53 | 25 | 1 |
-| Clef at 0.7 | 39 | 40 | 0 |
-| Clef at 0.5 | 46 | 32 | 1 |
-| Clef-flash at 0.7 | 47 | 32 | 0 |
+| Gemma 26B, about 0.5 s | 56 | 25 | 1 |
+| Clef at 0.7 | 42 | 40 | 0 |
+| Clef at 0.5 | 49 | 32 | 1 |
+| Clef-flash at 0.7 | 51 | 31 | 0 |
 
 The one Gemma wrong action is "To me, sink." read as a need to go.
