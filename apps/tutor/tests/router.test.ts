@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { JUDGE_MODEL, SAFETY_MODEL } from "../src/guard";
 import { NEEDS_GROWNUP, NEEDS_HELP, NOT_HEARD } from "../src/phrasebook";
 import { READER_MODEL } from "../src/read";
+import { ACTIONS } from "../src/router";
 import { takeTurn, type Ask } from "../src/turn";
 
 interface Script {
@@ -87,6 +88,19 @@ describe("every utterance is read by one model that chooses an action", () => {
       const { reply } = await calls(action, { reply: "Let us finish first." }, heard);
       expect(NEEDS_GROWNUP, heard).toContain(reply.say);
     }
+  });
+
+  it("sends a child who is hurt to a grown-up even when they also gave an answer, since safety comes before marking", async () => {
+    for (const heard of ["I feel dizzy and I think it is ten", "ten but my tummy is paining me"]) {
+      const { reply } = await calls("mark_answer", { said: 10 }, heard);
+      expect(NEEDS_GROWNUP, heard).toContain(reply.say);
+      expect(reply.verdict, heard).toBe("unheard");
+    }
+  });
+
+  it("lets a child who needs the toilet go even when they also gave an answer", async () => {
+    const { reply } = await calls("mark_answer", { said: 10 }, "ten and I need the toilet");
+    expect(NEEDS_HELP).toContain(reply.say);
   });
 
   it("asks garbled words, of more than a few, again from the phrasebook", async () => {
@@ -205,5 +219,14 @@ describe("where the router is not used", () => {
     expect(init.headers.authorization).toBe("Bearer test");
     expect(sent.tools.map((tool: { function: { name: string } }) => tool.function.name)).toEqual(["mark_answer", "ask_again", "not_know", "repeat_question", "needs_help", "needs_grownup", "answer_child"]);
     expect(JSON.stringify(sent.messages)).not.toMatch(/"10"|\bten\b/);
+  });
+});
+
+describe("the actions are told apart", () => {
+  it("name the toilet and water for one action only, so no case is a positive example of two", () => {
+    const naming = Object.entries(ACTIONS).filter(([, what]) => /toilet|water/i.test(what)).map(([name]) => name);
+    expect(naming).toEqual(["needs_help"]);
+    const hurt = Object.entries(ACTIONS).filter(([, what]) => /hurt|bleeding|frightened/i.test(what)).map(([name]) => name);
+    expect(hurt).toEqual(["needs_grownup"]);
   });
 });

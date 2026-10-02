@@ -54,3 +54,13 @@ sounds and at most one sound different. Over a 210,000-word dictionary, 0.1 to 3
 number (before the length bound and the last-sound rule it was up to 28 percent). Some common words still do: "play", "ball", "fun",
 "water" and "done" pass for three and ten, and "don't" and "toilet" for twenty and forty. The check is a net under the model, which is told
 never to answer the sum; it does not replace that.
+
+## The same boundary (2026-10-02)
+
+The raw Clef scores above compare an action with no guards against the Gemma router's result after its guards, and the older Gemma
+figure was on a different set. `run-routing.ts <url> <gemma|clef|clef-flash> [threshold]` runs each router through the same rules (safety words
+before every action, an action that is not an answer left to the marking where the words may be one, a word or two acted on only as not knowing,
+asking again or a need) and scores the turn. A Clef "answer" goes to the usual reading, which is right for an answer; it gives no number.
+On the 71 cases: Gemma 46 right, 24 left to the marking, 1 wrong action, about 0.6 s. Clef at 0.7: 34, 37, 0, about 0.4 s. Clef at 0.5: 36, 34, 1.
+Clef-flash at 0.7: 32, 39, 0, about 0.7 s. Clef writes no reply, so a child who says something else costs a second call to a language model.
+Latency here is inside the remote preview and varies run to run (Clef 0.39 to 1.0 s across runs).

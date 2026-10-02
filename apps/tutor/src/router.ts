@@ -33,17 +33,17 @@ export interface Route {
   reply?: string;
 }
 
-const ACTIONS: Record<Action, string> = {
+export const ACTIONS: Record<Action, string> = {
   mark_answer: "the child gave a number as their answer, possibly written as a similar-sounding word",
   ask_again: "the words are garbled, not real words, or make no sense as speech, so nothing can be told; a clear sentence about something else is answer_child",
   not_know: "the child says they do not know, cannot remember or are not sure, in English or Nigerian Pidgin",
   repeat_question: "the child asks to hear the question again, or says they did not hear it",
   needs_help: "the child needs the toilet or water",
   needs_grownup: "the child is hurt, in pain, ill, dizzy, bleeding or frightened, or asks for a grown-up",
-  answer_child: "the child asked a question or said a clear sentence about something else, such as being hungry, wanting to play or needing the toilet",
+  answer_child: "the child asked a question, or said a clear sentence about something else that is not a need, such as being hungry, wanting to play or a story",
 };
 
-const SETTING =
+export const SETTING =
   "A young Nigerian child is talking with their teacher, and a speech recogniser wrote down what the child said, often wrongly: " +
   "a number word may be written as another word that sounds like it. ";
 
@@ -106,14 +106,22 @@ async function chosenByModel(env: Env, ask: Ask, heard: string): Promise<Route |
 const TOILET_WORDS = /\b(toilet|bathroom|latrine|pee|poo|poop|wee|urinate|thirsty|water)\b/i;
 const HURT_WORDS = /\b(hurt|hurts|hurting|pain|paining|painful|vomit|vomiting|dizzy|headache|stomach|tummy|bleeding|bleed|scared|afraid|frightened)\b/i;
 
+/**
+ * Safety comes before everything the model chose, an answer included: a child who says "I feel sick and I think it is
+ * ten" is sent to a grown-up, not marked. Pain, bleeding and fear send the child to a grown-up; the toilet or water lets
+ * them go.
+ */
+export function withSafety(route: Route | null, heard: string): Route | null {
+  if (route === null || route.action === "needs_grownup") return route;
+  if (HURT_WORDS.test(heard)) return { action: "needs_grownup" };
+  if (route.action !== "needs_help" && TOILET_WORDS.test(heard)) return { action: "needs_help" };
+  return route;
+}
+
 /** The action for what the child said, from the language model; null where it could not say, which leaves the usual marking. */
 export async function routeUtterance(env: Env, ask: Ask): Promise<Route | null> {
   const heard = heardForPrompt(ask.heard);
-  const route = await chosenByModel(env, ask, heard).catch(() => null);
-  if (route === null || route.action === "mark_answer" || route.action === "needs_help" || route.action === "needs_grownup") return route;
-  if (HURT_WORDS.test(heard)) return { action: "needs_grownup" };
-  if (TOILET_WORDS.test(heard)) return { action: "needs_help" };
-  return route;
+  return withSafety(await chosenByModel(env, ask, heard).catch(() => null), heard);
 }
 
 /**
