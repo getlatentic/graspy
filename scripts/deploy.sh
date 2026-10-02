@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploys graspy to one environment. It installs with the pinned npm and builds everything first,
-# so a failed install or build deploys nothing. Then it deploys the tutor Worker, the API Worker
-# with its admin UI, the API's D1 migrations and the web app, and stops at the first failure.
+# so a failed install or build deploys nothing. Then it applies the API's D1 migrations and deploys
+# the tutor Worker, the API Worker with its admin UI and the web app, and stops at the first failure.
 # docs/DEPLOYING.md explains the order and the one-time setup.
 #
 #   scripts/deploy.sh staging
@@ -211,14 +211,14 @@ if [[ -n "$dry_run" ]]; then
   exit 0
 fi
 
+step "D1 migrations on $database"
+(cd apps/server && npx wrangler d1 migrations apply "$database" "$wrangler_env" --remote)
+
 step "Tutor Worker"
 (cd apps/tutor && npx wrangler deploy "$wrangler_env")
 
 step "API Worker"
 deploy_api_worker
-
-step "D1 migrations on $database"
-(cd apps/server && npx wrangler d1 migrations apply "$database" "$wrangler_env" --remote)
 
 step "Web app"
 deploy_web

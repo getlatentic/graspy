@@ -32,6 +32,8 @@ import { correctionLine, listStoppedLine, needsGrownupLine, needsHelpLine, notHe
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
 import { observedRoute } from "./observer";
+import { isShadowing, report, watch } from "./shadow";
+import { timed } from "./timing";
 import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
 import { isOnlyTheAnswer, needFor, wordsOfTheAnswer } from "./safety";
 import { isBareNumber, soundsLike } from "./sounds-like";
@@ -379,14 +381,6 @@ async function mark(
  * The two tools are the only things the model can act through, so the loop ends when the second one
  * has run. Rounds are bounded because a model that keeps re-marking would keep a child waiting.
  */
-/** How long a part of the turn took, so a child's wait can be read back from the logs. */
-async function timed<T>(part: string, work: Promise<T>): Promise<T> {
-  const started = Date.now();
-  const done = await work;
-  console.log(JSON.stringify({ part, ms: Date.now() - started }));
-  return done;
-}
-
 export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
   const reply = await markAndSay(env, ask);
   // An answer that is no number, marked wrong because "I don't know" is not the word, is a child who tried nothing.
@@ -611,7 +605,9 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   const heard = heardForPrompt(ask.heard);
   // Nothing but a number is an answer, with nothing to route.
   if (expected === null || heard === "" || isBareNumber(heard)) return null;
+  const shadow = isShadowing(env) ? watch(env, ask) : null;
   const route = await timed("route", observing ? observedRoute(env, ask) : routeUtterance(env, ask)).catch(() => null);
+  if (shadow !== null) report(env, ask, route, shadow);
   if (route === null) return null;
   if (route.action === "mark_answer") {
     return route.said !== undefined && (soundsLike(heard, route.said) || isOnlyTheAnswer(heard, route.said)) ? markedNumber(route.said, ask, expected) : null;

@@ -30,20 +30,20 @@ Both sign in with the Firebase project `graspy-f482e`. `APP_ENV=staging` behaves
 
 Then it deploys in this order and stops at the first failure:
 
-1. **The tutor.** The API's `TUTOR` binding needs its Worker to exist, and the API calls it, so the tutor goes first. It must keep answering what the running API asks.
-2. **The API**, with the admin UI built in step 3.
-3. **The API's D1 migrations**, `wrangler d1 migrations apply <database> --remote`.
+1. **The API's D1 migrations**, `wrangler d1 migrations apply <database> --remote`. They go before any new code, so no code runs on a schema older than it needs.
+2. **The tutor.** The API's `TUTOR` binding needs its Worker to exist, and the API calls it, so the tutor goes before the API. It must keep answering what the running API asks.
+3. **The API**, with the admin UI built in step 3.
 4. **The web app.**
 
-Code 10013 is the startup snapshot's size cap ([Development](DEVELOPMENT.md#build-and-deploy)): Cloudflare refuses the API Worker's upload, and the same build passes or fails at random. The script asks for the upload again, up to four times, for that error only; any other failure stops it. If all four are refused, run the script again: it stopped before the migrations.
+Code 10013 is the startup snapshot's size cap ([Development](DEVELOPMENT.md#build-and-deploy)): Cloudflare refuses the API Worker's upload, and the same build passes or fails at random. The script asks for the upload again, up to four times, for that error only; any other failure stops it. If all four are refused, run the script again: the migrations are already applied, and applying them again changes nothing.
 
 ### Migrations
 
-Migrations are applied after the API's new code is live. So:
+Migrations are applied before the new code goes live. So:
 
-- A migration must work with the code before it and the code after it. The new code runs for a moment on the old schema, and a rollback (`wrangler rollback`) runs the old code on the new one.
-- Code that needs a new table or column ships one deploy after the migration that adds it.
-- A migration that must follow its code says so in its header, as `0015_turn_attempts_restart.sql` does.
+- A migration must work with the code before it and the code after it. The running code keeps working on the new schema while the new code goes up, and a rollback (`wrangler rollback`) runs the old code on the new one. So a migration adds: a nullable or defaulted column, a new table, an index. A column or table is dropped, renamed or tightened one deploy after the code that stopped using it.
+- New code that needs a new table or column ships in the same deploy as the migration that adds it, since the migration is already applied when it goes up.
+- A migration that must follow its code (a data fix that relies on it) waits for the deploy after the code and says so in its header.
 
 ## One-time setup
 

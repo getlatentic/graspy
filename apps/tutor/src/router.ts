@@ -19,6 +19,7 @@ import { numberWords } from "./lines";
 import { correctionLine, needsGrownupLine, needsHelpLine, notHeardLine } from "./praise";
 import { couldBeANumber, writtenNumbers } from "./sounds-like";
 import { callTool } from "./bedrock-chat";
+import { timed } from "./timing";
 import type { Ask, Reply } from "./turn";
 
 export const ROUTER_MODEL = "google.gemma-4-26b-a4b";
@@ -135,7 +136,7 @@ export async function repliedTo(env: Env, ask: Ask, route: Route): Promise<Reply
     case "answer_child": {
       const line = (route.reply ?? "").trim();
       if (line === "" || lineProblems(line).length > 0 || givesAwayTheAnswer(line, ask)) return null;
-      const [safe, fit] = await Promise.all([safeForChild(env, ask.heard, line), fitForChild(env, ask.heard, line)]).catch(() => [false, false]);
+      const [safe, fit] = await timed("guard", Promise.all([safeForChild(env, ask.heard, line), fitForChild(env, ask.heard, line)])).catch(() => [false, false]);
       return safe && fit ? { ...unheard, heard: "conversation", say: line } : null;
     }
   }
