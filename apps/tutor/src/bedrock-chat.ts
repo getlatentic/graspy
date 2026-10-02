@@ -12,30 +12,56 @@ interface Request {
   timeoutMs: number;
   maxTokens: number;
   part: string;
+  /** When to send the second request; `HEDGE_AFTER_MS` unless given. */
+  hedgeAfterMs?: number;
 }
 
 type Message = { content?: string | null; tool_calls?: { function?: { name?: string; arguments?: string } }[] };
 
+/** A second request is sent when the first has not answered by then: the host's slow calls are a few in ten, not the next one. */
+export const HEDGE_AFTER_MS = 1200;
+
+/**
+ * The first answer of an attempt and, if it has not answered by `afterMs`, a second identical one, with the slower given up
+ * on; null where neither answers within `timeoutMs`. An attempt that fails quickly does not end the wait for the other.
+ */
+async function hedged<T>(attempt: (signal: AbortSignal) => Promise<T | null>, afterMs: number, timeoutMs: number): Promise<T | null> {
+  const stops = [new AbortController(), new AbortController()];
+  const deadline = AbortSignal.timeout(timeoutMs);
+  const run = (at: 0 | 1) => attempt(AbortSignal.any([stops[at].signal, deadline])).then((value) => value ?? Promise.reject(new Error("no answer")));
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const second = new Promise<T>((resolve, reject) => {
+    timer = setTimeout(() => run(1).then(resolve, reject), afterMs);
+  });
+  try {
+    return await Promise.any([run(0), second]);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer ?? null);
+    stops.forEach((stop) => stop.abort());
+  }
+}
+
 async function complete(env: Env, request: Request, extra: object): Promise<Message | null> {
   if (!env.AWS_BEARER_TOKEN_BEDROCK) return null;
-  const response = await fetch(`https://bedrock-mantle.${env.AWS_REGION || "us-east-1"}.api.aws${bedrockPath(request.model)}/chat/completions`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      model: request.model,
-      messages: [{ role: "system", content: request.system }, { role: "user", content: request.user }],
-      temperature: 0,
-      max_completion_tokens: request.maxTokens,
-      ...extra,
-    }),
-    signal: AbortSignal.timeout(request.timeoutMs),
+  const url = `https://bedrock-mantle.${env.AWS_REGION || "us-east-1"}.api.aws${bedrockPath(request.model)}/chat/completions`;
+  const body = JSON.stringify({
+    model: request.model,
+    messages: [{ role: "system", content: request.system }, { role: "user", content: request.user }],
+    temperature: 0,
+    max_completion_tokens: request.maxTokens,
+    ...extra,
   });
-  if (!response.ok) {
-    console.log(JSON.stringify({ part: request.part, status: response.status }));
-    return null;
-  }
-  const body = (await response.json()) as { choices?: { message?: Message }[] };
-  return body.choices?.[0]?.message ?? null;
+  const headers = { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" };
+  return hedged<Message>(async (signal) => {
+    const response = await fetch(url, { method: "POST", headers, body, signal });
+    if (!response.ok) {
+      console.log(JSON.stringify({ part: request.part, status: response.status }));
+      return null;
+    }
+    return ((await response.json()) as { choices?: { message?: Message }[] }).choices?.[0]?.message ?? null;
+  }, request.hedgeAfterMs ?? HEDGE_AFTER_MS, request.timeoutMs);
 }
 
 const objectOf = (text: string | null | undefined, part: string): Record<string, unknown> | null => {
