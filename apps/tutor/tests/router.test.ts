@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { JUDGE_MODEL, SAFETY_MODEL } from "../src/guard";
 import { NEEDS_GROWNUP, NEEDS_HELP, NOT_HEARD } from "../src/phrasebook";
 import { READER_MODEL } from "../src/read";
+import { ACTIONS } from "../src/router";
 import { takeTurn, type Ask } from "../src/turn";
 
 interface Script {
@@ -87,6 +88,75 @@ describe("every utterance is read by one model that chooses an action", () => {
       const { reply } = await calls(action, { reply: "Let us finish first." }, heard);
       expect(NEEDS_GROWNUP, heard).toContain(reply.say);
     }
+  });
+
+  it("sends a child who is hurt to a grown-up even when they also gave an answer, since safety comes before marking", async () => {
+    for (const heard of ["I feel dizzy and I think it is ten", "ten but my tummy is paining me"]) {
+      const { reply } = await calls("mark_answer", { said: 10 }, heard);
+      expect(NEEDS_GROWNUP, heard).toContain(reply.say);
+      expect(reply.verdict, heard).toBe("unheard");
+    }
+  });
+
+  it("lets a child who needs the toilet go even when they also gave an answer", async () => {
+    const { reply } = await calls("mark_answer", { said: 10 }, "ten and I need the toilet");
+    expect(NEEDS_HELP).toContain(reply.say);
+  });
+
+  it("sends a child who says they feel sick, or ill, to a grown-up before any answer is marked", async () => {
+    for (const heard of ["I feel sick and I think it is ten", "I am ill, ten", "my leg is aching, ten"]) {
+      const { reply } = await calls("mark_answer", { said: 10 }, heard);
+      expect(NEEDS_GROWNUP, heard).toContain(reply.say);
+    }
+  });
+
+  it("marks a right answer that is only the number asked for misheard as a word for a need, or has water in a word problem", async () => {
+    for (const heard of ["pain", "tummy", "ten glasses of water", "it is pain"]) {
+      const { reply } = await calls("mark_answer", { said: 10 }, heard);
+      expect(reply.verdict, heard).toBe("correct");
+    }
+  });
+
+  it("marks the answer asked for even where the model took its misheard word for a need", async () => {
+    for (const [tool, heard] of [["needs_grownup", "pain"], ["needs_help", "it is water"]]) {
+      const { reply } = await calls(tool, undefined, heard);
+      expect(reply.verdict, heard).toBe("correct");
+    }
+  });
+
+  it("does not mark a need as the answer because a word in it sounds like the number asked for", async () => {
+    for (const [item, heard] of [["2", "I need to go out"], ["4", "I need it for my friend"], ["1", "I won it, I need to go"]]) {
+      const { env } = setup({ tool: { name: "needs_help" } });
+      const reply = await takeTurn(env, { ...ask(heard), expect: { kind: "fact", item } });
+      expect(NEEDS_HELP, heard).toContain(reply.say);
+    }
+  });
+
+  it("leaves a water word problem to the marking where the model took it for a need", async () => {
+    for (const [tool, item, heard] of [["needs_help", "10", "ten litres of water"], ["needs_help", "5", "five bottles of water"], ["needs_grownup", "3", "three buckets of water please"]]) {
+      const { env } = setup({ tool: { name: tool } });
+      await expect(takeTurn(env, { ...ask(heard), expect: { kind: "fact", item } }), heard).rejects.toThrow("the teacher was asked");
+    }
+  });
+
+  it("lets a child go or sends them on in any kind of step, with nothing marked", async () => {
+    const recitation: Ask["expect"] = { kind: "recitation", item: "table", table: 2, multipliers: [1, 2, 3] };
+    const { env } = setup({});
+    const toilet = await takeTurn(env, { ...ask("I need the toilet"), expect: recitation });
+    expect(NEEDS_HELP).toContain(toilet.say);
+    const hurt = await takeTurn(env, { ...ask("my stomach is paining me"), expect: recitation });
+    expect([NEEDS_GROWNUP.includes(hurt.say), hurt.verdict]).toEqual([true, "unheard"]);
+  });
+
+  it("answers a need with no router at all: the router off, or it fails, or the step has the answer in it", async () => {
+    const heard = "my head is bleeding";
+    const off = setup({}, "off");
+    expect(NEEDS_GROWNUP).toContain((await takeTurn(off.env, ask(heard))).say);
+    expect(off.bedrock).not.toHaveBeenCalled();
+    const failed = setup({ refuse: true });
+    expect(NEEDS_GROWNUP).toContain((await takeTurn(failed.env, ask(heard))).say);
+    const support = setup({});
+    expect(NEEDS_GROWNUP).toContain((await takeTurn(support.env, { ...ask(heard), support: "modelled" as const })).say);
   });
 
   it("asks garbled words, of more than a few, again from the phrasebook", async () => {
@@ -197,7 +267,7 @@ describe("where the router is not used", () => {
   });
 
   it("asks Bedrock with the key and all the tools, and never the answer", async () => {
-    const { reply, bedrock } = await calls("answer_child", { reply: "Soon. How many oranges?" }, "Can I go to the toilet?");
+    const { reply, bedrock } = await calls("answer_child", { reply: "Soon. How many oranges?" }, "Can I eat after this?");
     expect(reply.heard).toBe("conversation");
     const [url, init] = bedrock.mock.calls[0] as unknown as [string, { headers: Record<string, string>; body: string }];
     const sent = JSON.parse(init.body);
@@ -205,5 +275,14 @@ describe("where the router is not used", () => {
     expect(init.headers.authorization).toBe("Bearer test");
     expect(sent.tools.map((tool: { function: { name: string } }) => tool.function.name)).toEqual(["mark_answer", "ask_again", "not_know", "repeat_question", "needs_help", "needs_grownup", "answer_child"]);
     expect(JSON.stringify(sent.messages)).not.toMatch(/"10"|\bten\b/);
+  });
+});
+
+describe("the actions are told apart", () => {
+  it("name the toilet and water for one action only, so no case is a positive example of two", () => {
+    const naming = Object.entries(ACTIONS).filter(([, what]) => /toilet|water/i.test(what)).map(([name]) => name);
+    expect(naming).toEqual(["needs_help"]);
+    const hurt = Object.entries(ACTIONS).filter(([, what]) => /hurt|bleeding|frightened/i.test(what)).map(([name]) => name);
+    expect(hurt).toEqual(["needs_grownup"]);
   });
 });

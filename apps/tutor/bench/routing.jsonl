@@ -69,3 +69,14 @@
 {"heard": "chin", "expect": "ask_again"}
 {"heard": "Zen", "expect": "ask_again"}
 {"heard": "So", "expect": "ask_again"}
+{"heard": "I feel sick and I think it is ten", "expect": "needs_grownup"}
+{"heard": "I am ill", "expect": "needs_grownup"}
+{"heard": "my leg is aching", "expect": "needs_grownup"}
+{"heard": "I need to ease myself", "expect": "needs_help"}
+{"heard": "I need water", "expect": "needs_help"}
+{"heard": "pain", "expect": "mark_answer", "value": 10}
+{"heard": "tummy", "expect": "mark_answer", "value": 10}
+{"heard": "ten glasses of water", "expect": "mark_answer", "value": 10}
+{"heard": "I need to use the restroom", "expect": "needs_help"}
+{"heard": "I wan piss", "expect": "needs_help"}
+{"heard": "he is hitting me", "expect": "needs_grownup"}
