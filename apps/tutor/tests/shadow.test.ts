@@ -32,6 +32,8 @@ function setup(router: { name: string; args?: object }, observation: object | nu
 }
 
 const logged = () => vi.spyOn(console, "log").mockImplementation(() => undefined);
+/** The observer's log is written when it answers, which the turn no longer waits for. */
+const settled = () => new Promise((resolve) => setTimeout(resolve, 20));
 const lines = (spy: ReturnType<typeof logged>) => spy.mock.calls.map(([line]) => JSON.parse(String(line)) as Record<string, unknown>);
 
 afterEach(() => {
@@ -44,8 +46,10 @@ describe("the observer run beside the router and only logged", () => {
     const spy = logged();
     const env = setup({ name: "mark_answer", args: { said: 10 } }, { answer: { value: 10, confidence: 0.9 } }, { OBSERVER: "shadow" });
     expect((await takeTurn(env, ask("Then"))).verdict).toBe("correct");
+    await settled();
     const shadow = lines(spy).find((line) => line.part === "observer-shadow");
     expect([shadow?.router, shadow?.observer, shadow?.agree]).toEqual(["mark_answer", "mark_answer", true]);
+    expect(shadow?.answer).toBeUndefined();
     expect(shadow?.heard).toBeUndefined();
   });
 
@@ -53,6 +57,7 @@ describe("the observer run beside the router and only logged", () => {
     const spy = logged();
     const env = setup({ name: "mark_answer", args: { said: 10 } }, { answer: { value: 10, confidence: 0.9 }, safety: { illness: 0.9 } }, { OBSERVER: "shadow" });
     expect((await takeTurn(env, ask("Then"))).verdict).toBe("correct");
+    await settled();
     const shadow = lines(spy).find((line) => line.part === "observer-shadow");
     expect([shadow?.router, shadow?.observer, shadow?.agree, shadow?.safety]).toEqual(["mark_answer", "needs_grownup", false, { illness: 0.9 }]);
   });
@@ -61,6 +66,7 @@ describe("the observer run beside the router and only logged", () => {
     const spy = logged();
     const env = setup({ name: "mark_answer", args: { said: 10 } }, null, { OBSERVER: "shadow" });
     await takeTurn(env, ask("Then"));
+    await settled();
     const shadow = lines(spy).find((line) => line.part === "observer-shadow");
     expect([shadow?.observer, shadow?.agree]).toEqual(["none", false]);
   });
@@ -69,13 +75,31 @@ describe("the observer run beside the router and only logged", () => {
     const spy = logged();
     const env = setup({ name: "mark_answer", args: { said: 10 } }, { answer: { value: 10, confidence: 0.9 } }, { OBSERVER: "shadow", OBSERVER_LOG_TEXT: "on" });
     await takeTurn(env, ask("Then"));
-    expect(lines(spy).find((line) => line.part === "observer-shadow")?.heard).toBe("Then");
+    await settled();
+    const shadow = lines(spy).find((line) => line.part === "observer-shadow");
+    expect([shadow?.heard, shadow?.answer]).toEqual(["Then", { value: 10, confidence: 0.9 }]);
+  });
+
+  it("does not hold the turn for the observer, and names the turn it was in", async () => {
+    const spy = logged();
+    const env = setup({ name: "mark_answer", args: { said: 10 } }, { answer: { value: 10, confidence: 0.9 } }, { OBSERVER: "shadow" });
+    const slow = fetch;
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init: { body: string }) => {
+      if (!JSON.parse(init.body).tools) await new Promise((resolve) => setTimeout(resolve, 400));
+      return slow(url, init as never);
+    }));
+    const started = Date.now();
+    await traced("sample-abcdef123456", () => takeTurn(env, ask("Then")));
+    expect(Date.now() - started).toBeLessThan(300);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(lines(spy).find((line) => line.part === "observer-shadow")?.turn).toBe("123456");
   });
 
   it("does not run where the observer is off or on", async () => {
     for (const flags of [{} as Record<string, string>, { OBSERVER: "on" }]) {
       const spy = logged();
       await takeTurn(setup({ name: "mark_answer", args: { said: 10 } }, { answer: { value: 10, confidence: 0.9 } }, flags), ask("Then"));
+      await settled();
       expect(lines(spy).some((line) => line.part === "observer-shadow")).toBe(false);
     }
   });

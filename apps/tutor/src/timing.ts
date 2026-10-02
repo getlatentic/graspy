@@ -7,6 +7,9 @@ export function traced<T>(turn: string | undefined, work: () => Promise<T>): Pro
   return turn === undefined ? work() : turns.run(turn.slice(-6), work);
 }
 
+/** The turn the running work belongs to, by its last six characters, where it is in one. */
+export const currentTurn = () => turns.getStore();
+
 /** How long a part of the turn took, so a child's wait can be read back from the logs, with the turn it was in. */
 export async function timed<T>(part: string, work: Promise<T>): Promise<T> {
   const started = Date.now();

@@ -607,7 +607,7 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (expected === null || heard === "" || isBareNumber(heard)) return null;
   const shadow = isShadowing(env) ? watch(env, ask) : null;
   const route = await timed("route", observing ? observedRoute(env, ask) : routeUtterance(env, ask)).catch(() => null);
-  if (shadow !== null) await report(env, ask, route, shadow);
+  if (shadow !== null) report(env, ask, route, shadow);
   if (route === null) return null;
   if (route.action === "mark_answer") {
     return route.said !== undefined && (soundsLike(heard, route.said) || isOnlyTheAnswer(heard, route.said)) ? markedNumber(route.said, ask, expected) : null;

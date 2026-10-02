@@ -43,7 +43,7 @@ Migrations are applied before the new code goes live. So:
 
 - A migration must work with the code before it and the code after it. The running code keeps working on the new schema while the new code goes up, and a rollback (`wrangler rollback`) runs the old code on the new one. So a migration adds: a nullable or defaulted column, a new table, an index. A column or table is dropped, renamed or tightened one deploy after the code that stopped using it.
 - New code that needs a new table or column ships in the same deploy as the migration that adds it, since the migration is already applied when it goes up.
-- A migration that must follow its code (a data fix that relies on it, as `0015_turn_attempts_restart.sql` did, back when migrations went after the code) waits for the deploy after the code and says so in its header.
+- A migration that must follow its code (a data fix that relies on it) waits for the deploy after the code and says so in its header.
 
 ## One-time setup
 

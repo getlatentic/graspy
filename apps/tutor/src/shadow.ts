@@ -8,10 +8,8 @@ import { heardForPrompt } from "./guard";
 import type { Observation } from "./observation";
 import { observeAndDecide } from "./observer";
 import type { Route } from "./router";
+import { currentTurn } from "./timing";
 import type { Ask } from "./turn";
-
-/** How long after the router the observer is waited for: it is logged if it is there and given up on if it is not. */
-const GRACE_MS = 1500;
 
 export interface Shadow {
   observation: Observation;
@@ -30,19 +28,27 @@ export async function watch(env: Env, ask: Ask): Promise<Shadow | null> {
 
 const rounded = (scores: Record<string, number>) => Object.fromEntries(Object.entries(scores).filter(([, score]) => score >= 0.2).map(([name, score]) => [name, Math.round(score * 100) / 100]));
 
-/** Logs the router's action and the observer's beside each other, once the observer has answered or the grace has run out. */
-export async function report(env: Env, ask: Ask, controlling: Route | null, shadow: Promise<Shadow | null>): Promise<void> {
-  const seen = await Promise.race([shadow, new Promise<null>((resolve) => setTimeout(() => resolve(null), GRACE_MS))]);
-  const said = seen?.route ?? null;
-  console.log(
-    JSON.stringify({
-      part: "observer-shadow",
-      router: controlling?.action ?? null,
-      observer: seen === null ? "none" : (said?.action ?? null),
-      agree: seen !== null && controlling?.action === said?.action && controlling?.said === said?.said,
-      ms: seen?.ms ?? null,
-      ...(seen === null ? {} : { answer: seen.observation.answer, communication: rounded(seen.observation.communication), need: rounded(seen.observation.physicalNeed), safety: rounded(seen.observation.safety) }),
-      ...(env.OBSERVER_LOG_TEXT === "on" ? { heard: heardForPrompt(ask.heard) } : {}),
-    }),
-  );
+/**
+ * Logs the router's action and the observer's beside each other when the observer has answered. The turn does not wait for it: it
+ * is logged when it is there, with the turn's id. The child's words, and the number read from them, only where asked for.
+ */
+export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Promise<Shadow | null>): void {
+  const turn = currentTurn();
+  void shadow.then((seen) => {
+    const said = seen?.route ?? null;
+    const words = env.OBSERVER_LOG_TEXT === "on";
+    console.log(
+      JSON.stringify({
+        ...(turn === undefined ? {} : { turn }),
+        part: "observer-shadow",
+        router: controlling?.action ?? null,
+        observer: seen === null ? "none" : (said?.action ?? null),
+        agree: seen !== null && controlling?.action === said?.action && controlling?.said === said?.said,
+        ms: seen?.ms ?? null,
+        ...(seen === null ? {} : { communication: rounded(seen.observation.communication), need: rounded(seen.observation.physicalNeed), safety: rounded(seen.observation.safety) }),
+        ...(seen !== null && words ? { answer: seen.observation.answer } : {}),
+        ...(words ? { heard: heardForPrompt(ask.heard) } : {}),
+      }),
+    );
+  });
 }
