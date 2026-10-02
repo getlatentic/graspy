@@ -23,10 +23,15 @@ export async function observe(env: Env, ask: Ask): Promise<Observation | null> {
   return reported === null ? null : parseObservation(reported);
 }
 
-/** The action for what the child said: the model's observation, decided by the policy; null where that settles nothing. */
-export async function observedRoute(env: Env, ask: Ask): Promise<Route | null> {
+/** What the model observed and what the policy decides on it (null where that settles nothing); null where there was no observation. */
+export async function observeAndDecide(env: Env, ask: Ask): Promise<{ observation: Observation; route: Route | null } | null> {
   const observation = await observe(env, ask);
   if (observation === null) return null;
   const expected = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
-  return decide(observation, { words: heardForPrompt(ask.heard), expected, question: ask.prompt });
+  return { observation, route: decide(observation, { words: heardForPrompt(ask.heard), expected, question: ask.prompt }) };
+}
+
+/** The action for what the child said: the model's observation, decided by the policy; null where that settles nothing. */
+export async function observedRoute(env: Env, ask: Ask): Promise<Route | null> {
+  return (await observeAndDecide(env, ask))?.route ?? null;
 }

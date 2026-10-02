@@ -17,8 +17,10 @@ interface Env {
   ROUTER?: string;
   /** The Bedrock model that routes when Clef is not sure; google.gemma-4-26b-a4b by default. */
   ROUTER_MODEL?: string;
-  /** "on" reads what a child said as an observation of independent judgments that policy.ts decides on, in place of the router's one choice. */
+  /** "on" reads what a child said as an observation of independent judgments that policy.ts decides on, in place of the router's one choice; "shadow" runs it beside the router and only logs the two (src/shadow.ts). */
   OBSERVER?: string;
+  /** "on" adds the child's words to the shadow log; for staging, where the children are simulated. */
+  OBSERVER_LOG_TEXT?: string;
   /** The Bedrock model that observes; the router's model by default. */
   OBSERVER_MODEL?: string;
 }
