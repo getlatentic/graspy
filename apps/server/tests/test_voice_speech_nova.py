@@ -200,3 +200,4 @@ def test_the_request_is_built_as_the_workers_runtime_needs_it(monkeypatch):
     assert sent["audio"]["contentType"] == "audio/wav"
     assert sent["audio"]["body"][0] == "stream"
     assert sent["language"] == "en" and sent["numerals"] is True
+    assert sent["mip_opt_out"] is True
