@@ -31,8 +31,8 @@ import { exampleBlock } from "./phrasebook";
 import { correctionLine, listStoppedLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
-import { repliedTo, routeUtterance } from "./router";
-import { soundsLike } from "./sounds-like";
+import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
+import { isBareNumber, soundsLike } from "./sounds-like";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
   markRecitation,
@@ -586,15 +586,20 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
  */
 async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (env.ROUTER !== "on" || ask.language !== "en" || ask.expect.kind !== "fact" || ask.prompt.trim() === "") return null;
+  // A step asked as an echo or a probe has the answer in its question, and a model told it could give it back.
+  if (ask.support !== undefined) return null;
   // Only a question whose answer is a number: a shape or a letter is a word the router has no way to know is right.
   const expected = spokenNumber(expectedAnswer(ask.expect.item));
   const heard = heardForPrompt(ask.heard);
-  if (expected === null || heard === "") return null;
+  // Nothing but a number is an answer, with nothing to route.
+  if (expected === null || heard === "" || isBareNumber(heard)) return null;
   const route = await timed("route", routeUtterance(env, ask)).catch(() => null);
   if (route === null) return null;
   if (route.action === "mark_answer") {
     return route.said !== undefined && soundsLike(heard, route.said) ? markedNumber(route.said, ask, expected) : null;
   }
+  // Anything but an answer, said of words that may be one, would throw a right answer away.
+  if (route.action !== "needs_help" && route.action !== "needs_grownup" && mayBeAnAnswer(heard)) return null;
   return repliedTo(env, ask, route).catch(() => null);
 }
 

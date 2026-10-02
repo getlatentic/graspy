@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { JUDGE_MODEL, SAFETY_MODEL } from "../src/guard";
-import { NEEDS_HELP, NOT_HEARD } from "../src/phrasebook";
+import { NEEDS_GROWNUP, NEEDS_HELP, NOT_HEARD } from "../src/phrasebook";
 import { READER_MODEL } from "../src/read";
 import { takeTurn, type Ask } from "../src/turn";
 
@@ -82,6 +82,13 @@ describe("every utterance is read by one model that chooses an action", () => {
     }
   });
 
+  it("sends a child who is hurt, ill or frightened to a grown-up, with the lesson able to stop", async () => {
+    for (const [action, heard] of [["answer_child", "my stomach is paining me"], ["ask_again", "I am scared"], ["not_know", "my head is bleeding"]]) {
+      const { reply } = await calls(action, { reply: "Let us finish first." }, heard);
+      expect(NEEDS_GROWNUP, heard).toContain(reply.say);
+    }
+  });
+
   it("asks garbled words, of more than a few, again from the phrasebook", async () => {
     const { reply } = await calls("ask_again", undefined, "my chain saw hot sink to me");
     expect([reply.verdict, reply.heard]).toEqual(["unheard", "garbled"]);
@@ -93,10 +100,18 @@ describe("every utterance is read by one model that chooses an action", () => {
     expect([reply.verdict, reply.heard, reply.say]).toEqual(["unheard", "conversation", "Let's finish this question first."]);
   });
 
-  it("is asked about a plain number too, and the number it reports is marked", async () => {
-    const { reply, bedrock } = await calls("mark_answer", { said: 10 }, "10");
+  it("is asked about an answer inside words, and the number it reports is marked", async () => {
+    const { reply, bedrock } = await calls("mark_answer", { said: 10 }, "ten oranges");
     expect(reply.verdict).toBe("correct");
     expect(bedrock).toHaveBeenCalledTimes(1);
+  });
+
+  it("is not asked about nothing but a number, which is an answer with nothing to route", async () => {
+    for (const heard of ["10", "ten", "twenty two"]) {
+      const { env, bedrock } = setup({ tool: { name: "not_know" } });
+      await takeTurn(env, ask(heard)).catch(() => undefined);
+      expect(bedrock, heard).not.toHaveBeenCalled();
+    }
   });
 });
 
@@ -108,7 +123,7 @@ describe("a number it reports is checked against the words before it is marked",
   });
 
   it("is a wrong answer, with the plan's hint, when it is the number the child said", async () => {
-    const { reply } = await calls("mark_answer", { said: 11 }, "eleven", ["Count on from five."]);
+    const { reply } = await calls("mark_answer", { said: 11 }, "eleven oranges", ["Count on from five."]);
     expect([reply.verdict, reply.say]).toEqual(["wrong", "Count on from five."]);
   });
 
@@ -120,6 +135,33 @@ describe("a number it reports is checked against the words before it is marked",
 });
 
 describe("what leaves the marking to read it", () => {
+  it("is an answer that the model chose not to treat as one: a number in the words, or a word or two that sounds like one", async () => {
+    for (const action of ["not_know", "ask_again", "answer_child", "repeat_question"]) {
+      for (const heard of ["it is ten oranges", "I think it is ten oranges because five and five", "tin"]) {
+        await teacherAsked({ tool: { name: action, args: { reply: "Good try." } } }, ask(heard));
+      }
+    }
+  });
+
+  it("is a sound-alike the table reads, which the marking marks as the number it is, whatever the model chose", async () => {
+    for (const action of ["not_know", "ask_again", "answer_child"]) {
+      const { env } = setup({ tool: { name: action, args: { reply: "Good try." } } });
+      expect((await takeTurn(env, ask("Nein."))).verdict, action).toBe("wrong");
+    }
+  });
+
+  it("is a step asked as an echo or a probe, whose question holds the answer", async () => {
+    const { env, bedrock } = setup({ tool: { name: "answer_child", args: { reply: "Say it again." } } });
+    await takeTurn(env, { ...ask("I want football"), support: "modelled" }).catch(() => undefined);
+    expect(bedrock).not.toHaveBeenCalled();
+  });
+
+  it("is a number the model reports that cannot be one: negative, huge, or not a whole number", async () => {
+    for (const said of [-3, 1e21, 2.5, "10"]) {
+      await teacherAsked({ tool: { name: "mark_answer", args: { said } } }, ask("negative tin"));
+    }
+  });
+
   it("is a word or two called garbled or something else, which may be a right answer written as a sound-alike", async () => {
     for (const action of ["ask_again", "answer_child"]) {
       await teacherAsked({ tool: { name: action, args: { reply: "Good try. How many?" } } }, ask("tin"));
@@ -131,6 +173,8 @@ describe("what leaves the marking to read it", () => {
     for (const reply of ["It is ten, say ten.", "The answer is 10.", "Five and five make ten, my dear."]) {
       await teacherAsked({ tool: { name: "answer_child", args: { reply } } }, ask("What is the answer?"));
     }
+    const twentyOne: Ask = { ...ask("What is the answer?"), expect: { kind: "fact", item: "21" } };
+    await teacherAsked({ tool: { name: "answer_child", args: { reply: "It is twenty one my dear." } } }, twentyOne);
   });
 
   it("is a refusal from Bedrock, a tool that is not one of ours, or a model that chose nothing", async () => {
@@ -159,7 +203,7 @@ describe("where the router is not used", () => {
     const sent = JSON.parse(init.body);
     expect(url).toContain("bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions");
     expect(init.headers.authorization).toBe("Bearer test");
-    expect(sent.tools.map((tool: { function: { name: string } }) => tool.function.name)).toEqual(["mark_answer", "ask_again", "not_know", "repeat_question", "needs_help", "answer_child"]);
+    expect(sent.tools.map((tool: { function: { name: string } }) => tool.function.name)).toEqual(["mark_answer", "ask_again", "not_know", "repeat_question", "needs_help", "needs_grownup", "answer_child"]);
     expect(JSON.stringify(sent.messages)).not.toMatch(/"10"|\bten\b/);
   });
 });

@@ -1,6 +1,6 @@
 import { HOMOPHONES, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "../src/interpret";
 import { answerHeard } from "../src/read";
-import { routeUtterance } from "../src/router";
+import { mayBeAnAnswer, routeUtterance } from "../src/router";
 import { soundsLike } from "../src/sounds-like";
 
 /**
@@ -31,7 +31,7 @@ export default {
       const { heard, prompt } = (await request.json()) as { heard: string; prompt: string };
       const [route, ms] = await timed(routeUtterance(env, { prompt, heard, language: "en", expect: { kind: "fact", item: "10" } }).catch(() => null));
       const accepted = route?.action === "mark_answer" && route.said !== undefined && soundsLike(heard, route.said);
-      return Response.json({ route, ms, accepted });
+      return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard) });
     }
     const { heard } = (await request.json()) as { heard: string };
     const [legacy, legacyMs] = await timed(reading(env, heard, false));

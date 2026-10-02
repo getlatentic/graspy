@@ -1,6 +1,6 @@
 import { lineProblems } from "./guard";
 import { numberWords } from "./lines";
-import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, LIST_STOPPED, LIST_WENT_ON, NEEDS_HELP, NOT_HEARD, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
+import { RIGHT, RIGHT_LIST, RIGHT_NUMBER, RIGHT_WITH_YOU, LIST_STOPPED, LIST_WENT_ON, NEEDS_GROWNUP, NEEDS_HELP, NOT_HEARD, NOT_QUITE, TOLD_NUMBER, WRONG_NUMBER, withNumber } from "./phrasebook";
 import { expectedAnswer, spokenNumber } from "./mark";
 import { sameLine } from "./told";
 import type { SequenceItem, SequenceResult } from "./recite";
@@ -106,4 +106,9 @@ export function listStoppedLine(ask: Ask, result: SequenceResult): string | null
 /** The line for a child who needs the toilet, water or help: let go with no condition. Never written by a model. */
 export function needsHelpLine(ask: Ask): string | null {
   return ask.language !== "en" ? null : pick(NEEDS_HELP, ask);
+}
+
+/** The line for a child who is hurt, ill or frightened: sent to a grown-up. Never written by a model. */
+export function needsGrownupLine(ask: Ask): string | null {
+  return ask.language !== "en" ? null : pick(NEEDS_GROWNUP, ask);
 }

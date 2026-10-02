@@ -14,6 +14,8 @@ export const TOLD_NUMBER: string[] = book.told_number;
 export const NOT_HEARD: string[] = book.not_heard;
 /** When a list was said whole and the child went on past its end: that they said it all, and where it stops. */
 export const LIST_WENT_ON: string[] = book.list_went_on;
+/** When a child is hurt, ill or frightened: they are sent to a grown-up and the lesson can stop, in the teacher's own words. */
+export const NEEDS_GROWNUP: string[] = book.needs_grownup;
 /** When a child needs the toilet, water or help: they are let go with no condition, in the teacher's own words. */
 export const NEEDS_HELP: string[] = book.needs_help;
 /** When a list stopped part way: how far the child got, said back to them. */
@@ -46,5 +48,5 @@ export function withoutSlots(line: string): string {
 
 /** Every line the phrasebook can say, with a number filled in where it takes one, for checking them all. */
 export function allLines(numberWords: string): string[] {
-  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...WRONG_NUMBER.map((line) => withNumber(line, numberWords)), ...TOLD_NUMBER.map((line) => withNumber(line, numberWords)), ...LIST_STOPPED.map((line) => line.replaceAll("{last}", numberWords)), ...NEEDS_HELP, ...LIST_WENT_ON.map((line) => line.replaceAll("{last}", numberWords)), ...NOT_HEARD, ...NOT_QUITE, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat().map(withoutSlots)];
+  return [...RIGHT, ...RIGHT_LIST, ...RIGHT_WITH_YOU, ...WRONG_NUMBER.map((line) => withNumber(line, numberWords)), ...TOLD_NUMBER.map((line) => withNumber(line, numberWords)), ...LIST_STOPPED.map((line) => line.replaceAll("{last}", numberWords)), ...NEEDS_HELP, ...NEEDS_GROWNUP, ...LIST_WENT_ON.map((line) => line.replaceAll("{last}", numberWords)), ...NOT_HEARD, ...NOT_QUITE, ...RIGHT_NUMBER.map((line) => withNumber(line, numberWords)), ...Object.values(book.examples).flat().map(withoutSlots)];
 }

@@ -61,11 +61,11 @@
 {"heard": "I don tire", "expect": "answer_child"}
 {"heard": "The oranges are many", "expect": "answer_child"}
 {"heard": "I want to use the toilet", "expect": "needs_help"}
-{"heard": "my stomach is hurting", "expect": "needs_help"}
-{"heard": "I am scared", "expect": "needs_help"}
+{"heard": "my stomach is hurting", "expect": "needs_grownup"}
+{"heard": "I am scared", "expect": "needs_grownup"}
 {"heard": "Teacher I need water", "expect": "needs_help"}
-{"heard": "I am not feeling well", "expect": "needs_help"}
-{"heard": "call my mummy", "expect": "needs_help"}
+{"heard": "I am not feeling well", "expect": "needs_grownup"}
+{"heard": "call my mummy", "expect": "needs_grownup"}
 {"heard": "chin", "expect": "ask_again"}
 {"heard": "Zen", "expect": "ask_again"}
 {"heard": "So", "expect": "ask_again"}

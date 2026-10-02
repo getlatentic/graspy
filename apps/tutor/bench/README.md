@@ -44,7 +44,13 @@ the Worker checks it against the words by sound (`src/sounds-like.ts`) before it
 `AWS_BEARER_TOKEN_BEDROCK` in the git-ignored `bench/.dev.vars`. A word or two is acted on only as not knowing, asking to hear it
 again or needing help; anything else is left to the marking.
 
-On 2026-10-02: 71 cases, 48 right, 21 left to the marking (safe, and slower), 2 wrong actions ("Nein.", German for no, read as
-not knowing; a garbled phrase read as needing help), median about 0.6 s for the one call through the laptop and remote preview. Clef, tried
-first on 2026-10-01, gave 0 false answers but could not write a reply and added a second call; one model is simpler.
-The cases were written by the person who wrote the router.
+On 2026-10-02, after review fixes: 71 cases, 46 right, 24 left to the marking (safe, and slower), 1 wrong action (a garbled
+phrase read as needing help, which lets the child go), median about 0.65 s for the one call through the laptop and remote
+preview. Clef, tried first on 2026-10-01, gave 0 false answers but could not write a reply and added a second call; one model is
+simpler. The cases were written by the person who wrote the router.
+
+The sound check (`src/sounds-like.ts`) accepts a word as a number only when it is about as long, with the same first and last
+sounds and at most one sound different. Over a 210,000-word dictionary, 0.1 to 3.5 percent of words pass for any one
+number (before the length bound and the last-sound rule it was up to 28 percent). Some common words still do: "play", "ball", "fun",
+"water" and "done" pass for three and ten, and "don't" and "toilet" for twenty and forty. The check is a net under the model, which is told
+never to answer the sum; it does not replace that.
