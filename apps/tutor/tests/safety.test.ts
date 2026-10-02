@@ -42,8 +42,6 @@ describe("what a child's words ask for", () => {
     ["pain", 10],
     ["tummy", 10],
     ["it is poo", 2],
-    ["I think it is poop", 8],
-    ["water", 3],
   ] as const)("%s alone is the number %i misheard, not a need", (heard, answer) => expect(needFor(heard, answer)).toBeNull());
 
   it("is a need where the lone word is not the number asked for", () => {
@@ -54,7 +52,7 @@ describe("what a child's words ask for", () => {
   });
 
   it("takes a lone word for the answer through the courtesy and the repeating that follow a number", () => {
-    for (const heard of ["pain please", "pain sir", "pain o", "pain pain", "sick ma"]) {
+    for (const heard of ["pain please", "pain sir", "pain o", "sick ma"]) {
       expect(needFor(heard, heard.startsWith("sick") ? 6 : 10), heard).toBeNull();
     }
   });
@@ -79,6 +77,91 @@ describe("what a child's words ask for", () => {
     expect(needFor("water", 3, "How many cups of water in three jugs?")).toBeNull();
     for (const heard of ["can I have some water", "I want to drink", "I need a drink", "bring me water", "abeg water", "I wan water"]) {
       expect(needFor(heard, 10), heard).toBe("needs_help");
+    }
+  });
+
+  it("never takes a toilet word for a number it was not attested for", () => {
+    for (const [heard, answer] of [["pee", 5], ["pee pee", 1], ["pee", 2], ["poo poo", 5], ["poo", 8], ["poop", 8], ["water", 3], ["water", 15], ["wee", 2], ["pain", 7]] as const) {
+      expect(needFor(heard, answer), `${heard} for ${answer}`).not.toBeNull();
+    }
+  });
+
+  it("reads a word for a need that stands for part of a number as that part, and only where the number is the one asked for", () => {
+    for (const [heard, answer] of [["forty poo", 42], ["twenty poo", 22], ["thirsty five", 35], ["thirty sick", 36], ["ten", 10]] as const) {
+      expect(needFor(heard, answer), heard).toBeNull();
+    }
+    expect(needFor("forty poo", 40)).toBe("needs_help");
+    expect(needFor("thirty sick", 30)).toBe("needs_grownup");
+  });
+
+  it("keeps a count or an alphabet whole where it has a need word and a closing word or two", () => {
+    const alphabet = "a b c d e f g h i j k l m n o pee q r s t u v w x y z".split(" ");
+    expect(needFor(`${alphabet.join(" ")} now I know my abcs`, null, "", alphabet)).toBeNull();
+    expect(needFor("one two three four five six seven eight nine pain I finished")).toBeNull();
+    expect(needFor("one two three four five six seven eight nine ten thank you sir")).toBeNull();
+    expect(needFor("one poo three four five six seven eight nine ten thank you")).toBeNull();
+    expect(needFor("one two free four five sick seven eight nine ten")).toBeNull();
+    expect(needFor("one two three four five six seven eight nine ten, my belly")).toBe("needs_grownup");
+  });
+
+  it("hears a need said after a count, a table or an alphabet, and does not lose the step to a word that is the next number", () => {
+    const alphabet = "a b c d e f g h i j k l m n o pee q r s t u v w x y z".split(" ");
+    const letters = alphabet.join(" ");
+    for (const tail of ["I am sick", "I feel sick", "I am in pain", "I am thirsty", "I want to poo", "I'm ill", "I don't feel well", "I can't breathe", "I see blood", "I want to pee", "I need to drink water", "can I drink water", "may I go out", "I am pressed", "I need water"]) {
+      expect(needFor(`one two three four five ${tail}`, null), tail).not.toBeNull();
+      expect(needFor(`${letters} ${tail}`, null, "", alphabet), tail).not.toBeNull();
+    }
+    for (const run of ["two four sick", "2 4 sick", "four five sick", "five sick", "eight nine pain", "ten twenty thirsty", "one poo three"]) {
+      expect(needFor(run, null), run).toBeNull();
+    }
+  });
+
+  it("takes no two words for need as one number, and no number that is not said as it is written", () => {
+    for (const [heard, answer] of [["tummy pain", 20], ["pain tummy", 20], ["pain and tummy", 20], ["sick pain", 16], ["tummy poo", 12], ["pain two", 12], ["sick seven", 13]] as const) {
+      expect(needFor(heard, answer), `${heard} for ${answer}`).not.toBeNull();
+    }
+  });
+
+  it("keeps a table or a count whole around a connector, and still hears a need said with it", () => {
+    for (const run of ["two times five equals pain", "2 times 5 makes pain", "pain times two is twenty", "five plus five equals pain", "eight nine and pain", "ten twenty and thirsty"]) {
+      expect(needFor(run, null), run).toBeNull();
+    }
+    for (const tail of ["I don sick", "I be sick", "so sick", "e pain me"]) {
+      expect(needFor(`one two three four five ${tail}`, null), tail).not.toBeNull();
+    }
+  });
+
+  it("reads a word said twice as said once, asks for help only when that is what was said, and not for a bare 'I want'", () => {
+    expect(needFor("pain pain", 10)).toBeNull();
+    expect(needFor("I need help with this", 10)).toBeNull();
+    expect(needFor("I need help", 10)).toBe("needs_grownup");
+    expect(needFor("abeg help me", 10)).toBe("needs_grownup");
+    expect(needFor("I want", 10)).toBeNull();
+    expect(needFor("abeg", 10)).toBeNull();
+  });
+
+  it("reads ordinary words around the misheard answer as the answer", () => {
+    for (const heard of ["e be pain", "that is pain", "that's pain", "so pain", "okay pain", "my answer is pain", "ehm pain", "pain thank you"]) {
+      expect(needFor(heard, 10), heard).toBeNull();
+    }
+    expect(needFor("that is poo", 2)).toBeNull();
+    expect(needFor("thirty poo thank you", 32)).toBeNull();
+  });
+
+  it("hears the apostrophes a recogniser writes, and the compounds", () => {
+    for (const heard of ["I don’t feel well", "I’m not well", "I can’t breathe", "I'm ill", "I have a stomachache", "stomach ache"]) {
+      expect(needFor(heard, 10), heard).toBe("needs_grownup");
+    }
+    expect(needFor("I want teacher to say it again", 10)).toBeNull();
+    expect(needFor("call teacher", 10)).toBe("needs_grownup");
+  });
+
+  it("hears the toilet, the drink, the parent and the hurt as the review heard them said", () => {
+    for (const heard of ["I want to go outside", "I need to go outside", "I wet my pants", "I have wet my trousers", "I am pressed", "I want to go and drink water", "can I drink", "let me drink water", "I want to get water", "let me take water", "I wan go out", "make I go out", "call of nature", "I need the potty"]) {
+      expect(needFor(heard, 10), heard).toBe("needs_help");
+    }
+    for (const heard of ["mom", "mum", "dad", "I want my mom", "I want my dad", "mom help me", "I need a grown-up", "there is blood", "I see blood", "I fell off my chair", "I slipped and fell", "I feel faint", "I am fainting", "I was bitten by a dog", "I broke my arm", "I have malaria", "I swallowed a coin", "he is touching me", "he is slapping me", "he is punching me", "he is pinching me", "he is troubling me", "I got beaten", "I have been beaten", "he is fighting me", "I dey fear", "I want my parents", "I want to see my mummy", "I need the nurse", "abeg help me", "I want a grown up"]) {
+      expect(needFor(heard, 10), heard).toBe("needs_grownup");
     }
   });
 
@@ -157,6 +240,17 @@ describe("no right answer is a need", () => {
     (n: string) => `abeg ${n}`,
     (n: string) => `I am afraid I do not know, is it ${n}`,
   ];
+
+  it("for the numbers a word for a need stands in for, as the recogniser writes them", () => {
+    const wrong: string[] = [];
+    for (let n = 1; n <= 100; n += 1) {
+      const spoken = numberWords(n);
+      for (const [word, stands] of [["poo", "two"], ["sick", "six"], ["pain", "ten"], ["thirsty", "thirty"]] as const) {
+        if (spoken.endsWith(stands) && needFor(spoken.slice(0, spoken.length - stands.length).replace(/-$/, " ") + word, n) !== null) wrong.push(`${spoken} as ${word}`);
+      }
+    }
+    expect(wrong).toEqual([]);
+  });
 
   it("for 1 to 100 said in sixteen ways, spoken or in digits", () => {
     const needs: string[] = [];

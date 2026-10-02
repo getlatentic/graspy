@@ -1,89 +1,48 @@
 /**
- * Phrases that say a child needs the toilet or water, or is hurt, ill or frightened. They are the net under the router
- * and what answers before it: a model asked what to do with them has said to finish the question first. Pain, bleeding,
- * being hit and fear send the child to a grown-up; the toilet or a drink lets them go.
+ * What a child's words ask for: the toilet or a drink (let go) or help for being hurt, ill, hit or frightened (a grown-up).
+ * The phrases are in safety-phrases.ts; they are the net under the router and answer before it, since a model asked what to do
+ * with them has said to finish the question first.
  *
- * The list holds phrases that are a need and nothing else. Topical words (a snake, a stomach, water in a word problem) are
- * not in it, and water is a need only where the child asks for it. A word the recogniser writes for a number ("pain" for
- * ten, "poo" for two) is the answer when it is all the child said and the number asked for, or one word among the numbers of
- * a count or a table; a word that is a need in every other mouth ("toilet", "bleeding") never is.
+ * Words a recogniser writes for a number can also be a need to someone who says them. Only those attested ("pain" or "tummy"
+ * for ten, "poo" for two, "sick" for six, "thirsty" for thirty) are taken for the number, and only where what was said, so
+ * read, is exactly the number asked for ("forty poo" is forty-two). In a count or a table a need word next to the numbers is
+ * one of them, and a step's own spoken forms (the letter p is "pee") are never a need.
  */
 
+import { numberWords } from "./lines";
 import { spokenNumber } from "./mark";
-import { soundsLike } from "./sounds-like";
+import { DRINK, HURT, NOT_FEAR, TOILET } from "./safety-phrases";
 import type { Expect } from "./turn";
 
 export type Need = "needs_help" | "needs_grownup";
 
-const TOILET = new RegExp(
-  "\\b(" +
-    [
-      "toilets?", "bathrooms?", "restrooms?", "washrooms?", "loo", "latrine", "pee", "peed", "peeing", "piss", "pissing",
-      "poo", "pooh", "poop", "shit", "wee", "urinate", "diarrhoea", "diarrhea", "thirsty", "thirst", "puke", "throw up",
-      "ease myself", "wan ease", "wet myself", "pass urine", "(short|long) call", "nature is calling",
-      "(want|wan|need) to go out", "(may|can|could) i (be excused|go out(side)?)", "let me go out", "(do|doing|need to do|want to do|go for) (a )?number (one|two)",
-    ].join("|") +
-    ")\\b",
-  "i",
-);
-const DRINK = [
-  "\\b(i|we)\\s+(need|want|wan|would like|will like)\\s+(to\\s+)?(some |a |the |my )?(drink|water)\\b",
-  "\\b(can|may|could) i (have|get|drink|take|go and (drink|get))\\s+(some |a |the |my )?(water|drink)\\b",
-  "\\b(bring|give|fetch) me\\s+(some |a |the |my )?water\\b",
-  "\\babeg\\s+(some |a )?water\\b",
-  "\\blet me (go and )?(drink|get)\\s+(some |a |the |my )?(water|drink)\\b",
-].map((source) => new RegExp(source, "i"));
-const HURT = new RegExp(
-  "\\b(" +
-    [
-      "hurt", "hurts", "hurting", "pain", "paining", "painful", "ache", "aching", "aches", "toothache", "fever", "vomit",
-      "vomiting", "dizzy", "sick", "headache", "bleeding", "bleed", "scared", "afraid", "frightened", "unwell", "injured",
-      "fainted", "choking", "belly", "(can't|cannot|cant) breathe", "cut myself", "stung me", "biting me", "scratched me", "disturbing me", "i fell (down|over)", "vomited", "(hit|cut|burnt|burned|banged|bumped|scratched) my (head|hand|hands|leg|legs|foot|feet|finger|fingers|arm|arms|eye|eyes|knee|knees|toe|toes|face|nose|mouth|back|neck|ear|ears|body)", "(don't|do not|dont) feel (good|fine)", "not feeling (fine|good)", "not feeling well", "no well",
-      "(don't|do not|dont|am not|im not|i'm not) (feel )?well", "(am|is|im|feel|feeling|been) ill", "feel bad",
-      "(hit|hits|hitting|beat|beating|beats|slap|slapped|push|pushed|pushing|kick|kicked|kicking|bit|bite|bites|punched|stabbed|touched|flogged|pinched) me",
-      "i was (beaten|hit|slapped|pushed|kicked)", "(want|call|need|bring) (my )?(mummy|mommy|mum|mama|daddy|papa|mother|father|teacher)",
-    ].join("|") +
-    ")\\b",
-  "i",
-);
-
-/** Words the recogniser writes for a number that are also a need to someone who says them: these may be the answer. */
-const MISHEARD_AS_NUMBER = new Set(["thirsty", "thirst", "pain", "paining", "tummy", "poo", "poop", "pee", "wee", "sick", "ill", "water"]);
-const FOR_NUMBER: Record<string, number> = { sick: 6 };
+/** The number a word that is also a need stands for, where a recogniser writes it so. */
+const STANDS_FOR: Record<string, string> = { pain: "ten", tummy: "ten", poo: "two", sick: "six", sicks: "six", thirsty: "thirty", thirst: "thirty" };
 const FILLER = new Set([
-  "it", "is", "its", "i", "think", "the", "a", "said", "say", "was", "um", "uh", "er", "answer", "please", "sir", "ma", "madam",
-  "o", "oh", "na", "teacher", "aunty", "auntie",
+  "it", "is", "its", "i", "think", "the", "a", "said", "say", "was", "um", "uh", "er", "ehm", "umm", "hmm", "answer", "please", "sir",
+  "ma", "madam", "o", "oh", "na", "e", "be", "don", "teacher", "aunty", "auntie", "that", "thats", "so", "okay", "ok", "my", "thank",
+  "thanks", "you",
 ]);
-const CONNECTORS = new Set(["and", "plus", "times", "equals", "make", "makes", "is", "are", "then"]);
-const NOT_FEAR =
-  /\b(i am|i['’]?m) afraid (it|that|its|this|the answer|i (do not|don't|dont|cannot|can't|cant|have to|think|am not|did not|didn't|forgot)|we (do not|don't|dont|cannot|can't|cant))\b/gi;
-const CALL = new Set(["help", "me", "somebody", "someone", "mummy", "mommy", "mama", "mother", "father", "daddy", "papa"]);
+const ASKS_FOR_A_GROWNUP = new Set(["help", "mummy", "mommy", "mum", "mom", "mama", "mother", "father", "daddy", "dad", "papa"]);
+const CALL = new Set([...ASKS_FOR_A_GROWNUP, "me", "somebody", "someone", "abeg", "need", "want"]);
+/** Words between a need word and a number that do not make it less the next number. */
+const BETWEEN = new Set(["is", "are", "and", "plus", "times", "equals", "make", "makes", "then", "please", "sir", "ma", "madam", "o", "oh", "teacher", "aunty", "auntie", "thank", "thanks", "you", "um", "uh", "er", "ehm", "umm", "hmm", "ok", "okay"]);
 
 function words(heard: string): string[] {
   return heard.toLowerCase().replace(/['’]/g, "").split(/[^a-z0-9]+/).filter((word) => word !== "");
 }
 
-/** What was said, filler aside; a word said over and over is said once. */
-function said(heard: string): string[] {
-  return [...new Set(words(heard).filter((word) => !FILLER.has(word)))];
-}
+const unfilled = (heard: string) => words(heard).filter((word) => !FILLER.has(word));
 
-function forTheNumber(word: string, answer: number): boolean {
-  return soundsLike(word, answer) || FOR_NUMBER[word] === answer;
-}
-
-/** Whether all the child said is one word that is the answer asked for, misheard: "pain" for ten, "poo" for two. */
+/**
+ * Whether what the child said is the number asked for with one word for a need standing for part of it: the only such word, and
+ * the number written as it is said, so "forty poo" is forty-two and "tummy five", "pain poo" and "pain two" are no number.
+ */
 export function isOnlyTheAnswer(heard: string, answer: number | null): boolean {
-  const [word, ...more] = said(heard);
-  return word !== undefined && more.length === 0 && answer !== null && MISHEARD_AS_NUMBER.has(word) && forTheNumber(word, answer);
-}
-
-/** A count or a table with one such word among its numbers, which is the number it stands where: nothing here to answer. */
-function amongNumbers(heard: string, answer: number | null): boolean {
-  if (answer !== null) return false;
-  const tokens = said(heard);
-  const odd = tokens.filter((word) => MISHEARD_AS_NUMBER.has(word));
-  return odd.length === 1 && tokens.some((word) => spokenNumber(word) !== null) && tokens.every((word) => word === odd[0] || CONNECTORS.has(word) || spokenNumber(word) !== null);
+  const tokens = unfilled(heard).filter((word, at, all) => !(word in STANDS_FOR && all[at - 1] === word));
+  if (answer === null || tokens.filter((word) => word in STANDS_FOR).length !== 1) return false;
+  const spoken = tokens.map((word) => STANDS_FOR[word] ?? word).join(" ");
+  return spokenNumber(spoken) === answer && numberWords(answer).replace(/-/g, " ") === spoken;
 }
 
 /** The words the answer to a step may be said in: a letter's "pee" is a letter, and nothing else, in the alphabet. */
@@ -93,16 +52,45 @@ export function wordsOfTheAnswer(expect: Expect): string[] {
 }
 
 /**
+ * Whether a phrase found in the words is only the next number or letter of a count, a table or an alphabet: one word for a need
+ * or a letter's spoken form whose nearest word on either side (filler aside) is a number, a letter or another such word, as
+ * "pain" in "nine pain I finished" or "pee" in "o pee q". "I am sick" after the numbers is a need: "am" is no number, and
+ * "I see blood" after the letters is a need whole.
+ */
+function isTheRun(tokens: string[], at: number, found: string, answerWords: readonly string[]): boolean {
+  const odd = (word: string) => word in STANDS_FOR || answerWords.includes(word);
+  const inRun = (word: string | undefined) => word !== undefined && (spokenNumber(word) !== null || odd(word));
+  const near = (step: 1 | -1) => {
+    for (let to = at + step; to >= 0 && to < tokens.length; to += step) if (!BETWEEN.has(tokens[to])) return tokens[to];
+    return undefined;
+  };
+  return found === tokens[at] && odd(found) && (inRun(near(-1)) || inRun(near(1)));
+}
+
+/** Whether the words hold one of the phrases, leaving out a phrase that is only the next step of a count (where `runs` says so). */
+function holds(patterns: RegExp[], heard: string[], answerWords: readonly string[], runs: boolean): boolean {
+  const tokens = heard.join(" ").replace(NOT_FEAR, " ").split(/\s+/).filter(Boolean);
+  const text = tokens.join(" ");
+  return patterns.some((pattern) =>
+    [...text.matchAll(new RegExp(pattern.source, "gi"))].some((match) => {
+      const at = text.slice(0, match.index).split(" ").length - 1;
+      return !(runs && isTheRun(tokens, at, match[0], answerWords));
+    }),
+  );
+}
+
+/**
  * What a child's words ask for, or null where they ask for nothing of the kind. `answer` is the number a fact asks for,
  * null for a count or a table; `question` is what the child was asked; `answerWords` are the words the answer may be said in.
  */
 export function needFor(heard: string, answer: number | null = null, question = "", answerWords: readonly string[] = []): Need | null {
-  if (isOnlyTheAnswer(heard, answer) || amongNumbers(heard, answer)) return null;
-  const spoken = said(heard);
-  if (spoken.length > 0 && spoken.every((word) => answerWords.includes(word))) return null;
-  if (spoken.length > 0 && spoken.every((word) => CALL.has(word)) && spoken.some((word) => word !== "me")) return "needs_grownup";
-  const text = heard.replace(NOT_FEAR, " ");
-  if (HURT.test(text)) return "needs_grownup";
-  const water = /\bwater\b/i.test(question) ? false : said(text).join(" ") === "water";
-  return TOILET.test(text) || DRINK.some((one) => one.test(text)) || water ? "needs_help" : null;
+  if (isOnlyTheAnswer(heard, answer)) return null;
+  const said = unfilled(heard);
+  if (said.length > 0 && said.every((word) => answerWords.includes(word))) return null;
+  if (said.length > 0 && said.every((word) => CALL.has(word)) && said.some((word) => ASKS_FOR_A_GROWNUP.has(word))) return "needs_grownup";
+  const tokens = words(heard);
+  const runs = answer === null;
+  if (holds([HURT], tokens, answerWords, runs)) return "needs_grownup";
+  const water = /\bwater\b/i.test(question) ? false : tokens.filter((word) => !FILLER.has(word)).join(" ") === "water";
+  return holds([TOILET, ...DRINK], tokens, answerWords, runs) || water ? "needs_help" : null;
 }
