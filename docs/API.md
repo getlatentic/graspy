@@ -18,7 +18,8 @@ TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/j
 | `/api/health` | GET | | Liveness and environment |
 | `/api/session` | POST | | A session token for `deviceId` |
 | `/api/subjects/generate-stream` | GET | ✓ | Subjects for a country, language and level (SSE) |
-| `/api/curriculum/generate-stream` | GET | ✓ | Subjects and their topics (SSE) |
+| `/api/curriculum/generate-stream` | GET | ✓ | Subjects and their topics (SSE). With `system` and `level`, a subject whose curriculum graspy holds for that class takes its topics, and `sources` names the edition |
+| `/api/curriculum/coverage` | GET | | Each class and subject with a held curriculum or voice lessons, and how they are grounded |
 | `/api/curriculum/path` | GET | ✓ | Topics in order, from the learner's level to a `goal` |
 | `/api/learner` | GET | ✓ | The record of the learner the session names, for `planId`: topics with a lesson or finished, and answers |
 | `/api/learner/plan` | POST | ✓ | Keeps the record in step as the plan changes |

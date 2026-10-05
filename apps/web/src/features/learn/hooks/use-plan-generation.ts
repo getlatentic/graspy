@@ -70,6 +70,7 @@ async function makePlan(
       createdAt,
       subjects: accumulator.subjects,
       topics: accumulator.topics,
+      sources: accumulator.sources,
       nextSubjectSlug: deps.next()?.slug ?? null,
       activeSession,
     });

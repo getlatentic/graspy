@@ -14,7 +14,42 @@ function accumulate(...chunks: Partial<CurriculumResultEvent>[]) {
   return acc;
 }
 
+const NERDC = {
+  packageId: "ai.graspy.curriculum.ng.nerdc.jss1.mathematics",
+  packageRevision: 2,
+  authority: "NERDC",
+  title: "Mathematics · JSS 1",
+  edition: "September 2025",
+};
+
 describe("CurriculumAccumulator", () => {
+  it("keeps the curriculum a subject's topics come from, under the subject's slug", () => {
+    const acc = accumulate({
+      subjects: [{ name: "Mathematics", slug: "mathematics" }, "Basic Science"],
+      topics: { mathematics: ["Whole Numbers"], "basic-science": ["Cells"] },
+      sources: { Mathematics: NERDC },
+    });
+    expect(acc.sources).toEqual({ mathematics: NERDC });
+    expect(
+      buildCurriculum({
+        country: "NG",
+        language: "en",
+        subjects: acc.subjects,
+        topics: acc.topics,
+        sources: acc.sources,
+      }).sources,
+    ).toEqual({ mathematics: NERDC });
+  });
+
+  it("has no sources where every subject was planned by a model", () => {
+    expect(
+      accumulate({
+        subjects: ["Mathematics"],
+        topics: { mathematics: ["Algebra"] },
+      }).sources,
+    ).toEqual({});
+  });
+
   it("accepts subjects as bare strings", () => {
     expect(
       accumulate({ subjects: ["Mathematics", "Chemistry"] }).subjects,

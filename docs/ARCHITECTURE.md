@@ -23,6 +23,8 @@ flowchart LR
 
 Both use one model, built in one place, for every language. Yoruba, Hausa, Igbo and Nigerian Pidgin lessons are written in English and translated stage by stage, because the model writes better English.
 
+A subject whose official curriculum graspy holds for the learner's class takes its topics from it, in its order, and the plan records the edition; a model writes the rest, and the app does not show them as a curriculum. The held editions are the teacher app's packages: `apps/server/src/app/domains/curriculum/packages` keeps an outline of each, derived by `export.py` and checked against the package by a test, with the classes and subject names it is for in `courses.json`. A new edition or revision of a package is a new outline: export again, and the test fails until it is.
+
 A lesson is staged: a plan, then each slide with the earlier slides as context, then a practice question. A failed slide costs one slide, not the lesson.
 
 ## Three surfaces, one app
@@ -60,7 +62,7 @@ The Worker runs CPython on Pyodide. The same app runs under uvicorn locally, wit
 
 ## graspy-teacher
 
-`apps/teacher` (graspy-teacher) is the app for teachers and schools. It shares no code or data with the web app or the server, and it works without a connection.
+`apps/teacher` (graspy-teacher) is the app for teachers and schools. It shares no code with the web app or the server, and it works without a connection. Its curriculum packages are the server's source for the curricula it holds (see Two kinds of model work).
 
 ```mermaid
 flowchart LR

@@ -1,0 +1,10 @@
+[
+  {
+    "package": "apps/teacher/src-tauri/resources/content/nerdc-jss1-mathematics-september-2025/curriculum.graspy-curriculum",
+    "courseKey": "mathematics-jss1",
+    "authority": "NERDC",
+    "levels": [{ "system": "NG", "level": "jss-1" }],
+    "subject": "mathematics",
+    "aliases": ["mathematics", "maths", "math", "general mathematics", "basic mathematics"]
+  }
+]

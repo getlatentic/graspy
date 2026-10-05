@@ -18,6 +18,8 @@ export interface CurriculumData {
   course?: string;
   subjects: CurriculumSubject[];
   topics?: Record<string, string[]>;
+  // By subject slug: the official curriculum its topics come from. A subject without one was planned by a model.
+  sources?: Record<string, CurriculumSource>;
   // Path topics' levels by subject slug, then topic; others are at gradeLevel.
   levels?: Record<string, Record<string, string>>;
   // By path subject slug: the topic the learner asked to learn.
@@ -28,6 +30,15 @@ export interface CurriculumData {
   };
   createdAt: number;
   updatedAt: number;
+}
+
+/** An official curriculum edition graspy holds, as the server names it. */
+export interface CurriculumSource {
+  packageId: string;
+  packageRevision: number;
+  authority: string;
+  title: string;
+  edition: string;
 }
 
 export interface LearningSession {

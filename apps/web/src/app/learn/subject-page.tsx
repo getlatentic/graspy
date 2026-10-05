@@ -32,6 +32,7 @@ export default function SubjectPage() {
     <div className="mx-auto max-w-3xl space-y-8">
       <SubjectHeader
         name={subjectOf(curriculum, slug)?.name ?? slug}
+        source={curriculum?.sources?.[slug]}
         onBack={() => navigate("/app/learn/subjects")}
       />
       {topics.length === 0 ? (

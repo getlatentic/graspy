@@ -8,6 +8,7 @@ import dspy
 
 from ...config.languages import generation_language_for, needs_translation
 from ...utils.slug import slugify
+from .packages import Course, held_course
 from .prompts import (
     CurriculumSubjectInput,
     GenerateCurriculum,
@@ -33,17 +34,38 @@ class CurriculumService:
         language: str,
         grade_level: str,
         subjects: list[str] | None = None,
+        system: str | None = None,
+        level: str | None = None,
     ) -> dict:
+        """The plan's subjects and topics. A subject a held curriculum covers for this class takes that curriculum's
+        topics, in its order, and its source is returned; the rest are written by the model."""
         chosen = normalize_subjects(subjects or [])
         writing_language = generation_language_for(language)
         if chosen:
-            listed, topics = await self._topics_for(
-                chosen, country, writing_language, grade_level
+            held = {slugify(s.id): c for s in chosen if (c := _held(system, level, s))}
+            listed = [{"name": s.label, "slug": slugify(s.id)} for s in chosen]
+            to_write = [s for s in chosen if slugify(s.id) not in held]
+            topics = (
+                await self._topics_for(to_write, country, writing_language, grade_level)
+                if to_write
+                else {}
             )
         else:
             listed, topics = await self._whole_curriculum(
                 country, writing_language, grade_level
             )
+            held = {
+                s["slug"]: c
+                for s in listed
+                if (
+                    c := held_course(system, level, s["name"])
+                    or held_course(system, level, s["slug"])
+                )
+            }
+        topics |= {slug: course.topics() for slug, course in held.items()}
+        _record_unheld(
+            country, system, level, [s["slug"] for s in listed if s["slug"] not in held]
+        )
         if needs_translation(language):
             names = {subject["slug"]: subject["name"] for subject in listed}
             topics = {
@@ -55,6 +77,7 @@ class CurriculumService:
             "topics": {
                 slug: list(dict.fromkeys(items)) for slug, items in topics.items()
             },
+            "sources": {slug: course.source.as_json() for slug, course in held.items()},
         }
 
     async def generate_stream(
@@ -63,16 +86,14 @@ class CurriculumService:
         language: str,
         grade_level: str,
         subjects: list[str] | None = None,
+        system: str | None = None,
+        level: str | None = None,
     ) -> AsyncIterator[str]:
         yield json.dumps({"type": "status", "message": "Designing curriculum..."})
-        result = await self.generate(country, language, grade_level, subjects or [])
-        yield json.dumps(
-            {
-                "type": "result",
-                "subjects": result["subjects"],
-                "topics": result["topics"],
-            }
+        result = await self.generate(
+            country, language, grade_level, subjects or [], system, level
         )
+        yield json.dumps({"type": "result", **result})
 
     async def _topics_for(
         self,
@@ -80,18 +101,14 @@ class CurriculumService:
         country: str,
         language: str,
         grade_level: str,
-    ) -> tuple[Subjects, Topics]:
+    ) -> Topics:
         prediction = await self.write_topics.acall(
             country=country,
             language=language,
             grade_level=grade_level,
             input_subjects=chosen,
         )
-        # The client's slug, not the model's key: progress is stored under it.
-        listed = [
-            {"name": subject.label, "slug": slugify(subject.id)} for subject in chosen
-        ]
-        return listed, pair_topics(chosen, prediction.topics)
+        return pair_topics(chosen, prediction.topics)
 
     async def _whole_curriculum(
         self, country: str, language: str, grade_level: str
@@ -125,6 +142,32 @@ class CurriculumService:
             "Translated %d topics for %s into %s", len(items), subject, language
         )
         return prediction.translated_topics
+
+
+def _held(
+    system: str | None, level: str | None, subject: CurriculumSubjectInput
+) -> Course | None:
+    return held_course(system, level, subject.id) or held_course(
+        system, level, subject.label
+    )
+
+
+def _record_unheld(
+    country: str, system: str | None, level: str | None, subjects: list[str]
+) -> None:
+    """Which classes and subjects learners ask for that graspy holds no curriculum for: the order to source them in."""
+    for subject in subjects:
+        logger.info(
+            json.dumps(
+                {
+                    "part": "curriculum-unheld",
+                    "country": country,
+                    "system": system,
+                    "level": level,
+                    "subject": subject,
+                }
+            )
+        )
 
 
 def normalize_subjects(subjects: list[str]) -> list[CurriculumSubjectInput]:

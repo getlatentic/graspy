@@ -72,7 +72,8 @@
     "lessonsCompleted": "{completed} of {total} lessons",
     "progressLabel": "Progress",
     "topicsLoading": "Loading topics...",
-    "goal": "You asked for this"
+    "goal": "You asked for this",
+    "curriculum": "Follows the {authority} curriculum, {edition}"
   },
   "lesson": {
     "backTo": "Back to {subject}",

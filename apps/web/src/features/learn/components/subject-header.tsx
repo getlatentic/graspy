@@ -1,13 +1,16 @@
 import { ArrowLeft } from "lucide-react";
+import type { CurriculumSource } from "@/lib/curriculum-record";
 import { useI18n } from "@/lib/i18n-context";
 import { SubjectBadge } from "@/features/learn/components/subject-icon";
 
 interface SubjectHeaderProps {
   name: string;
+  /** The official curriculum the topics follow; none where a model planned them. */
+  source?: CurriculumSource;
   onBack: () => void;
 }
 
-export function SubjectHeader({ name, onBack }: SubjectHeaderProps) {
+export function SubjectHeader({ name, source, onBack }: SubjectHeaderProps) {
   const { t } = useI18n();
   return (
     <header>
@@ -21,9 +24,19 @@ export function SubjectHeader({ name, onBack }: SubjectHeaderProps) {
       </button>
       <div className="mt-4 flex items-center gap-3">
         <SubjectBadge name={name} className="size-11 rounded-full" />
-        <h1 className="text-balance text-2xl font-semibold text-ink sm:text-3xl">
-          {name}
-        </h1>
+        <div className="min-w-0">
+          <h1 className="text-balance text-2xl font-semibold text-ink sm:text-3xl">
+            {name}
+          </h1>
+          {source && (
+            <p className="mt-1 text-sm text-muted">
+              {t("subject.curriculum", {
+                authority: source.authority,
+                edition: source.edition,
+              })}
+            </p>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -2,6 +2,7 @@ import type { LearningPath } from "@/lib/curriculum-api";
 import {
   topicsOf,
   type CurriculumData,
+  type CurriculumSource,
   type CurriculumSubject,
 } from "@/lib/curriculum-record";
 import { normalizeSubjectList } from "@/lib/slug";
@@ -136,17 +137,26 @@ function topicWords(title: string): string[] {
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .split(" ")
     .filter((word) => word && !SKIPPED_WORDS.has(word))
-    .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word));
+    .map((word) =>
+      word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word,
+    );
 }
 
 /** Edits between two words, a swap of neighbours counting as one. */
 function editDistance(a: string, b: string): number {
-  const rows = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array<number>(b.length).fill(0)]);
+  const rows = Array.from({ length: a.length + 1 }, (_, i) => [
+    i,
+    ...Array<number>(b.length).fill(0),
+  ]);
   for (let j = 0; j <= b.length; j++) rows[0][j] = j;
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      rows[i][j] = Math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1, rows[i - 1][j - 1] + cost);
+      rows[i][j] = Math.min(
+        rows[i - 1][j] + 1,
+        rows[i][j - 1] + 1,
+        rows[i - 1][j - 1] + cost,
+      );
       if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
         rows[i][j] = Math.min(rows[i][j], rows[i - 2][j - 2] + 1);
       }
@@ -156,7 +166,8 @@ function editDistance(a: string, b: string): number {
 }
 
 /** The slips of spelling a word of this length can carry and still be the same word: none in a short one. */
-const SLIPS = (length: number): number => (length <= 4 ? 0 : length <= 7 ? 1 : length <= 10 ? 2 : 4);
+const SLIPS = (length: number): number =>
+  length <= 4 ? 0 : length <= 7 ? 1 : length <= 10 ? 2 : 4;
 
 const isWordOf = (word: string): boolean => !/\d/.test(word);
 
@@ -175,7 +186,9 @@ export function sameTopic(a: string, b: string): boolean {
     if (!isWordOf(word) || !isWordOf(other)) return false;
     // A slip of the fingers seldom changes the first letter; "reproduction" and "production" are two topics.
     if (word[0] !== other[0]) return false;
-    return editDistance(word, other) <= SLIPS(Math.max(word.length, other.length));
+    return (
+      editDistance(word, other) <= SLIPS(Math.max(word.length, other.length))
+    );
   });
 }
 
@@ -231,7 +244,11 @@ export function subjectChange(current: CurriculumSubject[], names: string[]) {
 export function withSubjects(
   curriculum: CurriculumData,
   kept: CurriculumSubject[],
-  added: { subjects: CurriculumSubject[]; topics: Record<string, string[]> },
+  added: {
+    subjects: CurriculumSubject[];
+    topics: Record<string, string[]>;
+    sources?: Record<string, CurriculumSource>;
+  },
 ): CurriculumData {
   const subjects = [...kept, ...added.subjects];
   const topics = {
@@ -248,6 +265,7 @@ export function withSubjects(
     ...curriculum,
     subjects,
     topics,
+    sources: { ...ofSubjects(curriculum.sources, kept), ...added.sources },
     levels: ofSubjects(curriculum.levels, kept),
     goals: ofSubjects(curriculum.goals, kept),
     activeSession: kept.some(({ name }) => name === session?.subject)

@@ -1,4 +1,7 @@
-import type { CurriculumSubject } from "@/lib/curriculum-record";
+import type {
+  CurriculumSource,
+  CurriculumSubject,
+} from "@/lib/curriculum-record";
 import { createSSEStream } from "@/lib/api/sse";
 import { API_BASE_URL } from "@/lib/env";
 import { getJson } from "@/lib/api/request";
@@ -8,6 +11,9 @@ export interface CurriculumRequest {
   language: string;
   gradeLevel?: string;
   subjects?: string[];
+  /** The learner's school system and class as the catalogue names them, so a held curriculum can be found. */
+  system?: string;
+  level?: string;
 }
 
 type CurriculumSubjectEntry = CurriculumSubject | string;
@@ -16,6 +22,7 @@ export interface CurriculumResultEvent {
   type: "result";
   subjects?: CurriculumSubjectEntry[];
   topics?: Record<string, string[]>;
+  sources?: Record<string, CurriculumSource>;
 }
 
 interface CurriculumStatusEvent {
@@ -71,5 +78,7 @@ export function streamCurriculum(
   for (const subject of request.subjects ?? []) {
     url.searchParams.append("subject", subject);
   }
+  if (request.system) url.searchParams.set("system", request.system);
+  if (request.level) url.searchParams.set("level", request.level);
   return createSSEStream<CurriculumStreamEvent>(url.toString());
 }

@@ -139,6 +139,24 @@ describe("planRequest", () => {
       language: "en",
       gradeLevel: "Undergraduate student, studying Law",
       subjects: ["Law of Tort"],
+      system: "",
+      level: "undergraduate",
     });
+  });
+
+  it("names a school class as the catalogue does, so a held curriculum can be found", () => {
+    const request = planRequest(
+      {
+        country: "NG",
+        language: "en",
+        system: "NG",
+        level: "jss-1",
+        school: { names: { en: "JSS 1" } } as never,
+        course: "",
+        selectedSubjects: ["maths"],
+      },
+      [{ id: "maths", label: "Mathematics", recommended: true }],
+    );
+    expect([request.system, request.level]).toEqual(["NG", "jss-1"]);
   });
 });

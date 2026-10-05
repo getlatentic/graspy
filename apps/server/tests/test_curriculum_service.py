@@ -150,6 +150,7 @@ async def test_chosen_subjects_keep_the_clients_names_and_slugs():
             "mathematics": ["Fractions", "Ratios"],
             "english-language": ["Grammar"],
         },
+        "sources": {},
     }
     assert asked(lm, 0) == {
         "country": "Nigeria",
@@ -182,6 +183,7 @@ async def test_a_whole_curriculum_lists_each_subject_once_under_a_clean_slug():
             {"name": "Civic Education", "slug": "civic-education"},
         ],
         "topics": {"basic-science": ["Living things"]},
+        "sources": {},
     }
     assert asked(lm, 0) == {
         "country": "Nigeria",
@@ -232,6 +234,7 @@ async def test_a_whole_yoruba_curriculum_is_translated_too():
     assert result == {
         "subjects": [{"name": "Ìṣirò", "slug": "mathematics"}],
         "topics": {"mathematics": ["Ìdá"]},
+        "sources": {},
     }
     assert asked(lm, 0) == {
         "country": "Nigeria",
@@ -258,6 +261,88 @@ async def test_the_stream_reports_progress_then_the_result():
             "type": "result",
             "subjects": [{"name": "Mathematics", "slug": "mathematics"}],
             "topics": {"mathematics": ["Fractions"]},
+            "sources": {},
         },
     ]
     assert (asked(lm, 0)["country"], asked(lm, 0)["grade_level"]) == ("Ghana", "JHS 1")
+
+
+NERDC_JSS1_MATHS = {
+    "packageId": "ai.graspy.curriculum.ng.nerdc.jss1.mathematics",
+    "packageRevision": 2,
+    "authority": "NERDC",
+    "title": "Mathematics · JSS 1",
+    "edition": "September 2025",
+}
+
+
+async def test_a_subject_whose_curriculum_is_held_takes_its_topics_and_no_model_writes_them():
+    lm, context = stand_in([topics_answer({"English Language": ["Grammar"]})])
+
+    with context:
+        result = await CurriculumService().generate(
+            "NG",
+            "English",
+            "JSS 1",
+            ["Maths|mathematics", "English Language"],
+            "NG",
+            "jss-1",
+        )
+
+    assert result["topics"]["mathematics"][:3] == ["Whole Numbers", "LCM", "HCF"]
+    assert len(result["topics"]["mathematics"]) == 24
+    assert result["topics"]["english-language"] == ["Grammar"]
+    assert result["sources"] == {"mathematics": NERDC_JSS1_MATHS}
+    assert [s["label"] for s in asked(lm, 0)["input_subjects"]] == ["English Language"]
+
+
+async def test_held_topics_for_one_subject_need_no_model_at_all():
+    lm, context = stand_in([])
+
+    with context:
+        result = await CurriculumService().generate(
+            "NG", "English", "JSS 1", ["Mathematics"], "NG", "jss-1"
+        )
+
+    assert result["sources"] == {"mathematics": NERDC_JSS1_MATHS}
+    assert lm.history == []
+
+
+async def test_a_whole_curriculum_takes_the_held_topics_for_the_subjects_it_holds():
+    _, context = stand_in(
+        [
+            curriculum_answer(
+                ("mathematics", "Mathematics", ["Algebra"]),
+                ("basic-science", "Basic Science", ["Cells"]),
+            )
+        ]
+    )
+
+    with context:
+        result = await CurriculumService().generate(
+            "NG", "English", "JSS 1", None, "NG", "jss-1"
+        )
+
+    assert result["topics"]["mathematics"][0] == "Whole Numbers"
+    assert result["topics"]["basic-science"] == ["Cells"]
+    assert list(result["sources"]) == ["mathematics"]
+
+
+@pytest.mark.parametrize(
+    ("system", "level"), [("NG", "jss-2"), (None, None), ("GH", "jss-1")]
+)
+async def test_another_class_or_none_is_written_by_the_model_and_has_no_source(
+    system, level
+):
+    _, context = stand_in([topics_answer({"Mathematics": ["Algebra"]})])
+
+    with context:
+        result = await CurriculumService().generate(
+            "NG", "English", "JSS 2", ["Mathematics"], system, level
+        )
+
+    assert result == {
+        "subjects": [{"name": "Mathematics", "slug": "mathematics"}],
+        "topics": {"mathematics": ["Algebra"]},
+        "sources": {},
+    }

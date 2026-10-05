@@ -72,7 +72,8 @@
     "lessonsCompleted": "{completed} من {total} دروس",
     "progressLabel": "التقدم",
     "topicsLoading": "جارٍ تحميل المواضيع...",
-    "goal": "ما طلبته"
+    "goal": "ما طلبته",
+    "curriculum": "يتبع منهج {authority}، {edition}"
   },
   "lesson": {
     "backTo": "العودة إلى {subject}",
