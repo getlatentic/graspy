@@ -2,6 +2,7 @@ import { createSlug, normalizeSlug } from "@/lib/slug";
 import {
   planIdFor,
   type CurriculumData,
+  type CurriculumSource,
   type CurriculumSubject,
   type LearningSession,
 } from "@/lib/curriculum-record";
@@ -14,6 +15,7 @@ type CurriculumShape = Partial<PlanDetails> &
   Pick<PlanDetails, "country" | "language"> & {
     subjects: CurriculumSubject[];
     topics: Record<string, string[]>;
+    sources?: Record<string, CurriculumSource>;
     nextSubjectSlug?: string | null;
     activeSession?: LearningSession;
     createdAt?: number;
@@ -23,6 +25,7 @@ type CurriculumShape = Partial<PlanDetails> &
 export function buildCurriculum({
   subjects,
   topics,
+  sources = {},
   nextSubjectSlug,
   activeSession,
   createdAt = Date.now(),
@@ -38,6 +41,7 @@ export function buildCurriculum({
     topics: Object.fromEntries(
       Object.entries(topics).map(([slug, list]) => [slug, [...list]]),
     ),
+    sources: { ...sources },
     activeSession,
     assessment: { nextSubject: nextSubjectSlug ?? null },
     createdAt,
@@ -61,6 +65,7 @@ export function emptyCurriculum(): CurriculumData {
 export class CurriculumAccumulator {
   private readonly subjectsBySlug = new Map<string, CurriculumSubject>();
   private readonly topicsBySlug: Record<string, string[]> = {};
+  private readonly sourcesBySlug: Record<string, CurriculumSource> = {};
 
   constructor(initial: CurriculumSubject[] = []) {
     for (const subject of initial) {
@@ -76,6 +81,10 @@ export class CurriculumAccumulator {
     return { ...this.topicsBySlug };
   }
 
+  get sources(): Record<string, CurriculumSource> {
+    return { ...this.sourcesBySlug };
+  }
+
   get firstSubject(): CurriculumSubject | null {
     return this.subjects[0] ?? null;
   }
@@ -88,7 +97,11 @@ export class CurriculumAccumulator {
   }
 
   apply(chunk: CurriculumResultEvent): boolean {
-    return [this.applySubjects(chunk), this.applyTopics(chunk)].some(Boolean);
+    return [
+      this.applySubjects(chunk),
+      this.applyTopics(chunk),
+      this.applySources(chunk),
+    ].some(Boolean);
   }
 
   private applySubjects(chunk: CurriculumResultEvent): boolean {
@@ -142,5 +155,15 @@ export class CurriculumAccumulator {
     }
 
     return changed;
+  }
+
+  private applySources(chunk: CurriculumResultEvent): boolean {
+    const sources = Object.entries(chunk.sources ?? {});
+    for (const [key, source] of sources) {
+      const subject =
+        this.subjectsBySlug.get(normalizeSlug(key)) ?? this.findByName(key);
+      this.sourcesBySlug[subject ? subject.slug : normalizeSlug(key)] = source;
+    }
+    return sources.length > 0;
   }
 }

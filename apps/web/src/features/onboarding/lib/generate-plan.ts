@@ -62,12 +62,13 @@ export async function generatePlan({
   );
   if (failure) throw new Error(failure);
 
-  const { subjects, topics } = accumulator;
+  const { subjects, topics, sources } = accumulator;
   await saveCurriculum({
     ...details,
     gradeLevel: details.gradeLevel || "middle school",
     subjects,
     topics,
+    sources,
     assessment: { nextSubject: accumulator.firstSubject?.slug || null },
   });
   return {

@@ -72,7 +72,8 @@
     "lessonsCompleted": "{completed} nínú {total} ìkọ́ni",
     "progressLabel": "Ìlọsíwájú",
     "topicsLoading": "Ń kó àkòrí jọ...",
-    "goal": "Ohun tí o béèrè"
+    "goal": "Ohun tí o béèrè",
+    "curriculum": "Ó tẹ̀lé ètò-ẹ̀kọ́ {authority}, {edition}"
   },
   "lesson": {
     "backTo": "Padà sí {subject}",

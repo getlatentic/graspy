@@ -12,6 +12,8 @@ export function curriculumRequest(
     language: profile.language,
     gradeLevel: profile.gradeLevel,
     subjects,
+    system: profile.system,
+    level: profile.level,
   };
 }
 

@@ -10,6 +10,7 @@ from ..account.directory import Learner, LearnerId, learner_key
 from ..account.learners import opened
 from ..caller import Caller
 from ..config.generation import DEFAULT_GRADE_LEVEL
+from ..domains.curriculum.coverage import coverage
 from ..learner.record import Seen
 from ..learner.time import now_ms
 from ..security.firebase import (
@@ -38,6 +39,13 @@ Country = Annotated[str, Query(min_length=1, max_length=MAX_SHORT_TEXT)]
 Language = Annotated[str, Query(min_length=1, max_length=MAX_SHORT_TEXT)]
 Goal = Annotated[str, Query(min_length=1, max_length=MAX_TOPIC_TEXT)]
 GradeLevel = Annotated[str | None, Query(alias="gradeLevel", max_length=MAX_SHORT_TEXT)]
+# The learner's school system and class, as the education catalogue names them ("NG", "jss-1").
+SchoolSystem = Annotated[
+    str | None, Query(max_length=MAX_SHORT_TEXT, pattern=r"^[A-Za-z0-9-]+$")
+]
+SchoolLevel = Annotated[
+    str | None, Query(max_length=MAX_SHORT_TEXT, pattern=r"^[A-Za-z0-9-]+$")
+]
 SubjectNames = Annotated[
     list[str] | None, Query(alias="subject", max_length=MAX_SHORT_TEXT)
 ]
@@ -194,6 +202,8 @@ async def generate_curriculum_stream(
     language: Language,
     grade_level: GradeLevel = None,
     subjects: SubjectNames = None,
+    system: SchoolSystem = None,
+    level: SchoolLevel = None,
 ) -> EventSourceResponse:
     asked = Asked(
         country=country, language=language, grade_level=grade_level, subjects=subjects
@@ -203,8 +213,16 @@ async def generate_curriculum_stream(
         language=asked.language,
         grade_level=asked.grade(),
         subjects=asked.subjects,
+        system=system,
+        level=level,
     )
     return sse_response(events, "Curriculum stream failed")
+
+
+@api_router.get("/curriculum/coverage", tags=["curriculum"])
+async def curriculum_coverage() -> list[dict]:
+    """Each class and subject graspy holds a curriculum or voice lessons for, and how well grounded they are."""
+    return coverage()
 
 
 @api_router.get(

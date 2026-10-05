@@ -21,7 +21,11 @@ async function topicsForNewSubjects(
     if (chunk.type === "error") throw new Error(chunk.message);
     if (chunk.type !== "status") accumulator.apply(chunk);
   }
-  return { subjects: accumulator.subjects, topics: accumulator.topics };
+  return {
+    subjects: accumulator.subjects,
+    topics: accumulator.topics,
+    sources: accumulator.sources,
+  };
 }
 
 /** Only new subjects get topics made; kept ones keep their progress. */
@@ -38,7 +42,7 @@ export async function changeSubjects(
         change.kept,
         change.added,
       )
-    : { subjects: [], topics: {} };
+    : { subjects: [], topics: {}, sources: {} };
   // A record failure leaves stale topics there; the change still stands.
   await Promise.all(
     change.removed.map((subject) =>

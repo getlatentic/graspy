@@ -215,7 +215,30 @@ async def test_the_curriculum_stream_reaches_the_curriculum_service():
         "type": "result",
         "subjects": [{"name": "Mathematics", "slug": "mathematics"}],
         "topics": {"mathematics": ["Fractions"]},
+        "sources": {},
     }
+
+
+async def test_the_curriculum_stream_takes_a_held_curriculum_for_the_learners_class():
+    query = {
+        "country": "NG",
+        "language": "English",
+        "subject": "Mathematics",
+        "system": "NG",
+        "level": "jss-1",
+    }
+
+    response = await _with_model(
+        create_app(settings()),
+        [],
+        lambda http, auth: http.get(
+            "/api/curriculum/generate-stream", params=query, headers=auth
+        ),
+    )
+
+    result = _stream_events(response)[-1]
+    assert result["topics"]["mathematics"][0] == "Whole Numbers"
+    assert result["sources"]["mathematics"]["authority"] == "NERDC"
 
 
 DEVICE = "0a1b2c3d4e5f60718293a4b5c6d7e8f9"

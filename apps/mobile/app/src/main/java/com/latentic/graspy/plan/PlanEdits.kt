@@ -1,5 +1,7 @@
 package com.latentic.graspy.plan
 
+import kotlinx.serialization.json.JsonObject
+
 // A plan's edits, as the web makes them (features/learn/lib/curriculum-edit.ts). Each returns a new plan
 // stamped [now]; topics stay keyed by slug only, so an edit never leaves two lists for one subject.
 
@@ -80,5 +82,13 @@ fun LearnerPlan.withSubjects(kept: List<PlanSubject>, added: List<PlanSubject>, 
         activeSession = session,
         assessment = Assessment(next),
         updatedAt = now,
+        extras = extras.withSourcesOf(kept),
     )
+}
+
+/** The official curriculum of the kept subjects only: an added one here is planned by a model, which this app asks without the class. */
+private fun JsonObject.withSourcesOf(kept: List<PlanSubject>): JsonObject {
+    val sources = this["sources"] as? JsonObject ?: return this
+    val slugs = kept.map { it.slug }.toSet()
+    return JsonObject(this + ("sources" to JsonObject(sources.filterKeys { it in slugs })))
 }

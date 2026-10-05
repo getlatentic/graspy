@@ -61,11 +61,17 @@ describe("withTopic", () => {
     ["The decimals", 1],
     ["Décimals", 1],
     ["fraction", 0],
-  ])("opens the topic already there for %j, which only differs in form", (title, index) => {
-    const before = plan();
+  ])(
+    "opens the topic already there for %j, which only differs in form",
+    (title, index) => {
+      const before = plan();
 
-    expect(withTopic(before, "mathematics", title)).toEqual({ curriculum: before, index });
-  });
+      expect(withTopic(before, "mathematics", title)).toEqual({
+        curriculum: before,
+        index,
+      });
+    },
+  );
 
   it("still adds a topic that is another topic: one that only contains the words of an existing one", () => {
     const result = withTopic(plan(), "mathematics", "Decimals and percentages");
@@ -109,6 +115,35 @@ describe("withSubjects", () => {
     expect(result.topics).toEqual({
       mathematics: ["Fractions", "Decimals"],
       english: ["Nouns"],
+    });
+  });
+
+  it("keeps a kept subject's curriculum, takes an added one's and drops a removed one's", () => {
+    const source = (authority: string) => ({
+      packageId: authority,
+      packageRevision: 1,
+      authority,
+      title: authority,
+      edition: "2025",
+    });
+    const result = withSubjects(
+      plan({
+        sources: {
+          mathematics: source("NERDC"),
+          "basic-science": source("NERDC"),
+        },
+      }),
+      [MATHS],
+      {
+        subjects: [ENGLISH],
+        topics: { english: ["Nouns"] },
+        sources: { english: source("WAEC") },
+      },
+    );
+
+    expect(result.sources).toEqual({
+      mathematics: source("NERDC"),
+      english: source("WAEC"),
     });
   });
 
@@ -217,7 +252,9 @@ describe("paths across plan changes", () => {
 
 describe("topicKey", () => {
   it("makes one topic of its spellings, and not of different topics", () => {
-    expect(topicKey("Ratio & Proportion")).toBe(topicKey("ratio and proportions"));
+    expect(topicKey("Ratio & Proportion")).toBe(
+      topicKey("ratio and proportions"),
+    );
     expect(topicKey("Number Sense")).not.toBe(topicKey("Number"));
     expect(topicKey("Gas")).toBe("gas");
   });
@@ -230,9 +267,12 @@ describe("sameTopic", () => {
     ["Decimals", "decimlas"],
     ["Photosynthesis", "photosyntesis"],
     ["Ratio and proportion", "ratio & proprotion"],
-  ])("takes %j and %j as one topic, for a slip of the fingers", (existing, typed) => {
-    expect(sameTopic(existing, typed)).toBe(true);
-  });
+  ])(
+    "takes %j and %j as one topic, for a slip of the fingers",
+    (existing, typed) => {
+      expect(sameTopic(existing, typed)).toBe(true);
+    },
+  );
 
   it.each([
     ["Linear equations", "Linear inequalities"],

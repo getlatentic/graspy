@@ -95,10 +95,13 @@ export function planRequest(
   const subjects = data.selectedSubjects
     .map((id) => available.find((subject) => subject.id === id)?.label)
     .filter((label): label is string => Boolean(label));
+  const learner = learnerDetails(data);
   return {
     country: data.country,
     language: data.language,
-    gradeLevel: learnerDetails(data).gradeLevel,
+    gradeLevel: learner.gradeLevel,
     subjects,
+    system: learner.system,
+    level: learner.level,
   };
 }
