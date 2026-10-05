@@ -1,28 +1,13 @@
-import json
-
 from app.domains.curriculum.packages import courses, held_course
-from app.domains.curriculum.packages.export import (
-    COURSES,
-    OUTLINES,
-    outline,
-    outline_name,
-)
+from app.domains.curriculum.packages.export import outlines
+from app.domains.curriculum.packages.outlines import OUTLINES
 from app.education.catalogue import systems
 
 
-def test_each_outline_is_what_its_package_gives_now():
-    for entry in json.loads(COURSES.read_text(encoding="utf-8")):
-        kept = json.loads((OUTLINES / outline_name(entry)).read_text(encoding="utf-8"))
-        assert kept == outline(entry), (
-            f"{outline_name(entry)} is stale: run python -m app.domains.curriculum.packages.export"
-        )
-
-
-def test_every_outline_has_its_course_entry():
-    named = {
-        outline_name(entry) for entry in json.loads(COURSES.read_text(encoding="utf-8"))
-    }
-    assert {path.name for path in OUTLINES.glob("*.json")} == named
+def test_the_outlines_are_what_the_packages_give_now():
+    assert OUTLINES == outlines(), (
+        "outlines.py is stale: run python -m app.domains.curriculum.packages.export"
+    )
 
 
 def test_each_course_is_for_classes_the_catalogue_has():

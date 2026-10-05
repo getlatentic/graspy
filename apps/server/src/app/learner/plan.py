@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, model_validator
 
 from ..wire import Wire
 from .record import Id, PlanMerged
@@ -32,6 +32,22 @@ class Plan(Wire):
     country: str | None = None
     language: str | None = None
     grade_level: str | None = None
+
+    @model_validator(mode="after")
+    def _sources_of_its_subjects(self) -> Plan:
+        """The official curriculum each subject's topics follow, kept only for a subject the plan has: a subject
+        removed and added again on a device that does not ask for held curricula is planned by a model."""
+        if self.model_extra and isinstance(self.model_extra.get("sources"), dict):
+            slugs = {subject.slug for subject in self.subjects}
+            self.model_extra["sources"] = {
+                slug: source
+                for slug, source in self.model_extra["sources"].items()
+                if slug in slugs
+            }
+        return self
+
+    def sources(self) -> dict:
+        return (self.model_extra or {}).get("sources") or {}
 
     def written_for(self) -> tuple[str | None, str | None, str | None]:
         """What the plan was made for: its topics suit this and nothing else."""
@@ -69,6 +85,9 @@ def joined(account: Plan | None, device: Plan, now: int) -> Joined:
             "updated_at": now,
         }
     )
+    sources = _added(account.sources(), device.sources(), added)
+    if sources:
+        merged.model_extra["sources"] = sources
     return Joined(merged, _carried(device, merged))
 
 

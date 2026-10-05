@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterable
 
 import dspy
 
@@ -42,7 +42,9 @@ class CurriculumService:
         chosen = normalize_subjects(subjects or [])
         writing_language = generation_language_for(language)
         if chosen:
-            held = {slugify(s.id): c for s in chosen if (c := _held(system, level, s))}
+            held = _first_for_each(
+                (slugify(s.id), _held(system, level, s)) for s in chosen
+            )
             listed = [{"name": s.label, "slug": slugify(s.id)} for s in chosen]
             to_write = [s for s in chosen if slugify(s.id) not in held]
             topics = (
@@ -54,14 +56,14 @@ class CurriculumService:
             listed, topics = await self._whole_curriculum(
                 country, writing_language, grade_level
             )
-            held = {
-                s["slug"]: c
-                for s in listed
-                if (
-                    c := held_course(system, level, s["name"])
-                    or held_course(system, level, s["slug"])
+            held = _first_for_each(
+                (
+                    s["slug"],
+                    held_course(system, level, s["name"])
+                    or held_course(system, level, s["slug"]),
                 )
-            }
+                for s in listed
+            )
         topics |= {slug: course.topics() for slug, course in held.items()}
         _record_unheld(
             country, system, level, [s["slug"] for s in listed if s["slug"] not in held]
@@ -150,6 +152,16 @@ def _held(
     return held_course(system, level, subject.id) or held_course(
         system, level, subject.label
     )
+
+
+def _first_for_each(matches: Iterable[tuple[str, Course | None]]) -> dict[str, Course]:
+    """Each held course for the first subject it matches: a plan listing "Mathematics" and "General Mathematics" does
+    not show one curriculum twice."""
+    held: dict[str, Course] = {}
+    for slug, course in matches:
+        if course is not None and course not in held.values():
+            held[slug] = course
+    return held
 
 
 def _record_unheld(

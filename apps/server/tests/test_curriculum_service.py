@@ -346,3 +346,22 @@ async def test_another_class_or_none_is_written_by_the_model_and_has_no_source(
         "topics": {"mathematics": ["Algebra"]},
         "sources": {},
     }
+
+
+async def test_one_held_curriculum_is_given_to_one_subject_only():
+    _, context = stand_in(
+        [
+            curriculum_answer(
+                ("mathematics", "Mathematics", ["Algebra"]),
+                ("general-mathematics", "General Mathematics", ["Sets"]),
+            )
+        ]
+    )
+
+    with context:
+        result = await CurriculumService().generate(
+            "NG", "English", "JSS 1", None, "NG", "jss-1"
+        )
+
+    assert list(result["sources"]) == ["mathematics"]
+    assert result["topics"]["general-mathematics"] == ["Sets"]

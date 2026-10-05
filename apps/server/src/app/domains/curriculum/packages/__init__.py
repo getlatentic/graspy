@@ -4,14 +4,10 @@ A plan for a learner whose class and subject a held course covers takes its topi
 and says where they come from; any other is written by a model and says so.
 """
 
-import json
 from dataclasses import dataclass
 from functools import cache
-from pathlib import Path
 
 from ....utils.slug import slugify
-
-OUTLINES = Path(__file__).parent / "outlines"
 
 
 @dataclass(frozen=True)
@@ -80,10 +76,11 @@ def _course(outline: dict) -> Course:
 
 @cache
 def courses() -> tuple[Course, ...]:
-    return tuple(
-        _course(json.loads(path.read_text(encoding="utf-8")))
-        for path in sorted(OUTLINES.glob("*.json"))
-    )
+    # Imported here, not at the top: the Worker's startup snapshot has a size cap, and no outline is needed until a
+    # plan or the coverage asks for one.
+    from .outlines import OUTLINES
+
+    return tuple(_course(outline) for outline in OUTLINES)
 
 
 def held_course(system: str | None, level: str | None, subject: str) -> Course | None:
