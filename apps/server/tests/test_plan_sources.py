@@ -55,3 +55,16 @@ def test_the_accounts_own_subjects_keep_the_accounts_sources():
     device = plan("d", ["mathematics", "english"])
 
     assert joined(account, device, now=3).plan.sources() == {"mathematics": NERDC}
+
+
+def test_sources_in_another_shape_are_none_and_a_join_still_works():
+    for sent in ([1, 2], "str", 5, None, {"mathematics": "oops"}):
+        account = plan("a", ["english"], updated=2)
+        device = Plan.model_validate(
+            {
+                **plan("d", ["english", "mathematics"]).model_dump(by_alias=True),
+                "sources": sent,
+            }
+        )
+        assert device.sources() == {}
+        assert joined(account, device, now=3).plan.sources() == {}

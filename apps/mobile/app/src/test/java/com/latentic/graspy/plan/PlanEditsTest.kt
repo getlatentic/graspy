@@ -1,5 +1,7 @@
 package com.latentic.graspy.plan
 
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -38,6 +40,14 @@ class PlanEditsTest {
         assertEquals(mapOf("maths" to listOf("Fractions"), "art" to listOf("Colour")), next.topics)
         assertNull(next.activeSession)
         assertEquals("maths", next.assessment?.nextSubject)
+    }
+
+    @Test
+    fun `a removed subject's curriculum goes with it, and a kept one's stays`() {
+        val source = buildJsonObject { put("authority", "NERDC") }
+        val withSources = plan.copy(extras = buildJsonObject { put("sources", buildJsonObject { put("maths", source); put("science", source) }) })
+        val next = withSources.withSubjects(listOf(maths), listOf(PlanSubject("Art", "art")), mapOf("art" to listOf("Colour")), 9)
+        assertEquals(buildJsonObject { put("maths", source) }, next.extras["sources"])
     }
 
     @Test

@@ -35,15 +35,21 @@ class Plan(Wire):
 
     @model_validator(mode="after")
     def _sources_of_its_subjects(self) -> Plan:
-        """The official curriculum each subject's topics follow, kept only for a subject the plan has: a subject
-        removed and added again on a device that does not ask for held curricula is planned by a model."""
-        if self.model_extra and isinstance(self.model_extra.get("sources"), dict):
+        """The official curriculum each subject's topics follow, kept only for a subject the plan has and in the shape
+        the apps write: a subject removed and added again on a device that does not ask for held curricula is planned
+        by a model, and a value in another shape is no source."""
+        if self.model_extra and "sources" in self.model_extra:
+            sent = self.model_extra["sources"]
             slugs = {subject.slug for subject in self.subjects}
-            self.model_extra["sources"] = {
-                slug: source
-                for slug, source in self.model_extra["sources"].items()
-                if slug in slugs
-            }
+            self.model_extra["sources"] = (
+                {
+                    slug: source
+                    for slug, source in sent.items()
+                    if slug in slugs and isinstance(source, dict)
+                }
+                if isinstance(sent, dict)
+                else {}
+            )
         return self
 
     def sources(self) -> dict:
