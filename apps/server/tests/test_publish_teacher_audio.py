@@ -296,3 +296,83 @@ def test_the_key_is_read_from_the_environment_or_the_file_and_never_printed(
     with pytest.raises(SystemExit, match="No YARNGPT_API_KEY"):
         read_key(tmp_path / "missing")
     assert "from-" not in capsys.readouterr().out
+
+
+TICKET = json.dumps({"stream_url": "/api/v1/tts/stream/t"}).encode()
+FOUR = ["prompt", "feedback-correct", "feedback-retry", "feedback-unclear"]
+
+
+def test_a_stop_asks_for_no_more_lines(home):
+    network = Network([TICKET, MP3, refusal(402)])
+
+    with pytest.raises(Stop):
+        run(network=network, only=FOUR)
+
+    assert len(network.requests) == 3
+    assert len(json.loads((home / "staging.json").read_text())) == 1
+
+
+def test_trouble_that_is_not_the_providers_is_that_lines_failure_and_the_others_go_on(
+    home,
+):
+    class Odd(Store):
+        def __call__(self, bucket, key, audio):
+            if "/feedback-correct/" in key:
+                raise KeyError("odd")
+            super().__call__(bucket, key, audio)
+
+    outcome = run(store=Odd(), only=FOUR)
+
+    assert outcome["made"] == 3 and outcome["failed"] == {
+        "feedback-correct": "KeyError: 'odd'"
+    }
+
+
+def test_what_was_kept_is_noted_after_each_line_so_a_killed_run_loses_none(home):
+    first, second, third, _ = [line[0] for line in lines_to_record("en", FOUR, None)]
+
+    class Killed(Store):
+        def __call__(self, bucket, key, audio):
+            if f"/{third}/" in key:
+                raise KeyboardInterrupt
+            super().__call__(bucket, key, audio)
+
+    with pytest.raises(KeyboardInterrupt):
+        run(store=Killed(), only=FOUR)
+
+    kept = {
+        note["id"] for note in json.loads((home / "staging.json").read_text()).values()
+    }
+    assert {first, second} <= kept and third not in kept
+
+
+def test_the_notes_are_written_whole_and_a_damaged_file_is_ignored_with_a_word(
+    home, capsys
+):
+    run()
+    assert [
+        path.name
+        for path in home.iterdir()
+        if path.suffix == ".tmp" or path.name.endswith(".json.tmp")
+    ] == []
+
+    (home / "staging.json").write_text('{"truncated": ')
+    outcome = run()
+
+    assert outcome["made"] == 2
+    assert "damaged" in capsys.readouterr().err
+
+
+def test_one_idempotency_key_serves_every_attempt_at_a_line_and_the_next_line_has_its_own():
+    network = Network([refusal(503)])
+    client = yarn(network)
+
+    client.record("Well done.", "idera")
+    client.record("Try again.", "idera")
+
+    keys = [
+        headers["Idempotency-key"]
+        for url, _, headers, *_ in network.requests
+        if url.endswith("/tts/prepare")
+    ]
+    assert keys[0] == keys[1] and keys[2] != keys[0]

@@ -112,12 +112,12 @@ class Yarn:
         except (urllib.error.URLError, TimeoutError, OSError) as error:
             raise Failed(f"{type(error).__name__}", 0) from error
 
-    def _once(self, text: str, voice: str) -> bytes:
+    def _once(self, text: str, voice: str, idempotency_key: str) -> bytes:
         body = json.dumps({"text": text, "voice": voice}).encode()
         headers = {
             "Authorization": f"Bearer {self.key}",
             "Content-Type": "application/json",
-            "Idempotency-Key": str(uuid.uuid4()),
+            "Idempotency-Key": idempotency_key,
             "User-Agent": USER_AGENT,
         }
         ticket = json.loads(
@@ -137,9 +137,11 @@ class Yarn:
         return audio
 
     def record(self, text: str, voice: str) -> bytes:
+        # One key for the line, so a retry after an accepted request that timed out is not billed again.
+        idempotency_key = str(uuid.uuid4())
         for attempt in range(MOST_ATTEMPTS):
             try:
-                return self._once(text, voice)
+                return self._once(text, voice, idempotency_key)
             except Failed as error:
                 reason, wait = error.args
                 if attempt == MOST_ATTEMPTS - 1:
@@ -192,7 +194,24 @@ def lines_to_record(
 
 
 def load(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        print(
+            f"{path} is damaged and is ignored: lines are recorded again.",
+            file=sys.stderr,
+        )
+        return {}
+
+
+def save(path: Path, state: dict) -> None:
+    """Written whole and moved into place, so a run killed while writing leaves the earlier notes."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(state, indent=1), encoding="utf-8")
+    os.replace(temporary, path)
 
 
 def publish(
@@ -219,7 +238,7 @@ def publish(
         "failed": {},
     }
 
-    lock = threading.Lock()
+    lock, stopped = threading.Lock(), threading.Event()
 
     def one(line: tuple[str, str, str]) -> None:
         utterance_id, key, text = line
@@ -233,31 +252,48 @@ def publish(
         with lock:
             state[key] = {"bytes": len(audio), "id": utterance_id}
             outcome["made"] += 1
+            save(state_path, state)
         print(
             f"{utterance_id}: {len(audio)} bytes in {time.time() - started:.1f} s",
             flush=True,
         )
 
+    def fail(utterance_id: str, reason: str) -> None:
+        with lock:
+            outcome["failed"][utterance_id] = reason
+        print(f"{utterance_id}: FAILED ({reason})", flush=True)
+
     def guarded(line: tuple[str, str, str]) -> None:
+        if stopped.is_set():
+            return
         try:
             one(line)
+        except Stop as error:
+            outcome["stopped"] = str(error)
+            stopped.set()
         except Failed as error:
-            with lock:
-                outcome["failed"][line[0]] = str(error)
-            print(f"{line[0]}: FAILED ({error})", flush=True)
+            fail(line[0], str(error))
         except subprocess.CalledProcessError as error:
-            outcome["failed"][line[0]] = (
+            fail(
+                line[0],
                 "the store refused it: "
-                + error.stderr.decode("utf-8", "replace")[-200:]
+                + (error.stderr or b"").decode("utf-8", "replace")[-200:],
             )
-            print(f"{line[0]}: store refused it", flush=True)
+        except Exception as error:  # noqa: BLE001 - one line's trouble is reported, and the run goes on
+            fail(line[0], f"{type(error).__name__}: {error}")
 
+    pool = ThreadPoolExecutor(workers)
     try:
-        with ThreadPoolExecutor(workers) as pool:
-            list(pool.map(guarded, todo))
+        list(pool.map(guarded, todo))
+    except BaseException:
+        pool.shutdown(wait=False, cancel_futures=True)
+        raise
     finally:
-        state_path.parent.mkdir(parents=True, exist_ok=True)
-        state_path.write_text(json.dumps(state, indent=1), encoding="utf-8")
+        pool.shutdown(wait=True)
+        with lock:
+            save(state_path, state)
+    if "stopped" in outcome:
+        raise Stop(outcome["stopped"])
     return outcome
 
 
