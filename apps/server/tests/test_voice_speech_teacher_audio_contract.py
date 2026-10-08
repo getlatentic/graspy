@@ -12,7 +12,9 @@ from app.voice.speech.teacher_audio_contract import (
     is_fresh,
     published_utterance_ids,
     teacher_audio_route,
+    teacher_audio_routes,
     teacher_utterance,
+    yarngpt_route,
 )
 
 PROJECT_ROOT = Path(__file__).parents[1]
@@ -363,3 +365,57 @@ def test_a_small_teaching_question_that_names_nothing_asks_the_provider_nothing(
 ):
     with pytest.raises(ValueError, match="unsupported teacher utterance"):
         teacher_utterance(utterance, "en")
+
+
+def test_an_english_line_is_recorded_in_idera_and_spoken_in_a_turn_by_spitch():
+    utterance = teacher_utterance("prompt", "en")
+
+    recorded, spoken = teacher_audio_routes(utterance)
+
+    assert (
+        recorded.provider,
+        recorded.request["voice"],
+        recorded.extension,
+        recorded.content_type,
+    ) == (
+        "yarngpt",
+        "idera",
+        "mp3",
+        "audio/mpeg",
+    )
+    assert recorded.endpoint == "https://yarngpt.ai/api/v1/tts/prepare"
+    assert recorded.request["text"] == utterance.text
+    assert (spoken.provider, spoken.request["voice"]) == ("spitch", "lucy")
+
+
+@pytest.mark.parametrize("language", ["yo", "pcm"])
+def test_another_language_is_recorded_and_spoken_by_spitch_alone(language):
+    routes = teacher_audio_routes(teacher_utterance("prompt", language))
+
+    assert [route.provider for route in routes] == ["spitch"]
+
+
+def test_the_two_recordings_of_a_line_have_their_own_versions_and_keys():
+    utterance = teacher_utterance("prompt", "en")
+    recorded, spoken = teacher_audio_routes(utterance)
+
+    assert audio_version(recorded) != audio_version(spoken)
+    assert audio_cache_key("prompt", "en", recorded) != audio_cache_key(
+        "prompt", "en", spoken
+    )
+    assert audio_cache_key("prompt", "en", recorded).endswith("/yarngpt.mp3")
+
+
+def test_a_rewritten_line_is_recorded_afresh_and_a_changed_voice_is_a_new_recording():
+    first = yarngpt_route(TeacherUtterance(text="Well done.", language="en"))
+    reworded = yarngpt_route(TeacherUtterance(text="Well done, child.", language="en"))
+
+    assert audio_version(first) != audio_version(reworded)
+
+
+def test_a_requested_format_changes_the_spitch_recording_only():
+    ogg = teacher_audio_routes(teacher_utterance("prompt", "en"), "ogg")
+    mp3 = teacher_audio_routes(teacher_utterance("prompt", "en"), "mp3")
+
+    assert ogg[0] == mp3[0]
+    assert ogg[1] != mp3[1]
