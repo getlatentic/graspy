@@ -427,6 +427,34 @@ def teacher_audio_route(
     )
 
 
+# English lines are recorded ahead of time in YarnGPT's Idera, which listeners preferred to Spitch's Lucy (7 of 10 lines,
+# blind). It answers in 3 to 11 seconds and queues about a second per request at once, with no plan that raises that, so
+# it never speaks a line within a turn: the Worker serves what was recorded and speaks anything else with Spitch.
+YARNGPT_VOICE = "idera"
+YARNGPT_LANGUAGES = frozenset({"en"})
+
+
+def yarngpt_route(utterance: TeacherUtterance) -> TeacherAudioRoute:
+    """The recording the publisher makes: asked for at `prepare`, then fetched from the ticket it returns."""
+    return TeacherAudioRoute(
+        provider="yarngpt",
+        endpoint="https://yarngpt.ai/api/v1/tts/prepare",
+        request={"text": utterance.text, "voice": YARNGPT_VOICE},
+        extension="mp3",
+        content_type="audio/mpeg",
+    )
+
+
+def teacher_audio_routes(
+    utterance: TeacherUtterance, audio_format: AudioFormat = "ogg"
+) -> tuple[TeacherAudioRoute, ...]:
+    """The recordings a line may be kept in, best first. The last can be spoken within a turn; the others are only published."""
+    spitch = teacher_audio_route(utterance, audio_format)
+    if utterance.language in YARNGPT_LANGUAGES:
+        return (yarngpt_route(utterance), spitch)
+    return (spitch,)
+
+
 def audio_version(route: TeacherAudioRoute) -> str:
     """The recording's identity: exactly what the provider is asked to say, in which voice."""
     spoken = json.dumps(

@@ -38,6 +38,7 @@ The server's environment holds only what changes between deployments or is secre
 | `FIREBASE_API_KEY` | The Firebase project's web API key: the project whose sign-ins are accepted. A Worker secret in production. Unset turns sign-in off |
 | `FIREBASE_AUTH_EMULATOR_HOST` | The Auth emulator's `host:port`, which then checks sign-ins in place of Google. Development only: the server refuses to start with it in production |
 | `INTRON_API_KEY` | Intron's speech recognition, which hears the learner in voice lessons. Worker only: `.dev.vars` locally, a secret in production |
+| `YARNGPT_API_KEY` | YarnGPT's speech, used only by `scripts/voice/publish_teacher_audio.py` to record the English lines in Idera. In `apps/server/.dev.vars` or the environment of whoever publishes; never a Worker secret, since the Worker does not call YarnGPT |
 | `SPITCH_API_KEY` | Spitch's speech synthesis, the teacher's voice in voice lessons. Worker only: `.dev.vars` locally, a secret in production |
 | `SESSION_SECRET` | Signs session tokens. Required in production; in development a temporary key is made |
 | `CORS_ORIGINS` | Allowed origins, comma-separated or JSON. One wildcard label is allowed; `*` is refused |

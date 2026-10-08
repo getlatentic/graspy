@@ -25,6 +25,8 @@ Both use one model, built in one place, for every language. Yoruba, Hausa, Igbo 
 
 A subject whose official curriculum graspy holds for the learner's class takes its topics from it, in its order, and the plan records the edition; a model writes the rest, and the app does not show them as a curriculum. The held editions are the teacher app's packages: `apps/server/src/app/domains/curriculum/packages` keeps an outline of each, derived by `export.py` and checked against the package by a test, with the classes and subject names it is for in `courses.json`. A new edition or revision of a package is a new outline: export again, and the test fails until it is.
 
+The teacher's voice for a curriculum line is kept in a store, one recording per voice. English lines are recorded ahead of time in YarnGPT's Idera by `scripts/voice/publish_teacher_audio.py`, which is slow and queues, so the Worker never asks YarnGPT for anything: it serves the best recording held and speaks a line not yet recorded with Spitch within the turn. Other languages and the tutor's replies to a child are Spitch's.
+
 A lesson is staged: a plan, then each slide with the earlier slides as context, then a practice question. A failed slide costs one slide, not the lesson.
 
 ## Three surfaces, one app
