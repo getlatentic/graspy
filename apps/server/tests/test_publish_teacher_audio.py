@@ -162,6 +162,20 @@ class Store:
         self.kept[(bucket, key)] = audio
 
 
+@pytest.fixture(autouse=True)
+def never_the_real_store(monkeypatch):
+    """The publisher swallows a failing line, so the guard is checked after."""
+    reached = []
+
+    def refuse(command, *args, **options):
+        reached.append(command)
+        raise OSError("a test must not reach the real command")
+
+    monkeypatch.setattr(publish.__globals__["subprocess"], "run", refuse)
+    yield
+    assert reached == []
+
+
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     monkeypatch.setitem(publish.__globals__, "HOME", tmp_path)
@@ -459,3 +473,96 @@ def test_the_lines_the_lessons_say_are_recorded_first():
     assert all(
         utterance_id in plan_lines for utterance_id in ordered[: len(plan_lines)]
     )
+
+
+def refusal_with(code: int, body: dict, retry_after: str | None = None):
+    headers = {"Retry-After": retry_after} if retry_after else {}
+    return urllib.error.HTTPError(
+        "https://yarngpt.ai",
+        code,
+        "refused",
+        SimpleNamespace(get=headers.get),
+        io.BytesIO(json.dumps(body).encode()),
+    )
+
+
+def test_the_credits_left_and_needed_are_said_when_the_402_gives_them():
+    network = Network(
+        [
+            refusal_with(
+                402,
+                {
+                    "error": {
+                        "code": "QUOTA_EXCEEDED",
+                        "details": {"credits_remaining": 4, "credits_required": 5},
+                    }
+                },
+            )
+        ]
+    )
+
+    with pytest.raises(Stop, match=r"4 left, 5 needed"):
+        yarn(network).record("Okay.", "idera")
+
+
+def test_an_expired_link_is_that_attempts_failure_and_the_job_is_asked_after_again_not_a_refused_key():
+    network = Network(
+        [JOB, done(), refusal(403), JOB, done("https://store.example/fresh.mp3"), MP3]
+    )
+
+    assert yarn(network, route="job").record("Well done.", "idera") == MP3
+    assert network.requests[-1][0] == "https://store.example/fresh.mp3"
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        json.dumps({"status": "completed"}).encode(),
+        b"<html>502 Bad Gateway</html>",
+        json.dumps({"job_id": ""}).encode(),
+    ],
+)
+def test_an_answer_without_what_was_wanted_is_a_failed_attempt_and_is_asked_for_again(
+    bad,
+):
+    network = Network(
+        [bad, JOB, done(), MP3]
+        if bad != json.dumps({"status": "completed"}).encode()
+        else [JOB, bad, JOB, done(), MP3]
+    )
+
+    assert yarn(network, route="job").record("Well done.", "idera") == MP3
+
+
+def test_the_stop_after_a_long_wait_names_the_route_it_is_on():
+    stream = Network([refusal(429, "987")])
+    job = Network([refusal(429, "987")])
+
+    with pytest.raises(Stop, match="--route job"):
+        yarn(stream).record("Well done.", "idera")
+    with pytest.raises(Stop) as stopped:
+        yarn(job, route="job").record("Well done.", "idera")
+    assert "--route job" not in str(stopped.value)
+
+
+def test_a_recording_is_kept_locally_before_the_store_is_asked_so_a_refused_store_loses_nothing_paid_for(
+    home,
+):
+    outcome = run(store=Store(refuse=["/prompt/"]), only=["prompt"])
+
+    assert list(outcome["failed"]) == ["prompt"]
+    assert (home / "staging" / "en-prompt.mp3").read_bytes() == MP3
+
+
+def test_a_stop_leaves_its_counts_to_be_said(home, capsys, monkeypatch):
+    monkeypatch.setitem(main.__globals__, "read_key", lambda _: "k")
+    monkeypatch.setitem(
+        main.__globals__,
+        "Yarn",
+        lambda key, route: yarn(Network([TICKET, MP3, refusal(402)])),
+    )
+    monkeypatch.setitem(main.__globals__, "keep", Store())
+
+    assert main(["staging", "--workers", "1", "--limit", "4"]) == 2
+    said = capsys.readouterr().out
+    assert "STOPPED" in said and "the notes are saved" in said

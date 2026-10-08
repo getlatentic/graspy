@@ -69,6 +69,27 @@ class Failed(Exception):
     """One line could not be recorded."""
 
 
+def credits_said(error: urllib.error.HTTPError) -> str:
+    """What the 402 says: the credits left and the credits the line needs, when the body gives them."""
+    try:
+        details = json.loads(error.read()).get("error", {}).get("details", {})
+        return f"insufficient credits ({details['credits_remaining']} left, {details['credits_required']} needed)."
+    except ValueError, KeyError, AttributeError, TypeError:
+        return "no credits, or the account is not in good standing."
+
+
+def parsed(data: bytes, *names: str) -> dict:
+    """The JSON object the provider answered, with the fields wanted; anything else is a failed attempt, to be asked for again."""
+    try:
+        found = json.loads(data)
+        for name in names:
+            if not found.get(name):
+                raise KeyError(name)
+        return found
+    except (ValueError, KeyError, AttributeError, TypeError) as error:
+        raise Failed(f"an answer without {', '.join(names)}", 0) from error
+
+
 def read_key(key_file: Path) -> str:
     key = os.environ.get("YARNGPT_API_KEY", "")
     if not key and key_file.exists():
@@ -107,31 +128,35 @@ class Yarn:
     ):
         self.key, self.route, self.opener, self.sleep = key, route, opener, sleep
 
-    def _call(self, request: urllib.request.Request, timeout: int) -> bytes:
+    def _call(
+        self, request: urllib.request.Request, timeout: int, signed: bool = False
+    ) -> bytes:
         try:
             with self.opener(request, timeout=timeout) as response:
                 return response.read()
         except urllib.error.HTTPError as error:
-            if error.code == 402:
-                raise Stop(
-                    "YarnGPT refuses: no credits, or the account is not in good standing."
-                ) from error
-            if error.code in (401, 403):
-                raise Stop(f"YarnGPT refused the key (HTTP {error.code}).") from error
-            retry = error.headers.get("Retry-After") if error.headers else None
-            wait = (
-                int(retry) if retry and retry.isdigit() else RATE_LIMITED_WAIT_SECONDS
-            )
-            if error.code == 429 and wait > MOST_WAIT_SECONDS:
-                raise Stop(
-                    f"YarnGPT's allowance for this route is spent; a place frees in {wait // 60} minutes. "
-                    "Run again then, or with --route job."
-                ) from error
-            raise Failed(
-                f"HTTP {error.code}", wait if error.code == 429 else 0
-            ) from error
+            raise self._refusal(error, signed) from error
         except (urllib.error.URLError, TimeoutError, OSError) as error:
             raise Failed(f"{type(error).__name__}", 0) from error
+
+    def _refusal(self, error: urllib.error.HTTPError, signed: bool) -> Exception:
+        """Stop for what no retry mends (credits, the key, a spent allowance); Failed for the rest, an expired link included."""
+        if error.code == 402:
+            return Stop("YarnGPT refuses: " + credits_said(error))
+        if error.code in (401, 403) and not signed:
+            return Stop(f"YarnGPT refused the key (HTTP {error.code}).")
+        retry = error.headers.get("Retry-After") if error.headers else None
+        wait = int(retry) if retry and retry.isdigit() else RATE_LIMITED_WAIT_SECONDS
+        if error.code == 429 and wait > MOST_WAIT_SECONDS:
+            then = (
+                "Run again then."
+                if self.route == "job"
+                else "Run again then, or with --route job."
+            )
+            return Stop(
+                f"YarnGPT's allowance for this route is spent; a place frees in {wait // 60} minutes. {then}"
+            )
+        return Failed(f"HTTP {error.code}", wait if error.code == 429 else 0)
 
     def _headers(self, idempotency_key: str | None = None) -> dict:
         headers = {
@@ -145,27 +170,29 @@ class Yarn:
             else headers
         )
 
-    def _post(self, path: str, body: dict, idempotency_key: str) -> dict:
+    def _post(self, path: str, body: dict, idempotency_key: str, *names: str) -> dict:
         request = urllib.request.Request(
             API + path,
             json.dumps(body).encode(),
             self._headers(idempotency_key),
             "POST",
         )
-        return json.loads(self._call(request, 60))
+        return parsed(self._call(request, 60), *names)
 
     def _download(self, url: str) -> bytes:
         # A signed link: the key must not go with it, or the store refuses the request.
-        audio = self._call(
-            urllib.request.Request(url, headers={"User-Agent": USER_AGENT}), 120
-        )
+        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        audio = self._call(request, 120, signed=True)
         if not is_mp3(audio):
             raise Failed("the answer was not an MP3", 0)
         return audio
 
     def _stream(self, text: str, voice: str, idempotency_key: str) -> bytes:
         ticket = self._post(
-            "/api/v1/tts/prepare", {"text": text, "voice": voice}, idempotency_key
+            "/api/v1/tts/prepare",
+            {"text": text, "voice": voice},
+            idempotency_key,
+            "stream_url",
         )
         return self._download(API + ticket["stream_url"])
 
@@ -174,16 +201,19 @@ class Yarn:
             "/api/v1/tts",
             {"text": text, "voice": voice, "output_format": "mp3"},
             idempotency_key,
+            "job_id",
         )
         status = urllib.request.Request(
             f"{API}/api/v1/status/{job['job_id']}", headers=self._headers()
         )
         for _ in range(JOB_POLLS):
-            answer = json.loads(self._call(status, 30))
-            if answer.get("status") == "completed":
-                return self._download(answer["audio_url"])
-            if answer.get("status") == "failed":
-                raise Failed(answer.get("user_message") or "the job failed", 0)
+            state = parsed(self._call(status, 30), "status")
+            if state["status"] == "completed":
+                return self._download(
+                    parsed(json.dumps(state).encode(), "audio_url")["audio_url"]
+                )
+            if state["status"] == "failed":
+                raise Failed(state.get("user_message") or "the job failed", 0)
             self.sleep(1)
         raise Failed("the job did not finish in time", 0)
 
@@ -206,7 +236,8 @@ class Yarn:
         raise AssertionError("unreachable")
 
 
-def keep(bucket: str, key: str, audio: bytes, run=subprocess.run) -> None:
+def keep(bucket: str, key: str, audio: bytes, run=None) -> None:
+    run = run or subprocess.run
     with tempfile.NamedTemporaryFile(suffix=".mp3") as file:
         file.write(audio)
         file.flush()
@@ -290,8 +321,9 @@ def publish(
     force: bool,
     workers: int,
     yarn: Yarn,
-    store=keep,
+    store=None,
 ) -> dict:
+    store = store or keep
     state_path = HOME / f"{environment}.json"
     state, copies = load(state_path), HOME / environment
     copies.mkdir(parents=True, exist_ok=True)
@@ -315,8 +347,8 @@ def publish(
             text,
             yarngpt_route(teacher_utterance(utterance_id, language)).request["voice"],
         )
-        store(BUCKETS[environment], key, audio)
         (copies / f"{language}-{utterance_id}.mp3").write_bytes(audio)
+        store(BUCKETS[environment], key, audio)
         with lock:
             state[key] = {"bytes": len(audio), "id": utterance_id}
             outcome["made"] += 1
@@ -361,7 +393,7 @@ def publish(
         with lock:
             save(state_path, state)
     if "stopped" in outcome:
-        raise Stop(outcome["stopped"])
+        raise Stop(outcome["stopped"], outcome)
     return outcome
 
 
@@ -410,7 +442,11 @@ def main(argv: list[str] | None = None) -> int:
             Yarn(read_key(args.key_file), args.route),
         )
     except Stop as error:
-        print(f"STOPPED: {error}")
+        print(f"STOPPED: {error.args[0]}")
+        if len(error.args) > 1:
+            print(
+                f"made {error.args[1]['made']} before it, failed {len(error.args[1]['failed'])}; the notes are saved."
+            )
         return 2
     print(
         f"made {outcome['made']}, already kept {outcome['skipped']}, failed {len(outcome['failed'])}"
