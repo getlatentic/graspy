@@ -78,9 +78,10 @@ class Network:
         return Answer(self.audio)
 
 
-def yarn(network, sleeps=None):
+def yarn(network, sleeps=None, route="stream"):
     return Yarn(
         "secret-key",
+        route,
         opener=network,
         sleep=(sleeps.append if sleeps is not None else (lambda _: None)),
     )
@@ -264,7 +265,7 @@ def test_every_published_line_is_recorded_under_the_key_the_worker_looks_for():
 
     found = lines_to_record("en", [], None)
 
-    assert [line[0] for line in found] == published_utterance_ids()
+    assert sorted(line[0] for line in found) == sorted(published_utterance_ids())
     for utterance_id, key, text in found[:25]:
         yarngpt = teacher_audio_routes(teacher_utterance(utterance_id, "en"))[0]
         assert (
@@ -376,3 +377,85 @@ def test_one_idempotency_key_serves_every_attempt_at_a_line_and_the_next_line_ha
         if url.endswith("/tts/prepare")
     ]
     assert keys[0] == keys[1] and keys[2] != keys[0]
+
+
+JOB = json.dumps({"job_id": "j1", "status": "queued"}).encode()
+
+
+def done(url="https://store.example/j1.mp3"):
+    return json.dumps({"status": "completed", "audio_url": url}).encode()
+
+
+def test_a_job_is_queued_polled_until_done_and_its_link_fetched_without_the_key():
+    network = Network([JOB, json.dumps({"status": "processing"}).encode(), done(), MP3])
+    sleeps = []
+
+    audio = yarn(network, sleeps, "job").record("Well done.", "idera")
+
+    assert audio == MP3 and sleeps == [1]
+    (post, _, post_headers, body, _), poll1, poll2, link = network.requests
+    assert post.endswith("/api/v1/tts") and json.loads(body) == {
+        "text": "Well done.",
+        "voice": "idera",
+        "output_format": "mp3",
+    }
+    assert (
+        post_headers["Idempotency-key"]
+        and poll1[0].endswith("/api/v1/status/j1")
+        and poll2[0].endswith("/api/v1/status/j1")
+    )
+    assert link[0] == "https://store.example/j1.mp3" and "Authorization" not in link[2]
+
+
+def test_a_job_that_fails_is_that_lines_failure_with_the_providers_words():
+    network = Network(
+        [
+            JOB,
+            json.dumps(
+                {
+                    "status": "failed",
+                    "user_message": "the synthesis backend was unavailable",
+                }
+            ).encode(),
+        ]
+        * 3
+    )
+
+    with pytest.raises(Failed, match="synthesis backend was unavailable"):
+        yarn(network, route="job").record("Well done.", "idera")
+
+
+def test_a_job_that_never_finishes_is_given_up_on():
+    network = Network(
+        ([JOB] + [json.dumps({"status": "processing"}).encode()] * 150) * 3
+    )
+
+    with pytest.raises(Failed, match="did not finish"):
+        yarn(network, route="job").record("Well done.", "idera")
+
+
+def test_a_spent_daily_allowance_stops_the_run_and_says_when_a_place_frees_not_sleeping_for_it():
+    network = Network([refusal(429, "987")])
+    sleeps = []
+
+    with pytest.raises(Stop, match="16 minutes"):
+        yarn(network, sleeps).record("Well done.", "idera")
+    assert sleeps == [] and len(network.requests) == 1
+
+
+def test_a_short_rate_limit_is_waited_out_and_a_long_one_is_not():
+    network = Network([refusal(429, "299")])
+    sleeps = []
+
+    assert yarn(network, sleeps).record("Well done.", "idera") == MP3
+    assert sleeps == [299]
+
+
+def test_the_lines_the_lessons_say_are_recorded_first():
+    ordered = [line[0] for line in lines_to_record("en", [], None)]
+    plan_lines = SCRIPT["lessons_say"]()
+
+    assert len(plan_lines) > 100
+    assert all(
+        utterance_id in plan_lines for utterance_id in ordered[: len(plan_lines)]
+    )

@@ -6,8 +6,13 @@ so this is only ever a way to warm the store: a line not yet recorded is still s
 
     uv run python scripts/voice/publish_teacher_audio.py staging --dry-run
     uv run python scripts/voice/publish_teacher_audio.py staging --limit 12
+    uv run python scripts/voice/publish_teacher_audio.py staging --route job
     uv run python scripts/voice/publish_teacher_audio.py staging
     uv run python scripts/voice/publish_teacher_audio.py production --confirm production
+
+Plan lines, the ones lessons use, are recorded first. YarnGPT allows 120 requests in 24 hours on the stream route
+(the default, which answers in about 3 to 11 seconds); when that is spent the run stops and says when a place
+frees, and --route job, which has its own allowance and answers more slowly, can go on meanwhile.
 
 The key is YARNGPT_API_KEY in the environment or in --key-file (default apps/server/.dev.vars, which git
 ignores). Recordings are written with `wrangler r2 object put`, so `npx wrangler login` must have been run. What
@@ -29,11 +34,13 @@ import urllib.error
 import urllib.request
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+from functools import cache
 from pathlib import Path
 
 SERVER = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(SERVER / "src"))
 
+from app.voice.curriculum import load_plans
 from app.voice.speech.teacher_audio_contract import (
     audio_cache_key,
     published_utterance_ids,
@@ -48,6 +55,8 @@ USER_AGENT = "graspy-publisher/1"
 MOST_ATTEMPTS = 3
 BACKOFF_SECONDS = (2, 6, 18)
 RATE_LIMITED_WAIT_SECONDS = 20
+MOST_WAIT_SECONDS = 300
+JOB_POLLS = 150
 LEAST_BYTES = 1024
 CREDITS_PER_THOUSAND_CHARACTERS = 1
 
@@ -86,10 +95,17 @@ def is_mp3(audio: bytes) -> bool:
 
 
 class Yarn:
-    """The two requests that make a recording: `prepare` returns a ticket, and the ticket's URL serves the audio."""
+    """A recording by one of two routes: `stream` (`prepare` returns a ticket, and the ticket's URL serves the audio)
+    or `job` (a job is queued, polled until done, and its signed link fetched)."""
 
-    def __init__(self, key: str, opener=urllib.request.urlopen, sleep=time.sleep):
-        self.key, self.opener, self.sleep = key, opener, sleep
+    def __init__(
+        self,
+        key: str,
+        route: str = "stream",
+        opener=urllib.request.urlopen,
+        sleep=time.sleep,
+    ):
+        self.key, self.route, self.opener, self.sleep = key, route, opener, sleep
 
     def _call(self, request: urllib.request.Request, timeout: int) -> bytes:
         try:
@@ -106,35 +122,75 @@ class Yarn:
             wait = (
                 int(retry) if retry and retry.isdigit() else RATE_LIMITED_WAIT_SECONDS
             )
+            if error.code == 429 and wait > MOST_WAIT_SECONDS:
+                raise Stop(
+                    f"YarnGPT's allowance for this route is spent; a place frees in {wait // 60} minutes. "
+                    "Run again then, or with --route job."
+                ) from error
             raise Failed(
                 f"HTTP {error.code}", wait if error.code == 429 else 0
             ) from error
         except (urllib.error.URLError, TimeoutError, OSError) as error:
             raise Failed(f"{type(error).__name__}", 0) from error
 
-    def _once(self, text: str, voice: str, idempotency_key: str) -> bytes:
-        body = json.dumps({"text": text, "voice": voice}).encode()
+    def _headers(self, idempotency_key: str | None = None) -> dict:
         headers = {
             "Authorization": f"Bearer {self.key}",
             "Content-Type": "application/json",
-            "Idempotency-Key": idempotency_key,
             "User-Agent": USER_AGENT,
         }
-        ticket = json.loads(
-            self._call(
-                urllib.request.Request(
-                    f"{API}/api/v1/tts/prepare", body, headers, "POST"
-                ),
-                60,
-            )
+        return (
+            {**headers, "Idempotency-Key": idempotency_key}
+            if idempotency_key
+            else headers
         )
-        stream = urllib.request.Request(
-            API + ticket["stream_url"], headers={"User-Agent": USER_AGENT}
+
+    def _post(self, path: str, body: dict, idempotency_key: str) -> dict:
+        request = urllib.request.Request(
+            API + path,
+            json.dumps(body).encode(),
+            self._headers(idempotency_key),
+            "POST",
         )
-        audio = self._call(stream, 120)
+        return json.loads(self._call(request, 60))
+
+    def _download(self, url: str) -> bytes:
+        # A signed link: the key must not go with it, or the store refuses the request.
+        audio = self._call(
+            urllib.request.Request(url, headers={"User-Agent": USER_AGENT}), 120
+        )
         if not is_mp3(audio):
             raise Failed("the answer was not an MP3", 0)
         return audio
+
+    def _stream(self, text: str, voice: str, idempotency_key: str) -> bytes:
+        ticket = self._post(
+            "/api/v1/tts/prepare", {"text": text, "voice": voice}, idempotency_key
+        )
+        return self._download(API + ticket["stream_url"])
+
+    def _job(self, text: str, voice: str, idempotency_key: str) -> bytes:
+        job = self._post(
+            "/api/v1/tts",
+            {"text": text, "voice": voice, "output_format": "mp3"},
+            idempotency_key,
+        )
+        status = urllib.request.Request(
+            f"{API}/api/v1/status/{job['job_id']}", headers=self._headers()
+        )
+        for _ in range(JOB_POLLS):
+            answer = json.loads(self._call(status, 30))
+            if answer.get("status") == "completed":
+                return self._download(answer["audio_url"])
+            if answer.get("status") == "failed":
+                raise Failed(answer.get("user_message") or "the job failed", 0)
+            self.sleep(1)
+        raise Failed("the job did not finish in time", 0)
+
+    def _once(self, text: str, voice: str, idempotency_key: str) -> bytes:
+        return (self._job if self.route == "job" else self._stream)(
+            text, voice, idempotency_key
+        )
 
     def record(self, text: str, voice: str) -> bytes:
         # One key for the line, so a retry after an accepted request that timed out is not billed again.
@@ -174,12 +230,24 @@ def keep(bucket: str, key: str, audio: bytes, run=subprocess.run) -> None:
         )
 
 
+@cache
+def lessons_say() -> frozenset[str]:
+    """The lines the lesson plans have the teacher say: what learners hear first."""
+    return {
+        event.utterance_id(plan.id)
+        for plan in load_plans().values()
+        for event in plan.events
+    }
+
+
 def lines_to_record(
     language: str, only: list[str], limit: int | None
 ) -> list[tuple[str, str, str]]:
     """(utterance id, store key, words) for each published line, in publication order."""
     found = []
-    for utterance_id in published_utterance_ids():
+    for utterance_id in sorted(
+        published_utterance_ids(), key=lambda one: one not in lessons_say()
+    ):
         if only and utterance_id not in only:
             continue
         utterance = teacher_utterance(utterance_id, language)
@@ -309,6 +377,7 @@ def main(argv: list[str] | None = None) -> int:
         "--force", action="store_true", help="record again lines already kept"
     )
     parser.add_argument("--workers", type=int, default=3)
+    parser.add_argument("--route", choices=["stream", "job"], default="stream")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--confirm", default="")
     parser.add_argument("--key-file", type=Path, default=SERVER / ".dev.vars")
@@ -338,7 +407,7 @@ def main(argv: list[str] | None = None) -> int:
             args.limit,
             args.force,
             args.workers,
-            Yarn(read_key(args.key_file)),
+            Yarn(read_key(args.key_file), args.route),
         )
     except Stop as error:
         print(f"STOPPED: {error}")
