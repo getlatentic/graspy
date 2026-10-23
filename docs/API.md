@@ -74,6 +74,8 @@ A reply is the answer as text plus a data part:
 
 `/mcp` is a stateless MCP server over Streamable HTTP. It lists the tools that show UI (`give_practice`, `give_passage`, `give_lesson`), the app-only tools their views call, and the `ui://` resources. A lesson is not a REST endpoint: the app calls `give_lesson` and frames the view it returns.
 
+It also lists four tools an assistant speaks from, visible to the model only and with no view: `next_question(topic, level)`, `check_answer(question_id, answer)`, `hint(question_id, step)` and `show_working(question_id)`. The questions are made in code from a topic, a level and a seed (addition, subtraction, multiplication, sharing, parts of a number), and the `question_id` names those three, so the server keeps nothing between calls. `check_answer` hears the answer as digits or words (`twelve mangoes`) and is the only thing that marks it right or wrong; its feedback never contains the answer. `apps/alexa` is an assistant that calls them.
+
 ## Voice
 
 Voice lessons for the learner the session names: an account's learner or a signed-out device. They run on the Worker only; under uvicorn every endpoint answers `503 voice_unavailable`. Their errors carry `detail` as a sentence, as the Android app reads them.

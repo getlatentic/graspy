@@ -13,6 +13,7 @@ from app.factory import create_app
 from app.mcp.sandbox import build_of
 from app.mcp.views import LocalViews
 from app.settings import Settings
+from app.spoken.questions import find
 
 ORIGIN = "https://graspy-api.example"
 VIEW = '<!doctype html><html><head><meta charset="UTF-8" /></head><body></body></html>'
@@ -113,7 +114,14 @@ async def test_the_tools_are_listed_with_their_ui_and_who_may_call_them(app):
         "answer_check",
         "finish_lesson",
         "learner_route",
+        "next_question",
+        "check_answer",
+        "hint",
+        "show_working",
     }
+    # An assistant speaks these; no view calls them.
+    for spoken in ("next_question", "check_answer", "hint", "show_working"):
+        assert tools[spoken].meta == {"ui": {"visibility": ["model"]}}
     # Both apps ask it for the learner; no model does.
     assert tools["learner_route"].meta == {"ui": {"visibility": ["app"]}}
     assert tools["give_practice"].meta == {
@@ -343,3 +351,23 @@ async def test_the_endpoint_needs_a_session(app):
         )
 
     assert response.status_code == 401
+
+
+async def test_an_assistant_asks_a_question_and_has_the_answer_marked(app):
+    async with connected(app) as client:
+        asked = await client.call_tool(
+            "next_question", {"topic": "addition", "level": 1}
+        )
+        question = asked.structured_content
+        right = find(question["question_id"]).answer
+        wrong = await client.call_tool(
+            "check_answer",
+            {"question_id": question["question_id"], "answer": str(right + 1)},
+        )
+        said = await client.call_tool(
+            "check_answer",
+            {"question_id": question["question_id"], "answer": f"{right}"},
+        )
+
+    assert wrong.structured_content["correct"] is False
+    assert said.structured_content["correct"] is True

@@ -24,6 +24,7 @@ from ..app_tool import AppTool
 from ..caller import Caller
 from ..learner.route import LEARNER_TOOLS
 from ..lessons.tools import LESSON_TOOLS, LESSON_UI
+from ..spoken.tools import SPOKEN
 from .sandbox import (
     SANDBOX_META,
     WORKER_FILE,
@@ -36,6 +37,7 @@ from .views import Views
 RESOURCE_MIME_TYPE = "text/html;profile=mcp-app"
 MODEL_AND_APP = ("model", "app")
 APP_ONLY = ("app",)
+MODEL_ONLY = ("model",)
 
 # The host frames the views without a border; each card draws its own.
 UI_META = {"prefersBorder": False}
@@ -175,6 +177,16 @@ def _app_tool(tool: AppTool) -> McpTool:
     )
 
 
+def _spoken_tool(spoken) -> McpTool:
+    return McpTool(
+        name=spoken.name,
+        description=spoken.description,
+        arguments=spoken.arguments,
+        visibility=MODEL_ONLY,
+        run=spoken.run,
+    )
+
+
 @cache
 def tools() -> dict[str, McpTool]:
     # Built on first use: Worker startup must not build tools.
@@ -186,6 +198,7 @@ def tools() -> dict[str, McpTool]:
     offered += [
         _app_tool(tool) for tool in (*APP_TOOLS.values(), *LESSON_TOOLS, *LEARNER_TOOLS)
     ]
+    offered += [_spoken_tool(spoken) for spoken in SPOKEN]
     return {tool.name: tool for tool in offered}
 
 
