@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "graspy",
+  "version": "0.1.0",
+  "description": "A maths tutor an assistant can call: questions made and answers marked by graspy's server, for children learning aloud.",
+  "author": { "name": "Latentic", "url": "https://graspy.getlatentic.com" },
+  "homepage": "https://graspy.getlatentic.com",
+  "repository": "https://github.com/getlatentic/graspy",
+  "license": "AGPL-3.0-only",
+  "keywords": ["education", "maths", "children", "nigeria", "voice", "mcp-apps"]
+}

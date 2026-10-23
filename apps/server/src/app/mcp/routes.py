@@ -13,11 +13,14 @@ from .protocol import (
     INVALID_REQUEST,
     PROTOCOL_VERSIONS,
     UNSUPPORTED_PROTOCOL_VERSION,
+    Server,
     answer,
 )
 from .sandbox_routes import sandbox_routes
 
 MCP_PATH = "/mcp"
+# Under /api so the API's request budget applies; outside MCP_PATH so no session is asked for.
+SPOKEN_MCP_PATH = "/api/alexa/mcp"
 PARSE_ERROR = -32700
 # A tool's arguments are a question and its options: kilobytes, not more.
 MAX_BODY = 64 * 1024
@@ -44,7 +47,7 @@ def _unsupported(message: object, version: str) -> JSONResponse:
     )
 
 
-async def mcp(request: Request) -> Response:
+async def _serve(request: Request, server: Server, learner: str | None) -> Response:
     if request.method != "POST":
         return Response(status_code=405, headers={"Allow": "POST"})
     body = await request.body()
@@ -59,17 +62,28 @@ async def mcp(request: Request) -> Response:
         return _unsupported(message, version)
     if isinstance(message, list):
         return _refused(400, INVALID_REQUEST, "Batches are not part of MCP")
-    session = request.scope.get("auth")
-    response = await answer(
-        message, request.app.state.mcp, session.learner if session else None
-    )
+    response = await answer(message, server, learner)
     if response is None:
         return Response(status_code=202)
     return JSONResponse(response)
 
 
+async def mcp(request: Request) -> Response:
+    session = request.scope.get("auth")
+    return await _serve(
+        request, request.app.state.mcp, session.learner if session else None
+    )
+
+
+async def spoken_mcp(request: Request) -> Response:
+    """The tutor's spoken tools for an assistant that cannot sign a child in:
+    open to anyone, because none of them reads or writes a learner's record."""
+    return await _serve(request, request.app.state.mcp_spoken, None)
+
+
 def mcp_routes() -> list[Route]:
     return [
         Route(MCP_PATH, mcp, methods=["GET", "POST", "DELETE"]),
+        Route(SPOKEN_MCP_PATH, spoken_mcp, methods=["GET", "POST", "DELETE"]),
         *sandbox_routes(),
     ]

@@ -7,6 +7,7 @@ runs lifespan once per request.
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -177,6 +178,7 @@ def _add_state(
         origin=f"{public.scheme}://{public.netloc}",
         keeping=keeping,
     )
+    app.state.mcp_spoken = replace(app.state.mcp, spoken_only=True)
 
 
 def _origins(settings: Settings) -> list[str]:

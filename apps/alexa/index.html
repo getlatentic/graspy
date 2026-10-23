@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alexa+ with graspy</title>
+<style>
+  :root { color-scheme: dark; --ground:#0b1220; --panel:#121c30; --line:#22324f; --ink:#e8f0ff; --dim:#8fa3c7; --ring:#27c4ff; --good:#4ade80; --bad:#fbbf24; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink); font:16px/1.5 ui-rounded, "SF Pro Rounded", system-ui, sans-serif; min-height:100dvh; display:grid; grid-template-rows:auto 1fr auto; }
+  header { padding:1rem 1.25rem; display:flex; align-items:center; gap:.75rem; border-bottom:1px solid var(--line); }
+  header h1 { font-size:1rem; margin:0; font-weight:600; }
+  header span { color:var(--dim); font-size:.875rem; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,22rem); gap:1.25rem; padding:1.25rem; max-width:70rem; width:100%; margin:0 auto; min-height:0; }
+  @media (max-width:52rem){ main{grid-template-columns:1fr} }
+  .stage { display:flex; flex-direction:column; gap:1rem; min-height:0; }
+  .ring { align-self:center; width:7.5rem; height:7.5rem; border-radius:50%; border:.5rem solid var(--ring); box-shadow:0 0 2rem #27c4ff55, inset 0 0 1.5rem #27c4ff33; transition:transform .3s; }
+  .ring[data-state="listening"] { animation:pulse 1.1s ease-in-out infinite; border-color:#7ee0ff; }
+  .ring[data-state="thinking"] { animation:spin 1.2s linear infinite; border-color:var(--ring) var(--line) var(--ring) var(--line); }
+  .ring[data-state="speaking"] { animation:pulse .6s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform:scale(1.08); box-shadow:0 0 3rem #27c4ff99; } }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion:reduce){ .ring{animation:none!important} }
+  #log { flex:1; overflow:auto; display:flex; flex-direction:column; gap:.625rem; padding:.25rem; min-height:12rem; }
+  .line { max-width:85%; padding:.625rem .875rem; border-radius:1rem; background:var(--panel); border:1px solid var(--line); }
+  .line.you { align-self:flex-end; background:#16324f; }
+  .line small { display:block; color:var(--dim); font-size:.75rem; margin-bottom:.125rem; }
+  aside { background:var(--panel); border:1px solid var(--line); border-radius:1rem; padding:1rem; overflow:auto; max-height:calc(100dvh - 9rem); }
+  aside h2 { margin:0 0 .25rem; font-size:.875rem; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); }
+  aside p { margin:0 0 .75rem; color:var(--dim); font-size:.875rem; }
+  .call { border-top:1px solid var(--line); padding:.625rem 0; font-size:.875rem; }
+  .call b { color:var(--ring); font-family:ui-monospace, Menlo, monospace; }
+  .call pre { margin:.25rem 0 0; white-space:pre-wrap; word-break:break-word; color:var(--dim); font:.8125rem/1.4 ui-monospace, Menlo, monospace; }
+  .call.right b.verdict { color:var(--good); } .call.wrong b.verdict { color:var(--bad); }
+  form { display:flex; gap:.5rem; padding:1rem 1.25rem 1.5rem; max-width:70rem; width:100%; margin:0 auto; }
+  input { flex:1; min-width:0; padding:.75rem 1rem; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--ink); font:inherit; }
+  button { padding:.75rem 1.25rem; border-radius:999px; border:0; background:var(--ring); color:#04121f; font:inherit; font-weight:700; cursor:pointer; }
+  button.mic[aria-pressed="true"] { background:#7ee0ff; }
+  button:focus-visible, input:focus-visible { outline:.1875rem solid #fff; outline-offset:.125rem; }
+  button:disabled { opacity:.5; cursor:default; }
+</style>
+</head>
+<body>
+<header><h1>Alexa+</h1><span>simulated, calling graspy's tutor over MCP</span></header>
+<main>
+  <section class="stage">
+    <div class="ring" id="ring" data-state="idle" role="img" aria-label="Alexa's light ring"></div>
+    <div id="log" aria-live="polite"></div>
+  </section>
+  <aside>
+    <h2>What Alexa asked graspy</h2>
+    <p>Alexa never marks an answer. Each call below is an MCP tool on graspy's server.</p>
+    <div id="calls"></div>
+  </aside>
+</main>
+<form id="form">
+  <button type="button" class="mic" id="mic" aria-pressed="false" aria-label="Talk to Alexa">🎤 Talk</button>
+  <input id="said" autocomplete="off" placeholder="Say or type: “Alexa, ask graspy for a maths question”" aria-label="What you say">
+  <button id="send">Send</button>
+</form>
+<script>
+const $ = (id) => document.getElementById(id);
+let history = [], busy = false;
+
+const state = (value) => { $("ring").dataset.state = value; };
+const add = (who, text) => {
+  const line = document.createElement("div");
+  line.className = `line ${who === "You" ? "you" : ""}`;
+  const name = document.createElement("small"); name.textContent = who;
+  line.append(name, document.createTextNode(text));
+  $("log").append(line); $("log").scrollTop = $("log").scrollHeight;
+};
+const show = (call) => {
+  const row = document.createElement("div");
+  const verdict = call.result && typeof call.result === "object" && "correct" in call.result ? (call.result.correct ? "right" : "wrong") : "";
+  row.className = `call ${verdict}`;
+  const head = document.createElement("div");
+  const name = document.createElement("b"); name.textContent = call.tool;
+  head.append(name, document.createTextNode(` ${JSON.stringify(call.args)}`));
+  const out = document.createElement("pre");
+  out.textContent = typeof call.result === "string" ? call.result : JSON.stringify(call.result, null, 1);
+  row.append(head, out); $("calls").prepend(row);
+};
+
+function speak(text) {
+  return new Promise((done) => {
+    if (!("speechSynthesis" in window) || !text) return done();
+    const speech = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+    speech.voice = voices.find((v) => /en-(NG|GB|ZA)/.test(v.lang)) || voices.find((v) => /^en/.test(v.lang)) || null;
+    speech.rate = 0.95; speech.onend = speech.onerror = done;
+    state("speaking"); speechSynthesis.speak(speech);
+  });
+}
+
+async function turn(said) {
+  if (busy || !said.trim()) return;
+  busy = true; $("send").disabled = true;
+  add("You", said); state("thinking");
+  try {
+    const response = await fetch("/api/turn", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ history, said }) });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Alexa could not reach graspy");
+    history = body.history; body.trace.forEach(show);
+    add("Alexa", body.reply); await speak(body.reply);
+  } catch (error) {
+    add("Alexa", `Sorry, I could not do that. (${error.message})`);
+  } finally { busy = false; $("send").disabled = false; state("idle"); }
+}
+
+$("form").addEventListener("submit", (event) => { event.preventDefault(); const said = $("said").value; $("said").value = ""; turn(said); });
+
+const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!Recognition) { $("mic").disabled = true; $("mic").title = "Voice input needs Chrome or Edge"; }
+else {
+  const recognition = new Recognition(); recognition.lang = "en-NG"; recognition.interimResults = false;
+  recognition.onresult = (event) => turn(event.results[0][0].transcript);
+  recognition.onend = () => { $("mic").setAttribute("aria-pressed", "false"); if (!busy) state("idle"); };
+  $("mic").addEventListener("click", () => { speechSynthesis.cancel(); $("mic").setAttribute("aria-pressed", "true"); state("listening"); recognition.start(); });
+}
+add("Alexa", "Hi! I can practise maths with you using graspy. Try: “ask graspy for an addition question”.");
+</script>
+</body>
+</html>

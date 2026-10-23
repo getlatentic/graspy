@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "graspy-tutor": { "type": "streamable-http", "url": "https://graspy-api-staging.getlatentic.com/api/alexa/mcp" }
+  }
+}
