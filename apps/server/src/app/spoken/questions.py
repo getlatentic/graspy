@@ -33,7 +33,7 @@ def _who(rng: random.Random) -> tuple[str, str]:
 
 
 def _addition(level: int, rng: random.Random) -> tuple[str, int, tuple[str, str], str]:
-    low, high = {1: (1, 9), 2: (10, 60), 3: (50, 150)}[level]
+    low, high = {1: (2, 9), 2: (10, 60), 3: (50, 150)}[level]
     a, b = rng.randint(low, high), rng.randint(1, 9 if level == 1 else 60)
     name, thing = _who(rng)
     return (

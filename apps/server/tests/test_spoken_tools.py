@@ -118,3 +118,14 @@ async def test_an_unknown_topic_or_question_is_a_tool_error_the_assistant_can_co
     assert (await call("check_answer", question_id="nope", answer="3"))[
         "isError"
     ] is True
+
+
+@pytest.mark.parametrize("topic", TOPICS)
+@pytest.mark.parametrize("level", LEVELS)
+def test_no_question_counts_one_of_a_plural_thing(topic, level):
+    for seed in range(200):
+        assert " 1 " + "mangoes" not in make(topic, level, seed).text
+        assert not any(
+            f" 1 {thing}" in make(topic, level, seed).text
+            for thing in ("mangoes", "oranges", "pencils", "bananas", "eggs", "books")
+        )

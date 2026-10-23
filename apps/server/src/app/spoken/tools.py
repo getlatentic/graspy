@@ -104,7 +104,7 @@ async def check_answer(arguments: CheckAnswer, _caller: Caller) -> dict:
             understood=True,
             correct=True,
             feedback=f"Yes, {question.working}",
-            next="Praise them, then ask for the next question, a level up if they have been right twice running.",
+            next="Praise them, then call next_question for the next one (a level up if they have been right twice running). Never make a question up yourself.",
         )
     return _told(
         understood=True,
