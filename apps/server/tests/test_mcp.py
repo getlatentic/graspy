@@ -379,11 +379,11 @@ def rpc(method: str, params: dict | None = None) -> dict:
 
 async def test_an_assistant_without_a_sign_in_is_offered_the_spoken_tools_only(app):
     async with http_to(app, authorized=False) as http:
-        listed = (await http.post("/api/alexa/mcp", json=rpc("tools/list"))).json()
-        views = (await http.post("/api/alexa/mcp", json=rpc("resources/list"))).json()
+        listed = (await http.post("/mcp/public", json=rpc("tools/list"))).json()
+        views = (await http.post("/mcp/public", json=rpc("resources/list"))).json()
         refused = (
             await http.post(
-                "/api/alexa/mcp",
+                "/mcp/public",
                 json=rpc(
                     "tools/call", {"name": "give_practice", "arguments": PRACTICE}
                 ),
@@ -391,7 +391,7 @@ async def test_an_assistant_without_a_sign_in_is_offered_the_spoken_tools_only(a
         ).json()
         learner = (
             await http.post(
-                "/api/alexa/mcp",
+                "/mcp/public",
                 json=rpc("tools/call", {"name": "learner_route", "arguments": {}}),
             )
         ).json()
@@ -411,13 +411,13 @@ async def test_the_spoken_endpoint_marks_an_answer_without_a_session(app):
     async with http_to(app, authorized=False) as http:
         initialised = (
             await http.post(
-                "/api/alexa/mcp",
+                "/mcp/public",
                 json=rpc("initialize", {"protocolVersion": "2025-11-25"}),
             )
         ).json()["result"]
         asked = (
             await http.post(
-                "/api/alexa/mcp",
+                "/mcp/public",
                 json=rpc(
                     "tools/call",
                     {"name": "next_question", "arguments": {"topic": "addition"}},
@@ -426,7 +426,7 @@ async def test_the_spoken_endpoint_marks_an_answer_without_a_session(app):
         ).json()["result"]["structuredContent"]
         marked = (
             await http.post(
-                "/api/alexa/mcp",
+                "/mcp/public",
                 json=rpc(
                     "tools/call",
                     {
@@ -457,8 +457,16 @@ async def test_a_tool_named_by_something_other_than_a_string_is_a_protocol_error
 ):
     async with http_to(app, authorized=False) as http:
         answered = await http.post(
-            "/api/alexa/mcp", json=rpc("tools/call", {"name": name})
+            "/mcp/public", json=rpc("tools/call", {"name": name})
         )
 
     assert answered.status_code == 200
     assert answered.json()["error"]["code"] == -32602
+
+
+@pytest.mark.parametrize("path", ["/mcp/public/", "/mcp/public/x", "/mcp/other"])
+async def test_only_the_public_path_under_mcp_is_open(app, path):
+    async with http_to(app, authorized=False) as http:
+        answered = await http.post(path, json=rpc("tools/list"))
+
+    assert answered.status_code in (401, 307) and answered.status_code != 200

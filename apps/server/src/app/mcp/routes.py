@@ -19,8 +19,8 @@ from .protocol import (
 from .sandbox_routes import sandbox_routes
 
 MCP_PATH = "/mcp"
-# Under /api so the API's request budget applies; outside MCP_PATH so no session is asked for.
-SPOKEN_MCP_PATH = "/api/alexa/mcp"
+# The one path under MCP_PATH that asks for no session (see SessionMiddleware's open_paths).
+PUBLIC_MCP_PATH = "/mcp/public"
 PARSE_ERROR = -32700
 # A tool's arguments are a question and its options: kilobytes, not more.
 MAX_BODY = 64 * 1024
@@ -75,15 +75,15 @@ async def mcp(request: Request) -> Response:
     )
 
 
-async def spoken_mcp(request: Request) -> Response:
+async def public_mcp(request: Request) -> Response:
     """The tutor's spoken tools for an assistant that cannot sign a child in:
     open to anyone, because none of them reads or writes a learner's record."""
-    return await _serve(request, request.app.state.mcp_spoken, None)
+    return await _serve(request, request.app.state.mcp_public, None)
 
 
 def mcp_routes() -> list[Route]:
     return [
         Route(MCP_PATH, mcp, methods=["GET", "POST", "DELETE"]),
-        Route(SPOKEN_MCP_PATH, spoken_mcp, methods=["GET", "POST", "DELETE"]),
+        Route(PUBLIC_MCP_PATH, public_mcp, methods=["GET", "POST", "DELETE"]),
         *sandbox_routes(),
     ]

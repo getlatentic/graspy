@@ -55,6 +55,9 @@ class RateLimitMiddleware:
         )
         await send({"type": "http.response.body", "body": _REJECTION})
 
+    def _is_mcp(self, path: str) -> bool:
+        return path == self._mcp_path or path.startswith(f"{self._mcp_path}/")
+
     def _budget_for(self, scope) -> Limiter | None:
         # A preflight costs nothing; limiting it breaks CORS.
         if scope["type"] != "http" or scope["method"] == "OPTIONS":
@@ -66,7 +69,7 @@ class RateLimitMiddleware:
             return self._budgets.generate
         if path == self._agent_prefix or path.startswith(f"{self._agent_prefix}/"):
             return self._budgets.agent
-        if path.startswith("/api") or path == self._mcp_path:
+        if path.startswith("/api") or self._is_mcp(path):
             return self._budgets.api
         return None
 
