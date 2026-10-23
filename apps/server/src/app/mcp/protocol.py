@@ -95,7 +95,10 @@ async def _list_tools(
 async def _call_tool(
     params: Mapping[str, Any], server: Server, learner: str | None
 ) -> dict:
-    tool = _offered(server).get(params.get("name"))
+    name = params.get("name")
+    if not isinstance(name, str):
+        raise McpError(INVALID_PARAMS, "name must be a string")
+    tool = _offered(server).get(name)
     if tool is None:
         raise McpError(INVALID_PARAMS, f"Unknown tool: {params.get('name')}")
     return await tool.call(params.get("arguments"), Caller(learner, server.keeping))
@@ -117,7 +120,10 @@ async def _list_templates(
 async def _read_resource(
     params: Mapping[str, Any], server: Server, _learner: str | None
 ) -> dict:
-    resource = None if server.spoken_only else RESOURCES.get(params.get("uri"))
+    uri = params.get("uri")
+    resource = (
+        None if server.spoken_only or not isinstance(uri, str) else RESOURCES.get(uri)
+    )
     if resource is None:
         raise McpError(RESOURCE_NOT_FOUND, f"Resource not found: {params.get('uri')}")
     try:

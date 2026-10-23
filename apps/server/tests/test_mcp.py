@@ -449,3 +449,16 @@ async def test_the_signed_in_endpoint_still_asks_for_a_session(app):
         answered = await http.post("/mcp", json=rpc("tools/list"))
 
     assert answered.status_code == 401
+
+
+@pytest.mark.parametrize("name", [["x"], {"a": 1}, 3, None])
+async def test_a_tool_named_by_something_other_than_a_string_is_a_protocol_error(
+    app, name
+):
+    async with http_to(app, authorized=False) as http:
+        answered = await http.post(
+            "/api/alexa/mcp", json=rpc("tools/call", {"name": name})
+        )
+
+    assert answered.status_code == 200
+    assert answered.json()["error"]["code"] == -32602

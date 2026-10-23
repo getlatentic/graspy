@@ -5,6 +5,7 @@ make the same question, which is how a question is found again to be marked."""
 from __future__ import annotations
 
 import random
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -138,13 +139,13 @@ def make(topic: str, level: int, seed: int) -> Question:
     return Question(topic, level, seed, text, answer, hints, working)
 
 
+_ID = re.compile(r"(?P<topic>[a-z ]+)\.(?P<level>[1-9])\.(?P<seed>[0-9]{1,9})")
+
+
 def find(question_id: str) -> Question | None:
     """The question an id names, or None for an id that was not made here."""
-    parts = question_id.rsplit(".", 2)
-    if len(parts) != 3 or parts[0] not in MAKERS:
+    named = _ID.fullmatch(question_id)
+    if named is None or named["topic"] not in MAKERS:
         return None
-    try:
-        topic, level, seed = parts[0], int(parts[1]), int(parts[2])
-    except ValueError:
-        return None
-    return make(topic, level, seed) if level in LEVELS and 0 <= seed < 10**9 else None
+    level = int(named["level"])
+    return make(named["topic"], level, int(named["seed"])) if level in LEVELS else None

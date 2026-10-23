@@ -206,8 +206,7 @@ def tools() -> dict[str, McpTool]:
 def spoken_tools() -> dict[str, McpTool]:
     """What an assistant with no screen and no sign-in is offered: the tutor's
     spoken tools, none of which reads or writes a learner's record."""
-    names = {spoken.name for spoken in SPOKEN}
-    return {name: tool for name, tool in tools().items() if name in names}
+    return {spoken.name: _spoken_tool(spoken) for spoken in SPOKEN}
 
 
 RESOURCES: dict[str, UiResource] = {
