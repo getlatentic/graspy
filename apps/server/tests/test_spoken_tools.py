@@ -24,10 +24,33 @@ async def call(name: str, **arguments) -> dict:
         ("one hundred and five", 105),
         ("1,250", 1250),
         ("two thousand and six", 2006),
-        ("12.0", 12),
+        ("12.", 12),
+        ("12.0", None),
         ("banana", None),
         ("", None),
         ("one point five", None),
+        ("twenty one", 21),
+        ("a hundred", 100),
+        ("two hundred fifty", 250),
+        ("it is twelve eggs", 12),
+        ("twelve friends", 12),
+        ("two thousand five hundred", 2500),
+        ("9" * 400, None),
+        ("not 12", None),
+        ("12 or 13", None),
+        ("3 and 4", None),
+        ("three and four", None),
+        ("twelve twelve", None),
+        ("five five", None),
+        ("hundred hundred", None),
+        ("fifty-fifty", None),
+        ("5 6", None),
+        ("1,5", None),
+        ("12 13", None),
+        ("1e999", None),
+        ("５", None),
+        ("minus five", None),
+        ("twelve and a half", None),
     ],
 )
 def test_a_number_is_heard_as_digits_or_words(said, number):
@@ -129,3 +152,11 @@ def test_no_question_counts_one_of_a_plural_thing(topic, level):
             f" 1 {thing}" in make(topic, level, seed).text
             for thing in ("mangoes", "oranges", "pencils", "bananas", "eggs", "books")
         )
+
+
+def test_a_hint_never_lists_the_answer():
+    for seed in range(500):
+        question = make("multiplication", 1, seed)
+        assert str(question.answer) not in question.hints[1].split(": ")[-1].replace(
+            "and keep going.", ""
+        ).replace(" ", "").split(",")

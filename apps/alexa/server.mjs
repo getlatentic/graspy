@@ -29,11 +29,37 @@ const send = (response, status, body, type = "application/json") => {
   response.end(type === "application/json" ? JSON.stringify(body) : body);
 };
 
-const readBody = async (request) => {
-  const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
-  return JSON.parse(Buffer.concat(chunks).toString() || "{}");
+const MAX_BODY = 64 * 1024;
+const MAX_HISTORY = 60;
+const ROLES = new Set(["user", "assistant", "tool"]);
+
+class BadRequest extends Error {}
+
+/** Only this page may ask for a turn: another site's page could otherwise spend the model key from the learner's browser. */
+const ownPage = (request) => {
+  const origin = request.headers.origin;
+  return request.headers["content-type"]?.startsWith("application/json") && (!origin || origin === `http://${request.headers.host}`);
 };
+
+const readBody = async (request) => {
+  if (!ownPage(request)) throw new BadRequest("Send application/json from the page itself.");
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > MAX_BODY) throw new BadRequest("The request is too large.");
+    chunks.push(chunk);
+  }
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString() || "{}");
+  } catch {
+    throw new BadRequest("The request is not JSON.");
+  }
+};
+
+/** The page sends back what a turn returned: user, assistant and tool messages only, never a system prompt of its own. */
+export const validHistory = (history) =>
+  Array.isArray(history) && history.length <= MAX_HISTORY && history.every((message) => message && ROLES.has(message.role));
 
 createServer(async (request, response) => {
   try {
@@ -42,11 +68,13 @@ createServer(async (request, response) => {
     }
     if (request.method === "POST" && request.url === "/api/turn") {
       const { history = [], said = "" } = await readBody(request);
+      if (!validHistory(history)) throw new BadRequest("The conversation is not one this page made.");
       const { mcp, tools } = await graspy();
       return send(response, 200, await takeTurn({ complete, mcp, tools, history, said: String(said).slice(0, 500) }));
     }
     send(response, 404, { error: "not found" });
   } catch (error) {
+    if (error instanceof BadRequest) return send(response, 400, { error: error.message });
     connection = null;
     console.error(error.message);
     send(response, 502, { error: error.message });

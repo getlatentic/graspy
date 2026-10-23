@@ -75,7 +75,7 @@ def _multiplication(
         n * table,
         (
             f"Add {table} again and again, {n} times.",
-            f"Count in {table}s: {', '.join(str(table * i) for i in range(1, min(n, 4) + 1))}, and keep going.",
+            f"Count in {table}s: {', '.join(str(table * i) for i in range(1, min(n, 4)))}, and keep going.",
         ),
         f"{n} times {table} is {n * table}.",
     )
