@@ -202,6 +202,14 @@ def tools() -> dict[str, McpTool]:
     return {tool.name: tool for tool in offered}
 
 
+@cache
+def spoken_tools() -> dict[str, McpTool]:
+    """What an assistant with no screen and no sign-in is offered: the tutor's
+    spoken tools, none of which reads or writes a learner's record."""
+    names = {spoken.name for spoken in SPOKEN}
+    return {name: tool for name, tool in tools().items() if name in names}
+
+
 RESOURCES: dict[str, UiResource] = {
     resource.uri: resource
     for resource in (

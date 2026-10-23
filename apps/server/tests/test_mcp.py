@@ -371,3 +371,81 @@ async def test_an_assistant_asks_a_question_and_has_the_answer_marked(app):
 
     assert wrong.structured_content["correct"] is False
     assert said.structured_content["correct"] is True
+
+
+def rpc(method: str, params: dict | None = None) -> dict:
+    return {"jsonrpc": "2.0", "id": 1, "method": method, "params": params or {}}
+
+
+async def test_an_assistant_without_a_sign_in_is_offered_the_spoken_tools_only(app):
+    async with http_to(app, authorized=False) as http:
+        listed = (await http.post("/api/alexa/mcp", json=rpc("tools/list"))).json()
+        views = (await http.post("/api/alexa/mcp", json=rpc("resources/list"))).json()
+        refused = (
+            await http.post(
+                "/api/alexa/mcp",
+                json=rpc(
+                    "tools/call", {"name": "give_practice", "arguments": PRACTICE}
+                ),
+            )
+        ).json()
+        learner = (
+            await http.post(
+                "/api/alexa/mcp",
+                json=rpc("tools/call", {"name": "learner_route", "arguments": {}}),
+            )
+        ).json()
+
+    assert [tool["name"] for tool in listed["result"]["tools"]] == [
+        "next_question",
+        "check_answer",
+        "hint",
+        "show_working",
+    ]
+    assert views["result"]["resources"] == []
+    assert refused["error"]["message"] == "Unknown tool: give_practice"
+    assert learner["error"]["message"] == "Unknown tool: learner_route"
+
+
+async def test_the_spoken_endpoint_marks_an_answer_without_a_session(app):
+    async with http_to(app, authorized=False) as http:
+        initialised = (
+            await http.post(
+                "/api/alexa/mcp",
+                json=rpc("initialize", {"protocolVersion": "2025-11-25"}),
+            )
+        ).json()["result"]
+        asked = (
+            await http.post(
+                "/api/alexa/mcp",
+                json=rpc(
+                    "tools/call",
+                    {"name": "next_question", "arguments": {"topic": "addition"}},
+                ),
+            )
+        ).json()["result"]["structuredContent"]
+        marked = (
+            await http.post(
+                "/api/alexa/mcp",
+                json=rpc(
+                    "tools/call",
+                    {
+                        "name": "check_answer",
+                        "arguments": {
+                            "question_id": asked["question_id"],
+                            "answer": str(find(asked["question_id"]).answer),
+                        },
+                    },
+                ),
+            )
+        ).json()["result"]["structuredContent"]
+
+    assert initialised["capabilities"] == {"tools": {}}
+    assert marked["correct"] is True
+
+
+async def test_the_signed_in_endpoint_still_asks_for_a_session(app):
+    async with http_to(app, authorized=False) as http:
+        answered = await http.post("/mcp", json=rpc("tools/list"))
+
+    assert answered.status_code == 401

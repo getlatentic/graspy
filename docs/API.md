@@ -76,6 +76,8 @@ A reply is the answer as text plus a data part:
 
 It also lists four tools an assistant speaks from, visible to the model only and with no view: `next_question(topic, level)`, `check_answer(question_id, answer)`, `hint(question_id, step)` and `show_working(question_id)`. The questions are made in code from a topic, a level and a seed (addition, subtraction, multiplication, sharing, parts of a number), and the `question_id` names those three, so the server keeps nothing between calls. `check_answer` hears the answer as digits or words (`twelve mangoes`) and is the only thing that marks it right or wrong; its feedback never contains the answer. `apps/alexa` is an assistant that calls them.
 
+`/api/alexa/mcp` offers only those four tools to an assistant that cannot sign a child in, such as an Alexa+ add-on. It needs no session, lists no views, and answers `Unknown tool` for every other tool: none of the four reads or writes a learner's record. It spends the API's request budget.
+
 ## Voice
 
 Voice lessons for the learner the session names: an account's learner or a signed-out device. They run on the Worker only; under uvicorn every endpoint answers `503 voice_unavailable`. Their errors carry `detail` as a sentence, as the Android app reads them.

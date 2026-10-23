@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..caller import Caller, Keeping
-from .catalog import RESOURCE_MIME_TYPE, RESOURCES, tools
+from .catalog import RESOURCE_MIME_TYPE, RESOURCES, spoken_tools, tools
 from .views import Views, ViewsMissing
 
 PROTOCOL_VERSIONS = ("2025-11-25", "2025-06-18", "2025-03-26")
@@ -20,6 +20,14 @@ INSTRUCTIONS = (
     "graspy's tutor tools. give_practice sets the learner multiple-choice "
     "questions as a card they answer with a tap; give_passage sets a passage "
     "to read with questions on it."
+)
+
+SPOKEN_INSTRUCTIONS = (
+    "graspy's maths tutor for children, to speak from. next_question gives one "
+    "question to say aloud as it is; check_answer marks what the child said and "
+    "is the only judge of right and wrong; hint nudges without giving the answer; "
+    "show_working gives the worked answer to a child who has given up. Never make "
+    "a question up: ask for one."
 )
 
 INVALID_REQUEST = -32600
@@ -35,6 +43,8 @@ class Server:
     views: Views
     origin: str
     keeping: Keeping
+    # The public endpoint for assistants: the spoken tools only, no views.
+    spoken_only: bool = False
 
 
 class McpError(Exception):
@@ -44,21 +54,29 @@ class McpError(Exception):
         self.message = message
 
 
+def _offered(server: Server) -> dict:
+    return spoken_tools() if server.spoken_only else tools()
+
+
 async def _initialize(
-    params: Mapping[str, Any], _server: Server, _learner: str | None
+    params: Mapping[str, Any], server: Server, _learner: str | None
 ) -> dict:
     asked = params.get("protocolVersion")
     return {
         "protocolVersion": asked
         if asked in PROTOCOL_VERSIONS
         else PROTOCOL_VERSIONS[0],
-        "capabilities": {
-            "tools": {},
-            "resources": {},
-            "extensions": {UI_EXTENSION: {"mimeTypes": [RESOURCE_MIME_TYPE]}},
-        },
+        "capabilities": (
+            {"tools": {}}
+            if server.spoken_only
+            else {
+                "tools": {},
+                "resources": {},
+                "extensions": {UI_EXTENSION: {"mimeTypes": [RESOURCE_MIME_TYPE]}},
+            }
+        ),
         "serverInfo": SERVER_INFO,
-        "instructions": INSTRUCTIONS,
+        "instructions": SPOKEN_INSTRUCTIONS if server.spoken_only else INSTRUCTIONS,
     }
 
 
@@ -69,24 +87,25 @@ async def _ping(
 
 
 async def _list_tools(
-    _params: Mapping[str, Any], _server: Server, _learner: str | None
+    _params: Mapping[str, Any], server: Server, _learner: str | None
 ) -> dict:
-    return {"tools": [tool.listed() for tool in tools().values()]}
+    return {"tools": [tool.listed() for tool in _offered(server).values()]}
 
 
 async def _call_tool(
     params: Mapping[str, Any], server: Server, learner: str | None
 ) -> dict:
-    tool = tools().get(params.get("name"))
+    tool = _offered(server).get(params.get("name"))
     if tool is None:
         raise McpError(INVALID_PARAMS, f"Unknown tool: {params.get('name')}")
     return await tool.call(params.get("arguments"), Caller(learner, server.keeping))
 
 
 async def _list_resources(
-    _params: Mapping[str, Any], _server: Server, _learner: str | None
+    _params: Mapping[str, Any], server: Server, _learner: str | None
 ) -> dict:
-    return {"resources": [resource.listed() for resource in RESOURCES.values()]}
+    views = {} if server.spoken_only else RESOURCES
+    return {"resources": [resource.listed() for resource in views.values()]}
 
 
 async def _list_templates(
@@ -98,7 +117,7 @@ async def _list_templates(
 async def _read_resource(
     params: Mapping[str, Any], server: Server, _learner: str | None
 ) -> dict:
-    resource = RESOURCES.get(params.get("uri"))
+    resource = None if server.spoken_only else RESOURCES.get(params.get("uri"))
     if resource is None:
         raise McpError(RESOURCE_NOT_FOUND, f"Resource not found: {params.get('uri')}")
     try:
