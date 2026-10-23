@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import LandingPage from "@/features/landing/pages/landing-page";
 import AppEntry from "@/app/entry";
+import { chatLink } from "@/app/chat-link";
 import { lazyPage } from "@/app/page-chunks";
 import { AppShell, PageLoading, RouteError } from "@/app/shell";
 
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
         HydrateFallback: PageLoading,
         children: [
           { index: true, Component: AppEntry },
+          chatLink,
           { path: "onboarding", lazy: lazyPage("onboarding") },
           { path: "learners", lazy: lazyPage("learners") },
           { path: "sign-in", lazy: lazyPage("signIn") },
