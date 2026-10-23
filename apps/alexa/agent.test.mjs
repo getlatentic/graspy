@@ -51,9 +51,9 @@ test("the client sends graspy's session and protocol version, and lists only the
     const result = { tools: [{ name: "next_question", _meta: { ui: { visibility: ["model"] } } }, { name: "answer_practice", _meta: { ui: { visibility: ["app"] } } }, { name: "give_practice", _meta: { ui: { visibility: ["model", "app"] } } }] };
     return { ok: true, status: 200, json: async () => ({ jsonrpc: "2.0", id: 1, result: method === "tools/list" ? result : {} }) };
   };
-  const listed = await new McpClient("http://g/api/alexa/mcp", "tok", fetchImpl).tools();
+  const listed = await new McpClient("http://g/mcp/public", "tok", fetchImpl).tools();
   assert.deepEqual(listed.map((t) => t.name), ["next_question"]);
-  assert.deepEqual(seen[0], ["http://g/api/alexa/mcp", "Bearer tok", "2025-11-25"]);
+  assert.deepEqual(seen[0], ["http://g/mcp/public", "Bearer tok", "2025-11-25"]);
 });
 
 test("a question is said exactly as graspy wrote it, without another model call", async () => {
@@ -78,6 +78,6 @@ test("the skill's text after its front matter is the assistant's instructions", 
 test("a client of the public endpoint sends no authorization", async () => {
   const seen = [];
   const fetchImpl = async (_url, options) => (seen.push(options.headers), { ok: true, status: 200, json: async () => ({ jsonrpc: "2.0", id: 1, result: { tools: [] } }) });
-  await new McpClient("http://g/api/alexa/mcp", null, fetchImpl).tools();
+  await new McpClient("http://g/mcp/public", null, fetchImpl).tools();
   assert.equal("authorization" in seen[0], false);
 });

@@ -8,7 +8,7 @@ import { McpClient } from "./mcp-client.mjs";
 
 const GRASPY_URL = (process.env.GRASPY_URL ?? "http://127.0.0.1:8081").replace(/\/$/, "");
 // The public endpoint an Alexa+ add-on would use: the spoken tools only, no sign-in.
-const MCP_PATH = process.env.MCP_PATH ?? "/api/alexa/mcp";
+const MCP_PATH = process.env.MCP_PATH ?? "/mcp/public";
 const KEY = process.env.AWS_BEARER_TOKEN_BEDROCK;
 const PORT = Number(process.env.PORT ?? 8790);
 if (!KEY) throw new Error("Set AWS_BEARER_TOKEN_BEDROCK: the model that plays Alexa runs on Amazon Bedrock.");

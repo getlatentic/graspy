@@ -42,7 +42,7 @@ from .lessons.store import InMemoryLessonStore, LessonStore
 from .llm.client import build_lm, configure_cache
 from .llm.context import ModelContextMiddleware
 from .mcp.protocol import Server
-from .mcp.routes import MCP_PATH, mcp_routes
+from .mcp.routes import MCP_PATH, PUBLIC_MCP_PATH, mcp_routes
 from .mcp.views import LocalViews, Views
 from .security.guard import SessionMiddleware
 from .security.headers import SecurityHeadersMiddleware
@@ -178,7 +178,7 @@ def _add_state(
         origin=f"{public.scheme}://{public.netloc}",
         keeping=keeping,
     )
-    app.state.mcp_spoken = replace(app.state.mcp, spoken_only=True)
+    app.state.mcp_public = replace(app.state.mcp, spoken_only=True)
 
 
 def _origins(settings: Settings) -> list[str]:
@@ -207,6 +207,7 @@ def _add_middleware(
         SessionMiddleware,
         prefixes=(settings.a2a_path_prefix, MCP_PATH),
         secret=session_secret,
+        open_paths=(PUBLIC_MCP_PATH,),
     )
     if budgets is not None:
         app.add_middleware(

@@ -50,9 +50,18 @@ class SessionMiddleware:
     """Raw ASGI: BaseHTTPMiddleware buffers the response body, which would
     hold every streamed agent reply until the turn finished."""
 
-    def __init__(self, app, *, prefixes: tuple[str, ...], secret: str) -> None:
+    def __init__(
+        self,
+        app,
+        *,
+        prefixes: tuple[str, ...],
+        secret: str,
+        open_paths: tuple[str, ...] = (),
+    ) -> None:
         self.app = app
         self.prefixes = tuple("/" + prefix.strip("/") for prefix in prefixes)
+        # Exact paths under a prefix that need no token.
+        self.open_paths = frozenset(open_paths)
         self.secret = secret
 
     def _needs_token(self, scope) -> bool:
@@ -62,6 +71,8 @@ class SessionMiddleware:
         if scope["method"] == "OPTIONS":
             return False
         path = scope["path"]
+        if path in self.open_paths:
+            return False
         return any(
             path == prefix or path.startswith(f"{prefix}/") for prefix in self.prefixes
         )
