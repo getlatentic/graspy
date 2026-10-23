@@ -3,22 +3,25 @@
 
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { randomUUID } from "node:crypto";
-import { bedrock, takeTurn } from "./agent.mjs";
-import { McpClient, sessionFor } from "./mcp-client.mjs";
+import { bedrock, instructionsFrom, takeTurn } from "./agent.mjs";
+import { McpClient } from "./mcp-client.mjs";
 
 const GRASPY_URL = (process.env.GRASPY_URL ?? "http://127.0.0.1:8081").replace(/\/$/, "");
+// The public endpoint an Alexa+ add-on would use: the spoken tools only, no sign-in.
+const MCP_PATH = process.env.MCP_PATH ?? "/api/alexa/mcp";
 const KEY = process.env.AWS_BEARER_TOKEN_BEDROCK;
 const PORT = Number(process.env.PORT ?? 8790);
 if (!KEY) throw new Error("Set AWS_BEARER_TOKEN_BEDROCK: the model that plays Alexa runs on Amazon Bedrock.");
 
+const SKILL = new URL("../../plugins/graspy/skills/teach-maths-with-graspy/SKILL.md", import.meta.url);
+const instructions = instructionsFrom(await readFile(SKILL, "utf8"));
 const complete = bedrock({ key: KEY, region: process.env.AWS_REGION, model: process.env.MODEL });
 const SESSION_MS = 6 * 60 * 60 * 1000;
 let connection = null;
 
 async function graspy() {
   if (connection && Date.now() - connection.at < SESSION_MS) return connection;
-  const mcp = new McpClient(GRASPY_URL, await sessionFor(GRASPY_URL, `alexa-${randomUUID()}`));
+  const mcp = new McpClient(`${GRASPY_URL}${MCP_PATH}`);
   await mcp.initialize();
   connection = { at: Date.now(), mcp, tools: await mcp.tools() };
   return connection;
@@ -70,7 +73,7 @@ createServer(async (request, response) => {
       const { history = [], said = "" } = await readBody(request);
       if (!validHistory(history)) throw new BadRequest("The conversation is not one this page made.");
       const { mcp, tools } = await graspy();
-      return send(response, 200, await takeTurn({ complete, mcp, tools, history, said: String(said).slice(0, 500) }));
+      return send(response, 200, await takeTurn({ complete, mcp, tools, history, said: String(said).slice(0, 500), instructions }));
     }
     send(response, 404, { error: "not found" });
   } catch (error) {
@@ -79,4 +82,4 @@ createServer(async (request, response) => {
     console.error(error.message);
     send(response, 502, { error: error.message });
   }
-}).listen(PORT, "127.0.0.1", () => console.log(`Alexa+ simulator on http://127.0.0.1:${PORT} → ${GRASPY_URL}/mcp`));
+}).listen(PORT, "127.0.0.1", () => console.log(`Alexa+ simulator on http://127.0.0.1:${PORT} → ${GRASPY_URL}${MCP_PATH}`));

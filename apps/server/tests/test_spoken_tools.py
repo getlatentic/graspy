@@ -1,5 +1,7 @@
 """The tutor as spoken tools: questions made in code, answers marked in code."""
 
+import re
+
 import pytest
 
 from app.caller import Caller
@@ -154,9 +156,14 @@ def test_no_question_counts_one_of_a_plural_thing(topic, level):
         )
 
 
-def test_a_hint_never_lists_the_answer():
-    for seed in range(500):
-        question = make("multiplication", 1, seed)
-        assert str(question.answer) not in question.hints[1].split(": ")[-1].replace(
-            "and keep going.", ""
-        ).replace(" ", "").split(",")
+def test_no_hint_names_the_answer_as_a_number():
+    # A part of a number names the number of groups in its hint, which can equal the answer without giving it.
+    for topic in (topic for topic in TOPICS if topic != "parts of a number"):
+        for level in LEVELS:
+            for seed in range(300):
+                question = make(topic, level, seed)
+                for hint in question.hints:
+                    numbers = re.findall(r"[0-9]+", hint)
+                    assert str(question.answer) not in numbers or str(
+                        question.answer
+                    ) in re.findall(r"[0-9]+", question.text), (question.text, hint)

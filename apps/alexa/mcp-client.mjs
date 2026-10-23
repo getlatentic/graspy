@@ -5,8 +5,9 @@ const PROTOCOL_VERSION = "2025-11-25";
 export class McpClient {
   #next = 1;
 
-  constructor(base, token, fetchImpl = fetch) {
-    this.url = `${base}/mcp`;
+  /** `url` is the MCP endpoint; `token` is a session for an endpoint that asks for one, and null for the public one. */
+  constructor(url, token = null, fetchImpl = fetch) {
+    this.url = url;
     this.token = token;
     this.fetch = fetchImpl;
   }
@@ -17,7 +18,7 @@ export class McpClient {
       headers: {
         "content-type": "application/json",
         accept: "application/json, text/event-stream",
-        authorization: `Bearer ${this.token}`,
+        ...(this.token ? { authorization: `Bearer ${this.token}` } : {}),
         "mcp-protocol-version": PROTOCOL_VERSION,
       },
       body: JSON.stringify(message),
@@ -52,14 +53,4 @@ export class McpClient {
   async call(name, args) {
     return this.request("tools/call", { name, arguments: args });
   }
-}
-
-export async function sessionFor(base, deviceId, fetchImpl = fetch) {
-  const response = await fetchImpl(`${base}/api/session`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ deviceId }),
-  });
-  if (!response.ok) throw new Error(`graspy /api/session answered ${response.status}`);
-  return (await response.json()).token;
 }

@@ -6,9 +6,10 @@ Alexa+ is the assistant the child talks to: the voice, the conversation, everyth
 
 - graspy makes each question in code and marks each answer in code (`apps/server/src/app/spoken`). The assistant never decides what is right.
 - Alexa says the question exactly as graspy wrote it, passes on what the child said, and turns graspy's verdict, hint or worked answer into warm speech.
-- Her tools are the ones `/mcp` lists for the model (`next_question`, `check_answer`, `hint`, `show_working`). The page shows each call and what graspy answered.
+- Her tools are the four `/api/alexa/mcp` lists (`next_question`, `check_answer`, `hint`, `show_working`): a public endpoint with no sign-in, because none of them touches a learner's record. The page shows each call and what graspy answered.
+- Her instructions are the plugin's skill, `plugins/graspy/skills/teach-maths-with-graspy/SKILL.md`, read when the server starts. `plugins/graspy` is an [Agent Plugins](https://agent-plugins.org/) package (`plugin.json`, `mcp.json`, the skill) that any MCP client can install; it points at the staging server until production is chosen.
 
-The assistant here is `openai.gpt-oss-120b` on Amazon Bedrock. A real Alexa+ would connect to `/mcp` the same way, with a session token for the learner (account linking is the step that remains).
+The assistant here is `openai.gpt-oss-120b` on Amazon Bedrock. A real Alexa+ add-on would use the same endpoint as its server URL. We could not register one: the add-ons console says "Coming Soon" for our account and the `alexa-ai` CLI is not public, so this has not been tried against Alexa+.
 
 ## Run it
 
