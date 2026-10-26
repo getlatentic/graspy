@@ -29,6 +29,15 @@ export async function completeClean(complete, messages, tools) {
   return { content: "Sorry, say that once more for me?" };
 }
 
+/** A right answer, or a worked one, is followed by graspy's next question, asked for and said as written: the model makes none up. */
+export async function nextAfter(mcp, questionId, lead, trace) {
+  const [topic, level] = String(questionId).split(".");
+  const next = await mcp.call("next_question", { topic, level: Number(level) || 1 });
+  trace.push({ tool: "next_question", args: { topic, level: Number(level) || 1 }, result: next.structuredContent ?? "", error: next.isError === true });
+  const question = next.structuredContent?.say_to_the_child;
+  return question ? `${lead} Here is another one. ${question}` : null;
+}
+
 /**
  * One turn: the child's words in, Alexa's words out, calling graspy as often as she needs.
  * `history` carries the earlier turns, tool calls included, so the question being asked is remembered.
@@ -52,6 +61,12 @@ export async function takeTurn({ complete, mcp, tools, history, said, instructio
       trace.push({ tool: call.function.name, args, result: result.structuredContent ?? textOf(result), error: result.isError === true });
       messages.push({ role: "tool", tool_call_id: call.id, content: textOf(result) });
       if (call.function.name === "next_question" && !result.isError) spoken = result.structuredContent?.say_to_the_child ?? null;
+      if (call.function.name === "check_answer" && result.structuredContent?.correct === true) {
+        spoken = await nextAfter(mcp, args.question_id, result.structuredContent.feedback, trace);
+      }
+      if (call.function.name === "show_working" && !result.isError) {
+        spoken = await nextAfter(mcp, args.question_id, `The answer is ${result.structuredContent?.answer}. ${result.structuredContent?.working}`, trace);
+      }
     }
     // A question is said as graspy wrote it: the model has nothing to add to it.
     if (spoken) {
