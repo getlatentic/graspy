@@ -10,7 +10,7 @@ const scripted = (...replies) => async () => replies.shift();
 
 test("a tool the model calls is run on graspy and its result goes back to the model", async () => {
   const calls = [];
-  const mcp = { call: async (name, args) => (calls.push([name, args]), { content: [{ type: "text", text: "correct: true" }], structuredContent: { correct: true } }) };
+  const mcp = { call: async (name, args) => (calls.push([name, args]), { content: [{ type: "text", text: "correct: true" }], structuredContent: { correct: false } }) };
   const complete = scripted(
     { content: "", tool_calls: [{ id: "c1", function: { name: "check_answer", arguments: '{"answer":"twelve"}' } }] },
     { content: "Yes, that is right!" },
@@ -18,7 +18,7 @@ test("a tool the model calls is run on graspy and its result goes back to the mo
   const turn = await takeTurn({ complete, mcp, tools, instructions: "be kind", history: [], said: "twelve" });
   assert.deepEqual(calls, [["check_answer", { answer: "twelve" }]]);
   assert.equal(turn.reply, "Yes, that is right!");
-  assert.deepEqual(turn.trace, [{ tool: "check_answer", args: { answer: "twelve" }, result: { correct: true }, error: false }]);
+  assert.deepEqual(turn.trace, [{ tool: "check_answer", args: { answer: "twelve" }, result: { correct: false }, error: false }]);
   assert.equal(turn.history.at(-2).role, "tool");
 });
 
@@ -80,4 +80,33 @@ test("a client of the public endpoint sends no authorization", async () => {
   const fetchImpl = async (_url, options) => (seen.push(options.headers), { ok: true, status: 200, json: async () => ({ jsonrpc: "2.0", id: 1, result: { tools: [] } }) });
   await new McpClient("http://g/mcp/public", null, fetchImpl).tools();
   assert.equal("authorization" in seen[0], false);
+});
+
+test("a right answer is followed by graspy's next question, asked for by the code and said as written", async () => {
+  const calls = [];
+  const mcp = {
+    call: async (name, args) => {
+      calls.push([name, args]);
+      return name === "check_answer"
+        ? { content: [{ type: "text", text: "ok" }], structuredContent: { correct: true, feedback: "Yes, 7 times 10 is 70." } }
+        : { content: [{ type: "text", text: "q" }], structuredContent: { question_id: "multiplication.2.9", say_to_the_child: "Ada has 3 bags with 4 eggs in each bag. How many eggs?" } };
+    },
+  };
+  const complete = async () => ({ content: "", tool_calls: [{ id: "c", function: { name: "check_answer", arguments: '{"question_id":"multiplication.2.123","answer":"70"}' } }] });
+  const turn = await takeTurn({ complete, mcp, tools, instructions: "be kind", history: [], said: "seventy" });
+  assert.deepEqual(calls[1], ["next_question", { topic: "multiplication", level: 2 }]);
+  assert.equal(turn.reply, "Yes, 7 times 10 is 70. Here is another one. Ada has 3 bags with 4 eggs in each bag. How many eggs?");
+  assert.deepEqual(turn.trace.map((step) => step.tool), ["check_answer", "next_question"]);
+});
+
+test("a worked answer is followed by graspy's next question too, and the model's own working is not said", async () => {
+  const mcp = {
+    call: async (name) =>
+      name === "show_working"
+        ? { content: [{ type: "text", text: "w" }], structuredContent: { answer: 70, working: "7 times 10 is 70." } }
+        : { content: [{ type: "text", text: "q" }], structuredContent: { say_to_the_child: "Ada has 3 bags with 4 eggs in each bag. How many eggs?" } },
+  };
+  const complete = async () => ({ content: "", tool_calls: [{ id: "c", function: { name: "show_working", arguments: '{"question_id":"multiplication.1.5"}' } }] });
+  const turn = await takeTurn({ complete, mcp, tools, instructions: "be kind", history: [], said: "tell me" });
+  assert.equal(turn.reply, "The answer is 70. 7 times 10 is 70. Here is another one. Ada has 3 bags with 4 eggs in each bag. How many eggs?");
 });
