@@ -12,6 +12,7 @@ what is measured is what a learner would see.
   drop_after_delta   the client leaves at the first words
   resubscribe        after the first drop, the client asks for the same task again
   retry_after_drop   the client leaves, then sends the same message again, as the web app does
+  no_retry           the control for the line above: the same message sent once
   overlap            a second message is sent while the first is still running
 """
 
@@ -39,9 +40,19 @@ def code_word() -> str:
     return f"zebra-{secrets.randbelow(9000) + 1000}"
 
 
-async def kept(tutor: Tutor, context_id: str, code: str) -> bool:
+async def kept(tutor: Tutor, context_id: str, code: str) -> dict:
+    """Whether the conversation holds the code word. A recall that failed says
+    so, and is not counted as a loss."""
     asked = await tutor.turn(RECALL, context_id)
-    return code in asked.text
+    if asked.error or not asked.finished:
+        return {"kept": None, "recall_error": asked.error or "not finished"}
+    return {"kept": code in asked.text, "recall_error": ""}
+
+
+async def recalled(tutor: Tutor, context_id: str, code: str) -> dict:
+    if not context_id:
+        return {"kept": None, "recall_error": "the first turn gave no conversation"}
+    return await kept(tutor, context_id, code)
 
 
 async def baseline(tutor: Tutor) -> dict:
@@ -53,7 +64,7 @@ async def baseline(tutor: Tutor) -> dict:
         "total_s": seen.events[-1][0] if seen.events else None,
         "events": len(seen.events),
         "error": seen.error,
-        "kept": await kept(tutor, seen.context_id, code) if seen.context_id else None,
+        **await recalled(tutor, seen.context_id, code),
     }
 
 
@@ -69,9 +80,7 @@ async def drop(tutor: Tutor, stop_after: str, resubscribe: bool = False) -> dict
             "error": again.error,
         }
     await asyncio.sleep(SETTLE_SECONDS)
-    result["kept"] = (
-        await kept(tutor, seen.context_id, code) if seen.context_id else None
-    )
+    result.update(await recalled(tutor, seen.context_id, code))
     return result
 
 
@@ -111,10 +120,27 @@ async def overlap(tutor: Tutor) -> dict:
     }
 
 
+LIST_MESSAGES = (
+    "List each message I sent in this conversation that mentions a code word, "
+    "one per line, each line starting with the code word."
+)
+
+
+async def messages_with(tutor: Tutor, context_id: str, code: str) -> dict:
+    """How many times the conversation holds the message: the lines of a list
+    the model writes that carry the code word. The question does not contain it."""
+    asked = await tutor.turn(LIST_MESSAGES, context_id)
+    if asked.error or not asked.finished:
+        return {"held": None, "recall_error": asked.error or "not finished"}
+    lines = [line for line in asked.text.splitlines() if code in line]
+    return {"held": len(lines), "recall_error": ""}
+
+
 async def retry_after_drop(tutor: Tutor) -> dict:
     """The web client sends a message again 600 ms after a stream that ended
-    before any words, in the same conversation. If the first turn also
-    finishes, the conversation holds the message twice."""
+    before any words. It keeps the conversation id of an earlier message, so
+    this holds for a second message and later ones, not a first. If the first
+    turn also finishes, the conversation holds the message twice."""
     code = code_word()
     opened = await tutor.turn("Hello. Reply with only the word hi.")
     text = f"My code word is {code}. Reply with only the word ok."
@@ -122,17 +148,20 @@ async def retry_after_drop(tutor: Tutor) -> dict:
     await asyncio.sleep(0.6)
     again = await tutor.turn(text, opened.context_id)
     await asyncio.sleep(SETTLE_SECONDS)
-    counted = await tutor.turn(
-        f"How many separate messages did I send that contain the code word {code}? "
-        "Reply with only a number.",
-        opened.context_id,
-    )
-    digits = [char for char in counted.text if char.isdigit()]
     return {
         "retry_finished": again.finished,
-        "counted": int(digits[0]) if digits else None,
-        "said": counted.text[:40],
+        **await messages_with(tutor, opened.context_id, code),
     }
+
+
+async def no_retry(tutor: Tutor) -> dict:
+    """The control: the same message sent once, and the same list."""
+    code = code_word()
+    opened = await tutor.turn("Hello. Reply with only the word hi.")
+    await tutor.turn(
+        f"My code word is {code}. Reply with only the word ok.", opened.context_id
+    )
+    return await messages_with(tutor, opened.context_id, code)
 
 
 SCENARIOS = {
@@ -141,6 +170,7 @@ SCENARIOS = {
     "drop_after_delta": lambda tutor: drop(tutor, "delta"),
     "resubscribe": lambda tutor: drop(tutor, "task", resubscribe=True),
     "retry_after_drop": retry_after_drop,
+    "no_retry": no_retry,
     "overlap": overlap,
 }
 
@@ -149,10 +179,18 @@ def summary(rows: list[dict]) -> dict:
     out: dict = {"runs": len(rows)}
     for key in rows[0]:
         values = [row.get(key) for row in rows]
-        if all(isinstance(value, bool) or value is None for value in values):
-            out[key] = f"{sum(1 for value in values if value is True)}/{len(values)}"
-        elif all(isinstance(value, (int, float)) for value in values):
-            out[key] = round(statistics.median(values), 2)
+        if key == "recall_error":
+            out["recall_errors"] = [value for value in values if value]
+        elif all(isinstance(value, bool) or value is None for value in values):
+            yes = sum(1 for value in values if value is True)
+            unknown = sum(1 for value in values if value is None)
+            out[key] = f"{yes}/{len(values)} (unknown {unknown})"
+        elif all(isinstance(value, (int, float)) or value is None for value in values):
+            known = [value for value in values if value is not None]
+            out[key] = {
+                "median": round(statistics.median(known), 2) if known else None,
+                "values": values,
+            }
         else:
             out[key] = values
     return out
