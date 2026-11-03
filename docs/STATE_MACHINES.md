@@ -9,9 +9,9 @@ Paths are under `apps/` unless they start with `.github` or `scripts`. A machine
 
 | Machine | Where | Implicit states | Next step |
 |---|---|---|---|
-| Recording retention × consent | `server/src/app/voice/recording_retention.py:27-118`, `samples` cols `audio_key`, `audio_deleted_at`, `expires_at`; `account/consents.py` | awaiting_audio / undecided / kept / gone, all read from NULL combinations | **TLA+**, with the tutoring turn |
+| Recording retention × consent (`docs/specs/RecordingRetention.tla`) | `server/src/app/voice/recording_retention.py:27-118`, `samples` cols `audio_key`, `audio_deleted_at`, `expires_at`; `account/consents.py` | awaiting_audio / undecided / kept / gone, all read from NULL combinations | **TLA+**, written with the tutoring turn |
 | Parental consent record | `account/consents.py:28-82`, table `consents`, `listed_learners.py:39` | none / active / revoked per scope (`service`, `recordings`) | Table; TLA+ for the learner-removal saga |
-| Tutoring turn (marking a recording) | `voice/worker_evaluation.py:65-125,371-444`, `voice/exercises.py:283-350`, `tutoring_turns.state` + `attempts` + `claim_token` | no row / placeholder failed(0) / processing live / lease expired / failed waiting / failed given up / complete | **TLA+**, with recording retention |
+| Tutoring turn (marking a recording) (`docs/specs/RecordingRetention.tla`) | `voice/worker_evaluation.py:65-125,371-444`, `voice/exercises.py:283-350`, `tutoring_turns.state` + `attempts` + `claim_token` | no row / placeholder failed(0) / processing live / lease expired / failed waiting / failed given up / complete | **TLA+**, written with recording retention |
 | Learner erasure across stores | `account/learners.py:87-116`, `voice/keeping.py:16-77`, `threads/store.py:127`, DOs `Learner.forget`, `Conversation.forget` | present / partly erased / gone, no marker | **TLA+** |
 | Voice sample upload | `voice/samples.py:27-181`, `samples.state` | awaiting_audio / ready | Fold into recording retention |
 | Lesson step controller | `voice/progress*.py`, `sequencing.py`, `side_steps.py`, `progress_state.py:26-63`, `lesson_store.py` | a fold over the evidence log into about 20 sets and flags (`paused_today`, `echoed/recheck_due/rechecked`, `probed/shown/resume_at`, `guidance_owed/rung_owed`) | **TLA+** (top of the tutor side) and Props |
