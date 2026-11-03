@@ -10,8 +10,9 @@
 (* model finishes, and a client that did not hear the reply sends the     *)
 (* message again. Durable = TRUE is the design where a turn is written to *)
 (* an append-only log before work starts, a watchdog resumes a turn the   *)
-(* isolate dropped, and a message the server has already seen is joined   *)
-(* by its id and not started again.                                       *)
+(* isolate dropped, and an exchange is appended once per message id. A    *)
+(* message the log already holds can also be joined and not run again;    *)
+(* that saves a model call but is not what keeps the exchange single.     *)
 (*                                                                        *)
 (* Not modelled: the order of two different messages, tool calls, cards,  *)
 (* compaction, several learners, and the contents of any message.         *)
@@ -20,17 +21,22 @@ EXTENDS Naturals
 
 CONSTANTS
     Messages,      \* the learner's messages, for example {m1, m2}
-    Durable,       \* TRUE: logged, resumed and joined by id; FALSE: today
+    Durable,       \* TRUE: logged and resumed; FALSE: today
+    JoinsById,     \* Durable: a message the log holds is joined, not started again
+    AppendIsIdempotent,  \* Durable: appending an exchange is once per message id
     MaxCrashes,    \* isolate deaths in one run
     MaxAttempts    \* sends of one message: the first and the retries
 
 ASSUME /\ Durable \in BOOLEAN
+       /\ JoinsById \in BOOLEAN
+       /\ AppendIsIdempotent \in BOOLEAN
        /\ MaxCrashes \in Nat
        /\ MaxAttempts \in Nat \ {0}
 
 VARIABLES
     attempts,      \* attempts[m]: how many times the client sent m
-    running,       \* running[m]: executions of m alive in the isolate
+    running,       \* running[m]: executions of m alive in the isolate, before their append
+    pending,       \* pending[m]: executions of m that appended and have not yet finished
     reply,         \* reply[m]: an execution of m finished, so a reply exists
     connected,     \* connected[m]: the client's stream for m is open
     shown,         \* shown[m]: the client received the reply
@@ -39,13 +45,14 @@ VARIABLES
     up,            \* the isolate is alive
     crashes        \* isolate deaths so far
 
-vars == <<attempts, running, reply, connected, shown, kept, logged, up, crashes>>
+vars == <<attempts, running, pending, reply, connected, shown, kept, logged, up, crashes>>
 
 LogStates == {"none", "started", "done"}
 
 TypeOK ==
     /\ attempts \in [Messages -> 0..MaxAttempts]
     /\ running \in [Messages -> Nat]
+    /\ pending \in [Messages -> Nat]
     /\ reply \in [Messages -> BOOLEAN]
     /\ connected \in [Messages -> BOOLEAN]
     /\ shown \in [Messages -> BOOLEAN]
@@ -57,6 +64,7 @@ TypeOK ==
 Init ==
     /\ attempts = [m \in Messages |-> 0]
     /\ running = [m \in Messages |-> 0]
+    /\ pending = [m \in Messages |-> 0]
     /\ reply = [m \in Messages |-> FALSE]
     /\ connected = [m \in Messages |-> FALSE]
     /\ shown = [m \in Messages |-> FALSE]
@@ -66,7 +74,7 @@ Init ==
     /\ crashes = 0
 
 (* A message the log already holds is joined, not started again. *)
-Joins(m) == Durable /\ logged[m] # "none"
+Joins(m) == Durable /\ JoinsById /\ logged[m] # "none"
 
 Send(m) ==
     /\ up
@@ -77,18 +85,28 @@ Send(m) ==
     /\ connected' = [connected EXCEPT ![m] = TRUE]
     /\ running' = [running EXCEPT ![m] = IF Joins(m) THEN @ ELSE @ + 1]
     /\ logged' = [logged EXCEPT ![m] = IF Durable /\ @ = "none" THEN "started" ELSE @]
-    /\ UNCHANGED <<reply, shown, kept, up, crashes>>
+    /\ UNCHANGED <<pending, reply, shown, kept, up, crashes>>
 
-(* The model finished an execution of m. Appending is once per message when *)
-(* the log keys it by the message id, and once per execution today.         *)
-Finish(m) ==
+(* The model finished an execution of m and its exchange is appended to the *)
+(* conversation. Once per message id when appending is idempotent, and once  *)
+(* per execution today.                                                       *)
+Append(m) ==
     /\ up
     /\ running[m] > 0
     /\ running' = [running EXCEPT ![m] = @ - 1]
-    /\ kept' = [kept EXCEPT ![m] = IF Durable THEN 1 ELSE @ + 1]
+    /\ pending' = [pending EXCEPT ![m] = @ + 1]
+    /\ kept' = [kept EXCEPT ![m] =
+                   IF Durable /\ AppendIsIdempotent THEN (IF @ = 0 THEN 1 ELSE @) ELSE @ + 1]
+    /\ UNCHANGED <<attempts, reply, connected, shown, logged, up, crashes>>
+
+(* The reply exists and the log records the turn as done. *)
+Finish(m) ==
+    /\ up
+    /\ pending[m] > 0
+    /\ pending' = [pending EXCEPT ![m] = @ - 1]
     /\ logged' = [logged EXCEPT ![m] = IF Durable THEN "done" ELSE @]
     /\ reply' = [reply EXCEPT ![m] = TRUE]
-    /\ UNCHANGED <<attempts, connected, shown, up, crashes>>
+    /\ UNCHANGED <<attempts, running, connected, shown, kept, up, crashes>>
 
 Deliver(m) ==
     /\ up
@@ -96,7 +114,7 @@ Deliver(m) ==
     /\ reply[m]
     /\ shown' = [shown EXCEPT ![m] = TRUE]
     /\ connected' = [connected EXCEPT ![m] = FALSE]
-    /\ UNCHANGED <<attempts, running, reply, kept, logged, up, crashes>>
+    /\ UNCHANGED <<attempts, running, pending, reply, kept, logged, up, crashes>>
 
 (* The client's stream ends. Measured on the staging Worker and under        *)
 (* uvicorn: the turn keeps running and its exchange is kept.                 *)
@@ -104,7 +122,7 @@ Drop(m) ==
     /\ connected[m]
     /\ ~shown[m]
     /\ connected' = [connected EXCEPT ![m] = FALSE]
-    /\ UNCHANGED <<attempts, running, reply, shown, kept, logged, up, crashes>>
+    /\ UNCHANGED <<attempts, running, pending, reply, shown, kept, logged, up, crashes>>
 
 (* The isolate dies: every execution and every stream with it. The log and *)
 (* the conversation are in D1 and Durable Objects and stay.                *)
@@ -114,13 +132,14 @@ Crash ==
     /\ up' = FALSE
     /\ crashes' = crashes + 1
     /\ running' = [m \in Messages |-> 0]
+    /\ pending' = [m \in Messages |-> 0]
     /\ connected' = [m \in Messages |-> FALSE]
     /\ UNCHANGED <<attempts, reply, shown, kept, logged>>
 
 Restart ==
     /\ ~up
     /\ up' = TRUE
-    /\ UNCHANGED <<attempts, running, reply, connected, shown, kept, logged, crashes>>
+    /\ UNCHANGED <<attempts, running, pending, reply, connected, shown, kept, logged, crashes>>
 
 (* The watchdog starts a turn the log says began and nothing is running. *)
 Watchdog(m) ==
@@ -128,14 +147,16 @@ Watchdog(m) ==
     /\ up
     /\ logged[m] = "started"
     /\ running[m] = 0
+    /\ pending[m] = 0
     /\ running' = [running EXCEPT ![m] = 1]
-    /\ UNCHANGED <<attempts, reply, connected, shown, kept, logged, up, crashes>>
+    /\ UNCHANGED <<attempts, pending, reply, connected, shown, kept, logged, up, crashes>>
 
 Next ==
     \/ Crash
     \/ Restart
     \/ \E m \in Messages:
           \/ Send(m)
+          \/ Append(m)
           \/ Finish(m)
           \/ Deliver(m)
           \/ Drop(m)
@@ -147,6 +168,7 @@ Next ==
 Fairness ==
     /\ WF_vars(Restart)
     /\ \A m \in Messages:
+          /\ WF_vars(Append(m))
           /\ WF_vars(Finish(m))
           /\ WF_vars(Deliver(m))
           /\ WF_vars(Watchdog(m))
@@ -156,7 +178,9 @@ Spec == Init /\ [][Next]_vars /\ Fairness
 ----------------------------------------------------------------------------
 (* Safety *)
 
-(* A message's exchange is in the conversation at most once. *)
+(* A message's exchange is in the conversation at most once. With a durable *)
+(* log it needs an idempotent append: a crash after the append and before    *)
+(* the log says "done" makes the watchdog run the turn again.                *)
 AtMostOnce == \A m \in Messages: kept[m] <= 1
 
 (* The client never holds a reply the conversation does not. *)

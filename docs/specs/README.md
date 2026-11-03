@@ -6,12 +6,14 @@ Formal specs of the parts of graspy where a bug would lose or leak a child's wor
 
 `ChatTurn.tla` is the life of a chat turn as a task: the learner's client sends a message, the server works on it, the reply is appended to the conversation and delivered. A client can drop its stream or never come back, and the Worker's isolate can die.
 
-The constant `Durable` selects what is checked:
+The constants select what is checked:
 
 | Configuration | What it is | Result |
 |---|---|---|
-| `ChatTurn.asis.cfg` (`Durable = FALSE`) | The chat today: a turn is a task in one isolate's memory, the exchange is appended when the model finishes, and a client that did not hear the reply sends the message again | `AtMostOnce` is violated (a stream drops after the turn finished, the retry runs a second turn, and the exchange is appended twice); `EventuallyKept` is violated (a message is sent, the isolate dies, and a client that does not return leaves it lost for good); `ShownIsKept` holds |
-| `ChatTurn.durable.cfg` (`Durable = TRUE`) | A turn written to an append-only log before work starts, resumed by a watchdog after a crash, and joined by its message id when sent again | All hold: 366 distinct states, no error |
+| `ChatTurn.asis.cfg` (`Durable = FALSE`) | The chat today: a turn is a task in one isolate's memory, the exchange is appended when the model finishes, and a client that did not hear the reply sends the message again | `AtMostOnce` is violated (a stream drops, the client sends again, and the second execution appends as well); `EventuallyKept` is violated (a message is sent, the isolate dies, and a client that does not return leaves it lost for good); `ShownIsKept` holds |
+| `ChatTurn.durable.cfg` | A turn written to an append-only log before work starts, resumed by a watchdog after a crash, joined by its message id when sent again, with an append that is idempotent by message id | All hold: 882 distinct states, no error |
+| `ChatTurn.nonidempotent.cfg` | The same, with an append that is not idempotent | `AtMostOnce` is violated: the turn appends, the isolate dies before the log says "done", and the watchdog runs it again |
+| `ChatTurn.nojoin.cfg` | The same as durable, but a message the log holds is not joined: a retry starts a second execution | All hold: 1,906 distinct states. Joining saves a model call; it is the idempotent append that keeps the exchange single |
 
 The properties:
 
