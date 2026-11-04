@@ -15,10 +15,13 @@ from dspy.utils.dummies import DummyLM
 from fastapi.testclient import TestClient
 from lesson_example import LESSON, wire
 
+from app.agent.memory import DurableObjectConversationStore
+from app.chatlog.conversations import LogConversationStore
 from app.cloudflare import (
     BindingLimiter,
     build_lesson_runner,
     build_worker_app,
+    conversation_store,
     deployment_environment,
 )
 from app.learner.record import Learnt, TopicRef, changed
@@ -407,3 +410,27 @@ async def test_a_view_is_read_from_the_workers_assets():
         "baseUriDomains": ["https://api.example"],
     }
     assert content["_meta"]["graspy/sandbox"] == f"/ui-sandbox/{build_of(WORKER)}/"
+
+
+@pytest.mark.parametrize("on", ["on", "ON", "true", "1"])
+def test_conversations_are_kept_in_the_chat_log_when_it_is_on(on):
+    env = fake_env()
+    env.CHAT_LOG = on
+
+    assert isinstance(conversation_store(env), LogConversationStore)
+
+
+@pytest.mark.parametrize("off", [None, "", "off", "false", "0", "no"])
+def test_conversations_stay_in_the_durable_object_unless_the_chat_log_is_on(off):
+    env = fake_env()
+    if off is not None:
+        env.CHAT_LOG = off
+
+    assert isinstance(conversation_store(env), DurableObjectConversationStore)
+
+
+def test_a_worker_with_the_chat_log_on_builds():
+    env = fake_env()
+    env.CHAT_LOG = "on"
+
+    assert build_worker_app(env, lambda value: value) is not None

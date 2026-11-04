@@ -14,6 +14,8 @@ from app.agent.memory import (
     folded,
     parsed,
 )
+from app.chatlog.conversations import LogConversationStore
+from app.local_d1 import LocalD1
 
 
 def exchange(n: int) -> Exchange:
@@ -35,6 +37,9 @@ class FakeConversation:
     async def fold(self, summary: str, dropped: float) -> None:
         self.stored = folded(self.stored, summary, dropped)
 
+    async def forget(self) -> None:
+        self.stored = None
+
 
 class FakeNamespace:
     def __init__(self):
@@ -44,10 +49,12 @@ class FakeNamespace:
         return self.objects.setdefault(name, FakeConversation())
 
 
-@pytest.fixture(params=["in-memory", "durable-object"])
+@pytest.fixture(params=["in-memory", "durable-object", "event-log"])
 def store(request):
     if request.param == "in-memory":
         return InMemoryConversationStore()
+    if request.param == "event-log":
+        return LogConversationStore(LocalD1())
     return DurableObjectConversationStore(FakeNamespace())
 
 
@@ -104,3 +111,57 @@ async def test_a_store_never_holds_more_than_its_cap(store):
 def test_a_conversation_stored_before_summaries_still_loads():
     """Stored then as a plain list of exchanges."""
     assert parsed(json.dumps([exchange(1)])) == Conversation("", (exchange(1),))
+
+
+async def test_an_exchange_keeps_what_the_app_sent_and_the_card_it_showed(store):
+    full = Exchange(
+        message="Is it 7?",
+        answer="Yes.",
+        app="The learner called answer_practice.",
+        card="A practice set of two questions.",
+    )
+
+    await store.append("c", full)
+
+    assert (await store.load("c")).exchanges == (full,)
+
+
+async def test_a_fold_may_arrive_with_a_float_count(store):
+    """From a Durable Object call a whole number can arrive as a float."""
+    for n in range(4):
+        await store.append("c", exchange(n))
+
+    await store.fold("c", "summary", 2.0)
+
+    assert (await store.load("c")).exchanges == (exchange(2), exchange(3))
+
+
+async def test_a_second_fold_replaces_the_first_summary_and_covers_more(store):
+    for n in range(6):
+        await store.append("c", exchange(n))
+    await store.fold("c", "first", 2)
+
+    await store.fold("c", "second", 2)
+
+    assert await store.load("c") == Conversation("second", (exchange(4), exchange(5)))
+
+
+async def test_a_fold_of_nothing_changes_the_summary_only(store):
+    for n in range(3):
+        await store.append("c", exchange(n))
+
+    await store.fold("c", "so far", 0)
+
+    assert await store.load("c") == Conversation(
+        "so far", (exchange(0), exchange(1), exchange(2))
+    )
+
+
+async def test_a_forgotten_conversation_is_empty_and_others_are_not(store):
+    await store.append("a", exchange(1))
+    await store.append("b", exchange(2))
+
+    await store.forget("a")
+
+    assert await store.load("a") == Conversation()
+    assert (await store.load("b")).exchanges == (exchange(2),)

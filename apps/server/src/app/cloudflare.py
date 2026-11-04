@@ -9,7 +9,8 @@ from typing import Any
 
 from fastapi import FastAPI
 
-from .agent.memory import DurableObjectConversationStore
+from .agent.memory import ConversationStore, DurableObjectConversationStore
+from .chatlog.conversations import LogConversationStore
 from .domains.lesson.service import LessonService
 from .factory import create_app
 from .learner.store import DurableObjectLearnerStore
@@ -43,11 +44,20 @@ def deployment_environment(env: Any) -> dict[str, str]:
     return {key: str(value) for key, value in values.items() if value is not None}
 
 
+def conversation_store(env: Any) -> ConversationStore:
+    """Conversations are kept in a chat's log when CHAT_LOG is on (staging first), and read from the
+    Durable Object that held them until each is first read."""
+    held = DurableObjectConversationStore(env.CONVERSATIONS)
+    if str(getattr(env, "CHAT_LOG", "")).lower() in {"on", "true", "1"}:
+        return LogConversationStore(env.DB, held)
+    return held
+
+
 def build_worker_app(env: Any, js_object: JsObject) -> FastAPI:
     # Settings read the process environment, which a Worker leaves empty.
     os.environ.update(deployment_environment(env))
     return create_app(
-        conversations=DurableObjectConversationStore(env.CONVERSATIONS),
+        conversations=conversation_store(env),
         lessons=DurableObjectLessonStore(env.LESSONS),
         learners=DurableObjectLearnerStore(env.LEARNERS),
         making=DurableObjectLessonMaking(env.LESSON_MAKERS),
