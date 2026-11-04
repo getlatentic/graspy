@@ -38,10 +38,10 @@ A learner's page does not hold the turn; it follows it, and can follow it again 
   (a request that read it for ten minutes would spend the Worker's query limit) and the page asks again.
 - **Stop** (`POST .../stop`, or the socket message) writes `turn.stop`, ends the run that is writing the
   turn, then the next step of the runner marks each open tool `tool.cancelled`, keeps the exchange with the
-  words so far, and finishes the turn `status=stopped` with those words as the reply. A stop is in the
+  words so far (a stop before any words keeps nothing; the page sends the message as unanswered with the next one), and finishes the turn `status=stopped` with those words as the reply. A stop is in the
   log, so a restart finds it.
 
-Rate limits: a start spends the agent budget, as an A2A message does. The socket is opened by the Worker
+Limits: a chat's object holds at most 8 sockets, and a socket is opened only for a turn the chat holds. A start spends the agent budget, as an A2A message does. The socket is opened by the Worker
 before the app's middleware, so it spends none; it needs a valid session and the chat's owner.
 
 ## Failure

@@ -113,14 +113,19 @@ export interface LearnerContext {
 export interface TutorReply extends ReplyData {
   text: string;
   contextId?: string;
+  /** The learner stopped the turn: the text is the words it had written. */
+  stopped?: boolean;
 }
 
 export interface TurnListener {
   onDelta?: (text: string) => void;
   /** What streamed is withdrawn: the tutor is writing the answer again. */
   onRestart?: () => void;
-  onActivity?: (tool: string) => void;
-  /** Aborting makes askAgent reject with TurnStopped. */
+  onActivity?: (tool: string | null) => void;
+  /** The connection to the turn is down, and opened again when it can be. */
+  onReconnecting?: (reconnecting: boolean) => void;
+  /** Aborting stops the turn: askAgent rejects with TurnStopped, and askTutor resolves with the words
+   * the turn had. */
   signal?: AbortSignal;
 }
 

@@ -107,7 +107,13 @@ async def start_turn(
         parts=body.parts,
         metadata=body.metadata,
     )
-    return StartedTurn(turn=body.turn, cursor=await turns.host.start(job))
+    try:
+        return StartedTurn(turn=body.turn, cursor=await turns.host.start(job))
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail={"error": "That message is too large", "code": "turn_too_large"},
+        ) from None
 
 
 def _event(frame: dict[str, Any]) -> str:

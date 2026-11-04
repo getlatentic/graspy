@@ -23,6 +23,10 @@ TURN = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
             (CHAT, TURN, -1),
         ),
         (f"https://api/api/chats/{CHAT}/turns/{TURN}/socket?after=x", (CHAT, TURN, -1)),
+        (
+            f"https://api/api/chats/{CHAT}/turns/{TURN}/socket?after=%C2%B2",
+            (CHAT, TURN, -1),
+        ),
     ],
 )
 def test_the_chat_turn_and_cursor_come_from_the_url(url, target):

@@ -30,6 +30,7 @@ from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
 from ..settings import Settings
+from ..turns.access import may_start
 from ..turns.durable import DurableTurns
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
@@ -103,6 +104,8 @@ class TutorExecutor(AgentExecutor):
         if self._turns is None:
             turn = await self._turn(context, conversation_id, message)
             return reply_parts(await _relay(updater, turn))
+        if not await may_start(self._turns.log, conversation_id, learner_of(context)):
+            raise TurnFailed("not_yours")
         job = TurnJob(
             chat=conversation_id,
             turn=context.message.message_id,

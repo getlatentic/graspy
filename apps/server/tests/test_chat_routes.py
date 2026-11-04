@@ -240,3 +240,13 @@ async def test_a_server_that_keeps_no_turns_says_so():
 
     assert response.status_code == 404
     assert response.json()["detail"]["code"] == "turns_unavailable"
+
+
+async def test_a_turn_too_large_to_keep_is_refused_not_a_server_error(log):
+    http, _ = client_for(log, FakeTutor())
+    body = {**start_body(), "metadata": {"learner": {"topic": "x" * 300_000}}}
+
+    response = await http.post(f"/api/chats/{CHAT}/turns", json=body, headers=bearer())
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "turn_too_large"

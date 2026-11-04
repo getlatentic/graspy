@@ -202,3 +202,15 @@ def test_a_turn_the_learner_stopped_is_stopped_whatever_else_is_true():
     assert stopped.stop_requested
     assert next_step(stopped, 5_000, lambda tool: tool != "pay") == Stop()
     assert not state_of(started(), run(1)).stop_requested
+
+
+def test_a_tool_marked_cancelled_is_no_longer_open():
+    state = state_of(
+        started(),
+        run(1),
+        (kinds.TOOL_STARTED, {"tool": "calculate"}),
+        (kinds.TOOL_STARTED, {"tool": "give_practice"}),
+        (kinds.TOOL_CANCELLED, {"tool": "calculate"}),
+    )
+
+    assert state.open_tools == ("give_practice",)

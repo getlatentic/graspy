@@ -14,6 +14,7 @@
     "quickActionRelatedPrompt": "كيف يرتبط \"{topic}\" بمواضيع أخرى في {subject}؟",
     "draftPlaceholderTopic": "اسأل graspy عن {topic}",
     "tutorThinking": "أفكّر…",
+    "reconnecting": "جارٍ إعادة الاتصال…",
     "tutorError": "حدث خطأ. حاول مرة أخرى.",
     "errorMessage": "خطأ: {error}",
     "send": "إرسال",

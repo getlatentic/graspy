@@ -26,6 +26,7 @@ from ..chatlog.kinds import (
     ROUND_ABORTED,
     TEXT,
     TOOL,
+    TOOL_CANCELLED,
     TOOL_STARTED,
     TURN_FINISHED,
     TURN_RESUMED,
@@ -42,6 +43,7 @@ FOLDED = (
     TURN_FINISHED,
     TURN_STOP,
     ROUND_ABORTED,
+    TOOL_CANCELLED,
     *PROGRESS,
 )
 
@@ -100,6 +102,11 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
             state["finished"] = event
         elif event.kind == TURN_STOP:
             state["stop"] = True
+        elif (
+            event.kind == TOOL_CANCELLED
+            and str(event.data.get("tool", "")) in state["open"]
+        ):
+            state["open"].remove(str(event.data.get("tool", "")))
         elif event.kind == TURN_RESUMED:
             if state["runs"]:
                 state["stalled"] = _note_run(state["stalled"], state["progressed"])

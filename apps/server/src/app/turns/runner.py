@@ -75,6 +75,8 @@ class TurnRunner:
         # The turn whose run is going and the task that is running it.
         self._running: tuple[str, asyncio.Task] | None = None
         self._interrupted: str | None = None
+        # Turns stopped while this runner lives, which a run about to begin must not start.
+        self._stopped_turns: set[str] = set()
 
     async def stop(self, chat: str, turn: str) -> None:
         """The learner stopped `turn`. The stop is kept, so a restart finds it, and the run that is
@@ -82,6 +84,7 @@ class TurnRunner:
         if await self._log.once_seq(chat, kinds.TURN_FINISHED, turn) is not None:
             return
         await self._append(chat, kinds.TURN_STOP, {"turn": turn})
+        self._stopped_turns.add(turn)
         if self._running and self._running[0] == turn:
             self._interrupted = turn
             self._running[1].cancel()
@@ -117,6 +120,9 @@ class TurnRunner:
         await self._append(chat, kinds.TURN_RESUMED, {"turn": state.turn, "run": run})
         task = asyncio.ensure_future(self._run(chat, state, run))
         self._running = (state.turn, task)
+        if state.turn in self._stopped_turns:
+            self._interrupted = state.turn
+            task.cancel()
         try:
             async with asyncio.timeout(RUN_DEADLINE_S):
                 reply = await task
@@ -178,10 +184,10 @@ class TurnRunner:
 
         async def flush() -> None:
             nonlocal buffered, last
-            if buffered:
-                await keep(kinds.TEXT, text=buffered)
-                buffered = ""
+            words, buffered = buffered, ""
             last = self._clock()
+            if words:
+                await keep(kinds.TEXT, text=words)
 
         try:
             async for item in self._source.stream(state.job, state.turn):

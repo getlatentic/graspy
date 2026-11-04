@@ -7,6 +7,7 @@ the frames a reconnecting client would be sent: one reading of the log serves bo
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any, Protocol
@@ -39,6 +40,8 @@ class ChatSockets:
         self._sockets = sockets
         self._pushing = False
         self._dirty = False
+        # One push at a time, so two never read the same cursor and send a frame twice.
+        self._lock = asyncio.Lock()
 
     async def announce(self) -> None:
         """The chat kept an event: every socket is sent what it has not had. Announcements that come
@@ -61,27 +64,33 @@ class ChatSockets:
         beyond the chat."""
         kept = socket.attachment
         if kept["cursor"] > await self._log.last_seq(kept["chat"]):
-            socket.send(json.dumps(RESET))
-            socket.close(FINISHED_CODE, "reset")
+            async with self._lock:
+                self._tell_reset(socket)
             return
         await self.push(socket)
 
+    @staticmethod
+    def _tell_reset(socket: Socket) -> None:
+        socket.send(json.dumps(RESET))
+        socket.close(FINISHED_CODE, "reset")
+
     async def push(self, socket: Socket) -> None:
-        """Sends one socket the frames after its cursor, and closes it after the end of its turn."""
-        kept = socket.attachment
-        try:
-            frames = await pending(
-                self._log, kept["chat"], kept["turn"], kept["cursor"]
-            )
-        except Exception:
-            logger.exception(
-                "Frames for a socket of chat %s were not read", kept["chat"]
-            )
-            return
-        if not frames:
-            return
-        for frame in frames:
-            socket.send(json.dumps(frame))
-        socket.attach({**kept, "cursor": frames[-1]["seq"]})
-        if is_last(frames[-1]):
-            socket.close(FINISHED_CODE, "finished")
+        """Sends one socket the frames after its cursor, and closes it after the end of its turn. A
+        socket that cannot be written to is its own loss: the page opens another from its cursor."""
+        async with self._lock:
+            kept = socket.attachment
+            try:
+                frames = await pending(
+                    self._log, kept["chat"], kept["turn"], kept["cursor"]
+                )
+                if not frames:
+                    return
+                for frame in frames:
+                    socket.send(json.dumps(frame))
+                socket.attach({**kept, "cursor": frames[-1]["seq"]})
+                if is_last(frames[-1]):
+                    socket.close(FINISHED_CODE, "finished")
+            except Exception:
+                logger.warning(
+                    "A socket of chat %s was not sent to", kept["chat"], exc_info=True
+                )

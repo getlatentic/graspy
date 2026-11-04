@@ -126,3 +126,30 @@ async def test_announcements_made_while_sending_are_served_by_one_round(log):
     await asyncio.gather(*(sockets.announce() for _ in range(5)))
 
     assert [f["text"] for f in socket.sent] == ["Yes"]
+
+
+class BrokenSocket(FakeSocket):
+    def send(self, text: str) -> None:
+        raise RuntimeError("The socket is closed")
+
+
+async def test_a_socket_that_cannot_be_sent_to_does_not_stop_the_others(log):
+    started = await keep(log, kinds.TURN_STARTED, job={})
+    await keep(log, kinds.TEXT, text="Yes")
+    broken, whole = BrokenSocket(cursor=started), FakeSocket(cursor=started)
+
+    await sockets_of(log, broken, whole).announce()
+
+    assert [f["text"] for f in whole.sent] == ["Yes"]
+    assert broken.attachment["cursor"] == started
+
+
+async def test_a_socket_opened_while_the_object_announces_is_sent_each_frame_once(log):
+    started = await keep(log, kinds.TURN_STARTED, job={})
+    await keep(log, kinds.TEXT, text="Yes")
+    socket = FakeSocket(cursor=started)
+    sockets = sockets_of(log, socket)
+
+    await asyncio.gather(sockets.welcome(socket), sockets.announce())
+
+    assert [f["text"] for f in socket.sent] == ["Yes"]

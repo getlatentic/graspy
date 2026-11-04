@@ -513,3 +513,26 @@ async def test_every_event_a_run_keeps_is_announced(log, clock, alarm):
 
     # resumed, text, finished: each announced after it was kept.
     assert told == [2, 3, 4]
+
+
+async def test_a_stop_that_comes_before_the_run_is_registered_still_ends_the_run(
+    log, clock, alarm
+):
+    """The stop arrives while the run's first event is being announced, before the run exists."""
+    await begin(log, clock)
+    script = Script([REPLY])
+    stopped = []
+
+    async def announce() -> None:
+        if not stopped:
+            stopped.append(True)
+            await runner.stop("c", "t1")
+
+    runner = runner_for(log, clock, alarm, script, announce=announce)
+
+    assert await runner.advance("c") == 0
+    assert await runner.advance("c") == 0
+
+    finished = (await seen(log))[-1][1]
+    assert finished["status"] == "stopped"
+    assert script.called == []

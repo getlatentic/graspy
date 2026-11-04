@@ -10,6 +10,7 @@ import type { ConversationScroll } from "@/features/learn/hooks/use-conversation
 import { ChatMessageItem } from "@/features/learn/components/chat-message";
 import { AppFrame } from "@/features/learn/ui-apps/app-frame";
 import type { ViewHost } from "@/features/learn/ui-apps/view-bridge";
+import { RECONNECTING } from "@/features/learn/lib/chat-view-state";
 
 const NAMED_TOOLS = new Set<string>(TUTOR_TOOLS);
 
@@ -131,9 +132,11 @@ function TutorActivity({ tool }: { tool: string | null }) {
   return (
     <div className="motion-safe:animate-enter">
       <p role="status" className="animate-pulse text-sm text-muted">
-        {tool && NAMED_TOOLS.has(tool)
-          ? t(`chat.activity.${tool}`)
-          : t("chat.tutorThinking")}
+        {tool === RECONNECTING
+          ? t("chat.reconnecting")
+          : tool && NAMED_TOOLS.has(tool)
+            ? t(`chat.activity.${tool}`)
+            : t("chat.tutorThinking")}
       </p>
     </div>
   );
