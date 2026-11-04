@@ -26,7 +26,7 @@ Both sign in with the Firebase project `graspy-f482e`. `APP_ENV=staging` behaves
 
 1. The tree is clean, and the web build has its Firebase config (in the environment or `apps/web/.env.<environment>.local`). For production, `HEAD` is `origin/main`, and the deploy is confirmed.
 2. `npm ci` with the npm that `package.json`'s `packageManager` names, run through `npx`. Another npm can skip a workspace's packages without an error. Then every package that the tutor, the admin UI and the web declare must be installed, and `uv sync --locked` for the API.
-3. The admin UI and the web app are built. The web build must call the API in the committed `apps/web/.env.<environment>` and not the other environment's; a `VITE_API_URL` in the shell is ignored. `public/_headers` allows production's API in `connect-src` and `frame-src`; a staging build puts staging's API in its place.
+3. The admin UI and the web app are built. The web build must call the API in the committed `apps/web/.env.<environment>` and not the other environment's; a `VITE_API_URL` in the shell is ignored. `public/_headers` allows production's API in `connect-src` (as `https://` and as `wss://`, for the chat's WebSocket) and `frame-src`; a staging build puts staging's API in its place.
 
 Then it deploys in this order and stops at the first failure:
 

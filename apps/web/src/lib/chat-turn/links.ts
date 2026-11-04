@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/lib/env";
-import { toApiError } from "@/lib/api/errors";
+import { ApiError, toApiError } from "@/lib/api/errors";
 import {
   fetchWithSession,
   getSessionToken,
@@ -80,12 +80,20 @@ export function socketLink(
   }: LinkOptions = {},
   fresh = false,
 ): Link {
+  // A browser refuses a socket it may not make (a blocked address) by throwing, and the session may not
+  // be had offline: either is a socket that did not open.
+  async function connect(after: number): Promise<WebSocket> {
+    try {
+      return open(socketUrl(chat, turn, after), [PROTOCOL, await token(fresh)]);
+    } catch (cause) {
+      if (cause instanceof ApiError && !cause.retryable) throw cause;
+      throw new LinkFailed(String(cause), false);
+    }
+  }
+
   return {
     async *frames(after, signal, onOpen) {
-      const socket = open(socketUrl(chat, turn, after), [
-        PROTOCOL,
-        await token(fresh),
-      ]);
+      const socket = await connect(after);
       const queue = new Queue<Frame>();
       const began = now();
       let opened = false;

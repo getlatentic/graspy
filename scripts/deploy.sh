@@ -127,7 +127,8 @@ point_csp_at_api() {
   origin="$(api_origin "$environment")"
   grep -q "$PRODUCTION_API_ORIGIN" "$headers" ||
     die "$headers no longer names $PRODUCTION_API_ORIGIN; update point_csp_at_api."
-  sed "s#$PRODUCTION_API_ORIGIN#$origin#g" "$headers" > "$headers.next"
+  sed -e "s#$PRODUCTION_API_ORIGIN#$origin#g" \
+    -e "s#wss://${PRODUCTION_API_ORIGIN#https://}#wss://${origin#https://}#g" "$headers" > "$headers.next"
   mv "$headers.next" "$headers"
 }
 
@@ -138,7 +139,10 @@ require_csp_allows_own_api() {
   if ! grep -q "connect-src[^;]*$origin" "$headers" || ! grep -q "frame-src[^;]*$origin" "$headers"; then
     die "$headers does not allow $origin."
   fi
-  if grep -qF "$other" "$headers"; then
+  if ! grep -q "connect-src[^;]*wss://${origin#https://}" "$headers"; then
+    die "$headers does not allow a WebSocket to $origin."
+  fi
+  if grep -qF "$other" "$headers" || grep -qF "wss://${other#https://}" "$headers"; then
     die "$headers allows $other, the $other_environment API."
   fi
 }

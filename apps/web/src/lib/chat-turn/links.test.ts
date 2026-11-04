@@ -9,7 +9,7 @@ vi.mock("@/lib/api/session", () => ({
   refreshSessionToken: async () => "fresh",
 }));
 
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, NetworkError } from "@/lib/api/errors";
 import type { Frame } from "./frames";
 import { eventsLink, LinkFailed, socketLink } from "./links";
 
@@ -104,6 +104,46 @@ describe("socketLink", () => {
     expect(sockets[0].protocols[1]).toBe("fresh");
     sockets[0].onclose?.();
     await reading;
+  });
+
+  it("fails as not opened when the browser refuses to make the socket", async () => {
+    const link = socketLink(CHAT, TURN, {
+      token: async () => "token",
+      open: () => {
+        throw new Error("blocked by the page's policy");
+      },
+    });
+
+    const { failure } = await collected(link.frames(1, nothing()));
+
+    expect((failure as LinkFailed).opened).toBe(false);
+  });
+
+  it("fails as not opened when the session cannot be had for want of a network", async () => {
+    const link = socketLink(CHAT, TURN, {
+      token: async () => {
+        throw new NetworkError("offline");
+      },
+      open: () => {
+        throw new Error("never made");
+      },
+    });
+
+    const { failure } = await collected(link.frames(1, nothing()));
+
+    expect((failure as LinkFailed).opened).toBe(false);
+  });
+
+  it("does not hide a session that is refused behind a retry", async () => {
+    const link = socketLink(CHAT, TURN, {
+      token: async () => {
+        throw new ApiError("Not allowed", 403);
+      },
+    });
+
+    const { failure } = await collected(link.frames(1, nothing()));
+
+    expect(failure).toBeInstanceOf(ApiError);
   });
 
   it("yields the frames it is sent, and fails as opened when the socket then closes", async () => {
