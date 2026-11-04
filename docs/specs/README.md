@@ -59,7 +59,7 @@ The other configurations each break one assumption or ask one policy question, a
 | `revoke` | Is audio still kept after the parent withdraws consent? | Yes, when the parent does not also ask for the recordings to go; the route documents this (`NoKeptAfterRevoke`) |
 | `shorten` | Does a recording kept under 365 days follow the parent's later choice of 30? | No: `expires_at` is set once, when the recording is kept (`ExpiryWithinActiveRetention`) |
 
-The orphan was a gap in the claim at the top of `recording_retention.py`, that no unconsented recording outlives a day; the core configuration now models the sweep of stalled uploads that closes it. The other three are policy: which of them graspy wants is the owner's choice. I did not check whether the R2 bucket has a lifecycle rule that would also remove an orphan.
+The orphan was a gap in the claim at the top of `recording_retention.py`, that no unconsented recording outlives a day; the core configuration now models the sweep of stalled uploads that closes it. The other three are policy: which of them graspy wants is the owner's choice. The R2 buckets (`graspy-audio` and `graspy-audio-staging`) have only the default rule that aborts incomplete multipart uploads after 7 days, no expiration rule, so nothing but this sweep removed an orphan.
 
 Not modelled: several learners or recordings (a second sample was not checked), the audio's bytes, transcription, learner removal, and a crash between the object delete and the row update, which the next sweep repeats.
 
