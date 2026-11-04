@@ -12,7 +12,11 @@ from voice_worker import voice_app, worker_env
 
 from app.account.consents import DAY_MS
 from app.voice.keeping import AUDIO_EXTENSIONS, possible_audio_keys, sample_audio_key
-from app.voice.recording_retention import UNDECIDED_KEPT_MS, sweep_audio
+from app.voice.recording_retention import (
+    UNDECIDED_KEPT_MS,
+    delete_unfinished,
+    sweep_audio,
+)
 from app.voice.samples import AUDIO_TYPES, UPLOADED_SQL
 
 
@@ -173,3 +177,49 @@ async def test_a_sweep_page_deletes_every_stalled_sample_it_names(
 
     assert await sweep_audio(env, a_day_later()) == 3
     assert env.AUDIO.objects == {}
+
+
+async def test_a_sample_whose_upload_began_again_since_the_select_keeps_its_object(
+    app, env, monkeypatch
+):
+    old = await put_and_fail(app, monkeypatch)
+    fresh_key = sample_audio_key(ADA, old["sample_id"], "wav")
+    cutoff = _now_ms() + 60_000
+    stale = {"id": old["sample_id"], "owner_id": ADA}
+    # The sweep selected the sample with an old start; a new attempt began before its clear.
+    env.DB.db.execute(
+        "UPDATE samples SET upload_started_at = ? WHERE id = ?",
+        (cutoff + 1, old["sample_id"]),
+    )
+
+    assert await delete_unfinished(env, [stale], cutoff) == 0
+    assert list(env.AUDIO.objects) == [fresh_key]
+
+
+async def test_a_retry_that_finishes_removes_what_an_earlier_attempt_put_as_the_other_kind(
+    app, env, monkeypatch
+):
+    sample = await put_and_fail(app, monkeypatch, "audio/ogg")
+    assert list(env.AUDIO.objects) == [
+        sample_audio_key(ADA, sample["sample_id"], "ogg")
+    ]
+    monkeypatch.setattr("app.voice.samples.UPLOADED_SQL", UPLOADED_SQL)
+
+    async with client(app) as http:
+        await as_device(http, ADA)
+        await uploaded(http, sample)
+
+    assert list(env.AUDIO.objects) == [
+        sample_audio_key(ADA, sample["sample_id"], "wav")
+    ]
+    assert sample_row(env, sample)["upload_started_at"] is None
+
+
+async def test_an_upload_that_finishes_clears_its_start(app, env):
+    async with client(app) as http:
+        await as_device(http, ADA)
+        sample = await created(http)
+        await uploaded(http, sample)
+
+    row = sample_row(env, sample)
+    assert row["state"] == "ready" and row["upload_started_at"] is None

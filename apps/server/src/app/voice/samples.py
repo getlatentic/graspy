@@ -17,7 +17,7 @@ from starlette.responses import JSONResponse
 
 from .curriculum import SCHOOL_CLASSES, load_plans
 from .exercises import write_won
-from .keeping import sample_audio_key
+from .keeping import possible_audio_keys, sample_audio_key
 from .moves import answerable_prompts
 
 SAMPLE_ID = r"gvm_[a-z0-9_-]+"
@@ -33,7 +33,9 @@ CREATE_SQL = (
     "metadata_json, created_at) VALUES (?1, ?2, ?3, ?4, 'awaiting_audio', ?5, ?6) "
     "ON CONFLICT (owner_id, idempotency_key) DO NOTHING"
 )
-SAMPLE_SQL = "SELECT id, state FROM samples WHERE id = ?1 AND owner_id = ?2"
+SAMPLE_SQL = (
+    "SELECT id, state, upload_started_at FROM samples WHERE id = ?1 AND owner_id = ?2"
+)
 # Before the object is put, so an upload that dies between the put and the row update is found by the sweep.
 UPLOAD_STARTED_SQL = (
     "UPDATE samples SET upload_started_at = ?3 "
@@ -41,7 +43,8 @@ UPLOAD_STARTED_SQL = (
 )
 UPLOADED_SQL = (
     "UPDATE samples SET state = 'ready', audio_key = ?3, audio_content_type = ?4, "
-    "audio_bytes = ?5, uploaded_at = ?6 WHERE id = ?1 AND owner_id = ?2"
+    "audio_bytes = ?5, uploaded_at = ?6, upload_started_at = NULL "
+    "WHERE id = ?1 AND owner_id = ?2"
 )
 
 
@@ -184,6 +187,11 @@ async def upload_audio(
         .bind(sample_id, learner, audio_key, content_type, len(body), _now_ms())
         .run()
     )
+    if sample["upload_started_at"] is not None:
+        # An earlier attempt that never finished may have put the other kind of audio.
+        await env.AUDIO.delete(
+            [key for key in possible_audio_keys(learner, sample_id) if key != audio_key]
+        )
     return JSONResponse({"sample_id": sample_id, "state": "ready"})
 
 
