@@ -11,6 +11,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from ..chatlog import kinds
 from ..chatlog.log import PAGE, ChatLog, Event
 from ..learner.time import now_ms
+from .rules import MAX_TURN_MS, WATCHDOG_MS
 
 SHOWN = (
     kinds.TEXT,
@@ -21,9 +22,8 @@ SHOWN = (
     kinds.TURN_FINISHED,
 )
 POLL_MS = 150
-# Longer than a run's deadline and the watchdog together hold a turn that resumes once; a turn that
-# takes longer is still going, and is read again from the log by the app.
-FOLLOW_DEADLINE_MS = 180_000
+# A turn is given up on by MAX_TURN_MS after it began, so a reader that waits this long has seen it end.
+FOLLOW_DEADLINE_MS = MAX_TURN_MS + 2 * WATCHDOG_MS
 
 
 async def follow(

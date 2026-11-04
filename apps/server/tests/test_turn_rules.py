@@ -8,6 +8,7 @@ from app.turns.fold import folded
 from app.turns.rules import (
     GIVE_UP_AFTER_MS,
     MAX_STALLED_RUNS,
+    MAX_TURN_MS,
     NO_PROGRESS,
     STALLED,
     UNREADABLE,
@@ -159,3 +160,20 @@ def test_a_turn_is_run_until_its_stalled_runs_reach_the_limit(stalled):
     spec = [started(), *(run(n) for n in range(1, stalled + 1))]
 
     assert next_step(state_of(*spec), 9_000, always) == Run()
+
+
+def test_a_turn_that_keeps_a_little_each_run_is_still_given_up_on_when_it_is_old():
+    """A model that writes a few words and hangs, run after run, never stalls: the turn's age ends it."""
+    late = 1_000 + MAX_TURN_MS
+    spec = [(kinds.TURN_STARTED, {"job": JOB}, 1_000)]
+    for n in range(1, 6):
+        at = late - 60_000 + n
+        spec += [(kinds.TURN_RESUMED, {"run": n}, at), (kinds.TEXT, {"text": "w"}, at)]
+    state = folded(
+        Event("c", i + 1, kind, {"turn": "t", **data}, at)
+        for i, (kind, data, at) in enumerate(spec)
+    )["t"]
+
+    assert state.stalled_runs == 0
+    assert next_step(state, late, always) == Run()
+    assert next_step(state, late + 1, always) == GiveUp(STALLED)

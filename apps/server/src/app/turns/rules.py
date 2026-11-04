@@ -15,6 +15,8 @@ RUN_DEADLINE_S = 120
 MAX_STALLED_RUNS = 3
 # Time since the turn last kept anything, before it is given up on.
 GIVE_UP_AFTER_MS = 5 * 60 * 1000
+# Time since the turn began, however much it kept, before it is given up on.
+MAX_TURN_MS = 10 * 60 * 1000
 # The wait after a run that failed with an error, before the next.
 RETRY_AFTER_MS = 2_000
 
@@ -47,6 +49,9 @@ def next_step(
         return GiveUp(UNSAFE_TO_REPEAT)
     if state.stalled_runs >= MAX_STALLED_RUNS:
         return GiveUp(NO_PROGRESS)
-    if state.runs and now_ms - state.progressed_at > GIVE_UP_AFTER_MS:
+    if state.runs and (
+        now_ms - state.progressed_at > GIVE_UP_AFTER_MS
+        or now_ms - state.started_at > MAX_TURN_MS
+    ):
         return GiveUp(STALLED)
     return Run()

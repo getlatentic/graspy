@@ -11,6 +11,7 @@ import dspy
 from fastapi import FastAPI
 
 from .agent.memory import ConversationStore, DurableObjectConversationStore
+from .agent.tools_known import READ_ONLY_TOOLS
 from .agent.tutor import Tutor
 from .caller import Keeping
 from .chatlog.conversations import LogConversationStore
@@ -134,6 +135,8 @@ def build_turn_alarm(env: Any, storage: Any) -> ChatTurnAlarm:
     source = TutorTurnSource(Tutor(keeping.conversations), keeping)
 
     def runner_for(schedule: Schedule) -> TurnRunner:
-        return TurnRunner(log, source, now_ms, schedule)
+        return TurnRunner(
+            log, source, now_ms, schedule, lambda tool: tool in READ_ONLY_TOOLS
+        )
 
     return ChatTurnAlarm(storage, runner_for, model=lambda: dspy.context(lm=lm))

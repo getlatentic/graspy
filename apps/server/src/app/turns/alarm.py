@@ -6,12 +6,16 @@ it is set to the watchdog time, so an isolate that dies mid-run is woken to resu
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext
 from typing import Any, Protocol
 
 from ..learner.time import now_ms
+from .rules import RETRY_AFTER_MS
 from .runner import Schedule, TurnRunner
+
+logger = logging.getLogger(__name__)
 
 CHAT_KEY = "chat"
 
@@ -64,7 +68,12 @@ class ChatTurnAlarm:
         runner = self._runner_for(self.schedule)
         with self._model():
             while True:
-                wait = await runner.advance(chat)
+                try:
+                    wait = await runner.advance(chat)
+                except Exception:
+                    logger.exception("A turn of chat %s could not be advanced", chat)
+                    await self._storage.setAlarm(self._clock() + RETRY_AFTER_MS)
+                    return
                 if wait is None:
                     return
                 if wait > 0:

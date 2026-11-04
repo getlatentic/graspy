@@ -4,6 +4,7 @@ or cleared according to what is left to do."""
 from app.agent.toolkit import TOOLS
 from app.agent.tools_known import READ_ONLY_TOOLS
 from app.turns.alarm import CHAT_KEY, ChatTurnAlarm
+from app.turns.rules import RETRY_AFTER_MS
 
 
 class Storage:
@@ -120,3 +121,18 @@ def test_every_tool_the_tutor_has_is_known_to_be_read_only():
     """A resumed turn calls its tools again, so a tool that changes anything outside the turn must
     write `tool.started` before it leaves and be left out of this set (apps/server/src/app/turns/rules.py)."""
     assert {spec.name for spec in TOOLS} == READ_ONLY_TOOLS
+
+
+async def test_an_alarm_that_cannot_advance_rings_again_soon():
+    storage = Storage()
+    storage.values[CHAT_KEY] = "c1"
+
+    class Broken:
+        async def advance(self, chat):
+            raise RuntimeError("D1 is down")
+
+    alarm = ChatTurnAlarm(storage, lambda schedule: Broken(), lambda: 1000)
+
+    await alarm.alarm()
+
+    assert storage.alarm_at == 1000 + RETRY_AFTER_MS
