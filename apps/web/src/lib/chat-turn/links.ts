@@ -1,6 +1,10 @@
 import { API_BASE_URL } from "@/lib/env";
 import { toApiError } from "@/lib/api/errors";
-import { fetchWithSession, getSessionToken, refreshSessionToken } from "@/lib/api/session";
+import {
+  fetchWithSession,
+  getSessionToken,
+  refreshSessionToken,
+} from "@/lib/api/session";
 import { parseFrame, type Frame } from "./frames";
 import { Queue } from "./queue";
 import { chatUrl } from "./rest";
@@ -8,12 +12,12 @@ import { chatUrl } from "./rest";
 /** The connection to a turn failed. `opened` says whether it had opened: a socket that never opens
  * is a place the page cannot reach, which server-sent events may. */
 export class LinkFailed extends Error {
-  constructor(
-    message: string,
-    readonly opened: boolean,
-  ) {
+  readonly opened: boolean;
+
+  constructor(message: string, opened: boolean) {
     super(message);
     this.name = "LinkFailed";
+    this.opened = opened;
   }
 }
 
@@ -69,7 +73,11 @@ function frameOf(data: unknown): Frame | null {
 export function socketLink(
   chat: string,
   turn: string,
-  { token = defaultToken, open = defaultOpen, now = Date.now }: LinkOptions = {},
+  {
+    token = defaultToken,
+    open = defaultOpen,
+    now = Date.now,
+  }: LinkOptions = {},
   fresh = false,
 ): Link {
   return {
@@ -98,8 +106,10 @@ export function socketLink(
       socket.onerror = () => fail("The socket failed");
       socket.onclose = () => fail("The socket closed");
       const watch = setInterval(() => {
-        if (!opened && now() - began > CONNECT_MS) fail("The socket did not open");
-        else if (opened && now() - heard > SILENT_MS) fail("The socket went silent");
+        if (!opened && now() - began > CONNECT_MS)
+          fail("The socket did not open");
+        else if (opened && now() - heard > SILENT_MS)
+          fail("The socket went silent");
         else if (opened) socket.send("ping");
       }, PING_MS);
       const leave = () => queue.end();
@@ -109,7 +119,11 @@ export function socketLink(
       } finally {
         clearInterval(watch);
         signal.removeEventListener("abort", leave);
-        socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;
+        socket.onopen =
+          socket.onmessage =
+          socket.onerror =
+          socket.onclose =
+            null;
         socket.close();
       }
     },
@@ -128,7 +142,10 @@ async function readWithin(
 ): Promise<ReadableStreamReadResult<Uint8Array>> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const stalled = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new LinkFailed("The stream stalled", true)), ms);
+    timer = setTimeout(
+      () => reject(new LinkFailed("The stream stalled", true)),
+      ms,
+    );
   });
   try {
     return await Promise.race([reader.read(), stalled]);

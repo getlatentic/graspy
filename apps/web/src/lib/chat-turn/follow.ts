@@ -75,10 +75,13 @@ class Presence {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private shown = false;
 
-  constructor(
-    private readonly listener: FrameListener,
-    private readonly afterMs: number,
-  ) {}
+  private readonly listener: FrameListener;
+  private readonly afterMs: number;
+
+  constructor(listener: FrameListener, afterMs: number) {
+    this.listener = listener;
+    this.afterMs = afterMs;
+  }
 
   down(): void {
     if (this.timer !== undefined || this.shown) return;
@@ -137,7 +140,10 @@ export async function followTurn(follow: Follow): Promise<Finished> {
     for (;;) {
       if (signal.aborted) throw new Left();
       if (now() > deadline) {
-        throw new ApiError("The tutor stopped before answering", UNREADABLE_ANSWER);
+        throw new ApiError(
+          "The tutor stopped before answering",
+          UNREADABLE_ANSWER,
+        );
       }
       const kind: LinkKind = failedOpens >= SOCKET_TRIES ? "events" : "socket";
       const link = follow.link(kind, kind === "socket" && failedOpens > 0);

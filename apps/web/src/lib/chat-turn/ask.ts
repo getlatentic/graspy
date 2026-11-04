@@ -16,8 +16,9 @@ import { startTurn, stopTurn, TurnsUnavailable } from "./rest";
 // After the learner stops, the page waits this long for the turn's end before it shows what it has.
 const STOP_WAIT_MS = 6_000;
 
-// Set when the server answers that it keeps no turns: the tutor is then asked over A2A, as before.
-let kept = true;
+/** `keepsTurns` goes false when the server answers that it keeps none: the tutor is then asked over
+ * A2A, as before. */
+export const server = { keepsTurns: true };
 
 function replyOf(chat: string, finished: Finished): TutorReply {
   const answer = finished.reply?.answer ?? "";
@@ -43,7 +44,7 @@ export async function askTurn(
   turn: TutorTurn,
   listener: TurnListener = {},
 ): Promise<TutorReply> {
-  if (!kept) return askAgent(turn, listener);
+  if (!server.keepsTurns) return askAgent(turn, listener);
   const chat = turn.contextId ?? crypto.randomUUID();
   const id = crypto.randomUUID();
   let cursor: number;
@@ -57,7 +58,7 @@ export async function askTurn(
     }));
   } catch (error) {
     if (!(error instanceof TurnsUnavailable)) throw error;
-    kept = false;
+    server.keepsTurns = false;
     return askAgent(turn, listener);
   }
 

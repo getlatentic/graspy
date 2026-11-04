@@ -149,4 +149,19 @@ describe("a turn with the tutor", () => {
     expect(shownBeforeEnd).toBe("Place value is ");
     expect(turn.shown()[1].content).toBe("Place value is");
   });
+
+  it("keeps the words of a turn the learner stopped, marked stopped", async () => {
+    const turn = turnWith(async () => ({
+      ...REPLY,
+      text: "Place value is",
+      followUps: [],
+      cards: [],
+      stopped: true,
+    }));
+
+    await turn.run("Explain place value");
+
+    expect(turn.shown()[1].content).toBe("Place value is");
+    expect(turn.shown()[1].metadata).toEqual({ followUps: [], stopped: true });
+  });
 });

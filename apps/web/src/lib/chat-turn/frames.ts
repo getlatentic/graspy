@@ -17,7 +17,10 @@ export type TurnStatus = "ok" | "failed" | "stopped";
 export type Frame =
   | (Placed & { kind: "text"; text: string })
   | (Placed & { kind: "round.aborted"; reason: string })
-  | (Placed & { kind: "tool.started" | "tool" | "tool.cancelled"; tool: string })
+  | (Placed & {
+      kind: "tool.started" | "tool" | "tool.cancelled";
+      tool: string;
+    })
   | (Placed & { kind: "turn.resumed" })
   | (Placed & {
       kind: "turn.finished";
@@ -82,7 +85,11 @@ export type Taken = "apply" | "skip" | "gap" | "reset";
 
 /** What a page has had of a turn: the seq of the last frame it applied. */
 export class Cursor {
-  constructor(public at: number) {}
+  at: number;
+
+  constructor(at: number) {
+    this.at = at;
+  }
 
   /** What to do with a frame. A frame at or below the cursor was had; one whose `prev` is not the
    * cursor means a frame was lost, so the connection is opened again from the cursor. */
