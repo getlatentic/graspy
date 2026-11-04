@@ -23,6 +23,7 @@ from app.cloudflare import (
     build_worker_app,
     conversation_store,
     deployment_environment,
+    durable_turns,
 )
 from app.learner.record import Learnt, TopicRef, changed
 from app.learner.store import DurableObjectLearnerStore
@@ -434,3 +435,30 @@ def test_a_worker_with_the_chat_log_on_builds():
     env.CHAT_LOG = "on"
 
     assert build_worker_app(env, lambda value: value) is not None
+
+
+@pytest.mark.parametrize("on", ["on", "ON", "true", "1"])
+def test_turns_outlive_their_requests_when_durable_turns_is_on(on):
+    env = fake_env()
+    env.CHAT_LOG = "on"
+    env.DURABLE_TURNS = on
+    env.CHAT_TURNS = object()
+
+    assert durable_turns(env) is not None
+
+
+@pytest.mark.parametrize("off", [None, "", "off", "false"])
+def test_turns_run_in_their_requests_unless_durable_turns_is_on(off):
+    env = fake_env()
+    if off is not None:
+        env.DURABLE_TURNS = off
+
+    assert durable_turns(env) is None
+
+
+def test_durable_turns_without_the_chat_log_is_refused():
+    env = fake_env()
+    env.DURABLE_TURNS = "on"
+
+    with pytest.raises(ValueError, match="CHAT_LOG"):
+        durable_turns(env)

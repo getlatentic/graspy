@@ -161,7 +161,7 @@ except ImportError:
 with allow_bad_entropy_calls(1):
     import rpds  # noqa: F401
 
-from app.cloudflare import build_lesson_runner, build_worker_app
+from app.cloudflare import build_lesson_runner, build_turn_alarm, build_worker_app
 from app.lessons.store import KEEP_DAYS
 from app.voice.recording_retention import sweep_audio
 
@@ -317,3 +317,19 @@ class LessonMaker(DurableObject):
 
         await _runner_for(self.env)(job, save)
         await self.ctx.storage.setAlarm(now_ms() + FORGET_MS)
+
+
+class ChatTurn(DurableObject):
+    """One chat's turns, run in its alarm so they outlive the request that began them and the isolate
+    that was running them (apps/server/src/app/turns/alarm.py)."""
+
+    def _turns(self):
+        if getattr(self, "_alarm", None) is None:
+            self._alarm = build_turn_alarm(self.env, self.ctx.storage)
+        return self._alarm
+
+    async def wake(self, chat: str) -> None:
+        await self._turns().wake(chat)
+
+    async def alarm(self) -> None:
+        await self._turns().alarm()

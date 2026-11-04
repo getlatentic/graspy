@@ -94,6 +94,7 @@ class FakeTutor:
         calls: list[AppCall] | None = None,
         unanswered: list[str] | None = None,
         record: str = "",
+        turn: str | None = None,
     ):
         self.records.append(record)
         self.missed.append(unanswered)

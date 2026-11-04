@@ -31,16 +31,22 @@ def _fit(text: str) -> str:
     )
 
 
+def _texts(exchange: Exchange) -> tuple[dict[str, Any], dict[str, Any]]:
+    """What the two events of an exchange hold."""
+    said: dict[str, Any] = {"text": _fit(exchange["message"])}
+    if "app" in exchange:
+        said["app"] = _fit(exchange["app"])
+    answered: dict[str, Any] = {"text": _fit(exchange["answer"])}
+    if "card" in exchange:
+        answered["card"] = _fit(exchange["card"])
+    return said, answered
+
+
 def _events(exchange: Exchange, turn: str) -> list[tuple[str, dict[str, Any]]]:
     """The two events of an exchange, paired by `turn`, so they stay a pair when other events fall
     between them."""
-    said: dict[str, Any] = {"turn": turn, "text": _fit(exchange["message"])}
-    if "app" in exchange:
-        said["app"] = _fit(exchange["app"])
-    answered: dict[str, Any] = {"turn": turn, "text": _fit(exchange["answer"])}
-    if "card" in exchange:
-        answered["card"] = _fit(exchange["card"])
-    return [(USER, said), (ASSISTANT, answered)]
+    said, answered = _texts(exchange)
+    return [(USER, {"turn": turn, **said}), (ASSISTANT, {"turn": turn, **answered})]
 
 
 def _exchange(asked: Event, answered: Event) -> Exchange:
@@ -91,10 +97,16 @@ class LogConversationStore:
         summary, _, pairs = await self._held(conversation_id)
         return Conversation(summary, tuple(_exchange(*pair) for pair in pairs))
 
-    async def append(self, conversation_id: str, exchange: Exchange) -> None:
+    async def append(
+        self, conversation_id: str, exchange: Exchange, turn: str | None = None
+    ) -> None:
+        """Kept once for a `turn` named: a turn run again does not keep its exchange twice."""
         await self._imported(conversation_id)
-        await self._log.append_all(conversation_id, _events(exchange, uuid.uuid4().hex))
-        self._known.add(conversation_id)
+        said, answered = _texts(exchange)
+        await self._log.append_exchange(
+            conversation_id, turn or uuid.uuid4().hex, said, answered
+        )
+        self._remember(conversation_id)
 
     async def fold(self, conversation_id: str, summary: str, dropped: int) -> None:
         """Covers the oldest `dropped` exchanges held now; those kept since stay."""

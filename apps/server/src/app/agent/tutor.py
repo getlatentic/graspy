@@ -19,7 +19,7 @@ from .memory import ConversationStore, Exchange
 from .persona import WITHOUT_STAGE, persona
 from .reply import Action
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
-from .streaming import AnswerDelta, AnswerRestart, Silent, ToolActivity
+from .streaming import AnswerDelta, AnswerRestart, Silent, ToolActivity, ToolFinished
 from .summary import recalled
 from .toolkit import Turn, TurnOutputs, tools_for
 from .transcript import render
@@ -159,10 +159,14 @@ class Tutor:
         calls: list[AppCall] | None = None,
         unanswered: list[str] | None = None,
         record: str = NOTHING_YET,
-    ) -> AsyncIterator[AnswerDelta | AnswerRestart | ToolActivity | TutorReply]:
+        turn: str | None = None,
+    ) -> AsyncIterator[
+        AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | TutorReply
+    ]:
         """Tools as they start, the answer as it is written, and last the
         finished reply. ``unanswered`` are the learner's messages whose turns
-        failed, kept as exchanges with no answer."""
+        failed, kept as exchanges with no answer. ``turn`` names the turn: a store that keeps an exchange
+        once per turn is not made to keep it twice by a turn run again."""
         context = context or LearnerContext()
         earlier = await recalled(self._memory, conversation_id)
         missed = [Exchange(message=text, answer=NO_ANSWER) for text in unanswered or []]
@@ -182,8 +186,15 @@ class Tutor:
         answer = answered.prediction.answer
         # Of two opens, or two cards, in one turn, the last counts.
         cards = answered.outputs.cards[-1:]
-        for exchange in [*missed, remembered(message, answer, calls, cards)]:
-            await self._memory.append(conversation_id, exchange)
+        exchanges = [*missed, remembered(message, answer, calls, cards)]
+        for n, exchange in enumerate(exchanges):
+            # The learner's own message is the turn; the ones that failed before are its first.
+            named = (
+                None
+                if turn is None
+                else (turn if n == len(missed) else f"{turn}:missed:{n}")
+            )
+            await self._memory.append(conversation_id, exchange, turn=named)
         yield TutorReply(
             answer=answer,
             follow_ups=clean_follow_ups(answered.prediction.follow_ups),
@@ -194,7 +205,9 @@ class Tutor:
 
 async def _answered(
     context: LearnerContext, inputs: dict
-) -> AsyncIterator[AnswerDelta | AnswerRestart | ToolActivity | _Answered]:
+) -> AsyncIterator[
+    AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | _Answered
+]:
     """An answer that runs away is withdrawn and written again, once, with
     some sampling."""
     for again in (False, True):
@@ -211,7 +224,7 @@ async def _answered(
 
 async def _attempt(
     context: LearnerContext, inputs: dict, again: bool
-) -> AsyncIterator[AnswerDelta | ToolActivity | _Answered]:
+) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | _Answered]:
     """Closing it stops the model."""
     outputs = TurnOutputs()
     agent = _streamed_agent(Turn(context, inputs["message"]), outputs, again)
@@ -223,7 +236,7 @@ async def _attempt(
             if isinstance(item, StreamResponse):
                 watch.add(item.chunk)
                 yield AnswerDelta(item.chunk)
-            elif isinstance(item, ToolActivity):
+            elif isinstance(item, (ToolActivity, ToolFinished)):
                 yield item
             elif isinstance(item, dspy.Prediction):
                 finished = True

@@ -14,7 +14,7 @@ from .context import LearnerContext
 from .passage import give_passage
 from .practice import give_practice
 from .reply import Action, Outcome
-from .streaming import announce
+from .streaming import announce, announce_done
 from .tools import (
     add_topic_tool,
     calculate,
@@ -94,14 +94,20 @@ def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., 
         @functools.wraps(tool)
         async def run_async(*args, **kwargs) -> dict:
             announce(tool.__name__)
-            return kept(await tool(*args, **kwargs))
+            try:
+                return kept(await tool(*args, **kwargs))
+            finally:
+                announce_done(tool.__name__)
 
         return run_async
 
     @functools.wraps(tool)
     def run(*args, **kwargs) -> dict:
         announce(tool.__name__)
-        return kept(tool(*args, **kwargs))
+        try:
+            return kept(tool(*args, **kwargs))
+        finally:
+            announce_done(tool.__name__)
 
     return run
 

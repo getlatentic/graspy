@@ -30,10 +30,13 @@ from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
 from ..settings import Settings
+from ..turns.durable import DurableTurns
+from ..turns.job import TurnJob
 from .app_tools import app_calls
 from .context import LearnerContext, with_kept_lesson
+from .durable_relay import TurnFailed, payload_parts, relay_events
 from .reply import ReplyData
-from .streaming import AnswerDelta, AnswerRestart, ToolActivity
+from .streaming import AnswerDelta, AnswerRestart, ToolActivity, ToolFinished
 from .tutor import Tutor, TutorReply
 from .unanswered import unanswered
 
@@ -56,9 +59,12 @@ class TutorExecutor(AgentExecutor):
     the app. The record and lessons read are those of the device the session
     names."""
 
-    def __init__(self, tutor: Tutor, keeping: Keeping) -> None:
+    def __init__(
+        self, tutor: Tutor, keeping: Keeping, turns: DurableTurns | None = None
+    ) -> None:
         self._tutor = tutor
         self._keeping = keeping
+        self._turns = turns
 
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
         task = context.current_task or new_task_from_user_message(context.message)
@@ -73,15 +79,43 @@ class TutorExecutor(AgentExecutor):
 
         await updater.start_work()
         try:
-            turn = await self._turn(context, task.context_id, message)
-            reply = await _relay(updater, turn)
+            parts = await self._answer(context, task.context_id, message, updater)
+        except TurnFailed as failed:
+            logger.warning(
+                "Turn %s failed: %s", context.message.message_id, failed.cause
+            )
+            await updater.failed(
+                updater.new_agent_message([new_text_part(FAILED_TURN)])
+            )
+            return
         except Exception:
             logger.exception("Tutor turn failed")
             await updater.failed(
                 updater.new_agent_message([new_text_part(FAILED_TURN)])
             )
             return
-        await updater.complete(updater.new_agent_message(reply_parts(reply)))
+        await updater.complete(updater.new_agent_message(parts))
+
+    async def _answer(
+        self,
+        context: RequestContext,
+        conversation_id: str,
+        message: str,
+        updater: TaskUpdater,
+    ) -> list:
+        if self._turns is None:
+            turn = await self._turn(context, conversation_id, message)
+            return reply_parts(await _relay(updater, turn))
+        job = TurnJob(
+            chat=conversation_id,
+            turn=context.message.message_id,
+            learner=learner_of(context),
+            message=message,
+            parts=message_parts(context),
+            metadata=learner_metadata(context),
+        )
+        events = self._turns.run(job)
+        return payload_parts(await relay_events(updater, events))
 
     async def _turn(
         self, context: RequestContext, conversation_id: str, message: str
@@ -136,6 +170,8 @@ async def _relay(updater: TaskUpdater, turn: AsyncIterator) -> TutorReply:
                 [new_data_part({"activity": item.tool})]
             )
             await updater.update_status(TaskState.TASK_STATE_WORKING, message=activity)
+        elif isinstance(item, ToolFinished):
+            continue
         else:
             reply = item
     if reply is None:
@@ -211,10 +247,15 @@ def build_agent_card(settings: Settings) -> AgentCard:
     )
 
 
-def a2a_routes(settings: Settings, tutor: Tutor, keeping: Keeping) -> list:
+def a2a_routes(
+    settings: Settings,
+    tutor: Tutor,
+    keeping: Keeping,
+    turns: DurableTurns | None = None,
+) -> list:
     card = build_agent_card(settings)
     handler = DefaultRequestHandler(
-        agent_executor=TutorExecutor(tutor, keeping),
+        agent_executor=TutorExecutor(tutor, keeping, turns),
         # A task lives only as long as the request that streams it.
         task_store=InMemoryTaskStore(),
         agent_card=card,
