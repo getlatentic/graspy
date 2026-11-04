@@ -26,6 +26,24 @@ Behind `DURABLE_TURNS=on` (staging first; it needs `CHAT_LOG=on`). The model of 
 The exchange (`user` + `assistant`) is written once per turn id by `Tutor.stream`, by a unique index
 (migration 0024), so any number of runs keeps it once.
 
+## Measured on staging, 2026-11-04
+
+`scripts/chat/turn_restart.py` sent a 20-step question every 5 s. A temporary build (not merged) called
+`ctx.abort()` on the chat's object 6 s into its first run, which ends the isolate as a crash does. Five
+turns, five finished replies, each by a second run after the 30 s watchdog:
+
+| Turn | Total time | Runs | `round.aborted` | Exchanges kept |
+|---|---|---|---|---|
+| 1 | 38.6 s | 2 | none (nothing had been written before the kill) | 1 |
+| 2 | 39.1 s | 2 | `cut_off` | 1 |
+| 3 | 39.5 s | 2 | `cut_off` | 1 |
+| 4 | 40.2 s | 2 | `cut_off` | 1 |
+| 5 | 41.6 s | 2 | `cut_off` | 1 |
+
+A redeploy was not a kill: 110 turns sent while staging was redeployed all finished with one run each. A turn
+that cannot progress ends `failed` with a cause in the runner tests (`tests/test_turn_runner.py`,
+`tests/test_durable_turn.py`); it was not forced on staging.
+
 ## Not here
 
 The client still sends a new message id on each retry (`askAgent` in `apps/web/src/lib/a2a/client.ts`), so a
