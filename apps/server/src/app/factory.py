@@ -50,6 +50,7 @@ from .security.rate_limit import Budgets, RateLimitMiddleware
 from .security.session import resolve_secret
 from .settings import Settings, get_settings
 from .threads.store import ThreadStore
+from .turns.durable import DurableTurns
 from .voice.keeping import NO_VOICE, BoundVoice
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ def create_app(
     budgets: Budgets | None = None,
     voice: Any | None = None,
     threads: ThreadStore | None = None,
+    turns: DurableTurns | None = None,
 ) -> FastAPI:
     """The keyword arguments are the Worker's bindings; without them
     everything is kept in memory, no request budget applies and voice lessons
@@ -99,18 +101,21 @@ def create_app(
     tutor = Tutor(keeping.conversations)
     app.routes.append(
         LazyA2ARoutes(
-            settings.a2a_path_prefix, lambda: _a2a_routes(settings, tutor, keeping)
+            settings.a2a_path_prefix,
+            lambda: _a2a_routes(settings, tutor, keeping, turns),
         )
     )
     app.routes.extend(mcp_routes())
     return app
 
 
-def _a2a_routes(settings: Settings, tutor: Tutor, keeping: Keeping) -> list:
+def _a2a_routes(
+    settings: Settings, tutor: Tutor, keeping: Keeping, turns: DurableTurns | None
+) -> list:
     """The A2A routes, built, and the SDK imported, by the first A2A request."""
     from .agent.a2a import a2a_routes
 
-    return a2a_routes(settings, tutor, keeping)
+    return a2a_routes(settings, tutor, keeping, turns)
 
 
 def _bare_app(settings: Settings) -> FastAPI:

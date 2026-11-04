@@ -14,7 +14,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from .kinds import COMPACTION, IMPORTED, KINDS
+from .kinds import (
+    ASSISTANT,
+    COMPACTION,
+    IMPORTED,
+    KINDS,
+    TURN_FINISHED,
+    TURN_STARTED,
+    USER,
+)
 
 # D1 refuses a value over 2 MB; an event is a message, a tool result or a card.
 MAX_EVENT_BYTES = 256 * 1024
@@ -26,6 +34,13 @@ _INSERT = (
     "INSERT INTO chat_event (chat, seq, kind, data, at) "
     "SELECT ?1, COALESCE(top, 0) + 1, ?2, ?3, ?4 "
     "FROM (SELECT MAX(seq) AS top FROM chat_event WHERE chat = ?1) WHERE {guard}"
+)
+# The kinds kept once per turn, each with a unique index (migration 0024). The kind is a literal in the
+# guard, from this set, so the guard can use the index.
+ONCE_KINDS = frozenset({USER, ASSISTANT, TURN_STARTED, TURN_FINISHED})
+_NEW_FOR_TURN = (
+    "NOT EXISTS (SELECT 1 FROM chat_event WHERE chat = ?1 AND kind = '{kind}' "
+    "AND json_extract(data, '$.turn') = ?5)"
 )
 _EMPTY = "NOT EXISTS (SELECT 1 FROM chat_event WHERE chat = ?1)"
 _MINE = "(SELECT json_extract(data, '$.batch') FROM chat_event WHERE chat = ?1 AND seq = 1) = ?5"
@@ -145,6 +160,58 @@ class ChatLog:
         statements.append(self._db.prepare(_LAST_SEQS).bind(chat, len(events)))
         answers = await self._db.batch(statements)
         return sorted(int(_row(row)["seq"]) for row in answers[-1]["results"])
+
+    def _once(self, chat: str, kind: str, data: dict[str, Any], at: int):
+        if kind not in ONCE_KINDS:
+            raise ValueError(f"A {kind} event is not kept once per turn")
+        turn = data.get("turn")
+        if not isinstance(turn, str) or not turn:
+            raise ValueError(f"A {kind} event kept once per turn names its turn")
+        guard = _NEW_FOR_TURN.format(kind=kind)
+        return self._db.prepare(_INSERT.format(guard=guard)).bind(
+            chat, kind, _encoded(kind, data), at, turn
+        )
+
+    async def append_once(
+        self, chat: str, kind: str, data: dict[str, Any], now_ms: int | None = None
+    ) -> bool:
+        """An event kept once per turn: not written again if the chat holds one of this kind for the
+        turn named in `data["turn"]`. True if this call kept it."""
+        at = int(time.time() * 1000) if now_ms is None else now_ms
+        written = await self._once(chat, kind, data, at).run()
+        return int(written.meta.changes) > 0
+
+    async def once_seq(self, chat: str, kind: str, turn: str) -> int | None:
+        """The seq of the event of `kind` kept for `turn`, if there is one."""
+        if kind not in ONCE_KINDS:
+            raise ValueError(f"A {kind} event is not kept once per turn")
+        found = await (
+            self._db.prepare(
+                "SELECT seq FROM chat_event WHERE chat = ?1 "
+                f"AND kind = '{kind}' AND json_extract(data, '$.turn') = ?2"
+            )
+            .bind(chat, turn)
+            .first()
+        )
+        return None if found is None else int(_row(found)["seq"])
+
+    async def append_exchange(
+        self,
+        chat: str,
+        turn: str,
+        said: dict[str, Any],
+        answered: dict[str, Any],
+        now_ms: int | None = None,
+    ) -> None:
+        """A turn's question and answer, together, each kept once: a question written when the turn
+        began is not written again, and an answer a turn already kept is not either."""
+        at = int(time.time() * 1000) if now_ms is None else now_ms
+        await self._db.batch(
+            [
+                self._once(chat, USER, {**said, "turn": turn}, at),
+                self._once(chat, ASSISTANT, {**answered, "turn": turn}, at),
+            ]
+        )
 
     async def compact(
         self,

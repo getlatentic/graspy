@@ -13,7 +13,7 @@ from app.agent.memory import (
 )
 from app.chatlog import kinds
 from app.chatlog.conversations import MAX_TEXT_BYTES, LogConversationStore
-from app.chatlog.log import _OF_KIND, MAX_EVENT_BYTES, ChatLog, recent_sql
+from app.chatlog.log import _OF_KIND, MAX_EVENT_BYTES, ONCE_KINDS, ChatLog, recent_sql
 from app.local_d1 import LocalD1
 
 
@@ -412,3 +412,74 @@ async def test_a_chat_found_to_hold_events_is_not_asked_about_again(database):
     await store.load("c")
 
     assert not [sql for sql in asked if "AS seq" in sql]
+
+
+@pytest.mark.parametrize("kind", sorted(ONCE_KINDS))
+async def test_an_event_kept_once_per_turn_is_not_kept_twice(log, kind):
+    first = await log.append_once("c", kind, {"turn": "t1", "text": "a"})
+    again = await log.append_once("c", kind, {"turn": "t1", "text": "b"})
+    other = await log.append_once("c", kind, {"turn": "t2", "text": "c"})
+    elsewhere = await log.append_once("d", kind, {"turn": "t1", "text": "d"})
+
+    assert (first, again, other, elsewhere) == (True, False, True, True)
+    assert [event.data["text"] for event in await log.since("c")] == ["a", "c"]
+
+
+async def test_two_writers_of_one_turns_event_keep_it_once(log):
+    kept = await asyncio.gather(
+        *(
+            log.append_once("c", kinds.ASSISTANT, {"turn": "t", "text": str(n)})
+            for n in range(20)
+        )
+    )
+
+    assert kept.count(True) == 1 and len(await log.since("c")) == 1
+
+
+async def test_the_index_refuses_a_second_event_of_a_turn_that_slips_past_the_writer(
+    database,
+):
+    log = ChatLog(database)
+    await log.append_once("c", kinds.ASSISTANT, {"turn": "t", "text": "a"})
+
+    with pytest.raises(Exception, match="UNIQUE"):
+        await log.append("c", kinds.ASSISTANT, {"turn": "t", "text": "b"})
+
+
+async def test_events_of_other_kinds_may_repeat_within_a_turn(log):
+    for n in range(3):
+        await log.append("c", kinds.TEXT, {"turn": "t", "text": str(n)})
+        await log.append("c", kinds.TOOL_STARTED, {"turn": "t", "tool": "calculate"})
+
+    assert len(await log.since("c")) == 6
+
+
+async def test_an_event_kept_once_names_its_turn_and_is_of_a_kind_kept_once(log):
+    with pytest.raises(ValueError, match="names its turn"):
+        await log.append_once("c", kinds.USER, {"text": "x"})
+    with pytest.raises(ValueError, match="not kept once"):
+        await log.append_once("c", kinds.TEXT, {"turn": "t"})
+
+
+async def test_a_question_kept_when_the_turn_began_is_not_kept_again_with_its_answer(
+    log,
+):
+    await log.append_once("c", kinds.USER, {"turn": "t", "text": "Is it 7?"})
+
+    await log.append_exchange("c", "t", {"text": "Is it 7?"}, {"text": "Yes."})
+    await log.append_exchange("c", "t", {"text": "Is it 7?"}, {"text": "Yes."})
+
+    assert [(event.kind, event.data["text"]) for event in await log.since("c")] == [
+        ("user", "Is it 7?"),
+        ("assistant", "Yes."),
+    ]
+
+
+async def test_a_turn_run_twice_keeps_its_exchange_once_in_the_conversation(database):
+    store = LogConversationStore(database)
+
+    await store.append("c", exchange(1), turn="t1")
+    await store.append("c", exchange(1), turn="t1")
+    await store.append("c", exchange(2), turn="t2")
+
+    assert (await store.load("c")).exchanges == (exchange(1), exchange(2))

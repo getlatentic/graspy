@@ -94,7 +94,8 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Conversation"] },
     { "tag": "v2", "new_sqlite_classes": ["Lesson"] },
-    { "tag": "v3", "new_sqlite_classes": ["Learner", "LessonMaker"] }
+    { "tag": "v3", "new_sqlite_classes": ["Learner", "LessonMaker"] },
+    { "tag": "v4", "new_sqlite_classes": ["ChatTurn"] }
   ],
 
   // Requests per minute per client, counted per Cloudflare location.
@@ -121,6 +122,8 @@
         "ENGLISH_ASR": "nova",
         // Conversations are kept in a chat's event log (D1) here first; production keeps them in the Durable Object.
         "CHAT_LOG": "on",
+        // A turn is run by the chat's ChatTurn object and read from the log, so it outlives its request.
+        "DURABLE_TURNS": "on",
         "AWS_REGION": "us-east-1",
         "PUBLIC_BASE_URL": "https://graspy-api-staging.getlatentic.com",
         "A2A_PATH_PREFIX": "/a2a",
@@ -131,7 +134,8 @@
           { "name": "CONVERSATIONS", "class_name": "Conversation" },
           { "name": "LESSONS", "class_name": "Lesson" },
           { "name": "LEARNERS", "class_name": "Learner" },
-          { "name": "LESSON_MAKERS", "class_name": "LessonMaker" }
+          { "name": "LESSON_MAKERS", "class_name": "LessonMaker" },
+          { "name": "CHAT_TURNS", "class_name": "ChatTurn" }
         ]
       },
       "triggers": { "crons": ["*/15 * * * *"] },

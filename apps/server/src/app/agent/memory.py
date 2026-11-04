@@ -36,7 +36,12 @@ class Conversation:
 class ConversationStore(Protocol):
     async def load(self, conversation_id: str) -> Conversation: ...
 
-    async def append(self, conversation_id: str, exchange: Exchange) -> None: ...
+    async def append(
+        self, conversation_id: str, exchange: Exchange, turn: str | None = None
+    ) -> None:
+        """`turn` names the turn the exchange answers: a store that keeps it once per turn is not
+        made to keep it twice by a turn that is run again; the others ignore it."""
+        ...
 
     async def fold(self, conversation_id: str, summary: str, dropped: int) -> None:
         """Drops the oldest `dropped` exchanges, which `summary` covers;
@@ -53,7 +58,9 @@ class InMemoryConversationStore:
     async def load(self, conversation_id: str) -> Conversation:
         return parsed(self._stored.get(conversation_id))
 
-    async def append(self, conversation_id: str, exchange: Exchange) -> None:
+    async def append(
+        self, conversation_id: str, exchange: Exchange, turn: str | None = None
+    ) -> None:
         self._stored[conversation_id] = appended(
             self._stored.get(conversation_id), json.dumps(exchange)
         )
@@ -77,7 +84,9 @@ class DurableObjectConversationStore:
     async def load(self, conversation_id: str) -> Conversation:
         return parsed(await self._namespace.getByName(conversation_id).load())
 
-    async def append(self, conversation_id: str, exchange: Exchange) -> None:
+    async def append(
+        self, conversation_id: str, exchange: Exchange, turn: str | None = None
+    ) -> None:
         await self._namespace.getByName(conversation_id).append(json.dumps(exchange))
 
     async def fold(self, conversation_id: str, summary: str, dropped: int) -> None:

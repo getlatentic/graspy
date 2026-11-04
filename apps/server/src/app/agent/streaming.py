@@ -25,6 +25,13 @@ class ToolActivity:
     tool: str
 
 
+@dataclass(frozen=True)
+class ToolFinished:
+    """A tool the turn called has answered, or failed."""
+
+    tool: str
+
+
 class Silent(StatusMessageProvider):
     """DSPy announces tool calls through a thread pool, which a Worker cannot
     start; announce() does it instead."""
@@ -36,10 +43,20 @@ class Silent(StatusMessageProvider):
         return None
 
 
-def announce(tool: str) -> None:
-    """Puts a ToolActivity on the turn's stream, never waiting: a missing
-    status line serves the learner better than a stalled answer."""
+def _send(item: ToolActivity | ToolFinished) -> None:
     stream = dspy.settings.send_stream
     if stream is not None:
         with contextlib.suppress(anyio.WouldBlock):
-            stream.send_nowait(ToolActivity(tool))
+            stream.send_nowait(item)
+
+
+def announce(tool: str) -> None:
+    """Puts a ToolActivity on the turn's stream, never waiting: a missing
+    status line serves the learner better than a stalled answer. A tool that must
+    not be sent twice could not rely on this to say it began."""
+    _send(ToolActivity(tool))
+
+
+def announce_done(tool: str) -> None:
+    """Says the tool has answered, in the same way."""
+    _send(ToolFinished(tool))

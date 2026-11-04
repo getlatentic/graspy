@@ -10,6 +10,7 @@ TOOL = "tool"
 CARD = "card"
 NOTICE = "notice"
 TURN_STARTED = "turn.started"
+TURN_RESUMED = "turn.resumed"
 TURN_FINISHED = "turn.finished"
 ROUND_ABORTED = "round.aborted"
 COMPACTION = "compaction"
@@ -25,6 +26,7 @@ KINDS = frozenset(
         CARD,
         NOTICE,
         TURN_STARTED,
+        TURN_RESUMED,
         TURN_FINISHED,
         ROUND_ABORTED,
         COMPACTION,
