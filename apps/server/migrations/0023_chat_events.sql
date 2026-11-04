@@ -10,3 +10,7 @@ CREATE TABLE chat_event (
     at INTEGER NOT NULL,
     PRIMARY KEY (chat, seq)
 ) WITHOUT ROWID;
+
+-- The latest compaction and the recent exchanges are found by kind, without reading every tool result
+-- and card of the chat between them.
+CREATE INDEX chat_event_kind ON chat_event (chat, kind, seq);

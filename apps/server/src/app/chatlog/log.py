@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from .kinds import IMPORTED, KINDS
+from .kinds import COMPACTION, IMPORTED, KINDS
 
 # D1 refuses a value over 2 MB; an event is a message, a tool result or a card.
 MAX_EVENT_BYTES = 256 * 1024
@@ -34,12 +34,33 @@ _WON = (
     "WHERE chat = ?1 AND seq = 1 AND json_extract(data, '$.batch') = ?2"
 )
 _LAST_SEQS = "SELECT seq FROM chat_event WHERE chat = ?1 ORDER BY seq DESC LIMIT ?2"
+# The index is named: without statistics SQLite walks the primary key backwards to order by seq, reading
+# every event of other kinds between the ones asked for.
 _OF_KIND = (
-    "SELECT chat, seq, kind, data, at FROM chat_event "
+    "SELECT chat, seq, kind, data, at FROM chat_event INDEXED BY chat_event_kind "
     "WHERE chat = ?1 AND kind = ?2 ORDER BY seq DESC LIMIT 1"
 )
 _LAST = "SELECT MAX(seq) AS seq FROM chat_event WHERE chat = ?1"
 _FORGET = "DELETE FROM chat_event WHERE chat = ?1"
+# A compaction is kept only if it covers at least as much as the one before it: of two folds that read
+# the same state, the one that covers less is not written after the one that covers more.
+_NOT_BEHIND = (
+    "COALESCE((SELECT MAX(json_extract(data, '$.through')) FROM chat_event "
+    "WHERE chat = ?1 AND kind = 'compaction'), 0) <= ?5"
+)
+
+
+def recent_sql(kinds: Sequence[str]) -> str:
+    """The latest events of each kind after a seq, one subquery a kind: each is found through the index on
+    (chat, kind, seq), without reading the events of other kinds that fall between them. The caller
+    merges the kinds. ?1 is the chat, ?2 the seq, ?3 and on the kinds, and the last the limit."""
+    limit = f"?{3 + len(kinds)}"
+    return " UNION ALL ".join(
+        "SELECT chat, seq, kind, data, at FROM (SELECT chat, seq, kind, data, at "
+        "FROM chat_event INDEXED BY chat_event_kind "
+        f"WHERE chat = ?1 AND kind = ?{3 + n} AND seq > ?2 ORDER BY seq DESC LIMIT {limit})"
+        for n in range(len(kinds))
+    )
 
 
 def _select(
@@ -88,8 +109,9 @@ def _event(row: Any) -> Event:
 def _encoded(kind: str, data: dict[str, Any]) -> str:
     if kind not in KINDS:
         raise ValueError(f"Unknown chat event kind: {kind!r}")
-    text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
-    if len(text.encode()) > MAX_EVENT_BYTES:
+    # ASCII, so a text D1 would refuse (a lone surrogate) is escaped, and the length is the byte count.
+    text = json.dumps(data, separators=(",", ":"))
+    if len(text) > MAX_EVENT_BYTES:
         raise ValueError(f"A {kind} event is over {MAX_EVENT_BYTES} bytes")
     return text
 
@@ -123,6 +145,22 @@ class ChatLog:
         statements.append(self._db.prepare(_LAST_SEQS).bind(chat, len(events)))
         answers = await self._db.batch(statements)
         return sorted(int(_row(row)["seq"]) for row in answers[-1]["results"])
+
+    async def compact(
+        self,
+        chat: str,
+        summary: str,
+        through: int,
+        now_ms: int | None = None,
+    ) -> None:
+        """A summary of the exchanges up to seq `through`, unless a later fold already covers more."""
+        at = int(time.time() * 1000) if now_ms is None else now_ms
+        text = _encoded(COMPACTION, {"summary": summary, "through": through})
+        await (
+            self._db.prepare(_INSERT.format(guard=_NOT_BEHIND))
+            .bind(chat, COMPACTION, text, at, through)
+            .run()
+        )
 
     async def import_once(
         self,
@@ -169,9 +207,14 @@ class ChatLog:
         self, chat: str, kinds: Sequence[str], after: int, limit: int
     ) -> list[Event]:
         """The last `limit` events of `kinds` after `after`, oldest first."""
-        sql, values = _select(kinds, "ORDER BY seq DESC", (chat, after), limit)
-        found = await self._db.prepare(sql).bind(*values).all()
-        return [_event(row) for row in reversed(found["results"])]
+        for kind in kinds:
+            if kind not in KINDS:
+                raise ValueError(f"Unknown chat event kind: {kind!r}")
+        found = await (
+            self._db.prepare(recent_sql(kinds)).bind(chat, after, *kinds, limit).all()
+        )
+        events = sorted((_event(row) for row in found["results"]), key=lambda e: e.seq)
+        return events[-limit:]
 
     async def latest_of(self, chat: str, kind: str) -> Event | None:
         found = await self._db.prepare(_OF_KIND).bind(chat, kind).first()

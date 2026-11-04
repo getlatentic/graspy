@@ -12,8 +12,8 @@ from app.agent.memory import (
     InMemoryConversationStore,
 )
 from app.chatlog import kinds
-from app.chatlog.conversations import LogConversationStore
-from app.chatlog.log import MAX_EVENT_BYTES, ChatLog
+from app.chatlog.conversations import MAX_TEXT_BYTES, LogConversationStore
+from app.chatlog.log import _OF_KIND, MAX_EVENT_BYTES, ChatLog, recent_sql
 from app.local_d1 import LocalD1
 
 
@@ -294,3 +294,121 @@ async def test_a_load_reads_only_the_last_exchanges_a_store_holds(database):
     kept = (await store.load("long")).exchanges
 
     assert len(kept) == MAX_STORED and kept[0] == exchange(30)
+
+
+async def test_an_exchange_too_long_for_the_log_is_cut_and_the_chat_stays_readable(
+    database,
+):
+    long = "ọ" * 200_000
+    held = Held(Conversation("", (Exchange(message=long, answer="short"),)))
+    store = LogConversationStore(database, held)
+
+    [imported] = (await store.load("old")).exchanges
+    await store.append("old", Exchange(message="ok", answer=long, card=long))
+
+    first, second = (await store.load("old")).exchanges
+    assert (
+        len(imported["message"].encode()) <= MAX_TEXT_BYTES
+        and imported["answer"] == "short"
+    )
+    assert len(second["answer"].encode()) <= MAX_TEXT_BYTES
+    assert len(second["card"].encode()) <= MAX_TEXT_BYTES and first == imported
+
+
+async def test_a_text_with_a_lone_surrogate_is_kept_and_read_back(database):
+    store = LogConversationStore(database)
+    broken = "half an emoji: \ud83d"
+
+    await store.append("c", Exchange(message=broken, answer="ok"))
+
+    assert (await store.load("c")).exchanges[0]["message"] == broken
+
+
+async def test_exchanges_whose_events_interleave_stay_paired_by_turn(database, log):
+    store = LogConversationStore(database)
+    await log.append_all("c", [(kinds.USER, {"turn": "a", "text": "A?"})])
+    await log.append_all("c", [(kinds.USER, {"turn": "b", "text": "B?"})])
+    await log.append("c", kinds.TEXT, {"turn": "a", "text": "partial"})
+    await log.append_all("c", [(kinds.ASSISTANT, {"turn": "a", "text": "A!"})])
+    await log.append_all("c", [(kinds.ASSISTANT, {"turn": "b", "text": "B!"})])
+    await log.append_all(
+        "c", [(kinds.USER, {"turn": "c", "text": "C? (no answer yet)"})]
+    )
+
+    assert (await store.load("c")).exchanges == (
+        Exchange(message="A?", answer="A!"),
+        Exchange(message="B?", answer="B!"),
+    )
+
+
+async def test_a_fold_that_covers_less_than_one_already_kept_is_not_written(
+    log, database
+):
+    store = LogConversationStore(database)
+    for n in range(6):
+        await store.append("c", exchange(n))
+    held = await store.load("c")
+    assert held.exchanges[0] == exchange(0)
+
+    await log.compact("c", "covers four", 8)
+    await log.compact("c", "covers two", 4)
+
+    assert await store.load("c") == Conversation(
+        "covers four", (exchange(4), exchange(5))
+    )
+
+
+async def test_the_latest_compaction_and_the_recent_exchanges_are_found_by_an_index(
+    database,
+):
+    plans = [
+        database.connection.execute(f"EXPLAIN QUERY PLAN {sql}", values).fetchall()
+        for sql, values in (
+            (
+                _OF_KIND.replace("?1", "?").replace("?2", "?"),
+                ("c", "compaction"),
+            ),
+            (
+                recent_sql((kinds.USER, kinds.ASSISTANT)),
+                ("c", 0, "user", "assistant", 5),
+            ),
+        )
+    ]
+
+    for plan in plans:
+        steps = [str(tuple(row)) for row in plan]
+        assert any("chat_event_kind" in step for step in steps)
+        assert not any("USING PRIMARY KEY" in step and "SCAN" in step for step in steps)
+
+
+async def test_the_recent_events_of_each_kind_are_merged_in_order_whatever_falls_between(
+    log,
+):
+    for n in range(30):
+        await log.append("c", kinds.TOOL, {"n": n})
+        await log.append("c", kinds.USER if n % 2 == 0 else kinds.ASSISTANT, {"n": n})
+
+    recent = await log.recent("c", (kinds.USER, kinds.ASSISTANT), 0, 4)
+
+    assert [event.data["n"] for event in recent] == [26, 27, 28, 29]
+    assert [event.kind for event in recent] == [
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+    ]
+
+
+async def test_a_chat_found_to_hold_events_is_not_asked_about_again(database):
+    asked: list[str] = []
+    prepare = database.prepare
+    database.prepare = lambda sql: (asked.append(sql), prepare(sql))[1]
+    store = LogConversationStore(database, Held(Conversation()))
+    await store.append("c", exchange(1))
+    asked.clear()
+
+    await store.load("c")
+    await store.append("c", exchange(2))
+    await store.load("c")
+
+    assert not [sql for sql in asked if "AS seq" in sql]

@@ -8,20 +8,38 @@ once, when it is first read."""
 
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
 from ..agent.memory import MAX_STORED, Conversation, ConversationStore, Exchange
 from .kinds import ASSISTANT, COMPACTION, USER
 from .log import ChatLog, Event
 
+# Each text of an exchange is cut to this many bytes: the Durable Object kept any length, an event
+# is at most MAX_EVENT_BYTES, and an exchange too long for the log must not make a chat unreadable.
+MAX_TEXT_BYTES = 60 * 1024
+# How many chats this store has found to hold events: asked of the database once each.
+MAX_KNOWN = 1000
 
-def _events(exchange: Exchange) -> list[tuple[str, dict[str, Any]]]:
-    said: dict[str, Any] = {"text": exchange["message"]}
+
+def _fit(text: str) -> str:
+    kept = text.encode("utf-8", "replace")
+    return (
+        text
+        if len(kept) <= MAX_TEXT_BYTES
+        else kept[:MAX_TEXT_BYTES].decode("utf-8", "ignore")
+    )
+
+
+def _events(exchange: Exchange, turn: str) -> list[tuple[str, dict[str, Any]]]:
+    """The two events of an exchange, paired by `turn`, so they stay a pair when other events fall
+    between them."""
+    said: dict[str, Any] = {"turn": turn, "text": _fit(exchange["message"])}
     if "app" in exchange:
-        said["app"] = exchange["app"]
-    answered: dict[str, Any] = {"text": exchange["answer"]}
+        said["app"] = _fit(exchange["app"])
+    answered: dict[str, Any] = {"turn": turn, "text": _fit(exchange["answer"])}
     if "card" in exchange:
-        answered["card"] = exchange["card"]
+        answered["card"] = _fit(exchange["card"])
     return [(USER, said), (ASSISTANT, answered)]
 
 
@@ -35,16 +53,17 @@ def _exchange(asked: Event, answered: Event) -> Exchange:
 
 
 def _pairs(events: list[Event]) -> list[tuple[Event, Event]]:
-    """Each `user` event with the `assistant` event that follows it: they are written in one batch,
-    so nothing falls between them."""
+    """Each `user` event with the `assistant` event of its turn, in the order the answers were
+    kept. A `user` event whose answer has not been kept, and an answer whose question is not
+    among the events, are not an exchange."""
+    asked: dict[str, Event] = {}
     pairs: list[tuple[Event, Event]] = []
-    pending: Event | None = None
     for event in events:
-        if event.kind == USER:
-            pending = event
-        elif event.kind == ASSISTANT and pending is not None:
-            pairs.append((pending, event))
-            pending = None
+        turn = event.data.get("turn")
+        if event.kind == USER and turn is not None:
+            asked[turn] = event
+        elif event.kind == ASSISTANT and turn in asked:
+            pairs.append((asked.pop(turn), event))
     return pairs
 
 
@@ -54,6 +73,7 @@ class LogConversationStore:
     def __init__(self, database: Any, legacy: ConversationStore | None = None) -> None:
         self._log = ChatLog(database)
         self._legacy = legacy
+        self._known: set[str] = set()
 
     async def _held(self, chat: str) -> tuple[str, int, list[tuple[Event, Event]]]:
         """The summary the latest compaction wrote, the seq it covers through, and the exchanges
@@ -73,7 +93,8 @@ class LogConversationStore:
 
     async def append(self, conversation_id: str, exchange: Exchange) -> None:
         await self._imported(conversation_id)
-        await self._log.append_all(conversation_id, _events(exchange))
+        await self._log.append_all(conversation_id, _events(exchange, uuid.uuid4().hex))
+        self._known.add(conversation_id)
 
     async def fold(self, conversation_id: str, summary: str, dropped: int) -> None:
         """Covers the oldest `dropped` exchanges held now; those kept since stay."""
@@ -81,18 +102,19 @@ class LogConversationStore:
         # From a Durable Object call a whole number can arrive as a float; this store is called the same way.
         count = min(int(dropped), len(pairs))
         through = pairs[count - 1][1].seq if count > 0 else covered
-        await self._log.append(
-            conversation_id, COMPACTION, {"summary": summary, "through": through}
-        )
+        await self._log.compact(conversation_id, summary, through)
 
     async def forget(self, conversation_id: str) -> None:
+        self._known.discard(conversation_id)
         await self._log.forget(conversation_id)
         if self._legacy is not None:
             await self._legacy.forget(conversation_id)
 
     async def _imported(self, chat: str) -> None:
-        if self._legacy is None or await self._log.last_seq(chat) > 0:
+        if self._legacy is None or chat in self._known:
             return
+        if await self._log.last_seq(chat) > 0:
+            return self._remember(chat)
         before = await self._legacy.load(chat)
         if not before.exchanges and not before.summary:
             return
@@ -100,5 +122,11 @@ class LogConversationStore:
             (COMPACTION, {"summary": before.summary, "through": 1})
         ]
         for exchange in before.exchanges:
-            events += _events(exchange)
+            events += _events(exchange, uuid.uuid4().hex)
         await self._log.import_once(chat, {"exchanges": len(before.exchanges)}, events)
+        self._remember(chat)
+
+    def _remember(self, chat: str) -> None:
+        if len(self._known) >= MAX_KNOWN:
+            self._known.clear()
+        self._known.add(chat)
