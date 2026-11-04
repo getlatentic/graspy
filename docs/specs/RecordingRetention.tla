@@ -32,7 +32,8 @@ CONSTANTS
     RetShort, RetLong,  \* the retention a parent can choose, shortest and longest
     MaxAttempts,     \* MAX_TURN_ATTEMPTS
     TutorDedupes,    \* the tutor applies a verdict once per sample, whoever sends it
-    ClientRetriesUpload  \* a client whose upload did not finish sends it again in time
+    ClientRetriesUpload, \* a client whose upload did not finish sends it again
+    SweepsStalledUploads \* the cron deletes what an upload put when it began a day ago and never finished
 
 ASSUME /\ Lease \in Nat \ {0}
        /\ Wait1 \in Nat /\ Wait2 \in Nat
@@ -40,6 +41,7 @@ ASSUME /\ Lease \in Nat \ {0}
        /\ RetShort \in Nat \ {0} /\ RetLong \in Nat /\ RetShort < RetLong
        /\ MaxAttempts \in Nat \ {0}
        /\ TutorDedupes \in BOOLEAN /\ ClientRetriesUpload \in BOOLEAN
+       /\ SweepsStalledUploads \in BOOLEAN
 
 VARIABLES
     \* The audio and its sample row (samples.py, recording_retention.py)
@@ -266,6 +268,17 @@ SweepExpired(s) ==
                    tToken, live, taught, applied, nextToken, cActive, cDays,
                    keptAt, keptUnder, consentAtUpload, now>>
 
+(* An upload began a day ago and never finished: the object has no row that *)
+(* names it, so the sweep deletes the keys the upload may have put.          *)
+SweepStalled(s) ==
+    /\ SweepsStalledUploads
+    /\ Orphan(s)
+    /\ now - putAt[s] >= UndecidedLimit
+    /\ obj' = [obj EXCEPT ![s] = FALSE]
+    /\ UNCHANGED <<keyed, uploadedAt, putAt, expires, deleted, tState, tAttempts, tUpdated,
+                   tToken, live, taught, applied, nextToken, cActive, cDays,
+                   keptAt, keptUnder, consentAtUpload, now>>
+
 SweepUnsettled(s) ==
     /\ Undecided(s)
     /\ now - uploadedAt[s] >= UndecidedLimit
@@ -326,6 +339,7 @@ Next ==
           \/ Settle(s)
           \/ SweepExpired(s)
           \/ SweepUnsettled(s)
+          \/ SweepStalled(s)
           \/ ParentDeletes(s)
           \/ \E t \in Tokens:
                 \/ Teach(s, t)
@@ -335,12 +349,14 @@ Next ==
                 \/ WorkerDies(s, t)
 
 (* The cron sweeps and settles. A client whose upload did not finish sends *)
-(* it again, when ClientRetriesUpload.                                      *)
+(* it again, when ClientRetriesUpload; the cron deletes what a stalled      *)
+(* upload put, when SweepsStalledUploads.                                   *)
 Fairness ==
     \A s \in Samples:
         /\ WF_vars(Settle(s))
         /\ WF_vars(SweepExpired(s))
         /\ WF_vars(SweepUnsettled(s))
+        /\ SweepsStalledUploads => WF_vars(SweepStalled(s))
         /\ ClientRetriesUpload => WF_vars(RecordUpload(s))
 
 Spec == Init /\ [][Next]_vars /\ Fairness
@@ -368,10 +384,15 @@ UndecidedIsDecided ==
 ExpiredIsGone ==
     \A s \in Samples: (Kept(s) /\ now >= expires[s]) ~> ~Present(s)
 
-(* An object that was put is eventually named by its row. With no retry,   *)
-(* an upload that dies between the put and the update leaves audio that no *)
-(* sweep can find.                                                          *)
-OrphanResolved == \A s \in Samples: Orphan(s) ~> ~Orphan(s)
+(* Audio that an upload put a day ago, whose row never named it, does not  *)
+(* stay: it is deleted, named by its row, or put again by a new attempt     *)
+(* that starts its own day. With no retry and no sweep of stalled uploads,  *)
+(* an upload that dies between the put and the update leaves audio that     *)
+(* nothing finds.                                                            *)
+StalledIsSwept ==
+    \A s \in Samples:
+        (Orphan(s) /\ now - putAt[s] >= UndecidedLimit)
+            ~> ~(Orphan(s) /\ now - putAt[s] >= UndecidedLimit)
 
 (* The turn's row is only written by the latest claim: a complete turn has *)
 (* the token of a worker that sent the verdict.                             *)

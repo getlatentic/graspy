@@ -39,27 +39,27 @@ The second run stops at the first violated property, so to see each one on its o
 
 `RecordingRetention.tla` is a child's recording together with the marking of the answer it carries: the audio is uploaded, a worker claims the turn and marks it under a lease and a token, a parent's consent decides whether the audio is kept, and the cron sweep deletes what is due. It follows `apps/server/src/app/voice` (`samples.py`, `worker_evaluation.py`, `exercises.py`, `recording_retention.py`, `parent_recordings.py`). One learner and one recording; time is whole ticks that keep the order lease < waits < a day < retention.
 
-`RecordingRetention.core.cfg` checks what should hold: 1,695,532 distinct states, no error.
+`RecordingRetention.core.cfg` checks what should hold: 1,695,572 distinct states, no error.
 
 - `KeptOnlyUnderConsent`: a recording is kept only if consent was active the moment it was kept.
 - `AssessmentOnce` and `CompleteHasItsVerdict`: a verdict is applied once per recording even when a lease takeover runs two workers, and a complete turn has its verdict. This holds because the tutor applies a verdict once per `(turn, lesson, item)` and the server passes the sample id as the turn (`learner_memory.py`, `apps/tutor/src/learner.ts`).
 - `UndecidedIsDecided`: nothing stays undecided past a day.
 - `ExpiredIsGone`: a kept recording is gone once it is past its expiry.
-- `OrphanResolved`: an object that was put is eventually named by its row, given a client that sends an unfinished upload again.
+- `StalledIsSwept`: audio that an upload put a day ago, whose row never named it, does not stay: it is deleted, named by its row, or put again by a new attempt. This holds because the cron sweeps uploads that began a day ago and never finished, with no assumption about the client.
 
-Each of these was checked to be able to fail: with the sweep of unsettled recordings removed, or the sweep of expired ones, or settling that ignores consent, TLC reports the violation.
+Each of these was checked to be able to fail: with the sweep of unsettled recordings removed, or the sweep of expired ones, or the sweep of stalled uploads, or settling that ignores consent, TLC reports the violation.
 
 The other configurations each break one assumption or ask one policy question, and fail with a short trace:
 
 | Configuration | Question | Result |
 |---|---|---|
 | `effects` | Does a lease takeover apply a verdict twice if the tutor stops deduplicating? | Yes: claim, a worker sends the verdict, the lease passes, a second claim, its worker sends it too (`AssessmentOnce`) |
-| `orphan` | What if an upload dies after the put and the client never returns? | The audio is never swept: no sweep selects a row that is still `awaiting_audio`, and nothing here deletes an object without a row (`OrphanResolved`) |
+| `orphan` | What if an upload dies after the put and the client never returns, and nothing sweeps stalled uploads? | The audio is never swept: no sweep selects a row that is still `awaiting_audio` (`StalledIsSwept`). A client that sends the unfinished upload again closes it too, which is all the code relied on before the sweep of stalled uploads was added |
 | `retroactive` | Is a recording kept if consent arrives after it was recorded but before its turn ended? | Yes: upload, consent granted, the turn fails for good, `settle_audio` keeps it (`NoRetroactiveKeep`) |
 | `revoke` | Is audio still kept after the parent withdraws consent? | Yes, when the parent does not also ask for the recordings to go; the route documents this (`NoKeptAfterRevoke`) |
 | `shorten` | Does a recording kept under 365 days follow the parent's later choice of 30? | No: `expires_at` is set once, when the recording is kept (`ExpiryWithinActiveRetention`) |
 
-Of these, the orphan is a gap in the claim at the top of `recording_retention.py`, that no unconsented recording outlives a day. The other three are policy: which of them graspy wants is the owner's choice. I did not check whether the R2 bucket has a lifecycle rule that would remove an orphan, which would change the first.
+The orphan was a gap in the claim at the top of `recording_retention.py`, that no unconsented recording outlives a day; the core configuration now models the sweep of stalled uploads that closes it. The other three are policy: which of them graspy wants is the owner's choice. I did not check whether the R2 bucket has a lifecycle rule that would also remove an orphan.
 
 Not modelled: several learners or recordings (a second sample was not checked), the audio's bytes, transcription, learner removal, and a crash between the object delete and the row update, which the next sweep repeats.
 
