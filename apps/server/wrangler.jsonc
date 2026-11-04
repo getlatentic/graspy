@@ -119,6 +119,8 @@
         "APP_ENV": "staging",
         "LLM_HOST": "bedrock",
         "ENGLISH_ASR": "nova",
+        // Conversations are kept in a chat's event log (D1) here first; production keeps them in the Durable Object.
+        "CHAT_LOG": "on",
         "AWS_REGION": "us-east-1",
         "PUBLIC_BASE_URL": "https://graspy-api-staging.getlatentic.com",
         "A2A_PATH_PREFIX": "/a2a",
