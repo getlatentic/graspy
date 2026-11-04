@@ -12,8 +12,9 @@
 (*   recording_retention.py  settle_audio and sweep_audio                  *)
 (*   parent_recordings.py and account_voice_routes.py  the parent's side   *)
 (*                                                                         *)
-(* Time is whole ticks, not minutes: Lease < the waits < UndecidedLimit <  *)
-(* the retention periods, as 3 min < 2 and 30 min < 1 day < 30 days.       *)
+(* Time is whole ticks, not minutes. The code has a 3 minute lease, waits   *)
+(* of 2 and 30 minutes, a day, and retention of 30 to 365 days; the spec    *)
+(* keeps the order from the lease to a day to the retention periods.        *)
 (* The cron is fair: a sweep that stays possible happens. What the spec    *)
 (* checks is that the sweep can always reach what is due.                  *)
 (*                                                                         *)
@@ -63,6 +64,8 @@ VARIABLES
     \* The parent's consent (account/consents.py)
     cActive, cDays,
     \* Ghosts, for the properties only
+    doneBy,          \* doneBy[s]: the token that wrote the row complete, 0 if none
+    failedBy,        \* failedBy[s]: the token that last wrote the row failed, 0 if none
     keptAt,          \* keptAt[s]: when the recording was kept
     keptUnder,       \* keptUnder[s]: consent was active when it was kept
     consentAtUpload, \* consentAtUpload[s]: consent was active when it was uploaded
@@ -70,7 +73,7 @@ VARIABLES
 
 vars == <<obj, keyed, uploadedAt, putAt, expires, deleted,
           tState, tAttempts, tUpdated, tToken, live, taught, applied, nextToken,
-          cActive, cDays, keptAt, keptUnder, consentAtUpload, now>>
+          cActive, cDays, doneBy, failedBy, keptAt, keptUnder, consentAtUpload, now>>
 
 Tokens == 1..(MaxAttempts * Cardinality(Samples))
 
@@ -90,6 +93,8 @@ TypeOK ==
     /\ applied \in [Samples -> Nat]
     /\ nextToken \in 1..(Cardinality(Tokens) + 1)
     /\ cActive \in BOOLEAN /\ cDays \in {RetShort, RetLong}
+    /\ doneBy \in [Samples -> 0..Cardinality(Tokens)]
+    /\ failedBy \in [Samples -> 0..Cardinality(Tokens)]
     /\ keptAt \in [Samples -> 0..MaxTime]
     /\ keptUnder \in [Samples -> BOOLEAN]
     /\ consentAtUpload \in [Samples -> BOOLEAN]
@@ -112,6 +117,8 @@ Init ==
     /\ nextToken = 1
     /\ cActive = FALSE
     /\ cDays = RetShort
+    /\ doneBy = [s \in Samples |-> 0]
+    /\ failedBy = [s \in Samples |-> 0]
     /\ keptAt = [s \in Samples |-> 0]
     /\ keptUnder = [s \in Samples |-> FALSE]
     /\ consentAtUpload = [s \in Samples |-> FALSE]
@@ -123,9 +130,10 @@ Init ==
 Present(s) == keyed[s] /\ ~deleted[s]            \* PRESENT
 Undecided(s) == Present(s) /\ expires[s] = 0
 Kept(s) == Present(s) /\ expires[s] # 0
-Ended(s) ==                                      \* ENDED_SQL's turn condition
+Ended(s) ==              \* ENDED_SQL's turn condition, and given_up() on a poll
     \/ tState[s] = "complete"
     \/ tState[s] = "failed" /\ tAttempts[s] >= MaxAttempts
+    \/ tState[s] = "processing" /\ tAttempts[s] >= MaxAttempts /\ now > tUpdated[s] + Lease
 
 WaitFor(attempts) ==
     IF attempts >= 2 THEN Wait2 ELSE IF attempts = 1 THEN Wait1 ELSE 0
@@ -160,7 +168,7 @@ PutAudio(s) ==
     /\ putAt' = [putAt EXCEPT ![s] = now]
     /\ UNCHANGED <<keyed, uploadedAt, expires, deleted, tState, tAttempts, tUpdated,
                    tToken, live, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 RecordUpload(s) ==
     /\ obj[s]
@@ -170,7 +178,7 @@ RecordUpload(s) ==
     /\ consentAtUpload' = [consentAtUpload EXCEPT ![s] = cActive]
     /\ UNCHANGED <<obj, putAt, expires, deleted, tState, tAttempts, tUpdated,
                    tToken, live, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, now>>
+                   keptAt, keptUnder, now, doneBy, failedBy>>
 
 (* The marking turn: _claim_turn, the worker, and its token-guarded writes. *)
 
@@ -184,7 +192,7 @@ Claim(s) ==
     /\ live' = [live EXCEPT ![s] = @ \cup {nextToken}]
     /\ nextToken' = nextToken + 1
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, taught, applied,
-                   cActive, cDays, keptAt, keptUnder, consentAtUpload, now>>
+                   cActive, cDays, keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 (* The worker sends the transcript to the tutor, which applies the verdict. *)
 Teach(s, t) ==
@@ -195,7 +203,7 @@ Teach(s, t) ==
     /\ applied' = [applied EXCEPT ![s] = IF TutorDedupes THEN 1 ELSE @ + 1]
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, tState,
                    tAttempts, tUpdated, tToken, live, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 (* COMPLETE_TURN_SQL: only the latest claim's token completes the row. *)
 Complete(s, t) ==
@@ -206,9 +214,10 @@ Complete(s, t) ==
     /\ tState' = [tState EXCEPT ![s] = "complete"]
     /\ tUpdated' = [tUpdated EXCEPT ![s] = now]
     /\ live' = [live EXCEPT ![s] = @ \ {t}]
+    /\ doneBy' = [doneBy EXCEPT ![s] = t]
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, tAttempts, tToken,
                    taught, applied, nextToken, cActive, cDays, keptAt, keptUnder,
-                   consentAtUpload, now>>
+                   consentAtUpload, now, failedBy>>
 
 (* _fail_turn: a provider failure, a missing recording, or audio with no speech, *)
 (* which spends every attempt.                                                  *)
@@ -220,9 +229,10 @@ Fail(s, t, noSpeech) ==
     /\ tAttempts' = [tAttempts EXCEPT ![s] = IF noSpeech THEN MaxAttempts ELSE @]
     /\ tUpdated' = [tUpdated EXCEPT ![s] = now]
     /\ live' = [live EXCEPT ![s] = @ \ {t}]
+    /\ failedBy' = [failedBy EXCEPT ![s] = t]
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, tToken, taught,
                    applied, nextToken, cActive, cDays, keptAt, keptUnder,
-                   consentAtUpload, now>>
+                   consentAtUpload, now, doneBy>>
 
 (* A worker that no longer holds the claim ends without writing. *)
 StaleWorkerEnds(s, t) ==
@@ -232,7 +242,7 @@ StaleWorkerEnds(s, t) ==
     /\ live' = [live EXCEPT ![s] = @ \ {t}]
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, tState, tAttempts,
                    tUpdated, tToken, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 (* The worker dies; the row stays processing until the lease passes. *)
 WorkerDies(s, t) ==
@@ -240,7 +250,7 @@ WorkerDies(s, t) ==
     /\ live' = [live EXCEPT ![s] = @ \ {t}]
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, tState, tAttempts,
                    tUpdated, tToken, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 ----------------------------------------------------------------------------
 (* settle_audio: once the turn has ended, the consent decides. It runs when  *)
@@ -253,12 +263,12 @@ Settle(s) ==
          THEN /\ expires' = [expires EXCEPT ![s] = now + cDays]
               /\ keptAt' = [keptAt EXCEPT ![s] = now]
               /\ keptUnder' = [keptUnder EXCEPT ![s] = cActive]
-              /\ UNCHANGED <<obj, deleted>>
+              /\ UNCHANGED <<obj, deleted, doneBy, failedBy>>
          ELSE /\ DeleteAudio(s)
-              /\ UNCHANGED <<expires, keptAt, keptUnder>>
+              /\ UNCHANGED <<expires, keptAt, keptUnder, doneBy, failedBy>>
     /\ UNCHANGED <<keyed, uploadedAt, putAt, tState, tAttempts, tUpdated, tToken,
                    live, taught, applied, nextToken, cActive, cDays,
-                   consentAtUpload, now>>
+                   consentAtUpload, now, doneBy, failedBy>>
 
 SweepExpired(s) ==
     /\ Kept(s)
@@ -266,26 +276,26 @@ SweepExpired(s) ==
     /\ DeleteAudio(s)
     /\ UNCHANGED <<keyed, uploadedAt, putAt, expires, tState, tAttempts, tUpdated,
                    tToken, live, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 (* An upload began a day ago and never finished: the object has no row that *)
 (* names it, so the sweep deletes the keys the upload may have put.          *)
 SweepStalled(s) ==
     /\ SweepsStalledUploads
     /\ Orphan(s)
-    /\ now - putAt[s] >= UndecidedLimit
+    /\ now - putAt[s] > UndecidedLimit             \* upload_started_at < now - a day
     /\ obj' = [obj EXCEPT ![s] = FALSE]
     /\ UNCHANGED <<keyed, uploadedAt, putAt, expires, deleted, tState, tAttempts, tUpdated,
                    tToken, live, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 SweepUnsettled(s) ==
     /\ Undecided(s)
-    /\ now - uploadedAt[s] >= UndecidedLimit
+    /\ now - uploadedAt[s] > UndecidedLimit         \* uploaded_at < now - a day
     /\ DeleteAudio(s)
     /\ UNCHANGED <<keyed, uploadedAt, putAt, expires, tState, tAttempts, tUpdated,
                    tToken, live, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 (* The parent. *)
 
@@ -295,7 +305,7 @@ Grant(days) ==
     /\ cDays' = days
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, tState, tAttempts,
                    tUpdated, tToken, live, taught, applied, nextToken, keptAt,
-                   keptUnder, consentAtUpload, now>>
+                   keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 (* DELETE /consent: recordings already kept stay until they expire unless    *)
 (* the parent also asks for them to go (deleteRecordings).                   *)
@@ -305,17 +315,17 @@ Revoke(alsoDelete) ==
     /\ IF alsoDelete
          THEN /\ obj' = [s \in Samples |-> IF Kept(s) THEN FALSE ELSE obj[s]]
               /\ deleted' = [s \in Samples |-> IF Kept(s) THEN TRUE ELSE deleted[s]]
-         ELSE UNCHANGED <<obj, deleted>>
+         ELSE UNCHANGED <<obj, deleted, doneBy, failedBy>>
     /\ UNCHANGED <<keyed, uploadedAt, putAt, expires, tState, tAttempts, tUpdated,
                    tToken, live, taught, applied, nextToken, cDays, keptAt,
-                   keptUnder, consentAtUpload, now>>
+                   keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 ParentDeletes(s) ==
     /\ Kept(s)
     /\ DeleteAudio(s)
     /\ UNCHANGED <<keyed, uploadedAt, putAt, expires, tState, tAttempts, tUpdated,
                    tToken, live, taught, applied, nextToken, cActive, cDays,
-                   keptAt, keptUnder, consentAtUpload, now>>
+                   keptAt, keptUnder, consentAtUpload, now, doneBy, failedBy>>
 
 (* Time passes. *)
 Tick ==
@@ -323,7 +333,7 @@ Tick ==
     /\ now' = now + 1
     /\ UNCHANGED <<obj, keyed, uploadedAt, putAt, expires, deleted, tState, tAttempts,
                    tUpdated, tToken, live, taught, applied, nextToken, cActive,
-                   cDays, keptAt, keptUnder, consentAtUpload>>
+                   cDays, keptAt, keptUnder, consentAtUpload, doneBy, failedBy>>
 
 Done == now = MaxTime /\ UNCHANGED vars
 
@@ -365,7 +375,9 @@ Spec == Init /\ [][Next]_vars /\ Fairness
 (* Safety *)
 
 (* The tutor applies a verdict once per sample, however many workers a lease *)
-(* takeover has run: it holds only while the tutor dedupes by sample.        *)
+(* takeover has run. It holds because the tutor dedupes by sample, which is  *)
+(* an assumption of the spec: the effects configuration shows what breaks    *)
+(* without it.                                                                *)
 AssessmentOnce == \A s \in Samples: applied[s] <= 1
 
 (* A recording is kept only if consent was active the moment it was kept. *)
@@ -378,7 +390,7 @@ KeptOnlyUnderConsent == \A s \in Samples: Kept(s) => keptUnder[s]
 (* deletes the rest.                                                         *)
 UndecidedIsDecided ==
     \A s \in Samples:
-        (Undecided(s) /\ now - uploadedAt[s] >= UndecidedLimit) ~> ~Undecided(s)
+        (Undecided(s) /\ now - uploadedAt[s] > UndecidedLimit) ~> ~Undecided(s)
 
 (* A kept recording is gone once it is past its expiry. *)
 ExpiredIsGone ==
@@ -391,13 +403,15 @@ ExpiredIsGone ==
 (* nothing finds.                                                            *)
 StalledIsSwept ==
     \A s \in Samples:
-        (Orphan(s) /\ now - putAt[s] >= UndecidedLimit)
-            ~> ~(Orphan(s) /\ now - putAt[s] >= UndecidedLimit)
+        (Orphan(s) /\ now - putAt[s] > UndecidedLimit)
+            ~> ~(Orphan(s) /\ now - putAt[s] > UndecidedLimit)
 
-(* The turn's row is only written by the latest claim: a complete turn has *)
-(* the token of a worker that sent the verdict.                             *)
-CompleteHasItsVerdict ==
-    \A s \in Samples: tState[s] = "complete" => applied[s] >= 1
+(* The turn's row is written only by the latest claim: a worker that lost *)
+(* its claim to a lease takeover cannot complete or fail it.                 *)
+TurnWrittenByLatestClaim ==
+    \A s \in Samples:
+        /\ tState[s] = "complete" => doneBy[s] = tToken[s]
+        /\ (tState[s] = "failed" /\ failedBy[s] # 0) => failedBy[s] = tToken[s]
 
 (* Policy questions: each holds or fails depending on what graspy intends. *)
 

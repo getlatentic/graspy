@@ -39,15 +39,16 @@ The second run stops at the first violated property, so to see each one on its o
 
 `RecordingRetention.tla` is a child's recording together with the marking of the answer it carries: the audio is uploaded, a worker claims the turn and marks it under a lease and a token, a parent's consent decides whether the audio is kept, and the cron sweep deletes what is due. It follows `apps/server/src/app/voice` (`samples.py`, `worker_evaluation.py`, `exercises.py`, `recording_retention.py`, `parent_recordings.py`). One learner and one recording; time is whole ticks that keep the order lease < waits < a day < retention.
 
-`RecordingRetention.core.cfg` checks what should hold: 1,695,572 distinct states, no error.
+`RecordingRetention.core.cfg` checks what should hold: 2,475,468 distinct states, no error. It includes the sweep of stalled uploads, which is in a separate change to `recording_retention.py` and `samples.py`; until that merges, `core` describes the code with that change.
 
 - `KeptOnlyUnderConsent`: a recording is kept only if consent was active the moment it was kept.
-- `AssessmentOnce` and `CompleteHasItsVerdict`: a verdict is applied once per recording even when a lease takeover runs two workers, and a complete turn has its verdict. This holds because the tutor applies a verdict once per `(turn, lesson, item)` and the server passes the sample id as the turn (`learner_memory.py`, `apps/tutor/src/learner.ts`).
+- `TurnWrittenByLatestClaim`: only the latest claim completes or fails the turn's row, so a worker that lost its claim to a lease takeover writes nothing (`COMPLETE_TURN_SQL` and `_fail_turn` guard on the token).
+- `AssessmentOnce`: a verdict is applied once per recording even when a lease takeover runs two workers. It holds because the tutor applies a verdict once per `(turn, lesson, item)` and the server passes the sample id as the turn (`learner_memory.py`, `apps/tutor/src/learner.ts`); that is an assumption of the spec, and the `effects` configuration shows what breaks without it.
 - `UndecidedIsDecided`: nothing stays undecided past a day.
 - `ExpiredIsGone`: a kept recording is gone once it is past its expiry.
 - `StalledIsSwept`: audio that an upload put a day ago, whose row never named it, does not stay: it is deleted, named by its row, or put again by a new attempt. This holds because the cron sweeps uploads that began a day ago and never finished, with no assumption about the client.
 
-Each of these was checked to be able to fail: with the sweep of unsettled recordings removed, or the sweep of expired ones, or the sweep of stalled uploads, or settling that ignores consent, TLC reports the violation.
+Each of these was checked to be able to fail, by removing what it guards from a copy of the spec: the token guard on completing a turn, the sweep of unsettled recordings, the sweep of expired ones, the sweep of stalled uploads, and settling that ignores consent each make TLC report the violation. `KeptOnlyUnderConsent` and `AssessmentOnce` hold by the way the spec is written when nothing is removed, so they are worth only as much as those controls and the `effects` configuration.
 
 The other configurations each break one assumption or ask one policy question, and fail with a short trace:
 
@@ -61,7 +62,13 @@ The other configurations each break one assumption or ask one policy question, a
 
 The orphan was a gap in the claim at the top of `recording_retention.py`, that no unconsented recording outlives a day; the core configuration now models the sweep of stalled uploads that closes it. The other three are policy: which of them graspy wants is the owner's choice. The R2 buckets (`graspy-audio` and `graspy-audio-staging`) have only the default rule that aborts incomplete multipart uploads after 7 days, no expiration rule, so nothing but this sweep removed an orphan.
 
-Not modelled: several learners or recordings (a second sample was not checked), the audio's bytes, transcription, learner removal, and a crash between the object delete and the row update, which the next sweep repeats.
+Not modelled:
+
+- Several learners or recordings (a second sample was not checked), the audio's bytes, transcription, and learner removal.
+- A crash between the object delete and the row update, which the next sweep repeats.
+- That `settle_audio` reads the row, tries to keep it and deletes it if the keep did not win as separate statements: two settles of one recording at once (a poll and the cron) could make the second delete a recording the first kept. The spec settles in one step.
+- That a sweep is paged (100 rows, 10 pages) and one failed delete ends the run, so a failing row at the head of a page could hold up the rest.
+- That `Revoke` with deletion deletes every kept recording at once; the route deletes up to 1,000 and reports that more remain.
 
 ```bash
 cd docs/specs
