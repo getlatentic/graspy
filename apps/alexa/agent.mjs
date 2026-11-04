@@ -29,13 +29,48 @@ export async function completeClean(complete, messages, tools) {
   return { content: "Sorry, say that once more for me?" };
 }
 
-/** A right answer, or a worked one, is followed by graspy's next question, asked for and said as written: the model makes none up. */
-export async function nextAfter(mcp, questionId, lead, trace) {
+const HARDEST = 3;
+
+/**
+ * A right answer is followed by a question one level up, and a worked one by a question one level down,
+ * asked for and said as graspy wrote it: the model makes none up. The call and its result go into the
+ * history, so the child's answer to it can be marked.
+ */
+export async function nextAfter(mcp, questionId, lead, step, trace) {
   const [topic, level] = String(questionId).split(".");
-  const next = await mcp.call("next_question", { topic, level: Number(level) || 1 });
-  trace.push({ tool: "next_question", args: { topic, level: Number(level) || 1 }, result: next.structuredContent ?? "", error: next.isError === true });
+  const args = { topic, level: Math.min(HARDEST, Math.max(1, (Number(level) || 1) + step)) };
+  let next;
+  try {
+    next = await mcp.call("next_question", args);
+  } catch {
+    return { spoken: `${lead} Shall we try another one?`, calls: [] };
+  }
+  trace.push({ tool: "next_question", args, result: next.structuredContent ?? textOf(next), error: next.isError === true });
   const question = next.structuredContent?.say_to_the_child;
-  return question ? `${lead} Here is another one. ${question}` : null;
+  if (next.isError || !question) return { spoken: `${lead} Shall we try another one?`, calls: [] };
+  const id = `follow-${trace.length}`;
+  return {
+    spoken: `${lead} Here is another one. ${question}`,
+    calls: [
+      { role: "assistant", content: "", tool_calls: [{ id, type: "function", function: { name: "next_question", arguments: JSON.stringify(args) } }] },
+      { role: "tool", tool_call_id: id, content: textOf(next) },
+    ],
+  };
+}
+
+/** What graspy's answer to a tool call asks the code to say next, or null when the model should go on. */
+async function followUp(mcp, call, args, result, trace) {
+  if (call.function.name === "next_question" && !result.isError) {
+    return { spoken: result.structuredContent?.say_to_the_child ?? null, calls: [] };
+  }
+  if (call.function.name === "check_answer" && result.structuredContent?.correct === true) {
+    return nextAfter(mcp, args.question_id, result.structuredContent.feedback, 1, trace);
+  }
+  if (call.function.name === "show_working" && !result.isError) {
+    const { answer, working } = result.structuredContent ?? {};
+    return nextAfter(mcp, args.question_id, `The answer is ${answer}. ${working}`, -1, trace);
+  }
+  return null;
 }
 
 /**
@@ -49,7 +84,7 @@ export async function takeTurn({ complete, mcp, tools, history, said, instructio
     const message = await completeClean(complete, [{ role: "system", content: instructions }, ...messages], tools.map(toOpenAiTool));
     messages.push({ role: "assistant", content: message.content ?? "", ...(message.tool_calls?.length ? { tool_calls: message.tool_calls } : {}) });
     if (!message.tool_calls?.length) return { reply: (message.content ?? "").trim(), history: messages, trace };
-    let spoken = null;
+    let follow = null;
     for (const call of message.tool_calls) {
       let args = {};
       try {
@@ -60,18 +95,12 @@ export async function takeTurn({ complete, mcp, tools, history, said, instructio
       const result = await mcp.call(call.function.name, args);
       trace.push({ tool: call.function.name, args, result: result.structuredContent ?? textOf(result), error: result.isError === true });
       messages.push({ role: "tool", tool_call_id: call.id, content: textOf(result) });
-      if (call.function.name === "next_question" && !result.isError) spoken = result.structuredContent?.say_to_the_child ?? null;
-      if (call.function.name === "check_answer" && result.structuredContent?.correct === true) {
-        spoken = await nextAfter(mcp, args.question_id, result.structuredContent.feedback, trace);
-      }
-      if (call.function.name === "show_working" && !result.isError) {
-        spoken = await nextAfter(mcp, args.question_id, `The answer is ${result.structuredContent?.answer}. ${result.structuredContent?.working}`, trace);
-      }
+      follow ??= await followUp(mcp, call, args, result, trace);
     }
-    // A question is said as graspy wrote it: the model has nothing to add to it.
-    if (spoken) {
-      messages.push({ role: "assistant", content: spoken });
-      return { reply: spoken, history: messages, trace };
+    // What is said after a question is graspy's: the model has nothing to add to it.
+    if (follow?.spoken) {
+      messages.push(...follow.calls, { role: "assistant", content: follow.spoken });
+      return { reply: follow.spoken, history: messages, trace };
     }
   }
   return { reply: "Let's try that again. What would you like to practise?", history: messages, trace };
