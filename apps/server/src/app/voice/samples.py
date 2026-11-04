@@ -17,7 +17,7 @@ from starlette.responses import JSONResponse
 
 from .curriculum import SCHOOL_CLASSES, load_plans
 from .exercises import write_won
-from .keeping import recordings_prefix
+from .keeping import sample_audio_key
 from .moves import answerable_prompts
 
 SAMPLE_ID = r"gvm_[a-z0-9_-]+"
@@ -34,6 +34,11 @@ CREATE_SQL = (
     "ON CONFLICT (owner_id, idempotency_key) DO NOTHING"
 )
 SAMPLE_SQL = "SELECT id, state FROM samples WHERE id = ?1 AND owner_id = ?2"
+# Before the object is put, so an upload that dies between the put and the row update is found by the sweep.
+UPLOAD_STARTED_SQL = (
+    "UPDATE samples SET upload_started_at = ?3 "
+    "WHERE id = ?1 AND owner_id = ?2 AND state = 'awaiting_audio'"
+)
 UPLOADED_SQL = (
     "UPDATE samples SET state = 'ready', audio_key = ?3, audio_content_type = ?4, "
     "audio_bytes = ?5, uploaded_at = ?6 WHERE id = ?1 AND owner_id = ?2"
@@ -171,7 +176,8 @@ async def upload_audio(
     if len(body) > MAX_AUDIO_BYTES:
         return _problem(413, "audio exceeds the 10 MiB limit")
     extension = "ogg" if content_type == "audio/ogg" else "wav"
-    audio_key = f"{recordings_prefix(learner)}samples/{sample_id}.{extension}"
+    audio_key = sample_audio_key(learner, sample_id, extension)
+    await env.DB.prepare(UPLOAD_STARTED_SQL).bind(sample_id, learner, _now_ms()).run()
     await env.AUDIO.put(audio_key, body, httpMetadata={"contentType": content_type})
     await (
         env.DB.prepare(UPLOADED_SQL)

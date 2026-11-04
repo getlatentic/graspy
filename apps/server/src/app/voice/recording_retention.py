@@ -5,7 +5,9 @@ marked, heard to hold no speech, or failed on the last attempt, the learner's co
 an active parental consent the recording is kept until `expires_at`, the days the parent chose from
 now; without one it is deleted at once. The sweep, run by the Worker's cron trigger, deletes what
 has expired and what is a day old without a decision (the phone went away after the upload, a worker
-died on its last attempt), so no unconsented recording outlives a day whatever happens. A deleted
+died on its last attempt), and the audio of an upload that began a day ago and never finished (the
+object was put and the row never updated), so no unconsented recording outlives a day whatever
+happens. A deleted
 recording leaves `audio_deleted_at` on its sample row."""
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from typing import Any
 
 from ..account.consents import DAY_MS, RECORDINGS
 from .exercises import MAX_TURN_ATTEMPTS, write_won
+from .keeping import possible_audio_keys
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +57,18 @@ UNSETTLED_SQL = (
     "AND state = 'ready' AND audio_deleted_at IS NULL AND expires_at IS NULL "
     "AND uploaded_at < ?1 LIMIT ?2"
 )
+# An upload that began a day ago and never finished: the object may have been put and the row never
+# updated, so the row still says awaiting_audio and names no key. Its keys are known from the learner
+# and the sample.
+STALLED_SQL = (
+    "SELECT id, owner_id FROM samples INDEXED BY samples_upload_stalled "
+    "WHERE state = 'awaiting_audio' AND upload_started_at < ?1 LIMIT ?2"
+)
+# A newer attempt on the same sample keeps its own start.
+CLEAR_STARTED_SQL = (
+    "UPDATE samples SET upload_started_at = NULL WHERE state = 'awaiting_audio' "
+    "AND upload_started_at < ?1 AND id IN (SELECT value FROM json_each(?2))"
+)
 MARK_DELETED_SQL = (
     "UPDATE samples SET audio_deleted_at = ?1 "
     "WHERE id IN (SELECT value FROM json_each(?2))"
@@ -76,6 +91,19 @@ async def delete_audio(env: Any, rows: list[dict]) -> None:
     await (
         env.DB.prepare(MARK_DELETED_SQL)
         .bind(_now_ms(), json.dumps([row["id"] for row in rows]))
+        .run()
+    )
+
+
+async def delete_unfinished(env: Any, rows: list[dict], before: int) -> None:
+    """What an upload that never finished may have put goes, and the sample stops being looked at
+    until another upload begins."""
+    await env.AUDIO.delete(
+        [key for row in rows for key in possible_audio_keys(row["owner_id"], row["id"])]
+    )
+    await (
+        env.DB.prepare(CLEAR_STARTED_SQL)
+        .bind(before, json.dumps([row["id"] for row in rows]))
         .run()
     )
 
@@ -115,4 +143,11 @@ async def sweep_audio(env: Any, now_ms: int | None = None) -> int:
                 break
             await delete_audio(env, due)
             deleted += len(due)
+    cutoff = now - UNDECIDED_KEPT_MS
+    for _ in range(PAGES):
+        stalled = await rows_of(env, STALLED_SQL, cutoff, PAGE)
+        if not stalled:
+            break
+        await delete_unfinished(env, stalled, cutoff)
+        deleted += len(stalled)
     return deleted
