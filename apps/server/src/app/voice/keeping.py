@@ -31,6 +31,22 @@ def recordings_prefix(learner: str) -> str:
     return f"learners/{quote(learner, safe='')}/"
 
 
+# The kinds of audio an upload may be: its extension is the key's last part.
+AUDIO_EXTENSIONS = ("wav", "ogg")
+
+
+def sample_audio_key(learner: str, sample_id: str, extension: str) -> str:
+    return f"{recordings_prefix(learner)}samples/{sample_id}.{extension}"
+
+
+def possible_audio_keys(learner: str, sample_id: str) -> list[str]:
+    """Every key an upload for the sample may have put: for a sample whose row never learned which."""
+    return [
+        sample_audio_key(learner, sample_id, extension)
+        for extension in AUDIO_EXTENSIONS
+    ]
+
+
 class VoiceKeeping(Protocol):
     async def forget(self, learner: str) -> None: ...
 

@@ -5,8 +5,9 @@ marked, heard to hold no speech, or failed on the last attempt, the learner's co
 an active parental consent the recording is kept until `expires_at`, the days the parent chose from
 now; without one it is deleted at once. The sweep, run by the Worker's cron trigger, deletes what
 has expired and what is a day old without a decision (the phone went away after the upload, a worker
-died on its last attempt), so no unconsented recording outlives a day whatever happens. A deleted
-recording leaves `audio_deleted_at` on its sample row."""
+died on its last attempt), and the audio of an upload that began a day ago and never finished (the
+object was put and the row never updated), so no unconsented recording outlives a day whatever
+happens. A deleted recording leaves `audio_deleted_at` on its sample row."""
 
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from typing import Any
 
 from ..account.consents import DAY_MS, RECORDINGS
 from .exercises import MAX_TURN_ATTEMPTS, write_won
+from .keeping import possible_audio_keys
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +56,19 @@ UNSETTLED_SQL = (
     "AND state = 'ready' AND audio_deleted_at IS NULL AND expires_at IS NULL "
     "AND uploaded_at < ?1 LIMIT ?2"
 )
+# An upload that began a day ago and never finished: the object may have been put and the row never
+# updated, so the row still says awaiting_audio and names no key. Its keys are known from the learner
+# and the sample.
+STALLED_SQL = (
+    "SELECT id, owner_id FROM samples INDEXED BY samples_upload_stalled "
+    "WHERE state = 'awaiting_audio' AND upload_started_at < ?1 LIMIT ?2"
+)
+# A newer attempt on the same sample keeps its own start, and so is not returned.
+CLEAR_STARTED_SQL = (
+    "UPDATE samples SET upload_started_at = NULL WHERE state = 'awaiting_audio' "
+    "AND upload_started_at < ?1 AND id IN (SELECT value FROM json_each(?2)) "
+    "RETURNING id, owner_id"
+)
 MARK_DELETED_SQL = (
     "UPDATE samples SET audio_deleted_at = ?1 "
     "WHERE id IN (SELECT value FROM json_each(?2))"
@@ -80,6 +95,23 @@ async def delete_audio(env: Any, rows: list[dict]) -> None:
     )
 
 
+async def delete_unfinished(env: Any, rows: list[dict], before: int) -> int:
+    """The starts are cleared first, and only the samples whose start was cleared lose what an
+    upload may have put: a sample whose upload began again since the select keeps its object.
+    Returns how many samples were swept."""
+    cleared = await rows_of(
+        env, CLEAR_STARTED_SQL, before, json.dumps([row["id"] for row in rows])
+    )
+    await env.AUDIO.delete(
+        [
+            key
+            for row in cleared
+            for key in possible_audio_keys(row["owner_id"], row["id"])
+        ]
+    )
+    return len(cleared)
+
+
 async def settle_audio(env: Any, sample_id: str, now_ms: int | None = None) -> None:
     """Called once a sample's turn has ended: keeps its recording if its learner's parent agreed,
     and deletes it if not. A recording already decided is left as it is. A failure is logged and
@@ -103,7 +135,7 @@ async def settle_audio(env: Any, sample_id: str, now_ms: int | None = None) -> N
 
 async def sweep_audio(env: Any, now_ms: int | None = None) -> int:
     """Settles the recordings whose turn ended and were not, then deletes every one due for it,
-    a page at a time; returns how many were deleted."""
+    a page at a time; returns how many recordings were deleted and how many unfinished uploads were swept."""
     now = now_ms if now_ms is not None else _now_ms()
     for row in await rows_of(env, ENDED_SQL, MAX_TURN_ATTEMPTS, PAGE):
         await settle_audio(env, row["id"], now)
@@ -115,4 +147,10 @@ async def sweep_audio(env: Any, now_ms: int | None = None) -> int:
                 break
             await delete_audio(env, due)
             deleted += len(due)
+    cutoff = now - UNDECIDED_KEPT_MS
+    for _ in range(PAGES):
+        stalled = await rows_of(env, STALLED_SQL, cutoff, PAGE)
+        if not stalled:
+            break
+        deleted += await delete_unfinished(env, stalled, cutoff)
     return deleted
