@@ -6,7 +6,7 @@ The output is one line a turn: the conversation id (to look up its `turn.resumed
 events in the chat log), whether the stream finished, and the time it took. A redeploy does not end a
 run in progress (110 of 110 turns sent during one finished with one run each); the staging kill test
 of 2026-11-04 aborted the chat's object with `ctx.abort()` six seconds into its first run.
-
+"""
 
 from __future__ import annotations
 
