@@ -55,7 +55,7 @@ async def relay_events(updater: TaskUpdater, events: AsyncIterator[Event]) -> di
             )
             await updater.update_status(TaskState.TASK_STATE_WORKING, message=activity)
         elif event.kind == kinds.TURN_FINISHED:
-            if event.data.get("status") == "ok":
+            if event.data.get("status") in ("ok", "stopped"):
                 return event.data["reply"]
             raise TurnFailed(str(event.data.get("cause", "failed")))
     raise TurnFailed("unfinished")

@@ -25,6 +25,8 @@ from app.learner.record import changed
 from app.learner.time import now_ms
 from app.lessons.making import FORGET_MS, Job, Making, making_now, started
 
+logger = logging.getLogger(__name__)
+
 # DSPy imports the openai SDK only to fine-tune. The Worker build leaves it
 # out (pyproject.toml): it would take two thirds of the snapshot.
 sys.modules.setdefault("openai", ModuleType("openai"))
@@ -161,8 +163,11 @@ except ImportError:
 with allow_bad_entropy_calls(1):
     import rpds  # noqa: F401
 
+from app.chatlog.log import ChatLog
 from app.cloudflare import build_lesson_runner, build_turn_alarm, build_worker_app
+from app.cloudflare_sockets import JsSocket, accept, connect, socket_target
 from app.lessons.store import KEEP_DAYS
+from app.turns.sockets import ChatSockets
 from app.voice.recording_retention import sweep_audio
 
 logging.basicConfig(format="%(levelname)s | %(name)s | %(message)s")
@@ -202,6 +207,9 @@ def _runner_for(env):
 
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
+        target = socket_target(request.url)
+        if target and request.headers.get("Upgrade") == "websocket":
+            return await connect(self.env, _app_for(self.env), request, target)
         return await asgi.fetch(_app_for(self.env), request, self.env)
 
     async def scheduled(self, controller, env, ctx):
@@ -321,15 +329,59 @@ class LessonMaker(DurableObject):
 
 class ChatTurn(DurableObject):
     """One chat's turns, run in its alarm so they outlive the request that began them and the isolate
-    that was running them (apps/server/src/app/turns/alarm.py)."""
+    that was running them (apps/server/src/app/turns/alarm.py), and the sockets of the pages that
+    follow them (apps/server/src/app/cloudflare_sockets.py)."""
+
+    def __init__(self, ctx, env):
+        from js import WebSocketRequestResponsePair
+
+        super().__init__(ctx, env)
+        # Answered by the runtime, so a page's heartbeat does not wake the object.
+        ctx.setWebSocketAutoResponse(WebSocketRequestResponsePair.new("ping", "pong"))
+
+    def _sockets(self):
+        if getattr(self, "_chat_sockets", None) is None:
+            self._chat_sockets = ChatSockets(
+                ChatLog(self.env.DB),
+                lambda: [JsSocket(ws, _js_object) for ws in self.ctx.getWebSockets()],
+            )
+        return self._chat_sockets
 
     def _turns(self):
         if getattr(self, "_alarm", None) is None:
-            self._alarm = build_turn_alarm(self.env, self.ctx.storage)
+            self._alarm = build_turn_alarm(
+                self.env, self.ctx.storage, self._sockets().announce
+            )
         return self._alarm
 
     async def wake(self, chat: str) -> None:
         await self._turns().wake(chat)
 
+    async def stop(self, chat: str, turn: str) -> None:
+        await self._turns().stop(chat, turn)
+
     async def alarm(self) -> None:
         await self._turns().alarm()
+
+    async def fetch(self, request):
+        return await accept(self.ctx, self._sockets(), request.url, _js_object)
+
+    async def webSocketClose(self, ws, code, reason, was_clean):
+        # 1005 and 1006 only report that no code was sent or the connection dropped; they are not
+        # sent back.
+        ws.close(1000 if code in (1005, 1006) else code, reason)
+
+    async def webSocketError(self, ws, error):
+        logger.error("A socket of a chat failed: %s", error)
+
+    async def webSocketMessage(self, ws, message):
+        """The page asks for what only it can: to stop the turn it is following."""
+        if not isinstance(message, str):
+            return
+        try:
+            command = json.loads(message)
+        except ValueError:
+            return
+        if isinstance(command, dict) and command.get("type") == "stop":
+            kept = JsSocket(ws, _js_object).attachment
+            await self._turns().stop(kept["chat"], kept["turn"])

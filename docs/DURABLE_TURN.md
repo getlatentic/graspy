@@ -14,6 +14,36 @@ Behind `DURABLE_TURNS=on` (staging first; it needs `CHAT_LOG=on`). The model of 
 3. The executor only reads: `follow` (`turns/relay.py`) polls the log for the turn's events and
    `agent/durable_relay.py` turns them into A2A updates. A reader that goes away does not stop the turn.
 
+## Following a turn
+
+A learner's page does not hold the turn; it follows it, and can follow it again from where it was.
+
+- `POST /api/chats/{chat}/turns` (`api/chat_routes.py`) begins a turn with `{turn, parts, metadata}` and
+  answers `{turn, cursor}`. The `turn` is the message id: sent again, it joins the turn it began. The chat
+  is the learner's: another learner's chat answers 404, like a chat that does not exist.
+- The turn's events reach the page as **frames** (`turns/frames.py`): `{seq, prev, kind, ...}`, where `seq`
+  is the event's seq in the chat and `prev` the seq of the frame before it (the cursor, for the first). The
+  page keeps the seq of the last frame it applied, drops a frame at or below it, and asks again from its
+  cursor when a frame's `prev` is not its cursor. A cursor beyond the chat is answered `{kind: reset}`.
+- **WebSocket** `wss://<api>/api/chats/{chat}/turns/{turn}/socket?after=<seq>`, offering the subprotocols
+  `graspy.v1` and the session token (a browser cannot set `Authorization` on a socket). The Worker checks
+  the token, the origin and the chat's owner (`cloudflare_sockets.py`), then hands the upgrade to the chat's
+  `ChatTurn` object, which accepts it hibernatably. The object is told after every event the runner keeps
+  (`TurnRunner(announce=...)`) and sends each socket the frames after that socket's cursor
+  (`turns/sockets.py`); the cursor is the socket's attachment, so it survives hibernation. The same read
+  serves a socket opened late. The page sends the text `ping` and is answered `pong` by the runtime without
+  waking the object, and sends `{"type": "stop"}` to stop the turn.
+- **Server-sent events** `GET /api/chats/{chat}/turns/{turn}/events` (cursor in `Last-Event-ID` or
+  `?after=`) are the way in when a socket cannot be opened. The request reads the log for 20 s at most
+  (a request that read it for ten minutes would spend the Worker's query limit) and the page asks again.
+- **Stop** (`POST .../stop`, or the socket message) writes `turn.stop`, ends the run that is writing the
+  turn, then the next step of the runner marks each open tool `tool.cancelled`, keeps the exchange with the
+  words so far, and finishes the turn `status=stopped` with those words as the reply. A stop is in the
+  log, so a restart finds it.
+
+Rate limits: a start spends the agent budget, as an A2A message does. The socket is opened by the Worker
+before the app's middleware, so it spends none; it needs a valid session and the chat's owner.
+
 ## Failure
 
 | What happens | What the log shows |

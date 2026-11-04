@@ -10,7 +10,9 @@ A turn is one message and its answer. Its events carry the turn's id in `data["t
     tool           {turn, run, tool}      the tool answered
     round.aborted  {turn, run, reason}    what the run wrote of the answer is withdrawn
     assistant      {turn, text, card?}    the answer, kept
-    turn.finished  {turn, status, cause?, reply?}   status is "ok" or "failed"
+    turn.stop      {turn}                 the learner stopped the turn
+    tool.cancelled {turn, tool}           a tool the turn called was stopped before it answered
+    turn.finished  {turn, status, cause?, reply?}   status is "ok", "failed" or "stopped"
 
 A run that was cut off leaves no event saying so: the next `turn.resumed` is how it is known."""
 
@@ -28,12 +30,20 @@ from ..chatlog.kinds import (
     TURN_FINISHED,
     TURN_RESUMED,
     TURN_STARTED,
+    TURN_STOP,
 )
 from ..chatlog.log import Event
 
 # What a run keeps when it gets anywhere.
 PROGRESS = frozenset({TEXT, TOOL_STARTED, TOOL, ASSISTANT})
-FOLDED = (TURN_STARTED, TURN_RESUMED, TURN_FINISHED, ROUND_ABORTED, *PROGRESS)
+FOLDED = (
+    TURN_STARTED,
+    TURN_RESUMED,
+    TURN_FINISHED,
+    TURN_STOP,
+    ROUND_ABORTED,
+    *PROGRESS,
+)
 
 
 @dataclass(frozen=True)
@@ -51,6 +61,9 @@ class TurnState:
     last_cause: str
     # The last run wrote words of the answer that nothing has withdrawn.
     text_open: bool
+    # The words of the answer that nothing has withdrawn.
+    answer: str
+    stop_requested: bool
 
 
 def _note_run(stalled: int, progressed: bool) -> int:
@@ -76,6 +89,8 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
                 "open": [],
                 "cause": "",
                 "text": False,
+                "answer": "",
+                "stop": False,
             }
             continue
         state = states.get(turn)
@@ -83,6 +98,8 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
             continue
         if event.kind == TURN_FINISHED:
             state["finished"] = event
+        elif event.kind == TURN_STOP:
+            state["stop"] = True
         elif event.kind == TURN_RESUMED:
             if state["runs"]:
                 state["stalled"] = _note_run(state["stalled"], state["progressed"])
@@ -90,11 +107,13 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
         elif event.kind == ROUND_ABORTED:
             state["cause"] = str(event.data.get("reason", ""))
             state["text"] = False
+            state["answer"] = ""
         elif event.kind in PROGRESS:
             state["progressed"] = True
             state["progressed_at"] = event.at
             if event.kind == TEXT:
                 state["text"] = True
+                state["answer"] += str(event.data.get("text", ""))
             if event.kind == TOOL_STARTED:
                 state["open"].append(str(event.data.get("tool", "")))
             elif (
@@ -115,6 +134,8 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
             open_tools=tuple(kept["open"]),
             last_cause=kept["cause"],
             text_open=kept["text"],
+            answer=kept["answer"],
+            stop_requested=kept["stop"],
         )
         for turn, kept in states.items()
     }

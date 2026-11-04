@@ -7,11 +7,13 @@ TEXT = "text"
 ASSISTANT = "assistant"
 TOOL_STARTED = "tool.started"
 TOOL = "tool"
+TOOL_CANCELLED = "tool.cancelled"
 CARD = "card"
 NOTICE = "notice"
 TURN_STARTED = "turn.started"
 TURN_RESUMED = "turn.resumed"
 TURN_FINISHED = "turn.finished"
+TURN_STOP = "turn.stop"
 ROUND_ABORTED = "round.aborted"
 COMPACTION = "compaction"
 IMPORTED = "imported"
@@ -23,11 +25,13 @@ KINDS = frozenset(
         ASSISTANT,
         TOOL_STARTED,
         TOOL,
+        TOOL_CANCELLED,
         CARD,
         NOTICE,
         TURN_STARTED,
         TURN_RESUMED,
         TURN_FINISHED,
+        TURN_STOP,
         ROUND_ABORTED,
         COMPACTION,
         IMPORTED,

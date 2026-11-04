@@ -15,6 +15,7 @@ from app.turns.rules import (
     UNSAFE_TO_REPEAT,
     GiveUp,
     Run,
+    Stop,
     next_step,
 )
 
@@ -177,3 +178,27 @@ def test_a_turn_that_keeps_a_little_each_run_is_still_given_up_on_when_it_is_old
     assert state.stalled_runs == 0
     assert next_step(state, late, always) == Run()
     assert next_step(state, late + 1, always) == GiveUp(STALLED)
+
+
+def test_the_words_of_the_answer_are_those_nothing_has_withdrawn():
+    state = state_of(
+        started(),
+        run(1),
+        (kinds.TEXT, {"text": "Fort"}),
+        (kinds.ROUND_ABORTED, {"reason": "cut_off"}),
+        run(2),
+        (kinds.TEXT, {"text": "Forty"}),
+        (kinds.TEXT, {"text": "-two"}),
+    )
+
+    assert state.answer == "Forty-two"
+
+
+def test_a_turn_the_learner_stopped_is_stopped_whatever_else_is_true():
+    stopped = state_of(
+        started(), run(1), (kinds.TOOL_STARTED, {"tool": "pay"}), (kinds.TURN_STOP, {})
+    )
+
+    assert stopped.stop_requested
+    assert next_step(stopped, 5_000, lambda tool: tool != "pay") == Stop()
+    assert not state_of(started(), run(1)).stop_requested

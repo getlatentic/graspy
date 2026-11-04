@@ -24,6 +24,7 @@ from .agent.memory import ConversationStore, InMemoryConversationStore
 from .agent.tutor import Tutor
 from .api.account_routes import account_router
 from .api.account_voice_routes import account_voice_router
+from .api.chat_routes import chat_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
 from .api.routes import api_router
@@ -90,10 +91,12 @@ def create_app(
     )
     _add_state(app, settings, session_secret, origins, keeping, views)
     app.state.voice = voice
+    app.state.turns = turns
 
     app.include_router(api_router, prefix="/api")
     app.include_router(learner_router, prefix="/api")
     app.include_router(thread_router, prefix="/api")
+    app.include_router(chat_router, prefix="/api")
     app.include_router(account_router, prefix="/api")
     app.include_router(account_voice_router, prefix="/api")
     app.include_router(education_router, prefix="/api")

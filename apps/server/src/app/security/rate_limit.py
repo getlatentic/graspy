@@ -6,10 +6,14 @@ account's spend cap is the only absolute ceiling."""
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Protocol
 
 RETRY_AFTER_SECONDS = 60
+
+# A tutor turn started over REST spends what one started over A2A does.
+_STARTS_TURN = re.compile(r"^/api/chats/[^/]+/turns$")
 
 _REJECTION = json.dumps({"error": "Too many requests", "code": "rate_limited"}).encode()
 
@@ -68,6 +72,8 @@ class RateLimitMiddleware:
         if path.startswith(("/api/curriculum/", "/api/subjects/")) or _evaluation(path):
             return self._budgets.generate
         if path == self._agent_prefix or path.startswith(f"{self._agent_prefix}/"):
+            return self._budgets.agent
+        if scope["method"] == "POST" and _STARTS_TURN.match(path):
             return self._budgets.agent
         if path.startswith("/api") or self._is_mcp(path):
             return self._budgets.api

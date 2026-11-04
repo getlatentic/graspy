@@ -32,16 +32,23 @@ class Run:
 
 
 @dataclass(frozen=True)
+class Stop:
+    """End the turn with the words it has: the learner stopped it."""
+
+
+@dataclass(frozen=True)
 class GiveUp:
     cause: str
 
 
 def next_step(
     state: TurnState, now_ms: int, repeatable: Callable[[str], bool]
-) -> Run | GiveUp:
-    """A turn that has not finished is run again unless it cannot get anywhere: its last runs kept
+) -> Run | Stop | GiveUp:
+    """A turn the learner stopped ends with its words. Any other that has not finished is run again unless it cannot get anywhere: its last runs kept
     nothing, it has kept nothing for five minutes, or a run was cut off in a tool that must not be
     sent twice."""
+    if state.stop_requested:
+        return Stop()
     if not state.job:
         return GiveUp(UNREADABLE)
     unsafe = [tool for tool in state.open_tools if not repeatable(tool)]

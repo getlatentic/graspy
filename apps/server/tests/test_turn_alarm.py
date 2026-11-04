@@ -35,6 +35,10 @@ class Runner:
         self.waits = list(waits)
         self.schedule = schedule
         self.chats: list[str] = []
+        self.stopped: list[tuple[str, str]] = []
+
+    async def stop(self, chat, turn):
+        self.stopped.append((chat, turn))
 
     async def advance(self, chat):
         self.chats.append(chat)
@@ -136,3 +140,34 @@ async def test_an_alarm_that_cannot_advance_rings_again_soon():
     await alarm.alarm()
 
     assert storage.alarm_at == 1000 + RETRY_AFTER_MS
+
+
+async def test_a_stop_reaches_a_runner_and_keeps_the_chat():
+    storage = Storage()
+    alarm, runners = alarm_with(storage, [])
+
+    await alarm.stop("c1", "t1")
+
+    assert storage.values[CHAT_KEY] == "c1"
+    assert runners[0].stopped == [("c1", "t1")]
+
+
+async def test_a_stop_while_the_alarm_runs_reaches_the_runner_that_is_running():
+    storage = Storage()
+    storage.values[CHAT_KEY] = "c1"
+    runners: list[Runner] = []
+
+    class Watching(Runner):
+        async def advance(self, chat):
+            await alarm.stop(chat, "t1")
+            return await super().advance(chat)
+
+    def runner_for(schedule):
+        runners.append(Watching([None], schedule))
+        return runners[-1]
+
+    alarm = ChatTurnAlarm(storage, runner_for, lambda: 1000)
+    await alarm.alarm()
+
+    assert len(runners) == 1 and runners[0].stopped == [("c1", "t1")]
+    assert alarm._active is None
