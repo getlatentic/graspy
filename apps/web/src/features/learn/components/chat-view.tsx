@@ -7,6 +7,7 @@ import { useConversationScroll } from "@/features/learn/hooks/use-conversation-s
 import { useAppHost } from "@/features/learn/hooks/use-app-host";
 import { groupTurns } from "@/features/learn/lib/chat-turns";
 import {
+  RECONNECTING,
   scopeSubjectName,
   threadState,
 } from "@/features/learn/lib/chat-view-state";
@@ -58,7 +59,13 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
             : "chat.aiTutorWelcome",
         )}
         hostFor={hostFor}
-        activity={awaitingAnswer ? chat.tutorActivity : undefined}
+        activity={
+          state.answering && chat.reconnecting
+            ? RECONNECTING
+            : awaitingAnswer
+              ? chat.tutorActivity
+              : undefined
+        }
         changingPlan={state.changingPlan}
       />
       <ChatFooter

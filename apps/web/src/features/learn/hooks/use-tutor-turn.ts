@@ -7,6 +7,7 @@ import { runTurn, type TurnDeps } from "../lib/tutor-turn";
 export function useTutorTurn(deps: TurnDeps) {
   const [busyThreadId, setBusyThreadId] = useState<string | null>(null);
   const [tutorActivity, setActivity] = useState<string | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
   // Two taps in one tick both read pre-tap state; the ref flips synchronously.
   const inFlightRef = useRef(false);
   const stopRef = useRef<AbortController | null>(null);
@@ -29,11 +30,13 @@ export function useTutorTurn(deps: TurnDeps) {
           signal: stop.signal,
           onThread: setBusyThreadId,
           onActivity: setActivity,
+          onReconnecting: setReconnecting,
         });
       } finally {
         inFlightRef.current = false;
         stopRef.current = null;
         setActivity(null);
+        setReconnecting(false);
         setBusyThreadId(null);
       }
     },
@@ -43,7 +46,7 @@ export function useTutorTurn(deps: TurnDeps) {
   const stopTutor = useCallback(() => stopRef.current?.abort(), []);
 
   return useMemo(
-    () => ({ send, stopTutor, busyThreadId, tutorActivity }),
-    [send, stopTutor, busyThreadId, tutorActivity],
+    () => ({ send, stopTutor, busyThreadId, tutorActivity, reconnecting }),
+    [send, stopTutor, busyThreadId, tutorActivity, reconnecting],
   );
 }

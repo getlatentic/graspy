@@ -17,6 +17,9 @@ from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
 
+# A question, or a pasted problem; far more is a cost attack, not a question.
+MAX_MESSAGE_CHARS = 2000
+
 
 class TurnJob(BaseModel):
     chat: str
@@ -36,6 +39,14 @@ def reply_payload(reply: TutorReply) -> dict[str, Any]:
         follow_ups=reply.follow_ups, actions=reply.actions, cards=reply.cards
     )
     return {"answer": reply.answer, "data": data.model_dump(by_alias=True, mode="json")}
+
+
+def words_payload(answer: str) -> dict[str, Any]:
+    """The reply of a turn that ended with words and nothing else: the learner stopped it."""
+    return {
+        "answer": answer,
+        "data": ReplyData().model_dump(by_alias=True, mode="json"),
+    }
 
 
 def tutor_stream(tutor: Tutor, keeping: Keeping, job: TurnJob) -> AsyncIterator:

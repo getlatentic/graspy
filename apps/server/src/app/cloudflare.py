@@ -31,7 +31,7 @@ from .threads.store import ThreadStore
 from .turns.alarm import ChatTurnAlarm
 from .turns.durable import DurableTurns
 from .turns.host import DurableObjectTurnHost, TutorTurnSource
-from .turns.runner import Schedule, TurnRunner
+from .turns.runner import Announce, Schedule, TurnRunner
 from .voice.keeping import BoundVoice
 
 # Converts a Python dict into the JavaScript object a binding method expects.
@@ -125,8 +125,9 @@ def turn_host(env: Any) -> DurableObjectTurnHost:
     return DurableObjectTurnHost(env.CHAT_TURNS, ChatLog(env.DB))
 
 
-def build_turn_alarm(env: Any, storage: Any) -> ChatTurnAlarm:
-    """A chat's turns run in its object's alarm, outside any request, so they bring their own model."""
+def build_turn_alarm(env: Any, storage: Any, announce: Announce) -> ChatTurnAlarm:
+    """A chat's turns run in its object's alarm, outside any request, so they bring their own model.
+    `announce` is told after every event a run keeps, so the sockets the object holds are sent it."""
     os.environ.update(deployment_environment(env))
     configure_cache()
     lm = build_lm(get_settings())
@@ -136,7 +137,12 @@ def build_turn_alarm(env: Any, storage: Any) -> ChatTurnAlarm:
 
     def runner_for(schedule: Schedule) -> TurnRunner:
         return TurnRunner(
-            log, source, now_ms, schedule, lambda tool: tool in READ_ONLY_TOOLS
+            log,
+            source,
+            now_ms,
+            schedule,
+            lambda tool: tool in READ_ONLY_TOOLS,
+            announce,
         )
 
     return ChatTurnAlarm(storage, runner_for, model=lambda: dspy.context(lm=lm))

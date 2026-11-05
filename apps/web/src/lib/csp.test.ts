@@ -28,6 +28,14 @@ describe("Content-Security-Policy", () => {
     ).toContain(`'sha256-${digest}'`);
   });
 
+  it("allows the API's WebSocket, which a source of https:// does not", () => {
+    const policy = headers.match(/Content-Security-Policy:.*/)?.[0] ?? "";
+    const connectSrc = policy.match(/connect-src[^;]*/)?.[0] ?? "";
+
+    expect(connectSrc).toContain("https://graspy-api.getlatentic.com");
+    expect(connectSrc).toContain("wss://graspy-api.getlatentic.com");
+  });
+
   it("does not weaken script-src with 'unsafe-inline'", () => {
     const policy = headers.match(/Content-Security-Policy:.*/)?.[0] ?? "";
     const scriptSrc = policy.match(/script-src[^;]*/)?.[0] ?? "";

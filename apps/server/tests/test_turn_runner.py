@@ -42,6 +42,10 @@ class Script:
     def __init__(self, *runs) -> None:
         self.runs = list(runs)
         self.called: list[tuple[dict, str]] = []
+        self.stopped: list[tuple[str, str]] = []
+
+    async def keep_stopped(self, job: dict, turn: str, answer: str) -> None:
+        self.stopped.append((turn, answer))
 
     async def stream(self, job: dict, turn: str):
         self.called.append((job, turn))
@@ -398,3 +402,137 @@ async def test_the_turns_of_other_chats_are_not_touched(log, clock, alarm):
     await run_to_the_end(runner_for(log, clock, alarm, Script()), clock, chat="c")
 
     assert [event.kind for event in await log.since("d")] == ["turn.started"]
+
+
+async def until(log, kind: str, count: int = 1) -> None:
+    """Returns when the log holds `count` events of `kind`."""
+    for _ in range(1000):
+        if (
+            sum(1 for event in await log.since("c", limit=500) if event.kind == kind)
+            >= count
+        ):
+            return
+        await asyncio.sleep(0)
+    raise AssertionError(f"The log never held {count} {kind}")
+
+
+async def test_a_turn_stopped_while_it_runs_ends_with_the_words_it_has(
+    log, clock, alarm
+):
+    await begin(log, clock)
+    script = Script([AnswerDelta("Forty"), ToolActivity("calculate"), Script.HANG])
+    runner = runner_for(log, clock, alarm, script)
+    running = asyncio.create_task(runner.advance("c"))
+    await until(log, kinds.TOOL_STARTED)
+
+    await runner.stop("c", "t1")
+
+    assert await running == 0
+    assert await runner.advance("c") == 0
+    events = await seen(log)
+    assert kinds_seen(events)[-4:] == [
+        "tool.started",
+        "turn.stop",
+        "tool.cancelled",
+        "turn.finished",
+    ]
+    assert events[-2][1] == {"turn": "t1", "tool": "calculate"}
+    finished = events[-1][1]
+    assert finished["status"] == "stopped" and finished["reply"]["answer"] == "Forty"
+    assert script.stopped == [("t1", "Forty")]
+    assert await runner.advance("c") is None
+
+
+async def test_the_words_not_yet_kept_when_the_learner_stops_are_kept(
+    log, clock, alarm
+):
+    """Words are kept every TEXT_EVERY_MS; those after the last time are kept by the stop."""
+    await begin(log, clock)
+    script = Script([AnswerDelta("Forty"), AnswerDelta("-two"), Script.HANG])
+    runner = runner_for(log, clock, alarm, script)
+    running = asyncio.create_task(runner.advance("c"))
+    await until(log, kinds.TEXT)
+
+    await runner.stop("c", "t1")
+    await running
+    await runner.advance("c")
+
+    assert script.stopped == [("t1", "Forty-two")]
+
+
+async def test_a_turn_stopped_before_its_run_begins_ends_without_running(
+    log, clock, alarm
+):
+    await begin(log, clock)
+    script = Script()
+    runner = runner_for(log, clock, alarm, script)
+
+    await runner.stop("c", "t1")
+
+    assert alarm.set == [clock()]
+    assert await runner.advance("c") == 0
+    finished = (await seen(log))[-1][1]
+    assert finished["status"] == "stopped" and finished["reply"]["answer"] == ""
+    assert script.called == [] and script.stopped == []
+
+
+async def test_a_stop_after_the_end_of_a_turn_changes_nothing(log, clock, alarm):
+    await begin(log, clock)
+    runner = runner_for(log, clock, alarm, Script())
+    await run_to_the_end(runner, clock)
+    before = await seen(log)
+
+    await runner.stop("c", "t1")
+
+    assert await seen(log) == before
+
+
+async def test_a_stop_is_found_after_a_restart(log, clock, alarm):
+    """The stop is in the log: a runner that never heard of it ends the turn."""
+    await begin(log, clock)
+    first = runner_for(log, clock, alarm, Script())
+    await first.stop("c", "t1")
+    script = Script()
+
+    await run_to_the_end(runner_for(log, clock, alarm, script), clock)
+
+    assert (await seen(log))[-1][1]["status"] == "stopped" and script.called == []
+
+
+async def test_every_event_a_run_keeps_is_announced(log, clock, alarm):
+    await begin(log, clock)
+    told = []
+
+    async def announce() -> None:
+        told.append(len(await log.since("c", limit=500)))
+
+    runner = runner_for(
+        log, clock, alarm, Script([AnswerDelta("Yes"), REPLY]), announce=announce
+    )
+    await run_to_the_end(runner, clock)
+
+    # resumed, text, finished: each announced after it was kept.
+    assert told == [2, 3, 4]
+
+
+async def test_a_stop_that_comes_before_the_run_is_registered_still_ends_the_run(
+    log, clock, alarm
+):
+    """The stop arrives while the run's first event is being announced, before the run exists."""
+    await begin(log, clock)
+    script = Script([REPLY])
+    stopped = []
+
+    async def announce() -> None:
+        if not stopped:
+            stopped.append(True)
+            await runner.stop("c", "t1")
+
+    runner = runner_for(log, clock, alarm, script, announce=announce)
+
+    assert await runner.advance("c") == 0
+    assert await runner.advance("c") == 0
+
+    finished = (await seen(log))[-1][1]
+    assert finished["status"] == "stopped"
+    assert script.called == []

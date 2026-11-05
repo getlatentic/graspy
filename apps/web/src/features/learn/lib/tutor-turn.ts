@@ -1,9 +1,10 @@
 import {
-  askAgent,
+  type askAgent,
   TurnStopped,
   type LearnerContext,
   type TutorReply,
 } from "@/lib/a2a/client";
+import { askTurn } from "@/lib/chat-turn/ask";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { AppCallRequest } from "@/lib/a2a/request-data";
 import { ApiError } from "@/lib/api/errors";
@@ -48,6 +49,7 @@ interface TurnEvents {
   signal: AbortSignal;
   onThread: (threadId: string) => void;
   onActivity: (tool: string | null) => void;
+  onReconnecting?: (reconnecting: boolean) => void;
 }
 
 export async function runTurn(
@@ -77,6 +79,7 @@ export async function runTurn(
     await shown.finish(reply.text, {
       followUps: reply.followUps,
       ...(card ? { card } : {}),
+      ...(reply.stopped ? { stopped: true } : {}),
     });
     for (const action of reply.actions) await deps.carryOut(action, thread);
   } catch (error) {
@@ -114,7 +117,7 @@ async function askTutor(
   events: TurnEvents,
   shown: StreamingMessage,
 ): Promise<TutorReply> {
-  const ask = deps.ask ?? askAgent;
+  const ask = deps.ask ?? askTurn;
   return ask(
     {
       text: request.text,
@@ -126,6 +129,7 @@ async function askTutor(
     {
       signal: events.signal,
       onActivity: events.onActivity,
+      onReconnecting: events.onReconnecting,
       onDelta: (delta) => {
         events.onActivity(null);
         shown.append(delta);

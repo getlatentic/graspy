@@ -7,6 +7,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
+from ..agent.memory import Exchange
 from ..agent.tutor import Tutor
 from ..caller import Keeping
 from ..chatlog import kinds
@@ -24,6 +25,10 @@ class TurnHost(Protocol):
         request that started it."""
         ...
 
+    async def stop(self, chat: str, turn: str) -> None:
+        """The learner stopped the turn: it ends with the words it has written."""
+        ...
+
 
 class TutorTurnSource:
     """What the runner asks of the tutor: the turn of a job, as a stream of what it does."""
@@ -34,6 +39,12 @@ class TutorTurnSource:
 
     def stream(self, job: dict, turn: str):
         return tutor_stream(self._tutor, self._keeping, TurnJob.model_validate(job))
+
+    async def keep_stopped(self, job: dict, turn: str, answer: str) -> None:
+        kept = TurnJob.model_validate(job)
+        await self._keeping.conversations.append(
+            kept.chat, Exchange(message=kept.message, answer=answer), turn=turn
+        )
 
 
 async def begin_turn(log: ChatLog, job: TurnJob, at: int) -> int:
@@ -79,6 +90,12 @@ class TaskTurnHost:
             self._tasks[job.chat] = task
         return seq
 
+    async def stop(self, chat: str, turn: str) -> None:
+        await self._runner.stop(chat, turn)
+        self._dirty.add(chat)
+        if chat not in self._tasks:
+            self._tasks[chat] = asyncio.create_task(self._drain(chat))
+
     async def _drain(self, chat: str) -> None:
         """Runs the chat's turns until none is left. A turn begun after the last look sets the chat dirty
         before the task ends, and nothing awaits between that look and the task's end."""
@@ -116,3 +133,6 @@ class DurableObjectTurnHost:
         seq = await begin_turn(self._log, job, self._clock())
         await self._namespace.getByName(job.chat).wake(job.chat)
         return seq
+
+    async def stop(self, chat: str, turn: str) -> None:
+        await self._namespace.getByName(chat).stop(chat, turn)

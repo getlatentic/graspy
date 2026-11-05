@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ArrowDown } from "lucide-react";
 import type { ChatMessage } from "@/lib/chat-db";
-import { TUTOR_TOOLS } from "@/lib/a2a/reply-data";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
 import { Spinner } from "@/components/ui/spinner";
@@ -10,8 +9,7 @@ import type { ConversationScroll } from "@/features/learn/hooks/use-conversation
 import { ChatMessageItem } from "@/features/learn/components/chat-message";
 import { AppFrame } from "@/features/learn/ui-apps/app-frame";
 import type { ViewHost } from "@/features/learn/ui-apps/view-bridge";
-
-const NAMED_TOOLS = new Set<string>(TUTOR_TOOLS);
+import { TutorActivity } from "@/features/learn/components/tutor-activity";
 
 interface ChatLogProps {
   scroll: ConversationScroll;
@@ -123,19 +121,6 @@ function TurnSection({
       ))}
       {activity !== undefined && <TutorActivity tool={activity} />}
     </section>
-  );
-}
-
-function TutorActivity({ tool }: { tool: string | null }) {
-  const { t } = useI18n();
-  return (
-    <div className="motion-safe:animate-enter">
-      <p role="status" className="animate-pulse text-sm text-muted">
-        {tool && NAMED_TOOLS.has(tool)
-          ? t(`chat.activity.${tool}`)
-          : t("chat.tutorThinking")}
-      </p>
-    </div>
   );
 }
 

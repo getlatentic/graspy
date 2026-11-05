@@ -4,6 +4,9 @@ import type { PendingPlanChange } from "../hooks/use-tutor-actions";
 import { subjectOf } from "./chat-targets";
 import type { Translate } from "@/lib/i18n-context";
 
+/** Shown in place of the tutor's activity while the connection to the turn is down. */
+export const RECONNECTING = "reconnecting";
+
 interface TutorState {
   busyThreadId: string | null;
   planChangeThreadId: string | null;

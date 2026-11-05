@@ -46,18 +46,22 @@ interface Beside {
   unanswered?: string[];
 }
 
-export function messageParts(
+/** The message as plain JSON parts, `{text}` and `{data}`, which the REST routes read. */
+export function plainParts(
   text: string,
   { calls = [], unanswered = [] }: Beside = {},
-): Part[] {
+): ({ text: string } | { data: Record<string, unknown> })[] {
   const data = {
     ...(calls.length ? { [APP_CALLS_KEY]: calls } : {}),
     ...(unanswered.length ? { [UNANSWERED_KEY]: unanswered } : {}),
   };
-  return [
-    { content: { $case: "text", value: text } },
-    ...(Object.keys(data).length
-      ? [{ content: { $case: "data" as const, value: data } }]
-      : []),
-  ];
+  return [{ text }, ...(Object.keys(data).length ? [{ data }] : [])];
+}
+
+export function messageParts(text: string, beside: Beside = {}): Part[] {
+  return plainParts(text, beside).map((part) =>
+    "text" in part
+      ? { content: { $case: "text", value: part.text } }
+      : { content: { $case: "data", value: part.data } },
+  );
 }

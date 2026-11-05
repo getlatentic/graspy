@@ -14,6 +14,7 @@
     "quickActionRelatedPrompt": "How \"{topic}\" take connect to other topics for {subject}?",
     "draftPlaceholderTopic": "Ask graspy about {topic}",
     "tutorThinking": "I dey think…",
+    "reconnecting": "I dey connect again…",
     "tutorError": "Something no work. Try again.",
     "errorMessage": "Problem: {error}",
     "send": "Send",

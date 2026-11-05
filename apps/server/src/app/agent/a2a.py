@@ -30,8 +30,9 @@ from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
 from ..settings import Settings
+from ..turns.access import may_start
 from ..turns.durable import DurableTurns
-from ..turns.job import TurnJob
+from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
 from .context import LearnerContext, with_kept_lesson
 from .durable_relay import TurnFailed, payload_parts, relay_events
@@ -41,9 +42,6 @@ from .tutor import Tutor, TutorReply
 from .unanswered import unanswered
 
 logger = logging.getLogger(__name__)
-
-# A question, or a pasted problem; far more is a cost attack, not a question.
-MAX_MESSAGE_CHARS = 2000
 
 FAILED_TURN = "Sorry, I couldn't answer that just now. Please try again."
 TOO_LONG = "That message is too long for me to read. Please send a shorter question."
@@ -106,6 +104,8 @@ class TutorExecutor(AgentExecutor):
         if self._turns is None:
             turn = await self._turn(context, conversation_id, message)
             return reply_parts(await _relay(updater, turn))
+        if not await may_start(self._turns.log, conversation_id, learner_of(context)):
+            raise TurnFailed("not_yours")
         job = TurnJob(
             chat=conversation_id,
             turn=context.message.message_id,

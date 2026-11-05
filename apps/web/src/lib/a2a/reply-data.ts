@@ -189,16 +189,19 @@ const listOf = <T>(value: unknown, check: (item: unknown) => item is T) =>
 const isText = (value: unknown): value is string => typeof value === "string";
 
 /** Checked field by field: a malformed part must cost the extras, not the answer. */
-export function agentData(message: AgentMessage | undefined): ReplyData {
-  if (!message || message.role !== ROLE_AGENT) return NO_DATA;
-  const part = (message.parts ?? []).find((p) => p.content?.$case === "data");
-  const value = part?.content?.value as Partial<ReplyData> | undefined;
-  if (!value) return NO_DATA;
+export function replyDataOf(value: unknown): ReplyData {
+  if (!isObject(value)) return NO_DATA;
   return {
     followUps: listOf(value.followUps, isText),
     actions: listOf(value.actions, isTutorAction),
     cards: listOf(value.cards, isTutorCard),
   };
+}
+
+export function agentData(message: AgentMessage | undefined): ReplyData {
+  if (!message || message.role !== ROLE_AGENT) return NO_DATA;
+  const part = (message.parts ?? []).find((p) => p.content?.$case === "data");
+  return replyDataOf(part?.content?.value);
 }
 
 export function agentText(message: AgentMessage | undefined): string {

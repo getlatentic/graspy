@@ -18,10 +18,13 @@ SHOWN = (
     kinds.ROUND_ABORTED,
     kinds.TOOL_STARTED,
     kinds.TOOL,
+    kinds.TOOL_CANCELLED,
     kinds.TURN_RESUMED,
     kinds.TURN_FINISHED,
 )
 POLL_MS = 150
+# A turn that keeps nothing for a while is read less often, down to this.
+MAX_POLL_MS = 1_000
 # A turn is given up on by MAX_TURN_MS after it began, so a reader that waits this long has seen it end.
 FOLLOW_DEADLINE_MS = MAX_TURN_MS + 2 * WATCHDOG_MS
 
@@ -39,12 +42,15 @@ async def follow(
     """The events of `turn` after seq `after`, the last being its `turn.finished`. Raises TimeoutError
     when the turn is not finished within `deadline_ms`."""
     stop = clock() + deadline_ms
+    wait = POLL_MS
     while True:
         page = await log.since(chat, after, PAGE, SHOWN)
+        kept = False
         for event in page:
             after = event.seq
             if event.data.get("turn") != turn:
                 continue
+            kept = True
             yield event
             if event.kind == kinds.TURN_FINISHED:
                 return
@@ -52,4 +58,5 @@ async def follow(
             continue
         if clock() >= stop:
             raise TimeoutError(f"Turn {turn} is not finished")
-        await sleep(POLL_MS / 1000)
+        wait = POLL_MS if kept else min(wait * 2, MAX_POLL_MS)
+        await sleep(wait / 1000)

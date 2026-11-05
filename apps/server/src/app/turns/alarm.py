@@ -44,6 +44,8 @@ class ChatTurnAlarm:
         self._runner_for = runner_for
         self._clock = clock
         self._model = model
+        # The runner of the alarm that is running, which the learner's stop ends the run of.
+        self._active: TurnRunner | None = None
 
     async def wake(self, chat: str) -> None:
         """A turn was begun in `chat`: the alarm rings now, unless it is already due."""
@@ -52,6 +54,12 @@ class ChatTurnAlarm:
         due = await self._storage.getAlarm()
         if due is None or due > now:
             await self._storage.setAlarm(now)
+
+    async def stop(self, chat: str, turn: str) -> None:
+        """The learner stopped `turn`: the run that is writing it ends, and the alarm ends the turn."""
+        await self._storage.put(CHAT_KEY, chat)
+        runner = self._active or self._runner_for(self.schedule)
+        await runner.stop(chat, turn)
 
     async def schedule(self, at: int | None) -> None:
         if at is None:
@@ -65,7 +73,13 @@ class ChatTurnAlarm:
         chat = await self._storage.get(CHAT_KEY)
         if not chat:
             return
-        runner = self._runner_for(self.schedule)
+        runner = self._active = self._runner_for(self.schedule)
+        try:
+            await self._advance(chat, runner)
+        finally:
+            self._active = None
+
+    async def _advance(self, chat: str, runner: TurnRunner) -> None:
         with self._model():
             while True:
                 try:

@@ -14,6 +14,7 @@
     "quickActionRelatedPrompt": "Báwo ni \"{topic}\" ṣe so mọ́ àwọn kókó míì nínú {subject}?",
     "draftPlaceholderTopic": "Béèrè graspy nípa {topic}",
     "tutorThinking": "Mo ń ronú…",
+    "reconnecting": "Ń tún sopọ̀…",
     "tutorError": "Nǹkan kan ò lọ dáadáa. Tún gbìyànjú.",
     "errorMessage": "Àṣìṣe: {error}",
     "send": "Firánṣẹ́",
