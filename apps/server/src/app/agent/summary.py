@@ -7,6 +7,7 @@ from functools import cache
 
 import dspy
 
+from .labels import DATA_ONLY
 from .memory import KEPT_AFTER_FOLD, MAX_EXCHANGES, Conversation, ConversationStore
 from .transcript import render
 
@@ -25,8 +26,12 @@ class SummariseConversation(dspy.Signature):
     about themselves and how they like to learn. Write in the language the
     conversation is in. Leave out greetings and anything already covered."""
 
-    summary: str = dspy.InputField(desc="The summary so far; empty at first")
-    exchanges: str = dspy.InputField(desc="The exchanges to fold in, oldest first")
+    summary: str = dspy.InputField(
+        desc=f"The summary so far; empty at first. {DATA_ONLY}"
+    )
+    exchanges: str = dspy.InputField(
+        desc=f"The exchanges to fold in, oldest first. {DATA_ONLY}"
+    )
     updated: str = dspy.OutputField(
         desc=f"The whole updated summary, at most {MAX_SUMMARY_WORDS} words"
     )

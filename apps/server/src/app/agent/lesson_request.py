@@ -12,6 +12,8 @@ from functools import cache
 
 import dspy
 
+from .labels import DATA_ONLY
+
 
 class AsksForLesson(dspy.Signature):
     """Whether the learner asks to go to the app's lesson screen for a topic, rather than to
@@ -23,7 +25,7 @@ class AsksForLesson(dspy.Signature):
     fractions", "explain fractions", "how do fractions work", "what is a fraction". The
     tutor teaches those here; it opens a lesson only when asked for the lesson."""
 
-    message: str = dspy.InputField(desc="The learner's message")
+    message: str = dspy.InputField(desc=f"The learner's message. {DATA_ONLY}")
     asks_for_lesson: bool = dspy.OutputField()
 
 

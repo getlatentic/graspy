@@ -9,6 +9,7 @@ import logging
 from collections.abc import Awaitable, Callable
 
 from .context import LearnerContext, SubjectRef
+from .labels import DATA_ONLY
 from .lesson_request import asks_for_lesson
 from .refusal import refusal
 from .reply import (
@@ -146,6 +147,7 @@ def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
                     "note": "It is already in their topic list, so nothing was added. "
                     "Teach it here, in this conversation; offer its lesson only if "
                     "they ask for the lesson.",
+                    "data_note": DATA_ONLY,
                 }
         return Outcome(
             told={"added": title, "subject": target.name, "done": _added_told(title)},
