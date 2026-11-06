@@ -9,7 +9,9 @@ import logging
 from collections.abc import Awaitable, Callable
 
 from .context import LearnerContext, SubjectRef
+from .labels import DATA_ONLY
 from .lesson_request import asks_for_lesson
+from .refusal import refusal
 from .reply import (
     AddTopic,
     ChangeSubjects,
@@ -41,7 +43,7 @@ def calculate(expression: str) -> dict:
         return {"result": str(evaluate(expression))}
     except CalculationError as exc:
         logger.debug("calculate rejected %r: %s", expression, exc)
-        return {"error": str(exc)}
+        return refusal(str(exc))
 
 
 def find_topic(wanted: str, topics: list[str]) -> int | None:
@@ -84,20 +86,19 @@ def open_topic_tool(
             topic: The topic as the learner named it, e.g. "fractions".
         """
         if not context.topics or not context.subject_slug:
-            return {
-                "error": "No subject is open, so there is no topic list to open from."
-            }
+            return refusal(
+                "No subject is open, so there is no topic list to open from."
+            )
         index = find_topic(topic, context.topics)
         if index is None:
-            return {
-                "error": f"No topic like {topic!r} in {context.subject}.",
-                "topics": context.topics,
-            }
+            return refusal(
+                f"No topic like {topic!r} in {context.subject}.", topics=context.topics
+            )
         if not await asks_for_lesson(message):
-            return {
-                "error": "The learner asked to learn this, not for its lesson: teach "
+            return refusal(
+                "The learner asked to learn this, not for its lesson: teach "
                 "it here, in this conversation, and offer no lesson."
-            }
+            )
         return _opened(context, index, {"position": index + 1})
 
     return open_topic
@@ -129,14 +130,14 @@ def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
         """
         title = " ".join(topic.split())[:MAX_TOPIC_TITLE]
         if not title:
-            return {"error": "The new topic needs a title."}
+            return refusal("The new topic needs a title.")
         target = _subject_named(subject, context)
         if target is None:
-            return {
-                "error": "The learner has no such subject. To take up a school subject at their grade, use "
+            return refusal(
+                "The learner has no such subject. To take up a school subject at their grade, use "
                 "change_subjects to add it; for something beyond their grade, use propose_path.",
-                "subjects": [s.name for s in context.subjects],
-            }
+                subjects=[s.name for s in context.subjects],
+            )
         if target.slug == context.subject_slug and context.topics:
             existing = find_topic(title, context.topics)
             if existing is not None:
@@ -146,6 +147,7 @@ def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
                     "note": "It is already in their topic list, so nothing was added. "
                     "Teach it here, in this conversation; offer its lesson only if "
                     "they ask for the lesson.",
+                    "data_note": DATA_ONLY,
                 }
         return Outcome(
             told={"added": title, "subject": target.name, "done": _added_told(title)},
@@ -183,9 +185,9 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
         """
         names = [s.name for s in context.subjects]
         if not names:
-            return {
-                "error": "The learner's subjects were not sent, so none can be changed."
-            }
+            return refusal(
+                "The learner's subjects were not sent, so none can be changed."
+            )
         dropped = _subjects_named(remove or [], names)
         if isinstance(dropped, dict):
             return dropped
@@ -207,10 +209,7 @@ def _subjects_named(wanted: list[str], names: list[str]) -> list[str] | dict:
     for name in wanted:
         index = find_topic(name, names)
         if index is None:
-            return {
-                "error": f"The learner has no subject like {name!r}.",
-                "subjects": names,
-            }
+            return refusal(f"The learner has no subject like {name!r}.", subjects=names)
         found.append(names[index])
     return list(dict.fromkeys(found))
 
@@ -224,17 +223,16 @@ def _change_problem(
     names: list[str], added: list[str], dropped: list[str]
 ) -> dict | None:
     if not added and not dropped:
-        return {
-            "error": "Nothing to change: the new subjects are already in the plan.",
-            "subjects": names,
-        }
+        return refusal(
+            "Nothing to change: the new subjects are already in the plan.",
+            subjects=names,
+        )
     if len(names) - len(dropped) + len(added) > MAX_CHOSEN_SUBJECTS:
-        return {
-            "error": f"A plan holds at most {MAX_CHOSEN_SUBJECTS} subjects.",
-            "subjects": names,
-        }
+        return refusal(
+            f"A plan holds at most {MAX_CHOSEN_SUBJECTS} subjects.", subjects=names
+        )
     if len(names) == len(dropped) and not added:
-        return {"error": "A plan needs at least one subject."}
+        return refusal("A plan needs at least one subject.")
     return None
 
 
@@ -263,9 +261,9 @@ def rebuild_plan_tool(context: LearnerContext) -> Callable[[], dict | Outcome]:
         confirm itself.
         """
         if not context.subjects:
-            return {
-                "error": "The learner's subjects were not sent, so the plan cannot be rebuilt."
-            }
+            return refusal(
+                "The learner's subjects were not sent, so the plan cannot be rebuilt."
+            )
         return Outcome(told={"needs_confirmation": True}, action=RebuildPlan())
 
     return rebuild_plan
@@ -282,11 +280,11 @@ def open_subject_tool(context: LearnerContext) -> Callable[[str], dict | Outcome
         """
         target = _subject_named(subject, context) if subject.strip() else None
         if target is None:
-            return {
-                "error": f"The learner has no subject like {subject!r}. To take up a school subject at "
+            return refusal(
+                f"The learner has no subject like {subject!r}. To take up a school subject at "
                 "their grade, use change_subjects to add it; for something beyond their grade, use propose_path.",
-                "subjects": [s.name for s in context.subjects],
-            }
+                subjects=[s.name for s in context.subjects],
+            )
         return Outcome(
             told={"subject": target.name, "done": _button_told("subject")},
             action=OpenSubject(subject_slug=target.slug, subject=target.name),
@@ -306,7 +304,7 @@ def propose_path(goal: str) -> dict | Outcome:
     """
     wanted = " ".join(goal.split())[:MAX_TOPIC_TITLE]
     if not wanted:
-        return {"error": "Say what the learner wants to learn."}
+        return refusal("Say what the learner wants to learn.")
     return Outcome(
         told={
             "shown": f"The app now shows the learner a path to {wanted} with a button to add it. "

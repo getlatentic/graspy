@@ -7,6 +7,7 @@ import re
 from typing import Protocol
 
 from .cards import Question
+from .refusal import refusal
 
 MIN_OPTIONS = 2
 MAX_OPTIONS = 5
@@ -131,11 +132,11 @@ def refused(checked: list, tool: str) -> dict:
         for position, result in enumerate(checked, 1)
         if isinstance(result, str)
     ]
-    return {
-        "error": " ".join(problems),
-        "then": f"Fix these and call {tool} again with every question. Never "
-        "write the questions or their options in your answer.",
-    }
+    return refusal(
+        " ".join(problems)
+        + f" Fix these and call {tool} again with every question. Never "
+        "write the questions or their options in your answer."
+    )
 
 
 # Without it, asked for three questions, the model writes "Here is the

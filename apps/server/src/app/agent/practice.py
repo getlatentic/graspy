@@ -28,6 +28,7 @@ from .choices import (
     refused,
     shown,
 )
+from .refusal import refusal
 from .reply import Outcome
 from .sandbox import CalculationError, evaluate
 
@@ -141,7 +142,7 @@ def give_practice(
     """
     problem = count_problem(questions)
     if problem:
-        return {"error": problem}
+        return refusal(problem)
     checked = [_checked(written) for written in questions]
     if any(isinstance(result, str) for result in checked):
         return refused(checked, "give_practice")

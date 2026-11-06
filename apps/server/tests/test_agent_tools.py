@@ -78,7 +78,7 @@ def test_calculate_explains_the_refusal_so_the_model_can_correct_itself(caplog):
     with caplog.at_level("DEBUG", logger="app.agent.tools"):
         result = tools.calculate("'abc'")
 
-    assert result == {"error": "only numbers are allowed"}
+    assert result == {"error": "only numbers are allowed. Nothing was done."}
     assert "calculate rejected \"'abc'\": only numbers are allowed" in caplog.messages
 
 
