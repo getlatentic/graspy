@@ -25,6 +25,7 @@ from .choices import (
     refused,
     shown,
 )
+from .refusal import refusal
 from .reply import Outcome
 
 MIN_PASSAGE = 200
@@ -101,7 +102,7 @@ def give_passage(
         questions
     )
     if problem:
-        return {"error": problem}
+        return refusal(problem)
     checked = [_checked(written, text) for written in questions]
     if any(isinstance(result, str) for result in checked):
         return refused(checked, "give_passage")

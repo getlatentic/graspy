@@ -287,5 +287,5 @@ def test_every_question_that_cannot_be_shown_is_named_at_once():
     assert result["error"].startswith("Question 1: answer_index")
     assert "Question 3: Options '1' and '1'" in result["error"]
     assert "Question 2" not in result["error"]
-    assert "Never write the questions" in result["then"]
+    assert "Never write the questions" in result["error"]
     assert cards == []
