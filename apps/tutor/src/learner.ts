@@ -124,7 +124,7 @@ export class Learner extends Agent<Env> {
   async teach(lesson: string, ask: Ask, turn?: string, at?: string): Promise<Reply> {
     return this.replies.reply(turn, async () => {
       const earlier = this.told.before(lesson, ask.prompt);
-      const reply = await traced(turn, () => timed("turn", takeTurn(this.env, earlier.length > 0 ? { ...ask, earlier } : ask)));
+      const reply = await traced(turn, () => timed("turn", takeTurn(this.env, earlier.length > 0 ? { ...ask, earlier } : ask)), (work) => this.ctx.waitUntil(work));
       this.record(lesson, ask.expect.item, reply.verdict, at, turn);
       // The steady lines are the fallback for a line the teacher could not write: telling the teacher not to
       // repeat one would only crowd out the lines it did write.

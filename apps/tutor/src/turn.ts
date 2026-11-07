@@ -36,7 +36,7 @@ import { observeAndDecide, observedRoute } from "./observer";
 import { isShadowing, report, watch } from "./shadow";
 import { timed } from "./timing";
 import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
-import { isOnlyTheAnswer, needFor, wordsOfTheAnswer } from "./safety";
+import { isOnlyTheAnswer, needFor, wordsOfTheAnswer, type Need } from "./safety";
 import { isBareNumber, soundsLike } from "./sounds-like";
 import { fewWords, HOMOPHONES, LARGEST_NUMBER, readWithClef, saidOnlyThatTheyDoNotKnow, type Reading } from "./interpret";
 import {
@@ -401,7 +401,7 @@ export async function takeTurn(env: Env, ask: Ask): Promise<Reply> {
 
 async function markAndSay(env: Env, ask: Ask): Promise<Reply> {
   const started = Date.now();
-  const needed = repliedToNeed(ask);
+  const needed = repliedToNeed(env, ask);
   if (needed !== null) return needed;
   const routed = await routedReply(env, ask);
   if (routed !== null) return routed;
@@ -577,16 +577,24 @@ function markedFromReading(reading: Reading, ask: Ask, expected: number): Reply 
   return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "dont_know", say: line };
 }
 
-/**
- * A child who needs the toilet or is hurt is answered as such before anything is marked, router or no router, in any
- * kind of step: it is no try, and the question is asked again when they are back.
- */
-function repliedToNeed(ask: Ask): Reply | null {
+/** What a child's words ask for before anything is marked, the same in any kind of step; null where they ask for nothing of the kind or the language is not English. */
+function needOf(ask: Ask): Need | null {
   if (ask.language !== "en") return null;
   const answer = ask.expect.kind === "fact" ? spokenNumber(expectedAnswer(ask.expect.item)) : null;
-  const need = needFor(heardForPrompt(ask.heard), answer, ask.prompt, wordsOfTheAnswer(ask.expect));
+  return needFor(heardForPrompt(ask.heard), answer, ask.prompt, wordsOfTheAnswer(ask.expect));
+}
+
+/**
+ * A child who needs the toilet or is hurt is answered as such before anything is marked, router or no router, in any
+ * kind of step: it is no try, and the question is asked again when they are back. Where the observer is shadowing, it
+ * reads the same words beside the reply, so a rule that answers a need can be compared with what the model reads.
+ */
+function repliedToNeed(env: Env, ask: Ask): Reply | null {
+  const need = needOf(ask);
   const line = need === "needs_help" ? needsHelpLine(ask) : need === "needs_grownup" ? needsGrownupLine(ask) : null;
-  return line === null ? null : { ...markAnswer(ask.expect.item, null), heard: "conversation", say: line };
+  if (need === null || line === null) return null;
+  if (isShadowing(env) && ask.prompt.trim() !== "") report(env, ask, { action: need }, watch(env, ask), "rule");
+  return { ...markAnswer(ask.expect.item, null), heard: "conversation", say: line };
 }
 
 /**
