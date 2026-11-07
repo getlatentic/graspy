@@ -28,6 +28,7 @@ from .api.chat_routes import chat_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
 from .api.routes import api_router
+from .api.service_consent import session_consent_refusal
 from .api.thread_routes import thread_router
 from .api.voice_routes import voice_router
 from .caller import Keeping
@@ -216,6 +217,7 @@ def _add_middleware(
         prefixes=(settings.a2a_path_prefix, MCP_PATH),
         secret=session_secret,
         open_paths=(PUBLIC_MCP_PATH,),
+        check=lambda session: session_consent_refusal(app, session),
     )
     if budgets is not None:
         app.add_middleware(

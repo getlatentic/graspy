@@ -31,8 +31,8 @@ from ..learner.record import (
     TopicRef,
 )
 from ..learner.time import now_ms
-from ..security.guard import Session, require_session
 from ..wire import Wire
+from .service_consent import ConsentedSession
 
 # More than any device kept: it kept the current plan's lessons only.
 MAX_IMPORTED_LESSONS = 100
@@ -76,9 +76,7 @@ class DeviceRecords(Wire):
     )
 
 
-async def learner_caller(
-    request: Request, session: Annotated[Session, Depends(require_session)]
-) -> Caller:
+async def learner_caller(request: Request, session: ConsentedSession) -> Caller:
     if session.account and not session.learner:
         raise HTTPException(
             status_code=409,

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { listLearners } from "@/lib/account/learners-api";
 import {
+  forgetServiceConsent,
   keepServiceConsent,
   serviceConsentKept,
 } from "@/lib/account/service-consent";
 import { useAccount } from "@/lib/account/use-account";
+import { onConsentRequired } from "@/lib/api/consent-refusal";
 
 /** Whether a parent has agreed to graspy teaching the learner in use:
  * `checking` while the server is asked, `unchecked` when it could not be, and `needed` when
@@ -47,6 +49,16 @@ export function useServiceStanding() {
       current = false;
     };
   }, [key, uid, learner, attempt]);
+
+  // The server refuses a learner whose agreement it does not hold, whatever this device
+  // remembers: the agreement is asked for again.
+  useEffect(() => {
+    if (!key || !uid || !learner) return;
+    return onConsentRequired(() => {
+      forgetServiceConsent(uid, learner);
+      setChecked({ key, standing: "needed" });
+    });
+  }, [key, uid, learner]);
 
   const agreed = useCallback(() => {
     if (key) setChecked({ key, standing: "agreed" });

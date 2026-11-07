@@ -5,6 +5,7 @@ import time
 
 import pytest
 from consent_sign_ins import consent_app
+from service_agreed import service_agreed
 from signed_in import UID, added, chosen, client, signed_in
 from test_voice_routes import METADATA, T2, as_device, offered
 from voice_worker import worker_env
@@ -59,6 +60,7 @@ async def agree(http, learner_id: str, days: int = 30, token: str = "fresh"):
 
 async def recorded(http, env, learner_id: str, n: int = 1, body: bytes = b"RIFF"):
     """The learner answers `n` times, and each is marked; the parent signs in again after."""
+    await service_agreed(env, learner_id)
     await chosen(http, learner_id)
     offered(env, key(learner_id))
     samples = []
@@ -363,7 +365,8 @@ async def test_stopping_keeps_what_was_kept_and_keeps_nothing_new(app, env):
     assert [one["id"] for one in overview["recordings"]] == [kept]
     assert len(env.AUDIO.objects) == 1
     assert [
-        row["revoked_at"] is not None for row in env.DB.rows("SELECT * FROM consents")
+        row["revoked_at"] is not None
+        for row in env.DB.rows("SELECT * FROM consents WHERE scope = 'recordings'")
     ] == [True]
 
 
@@ -458,6 +461,7 @@ async def test_a_recording_still_being_marked_is_not_the_parents_to_delete(app, 
     async with client(app) as http:
         learner = await parent(http)
         await agree(http, learner)
+        await service_agreed(env, learner)
         await chosen(http, learner)
         sample = (
             await http.post(

@@ -13,9 +13,9 @@ from ..account.directory import learner_key
 from ..account.learners import NoSuchLearner, learner_of
 from ..caller import Keeping
 from ..local_d1 import MAX_BOUND_INTEGER
-from ..security.guard import Session, require_session
 from ..threads.store import BadCursor
 from ..threads.wire import SentThreads
+from .service_consent import ConsentedSession
 
 # More than MAX_SENT_MESSAGES messages of the largest size a device keeps.
 MAX_SENT_CHARS = 4_000_000
@@ -34,7 +34,7 @@ class AccountLearner:
 
 
 async def _account_learner(
-    session: Annotated[Session, Depends(require_session)],
+    session: ConsentedSession,
 ) -> AccountLearner:
     if not session.account:
         raise HTTPException(

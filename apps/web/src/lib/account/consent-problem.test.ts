@@ -14,6 +14,7 @@ describe("what a parent is told when agreeing did not go through", () => {
     [400, "notice_unknown", "notice"],
     [403, "sign_in_not_google", "notGoogle"],
     [503, "consent_not_kept", "notKept"],
+    [403, "consent_required", "required"],
     [503, "consent_unavailable", "failed"],
     [404, "no_such_learner", "failed"],
   ])("%i %s is %s", (status, code, problem) => {

@@ -5,6 +5,7 @@ endpoints, which are Starlette routes."""
 from __future__ import annotations
 
 import json
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from fastapi import HTTPException, Request
@@ -46,6 +47,11 @@ async def require_session(request: Request) -> Session:
     return session
 
 
+# Asked of each session the middleware lets through; a refusal ends the request with its status
+# and detail.
+SessionCheck = Callable[[Session], Awaitable[HTTPException | None]]
+
+
 class SessionMiddleware:
     """Raw ASGI: BaseHTTPMiddleware buffers the response body, which would
     hold every streamed agent reply until the turn finished."""
@@ -57,12 +63,14 @@ class SessionMiddleware:
         prefixes: tuple[str, ...],
         secret: str,
         open_paths: tuple[str, ...] = (),
+        check: SessionCheck | None = None,
     ) -> None:
         self.app = app
         self.prefixes = tuple("/" + prefix.strip("/") for prefix in prefixes)
         # Exact paths under a prefix that need no token.
         self.open_paths = frozenset(open_paths)
         self.secret = secret
+        self.check = check
 
     def _needs_token(self, scope) -> bool:
         if scope["type"] != "http":
@@ -83,24 +91,31 @@ class SessionMiddleware:
             return
         refused = checked(_authorization(scope), self.secret)
         if isinstance(refused, Session):
-            # request.auth, which the A2A SDK copies into each call's context.
-            scope["auth"] = refused
-            await self.app(scope, receive, send)
+            turned_away = await self.check(refused) if self.check else None
+            if turned_away is None:
+                # request.auth, which the A2A SDK copies into each call's context.
+                scope["auth"] = refused
+                await self.app(scope, receive, send)
+                return
+            await _refuse(send, turned_away.status_code, turned_away.detail)
             return
+        await _refuse(send, 401, refused)
 
-        # The shape FastAPI gives the refusal on the REST routes.
-        body = json.dumps({"detail": refused}).encode()
-        await send(
-            {
-                "type": "http.response.start",
-                "status": 401,
-                "headers": [
-                    (b"content-type", b"application/json"),
-                    (b"content-length", str(len(body)).encode()),
-                ],
-            }
-        )
-        await send({"type": "http.response.body", "body": body})
+
+# The shape FastAPI gives the refusal on the REST routes.
+async def _refuse(send, status: int, detail) -> None:
+    body = json.dumps({"detail": detail}).encode()
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode()),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body})
 
 
 def _authorization(scope) -> str | None:

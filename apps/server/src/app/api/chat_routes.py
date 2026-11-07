@@ -15,15 +15,15 @@ import json
 from collections.abc import AsyncIterator
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query, Request
+from fastapi import APIRouter, Header, HTTPException, Path, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from ..security.guard import Session, require_session
 from ..turns.access import may_follow, may_start
 from ..turns.durable import DurableTurns
 from ..turns.frames import read
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
+from .service_consent import ConsentedSession
 from .sse import SSE_HEADERS
 
 # A window of reading, after which the client asks again from its cursor: a request that reads the
@@ -93,7 +93,7 @@ def _message(parts: list[dict[str, Any]]) -> str:
 async def start_turn(
     chat: ChatId,
     body: StartTurn,
-    session: Annotated[Session, Depends(require_session)],
+    session: ConsentedSession,
     request: Request,
 ) -> StartedTurn:
     turns = _turns(request)
@@ -137,7 +137,7 @@ async def _stream(
 async def turn_events(
     chat: ChatId,
     turn: TurnId,
-    session: Annotated[Session, Depends(require_session)],
+    session: ConsentedSession,
     request: Request,
     last_event_id: Annotated[int | None, Header(ge=0)] = None,
     after: Annotated[int | None, Query(ge=0)] = None,
@@ -158,7 +158,7 @@ async def turn_events(
 async def stop_turn(
     chat: ChatId,
     turn: TurnId,
-    session: Annotated[Session, Depends(require_session)],
+    session: ConsentedSession,
     request: Request,
 ) -> None:
     turns = _turns(request)

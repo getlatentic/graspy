@@ -9,6 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAccount } from "@/lib/account/account-store";
 import { SERVICE_NOTICE } from "@/lib/account/consent-notices";
+import { toApiError } from "@/lib/api/errors";
 import { serviceConsentKept } from "@/lib/account/service-consent";
 import { KeysApp } from "@/test/keys-app";
 import {
@@ -177,6 +178,40 @@ describe("the pages of a learner in use", () => {
     );
     await waitFor(() => expect(pages()).toBeTruthy());
     expect(listLearners).toHaveBeenCalledTimes(2);
+  });
+
+  it("shut again, and ask for the agreement, when the server refuses the learner for want of one", async () => {
+    signedInAs(ADA);
+    window.localStorage.setItem(`graspy.service-consent.${UID}/${ADA.id}`, "1");
+    gated();
+    expect(pages()).toBeTruthy();
+
+    await toApiError(
+      new Response(
+        JSON.stringify({ detail: { error: "no", code: "consent_required" } }),
+        { status: 403 },
+      ),
+    );
+
+    expect(await screen.findByText(SERVICE_NOTICE)).toBeTruthy();
+    expect(pages()).toBeNull();
+    expect(serviceConsentKept(UID, ADA.id)).toBe(false);
+  });
+
+  it("stay open when the server refuses a call for another reason", async () => {
+    signedInAs(ADA);
+    window.localStorage.setItem(`graspy.service-consent.${UID}/${ADA.id}`, "1");
+    gated();
+
+    await toApiError(
+      new Response(
+        JSON.stringify({ detail: { error: "no", code: "account_required" } }),
+        { status: 403 },
+      ),
+    );
+
+    expect(pages()).toBeTruthy();
+    expect(serviceConsentKept(UID, ADA.id)).toBe(true);
   });
 
   it("are left to the session when the account no longer holds the learner", async () => {
