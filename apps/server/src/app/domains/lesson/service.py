@@ -24,6 +24,7 @@ from ...config.languages import (
 )
 from .checked import PRACTICE_CHECKS, SLIDE_CHECKS, checked
 from .generator import StagedLessonGenerator
+from .grounded import Grounding, grounding_for
 from .lesson import (
     FinishedLesson,
     Lesson,
@@ -63,6 +64,11 @@ class LessonRequest:
     def part(self, name: str) -> str:
         return f"{name} of {self.subject}/{self.topic}"
 
+    @property
+    def grounding(self) -> Grounding | None:
+        """What a held curriculum gives this topic to be written from; None for a topic a model planned."""
+        return grounding_for(self.grade_level, self.subject, self.topic)
+
 
 @dataclass
 class _Draft:
@@ -71,6 +77,7 @@ class _Draft:
 
     plan: LessonPlan
     shown_plan: LessonPlan
+    grounding: Grounding | None = None
     written: list[LessonSlide] = field(default_factory=list)
     slides: list[LessonSlide] = field(default_factory=list)
     practice: LessonPractice | None = None
@@ -103,7 +110,14 @@ class LessonService:
     async def events(self, request: LessonRequest) -> AsyncIterator[dict]:
         """The lesson as it is made, ending with a "complete" event whose
         payload is the FinishedLesson."""
+        grounding = request.grounding
         yield _status("planning", "Creating lesson plan...")
+        if grounding:
+            yield {
+                "type": "grounding",
+                "phase": "planning",
+                "payload": grounding.cited(),
+            }
         plan = await self.module.generate_plan(
             request.country,
             request.writing_language,
@@ -111,8 +125,9 @@ class LessonService:
             request.topic,
             request.grade_level,
             request.learner_notes,
+            grounding,
         )
-        lesson = _Draft(plan=plan, shown_plan=plan)
+        lesson = _Draft(plan=plan, shown_plan=plan, grounding=grounding)
         for stage in (self._plan_events, self._slide_events, self._practice_events):
             async for event in stage(request, lesson):
                 yield event
@@ -211,6 +226,7 @@ class LessonService:
         model writes a table into a check's options: a lesson short of a
         slide is never kept. Its check is marked in English, before any
         translation, whose options keep their order."""
+        grounding = lesson.grounding
         written = (
             spec,
             request.subject,
@@ -221,16 +237,20 @@ class LessonService:
             request.country,
         )
         try:
-            slide = await self.module.generate_slide(*written)
+            slide = await self.module.generate_slide(*written, grounding=grounding)
         except Exception:
             logger.warning("Slide %r is written again", spec.title, exc_info=True)
-            slide = await self.module.generate_slide(*written, again=True)
+            slide = await self.module.generate_slide(
+                *written, again=True, grounding=grounding
+            )
         if not request.answers_checked:
             return slide
         return await checked(
             slide,
             SLIDE_CHECKS,
-            lambda problem: self.module.generate_slide(*written, problem=problem),
+            lambda problem: self.module.generate_slide(
+                *written, problem=problem, grounding=grounding
+            ),
             request.part(f"slide {index + 1}"),
         )
 
@@ -273,6 +293,7 @@ class LessonService:
         self, request: LessonRequest, lesson: _Draft
     ) -> LessonPractice | None:
         """None when its check was taken out."""
+        grounding = lesson.grounding
         written = (
             request.subject,
             request.topic,
@@ -281,13 +302,15 @@ class LessonService:
             request.country,
             _context_summary(lesson.written),
         )
-        practice = await self.module.generate_practice(*written)
+        practice = await self.module.generate_practice(*written, grounding=grounding)
         if not request.answers_checked:
             return practice
         return await checked(
             practice,
             PRACTICE_CHECKS,
-            lambda problem: self.module.generate_practice(*written, problem=problem),
+            lambda problem: self.module.generate_practice(
+                *written, problem=problem, grounding=grounding
+            ),
             request.part("the practice question"),
         )
 
@@ -346,6 +369,7 @@ def _finished(request: LessonRequest, lesson: _Draft) -> FinishedLesson:
             objectives=lesson.shown_plan.learning_objectives,
             slides=lesson.slides,
             practice=lesson.practice,
+            grounding=lesson.grounding.cited() if lesson.grounding else None,
             progress=LessonProgress(current=0, total=len(lesson.slides) + 1),
         ),
     )

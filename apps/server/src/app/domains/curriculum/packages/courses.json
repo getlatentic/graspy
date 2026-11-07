@@ -5,6 +5,7 @@
     "authority": "NERDC",
     "levels": [{ "system": "NG", "level": "jss-1" }],
     "subject": "mathematics",
-    "aliases": ["mathematics", "maths", "math", "general mathematics", "basic mathematics"]
+    "aliases": ["mathematics", "maths", "math", "general mathematics", "basic mathematics"],
+    "textbook": "apps/teacher/src-tauri/resources/content/siyavula-jss1-mathematics-v1/corpus.sqlite3"
   }
 ]

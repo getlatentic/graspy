@@ -47,6 +47,8 @@ def _grown(lesson: Lesson, event: dict) -> Lesson | None:
                     "key_points": payload.key_points,
                 }
             )
+        case "grounding":
+            return lesson.model_copy(update={"grounding": payload})
         case "slide":
             return lesson.model_copy(update={"slides": [*lesson.slides, payload]})
         case "practice":

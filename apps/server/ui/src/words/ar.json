@@ -58,6 +58,9 @@
     "failed": "حدث خطأ أثناء تحضير هذا الدرس. حاول مرة أخرى، أو ارجع واختر موضوعًا آخر.",
     "partial": "تعذّر تحضير جزء من هذا الدرس. اقرأ ما هنا، أو حاول مرة أخرى للحصول على الدرس كاملًا.",
     "finishing": "جارٍ الحفظ…",
-    "objectives": "في هذا الدرس ستتعلّم أن"
+    "objectives": "في هذا الدرس ستتعلّم أن",
+    "source": "Written from the {authority} curriculum, {edition}",
+    "textbook": "Textbook passages from {title}",
+    "noPassages": "No textbook passage is linked to this topic, so this lesson is written from the objectives alone."
   }
 }

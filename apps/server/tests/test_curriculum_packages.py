@@ -72,3 +72,100 @@ def test_coverage_is_served():
     response = client.get("/api/curriculum/coverage")
     assert response.status_code == 200
     assert any(row["curriculum"] for row in response.json())
+
+
+def test_the_passages_are_what_the_textbook_gives_now():
+    from app.domains.curriculum.packages.export import topic_passages
+    from app.domains.curriculum.packages.passages import PASSAGES
+
+    assert PASSAGES == topic_passages(), (
+        "passages.py is stale: run python -m app.domains.curriculum.packages.export"
+    )
+
+
+def test_every_topic_of_the_held_course_has_passages_that_fit_a_prompt():
+    from app.domains.curriculum.packages.textbook_export import (
+        MAX_EXERCISES,
+        PASSAGE_LIMIT,
+        ROLE_ORDER,
+        TOPIC_BUDGET,
+    )
+
+    course = held_course("NG", "jss-1", "Mathematics")
+    assert course is not None
+    for title in course.topics():
+        topic = course.topic(title)
+        assert topic is not None and topic.objectives and topic.passages, title
+        texts = [p.text for p in topic.passages]
+        assert sum(map(len, texts)) <= TOPIC_BUDGET, title
+        assert all(0 < len(text) <= PASSAGE_LIMIT for text in texts), title
+        assert all(text.count("$$") % 2 == 0 for text in texts), title
+        roles = [p.role for p in topic.passages]
+        assert roles == sorted(roles, key=ROLE_ORDER.index), title
+        assert roles.count("exercise") <= MAX_EXERCISES, title
+        assert "![" not in "".join(texts), title
+
+
+def test_a_topic_is_found_by_its_title_however_it_is_written():
+    course = held_course("NG", "jss-1", "Mathematics")
+    assert course is not None
+    assert course.topic("fractions").code == course.topic("Fractions").code
+    assert course.topic("Algebra") is None
+
+
+def test_each_role_takes_a_turn_so_worked_examples_are_not_crowded_out():
+    from app.domains.curriculum.packages.textbook_export import TOPIC_BUDGET, _chosen
+
+    def passage(role, number):
+        return {"id": f"{role}-{number}", "role": role, "text": "x" * 1000}
+
+    linked = [passage("instruction", n) for n in range(10)] + [
+        passage("worked_example", n) for n in range(3)
+    ]
+    chosen = _chosen(linked)
+
+    assert sum(len(p["text"]) for p in chosen) <= TOPIC_BUDGET
+    assert sum(p["role"] == "worked_example" for p in chosen) == 3
+
+
+def test_no_two_topics_of_a_course_share_a_title_once_written_as_a_slug():
+    from app.utils.slug import slugify
+
+    course = held_course("NG", "jss-1", "Mathematics")
+    assert course is not None
+    slugs = [slugify(title) for title in course.topics()]
+    assert len(slugs) == len(set(slugs))
+
+
+def test_a_passage_too_long_to_keep_whole_is_left_out_not_kept_empty():
+    from app.domains.curriculum.packages.textbook_export import (
+        PASSAGE_LIMIT,
+        _shortened,
+    )
+
+    assert _shortened("x" * (PASSAGE_LIMIT + 1)) == ""
+
+
+def test_a_linked_passage_whose_text_is_left_empty_by_shortening_is_not_kept():
+    import sqlite3
+
+    from app.domains.curriculum.packages.textbook_export import PASSAGE_LIMIT, _linked
+
+    db = sqlite3.connect(":memory:")
+    db.executescript(
+        """
+        CREATE TABLE textbook_records (record_id, title, chapter_title, prompt_text, content_text, retrieval_text);
+        CREATE TABLE subtopic_sources (subtopic_id, record_id, role, rank);
+        """
+    )
+    for record, text in (("long", "x" * (PASSAGE_LIMIT + 1)), ("short", "A fraction.")):
+        db.execute(
+            "INSERT INTO textbook_records VALUES (?, ?, 'Chapter', '', ?, '')",
+            (record, record, text),
+        )
+        db.execute(
+            "INSERT INTO subtopic_sources VALUES ('s', ?, 'instruction', ?)",
+            (record, 1 if record == "long" else 2),
+        )
+
+    assert [p["id"] for p in _linked(db, ["s"])] == ["short"]

@@ -42,7 +42,11 @@ from app.agent.toolkit import TOOLS
 from app.agent.unanswered import PART_KEY as UNANSWERED_KEY
 from app.caller import Caller, Keeping
 from app.domains.lesson.lesson import (
+    CitedObjective,
+    CitedPassage,
+    CitedTextbook,
     Lesson,
+    LessonGrounding,
     LessonPractice,
     LessonProgress,
     LessonSlide,
@@ -222,6 +226,29 @@ LESSON = Lesson(
         incorrect_feedback="Share 8 among 4.",
     ),
     progress=LessonProgress(current=0, total=2),
+    grounding=LessonGrounding(
+        authority="NERDC",
+        edition="September 2025",
+        objectives=[
+            CitedObjective(
+                code="fractions-ao-name", statement="Name the parts of a fraction."
+            ),
+        ],
+        passages=[
+            CitedPassage(
+                id="ch03-b001",
+                title="3.1 What is a fraction?",
+                chapter="Chapter 3: Fractions",
+            )
+        ],
+        textbook=CitedTextbook(
+            title="Siyavula Mathematics JSS 1",
+            source_url="https://ng.siyavula.com/read",
+            licence="Creative Commons Attribution 3.0 Unported",
+            licence_url="https://creativecommons.org/licenses/by/3.0/",
+            attribution="Siyavula Mathematics JSS 1, from https://ng.siyavula.com/read, licensed under CC BY 3.0.",
+        ),
+    ),
 )
 
 

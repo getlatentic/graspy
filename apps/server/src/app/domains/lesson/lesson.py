@@ -71,6 +71,37 @@ class LessonPractice(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+class CitedObjective(Wire):
+    code: str
+    statement: str
+
+
+class CitedPassage(Wire):
+    id: str
+    title: str
+    chapter: str
+
+
+class CitedTextbook(Wire):
+    title: str
+    source_url: str
+    licence: str
+    licence_url: str
+    attribution: str
+
+
+class LessonGrounding(Wire):
+    """What a lesson on a topic of an official curriculum was written from: the edition, the objectives the lesson
+    was asked to cover, and the textbook passages it was given. No passages means it was written from the objectives
+    alone."""
+
+    authority: str
+    edition: str
+    objectives: list[CitedObjective]
+    passages: list[CitedPassage]
+    textbook: CitedTextbook | None = None
+
+
 class LessonProgress(Wire):
     current: int
     total: int
@@ -101,6 +132,8 @@ class Lesson(Wire):
     examples: list[str] = Field(default_factory=list)
     practice: LessonPractice | None = None
     progress: LessonProgress | None = None
+    # None for a lesson a model planned, and for one kept before lessons cited their sources.
+    grounding: LessonGrounding | None = None
 
     @field_validator("slides", mode="before")
     @classmethod

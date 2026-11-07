@@ -10,7 +10,6 @@ import dspy
 
 from ...config.stage_writing import WRITING
 from ...education.stage import LearnerStage
-from .prompts import GenerateLessonPlan, GeneratePracticeQuestion, GenerateSlide
 
 STAGE_NOTE = (
     "Aim every part at the learner's `stage` and `age`, as `stage_guidance` says."
@@ -28,11 +27,6 @@ def for_stage(signature: type[dspy.Signature]) -> type[dspy.Signature]:
     for offset, (name, desc) in enumerate(_STAGE_FIELDS):
         signature = signature.insert(at + offset, name, dspy.InputField(desc=desc), str)
     return signature.with_instructions(f"{signature.instructions}\n\n{STAGE_NOTE}")
-
-
-StagedLessonPlan = for_stage(GenerateLessonPlan)
-StagedSlide = for_stage(GenerateSlide)
-StagedPracticeQuestion = for_stage(GeneratePracticeQuestion)
 
 
 def stage_inputs(learner: LearnerStage) -> dict[str, str]:

@@ -91,6 +91,30 @@
         "progress": {
           "current": 0,
           "total": 2
+        },
+        "grounding": {
+          "authority": "NERDC",
+          "edition": "September 2025",
+          "objectives": [
+            {
+              "code": "fractions-ao-name",
+              "statement": "Name the parts of a fraction."
+            }
+          ],
+          "passages": [
+            {
+              "id": "ch03-b001",
+              "title": "3.1 What is a fraction?",
+              "chapter": "Chapter 3: Fractions"
+            }
+          ],
+          "textbook": {
+            "title": "Siyavula Mathematics JSS 1",
+            "sourceUrl": "https://ng.siyavula.com/read",
+            "licence": "Creative Commons Attribution 3.0 Unported",
+            "licenceUrl": "https://creativecommons.org/licenses/by/3.0/",
+            "attribution": "Siyavula Mathematics JSS 1, from https://ng.siyavula.com/read, licensed under CC BY 3.0."
+          }
         }
       },
       "whole": true,
