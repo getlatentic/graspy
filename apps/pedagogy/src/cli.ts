@@ -4,12 +4,13 @@ import { parseArgs } from "node:util";
 import { installAudioProbe, readAudioLog } from "./audio-probe.ts";
 import { openChild } from "./browser.ts";
 import { checkRun } from "./checks.ts";
-import { ChildVoice, ENGINE_NAME, locateYarngo } from "./child-voice.ts";
+import { ChildVoice, ENGINE_NAME, locateYarngo, type Speaker } from "./child-voice.ts";
 import { judgedOrNull, type Judgement } from "./judge.ts";
 import { LessonObserver } from "./observer.ts";
 import { openLesson } from "./open-lesson.ts";
 import { onboard, type Learner } from "./onboarding.ts";
 import { personaNamed } from "./personas.ts";
+import { SAY_ENGINE_NAME, SayVoice } from "./say-voice.ts";
 import { transcriptMarkdown, writeRun } from "./report.ts";
 import { playLesson } from "./lesson-loop.ts";
 import { bedrockKey } from "./secrets.ts";
@@ -24,6 +25,7 @@ const USAGE = `Usage: npm run pedagogy -w @graspy/pedagogy -- [options]
   --answers <n>      stop after this many answers                        (default 10)
   --web <url>        the web app                                         (default http://localhost:5173)
   --out <dir>        where runs are kept                                 (default runs)
+  --say-voice <name> speak with this macOS system voice (Samantha, Aman) where the cloned voice's model is not installed
   --reuse-device     keep one child's device between runs (skips onboarding, but the lesson resumes)
   --no-judge         skip the model that reads the transcript`;
 
@@ -37,6 +39,7 @@ function options() {
       answers: { type: "string", default: "10" },
       web: { type: "string", default: "http://localhost:5173" },
       out: { type: "string", default: "runs" },
+      "say-voice": { type: "string" },
       "reuse-device": { type: "boolean", default: false },
       "no-judge": { type: "boolean", default: false },
       help: { type: "boolean", default: false },
@@ -59,7 +62,9 @@ async function main(): Promise<void> {
 
   const state = args["reuse-device"] ? join(out, ".state", `${learnerClass}-${language}.json`) : join(dir, "device.json");
   const { browser, context } = await openChild(state);
-  const voice = new ChildVoice(locateYarngo(), join(out, ".voice-cache"));
+  const sayVoice = args["say-voice"];
+  const voice: Speaker = sayVoice ? new SayVoice(sayVoice, join(out, ".voice-cache")) : new ChildVoice(locateYarngo(), join(out, ".voice-cache"));
+  const engine = sayVoice ? SAY_ENGINE_NAME : ENGINE_NAME;
   try {
     const page = await context.newPage();
     const web = args.web as string;
@@ -76,7 +81,7 @@ async function main(): Promise<void> {
       page, observer, persona, learnerClass, strings, voice, key: bedrockKey(), shotsDir: join(dir, "shots"), runDir: dir,
       maxAnswers: persona.id === "silent" ? 3 : Number(args.answers),
     });
-    const run: Run = { id: runId, voice: { engine: ENGINE_NAME, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, site: web, finished, turns, audio: await readAudioLog(page) };
+    const run: Run = { id: runId, voice: { engine, reference: basename(voice.reference, ".wav"), pitch: persona.pitch }, persona: persona.id, language, learnerClass, plan: turns[0]?.move.planId ?? null, startedAt, site: web, finished, turns, audio: await readAudioLog(page) };
     const findings = checkRun(run);
     const judgement: Judgement | null = args["no-judge"] ? null : await judgedOrNull(bedrockKey(), transcriptMarkdown(run, findings, null));
     writeRun(dir, run, findings, judgement);
