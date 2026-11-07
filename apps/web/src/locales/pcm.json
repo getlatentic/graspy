@@ -74,7 +74,8 @@
     "progressLabel": "Progress",
     "topicsLoading": "Topics dey load...",
     "goal": "Na you ask for this",
-    "curriculum": "E follow {authority} curriculum, {edition}"
+    "curriculum": "E follow {authority} curriculum, {edition}",
+    "modelWritten": "Written by the tutor, not from an official curriculum"
   },
   "lesson": {
     "backTo": "Go back to {subject}",

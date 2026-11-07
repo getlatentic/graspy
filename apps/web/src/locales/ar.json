@@ -74,7 +74,8 @@
     "progressLabel": "التقدم",
     "topicsLoading": "جارٍ تحميل المواضيع...",
     "goal": "ما طلبته",
-    "curriculum": "يتبع منهج {authority}، {edition}"
+    "curriculum": "يتبع منهج {authority}، {edition}",
+    "modelWritten": "Written by the tutor, not from an official curriculum"
   },
   "lesson": {
     "backTo": "العودة إلى {subject}",
