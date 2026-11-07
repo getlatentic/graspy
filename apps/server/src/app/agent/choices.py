@@ -81,6 +81,7 @@ def _same_answer(a: tuple[float, int | None], b: tuple[float, int | None]) -> bo
 NUMBERS_IN = re.compile(r"\\d?frac\{\d+\}\{\d+\}|\d+\s*/\s*\d+|\d+(?:\.\d+)?|\.\d+")
 
 
+MIN_WORD = 3
 ABOUT_ANSWER = re.compile(r"\b(?:answer|correct|right)\b")
 
 
@@ -110,7 +111,7 @@ def states(text: str, right: str, given: str) -> bool:
     marked = number(bare)
     if marked is None:
         return (
-            bool(wanted)
+            len(wanted) >= MIN_WORD
             and wanted not in setting
             and re.search(rf"(?<!\w){re.escape(wanted)}(?!\w)", written) is not None
         )

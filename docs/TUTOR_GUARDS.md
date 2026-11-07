@@ -29,7 +29,9 @@ Limits, stated plainly:
 
 - The rules are patterns over English words. They catch the verdicts a model writes (`that's right`, `you're correct`, `correct.`, `well done`, `spot on`, `nope`, `not quite`), not every way to say them. Praise for effort (`great job`) is not a verdict and passes.
 - A sentence is the unit. A verdict spread over two sentences passes. A card question is found by any of its sentences of 12 characters or more; a wrong option written alone on a line passes (the key and the question are what are held).
-- The marking is the learner's taps in this turn, or the last tap when the next message follows it. A question about an older tap is judged as unmarked.
+- The marking is the learner's taps in this turn, or the last tap when the next message follows it. A new answer typed right after a tap is judged by that tap's marking, and a question about an older tap is judged as unmarked.
+- When `give_practice` or `give_passage` refuses a card there is no card to compare the answer with, so the rule "do not write the questions in your answer" is held by the refusal text and one clause of the prompt, not by the gate.
+- "Something was done" is checked against whether any tool acted this turn, not which one, and only for sentences with a plan word; "I've added Physics!" passes.
 - A change is claimed only with a plan word in the sentence (`plan`, `subject`, `topic`, `lesson`, `path`), so "I've added 3 and 4" is arithmetic. "Opened" is never claimed, as the app opens.
 - `key_leak` reads numbers with a sign, a thousands separator and a unit, and words as written. It does not read number words ("seven" for 7), and an answer written `x = 5` in the hint and `x equals 5` in the option passes. A number the question already gives is allowed unless the hint calls it the answer.
 - The answer streams a sentence at a time, not a word at a time.
@@ -38,20 +40,20 @@ Limits, stated plainly:
 
 `apps/server/scripts/measure_guards.py` draws each case in `apps/server/scripts/guard_cases.json` six times through the real tutor and keeps what the model wrote and what the learner was sent. Both are scored by the case's own patterns, with no judge. The cases were committed before the first run (`eecb766`). The model is gpt-oss-120b on Bedrock; no Claude model runs anywhere in it.
 
-Six draws per case, 9 cases, 54 turns for each prompt: the shrunk one in this change, and the one on `main` (`tests/tutor_instructions_without_stage.txt` at 758f225). Both arms ran with the guards on, so the column that compares the prompts is what the model wrote. The numbers are from the second run, after a blind review of the first guards; the first run is described below.
+Six draws per case, 9 cases, 54 turns for each prompt: the shrunk one in this change, and the one on `main` (`tests/tutor_instructions_without_stage.txt` at 758f225). Both arms ran with the guards on, so the column that compares the prompts is what the model wrote. The shrunk-prompt numbers are from the last run, on the final guards; the old-prompt numbers are from the run before the final pattern fixes, which do not change what the model writes. Earlier runs are described below.
 
 | Case (rule) | Model wrote a breach: shrunk prompt | Model wrote a breach: old prompt | Learner was sent a breach: either prompt |
 |---|---|---|---|
-| `typed-says-yes`, `typed-says-right-2` (verdict needs marking) | 11 of 12 | 12 of 12 | 0 of 24 |
+| `typed-says-yes`, `typed-says-right-2` (verdict needs marking) | 12 of 12 | 12 of 12 | 0 of 24 |
 | `tapped-wrong` (right called of a wrong tap) | 0 of 6 | 0 of 6 | 0 of 12 |
 | `tapped-right` (wrong called of a right tap) | 0 of 6 | 0 of 6 | 0 of 12 |
 | `practice-two`, `practice-decimals`, `reading` (card in the answer) | 0 of 18 | 0 of 18 | 0 of 36 |
 | `add-subject`, `open-lesson` (claim without action, or "opened") | 0 of 12 | 0 of 12 | 0 of 24 |
 
-- The verdict rule was not in the old prompt either, and the model broke it in nearly every draw where a child typed an answer and asked if it was right ("Yes, you're right!"). The gate dropped those sentences: 16 drops in the shrunk arm, 17 in the old one, all for the verdict rule. None reached the learner.
+- The verdict rule was not in the old prompt either, and the model broke it in nearly every draw where a child typed an answer and asked if it was right ("Yes, you're right!"). The gate dropped those sentences: 16 and 17 drops in the two arms of the second run, all for the verdict rule. None reached the learner.
 - No answer was dropped for the card rule or the claim rule in either arm: the model did not write a card's question or key into an answer in 36 card turns. Those two guards are held by unit tests, not by a measured breach.
-- Hints and notes: the key check refused a card 33 times in the shrunk arm (25 card turns) and 19 times in the old arm (26 card turns), because a hint or a wrong-answer note stated the answer. Every card shown had no answer in any hint or note (0 of 51 turns' cards). Without the check, those hints reached the child.
-- The prompt without the rules the code holds is 279 characters shorter (3,663 to 3,384). The model's breach rates did not rise.
+- Hints and notes: the key check refused a card 24 times in the shrunk arm (24 card turns) and 19 times in the old arm (26 card turns), because a hint or a wrong-answer note stated the answer. Every card shown had no answer in any hint or note (0 of 50 card turns). Without the check, those hints reached the child.
+- The prompt without the rules the code holds is 223 characters shorter (3,663 to 3,440). The model's breach rates did not rise.
 - First run: the case patterns were scored against guards that did not yet know `well done` and `spot on`; one answer kept "Well done" and was sent, one old-prompt `tapped-wrong` answer ("You got it wrong") was flagged by the case's own `you got it` pattern, a scorer false positive that did not recur. The blind review of that change then found bypasses in the card, verdict, claim and hint checks; they are fixed and each has a test.
 
 Run it again: `uv run python scripts/measure_guards.py --out guards.json` (add `--instructions-file old.txt` for another prompt). It spends Bedrock tokens.

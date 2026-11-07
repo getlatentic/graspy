@@ -30,6 +30,9 @@ def facts(verdicts=(), questions=(), acted=False) -> Facts:
         "You got it right!",
         "Correct! Nice work.",
         "Well done 🎉.",
+        "0.375 is correct.",
+        "You got it!",
+        "Right!",
         "Correct.",
         "Exactly! Perfect.",
         "That's the right answer.",
@@ -50,6 +53,9 @@ def test_no_answer_is_called_right_until_the_app_has_marked_it(sentence):
         "Your answer is incorrect.",
         "Nope.",
         "Not quite!",
+        "That isn't right.",
+        "Wrong!",
+        "Incorrect.",
         "Unfortunately that is wrong.",
     ],
 )
@@ -71,6 +77,11 @@ def test_two_taps_marked_differently_leave_no_bare_verdict():
         "You're right to ask about this.",
         "Right, let us start with the denominator.",
         "It is right there in the question.",
+        "Perfect, let us start with the denominator.",
+        "Exactly how many apples are left?",
+        "Unfortunately, Physics is not available yet.",
+        "That is the correct way to add fractions.",
+        "It's not correct to add denominators.",
         "It's wrong to add the denominators.",
         "I've added 3 and 4 to get 7.",
         "A common mistake is thinking that 0.38 is wrong because it looks odd.",
@@ -156,3 +167,17 @@ def test_a_question_of_several_sentences_is_found_in_any_of_them():
 def test_a_short_option_is_not_found_inside_another_number():
     assert breach_in("Add 3/8 and 2.5 first.", facts(questions=[MULTI])) is None
     assert breach_in("Try it with 5 apples and 2.", facts(questions=[MULTI])) is None
+
+
+WORD = Question(
+    question="She ___ a teacher.",
+    options=["is", "are", "am"],
+    answer_index=0,
+    correct_feedback="",
+    incorrect_feedback="",
+    hint="",
+)
+
+
+def test_a_short_grammar_word_that_is_the_key_does_not_condemn_every_sentence():
+    assert breach_in("Here is one to try.", facts(questions=[WORD])) is None

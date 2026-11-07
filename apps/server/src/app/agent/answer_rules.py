@@ -32,18 +32,23 @@ _NOT_A_VERDICT = (
     r"(?!\s+(?:to|there|here|under|above|below|in|on|at|next|beside|now)\b)"
 )
 _SAYS_RIGHT = re.compile(
-    r"\b(?:that|it)(?:'s| is)\s+(?:\w+ly\s+)?(?:the\s+)?(?:right|correct)\b"
+    r"\b(?:that|it)(?:'s| is)\s+(?:\w+ly\s+)?(?:right|correct)\b"
     + _NOT_A_VERDICT
+    + r"|\b(?:that|it)(?:'s| is)\s+the\s+(?:right|correct)\s+(?:answer|one|choice|option)\b"
     + r"|\b(?:your answer is|you(?:'re| are))\s+(?:\w+ly\s+)?(?:right|correct)\b"
     + _NOT_A_VERDICT
-    + r"|\byou got (?:it|that) right\b"
+    + r"|\b\w+ is (?:right|correct)\b"
+    + _NOT_A_VERDICT
+    + r"|\byou got (?:it|that)(?: right)?\b(?!\s+wrong)"
     r"|\bcorrect!|\bwell done\b|\bspot on\b"
-    r"|^\W*(?:correct|exactly|perfect)\b"
+    r"|^\W*(?:correct|exactly|perfect|right)\s*[.!]"
 )
 _SAYS_WRONG = re.compile(
-    r"\b(?:that|it)(?:'s| is)\s+(?:not\s+(?:quite\s+)?(?:right|correct)|incorrect|wrong(?!\s+to\b))"
+    r"\b(?:that|it)(?:'s| is)\s+(?:incorrect|wrong)\b(?!\s+to\b)"
+    r"|\b(?:that|it)(?:'s| is)\s+not\s+(?:quite\s+)?(?:right|correct)\b(?!\s+to\b)"
+    r"|\b(?:that|it) isn't\s+(?:quite\s+)?(?:right|correct)\b(?!\s+to\b)"
     r"|\b(?:your answer is|you(?:'re| are))\s+(?:not\s+(?:quite\s+)?(?:right|correct)|incorrect|wrong)\b"
-    r"|^\W*(?:nope|not quite|unfortunately)\b"
+    r"|^\W*(?:nope|not quite|incorrect|wrong)\s*[.!]"
 )
 _VERBS = r"(?:added|opened|changed|switched|removed|dropped|rebuilt|started|updated|reset|cleared|created)"
 _DONE = re.compile(

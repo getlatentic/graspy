@@ -33,7 +33,7 @@ def _fallback(breach: Breach, verdicts: tuple[bool, ...], acted: bool) -> str:
     return MARKED_WRONG if not any(verdicts) else SOME_RIGHT
 
 
-_MARKED = re.compile(r"The learner chose: .*, which is (right|wrong)\.")
+_MARKED = re.compile(r"The learner chose: [^\n]*?, which is (right|wrong)\.")
 
 
 def verdicts_in(told: str) -> tuple[bool, ...]:
@@ -58,7 +58,7 @@ class AnswerGate:
 
     def feed(self, chunk: str) -> str:
         """The sentences the chunk completed, as far as they keep the rules."""
-        self.fed = True
+        self.fed = self.fed or bool(chunk)
         self.raw += chunk
         self._pending += chunk
         sent, start = [], 0
