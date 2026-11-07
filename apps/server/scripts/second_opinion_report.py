@@ -3,7 +3,8 @@
     npx wrangler tail graspy-web-api-staging --format json > tail.json   (or a Workers Logs export)
     uv run python scripts/second_opinion_report.py tail.json [more.json ...]
 
-Reads the English recognition lines `{"asr": "nova"|"whisper"|"intron_sync"}` and `{"asr": "second_opinion", "first",
+Counts the recordings a first recognizer heard (a recording that went straight to Intron, or that no first recognizer
+answered, logs no line). Reads the English recognition lines `{"asr": "nova"|"whisper"|"intron_sync"}` and `{"asr": "second_opinion", "first",
 "first_ms", "ask_ms", "outcome", "used"}`. Of every 100 English recordings: how many Intron was asked about, how many
 it rescued (read a number the first recognizer had lost), what the asks cost in time, and what a shorter limit would
 have kept. Prints counts and times only; the log holds no words."""
@@ -68,31 +69,37 @@ def report(lines: list[dict]) -> str:
     for line in lines:
         if line["asr"] == "second_opinion":
             first = line.get("first", "unknown")
-            turns[first] += 1
             asked[first].append(line)
+            # A second opinion that is used ends the recording's logging; one that is not is followed by the first recognizer's own line.
+            if line.get("used"):
+                turns[first] += 1
         elif line["asr"] in FIRST_RECOGNIZERS:
             turns[line["asr"]] += 1
-    if not turns:
+    if not turns and not asked:
         return "no English recognition lines"
     out: list[str] = []
-    for first in sorted(turns):
+    for first in sorted(set(turns) | set(asked)):
         own = asked.get(first, [])
-        n = turns[first]
-        outcomes = Counter(line["outcome"] for line in own)
+        n = turns[first] or 1
+        outcomes = Counter(line.get("outcome", "unknown") for line in own)
         out.append(
             f"{first}: {n} recordings | second opinion asked {len(own)} ({_per_100(len(own), n)} per 100) | "
             f"rescued {outcomes['rescued']} ({_per_100(outcomes['rescued'], n)} per 100) | "
             f"no number {outcomes['no_number']} | timeout {outcomes['timeout']} | failed {outcomes['failed']}"
         )
         if own:
-            ms = sorted(line["ask_ms"] for line in own)
+            ms = sorted(line.get("ask_ms") or 0 for line in own)
             out.append(
                 f"    ask time: median {int(statistics.median(ms))} ms, p90 {_quantile(ms, 0.9)} ms, max {ms[-1]} ms"
             )
-            rescued = [line["ask_ms"] for line in own if line["outcome"] == "rescued"]
+            rescued = [
+                line.get("ask_ms") or 0
+                for line in own
+                if line.get("outcome") == "rescued"
+            ]
             for limit in LIMITS_MS:
                 kept = sum(ms_ <= limit for ms_ in rescued)
-                waited = sum(min(line["ask_ms"], limit) for line in own)
+                waited = sum(min(line.get("ask_ms") or 0, limit) for line in own)
                 out.append(
                     f"    limit {limit} ms: keeps {kept} of {len(rescued)} rescues; total wait {waited} ms over {len(own)} asks"
                 )

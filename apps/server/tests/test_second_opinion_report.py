@@ -31,16 +31,20 @@ def tail_event(*lines):
 
 
 def test_it_counts_per_100_recordings_and_what_a_limit_keeps():
-    plain = [{"asr": "nova", "ms": 300}] * 96
+    # A rescue ends the recording's logging; an ask that rescued nothing is followed by the first recognizer's own line.
+    plain = [{"asr": "nova", "ms": 300}] * 98
     asked = [
         opinion("nova", "rescued", 900),
         opinion("nova", "rescued", 2600),
         opinion("nova", "no_number", 1500),
+        {"asr": "nova", "ms": 1900},
         opinion("nova", "timeout", 4000),
+        {"asr": "nova", "ms": 4300},
     ]
+    plain = plain[:96]
     text = tail_event(*plain[:50]) + "\n" + tail_event(*plain[50:], *asked)
     lines = report_module.asr_lines(text)
-    assert len(lines) == 100
+    assert len(lines) == 102
     out = report_module.report(lines)
     assert (
         "nova: 100 recordings | second opinion asked 4 (4.0 per 100) | rescued 2 (2.0 per 100)"
@@ -61,9 +65,19 @@ def test_the_first_recognizers_are_kept_apart_and_nothing_prints_a_word():
         {"asr": "nova", "ms": 1},
         {"transcript": "hello", "part": "other"},
     ]
-    out = report_module.report(lines[:3])
-    assert "whisper: 2 recordings" in out and "nova: 1 recordings" in out
+    kept = report_module.asr_lines("\n".join(json.dumps(line) for line in lines))
+    assert len(kept) == 3
+    out = report_module.report(kept)
+    assert "whisper: 1 recordings" in out and "nova: 1 recordings" in out
     assert "hello" not in out
+    assert report_module.asr_lines(json.dumps(lines[3])) == []
+    assert report_module.asr_lines(json.dumps(lines[0])) == [lines[0]]
+    assert "median 800 ms, p90 800 ms, max 800 ms" in out
+
+
+def test_an_ask_with_no_time_or_outcome_does_not_crash_the_report():
+    out = report_module.report([{"asr": "second_opinion", "first": "nova"}])
+    assert "unknown" not in out or "asked 1" in out
 
 
 def test_it_says_so_where_there_is_nothing():
