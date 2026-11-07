@@ -78,6 +78,48 @@ def _same_answer(a: tuple[float, int | None], b: tuple[float, int | None]) -> bo
     return abs(a[0] - b[0]) <= 1e-9 * max(1.0, abs(a[0]))
 
 
+NUMBERS_IN = re.compile(r"\\d?frac\{\d+\}\{\d+\}|\d+\s*/\s*\d+|\d+(?:\.\d+)?|\.\d+")
+
+
+def _gives(text: str, right: str, given: str) -> bool:
+    """Whether ``text`` states the right option: its words, or a number equal
+    to it that the question had not already given."""
+    wanted, written, setting = plain(right), plain(text), plain(given)
+    marked = number(wanted.replace("%", ""))
+    if marked is None:
+        return (
+            bool(wanted)
+            and wanted not in setting
+            and re.search(rf"(?<!\w){re.escape(wanted)}(?!\w)", written) is not None
+        )
+    given_tokens = set(NUMBERS_IN.findall(setting))
+    values = (
+        (token, number(token if token[0] != "." else f"0{token}"))
+        for token in NUMBERS_IN.findall(written)
+    )
+    return any(
+        token not in given_tokens and value is not None and _same_answer(value, marked)
+        for token, value in values
+    )
+
+
+def key_leak(written: Written, choices: list[str], given: str) -> str | None:
+    """Why a hint or a wrong-answer note cannot be shown: the learner reads
+    them before they have the answer. ``given`` is what the question already
+    puts in front of them."""
+    right = choices[written.answer_index]
+    for name, text in (
+        ("hint", written.hint),
+        ("incorrect_feedback", written.incorrect_feedback),
+    ):
+        if _gives(text, right, given):
+            return (
+                f"The {name} gives away the right answer, {right!r}. Write it as "
+                "a nudge towards the method, without stating the answer."
+            )
+    return None
+
+
 def options_problem(question: str, choices: list[str], answer_index: int) -> str | None:
     """Why a question's options cannot be shown, in words the model can act on."""
     if not question:

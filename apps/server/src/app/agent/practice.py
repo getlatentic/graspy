@@ -19,9 +19,11 @@ from .cards import (
 )
 from .choices import (
     CARD_TOLD,
+    NUMBERS_IN,
     agrees,
     clean,
     count_problem,
+    key_leak,
     number,
     options_problem,
     plain,
@@ -62,9 +64,6 @@ class PracticeQuestion(BaseModel):
     )
 
 
-_NUMBERS_IN = re.compile(r"\\d?frac\{\d+\}\{\d+\}|\d+\s*/\s*\d+|\d+(?:\.\d+)?")
-
-
 def _reaches(working: str, answer: str) -> bool:
     """A wrong "0.3" is not found inside a worked "0.325"; "3/2" in the
     working reaches an option written \\(\\frac{3}{2}\\)."""
@@ -76,7 +75,7 @@ def _reaches(working: str, answer: str) -> bool:
     marked = number(answer)
     if marked is None:
         return False
-    found = (number(token) for token in _NUMBERS_IN.findall(plain(working)))
+    found = (number(token) for token in NUMBERS_IN.findall(plain(working)))
     return any(
         value and abs(value[0] - marked[0]) <= 1e-9 * max(1.0, abs(marked[0]))
         for value in found
@@ -121,6 +120,7 @@ def _checked(written: PracticeQuestion) -> Question | str:
     problem = options_problem(
         clean(written.question), choices, written.answer_index
     ) or _key_problem(choices[written.answer_index], written.working, written.check)
+    problem = problem or key_leak(written, choices, written.question)
     if problem:
         return problem
     return shown(written, choices)

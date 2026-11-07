@@ -152,9 +152,9 @@ async def test_the_real_stack_returns_the_models_answer():
 
 async def test_the_real_stack_streams_the_answer_in_pieces():
     """Through DSPy, lm15 and the httpx transport, as in production: the
-    learner reads the answer while it is written, and the pieces add up to
-    the answer that is kept."""
-    answer = "Seven, because three and four more make seven altogether, which you can count on your fingers."
+    learner reads the answer while it is written, a sentence at a time, and
+    the pieces add up to the answer that is kept."""
+    answer = "Seven, because three and four more make seven altogether. You can count it on your fingers."
     lm = slow_model(*tutor_turn(answer, []))
     with dspy.context(lm=lm):
         items = [
@@ -166,3 +166,20 @@ async def test_the_real_stack_streams_the_answer_in_pieces():
     assert len(deltas) > 1
     assert "".join(deltas).strip() == answer
     assert items[-1].answer == answer
+
+
+async def test_the_real_stack_never_streams_a_sentence_that_breaks_a_rule():
+    """Streamed in pieces, as in production: the verdict nothing marked is not
+    among the pieces the learner reads."""
+    answer = "That's correct! Three and four make seven. You can count it."
+    lm = slow_model(*tutor_turn(answer, []))
+    with dspy.context(lm=lm):
+        items = [
+            item
+            async for item in Tutor(InMemoryConversationStore()).stream("c1", "3 + 4?")
+        ]
+
+    deltas = [item.text for item in items if isinstance(item, AnswerDelta)]
+    assert len(deltas) > 1
+    assert "".join(deltas).strip() == items[-1].answer
+    assert items[-1].answer == "Three and four make seven. You can count it."

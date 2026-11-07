@@ -20,6 +20,7 @@ from .choices import (
     CARD_TOLD,
     clean,
     count_problem,
+    key_leak,
     options_problem,
     plain,
     refused,
@@ -66,6 +67,9 @@ def _checked(written: PassageQuestion, passage: str) -> Question | str:
             f"The evidence {written.evidence!r} is not in the passage. Copy the "
             "passage's own words that answer the question."
         )
+    problem = key_leak(written, choices, written.question)
+    if problem:
+        return problem
     return shown(written, choices)
 
 

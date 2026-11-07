@@ -11,7 +11,9 @@ from dspy.streaming import StreamListener, StreamResponse
 from dspy.utils.exceptions import AdapterParseError
 
 from ..education.stage import stage_of
+from ..learner.answers import PracticeAnswer
 from ..learner.notes import NOTHING_YET
+from .answer_gate import AnswerGate
 from .app_tools import AppCall, describe_calls
 from .cards import Card
 from .context import LearnerContext
@@ -75,24 +77,20 @@ The learner's plan changes only through tools, and only when they ask:
   below.
 - to start their whole plan again: rebuild_plan.
 Opening a topic or subject never leaves this conversation: the app shows
-the learner a button to open it. Say it is ready below, never that it is
-open.
+the learner a button to open it. Say it is ready below.
 
 Call these straight away without asking whether they are sure: the app asks
 before anything that clears progress, and shows a path before adding it.
-Say that something was added, opened or changed only when a tool reported
-it; when the app is asking the learner, tell them to look below.
+When the app is asking the learner, tell them to look below.
 
 When the learner asks to practise, to be tested or for questions to try,
 use give_practice: multiple-choice questions on this conversation's
 topic, at their level, as many as they ask for and one when they do not
-say, all in one call. When an answer is a number, give its check, the
-arithmetic that produces it, so the app can confirm the key. For reading
-or comprehension practice, or when they ask for a passage with
-questions, use give_passage. The app shows these as a card: your answer
-only introduces it. Never write practice questions or their options in
-your answer, even when a tool refuses them: fix what it says and call
-it again. When they tell you how they did, build on it:
+say, all in one call. For reading or comprehension practice, or when
+they ask for a passage with questions, use give_passage. The app shows
+these as a card: your answer only introduces it. When a tool refuses
+them, fix what it says and call it again. When they tell you how they
+did, build on it:
 explain a mistake, or make the next questions a little harder. Their
 record shows the mistakes they made before: aim explanations and
 questions at the ones on this topic.
@@ -147,6 +145,7 @@ class TutorReply:
 class _Answered:
     prediction: dspy.Prediction
     outputs: TurnOutputs
+    answer: str
 
 
 class Tutor:
@@ -180,12 +179,17 @@ class Tutor:
             "app": describe_calls(calls) if calls else NO_APP_CALLS,
             "message": message,
         }
-        async for item in _answered(context, inputs):
+        verdicts = tuple(
+            call.arguments.correct
+            for call in calls or []
+            if isinstance(call.arguments, PracticeAnswer)
+        )
+        async for item in _answered(context, inputs, verdicts):
             if isinstance(item, _Answered):
                 answered = item
             else:
                 yield item
-        answer = answered.prediction.answer
+        answer = answered.answer
         # Of two opens, or two cards, in one turn, the last counts.
         cards = answered.outputs.cards[-1:]
         exchanges = [*missed, remembered(message, answer, calls, cards)]
@@ -206,7 +210,7 @@ class Tutor:
 
 
 async def _answered(
-    context: LearnerContext, inputs: dict
+    context: LearnerContext, inputs: dict, verdicts: tuple[bool, ...]
 ) -> AsyncIterator[
     AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | _Answered
 ]:
@@ -214,7 +218,7 @@ async def _answered(
     some sampling."""
     for again in (False, True):
         try:
-            async for item in _attempt(context, inputs, again):
+            async for item in _attempt(context, inputs, verdicts, again):
                 yield item
             return
         except (Runaway, AdapterParseError) as error:
@@ -225,24 +229,34 @@ async def _answered(
 
 
 async def _attempt(
-    context: LearnerContext, inputs: dict, again: bool
+    context: LearnerContext, inputs: dict, verdicts: tuple[bool, ...], again: bool
 ) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | _Answered]:
     """Closing it stops the model."""
     outputs = TurnOutputs()
     agent = _streamed_agent(Turn(context, inputs["message"]), outputs, again)
     watch = RunawayWatch()
+    gate = AnswerGate(outputs, verdicts)
     finished = False
     items = agent(**inputs)
     try:
         async for item in items:
             if isinstance(item, StreamResponse):
                 watch.add(item.chunk)
-                yield AnswerDelta(item.chunk)
+                if sent := gate.feed(item.chunk):
+                    yield AnswerDelta(sent)
             elif isinstance(item, (ToolActivity, ToolFinished)):
                 yield item
             elif isinstance(item, dspy.Prediction):
                 finished = True
-                yield _Answered(item, outputs)
+                unstreamed = "" if gate.fed else gate.feed(item.answer)
+                if sent := unstreamed + gate.finish():
+                    yield AnswerDelta(sent)
+                if gate.breaches:
+                    logger.warning(
+                        "Sentences of the answer were dropped: %s",
+                        sorted({breach.value for breach in gate.breaches}),
+                    )
+                yield _Answered(item, outputs, gate.answer())
     except BaseExceptionGroup as group:
         # streamify runs the turn in a task group; the caller wants the
         # model's own error, not the group around it.
