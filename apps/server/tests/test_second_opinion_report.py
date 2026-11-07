@@ -68,7 +68,7 @@ def test_the_first_recognizers_are_kept_apart_and_nothing_prints_a_word():
     kept = report_module.asr_lines("\n".join(json.dumps(line) for line in lines))
     assert len(kept) == 3
     out = report_module.report(kept)
-    assert "whisper: 1 recordings" in out and "nova: 1 recordings" in out
+    assert "whisper: 2 recordings" in out and "nova: 1 recordings" in out
     assert "hello" not in out
     assert report_module.asr_lines(json.dumps(lines[3])) == []
     assert report_module.asr_lines(json.dumps(lines[0])) == [lines[0]]
