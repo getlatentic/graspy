@@ -42,19 +42,23 @@ class TutorRun internal constructor(
     suspend fun reply(listener: TurnListener): TutorReply = coroutineScope {
         val reading = Reading(TurnReader(chat, listener), Presence(this, listener, timing.showReconnectingAfterMs))
         try {
-            reading.run()
+            reading.run().let { if (stopAccepted) it.copy(stopped = true) else it }
         } finally {
             reading.presence.up()
         }
     }
 
+    @Volatile
+    private var stopAccepted = false
+
     /** True when the server has the stop; the turn then ends with the words it has, and [reply] returns them. */
-    suspend fun stop(): Boolean = wire.stop(chat, messageId)
+    suspend fun stop(): Boolean = wire.stop(chat, messageId).also { if (it) stopAccepted = true }
 
     private inner class Reading(val reader: TurnReader, val presence: Presence) {
-        private val cursor = TurnCursor()
+        private var cursor = TurnCursor()
         private var following = false
         private var failures = 0
+        private var emptyReads = 0
 
         suspend fun run(): TutorReply {
             val deadline = System.currentTimeMillis() + timing.longestTurnMs
@@ -64,7 +68,7 @@ class TutorRun internal constructor(
                     if (if (following) follow() else send()) return reader.reply()
                 } catch (failure: TutorUnreachable) {
                     if (!failure.retryable) throw failure
-                    if (failure is ChatNotFound) following = false
+                    if (failure is ChatNotFound) sendAgain()
                     waitToTryAgain()
                 }
             }
@@ -99,14 +103,31 @@ class TutorRun internal constructor(
                     Taken.APPLY -> {
                         applied = true
                         failures = 0
+                        emptyReads = 0
                         presence.up()
                         apply(frame as TurnFrame.Placed)
                     }
                 }
             }
             if (reader.finished) return true
-            if (!applied) delay(timing.readAgainMs)
+            if (!applied) quietRead()
             return false
+        }
+
+        /** A read with nothing new. Where the chat is there but this turn never began, the server answers an empty stream
+         * for as long as it is asked: after [QUIET_READS] of them at the first frame, the message is sent again. */
+        private suspend fun quietRead() {
+            emptyReads += 1
+            if (cursor.at == 0L && emptyReads >= QUIET_READS) return sendAgain()
+            delay(timing.readAgainMs)
+        }
+
+        /** The message is sent again, and the turn read from its first frame: nothing of what came before stands. */
+        private fun sendAgain() {
+            following = false
+            emptyReads = 0
+            cursor = TurnCursor()
+            reader.startOver()
         }
 
         private fun apply(frame: TurnFrame.Placed) {
@@ -133,6 +154,8 @@ class TutorRun internal constructor(
         }
     }
 }
+
+private const val QUIET_READS = 2
 
 /** Tells the learner the connection is down only when it stays down, not at a blink. */
 private class Presence(private val scope: CoroutineScope, private val listener: TurnListener, private val afterMs: Long) {

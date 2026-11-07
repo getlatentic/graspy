@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -124,7 +125,9 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
         val job = running ?: return
         val run = asking
         viewModelScope.launch {
-            if (run != null && run.stop()) delay(STOP_WAIT_MS)
+            // Offline, the stop cannot be told: the turn ends here at once with the words that showed.
+            val told = run != null && !turn.value.reconnecting && withTimeoutOrNull(STOP_TELL_MS) { run.stop() } == true
+            if (told) delay(STOP_WAIT_MS)
             job.cancel()
         }
     }
@@ -184,7 +187,7 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
 
     /** A reply the learner stopped keeps the words it had, marked as stopped; a stop before any words keeps nothing. */
     private suspend fun keepReply(threadId: String, reply: TutorReply) {
-        if (reply.stopped && reply.text.isEmpty()) return
+        if (reply.text.isEmpty()) return
         val metadata = MessageMetadata(followUps = reply.followUps, card = reply.cards.firstOrNull(), stopped = reply.stopped)
         store.add(threadId, MessageKind.TUTOR, reply.text, metadata)
     }
@@ -234,6 +237,7 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
         const val TAG = "GraspyTutor"
         // After a stop the turn ends within moments; a server that does not end it is left.
         const val STOP_WAIT_MS = 6_000L
+        const val STOP_TELL_MS = 2_000L
         // Busy before the thread is known, so a second tap in the same moment is refused.
         const val PENDING = "pending"
     }

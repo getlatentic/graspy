@@ -36,6 +36,9 @@ class ScriptedTurnServer(private val steps: List<Step>) {
     /** How many of the first A2A messages reach the route but begin no turn: each is answered with an empty stream. */
     var silentMessages = 0
 
+    /** A chat that already exists answers an empty stream for a turn it has not got, not a 404. */
+    var knownChat = false
+
     private var begun = false
 
     /** The statuses the A2A route answers before it sends the stream. */
@@ -71,7 +74,7 @@ class ScriptedTurnServer(private val steps: List<Step>) {
 
     private fun events(after: Long): MockResponse {
         eventsFailures.removeFirstOrNull()?.let { return MockResponse().setResponseCode(it) }
-        if (!begun) return MockResponse().setResponseCode(404)
+        if (!begun) return if (knownChat) stream(emptyList(), 0) else MockResponse().setResponseCode(404)
         val skipped = lost()
         val firstNew = steps.indexOfFirst { it.seq > after }.let { if (it < 0) steps.size else it }
         val first = if (overlap) maxOf(firstNew - 1, 0) else firstNew

@@ -116,6 +116,28 @@ class TutorRunTest {
     }
 
     @Test
+    fun `in a chat that exists, a message that began no turn is sent again after reads that find nothing`() {
+        val (whole, _) = readUncut()
+        val server = tutor { a2aEvents = 0; silentMessages = 1; knownChat = true }
+
+        assertEquals(whole, ask(server).readOn())
+
+        assertEquals(2, messageIds(server).size)
+        assertEquals(1, messageIds(server).toSet().size)
+    }
+
+    @Test
+    fun `a stop the server accepted marks the reply stopped even when the first stream carried its end`() {
+        val server = tutor(STOPPED)
+        val run = ask(server)
+
+        assertTrue(runBlocking { run.stop() })
+
+        val reply = run.readOn()
+        assertTrue(reply.stopped)
+    }
+
+    @Test
     fun `a gateway error before the stream opens sends the same message again`() {
         val (whole, _) = readUncut()
         val server = tutor { a2aFailures += listOf(502, 503) }
