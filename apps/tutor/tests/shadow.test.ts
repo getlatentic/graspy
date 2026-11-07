@@ -48,7 +48,7 @@ describe("the observer run beside the router and only logged", () => {
     expect((await takeTurn(env, ask("Then"))).verdict).toBe("correct");
     await settled();
     const shadow = lines(spy).find((line) => line.part === "observer-shadow");
-    expect([shadow?.router, shadow?.observer, shadow?.agree]).toEqual(["mark_answer", "mark_answer", true]);
+    expect([shadow?.taken, shadow?.observer, shadow?.agree]).toEqual(["mark_answer", "mark_answer", true]);
     expect(shadow?.answer).toBeUndefined();
     expect(shadow?.heard).toBeUndefined();
   });
@@ -59,7 +59,7 @@ describe("the observer run beside the router and only logged", () => {
     expect((await takeTurn(env, ask("Then"))).verdict).toBe("correct");
     await settled();
     const shadow = lines(spy).find((line) => line.part === "observer-shadow");
-    expect([shadow?.router, shadow?.observer, shadow?.agree, shadow?.safety]).toEqual(["mark_answer", "needs_grownup", false, { illness: 0.9 }]);
+    expect([shadow?.taken, shadow?.observer, shadow?.agree, shadow?.safety]).toEqual(["mark_answer", "needs_grownup", false, { illness: 0.9 }]);
   });
 
   it("logs that there was no observation where the model gave none", async () => {
@@ -102,6 +102,65 @@ describe("the observer run beside the router and only logged", () => {
       await settled();
       expect(lines(spy).some((line) => line.part === "observer-shadow")).toBe(false);
     }
+  });
+});
+
+describe("a need answered by the safety rule is shadowed too", () => {
+  it("logs the rule's action beside what the observer read, and the turn is still the rule's", async () => {
+    const spy = logged();
+    const env = setup({ name: "mark_answer", args: { said: 10 } }, { physical_need: { toilet: 0.9 } }, { OBSERVER: "shadow" });
+    const reply = await takeTurn(env, ask("I need the toilet"));
+    expect(reply.heard).toBe("conversation");
+    await settled();
+    const shadow = lines(spy).find((line) => line.part === "observer-shadow");
+    expect([shadow?.decidedBy, shadow?.taken, shadow?.observer, shadow?.agree]).toEqual(["rule", "needs_help", "needs_help", true]);
+  });
+
+  it("logs a disagreement, and keeps the child's words out of the log", async () => {
+    const spy = logged();
+    const env = setup({ name: "mark_answer", args: { said: 10 } }, { answer: { value: 10, confidence: 0.9 } }, { OBSERVER: "shadow" });
+    await takeTurn(env, ask("I am hurt"));
+    await settled();
+    const logs = lines(spy);
+    expect(logs.find((line) => line.part === "observer-shadow")?.agree).toBe(false);
+    expect(JSON.stringify(logs)).not.toMatch(/I am hurt/);
+  });
+
+  it("does not run where the observer is not shadowing", async () => {
+    const spy = logged();
+    await takeTurn(setup({ name: "mark_answer", args: { said: 10 } }, { physical_need: { toilet: 0.9 } }, {}), ask("I need the toilet"));
+    await settled();
+    expect(lines(spy).some((line) => line.part === "observer-shadow")).toBe(false);
+  });
+});
+
+describe("the shadow's log is handed to the host to keep running", () => {
+  it("anchors the promise of each log, and it is done when the observer has answered", async () => {
+    logged();
+    const env = setup({ name: "mark_answer", args: { said: 10 } }, { answer: { value: 10, confidence: 0.9 } }, { OBSERVER: "shadow" });
+    const anchors: Promise<unknown>[] = [];
+    await traced("sample-abcdef123456", () => takeTurn(env, ask("Then")), (work) => anchors.push(work));
+    expect(anchors).toHaveLength(1);
+    await expect(anchors[0]).resolves.toBeUndefined();
+  });
+
+  it("anchors the log of a turn the rule answered", async () => {
+    logged();
+    const env = setup({ name: "mark_answer", args: { said: 10 } }, { physical_need: { toilet: 0.9 } }, { OBSERVER: "shadow" });
+    const anchors: Promise<unknown>[] = [];
+    await traced(undefined, () => takeTurn(env, ask("I need the toilet")), (work) => anchors.push(work));
+    expect(anchors).toHaveLength(1);
+  });
+});
+
+describe("a host that refuses the anchor", () => {
+  it("does not fail the child's turn", async () => {
+    logged();
+    const env = setup({ name: "mark_answer", args: { said: 10 } }, { physical_need: { toilet: 0.9 } }, { OBSERVER: "shadow" });
+    const reply = await traced(undefined, () => takeTurn(env, ask("I need the toilet")), () => {
+      throw new Error("Illegal invocation");
+    });
+    expect(reply.heard).toBe("conversation");
   });
 });
 

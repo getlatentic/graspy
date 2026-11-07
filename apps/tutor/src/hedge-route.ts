@@ -10,7 +10,8 @@ import { MODEL_TIMEOUT_MS, routeUtterance, type Route } from "./router";
 import { currentTurn } from "./timing";
 import type { Ask } from "./turn";
 
-export type Decider = "router" | "observer";
+/** Who chose the action a turn took: the safety rule answers a need in code; the observer only reads beside it where shadowing. */
+export type Decider = "router" | "observer" | "rule";
 
 export interface Routed {
   route: Route;

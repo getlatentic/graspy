@@ -5,10 +5,11 @@
  */
 
 import { heardForPrompt } from "./guard";
+import type { Decider } from "./hedge-route";
 import type { Observation } from "./observation";
 import { observeAndDecide } from "./observer";
 import type { Route } from "./router";
-import { currentTurn } from "./timing";
+import { anchored, currentTurn } from "./timing";
 import type { Ask } from "./turn";
 
 export interface Shadow {
@@ -29,12 +30,12 @@ export async function watch(env: Env, ask: Ask): Promise<Shadow | null> {
 const rounded = (scores: Record<string, number>) => Object.fromEntries(Object.entries(scores).filter(([, score]) => score >= 0.2).map(([name, score]) => [name, Math.round(score * 100) / 100]));
 
 /**
- * Logs the router's action and the observer's beside each other when the observer has answered. The turn does not wait for it: it
+ * Logs the action taken (by the router, the observer or the safety rule) and the observer's beside each other when the observer has answered. The turn does not wait for it: it
  * is logged when it is there, with the turn's id. The child's words, and the number read from them, only where asked for.
  */
-export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Promise<Shadow | null>, by: "router" | "observer" = "router"): void {
+export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Promise<Shadow | null>, by: Decider = "router"): void {
   const turn = currentTurn();
-  void shadow.then((seen) => {
+  anchored(shadow.then((seen) => {
     const said = seen?.route ?? null;
     const words = env.OBSERVER_LOG_TEXT === "on";
     console.log(
@@ -42,7 +43,7 @@ export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Pr
         ...(turn === undefined ? {} : { turn }),
         part: "observer-shadow",
         decidedBy: by,
-        router: controlling?.action ?? null,
+        taken: controlling?.action ?? null,
         observer: seen === null ? "none" : (said?.action ?? null),
         // Where the observer decided the turn there is no other action to agree with.
         agree: by === "observer" ? null : seen !== null && controlling?.action === said?.action && controlling?.said === said?.said,
@@ -52,5 +53,5 @@ export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Pr
         ...(words ? { heard: heardForPrompt(ask.heard) } : {}),
       }),
     );
-  });
+  }).catch(() => undefined));
 }
