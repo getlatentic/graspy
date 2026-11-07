@@ -126,3 +126,46 @@ def test_each_role_takes_a_turn_so_worked_examples_are_not_crowded_out():
 
     assert sum(len(p["text"]) for p in chosen) <= TOPIC_BUDGET
     assert sum(p["role"] == "worked_example" for p in chosen) == 3
+
+
+def test_no_two_topics_of_a_course_share_a_title_once_written_as_a_slug():
+    from app.utils.slug import slugify
+
+    course = held_course("NG", "jss-1", "Mathematics")
+    assert course is not None
+    slugs = [slugify(title) for title in course.topics()]
+    assert len(slugs) == len(set(slugs))
+
+
+def test_a_passage_too_long_to_keep_whole_is_left_out_not_kept_empty():
+    from app.domains.curriculum.packages.textbook_export import (
+        PASSAGE_LIMIT,
+        _shortened,
+    )
+
+    assert _shortened("x" * (PASSAGE_LIMIT + 1)) == ""
+
+
+def test_a_linked_passage_whose_text_is_left_empty_by_shortening_is_not_kept():
+    import sqlite3
+
+    from app.domains.curriculum.packages.textbook_export import PASSAGE_LIMIT, _linked
+
+    db = sqlite3.connect(":memory:")
+    db.executescript(
+        """
+        CREATE TABLE textbook_records (record_id, title, chapter_title, prompt_text, content_text, retrieval_text);
+        CREATE TABLE subtopic_sources (subtopic_id, record_id, role, rank);
+        """
+    )
+    for record, text in (("long", "x" * (PASSAGE_LIMIT + 1)), ("short", "A fraction.")):
+        db.execute(
+            "INSERT INTO textbook_records VALUES (?, ?, 'Chapter', '', ?, '')",
+            (record, record, text),
+        )
+        db.execute(
+            "INSERT INTO subtopic_sources VALUES ('s', ?, 'instruction', ?)",
+            (record, 1 if record == "long" else 2),
+        )
+
+    assert [p["id"] for p in _linked(db, ["s"])] == ["short"]

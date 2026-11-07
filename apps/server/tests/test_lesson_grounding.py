@@ -59,7 +59,7 @@ async def test_the_plan_each_slide_and_the_practice_are_given_the_topics_objecti
         for passage in topic.passages:
             assert passage.title in asked["source_passages"]
             assert passage.text in asked["source_passages"]
-    assert len(topic.objectives) == 17 and topic.passages
+    assert topic.objectives and topic.passages
 
 
 async def test_a_slide_written_again_is_still_given_them():

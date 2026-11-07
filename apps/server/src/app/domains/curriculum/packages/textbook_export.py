@@ -74,7 +74,7 @@ def _linked(db: sqlite3.Connection, subtopics: list[str]) -> list[dict]:
     seen: set[str] = set()
     found = []
     for role, record, title, chapter, prompt, content, retrieval in rows:
-        text = _text(role, prompt, content, retrieval)
+        text = _shortened(_text(role, prompt, content, retrieval))
         if record in seen or not text:
             continue
         seen.add(record)
@@ -84,7 +84,7 @@ def _linked(db: sqlite3.Connection, subtopics: list[str]) -> list[dict]:
                 "role": role,
                 "title": title,
                 "chapter": chapter,
-                "text": _shortened(text),
+                "text": text,
             }
         )
     return found

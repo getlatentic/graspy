@@ -27,13 +27,7 @@ export interface LessonGrounding {
   objectives: string[];
   passages: { title: string; chapter: string }[];
   /** Absent when no passage is linked to the topic. */
-  textbook: {
-    title: string;
-    sourceUrl: string;
-    licence: string;
-    licenceUrl: string;
-    attribution: string;
-  } | null;
+  textbook: { title: string; attribution: string } | null;
 }
 
 interface Lesson {
@@ -94,26 +88,13 @@ function slideOf(value: unknown): LessonSlide | null {
   };
 }
 
+/** What the licence needs shown: a textbook missing its title or attribution is not shown as one. */
 function textbookOf(value: unknown): LessonGrounding["textbook"] {
   const book = value as Partial<
     NonNullable<LessonGrounding["textbook"]>
   > | null;
-  if (
-    !isText(book?.title) ||
-    !isText(book.sourceUrl) ||
-    !isText(book.licence) ||
-    !isText(book.licenceUrl) ||
-    !isText(book.attribution)
-  ) {
-    return null;
-  }
-  return {
-    title: book.title,
-    sourceUrl: book.sourceUrl,
-    licence: book.licence,
-    licenceUrl: book.licenceUrl,
-    attribution: book.attribution,
-  };
+  if (!isText(book?.title) || !isText(book.attribution)) return null;
+  return { title: book.title, attribution: book.attribution };
 }
 
 function groundingOf(value: unknown): LessonGrounding | null {

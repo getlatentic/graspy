@@ -83,7 +83,7 @@ describe("a lesson on a topic of an official curriculum", () => {
     expect(grounding.passages).toEqual([
       { title: "3.1 What is a fraction?", chapter: "Chapter 3: Fractions" },
     ]);
-    expect(grounding.textbook?.licence).toContain("Attribution");
+    expect(grounding.textbook?.attribution).toContain("CC BY 3.0");
   });
 
   it("has none when a model planned it", () => {
@@ -113,6 +113,24 @@ describe("a lesson on a topic of an official curriculum", () => {
 
     expect(grounding.objectives).toEqual(["Count in millions."]);
     expect(grounding.passages).toEqual([]);
+    expect(grounding.textbook).toBeNull();
+  });
+});
+
+describe("a lesson's citation with a textbook missing a field", () => {
+  it("keeps the passages and drops only the textbook it cannot name", () => {
+    const grounding = lessonViewOf({
+      ...opened,
+      lesson: {
+        ...opened.lesson,
+        grounding: {
+          ...opened.lesson.grounding,
+          textbook: { title: "Siyavula Mathematics JSS 1" },
+        },
+      },
+    })!.lesson!.grounding!;
+
+    expect(grounding.passages).toHaveLength(1);
     expect(grounding.textbook).toBeNull();
   });
 });

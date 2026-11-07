@@ -26,25 +26,23 @@ export function LessonSource({
           <section aria-label={words.objectives}>
             <h2 className="font-semibold text-ink">{words.objectives}</h2>
             <ul className="mt-1 list-disc space-y-1 ps-5">
-              {objectives.map((objective) => (
-                <li key={objective}>{objective}</li>
+              {objectives.map((objective, index) => (
+                <li key={index}>{objective}</li>
               ))}
             </ul>
           </section>
         )}
-        {textbook && passages.length > 0 ? (
-          <section aria-label={textbook.title}>
+        {passages.length > 0 ? (
+          <section aria-label={words.textbook}>
             <h2 className="font-semibold text-ink">
-              {fill(words.textbook, { title: textbook.title })}
+              {fill(words.textbook, { title: textbook?.title ?? "" })}
             </h2>
             <ul className="mt-1 list-disc space-y-1 ps-5">
-              {passages.map((passage) => (
-                <li key={`${passage.chapter}/${passage.title}`}>
-                  {passage.title}
-                </li>
+              {passages.map((passage, index) => (
+                <li key={index}>{passage.title}</li>
               ))}
             </ul>
-            <p className="mt-2 text-xs">{textbook.attribution}</p>
+            {textbook && <p className="mt-2 text-xs">{textbook.attribution}</p>}
           </section>
         ) : (
           <p>{words.noPassages}</p>
