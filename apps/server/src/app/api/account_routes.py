@@ -123,6 +123,19 @@ async def require_learner(keeping: Keeping, uid: str, learner_id: str) -> None:
         raise no_such_learner(learner_id) from None
 
 
+def consent_not_kept() -> HTTPException:
+    return refusal(503, "consent_not_kept", "The consent was not kept. Try again")
+
+
+async def _taken_back(database, key: str) -> None:
+    """A consent whose learner is gone, or may be, is deleted. Failing to is logged, not raised:
+    the caller's answer is about the learner, and the row is all that is left to find."""
+    try:
+        await forget_consents(database, key)
+    except Exception:
+        logger.exception("A consent with no learner could not be deleted: %s", key)
+
+
 async def grant_for_held_learner(
     keeping: Keeping,
     database,
@@ -133,17 +146,27 @@ async def grant_for_held_learner(
     retention_days: int | None,
 ) -> dict:
     """Writes the consent, then checks the account still holds the learner. Removing a learner
-    deletes their consents before it removes them, so a consent written in between, or while
-    Google was asked, would be left with no learner: that row is deleted."""
+    takes them out of the directory before it forgets what was kept for them, so a consent written
+    before the removal is deleted by it and one whose check comes after is deleted here. The
+    answer is the consent, 404 for a learner that is gone, or 503 `consent_not_kept` for any
+    other failure, after which no consent is left for the learner by this call."""
     key = learner_key(uid, learner_id)
-    granted = await grant_consent(
-        database, key, uid, scope, notice_version, retention_days, now_ms()
-    )
+    try:
+        granted = await grant_consent(
+            database, key, uid, scope, notice_version, retention_days, now_ms()
+        )
+    except Exception:
+        logger.exception("Consent for a learner was not kept")
+        raise consent_not_kept() from None
     try:
         await learner_of(keeping, uid, learner_id)
     except NoSuchLearner:
-        await forget_consents(database, key)
+        await _taken_back(database, key)
         raise no_such_learner(learner_id) from None
+    except Exception:
+        logger.exception("The learner a consent was written for could not be checked")
+        await _taken_back(database, key)
+        raise consent_not_kept() from None
     return granted
 
 
@@ -180,33 +203,30 @@ async def add_learner(
     if body.consent is None:
         return listed(learner, {})
     try:
-        granted = await grant_consent(
+        granted = await grant_for_held_learner(
+            keeping,
             request.app.state.voice.DB,
-            learner_key(uid, learner.id),
             uid,
+            learner.id,
             SERVICE,
             body.consent.notice_version,
             None,
-            now_ms(),
         )
-    except Exception:
-        # The learner lives in a Durable Object and the consent in D1, so they cannot be written
-        # together: the learner goes again, and a retry adds one learner, not two. D1 may be what
-        # failed, so only the directory's entry is taken back; if that fails too, the learner
-        # stays without consent, for the parent to agree for.
-        logger.exception(
-            "Consent for a new learner was not kept; the learner is undone"
-        )
-        try:
-            await unadded(keeping, uid, learner.id)
-        except Exception:
-            logger.exception(
-                "The learner whose consent was not kept could not be undone"
-            )
-        raise refusal(
-            503, "consent_not_kept", "The consent was not kept. Try again"
-        ) from None
+    except HTTPException as failure:
+        if failure.detail["code"] == "consent_not_kept":
+            await _undo_added(keeping, uid, learner.id)
+        raise
     return listed(learner, {SERVICE: granted})
+
+
+async def _undo_added(keeping: Keeping, uid: str, learner_id: str) -> None:
+    """The learner lives in a Durable Object and the consent in D1, so they cannot be written
+    together: the learner goes again, and a retry adds one learner, not two. If that fails too,
+    the learner stays without consent, for the parent to agree for."""
+    try:
+        await unadded(keeping, uid, learner_id)
+    except Exception:
+        logger.exception("The learner whose consent was not kept could not be undone")
 
 
 @account_router.put("/learners/{learner_id}/consent", response_model=ServiceConsent)
@@ -220,23 +240,15 @@ async def agree_to_service(
     """The parent of a learner added without consent agrees to graspy teaching them."""
     await require_learner(keeping, uid, learner_id)
     await _proved(request, uid, body)
-    try:
-        granted = await grant_for_held_learner(
-            keeping,
-            request.app.state.voice.DB,
-            uid,
-            learner_id,
-            SERVICE,
-            body.notice_version,
-            None,
-        )
-    except HTTPException:
-        raise
-    except Exception:
-        logger.exception("Consent for a learner was not kept")
-        raise refusal(
-            503, "consent_not_kept", "The consent was not kept. Try again"
-        ) from None
+    granted = await grant_for_held_learner(
+        keeping,
+        request.app.state.voice.DB,
+        uid,
+        learner_id,
+        SERVICE,
+        body.notice_version,
+        None,
+    )
     return ServiceConsent.model_validate(granted)
 
 

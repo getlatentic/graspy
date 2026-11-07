@@ -76,12 +76,16 @@ async def renamed(keeping: Keeping, uid: str, learner_id: str, name: str) -> Lea
 
 
 async def unadded(keeping: Keeping, uid: str, learner_id: str) -> None:
-    """Takes back a learner just added, who has nothing kept for them yet: only the directory's
-    entry goes, which is all that can be done where the stores that removing a learner also
-    clears are the ones that failed."""
-    await keeping.learners.change_directory(
-        account_key(uid), LearnerRemoved(id=learner_id)
-    )
+    """Takes back a learner just added, who has nothing kept for them yet but possibly a consent
+    that was written though its write was reported failed: the directory's entry and the consents
+    go, each tried even if the other fails, which is all that can be done where the stores that
+    removing a learner also clears are the ones that failed."""
+    try:
+        await keeping.learners.change_directory(
+            account_key(uid), LearnerRemoved(id=learner_id)
+        )
+    finally:
+        await keeping.voice.forget_consents(learner_key(uid, learner_id))
 
 
 async def _forgot_kept(keeping: Keeping, key: str) -> None:
@@ -97,14 +101,23 @@ async def _forgot_kept(keeping: Keeping, key: str) -> None:
 
 
 async def removed(keeping: Keeping, uid: str, learner_id: str) -> Directory:
-    """Everything kept for the learner goes: their record, plan, lessons,
-    tutor conversations, as the tutor recalls them and as their devices show
-    them, and voice lessons."""
-    await learner_of(keeping, uid, learner_id)
-    await _forgot_kept(keeping, learner_key(uid, learner_id))
+    """The learner leaves the directory first, then everything kept for them goes: their record,
+    plan, lessons, tutor conversations, as the tutor recalls them and as their devices show them,
+    voice lessons and consents. A consent written while this runs either finds the learner gone
+    and takes itself back, or is written before the stores are forgotten and goes with them.
+
+    Removing a learner already gone still forgets what was kept for them, so a removal that failed
+    part way is finished by sending it again."""
+    key = learner_key(uid, learner_id)
+    try:
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        await _forgot_kept(keeping, key)
+        raise
     await keeping.learners.change_directory(
         account_key(uid), LearnerRemoved(id=learner_id)
     )
+    await _forgot_kept(keeping, key)
     return await keeping.learners.directory(account_key(uid))
 
 
