@@ -215,6 +215,20 @@ describe("the pages of a learner in use", () => {
     expect(serviceConsentKept(UID, ADA.id)).toBe(true);
   });
 
+  it("shut, offering another try, when a refusal comes and the server cannot be asked who lacks the agreement", async () => {
+    signedInAs(ADA);
+    window.localStorage.setItem(`graspy.service-consent.${UID}/${ADA.id}`, "1");
+    listLearners.mockRejectedValue(new Error("offline"));
+    gated();
+
+    await refusedForConsent();
+
+    expect(
+      await screen.findByRole("button", { name: "learners.tryAgain" }),
+    ).toBeTruthy();
+    expect(pages()).toBeNull();
+  });
+
   it("stay open when the server refuses a call for another reason", async () => {
     signedInAs(ADA);
     window.localStorage.setItem(`graspy.service-consent.${UID}/${ADA.id}`, "1");

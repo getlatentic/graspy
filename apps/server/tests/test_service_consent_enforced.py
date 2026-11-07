@@ -113,6 +113,16 @@ async def test_each_route_of_a_learner_with_consent_is_not_refused_for_it(
     assert reached.status_code != 503
 
 
+async def test_the_public_views_are_open_to_a_learner_without_consent(app):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added(http)
+        await learner_session(http, learner)
+        reached = await sent(http, "POST", "/mcp/public")
+
+    assert not refused_for_consent(reached)
+
+
 async def test_a_turn_can_be_stopped_though_the_consent_is_gone(app, env):
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")

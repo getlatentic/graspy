@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { listLearners } from "@/lib/account/learners-api";
 import {
   forgetServiceConsent,
@@ -29,16 +29,19 @@ async function standingOnServer(
 
 // A refusal does not say which learner it was for (a call for the learner just left, or the one
 // being chosen, may arrive late), so the server is asked about the one in use.
-async function refusedFor(uid: string, learner: string): Promise<boolean> {
+async function refusedFor(
+  uid: string,
+  learner: string,
+): Promise<"needed" | "unchecked" | null> {
   try {
     const held = (await listLearners()).find((one) => one.id === learner);
-    if (!held || held.serviceConsent) return false;
+    if (!held || held.serviceConsent) return null;
   } catch (error) {
     console.warn("Asking whether a parent agreed failed:", error);
-    return false;
+    return "unchecked";
   }
   forgetServiceConsent(uid, learner);
-  return true;
+  return "needed";
 }
 
 /** The learner in use, asked of the server once and remembered on the device. */
@@ -49,6 +52,7 @@ export function useServiceStanding() {
   const key = uid && learner ? `${uid}/${learner}` : null;
   const [checked, setChecked] = useState<Checked | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const asking = useRef(false);
 
   useEffect(() => {
     if (!key || !uid || !learner || serviceConsentKept(uid, learner)) return;
@@ -69,9 +73,14 @@ export function useServiceStanding() {
   useEffect(() => {
     if (!key || !uid || !learner) return;
     return onConsentRequired(() => {
-      void refusedFor(uid, learner).then(
-        (needed) => needed && setChecked({ key, standing: "needed" }),
-      );
+      // A screen's calls are refused together; the server is asked once for all of them.
+      if (asking.current) return;
+      asking.current = true;
+      void refusedFor(uid, learner)
+        .then((standing) => standing && setChecked({ key, standing }))
+        .finally(() => {
+          asking.current = false;
+        });
     });
   }, [key, uid, learner]);
 
