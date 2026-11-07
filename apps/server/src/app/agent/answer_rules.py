@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from .cards import Question
-from .choices import plain
+from .choices import plain, states
 
 
 class Breach(Enum):
@@ -28,45 +28,56 @@ class Facts:
     acted: bool
 
 
+_NOT_A_VERDICT = (
+    r"(?!\s+(?:to|there|here|under|above|below|in|on|at|next|beside|now)\b)"
+)
 _SAYS_RIGHT = re.compile(
-    r"\b(?:that|it)(?:'s| is)\s+(?:\w+ly\s+)?(?:right|correct)\b(?!\s+to\b)"
-    r"|\b(?:your answer is|you(?:'re| are))\s+(?:\w+ly\s+)?(?:right|correct)\b(?!\s+to\b)"
-    r"|\byou got (?:it|that) right\b"
+    r"\b(?:that|it)(?:'s| is)\s+(?:\w+ly\s+)?(?:the\s+)?(?:right|correct)\b"
+    + _NOT_A_VERDICT
+    + r"|\b(?:your answer is|you(?:'re| are))\s+(?:\w+ly\s+)?(?:right|correct)\b"
+    + _NOT_A_VERDICT
+    + r"|\byou got (?:it|that) right\b"
     r"|\bcorrect!|\bwell done\b|\bspot on\b"
+    r"|^\W*(?:correct|exactly|perfect)\b"
 )
 _SAYS_WRONG = re.compile(
-    r"\b(?:that|it)(?:'s| is)\s+(?:not\s+(?:quite\s+)?(?:right|correct)|incorrect|wrong)\b"
+    r"\b(?:that|it)(?:'s| is)\s+(?:not\s+(?:quite\s+)?(?:right|correct)|incorrect|wrong(?!\s+to\b))"
     r"|\b(?:your answer is|you(?:'re| are))\s+(?:not\s+(?:quite\s+)?(?:right|correct)|incorrect|wrong)\b"
+    r"|^\W*(?:nope|not quite|unfortunately)\b"
 )
+_VERBS = r"(?:added|opened|changed|switched|removed|dropped|rebuilt|started|updated|reset|cleared|created)"
 _DONE = re.compile(
-    r"\b(?:i(?:'ve| have| just))\s+(?:now\s+|just\s+)?"
-    r"(?:added|opened|changed|switched|removed|dropped|rebuilt|started)\b"
-    r"|\b(?:has|have) been (?:added|opened|changed|switched|removed|rebuilt)\b"
+    rf"\bi(?:'ve|\s+have|\s+just|\s+now)?\s+(?:now\s+|just\s+)?{_VERBS}\b"
+    rf"|\b(?:has|have) been {_VERBS}\b|\bis now (?:in|on) your\b"
 )
+# What a change of the plan is a change of; "I've added 3 and 4" is arithmetic.
+_PLAN = re.compile(r"\b(?:plan|subjects?|topics?|lessons?|path)\b")
 # The app opens a lesson or a subject, never the tutor: it says it is ready below.
 _OPENED = re.compile(
-    r"\bi(?:'ve| have| just)\s+(?:now\s+|just\s+)?opened\b"
+    r"\bi(?:'ve|\s+have|\s+just)?\s+(?:now\s+|just\s+)?opened\b"
     r"|\b(?:has|have) been opened\b|\bis now open\b"
 )
-_ABOUT_ANSWER = re.compile(r"\b(?:answer|correct|right)\b")
+_PIECE = re.compile(r"(?<=[.!?])\s+|\n+")
+MIN_PIECE = 12
 
 
 def _appears(sentence: str, option: str) -> bool:
     wanted = plain(option)
     return (
         bool(wanted)
-        and re.search(rf"(?<!\w){re.escape(wanted)}(?!\w)", sentence) is not None
+        and re.search(rf"(?<![\w./]){re.escape(wanted)}(?![\w/]|\.\d)", sentence)
+        is not None
     )
 
 
 def _leaks_card(sentence: str, question: Question) -> bool:
-    """The question itself, a listing of its options, or its right answer."""
-    if plain(question.question) in sentence:
+    """A sentence of the question, a listing of its options, or its right answer."""
+    pieces = (piece.strip() for piece in _PIECE.split(plain(question.question)))
+    if any(len(piece) >= MIN_PIECE and piece in sentence for piece in pieces):
         return True
-    options = [_appears(sentence, option) for option in question.options]
-    if sum(options) >= 2:
+    if sum(_appears(sentence, option) for option in question.options) >= 2:
         return True
-    return options[question.answer_index] and _ABOUT_ANSWER.search(sentence) is not None
+    return states(sentence, question.options[question.answer_index], question.question)
 
 
 def _marking(verdicts: tuple[bool, ...]) -> str:
@@ -80,11 +91,13 @@ def _marking(verdicts: tuple[bool, ...]) -> str:
 def breach_in(sentence: str, facts: Facts) -> Breach | None:
     """The rule the sentence breaks, if any."""
     text = plain(sentence.replace("\u2019", "'"))
-    if _OPENED.search(text) or (_DONE.search(text) and not facts.acted):
+    if _OPENED.search(text) or (
+        _DONE.search(text) and _PLAN.search(text) and not facts.acted
+    ):
         return Breach.CLAIM
     marking = _marking(facts.verdicts)
-    if (_SAYS_RIGHT.search(text) and marking in ("none", "wrong")) or (
-        _SAYS_WRONG.search(text) and marking in ("none", "right")
+    if (_SAYS_RIGHT.search(text) and marking in ("none", "wrong", "mixed")) or (
+        _SAYS_WRONG.search(text) and marking in ("none", "right", "mixed")
     ):
         return Breach.VERDICT
     if any(_leaks_card(text, question) for question in facts.questions):

@@ -87,3 +87,51 @@ def test_a_passage_note_may_point_at_the_passage_without_the_answer():
     result, cards = give_passage([asked(hint="Read the sentence about the bus.")])
 
     assert "error" not in result and len(cards) == 1
+
+
+@pytest.mark.parametrize(
+    ("overrides", "text"),
+    [
+        (
+            {
+                "question": "What is 2 - 5?",
+                "options": ["-3", "3", "7"],
+                "working": "2 - 5 = -3",
+                "check": "2-5",
+            },
+            "The answer is -3.",
+        ),
+        (
+            {
+                "question": "What is 10 x 100?",
+                "options": ["1,000", "100", "10"],
+                "working": "10 x 100 = 1,000",
+                "check": "10*100",
+            },
+            "It is 1,000.",
+        ),
+        (
+            {
+                "question": "What is 2 + 3 cm?",
+                "options": ["5 cm", "6 cm", "1 cm"],
+                "working": "2 + 3 = 5 cm",
+            },
+            "It's 5.",
+        ),
+        (
+            {
+                "question": "What is 5 x 1?",
+                "options": ["5", "6", "1"],
+                "working": "5 x 1 = 5",
+                "check": "5*1",
+            },
+            "The answer is 5.",
+        ),
+    ],
+)
+def test_the_answer_is_found_with_a_sign_a_separator_a_unit_or_when_the_question_has_it(
+    overrides, text
+):
+    result, _ = give(hint=text, **overrides)
+
+    assert "gives away the right answer" in result["error"]

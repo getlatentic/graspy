@@ -30,6 +30,9 @@ def facts(verdicts=(), questions=(), acted=False) -> Facts:
         "You got it right!",
         "Correct! Nice work.",
         "Well done 🎉.",
+        "Correct.",
+        "Exactly! Perfect.",
+        "That's the right answer.",
         "Spot on!",
     ],
 )
@@ -41,7 +44,14 @@ def test_no_answer_is_called_right_until_the_app_has_marked_it(sentence):
 
 @pytest.mark.parametrize(
     "sentence",
-    ["That's wrong.", "That is not quite right.", "Your answer is incorrect."],
+    [
+        "That's wrong.",
+        "That is not quite right.",
+        "Your answer is incorrect.",
+        "Nope.",
+        "Not quite!",
+        "Unfortunately that is wrong.",
+    ],
 )
 def test_no_answer_is_called_wrong_until_the_app_has_marked_it(sentence):
     assert breach_in(sentence, facts()) is Breach.VERDICT
@@ -49,8 +59,9 @@ def test_no_answer_is_called_wrong_until_the_app_has_marked_it(sentence):
     assert breach_in(sentence, facts([False])) is None
 
 
-def test_two_taps_marked_differently_leave_the_tutor_to_say_which():
-    assert breach_in("That one is correct.", facts([True, False])) is None
+def test_two_taps_marked_differently_leave_no_bare_verdict():
+    assert breach_in("That is correct.", facts([True, False])) is Breach.VERDICT
+    assert breach_in("That is wrong.", facts([True, False])) is Breach.VERDICT
 
 
 @pytest.mark.parametrize(
@@ -59,6 +70,9 @@ def test_two_taps_marked_differently_leave_the_tutor_to_say_which():
         "The correct way to add fractions is to find a common denominator.",
         "You're right to ask about this.",
         "Right, let us start with the denominator.",
+        "It is right there in the question.",
+        "It's wrong to add the denominators.",
+        "I've added 3 and 4 to get 7.",
         "A common mistake is thinking that 0.38 is wrong because it looks odd.",
     ],
 )
@@ -74,6 +88,9 @@ def test_words_that_are_not_a_verdict_on_an_answer_pass(sentence):
         "The first one is 0.375 or 0.38.",
         "The answer is 0.375.",
         "The correct choice is 0.375.",
+        "It's 0.375.",
+        "3 divided by 8 equals 0.375.",
+        "0.375",
     ],
 )
 def test_a_card_is_not_written_into_the_answer(sentence):
@@ -99,8 +116,10 @@ def test_an_introduction_to_a_card_passes(sentence):
     [
         "I've added Algebra to your plan.",
         "I have changed your subjects.",
-        "Fractions has been added.",
-        "I just switched you to Science.",
+        "Fractions has been added to your topics.",
+        "I just switched your subject to Science.",
+        "I added Algebra to your plan.",
+        "Physics is now in your plan.",
     ],
 )
 def test_nothing_is_said_to_be_done_that_no_tool_did(sentence):
@@ -117,3 +136,23 @@ def test_the_app_opens_a_lesson_never_the_tutor(sentence):
 
 def test_it_is_ready_below_passes():
     assert breach_in("The fractions lesson is ready below.", facts(acted=True)) is None
+
+
+MULTI = Question(
+    question="Ada has 5 apples. She eats 2. How many are left?",
+    options=["3", "7", "2"],
+    answer_index=0,
+    correct_feedback="",
+    incorrect_feedback="",
+    hint="",
+)
+
+
+def test_a_question_of_several_sentences_is_found_in_any_of_them():
+    assert breach_in("How many are left?", facts(questions=[MULTI])) is Breach.CARD
+    assert breach_in("Ada has 5 apples.", facts(questions=[MULTI])) is Breach.CARD
+
+
+def test_a_short_option_is_not_found_inside_another_number():
+    assert breach_in("Add 3/8 and 2.5 first.", facts(questions=[MULTI])) is None
+    assert breach_in("Try it with 5 apples and 2.", facts(questions=[MULTI])) is None

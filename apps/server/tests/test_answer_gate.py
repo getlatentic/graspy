@@ -9,8 +9,10 @@ from app.agent.answer_gate import (
     CARD_INTRO,
     MARKED_WRONG,
     NOTHING_CHANGED,
+    READY_BELOW,
     STILL_UNMARKED,
     AnswerGate,
+    verdicts_in,
 )
 from app.agent.app_tools import app_calls
 from app.agent.memory import InMemoryConversationStore
@@ -46,16 +48,16 @@ def tapped(chosen: int):
     )
 
 
-async def turn(script, message="Hello", calls=None):
+async def turn(script, message="Hello", calls=None, memory=None):
     """What the learner was sent as the answer, the reply, and what was kept."""
-    memory = InMemoryConversationStore()
+    memory = memory or InMemoryConversationStore()
     _, context = stand_in(script)
     with context:
         items = [i async for i in Tutor(memory).stream("c", message, MATHS, calls)]
     reply = items[-1]
     assert isinstance(reply, TutorReply)
     sent = "".join(i.text for i in items if isinstance(i, AnswerDelta))
-    [kept] = (await memory.load("c")).exchanges
+    kept = list((await memory.load("c")).exchanges)[-1]
     assert sent.strip() == reply.answer == kept["answer"]
     return reply.answer
 
@@ -135,3 +137,40 @@ def test_a_blank_answer_stays_blank():
     gate = AnswerGate(TurnOutputs(), ())
 
     assert gate.feed("") == "" and gate.finish() == "" and gate.answer() == ""
+
+
+def test_the_marking_is_read_back_from_what_a_tap_was_told_as():
+    told = "The right answer: 0.375\nThe learner chose: 0.35, which is wrong."
+
+    assert verdicts_in(told) == (False,)
+    assert verdicts_in("") == ()
+
+
+async def _after_a_wrong_tap():
+    memory = InMemoryConversationStore()
+    await turn(finish("Let us look at it."), "I chose 0.35", tapped(2), memory)
+    return memory
+
+
+async def test_a_question_about_the_last_tap_may_say_it_was_not_right():
+    memory = await _after_a_wrong_tap()
+    text = "That is not right because 3 divided by 8 is 0.375."
+
+    assert await turn(finish(text), "why?", None, memory) == text
+
+
+async def test_a_question_about_the_last_tap_cannot_call_it_right():
+    memory = await _after_a_wrong_tap()
+
+    answer = await turn(finish("That is right! Well done."), "so?", None, memory)
+
+    assert answer == MARKED_WRONG
+
+
+async def test_an_answer_that_only_claims_an_opening_says_it_is_ready_below_when_a_tool_acted():
+    gate = AnswerGate(TurnOutputs(actions=[object()]), ())
+
+    gate.feed("The lesson is now open.")
+    gate.finish()
+
+    assert gate.answer() == READY_BELOW

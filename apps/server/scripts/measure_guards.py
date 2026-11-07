@@ -126,14 +126,14 @@ async def draw(spec: dict, case: dict, lm: dspy.LM) -> dict:
         ]
     reply = items[-1]
     assert isinstance(reply, TutorReply)
-    [gate] = _GATES.get()[-1:]
+    gates = _GATES.get()
     return {
         "case": case["id"],
-        "raw": gate.raw,
+        "raw": gates[-1].raw,
         "delivered": reply.answer,
-        "raw_violation": violates(case, spec, gate.raw, reply),
+        "raw_violation": violates(case, spec, gates[-1].raw, reply),
         "delivered_violation": violates(case, spec, reply.answer, reply),
-        "dropped": [b.value for b in gate.breaches],
+        "dropped": [b.value for gate in gates for b in gate.breaches],
         "cards": len(reply.cards),
         "refused_for_notes": len(_REFUSED.get()),
         "delivered_note_leak": note_leaks(reply.cards),

@@ -15,18 +15,30 @@ STILL_UNMARKED = "The app marks answers, not me: try it in a practice question."
 MARKED_RIGHT = "That is right."
 MARKED_WRONG = "That is not right yet."
 NOTHING_CHANGED = "Nothing has been changed."
+READY_BELOW = "It is ready below."
+SOME_RIGHT = "Some of those were right and some were not."
 
 _END = re.compile(r"(?<=[.!?])\s+|\n+")
 
 
-def _fallback(breach: Breach, verdicts: tuple[bool, ...]) -> str:
+def _fallback(breach: Breach, verdicts: tuple[bool, ...], acted: bool) -> str:
     if breach is Breach.CARD:
         return CARD_INTRO
     if breach is Breach.CLAIM:
-        return NOTHING_CHANGED
+        return READY_BELOW if acted else NOTHING_CHANGED
     if not verdicts:
         return STILL_UNMARKED
-    return MARKED_RIGHT if all(verdicts) else MARKED_WRONG
+    if all(verdicts):
+        return MARKED_RIGHT
+    return MARKED_WRONG if not any(verdicts) else SOME_RIGHT
+
+
+_MARKED = re.compile(r"The learner chose: .*, which is (right|wrong)\.")
+
+
+def verdicts_in(told: str) -> tuple[bool, ...]:
+    """The markings a tap was told to the tutor with (PracticeAnswer.describe)."""
+    return tuple(found == "right" for found in _MARKED.findall(told))
 
 
 class AnswerGate:
@@ -63,7 +75,9 @@ class AnswerGate:
         tail = self._keep(self._judged(rest)) if rest else ""
         if self._first_breach is None or self.answer():
             return tail
-        return tail + self._keep(_fallback(self._first_breach, self._verdicts))
+        return tail + self._keep(
+            _fallback(self._first_breach, self._verdicts, bool(self._outputs.actions))
+        )
 
     def answer(self) -> str:
         return "".join(self._sent).strip()

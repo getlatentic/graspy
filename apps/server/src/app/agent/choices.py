@@ -81,11 +81,33 @@ def _same_answer(a: tuple[float, int | None], b: tuple[float, int | None]) -> bo
 NUMBERS_IN = re.compile(r"\\d?frac\{\d+\}\{\d+\}|\d+\s*/\s*\d+|\d+(?:\.\d+)?|\.\d+")
 
 
-def _gives(text: str, right: str, given: str) -> bool:
+ABOUT_ANSWER = re.compile(r"\b(?:answer|correct|right)\b")
+
+
+def _numbers(text: str):
+    """Each number written in ``text`` as (token, value), a minus sign kept
+    and thousands separators dropped."""
+    text = re.sub(r"(?<=\d),(?=\d{3}\b)", "", text)
+    for found in NUMBERS_IN.finditer(text):
+        token, start = found.group(), found.start()
+        value = number(token if token[0] != "." else f"0{token}")
+        if value is None:
+            continue
+        negative = (
+            start > 0
+            and text[start - 1] == "-"
+            and (start == 1 or text[start - 2] in " (=:\n")
+        )
+        yield token, ((-value[0], value[1]) if negative else value)
+
+
+def states(text: str, right: str, given: str) -> bool:
     """Whether ``text`` states the right option: its words, or a number equal
-    to it that the question had not already given."""
+    to it (a unit after it ignored) that the question had not already given,
+    unless the text calls it the answer."""
     wanted, written, setting = plain(right), plain(text), plain(given)
-    marked = number(wanted.replace("%", ""))
+    bare = re.sub(r"\s*[a-z°²³/]+$", "", wanted.replace("%", ""))
+    marked = number(bare)
     if marked is None:
         return (
             bool(wanted)
@@ -93,13 +115,11 @@ def _gives(text: str, right: str, given: str) -> bool:
             and re.search(rf"(?<!\w){re.escape(wanted)}(?!\w)", written) is not None
         )
     given_tokens = set(NUMBERS_IN.findall(setting))
-    values = (
-        (token, number(token if token[0] != "." else f"0{token}"))
-        for token in NUMBERS_IN.findall(written)
-    )
+    calls_it_the_answer = ABOUT_ANSWER.search(written) is not None
     return any(
-        token not in given_tokens and value is not None and _same_answer(value, marked)
-        for token, value in values
+        (token not in given_tokens or calls_it_the_answer)
+        and _same_answer(value, marked)
+        for token, value in _numbers(written)
     )
 
 
@@ -112,7 +132,7 @@ def key_leak(written: Written, choices: list[str], given: str) -> str | None:
         ("hint", written.hint),
         ("incorrect_feedback", written.incorrect_feedback),
     ):
-        if _gives(text, right, given):
+        if states(text, right, given):
             return (
                 f"The {name} gives away the right answer, {right!r}. Write it as "
                 "a nudge towards the method, without stating the answer."

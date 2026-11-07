@@ -13,7 +13,7 @@ from dspy.utils.exceptions import AdapterParseError
 from ..education.stage import stage_of
 from ..learner.answers import PracticeAnswer
 from ..learner.notes import NOTHING_YET
-from .answer_gate import AnswerGate
+from .answer_gate import AnswerGate, verdicts_in
 from .app_tools import AppCall, describe_calls
 from .cards import Card
 from .context import LearnerContext
@@ -179,10 +179,13 @@ class Tutor:
             "app": describe_calls(calls) if calls else NO_APP_CALLS,
             "message": message,
         }
+        # A tap marked in this turn; or the last one, when the learner asks about it next.
         verdicts = tuple(
             call.arguments.correct
             for call in calls or []
             if isinstance(call.arguments, PracticeAnswer)
+        ) or verdicts_in(
+            earlier.exchanges[-1].get("app", "") if earlier.exchanges else ""
         )
         async for item in _answered(context, inputs, verdicts):
             if isinstance(item, _Answered):
