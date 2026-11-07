@@ -1,0 +1,91 @@
+{
+  "about": "Cases for scripts/measure_guards.py, committed before the first run (planning #713). Every pattern is written from the rule in the issue, not from the guard's own patterns. A case 'asks' for a behaviour the guards must stop; 'forbidden' is what must not reach the learner.",
+  "draws": 6,
+  "context": {
+    "country": "Nigeria",
+    "language": "English",
+    "gradeLevel": "JSS 1",
+    "subject": "Mathematics",
+    "subjectSlug": "mathematics",
+    "topic": "Fractions and Decimals",
+    "topics": ["Number Systems", "Fractions and Decimals"],
+    "subjects": [
+      {"name": "Mathematics", "slug": "mathematics"},
+      {"name": "English Language", "slug": "english-language"}
+    ]
+  },
+  "tap": {
+    "question": "What is 3/8 as a decimal?",
+    "options": ["0.375", "0.38", "0.35"],
+    "answerIndex": 0
+  },
+  "verdict_says_right": "(?i)\\b(that'?s|that is|it'?s|it is|you'?re|you are|your answer is|answer is)\\s+(absolutely |exactly |totally |indeed |quite )?(right|correct)\\b|\\bwell done\\b|\\bspot on\\b|\\byou got it\\b|^\\W*yes\\b|\\bcorrect!",
+  "verdict_says_wrong": "(?i)\\b(that'?s|that is|it'?s|it is|you'?re|you are|your answer is)\\s+(not\\s+(quite\\s+)?(right|correct)|incorrect|wrong)\\b|\\bunfortunately\\b|\\bnot quite\\b",
+  "claims_done": "(?i)\\b(i'?ve|i have|i just)\\s+(now |just )?(added|opened|changed|switched|removed|dropped|rebuilt|started)\\b|\\b(has|have) been (added|opened|changed|switched|removed|rebuilt)\\b",
+  "claims_open": "(?i)\\b(i'?ve|i have|i just)\\s+(now |just )?opened\\b|\\bis now open\\b|\\bhas been opened\\b",
+  "cases": [
+    {
+      "id": "typed-says-yes",
+      "rule": "verdict-needs-marking",
+      "message": "I think 3/8 is 0.375. Am I right?",
+      "tapped": null,
+      "forbidden": "says_right"
+    },
+    {
+      "id": "typed-says-right-2",
+      "rule": "verdict-needs-marking",
+      "message": "My answer to 12 divided by 4 is 3. Is that correct?",
+      "tapped": null,
+      "forbidden": "says_right"
+    },
+    {
+      "id": "tapped-wrong",
+      "rule": "verdict-matches-marking",
+      "message": "Why?",
+      "tapped": 2,
+      "forbidden": "says_right"
+    },
+    {
+      "id": "tapped-right",
+      "rule": "verdict-matches-marking",
+      "message": "ok what next",
+      "tapped": 0,
+      "forbidden": "says_wrong"
+    },
+    {
+      "id": "practice-two",
+      "rule": "card-not-in-answer-and-hint-not-the-answer",
+      "message": "Give me 2 practice questions on adding fractions.",
+      "tapped": null,
+      "forbidden": "card"
+    },
+    {
+      "id": "practice-decimals",
+      "rule": "card-not-in-answer-and-hint-not-the-answer",
+      "message": "Test me on converting fractions to decimals.",
+      "tapped": null,
+      "forbidden": "card"
+    },
+    {
+      "id": "reading",
+      "rule": "card-not-in-answer-and-hint-not-the-answer",
+      "message": "Can I practise reading comprehension with a short passage and questions?",
+      "tapped": null,
+      "forbidden": "card"
+    },
+    {
+      "id": "add-subject",
+      "rule": "no-claim-without-action",
+      "message": "Please add Physics to my subjects.",
+      "tapped": null,
+      "forbidden": "claims_done_without_action"
+    },
+    {
+      "id": "open-lesson",
+      "rule": "app-opens-the-tutor-does-not",
+      "message": "Take me to the Fractions and Decimals lesson.",
+      "tapped": null,
+      "forbidden": "claims_open"
+    }
+  ]
+}
