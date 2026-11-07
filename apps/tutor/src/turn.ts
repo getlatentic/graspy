@@ -31,7 +31,8 @@ import { exampleBlock } from "./phrasebook";
 import { correctionLine, listStoppedLine, needsGrownupLine, needsHelpLine, notHeardLine, praiseLine } from "./praise";
 import { sameLine, type Told } from "./told";
 import { answerHeard } from "./read";
-import { observedRoute } from "./observer";
+import { routeWithObserver, type Routed } from "./hedge-route";
+import { observeAndDecide, observedRoute } from "./observer";
 import { isShadowing, report, watch } from "./shadow";
 import { timed } from "./timing";
 import { mayBeAnAnswer, repliedTo, routeUtterance } from "./router";
@@ -606,19 +607,31 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   // Nothing but a number is an answer, with nothing to route.
   if (expected === null || heard === "" || isBareNumber(heard)) return null;
   const shadow = isShadowing(env) ? watch(env, ask) : null;
-  const route = await timed("route", observing ? observedRoute(env, ask) : routeUtterance(env, ask)).catch(() => null);
-  if (shadow !== null) report(env, ask, route, shadow);
-  if (route === null) return null;
+  const decided = await timed("route", routedBy(env, ask, observing, shadow)).catch(() => null);
+  if (shadow !== null) report(env, ask, decided?.route ?? null, shadow, decided?.by ?? (observing ? "observer" : "router"));
+  if (decided === null) return null;
+  const { route } = decided;
   if (route.action === "mark_answer") {
     return route.said !== undefined && (soundsLike(heard, route.said) || isOnlyTheAnswer(heard, route.said)) ? markedNumber(route.said, ask, expected) : null;
   }
   // An observation has said whether there was an answer beside the rest, and the policy has put it in order; the router's one
   // choice has not, so anything but an answer, said of words that may be one, would throw a right answer away.
-  if (!observing) {
+  if (decided.by === "router") {
     if (isOnlyTheAnswer(heard, expected) && route.action.startsWith("needs_")) return markedNumber(expected, ask, expected);
     if (mayBeAnAnswer(heard)) return null;
   }
   return repliedTo(env, ask, route).catch(() => null);
+}
+
+/** The action and who chose it: the observer where it is on; else the router, with the observer beside its second request where `OBSERVER_HEDGE` is on. */
+async function routedBy(env: Env, ask: Ask, observing: boolean, shadow: ReturnType<typeof watch> | null): Promise<Routed | null> {
+  if (observing) {
+    const route = await observedRoute(env, ask);
+    return route === null ? null : { route, by: "observer" };
+  }
+  if (env.OBSERVER_HEDGE === "on") return routeWithObserver(env, ask, () => shadow ?? observeAndDecide(env, ask));
+  const route = await routeUtterance(env, ask);
+  return route === null ? null : { route, by: "router" };
 }
 
 /**

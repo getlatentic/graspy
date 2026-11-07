@@ -27,8 +27,9 @@
       // benchmark (bench/README.md) it does not beat the small reader.
       // ROUTER=on answers a child who is not giving a number as a conversation (src/router.ts); on in staging first.
       // OBSERVER=shadow runs the observation beside the router and only logs the two (src/shadow.ts); the router stays in charge.
+      // OBSERVER_HEDGE=on starts the observer beside the router's second request when the router is slow (src/hedge-route.ts).
       // OBSERVER_LOG_TEXT=on adds the words to that log: staging's children are simulated.
-      "vars": { "SPELLER_HOST": "bedrock", "ROUTER": "on", "OBSERVER": "shadow", "OBSERVER_LOG_TEXT": "on" },
+      "vars": { "SPELLER_HOST": "bedrock", "ROUTER": "on", "OBSERVER": "shadow", "OBSERVER_HEDGE": "on", "OBSERVER_LOG_TEXT": "on" },
       "durable_objects": {
         "bindings": [{ "name": "Learner", "class_name": "Learner" }]
       }

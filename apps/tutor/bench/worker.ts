@@ -3,7 +3,8 @@ import { answerHeard } from "../src/read";
 import { isOnlyTheAnswer, needFor } from "../src/safety";
 import { ACTIONS, SETTING, mayBeAnAnswer, routeUtterance, type Action, type Route } from "../src/router";
 import { soundsLike } from "../src/sounds-like";
-import { observe } from "../src/observer";
+import { routeWithObserver } from "../src/hedge-route";
+import { observe, observeAndDecide } from "../src/observer";
 import { decide, THRESHOLD } from "../src/policy";
 import { observeWithClef } from "./clef-observer";
 
@@ -62,6 +63,18 @@ async function handle(request: Request, env: Env): Promise<Response> {
       // Clef has no number to give and no reply to write; Gemma's answer is checked by sound.
       const accepted = model === "gemma" && route?.action === "mark_answer" && route.said !== undefined && soundsLike(heard, route.said);
       return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard), soundsLikeTheAnswer: isOnlyTheAnswer(heard, 10), foundBySafetyRule: need !== null });
+    }
+    if (new URL(request.url).pathname === "/hedge") {
+      // The router alone (with its own second request) against the router with the observer started beside that second request.
+      const { heard, prompt, arm } = (await request.json()) as { heard: string; prompt: string; arm: "router" | "hedged" };
+      const ask = { prompt, heard, language: "en" as const, expect: { kind: "fact" as const, item: "10" } };
+      let observerAsked = false;
+      const [decided, ms] = await timed(
+        arm === "router"
+          ? routeUtterance(env, ask).then((route) => (route === null ? null : { route, by: "router" }))
+          : routeWithObserver(env, ask, () => { observerAsked = true; return observeAndDecide(env, ask); }),
+      );
+      return Response.json({ ms, observerAsked, by: decided?.by ?? "none", action: decided?.route.action ?? null });
     }
     if (new URL(request.url).pathname === "/observe") {
       const { heard, prompt, expected, model = "gemma", thresholds } = (await request.json()) as { heard: string; prompt: string; expected: number; model?: "gemma" | "clef" | "clef-flash"; thresholds?: Partial<typeof THRESHOLD> };

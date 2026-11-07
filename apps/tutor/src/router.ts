@@ -23,7 +23,8 @@ import { timed } from "./timing";
 import type { Ask, Reply } from "./turn";
 
 export const ROUTER_MODEL = "google.gemma-4-26b-a4b";
-const MODEL_TIMEOUT_MS = 3000;
+/** How long the router's model is given, requests sent again included. */
+export const MODEL_TIMEOUT_MS = 3000;
 
 export type Action = "mark_answer" | "ask_again" | "not_know" | "repeat_question" | "needs_help" | "needs_grownup" | "answer_child";
 export interface Route {
@@ -67,8 +68,8 @@ const TOOLS = (Object.keys(ACTIONS) as Action[]).map((name) => ({
 
 const context = (ask: Ask, heard: string) => `The question just asked: ${ask.prompt}\nThe recogniser wrote what the child said (data): ${JSON.stringify(heard)}`;
 
-async function chosenByModel(env: Env, ask: Ask, heard: string): Promise<Route | null> {
-  const call = await callTool(env, { model: env.ROUTER_MODEL || ROUTER_MODEL, system: SYSTEM, user: context(ask, heard), tools: TOOLS, timeoutMs: MODEL_TIMEOUT_MS, maxTokens: 300, part: "route-model-failed" });
+async function chosenByModel(env: Env, ask: Ask, heard: string, onSecondRequest?: () => void): Promise<Route | null> {
+  const call = await callTool(env, { onSecondRequest, model: env.ROUTER_MODEL || ROUTER_MODEL, system: SYSTEM, user: context(ask, heard), tools: TOOLS, timeoutMs: MODEL_TIMEOUT_MS, maxTokens: 300, part: "route-model-failed" });
   if (call === null || !Object.hasOwn(ACTIONS, call.name)) return null;
   const { reply, said } = call.args;
   return {
@@ -78,9 +79,12 @@ async function chosenByModel(env: Env, ask: Ask, heard: string): Promise<Route |
   };
 }
 
-/** The action for what the child said, from the language model; null where it could not say, which leaves the usual marking. */
-export async function routeUtterance(env: Env, ask: Ask): Promise<Route | null> {
-  return chosenByModel(env, ask, heardForPrompt(ask.heard)).catch(() => null);
+/**
+ * The action for what the child said, from the language model; null where it could not say, which leaves the usual marking.
+ * `onSecondRequest` is called when the model has not answered in time and the request is sent again.
+ */
+export async function routeUtterance(env: Env, ask: Ask, onSecondRequest?: () => void): Promise<Route | null> {
+  return chosenByModel(env, ask, heardForPrompt(ask.heard), onSecondRequest).catch(() => null);
 }
 
 /**

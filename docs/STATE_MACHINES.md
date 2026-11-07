@@ -26,7 +26,7 @@ Paths are under `apps/` unless they start with `.github` or `scripts`. A machine
 | Learner record and plan sync | `learner/record.py:77-366`, `learner/plan.py`, `learner/store.py:105-108` | `imported`, `joined` devices, plan matched by `plan_id` and `written_for` | TLA+ for join and agree |
 | Tutor thread sync | `threads/store.py:255-273`, `tutor_sync.seq` | per-owner monotone `seq`, cursors `(seq, id)` | Small model |
 | Session token | `security/session.py:25-107`, Firebase fresh-sign-in check | valid / expired | Fix with learner erasure |
-| Per-answer decision cascade | `tutor/src/turn.ts:401-511`, `router.ts`, `observer.ts`, `policy.ts:52-66` | fixed cascade: need → router/observer → don't know → plain number → plain list → model loop; flags `ROUTER`/`OBSERVER`/`INTERPRETER` | Table of the order and flags; Props |
+| Per-answer decision cascade | `tutor/src/turn.ts:401-511`, `router.ts`, `observer.ts`, `policy.ts:52-66` | fixed cascade: need → router/observer → don't know → plain number → plain list → model loop; flags `ROUTER`/`OBSERVER`/`OBSERVER_HEDGE`/`INTERPRETER`; with `OBSERVER_HEDGE=on` the observer starts beside the router's second request and the first action either settles is used (`hedge-route.ts`) | Table of the order and flags; Props |
 | Hint ladder and told memory | `tutor/src/told.ts`, `praise.ts:62-72`, `server/.../progress.py:50` | tutor rung = wrong rows among the last 4 told within 30 min; server rung = per-day miss streak | Fix: one source of truth |
 | Teacher audio store and publisher | `server/.../speech/teacher_audio.py:53-92`, `scripts/voice/publish_teacher_audio.py` | line recorded better / fallback only / none; notes file | Fix |
 
