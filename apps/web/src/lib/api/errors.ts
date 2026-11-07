@@ -1,3 +1,5 @@
+import { announceIfConsentRequired } from "./consent-refusal";
+
 // Gateway and rate-limit blips, and 0: a NetworkError, no answer at all.
 const RETRYABLE_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504]);
 
@@ -25,11 +27,16 @@ export class ApiError extends Error {
   }
 }
 
+function codeIn(record: Record<string, unknown> | undefined): unknown {
+  return (record?.detail as { code?: unknown } | undefined)?.code;
+}
+
 // A gateway answers with HTML, not JSON, so the body's detail is optional.
 export async function toApiError(response: Response): Promise<ApiError> {
   const body: unknown = await response.json().catch(() => undefined);
   const record = body as Record<string, unknown> | undefined;
   const detail = String(record?.error ?? record?.detail ?? "");
+  announceIfConsentRequired(response.status, codeIn(record));
   return new ApiError(
     detail || `Request failed with status ${response.status}`,
     response.status,

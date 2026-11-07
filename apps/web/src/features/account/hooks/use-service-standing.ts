@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { listLearners } from "@/lib/account/learners-api";
 import {
+  forgetServiceConsent,
   keepServiceConsent,
   serviceConsentKept,
 } from "@/lib/account/service-consent";
 import { useAccount } from "@/lib/account/use-account";
+import { onConsentRequired } from "@/lib/api/consent-refusal";
 
 /** Whether a parent has agreed to graspy teaching the learner in use:
  * `checking` while the server is asked, `unchecked` when it could not be, and `needed` when
@@ -25,6 +27,23 @@ async function standingOnServer(
   return "agreed";
 }
 
+// A refusal does not say which learner it was for (a call for the learner just left, or the one
+// being chosen, may arrive late), so the server is asked about the one in use.
+async function refusedFor(
+  uid: string,
+  learner: string,
+): Promise<"needed" | "unchecked" | null> {
+  try {
+    const held = (await listLearners()).find((one) => one.id === learner);
+    if (!held || held.serviceConsent) return null;
+  } catch (error) {
+    console.warn("Asking whether a parent agreed failed:", error);
+    return "unchecked";
+  }
+  forgetServiceConsent(uid, learner);
+  return "needed";
+}
+
 /** The learner in use, asked of the server once and remembered on the device. */
 export function useServiceStanding() {
   const account = useAccount();
@@ -33,6 +52,7 @@ export function useServiceStanding() {
   const key = uid && learner ? `${uid}/${learner}` : null;
   const [checked, setChecked] = useState<Checked | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const asking = useRef(false);
 
   useEffect(() => {
     if (!key || !uid || !learner || serviceConsentKept(uid, learner)) return;
@@ -47,6 +67,22 @@ export function useServiceStanding() {
       current = false;
     };
   }, [key, uid, learner, attempt]);
+
+  // The server refuses a learner whose agreement it does not hold, whatever this device
+  // remembers: the agreement is asked for again.
+  useEffect(() => {
+    if (!key || !uid || !learner) return;
+    return onConsentRequired(() => {
+      // A screen's calls are refused together; the server is asked once for all of them.
+      if (asking.current) return;
+      asking.current = true;
+      void refusedFor(uid, learner)
+        .then((standing) => standing && setChecked({ key, standing }))
+        .finally(() => {
+          asking.current = false;
+        });
+    });
+  }, [key, uid, learner]);
 
   const agreed = useCallback(() => {
     if (key) setChecked({ key, standing: "agreed" });

@@ -28,6 +28,7 @@ from .api.chat_routes import chat_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
 from .api.routes import api_router
+from .api.service_consent import session_consent_refusal
 from .api.thread_routes import thread_router
 from .api.voice_routes import voice_router
 from .caller import Keeping
@@ -77,6 +78,10 @@ def create_app(
     are unavailable. ``voice`` is the Worker's env, which the voice modules
     read their bindings from."""
     settings = settings or get_settings()
+    if settings.is_deployed and voice is None:
+        raise ValueError(
+            f"Consent cannot be enforced in {settings.app_env} without the Worker's bindings"
+        )
     lm = build_lm(settings)
     logger.info("Serving with model: %s", lm.model)
     configure_cache()
@@ -216,6 +221,7 @@ def _add_middleware(
         prefixes=(settings.a2a_path_prefix, MCP_PATH),
         secret=session_secret,
         open_paths=(PUBLIC_MCP_PATH,),
+        check=lambda session: session_consent_refusal(app, session),
     )
     if budgets is not None:
         app.add_middleware(

@@ -49,6 +49,7 @@ from .listed_learners import (
     listed_with_consents,
 )
 from .routes import SessionResponse, learner_session
+from .service_consent import service_consent_refusal
 
 logger = logging.getLogger(__name__)
 
@@ -293,6 +294,9 @@ async def choose_learner(
         learner = await learner_of(keeping, uid, learner_id)
     except NoSuchLearner:
         raise no_such_learner(learner_id) from None
+    refusal = await service_consent_refusal(request.app, learner_key(uid, learner.id))
+    if refusal is not None:
+        raise refusal
     if body and body.device_id:
         device = await Caller(body.device_id, keeping).record()
         await Caller(learner_key(uid, learner.id), keeping).change(

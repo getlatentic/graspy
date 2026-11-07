@@ -4,6 +4,7 @@ D1 rows kept under their key, their recordings, and the tutor's memory."""
 from urllib.parse import quote
 
 import pytest
+from service_agreed import service_agreed
 from signed_in import UID, added, chosen, client, signed_in
 from voice_worker import Bucket, voice_app, worker_env
 
@@ -54,6 +55,7 @@ def key(learner_id: str) -> str:
 
 async def taught(http, env, learner_id: str, recordings: int) -> None:
     """A lesson step offered and heard, marked recordings, and one still waiting to be marked."""
+    await service_agreed(env, learner_id)
     await chosen(http, learner_id)
     lesson = await http.get("/api/voice/lesson", params={"learner_class": "primary_3"})
     move = lesson.json()["move"]

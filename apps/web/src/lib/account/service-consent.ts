@@ -18,6 +18,14 @@ export function serviceConsentKept(account: string, learner: string): boolean {
   }
 }
 
+export function forgetServiceConsent(account: string, learner: string): void {
+  try {
+    window.localStorage.removeItem(keyOf(account, learner));
+  } catch {
+    // Storage refused: the server's refusal is heard again next time.
+  }
+}
+
 export function keepServiceConsent(account: string, learner: string): void {
   try {
     window.localStorage.setItem(keyOf(account, learner), String(Date.now()));

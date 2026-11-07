@@ -1,4 +1,5 @@
 import { audioFormat } from "./audio-format";
+import { announceIfConsentRequired } from "@/lib/api/consent-refusal";
 import { fetchWithSession } from "@/lib/api/session";
 import { voiceLearnerKey } from "./voice-learner-key";
 import { API_BASE_URL } from "@/lib/env";
@@ -23,6 +24,7 @@ export type VoiceCode =
   | "provider_failure"
   | "marking_failed"
   | "learner_required"
+  | "consent_required"
   | "voice_unavailable";
 
 export class VoiceError extends Error {
@@ -56,6 +58,7 @@ async function refusalOf(response: Response): Promise<VoiceError> {
   const body = found ?? {};
   const inner = (typeof body.detail === "object" ? body.detail : {}) as Body;
   const code = (body.code ?? inner.code ?? null) as VoiceCode | null;
+  announceIfConsentRequired(response.status, code);
   const message = String(
     (typeof body.detail === "string" ? body.detail : inner.error) ??
       `Voice request failed with status ${response.status}`,

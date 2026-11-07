@@ -15,6 +15,7 @@ const MESSAGES: Record<ConsentProblem, string> = {
   signIn: "consent.signIn",
   notice: "consent.notice",
   notKept: "consent.notKept",
+  required: "consent.needed",
   failed: "learners.failed",
 };
 

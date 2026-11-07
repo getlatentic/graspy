@@ -12,6 +12,7 @@ export type ConsentProblem =
   | "signIn"
   | "notice"
   | "notKept"
+  | "required"
   | "failed";
 
 // What the server names when the sign-in sent with a consent does not hold (docs/API.md).
@@ -23,6 +24,7 @@ const REFUSALS: Record<string, ConsentProblem> = {
   sign_in_not_google: "notGoogle",
   notice_unknown: "notice",
   consent_not_kept: "notKept",
+  consent_required: "required",
 };
 
 // Firebase's own codes, and the one graspy throws when Firebase holds nobody signed in.

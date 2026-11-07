@@ -8,6 +8,7 @@ import pytest
 from dspy.utils.dummies import DummyLM
 from fastapi.testclient import TestClient
 from stand_in import stand_in
+from voice_worker import worker_env
 
 from app.factory import create_app
 from app.settings import Settings
@@ -147,9 +148,15 @@ async def test_a_request_is_answered_by_the_apps_own_model(monkeypatch):
 @pytest.mark.parametrize("app_env", ["production", "staging"])
 @pytest.mark.parametrize("path", [*DOCS, "/docs/oauth2-redirect"])
 def test_a_deployment_serves_no_docs(path, app_env):
-    client = TestClient(create_app(settings(app_env=app_env)))
+    client = TestClient(create_app(settings(app_env=app_env), voice=worker_env()))
 
     assert client.get(path).status_code == 404
+
+
+@pytest.mark.parametrize("app_env", ["production", "staging"])
+def test_a_deployment_without_the_workers_bindings_does_not_start(app_env):
+    with pytest.raises(ValueError, match="Consent cannot be enforced"):
+        create_app(settings(app_env=app_env))
 
 
 async def _with_model(app, answers, request):
