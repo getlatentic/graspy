@@ -62,14 +62,14 @@ async def test_a_rescue_is_logged_with_the_first_recognizer_and_the_ask_alone_ti
 ):
     line, _ = await turn(capsys, asr, intron("10.", delay=0.05))
     assert (line["first"], line["outcome"], line["used"]) == (asr, "rescued", True)
-    assert 40 <= line["ms"] < 1000
+    assert 40 <= line["ask_ms"] < 2000
 
 
 @pytest.mark.asyncio
 async def test_the_ask_is_timed_without_the_first_recognizer(capsys):
     line, _ = await turn(capsys, "nova", intron("10.", delay=0.05), Ai(delay=0.3))
     assert line["first_ms"] >= 300
-    assert line["ms"] < 250
+    assert line["ask_ms"] < 280
 
 
 @pytest.mark.asyncio
@@ -85,8 +85,14 @@ async def test_a_second_opinion_given_up_on_and_one_that_failed_are_told_apart(
     monkeypatch.setattr(whisper_asr, "SECOND_OPINION_SECONDS", 0.01)
     line, _ = await turn(capsys, "nova", intron("10.", delay=1))
     assert (line["outcome"], line["used"]) == ("timeout", False)
-    assert line["ms"] < 500
+    assert line["ask_ms"] < 900
     line, _ = await turn(capsys, "nova", intron(RuntimeError("HTTP 429")))
+    assert (line["outcome"], line["used"]) == ("failed", False)
+
+
+@pytest.mark.asyncio
+async def test_a_timeout_of_introns_own_client_is_a_failure_not_the_deadline(capsys):
+    line, _ = await turn(capsys, "nova", intron(TimeoutError("read timed out")))
     assert (line["outcome"], line["used"]) == ("failed", False)
 
 

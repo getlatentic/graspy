@@ -82,14 +82,13 @@ async def _intron_reading(
         return round((time.perf_counter() - started) * 1000)
 
     try:
-        transcript, _ = await asyncio.wait_for(
-            intron(audio, "en", api_key, file_name, hedge=False),
-            timeout=SECOND_OPINION_SECONDS,
-        )
-    except TimeoutError:
-        logger.warning("Intron gave no second opinion in time")
-        return None, "timeout", spent()
+        async with asyncio.timeout(SECOND_OPINION_SECONDS) as deadline:
+            transcript, _ = await intron(audio, "en", api_key, file_name, hedge=False)
     except Exception:
+        # A timeout of Intron's own client is a failure of the ask, not the deadline this ask was given.
+        if deadline.expired():
+            logger.warning("Intron gave no second opinion in time")
+            return None, "timeout", spent()
         logger.warning("Intron gave no second opinion", exc_info=True)
         return None, "failed", spent()
     if reads_as_a_number(transcript):
@@ -116,7 +115,7 @@ async def transcribe_english(
 
     `intron` is the Intron recognizer to ask when no other is asked, gave no answer, or heard nothing.
     `second_opinion` says, of what the first recognizer heard, whether Intron is asked too; Intron's reading then stands
-    only if it is a number. Each second opinion is logged as `{"asr": "second_opinion", "first", "first_ms", "ms",
+    only if it is a number. Each second opinion is logged as `{"asr": "second_opinion", "first", "first_ms", "ask_ms",
     "outcome", "used"}` for the first recognizer, whether it or Nova-3, and the ask's own time."""
     started = time.perf_counter()
     text, heard_by = await _heard_first(env, audio)
@@ -133,7 +132,7 @@ async def transcribe_english(
                     "asr": "second_opinion",
                     "first": heard_by,
                     "first_ms": first_ms,
-                    "ms": asked_ms,
+                    "ask_ms": asked_ms,
                     "outcome": outcome,
                     "used": better is not None,
                 }
