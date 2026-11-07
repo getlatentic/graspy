@@ -8,7 +8,10 @@ from signed_in import UID, client, signed_in
 from voice_worker import worker_env
 
 from app.account.directory import LearnerRemoved, account_key
+from app.account.learners import FORGET_TRIES, removed
 from app.api import account_routes as routes_of_accounts
+from app.caller import Caller
+from app.learner.record import LearnerRecord, Seen
 
 CONSENT = {"noticeVersion": 1, "firebaseIdToken": "fresh"}
 ADDING = {"name": "Ada", "guardian": True, "consent": CONSENT}
@@ -143,56 +146,77 @@ async def test_a_consent_committed_though_d1_reported_failure_goes_with_the_undo
     assert consents(env) == []
 
 
-async def test_a_learner_that_cannot_be_checked_after_the_write_keeps_no_consent(
+def second_look_fails(monkeypatch, broken: list[bool]):
+    """The first look at the learner (the route's own) passes; the one after the write fails
+    while `broken` holds."""
+    looked = routes_of_accounts.learner_of
+    calls: list[str] = []
+
+    async def look(keeping, uid, learner_id):
+        calls.append(learner_id)
+        if len(calls) > 1 and broken:
+            raise RuntimeError("the directory is down")
+        return await looked(keeping, uid, learner_id)
+
+    monkeypatch.setattr("app.api.account_routes.learner_of", look)
+
+
+async def test_a_learner_that_cannot_be_checked_after_the_write_answers_503_and_a_resend_agrees(
     app, env, monkeypatch
 ):
+    broken = [True]
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")
         learner = await added_without_consent(http)
-        looked = routes_of_accounts.learner_of
-        calls = []
-
-        async def second_look_fails(keeping, uid, learner_id):
-            calls.append(learner_id)
-            if len(calls) > 1:
-                raise RuntimeError("the directory is down")
-            return await looked(keeping, uid, learner_id)
-
-        monkeypatch.setattr("app.api.account_routes.learner_of", second_look_fails)
+        second_look_fails(monkeypatch, broken)
         failed = await http.put(consent_url(learner), json=CONSENT)
+        broken.clear()
+        resent = await http.put(consent_url(learner), json=CONSENT)
 
     assert failed.status_code == 503
     assert failed.json()["detail"]["code"] == "consent_not_kept"
-    assert consents(env) == []
+    assert resent.status_code == 200
+    active = [row for row in consents(env) if row["revoked_at"] is None]
+    assert [row["scope"] for row in active] == ["service"]
 
 
-async def test_a_recordings_consent_for_a_learner_that_cannot_be_checked_answers_503_not_500(
+async def test_a_recordings_consent_for_a_learner_that_cannot_be_checked_answers_503_and_keeps_the_service_consent(
     app, env, monkeypatch
 ):
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")
         learner = await added_with_consent(http)
-
-        looked = routes_of_accounts.learner_of
-        calls = []
-
-        async def check_after_the_write_fails(keeping, uid, learner_id):
-            calls.append(learner_id)
-            if len(calls) > 1:
-                raise RuntimeError("the directory is down")
-            return await looked(keeping, uid, learner_id)
-
-        monkeypatch.setattr(
-            "app.api.account_routes.learner_of", check_after_the_write_fails
-        )
+        second_look_fails(monkeypatch, [True])
         failed = await http.put(
             voice_consent_url(learner), json={**CONSENT, "retentionDays": 30}
         )
-        recordings = env.DB.rows("SELECT * FROM consents WHERE scope = 'recordings'")
 
     assert failed.status_code == 503
     assert failed.json()["detail"]["code"] == "consent_not_kept"
-    assert recordings == []
+    active = [row["scope"] for row in consents(env) if row["revoked_at"] is None]
+    assert "service" in active
+
+
+async def test_a_consent_written_before_the_learner_was_forgotten_goes_with_them(
+    app, env, monkeypatch
+):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_without_consent(http)
+        write = routes_of_accounts.grant_consent
+
+        async def written_then_removed_in_full(database, key, *rest):
+            granted = await write(database, key, *rest)
+            await removed(app.state.keeping, UID, learner)
+            return granted
+
+        monkeypatch.setattr(
+            "app.api.account_routes.grant_consent", written_then_removed_in_full
+        )
+        refused = await http.put(consent_url(learner), json=CONSENT)
+
+    assert refused.status_code == 404
+    assert consents(env) == []
 
 
 async def test_a_consent_that_cannot_be_deleted_for_a_removed_learner_still_answers_404(
@@ -222,21 +246,50 @@ async def test_a_consent_that_cannot_be_deleted_for_a_removed_learner_still_answ
     assert refused.json()["detail"]["code"] == "no_such_learner"
 
 
-async def test_a_removal_that_failed_part_way_is_finished_by_sending_it_again(
+async def kept_for(app, learner: str):
+    """A record for the learner, so there is something besides consents to forget."""
+    key = f"account:{UID}/{learner}"
+    await Caller(key, app.state.keeping).change(Seen(fingerprint="ab" * 8))
+    return key
+
+
+def forgetting_fails(monkeypatch, app, times: int):
+    forget = app.state.keeping.voice.forget
+    failures = [True] * times
+
+    async def fails_then_forgets(key):
+        if failures:
+            failures.pop()
+            raise RuntimeError("the audio bucket is down")
+        await forget(key)
+
+    monkeypatch.setattr(app.state.keeping.voice, "forget", fails_then_forgets)
+    monkeypatch.setattr("app.account.learners.FORGET_PAUSE_SECONDS", 0)
+
+
+async def test_a_removal_whose_forgetting_fails_once_is_tried_again_and_completes(
     app, env, monkeypatch
 ):
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")
         learner = await added_with_consent(http)
-        forget = app.state.keeping.voice.forget
-        fail = [True]
+        key = await kept_for(app, learner)
+        forgetting_fails(monkeypatch, app, 1)
+        removal = await http.delete(f"/api/account/learners/{learner}")
 
-        async def fails_once(key):
-            if fail.pop() if fail else False:
-                raise RuntimeError("the audio bucket is down")
-            await forget(key)
+    assert removal.status_code == 200
+    assert consents(env) == []
+    assert await app.state.keeping.learners.load(key) == LearnerRecord()
 
-        monkeypatch.setattr(app.state.keeping.voice, "forget", fails_once)
+
+async def test_a_removal_whose_forgetting_keeps_failing_is_finished_by_sending_it_again(
+    app, env, monkeypatch
+):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_with_consent(http)
+        key = await kept_for(app, learner)
+        forgetting_fails(monkeypatch, app, FORGET_TRIES)
         with pytest.raises(RuntimeError):
             await http.delete(f"/api/account/learners/{learner}")
         listed_between = await directory_of(app)
@@ -245,3 +298,17 @@ async def test_a_removal_that_failed_part_way_is_finished_by_sending_it_again(
     assert listed_between == []
     assert again.status_code == 404
     assert consents(env) == []
+    assert await app.state.keeping.learners.load(key) == LearnerRecord()
+
+
+async def test_a_removal_of_a_learner_already_gone_answers_404_though_forgetting_fails(
+    app, env, monkeypatch
+):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added_with_consent(http)
+        await http.delete(f"/api/account/learners/{learner}")
+        forgetting_fails(monkeypatch, app, 99)
+        again = await http.delete(f"/api/account/learners/{learner}")
+
+    assert again.status_code == 404

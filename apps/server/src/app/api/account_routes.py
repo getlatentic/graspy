@@ -123,8 +123,18 @@ async def require_learner(keeping: Keeping, uid: str, learner_id: str) -> None:
         raise no_such_learner(learner_id) from None
 
 
-def consent_not_kept() -> HTTPException:
-    return refusal(503, "consent_not_kept", "The consent was not kept. Try again")
+class ConsentNotKept(HTTPException):
+    """The consent could not be written, or the learner it was written for could not be checked.
+    Sending it again is safe: it replaces the one written."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            status_code=503,
+            detail={
+                "error": "The consent was not kept. Try again",
+                "code": "consent_not_kept",
+            },
+        )
 
 
 async def _taken_back(database, key: str) -> None:
@@ -149,7 +159,8 @@ async def grant_for_held_learner(
     takes them out of the directory before it forgets what was kept for them, so a consent written
     before the removal is deleted by it and one whose check comes after is deleted here. The
     answer is the consent, 404 for a learner that is gone, or 503 `consent_not_kept` for any
-    other failure, after which no consent is left for the learner by this call."""
+    other failure. A learner who could not be checked most likely still exists, so the consents
+    they hold, this one included, stay."""
     key = learner_key(uid, learner_id)
     try:
         granted = await grant_consent(
@@ -157,7 +168,7 @@ async def grant_for_held_learner(
         )
     except Exception:
         logger.exception("Consent for a learner was not kept")
-        raise consent_not_kept() from None
+        raise ConsentNotKept() from None
     try:
         await learner_of(keeping, uid, learner_id)
     except NoSuchLearner:
@@ -165,8 +176,7 @@ async def grant_for_held_learner(
         raise no_such_learner(learner_id) from None
     except Exception:
         logger.exception("The learner a consent was written for could not be checked")
-        await _taken_back(database, key)
-        raise consent_not_kept() from None
+        raise ConsentNotKept() from None
     return granted
 
 
@@ -212,9 +222,8 @@ async def add_learner(
             body.consent.notice_version,
             None,
         )
-    except HTTPException as failure:
-        if failure.detail["code"] == "consent_not_kept":
-            await _undo_added(keeping, uid, learner.id)
+    except ConsentNotKept:
+        await _undo_added(keeping, uid, learner.id)
         raise
     return listed(learner, {SERVICE: granted})
 
