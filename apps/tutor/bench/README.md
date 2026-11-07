@@ -120,3 +120,17 @@ labelled fields to learn. It never missed a need or safety concern and never mar
 - `OBSERVER=on` turns the observation on. The router stays the default; the next step is the output cost (about 90 tokens of scores),
   by fewer or terser fields or a smaller model, and fine-tuned judgments on the labelled data.
 - A whole set sent at once is throttled by the hosts (7% empty and the latency measured was the queue's); the scorer sends four at a time.
+
+## Router with the observer beside its second request (`run-hedge.ts`, 2026-11-07)
+
+`worker.ts` has a `/hedge` endpoint and `run-hedge.ts` sends each routing case to two arms, alternating: today's router alone and
+the router with the observer started at 1.2 s (`src/hedge-route.ts`). Local Worker to Bedrock, 71 cases x 4 rounds, 328 turns each:
+
+| | median | p90 | p99 | max | over 3 s | observer asked | no action |
+|---|---|---|---|---|---|---|---|
+| router | 809 ms | 1050 | 2233 | 3002 | 2 | 0 | 2 |
+| hedged (before the 3 s cap) | 819 ms | 1084 | 2781 | 4205 | 2 | 21 (answered first 1) | 1 |
+
+The observer's own median is about a second, so started at 1.2 s it almost never beats the router's second request; what it buys is an
+action where the router gives none (2 turns became 1 in this run), which is the case that fell through to the 10 s teacher loop. Before the
+cap the observer could also be waited for to 4.2 s; the hedge now stops at the router's own 3 s.

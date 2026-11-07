@@ -6,7 +6,7 @@
  * where the router answers with nothing usable. A turn the router answers in time never calls it.
  */
 
-import { routeUtterance, type Route } from "./router";
+import { MODEL_TIMEOUT_MS, routeUtterance, type Route } from "./router";
 import { currentTurn } from "./timing";
 import type { Ask } from "./turn";
 
@@ -27,8 +27,11 @@ export type Observed = () => Promise<{ route: Route | null } | null>;
 export async function routeWithObserver(env: Env, ask: Ask, observed: Observed): Promise<Routed | null> {
   const started = Date.now();
   let hedged = false;
+  let cap: ReturnType<typeof setTimeout> | undefined;
   const decided = await new Promise<Routed | null>((resolve) => {
     let pending = 1;
+    // The observer is started late, so it is not waited for past the time the router itself is given.
+    cap = setTimeout(() => resolve(null), MODEL_TIMEOUT_MS);
     const settle = (routed: Routed | null) => {
       if (routed !== null) resolve(routed);
       else if (--pending === 0) resolve(null);
@@ -37,7 +40,7 @@ export async function routeWithObserver(env: Env, ask: Ask, observed: Observed):
       if (hedged) return;
       hedged = true;
       pending += 1;
-      void observed().then((seen) => settle(seen?.route ? { route: seen.route, by: "observer" } : null), () => settle(null));
+      void Promise.resolve().then(observed).then((seen) => settle(seen?.route ? { route: seen.route, by: "observer" } : null), () => settle(null));
     };
     // A router that answered with nothing usable is no reason to wait: the observer is the second opinion then too.
     const answered = (route: Route | null) => {
@@ -45,7 +48,7 @@ export async function routeWithObserver(env: Env, ask: Ask, observed: Observed):
       settle(route === null ? null : { route, by: "router" });
     };
     void routeUtterance(env, ask, beside).then(answered, () => answered(null));
-  });
+  }).finally(() => clearTimeout(cap ?? null));
   if (hedged) {
     const turn = currentTurn();
     console.log(JSON.stringify({ ...(turn === undefined ? {} : { turn }), part: "route-hedge", by: decided?.by ?? "none", action: decided?.route.action ?? null, ms: Date.now() - started }));

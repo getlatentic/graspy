@@ -23,7 +23,8 @@ import { timed } from "./timing";
 import type { Ask, Reply } from "./turn";
 
 export const ROUTER_MODEL = "google.gemma-4-26b-a4b";
-const MODEL_TIMEOUT_MS = 3000;
+/** How long the router's model is given, requests sent again included. */
+export const MODEL_TIMEOUT_MS = 3000;
 
 export type Action = "mark_answer" | "ask_again" | "not_know" | "repeat_question" | "needs_help" | "needs_grownup" | "answer_child";
 export interface Route {

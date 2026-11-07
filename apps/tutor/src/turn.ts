@@ -608,7 +608,7 @@ async function routedReply(env: Env, ask: Ask): Promise<Reply | null> {
   if (expected === null || heard === "" || isBareNumber(heard)) return null;
   const shadow = isShadowing(env) ? watch(env, ask) : null;
   const decided = await timed("route", routedBy(env, ask, observing, shadow)).catch(() => null);
-  if (shadow !== null) report(env, ask, decided?.route ?? null, shadow, decided?.by);
+  if (shadow !== null) report(env, ask, decided?.route ?? null, shadow, decided?.by ?? (observing ? "observer" : "router"));
   if (decided === null) return null;
   const { route } = decided;
   if (route.action === "mark_answer") {

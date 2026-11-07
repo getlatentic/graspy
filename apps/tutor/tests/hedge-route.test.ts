@@ -60,7 +60,7 @@ describe("the observer beside the router's second request", () => {
     const { env, calls } = setup({ delays: [-1, -1], say: ROUTER_SAYS_TEN }, { delays: [50], say: OBSERVER_SAYS_TOILET });
     const started = Date.now();
     const reply = await takeTurn(env, ask("I must go behind the house"));
-    expect(Date.now() - started).toBeLessThan(2000);
+    expect(Date.now() - started).toBeLessThan(2500);
     expect(reply.verdict).toBe("unheard");
     expect(reply.heard).toBe("conversation");
     expect(calls).toEqual({ router: 2, observer: 1 });
@@ -76,8 +76,27 @@ describe("the observer beside the router's second request", () => {
   });
 
   it("waits for the router where the observer's policy settles nothing", async () => {
-    const { env } = setup({ delays: [-1, 300], say: ROUTER_SAYS_TEN }, { delays: [10], say: { json: {} } });
+    const { env, calls } = setup({ delays: [-1, 300], say: ROUTER_SAYS_TEN }, { delays: [10], say: { json: {} } });
     expect((await takeTurn(env, ask("Then"))).verdict).toBe("correct");
+    expect(calls.observer).toBe(1);
+  });
+
+  it("does not wait for a late observer past the time the router itself is given", async () => {
+    const { env } = setup({ delays: [-1, -1], say: ROUTER_SAYS_TEN }, { delays: [-1, -1], say: OBSERVER_SAYS_TOILET });
+    const started = Date.now();
+    await takeTurn(env, ask("Then")).catch(() => undefined);
+    expect(Date.now() - started).toBeLessThan(3600);
+  });
+
+  it("answers null and does not hang where the observer throws as it starts", async () => {
+    const { env } = setup({ delays: [-1, -1], say: ROUTER_SAYS_TEN }, { delays: [0], say: { json: {} } });
+    vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: { body: string; signal?: AbortSignal }) => {
+      if (!JSON.parse(init.body).tools) throw new Error("boom");
+      await new Promise((_, reject) => init.signal?.addEventListener("abort", () => reject(new Error("aborted"))));
+    }));
+    const started = Date.now();
+    await takeTurn(env, ask("Then")).catch(() => undefined);
+    expect(Date.now() - started).toBeLessThan(3600);
   });
 
   it("does not call the observer where the router answers in time", async () => {

@@ -44,7 +44,8 @@ export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Pr
         decidedBy: by,
         router: controlling?.action ?? null,
         observer: seen === null ? "none" : (said?.action ?? null),
-        agree: seen !== null && controlling?.action === said?.action && controlling?.said === said?.said,
+        // Where the observer decided the turn there is no other action to agree with.
+        agree: by === "observer" ? null : seen !== null && controlling?.action === said?.action && controlling?.said === said?.said,
         ms: seen?.ms ?? null,
         ...(seen === null ? {} : { communication: rounded(seen.observation.communication), need: rounded(seen.observation.physicalNeed), safety: rounded(seen.observation.safety) }),
         ...(seen !== null && words ? { answer: seen.observation.answer } : {}),
