@@ -23,4 +23,16 @@ describe.skipIf(process.platform !== "darwin")("SayVoice", () => {
     expect(statSync(file).mtimeMs).toBe(made);
     expect((await voice.speak("forty two", 1.2, 1)).length).toBeGreaterThan(0);
   }, 30_000);
+
+  it("names a voice that is not installed instead of speaking in another", () => {
+    const cache = mkdtempSync(join(tmpdir(), "say-voice-"));
+    dirs.push(cache);
+    expect(() => new SayVoice("No Such Voice", cache)).toThrow(/No Such Voice/);
+  });
+
+  it("refuses to say nothing", async () => {
+    const cache = mkdtempSync(join(tmpdir(), "say-voice-"));
+    dirs.push(cache);
+    await expect(new SayVoice("Samantha", cache).speak("  ", 1.2, 0)).rejects.toThrow("nothing to say");
+  });
 });
