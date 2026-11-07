@@ -15,10 +15,11 @@ import json
 from collections.abc import AsyncIterator
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Header, HTTPException, Path, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from ..security.guard import Session, require_session
 from ..turns.access import may_follow, may_start
 from ..turns.durable import DurableTurns
 from ..turns.frames import read
@@ -154,11 +155,12 @@ async def turn_events(
     )
 
 
+# Stopping is never refused for want of consent: a turn still running must be able to end.
 @chat_router.post("/{chat}/turns/{turn}/stop", status_code=204)
 async def stop_turn(
     chat: ChatId,
     turn: TurnId,
-    session: ConsentedSession,
+    session: Annotated[Session, Depends(require_session)],
     request: Request,
 ) -> None:
     turns = _turns(request)

@@ -18,3 +18,9 @@ export function onConsentRequired(listener: Listener): () => void {
 export function consentRequired(): void {
   for (const listener of [...listeners]) listener();
 }
+
+/** Announces a refusal that is the server's `consent_required`. Which learner it was for is not
+ * said: a listener asks the server about the learner it holds. */
+export function announceIfConsentRequired(status: number, code: unknown): void {
+  if (status === 403 && code === CONSENT_REQUIRED) consentRequired();
+}

@@ -8,6 +8,7 @@ served on a guess."""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Annotated, Any
 
@@ -20,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 CONSENT_REQUIRED = "consent_required"
 CONSENT_UNAVAILABLE = "consent_unavailable"
+# A slow store must not hold every request of every learner.
+READ_TIMEOUT_SECONDS = 3
 
 
 def _refusal(status: int, code: str, error: str) -> HTTPException:
@@ -32,7 +35,9 @@ async def service_consent_refusal(app: Any, learner_key: str) -> HTTPException |
     if voice is None:
         return None
     try:
-        agreed = await active_consent(voice.DB, learner_key, SERVICE)
+        agreed = await asyncio.wait_for(
+            active_consent(voice.DB, learner_key, SERVICE), READ_TIMEOUT_SECONDS
+        )
     except Exception:
         logger.exception("Whether a parent agreed could not be read")
         return _refusal(

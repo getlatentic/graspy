@@ -53,6 +53,14 @@ function gated() {
 
 const pages = () => screen.queryByText("the learner's pages");
 
+const refusedForConsent = () =>
+  toApiError(
+    new Response(
+      JSON.stringify({ detail: { error: "no", code: "consent_required" } }),
+      { status: 403 },
+    ),
+  );
+
 beforeEach(() => {
   vi.resetAllMocks();
   window.localStorage.clear();
@@ -183,19 +191,28 @@ describe("the pages of a learner in use", () => {
   it("shut again, and ask for the agreement, when the server refuses the learner for want of one", async () => {
     signedInAs(ADA);
     window.localStorage.setItem(`graspy.service-consent.${UID}/${ADA.id}`, "1");
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
     gated();
     expect(pages()).toBeTruthy();
 
-    await toApiError(
-      new Response(
-        JSON.stringify({ detail: { error: "no", code: "consent_required" } }),
-        { status: 403 },
-      ),
-    );
+    await refusedForConsent();
 
     expect(await screen.findByText(SERVICE_NOTICE)).toBeTruthy();
     expect(pages()).toBeNull();
     expect(serviceConsentKept(UID, ADA.id)).toBe(false);
+  });
+
+  it("stay open when the refusal was for another learner, which the server says has agreed", async () => {
+    signedInAs(ADA);
+    window.localStorage.setItem(`graspy.service-consent.${UID}/${ADA.id}`, "1");
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", AGREED)]);
+    gated();
+
+    await refusedForConsent();
+    await waitFor(() => expect(listLearners).toHaveBeenCalled());
+
+    expect(pages()).toBeTruthy();
+    expect(serviceConsentKept(UID, ADA.id)).toBe(true);
   });
 
   it("stay open when the server refuses a call for another reason", async () => {

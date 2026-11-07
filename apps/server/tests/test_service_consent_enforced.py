@@ -2,6 +2,8 @@
 chats, voice lessons, tutor and views all answer `403 consent_required` for one with no active
 service consent, and the account's own routes stay open so the parent can agree."""
 
+import asyncio
+
 import pytest
 from consent_sign_ins import consent_app
 from service_agreed import service_agreed
@@ -18,7 +20,13 @@ GUARDED = [
     ("GET", "/api/learner?plan_id=mathematics.multiplication.table-2"),
     ("GET", "/api/learner/threads"),
     ("POST", f"/api/chats/{CHAT}/turns"),
-    ("POST", f"/api/chats/{CHAT}/turns/{'t' * 8}/stop"),
+    ("GET", f"/api/chats/{CHAT}/turns/{'t' * 8}/events"),
+    ("POST", "/api/voice/samples"),
+    ("POST", f"/api/voice/samples/{'a' * 12}/evaluation"),
+    ("GET", "/api/voice/catalogue"),
+    ("POST", "/api/learner/import"),
+    ("POST", "/api/learner/plan"),
+    ("PUT", "/api/learner/curriculum"),
     ("GET", "/api/voice/lesson"),
     ("POST", "/a2a"),
     ("POST", "/mcp"),
@@ -103,6 +111,16 @@ async def test_each_route_of_a_learner_with_consent_is_not_refused_for_it(
 
     assert not refused_for_consent(reached), reached.text
     assert reached.status_code != 503
+
+
+async def test_a_turn_can_be_stopped_though_the_consent_is_gone(app, env):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added(http)
+        await learner_session(http, learner)
+        stopped = await http.post(f"/api/chats/{CHAT}/turns/{'t' * 8}/stop")
+
+    assert not refused_for_consent(stopped)
 
 
 async def test_a_consent_that_is_withdrawn_ends_service_at_the_next_request(app, env):
@@ -217,3 +235,19 @@ async def test_a_socket_for_a_learner_with_consent_gets_as_far_as_the_chat(
     reached = await upgraded(app, env, monkeypatch, "a" * 12)
 
     assert reached == (404, "chat_not_found")
+
+
+async def test_a_consent_read_that_hangs_is_refused_with_503(app, env, monkeypatch):
+    async def hangs(*_):
+        await asyncio.sleep(10)
+
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        learner = await added(http)
+        await learner_session(http, learner)
+        monkeypatch.setattr("app.api.service_consent.active_consent", hangs)
+        monkeypatch.setattr("app.api.service_consent.READ_TIMEOUT_SECONDS", 0.01)
+        refused = await http.get("/api/learner/threads")
+
+    assert refused.status_code == 503
+    assert refused.json()["detail"]["code"] == "consent_unavailable"

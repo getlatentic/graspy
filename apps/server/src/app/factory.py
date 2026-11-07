@@ -78,6 +78,10 @@ def create_app(
     are unavailable. ``voice`` is the Worker's env, which the voice modules
     read their bindings from."""
     settings = settings or get_settings()
+    if settings.is_deployed and voice is None:
+        raise ValueError(
+            f"Consent cannot be enforced in {settings.app_env} without the Worker's bindings"
+        )
     lm = build_lm(settings)
     logger.info("Serving with model: %s", lm.model)
     configure_cache()

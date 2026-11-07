@@ -27,6 +27,20 @@ async function standingOnServer(
   return "agreed";
 }
 
+// A refusal does not say which learner it was for (a call for the learner just left, or the one
+// being chosen, may arrive late), so the server is asked about the one in use.
+async function refusedFor(uid: string, learner: string): Promise<boolean> {
+  try {
+    const held = (await listLearners()).find((one) => one.id === learner);
+    if (!held || held.serviceConsent) return false;
+  } catch (error) {
+    console.warn("Asking whether a parent agreed failed:", error);
+    return false;
+  }
+  forgetServiceConsent(uid, learner);
+  return true;
+}
+
 /** The learner in use, asked of the server once and remembered on the device. */
 export function useServiceStanding() {
   const account = useAccount();
@@ -55,8 +69,9 @@ export function useServiceStanding() {
   useEffect(() => {
     if (!key || !uid || !learner) return;
     return onConsentRequired(() => {
-      forgetServiceConsent(uid, learner);
-      setChecked({ key, standing: "needed" });
+      void refusedFor(uid, learner).then(
+        (needed) => needed && setChecked({ key, standing: "needed" }),
+      );
     });
   }, [key, uid, learner]);
 

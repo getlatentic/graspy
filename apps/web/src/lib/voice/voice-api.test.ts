@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { onConsentRequired } from "@/lib/api/consent-refusal";
 import { ApiError, NetworkError } from "@/lib/api/errors";
 import type { KeptAnswer } from "./answer-store";
 import { sendAnswer, UNANSWERED } from "./send-answer";
@@ -166,6 +167,22 @@ describe("the voice API client", () => {
       status: 0,
       code: null,
     });
+  });
+
+  it("announces a refusal for want of a parent's agreement", async () => {
+    const heard = vi.fn();
+    const stop = onConsentRequired(heard);
+    fetchWithSession.mockResolvedValue(
+      json({ detail: { error: "no", code: "consent_required" } }, 403),
+    );
+
+    await expect(api.lessonMove("primary_4", "en")).rejects.toMatchObject({
+      status: 403,
+      code: "consent_required",
+    });
+    stop();
+
+    expect(heard).toHaveBeenCalledTimes(1);
   });
 
   it("reads a 4xx graspy gave as its refusal, with or without a code", async () => {

@@ -1,4 +1,4 @@
-import { CONSENT_REQUIRED, consentRequired } from "./consent-refusal";
+import { announceIfConsentRequired } from "./consent-refusal";
 
 // Gateway and rate-limit blips, and 0: a NetworkError, no answer at all.
 const RETRYABLE_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504]);
@@ -36,9 +36,7 @@ export async function toApiError(response: Response): Promise<ApiError> {
   const body: unknown = await response.json().catch(() => undefined);
   const record = body as Record<string, unknown> | undefined;
   const detail = String(record?.error ?? record?.detail ?? "");
-  if (response.status === 403 && codeIn(record) === CONSENT_REQUIRED) {
-    consentRequired();
-  }
+  announceIfConsentRequired(response.status, codeIn(record));
   return new ApiError(
     detail || `Request failed with status ${response.status}`,
     response.status,
