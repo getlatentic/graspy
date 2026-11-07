@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Protocol
 from urllib.parse import quote
 
+from ..account.consents import forget_consents
 from .learner_memory import forget_memory
 
 # Turns first: they are found through the learner's samples.
@@ -21,7 +22,6 @@ FORGET_SQL = (
     "DELETE FROM samples WHERE owner_id = ?1",
     "DELETE FROM lesson_events WHERE owner_id = ?1",
     "DELETE FROM lesson_offers WHERE owner_id = ?1",
-    "DELETE FROM consents WHERE learner_key = ?1",
 )
 
 
@@ -50,11 +50,16 @@ def possible_audio_keys(learner: str, sample_id: str) -> list[str]:
 class VoiceKeeping(Protocol):
     async def forget(self, learner: str) -> None: ...
 
+    async def forget_consents(self, learner: str) -> None: ...
+
 
 class NoVoice:
     """Without the Worker's bindings no voice lesson was ever kept."""
 
     async def forget(self, learner: str) -> None:
+        return None
+
+    async def forget_consents(self, learner: str) -> None:
         return None
 
 
@@ -70,8 +75,12 @@ class BoundVoice:
     async def forget(self, learner: str) -> None:
         for sql in FORGET_SQL:
             await self._env.DB.prepare(sql).bind(learner).run()
+        await self.forget_consents(learner)
         await _forget_recordings(self._env.AUDIO, recordings_prefix(learner))
         await forget_memory(self._env, learner)
+
+    async def forget_consents(self, learner: str) -> None:
+        await forget_consents(self._env.DB, learner)
 
 
 async def _forget_recordings(bucket: Any, prefix: str) -> None:

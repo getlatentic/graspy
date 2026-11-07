@@ -3,6 +3,9 @@ adding, renaming and forgetting learners with everything kept for them."""
 
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from ..caller import Keeping
 from ..learner.record import LearnerRecord
 from .directory import (
@@ -15,6 +18,12 @@ from .directory import (
     learner_key,
     new_learner,
 )
+
+logger = logging.getLogger(__name__)
+
+# Forgetting what was kept for a removed learner is tried this often, a little longer apart each time.
+FORGET_TRIES = 3
+FORGET_PAUSE_SECONDS = 0.5
 
 # Names the account holder's own learner when Google gives no name.
 FIRST_LEARNER = "Learner"
@@ -76,12 +85,19 @@ async def renamed(keeping: Keeping, uid: str, learner_id: str, name: str) -> Lea
 
 
 async def unadded(keeping: Keeping, uid: str, learner_id: str) -> None:
-    """Takes back a learner just added, who has nothing kept for them yet: only the directory's
-    entry goes, which is all that can be done where the stores that removing a learner also
-    clears are the ones that failed."""
-    await keeping.learners.change_directory(
-        account_key(uid), LearnerRemoved(id=learner_id)
-    )
+    """Takes back a learner just added, who has nothing kept for them yet but possibly a consent
+    that was written though its write was reported failed: the directory's entry and the consents
+    go, each tried even if the other fails, which is all that can be done where the stores that
+    removing a learner also clears are the ones that failed."""
+    try:
+        await keeping.learners.change_directory(
+            account_key(uid), LearnerRemoved(id=learner_id)
+        )
+    except Exception:
+        logger.exception("A learner just added could not be taken out of the directory")
+        raise
+    finally:
+        await keeping.voice.forget_consents(learner_key(uid, learner_id))
 
 
 async def _forgot_kept(keeping: Keeping, key: str) -> None:
@@ -96,15 +112,41 @@ async def _forgot_kept(keeping: Keeping, key: str) -> None:
     await keeping.learners.forget(key)
 
 
+async def _forgot_kept_again(keeping: Keeping, key: str) -> None:
+    """The directory no longer lists the learner, so nothing in the app can send the removal
+    again: a failure is tried a few times before it is raised, for the operator to finish."""
+    for attempt in range(FORGET_TRIES):
+        try:
+            await _forgot_kept(keeping, key)
+            return
+        except Exception:
+            logger.exception("Forgetting %s failed, try %d", key, attempt + 1)
+            if attempt + 1 == FORGET_TRIES:
+                raise
+            await asyncio.sleep(FORGET_PAUSE_SECONDS * (attempt + 1))
+
+
 async def removed(keeping: Keeping, uid: str, learner_id: str) -> Directory:
-    """Everything kept for the learner goes: their record, plan, lessons,
-    tutor conversations, as the tutor recalls them and as their devices show
-    them, and voice lessons."""
-    await learner_of(keeping, uid, learner_id)
-    await _forgot_kept(keeping, learner_key(uid, learner_id))
+    """The learner leaves the directory first, then everything kept for them goes: their record,
+    plan, lessons, tutor conversations, as the tutor recalls them and as their devices show them,
+    voice lessons and consents. A consent written while this runs either finds the learner gone
+    and takes itself back, or is written before the stores are forgotten and goes with them.
+
+    Removing a learner already gone still forgets what was kept for them, so a removal that failed
+    part way is finished by sending it again, and answers 404."""
+    key = learner_key(uid, learner_id)
+    try:
+        await learner_of(keeping, uid, learner_id)
+    except NoSuchLearner:
+        try:
+            await _forgot_kept(keeping, key)
+        except Exception:
+            logger.exception("Forgetting %s, a learner already gone, failed", key)
+        raise
     await keeping.learners.change_directory(
         account_key(uid), LearnerRemoved(id=learner_id)
     )
+    await _forgot_kept_again(keeping, key)
     return await keeping.learners.directory(account_key(uid))
 
 
