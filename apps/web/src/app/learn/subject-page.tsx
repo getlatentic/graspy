@@ -33,6 +33,7 @@ export default function SubjectPage() {
       <SubjectHeader
         name={subjectOf(curriculum, slug)?.name ?? slug}
         source={curriculum?.sources?.[slug]}
+        modelWritten={subjectOf(curriculum, slug) !== null}
         onBack={() => navigate("/app/learn/subjects")}
       />
       {topics.length === 0 ? (

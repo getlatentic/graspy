@@ -7,10 +7,17 @@ interface SubjectHeaderProps {
   name: string;
   /** The official curriculum the topics follow; none where a model planned them. */
   source?: CurriculumSource;
+  /** The subject is in the learner's plan and has no official curriculum behind it. */
+  modelWritten?: boolean;
   onBack: () => void;
 }
 
-export function SubjectHeader({ name, source, onBack }: SubjectHeaderProps) {
+export function SubjectHeader({
+  name,
+  source,
+  modelWritten = false,
+  onBack,
+}: SubjectHeaderProps) {
   const { t } = useI18n();
   return (
     <header>
@@ -34,6 +41,11 @@ export function SubjectHeader({ name, source, onBack }: SubjectHeaderProps) {
                 authority: source.authority,
                 edition: source.edition,
               })}
+            </p>
+          )}
+          {!source && modelWritten && (
+            <p className="mt-1 text-sm text-muted">
+              {t("subject.modelWritten")}
             </p>
           )}
         </div>
