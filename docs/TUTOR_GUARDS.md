@@ -33,7 +33,7 @@ Limits, stated plainly:
 - When `give_practice` or `give_passage` refuses a card there is no card to compare the answer with, so the rule "do not write the questions in your answer" is held by the refusal text and one clause of the prompt, not by the gate.
 - "Something was done" is checked against whether any tool acted this turn, not which one, and only for sentences with a plan word; "I've added Physics!" passes.
 - A change is claimed only with a plan word in the sentence (`plan`, `subject`, `topic`, `lesson`, `path`), so "I've added 3 and 4" is arithmetic. "Opened" is never claimed, as the app opens.
-- `key_leak` reads numbers with a sign, a thousands separator and a unit, and words as written. It does not read number words ("seven" for 7), and an answer written `x = 5` in the hint and `x equals 5` in the option passes. A number the question already gives is allowed unless the hint calls it the answer.
+- `key_leak` reads numbers with a sign, a thousands separator and a unit, and words as written. It ignores a key of one or two letters in words ("is", "Fe"), as such a word is in every sentence. It does not read number words ("seven" for 7), and an answer written `x = 5` in the hint and `x equals 5` in the option passes. A number the question already gives is allowed unless the hint calls it the answer.
 - The answer streams a sentence at a time, not a word at a time.
 
 ## Measured

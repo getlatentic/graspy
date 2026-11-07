@@ -31,24 +31,27 @@ class Facts:
 _NOT_A_VERDICT = (
     r"(?!\s+(?:to|there|here|under|above|below|in|on|at|next|beside|now)\b)"
 )
+# An opener that goes on to teach: "Exactly how many", "Perfect, let us start", "Not quite sure".
+_CONTINUES_TEACHING = r"(?![,\s]+(?:how|what|why|which|when|let|now|sure|certain)\b)"
+_SUBJECT = r"(?:[\d.,/]+|answer|one|option|choice)"
 _SAYS_RIGHT = re.compile(
     r"\b(?:that|it)(?:'s| is)\s+(?:\w+ly\s+)?(?:right|correct)\b"
     + _NOT_A_VERDICT
-    + r"|\b(?:that|it)(?:'s| is)\s+the\s+(?:right|correct)\s+(?:answer|one|choice|option)\b"
+    + r"|\b(?:that|it)(?:'s| is)\s+the\s+(?:right|correct)\s+(?:answer|one|choice|option)\b(?!\s+(?:to|for)\b)"
     + r"|\b(?:your answer is|you(?:'re| are))\s+(?:\w+ly\s+)?(?:right|correct)\b"
     + _NOT_A_VERDICT
-    + r"|\b\w+ is (?:right|correct)\b"
+    + rf"|\b{_SUBJECT} is (?:right|correct)\b"
     + _NOT_A_VERDICT
-    + r"|\byou got (?:it|that)(?: right)?\b(?!\s+wrong)"
+    + r"|\byou got (?:it|that) right\b|\byou got (?:it|that)!"
     r"|\bcorrect!|\bwell done\b|\bspot on\b"
-    r"|^\W*(?:correct|exactly|perfect|right)\s*[.!]"
+    r"|^\W*(?:correct|exactly|perfect)\b" + _CONTINUES_TEACHING + r"|^\W*right\s*[.!]"
 )
 _SAYS_WRONG = re.compile(
     r"\b(?:that|it)(?:'s| is)\s+(?:incorrect|wrong)\b(?!\s+to\b)"
     r"|\b(?:that|it)(?:'s| is)\s+not\s+(?:quite\s+)?(?:right|correct)\b(?!\s+to\b)"
     r"|\b(?:that|it) isn't\s+(?:quite\s+)?(?:right|correct)\b(?!\s+to\b)"
     r"|\b(?:your answer is|you(?:'re| are))\s+(?:not\s+(?:quite\s+)?(?:right|correct)|incorrect|wrong)\b"
-    r"|^\W*(?:nope|not quite|incorrect|wrong)\s*[.!]"
+    r"|^\W*(?:nope|not quite|incorrect|wrong)\b" + _CONTINUES_TEACHING
 )
 _VERBS = r"(?:added|opened|changed|switched|removed|dropped|rebuilt|started|updated|reset|cleared|created)"
 _DONE = re.compile(
@@ -101,6 +104,8 @@ def breach_in(sentence: str, facts: Facts) -> Breach | None:
     ):
         return Breach.CLAIM
     marking = _marking(facts.verdicts)
+    if text.rstrip().endswith("?"):
+        marking = "asked"
     if (_SAYS_RIGHT.search(text) and marking in ("none", "wrong", "mixed")) or (
         _SAYS_WRONG.search(text) and marking in ("none", "right", "mixed")
     ):
