@@ -21,7 +21,12 @@ export const currentTurn = () => turns.getStore()?.turn;
 
 /** Hands work that outlives the reply to the host to keep running; it is only awaited here by the host. */
 export function anchored(work: Promise<unknown>): void {
-  turns.getStore()?.anchor?.(work);
+  try {
+    turns.getStore()?.anchor?.(work);
+  } catch (error) {
+    // The log is only a record: a host that refuses the anchor must not fail the child's turn.
+    console.log(JSON.stringify({ part: "anchor-failed", error: String(error) }));
+  }
 }
 
 /** How long a part of the turn took, so a child's wait can be read back from the logs, with the turn it was in. */

@@ -153,6 +153,17 @@ describe("the shadow's log is handed to the host to keep running", () => {
   });
 });
 
+describe("a host that refuses the anchor", () => {
+  it("does not fail the child's turn", async () => {
+    logged();
+    const env = setup({ name: "mark_answer", args: { said: 10 } }, { physical_need: { toilet: 0.9 } }, { OBSERVER: "shadow" });
+    const reply = await traced(undefined, () => takeTurn(env, ask("I need the toilet")), () => {
+      throw new Error("Illegal invocation");
+    });
+    expect(reply.heard).toBe("conversation");
+  });
+});
+
 describe("the parts of a turn are logged with the turn they were in", () => {
   it("names the turn by its last six characters, and not at all outside one", async () => {
     const spy = logged();

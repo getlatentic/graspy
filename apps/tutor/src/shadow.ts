@@ -53,5 +53,5 @@ export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Pr
         ...(words ? { heard: heardForPrompt(ask.heard) } : {}),
       }),
     );
-  }));
+  }).catch(() => undefined));
 }

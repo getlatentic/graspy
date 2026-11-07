@@ -1,6 +1,6 @@
 // What the observer read beside what the tutor did, by kind of turn, from a log of the tutor Worker.
 //   npx wrangler tail graspy-tutor-staging --format json > tail.json     (let a batch of lessons run, then stop it)
-//   node bench/shadow-report.ts tail.json [more.json ...]
+//   node bench/shadow-report.ts tail.json [more.json ...]     (Node 24.2 or later: it runs only as the main module)
 // Reads the `observer-shadow` lines only and prints counts and times: never a word a child said, even where the log has them.
 import { readFileSync } from "node:fs";
 
