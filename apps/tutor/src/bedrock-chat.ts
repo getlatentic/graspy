@@ -15,6 +15,8 @@ interface Request {
   part: string;
   /** When to send the second request; `HEDGE_AFTER_MS` unless given. */
   hedgeAfterMs?: number;
+  /** Called as the second request is sent, so other work can start beside it. */
+  onSecondRequest?: () => void;
 }
 
 type Message = { content?: string | null; tool_calls?: { function?: { name?: string; arguments?: string } }[] };
@@ -37,7 +39,7 @@ async function complete(env: Env, request: Request, extra: object): Promise<Mess
       return null;
     }
     return ((await response.json()) as { choices?: { message?: Message }[] }).choices?.[0]?.message ?? null;
-  }, request.hedgeAfterMs ?? HEDGE_AFTER_MS, request.timeoutMs, request.part);
+  }, request.hedgeAfterMs ?? HEDGE_AFTER_MS, request.timeoutMs, request.part, request.onSecondRequest);
 }
 
 const objectOf = (text: string | null | undefined, part: string): Record<string, unknown> | null => {

@@ -32,7 +32,7 @@ const rounded = (scores: Record<string, number>) => Object.fromEntries(Object.en
  * Logs the router's action and the observer's beside each other when the observer has answered. The turn does not wait for it: it
  * is logged when it is there, with the turn's id. The child's words, and the number read from them, only where asked for.
  */
-export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Promise<Shadow | null>): void {
+export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Promise<Shadow | null>, by: "router" | "observer" = "router"): void {
   const turn = currentTurn();
   void shadow.then((seen) => {
     const said = seen?.route ?? null;
@@ -41,6 +41,7 @@ export function report(env: Env, ask: Ask, controlling: Route | null, shadow: Pr
       JSON.stringify({
         ...(turn === undefined ? {} : { turn }),
         part: "observer-shadow",
+        decidedBy: by,
         router: controlling?.action ?? null,
         observer: seen === null ? "none" : (said?.action ?? null),
         agree: seen !== null && controlling?.action === said?.action && controlling?.said === said?.said,
