@@ -37,8 +37,15 @@ export function cacheName(text: string, pitch: number, reference: string, take: 
   return `${createHash("sha1").update(`${reference}|${pitch}|${take}|${text}`).digest("hex").slice(0, 16)}.wav`;
 }
 
+/** What speaks for the simulated child: the wav of the text said at a pitch, the voice it came from, and a way to stop. */
+export interface Speaker {
+  speak(text: string, pitch: number, take: number): Promise<Buffer>;
+  readonly reference: string;
+  close(): void;
+}
+
 /** The simulated child's voice: yarngo studio's cloned voice, pitched up to sound like a smaller speaker. */
-export class ChildVoice {
+export class ChildVoice implements Speaker {
   private readonly where: VoiceLocation;
   private readonly cache: string;
   private readonly engine: JsonRpcProcess;

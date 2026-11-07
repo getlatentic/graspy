@@ -8,6 +8,7 @@ Nothing here runs in production. It needs the local stack from [docs/DEVELOPMENT
 
 - The web app, the API, the tutor, Intron's recognition and Spitch's teacher voice are the real ones.
 - The child's words come from `openai.gpt-oss-120b` on Bedrock, playing a persona. It is never an Anthropic model: graspy's work does not use one, and that includes its tests.
+- Where yarngo studio's cloned-voice model is not installed on the machine, `--say-voice Samantha` speaks with a macOS system voice instead, pitched and levelled the same way; the run records which engine made it.
 - The child's voice is yarngo studio's cloned voice, pitched up, and levelled to what the app counts as speech. It is played into the page's microphone stream (`getUserMedia` answers with a stream fed from an audio graph), so the app's own recorder, endpoint detection and upload run as with a child. The system microphone is not involved, and nothing changes on the Mac's audio settings.
 - Onboarding is driven through the real screens the first time; the device is then saved under `runs/.state` so later runs skip building a plan.
 

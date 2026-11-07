@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Page } from "playwright-core";
 import { decideWhatToSay, type Exchange } from "./child-model.ts";
-import type { ChildVoice } from "./child-voice.ts";
+import type { Speaker } from "./child-voice.ts";
 import { sayIntoMicrophone } from "./microphone.ts";
 import type { LessonObserver } from "./observer.ts";
 import type { Persona } from "./personas.ts";
@@ -21,7 +21,7 @@ export interface Sitting {
   persona: Persona;
   learnerClass: string;
   strings: PageStrings;
-  voice: ChildVoice;
+  voice: Speaker;
   key: string;
   shotsDir: string;
   runDir: string;
