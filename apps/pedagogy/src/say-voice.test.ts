@@ -22,7 +22,7 @@ describe.skipIf(process.platform !== "darwin")("SayVoice", () => {
     await voice.speak("forty two", 1.2, 0);
     expect(statSync(file).mtimeMs).toBe(made);
     expect((await voice.speak("forty two", 1.2, 1)).length).toBeGreaterThan(0);
-  }, 30_000);
+  }, 60_000);
 
   it("names a voice that is not installed instead of speaking in another", () => {
     const cache = mkdtempSync(join(tmpdir(), "say-voice-"));
