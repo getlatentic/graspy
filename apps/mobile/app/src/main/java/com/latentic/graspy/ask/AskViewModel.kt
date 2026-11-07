@@ -17,6 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +44,8 @@ data class TurnState(
     val streaming: String = "",
     /** The tool the tutor is working, while it works one. */
     val activity: String? = null,
+    /** The connection to the turn is down and being opened again. */
+    val reconnecting: Boolean = false,
     val pending: PendingChange? = null,
     val pendingThreadId: String? = null,
     val changingPlan: Boolean = false,
@@ -57,7 +60,7 @@ data class TurnState(
  * The conversations are synced while there is a connection, after each message kept, and when Ask is shown.
  */
 class AskViewModel(application: Application, private val ownerId: String) : AndroidViewModel(application) {
-    private val tutor = TutorClient(AppGraph.callsFor(application, ownerId), "$API_ORIGIN/a2a".toHttpUrl())
+    private val tutor = TutorClient(AppGraph.callsFor(application, ownerId), "$API_ORIGIN/a2a".toHttpUrl(), "$API_ORIGIN/api/chats".toHttpUrl())
     private val database = AppGraph.database(application)
     private val store = ChatStore(database.chatDao(), ownerId, { block -> database.withTransaction { block() } })
     private val threadSync = threadSyncFor(application, ownerId)
@@ -68,6 +71,7 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
     private val ids = AtomicLong()
     private var viewCalls = emptyList<JsonObject>()
     private var running: Job? = null
+    private var asking: TutorRun? = null
 
     /** Null until read from the phone. */
     val threads: StateFlow<List<ChatThread>?> = store.threads.stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -114,8 +118,15 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
         return true
     }
 
+    /** Asks the server to end the turn with the words it has; they stay as the reply. A stop the server did not get, or
+     * did not answer in time, ends the turn here with the words that showed. */
     fun stop() {
-        running?.cancel()
+        val job = running ?: return
+        val run = asking
+        viewModelScope.launch {
+            if (run != null && run.stop()) delay(STOP_WAIT_MS)
+            job.cancel()
+        }
     }
 
     fun viewCalled(name: String, arguments: JsonObject) {
@@ -149,9 +160,11 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
         try {
             val unanswered = unansweredIn(store.messagesNow(thread.id))
             store.add(thread.id, MessageKind.LEARNER, text, MessageMetadata(appCalls = calls))
-            val reply = tutor.ask(TutorTurn(text, thread.agentContextId, context.learner, calls, unanswered), streamInto())
+            val run = tutor.start(TutorTurn(text, thread.agentContextId, context.learner, calls, unanswered))
+            asking = run
+            val reply = run.reply(streamInto())
             store.recordTurn(thread, reply.contextId, text)
-            store.add(thread.id, MessageKind.TUTOR, reply.text, MessageMetadata(followUps = reply.followUps, card = reply.cards.firstOrNull()))
+            keepReply(thread.id, reply)
             turn.update { it.copy(streaming = "", activity = null) }
             reply.actions.forEach { actionsFor(context, thread.id).carryOut(it) }
         } catch (stopped: CancellationException) {
@@ -163,9 +176,17 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
             val retryable = (failure as? TutorUnreachable)?.retryable == true
             failed(thread.id, if (retryable) context.words.temporaryProblem else context.words.tutorError)
         } finally {
-            turn.update { it.copy(busyThreadId = null, streaming = "", activity = null) }
+            asking = null
+            turn.update { it.copy(busyThreadId = null, streaming = "", activity = null, reconnecting = false) }
             unreadState.update { it.answered(thread.id) }
         }
+    }
+
+    /** A reply the learner stopped keeps the words it had, marked as stopped; a stop before any words keeps nothing. */
+    private suspend fun keepReply(threadId: String, reply: TutorReply) {
+        if (reply.stopped && reply.text.isEmpty()) return
+        val metadata = MessageMetadata(followUps = reply.followUps, card = reply.cards.firstOrNull(), stopped = reply.stopped)
+        store.add(threadId, MessageKind.TUTOR, reply.text, metadata)
     }
 
     /** What streamed before a stop or a failure stays, marked as stopped. */
@@ -205,10 +226,14 @@ class AskViewModel(application: Application, private val ownerId: String) : Andr
         override fun onRestart() = turn.update { it.copy(streaming = "") }
 
         override fun onActivity(tool: String) = turn.update { it.copy(activity = tool) }
+
+        override fun onReconnecting(on: Boolean) = turn.update { it.copy(reconnecting = on) }
     }
 
     private companion object {
         const val TAG = "GraspyTutor"
+        // After a stop the turn ends within moments; a server that does not end it is left.
+        const val STOP_WAIT_MS = 6_000L
         // Busy before the thread is known, so a second tap in the same moment is refused.
         const val PENDING = "pending"
     }
