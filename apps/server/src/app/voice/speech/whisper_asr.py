@@ -71,17 +71,30 @@ async def heard_by_whisper(ai, audio: bytes) -> str | None:
 
 async def _intron_reading(
     intron, audio: bytes, api_key: str, file_name: str
-) -> str | None:
-    """What Intron heard when it was asked for a second opinion, or None: that ask failing is not the child's."""
+) -> tuple[str | None, str, int]:
+    """What Intron heard when it was asked for a second opinion, how that went, and how long the ask took.
+
+    The reading is None unless it reads as a number; asking failing is not the child's. The outcome is
+    'rescued' (a number was read), 'no_number' (Intron answered with none), 'timeout' or 'failed'."""
+    started = time.perf_counter()
+
+    def spent() -> int:
+        return round((time.perf_counter() - started) * 1000)
+
     try:
         transcript, _ = await asyncio.wait_for(
             intron(audio, "en", api_key, file_name, hedge=False),
             timeout=SECOND_OPINION_SECONDS,
         )
+    except TimeoutError:
+        logger.warning("Intron gave no second opinion in time")
+        return None, "timeout", spent()
     except Exception:
         logger.warning("Intron gave no second opinion", exc_info=True)
-        return None
-    return transcript if reads_as_a_number(transcript) else None
+        return None, "failed", spent()
+    if reads_as_a_number(transcript):
+        return transcript, "rescued", spent()
+    return None, "no_number", spent()
 
 
 async def _heard_first(env, audio: bytes) -> tuple[str | None, str]:
@@ -103,15 +116,27 @@ async def transcribe_english(
 
     `intron` is the Intron recognizer to ask when no other is asked, gave no answer, or heard nothing.
     `second_opinion` says, of what the first recognizer heard, whether Intron is asked too; Intron's reading then stands
-    only if it is a number."""
+    only if it is a number. Each second opinion is logged as `{"asr": "second_opinion", "first", "first_ms", "ms",
+    "outcome", "used"}` for the first recognizer, whether it or Nova-3, and the ask's own time."""
     started = time.perf_counter()
     text, heard_by = await _heard_first(env, audio)
     if text and second_opinion is not None and second_opinion(text):
-        better = await _intron_reading(intron, audio, api_key, file_name)
+        first_ms = round((time.perf_counter() - started) * 1000)
+        better, outcome, asked_ms = await _intron_reading(
+            intron, audio, api_key, file_name
+        )
         spent = round((time.perf_counter() - started) * 1000)
+        # Never the child's words: which recognizer was first, what each cost, and whether Intron's reading was used.
         print(
             json.dumps(
-                {"asr": "second_opinion", "ms": spent, "used": better is not None}
+                {
+                    "asr": "second_opinion",
+                    "first": heard_by,
+                    "first_ms": first_ms,
+                    "ms": asked_ms,
+                    "outcome": outcome,
+                    "used": better is not None,
+                }
             )
         )
         if better is not None:
