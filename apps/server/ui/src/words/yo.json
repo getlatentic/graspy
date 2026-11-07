@@ -58,6 +58,9 @@
     "failed": "Nǹkan kan ṣàṣìṣe nígbà tí a ń múra ẹ̀kọ́ yìí. Gbìyànjú lẹ́ẹ̀kan sí i, tàbí padà sẹ́yìn kí o yan àkòrí mìíràn.",
     "partial": "A kò lè múra apá kan ẹ̀kọ́ yìí sílẹ̀. Ka èyí tó wà níbí, tàbí gbìyànjú lẹ́ẹ̀kan sí i fún gbogbo ẹ̀kọ́ náà.",
     "finishing": "À ń fi pamọ́…",
-    "objectives": "Nínú ẹ̀kọ́ yìí, wàá kọ́ láti"
+    "objectives": "Nínú ẹ̀kọ́ yìí, wàá kọ́ láti",
+    "source": "Written from the {authority} curriculum, {edition}",
+    "textbook": "Textbook passages from {title}",
+    "noPassages": "No textbook passage is linked to this topic, so this lesson is written from the objectives alone."
   }
 }

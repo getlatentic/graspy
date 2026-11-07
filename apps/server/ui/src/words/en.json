@@ -58,6 +58,9 @@
     "failed": "Something went wrong while preparing this lesson. Try again, or go back and choose another topic.",
     "partial": "Part of this lesson could not be prepared. Read what is here, or try again for the whole lesson.",
     "finishing": "Saving…",
-    "objectives": "In this lesson you'll learn to"
+    "objectives": "In this lesson you'll learn to",
+    "source": "Written from the {authority} curriculum, {edition}",
+    "textbook": "Textbook passages from {title}",
+    "noPassages": "No textbook passage is linked to this topic, so this lesson is written from the objectives alone."
   }
 }

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from functools import cache
 
 from ....utils.slug import slugify
+from .topic import Textbook, Topic, read_topic, same_title
 
 
 @dataclass(frozen=True)
@@ -38,10 +39,29 @@ class Course:
     aliases: frozenset[str]
     levels: frozenset[tuple[str, str]]
     themes: tuple[dict, ...]
+    textbook: Textbook | None = None
 
     def topics(self) -> list[str]:
         """Every topic, theme by theme, in the curriculum's order."""
         return [topic["title"] for theme in self.themes for topic in theme["topics"]]
+
+    def topic(self, title: str) -> Topic | None:
+        """The topic of this title with its objectives and the passages linked to it; None where it has none."""
+        # Imported here for the same reason as the outlines in courses().
+        from .passages import PASSAGES
+
+        node = next(
+            (
+                t
+                for theme in self.themes
+                for t in theme["topics"]
+                if same_title(t["title"], title)
+            ),
+            None,
+        )
+        return (
+            None if node is None else read_topic(node, PASSAGES.get(node["code"], []))
+        )
 
     def objectives(self) -> int:
         return sum(
@@ -53,6 +73,19 @@ class Course:
 
     def teaches(self, subject: str) -> bool:
         return slugify(subject) in self.aliases
+
+
+def _textbook(held: dict | None) -> Textbook | None:
+    if held is None:
+        return None
+    return Textbook(
+        title=held["title"],
+        publisher=held["publisher"],
+        source_url=held["sourceUrl"],
+        licence=held["licence"],
+        licence_url=held["licenceUrl"],
+        attribution=held["attribution"],
+    )
 
 
 def _course(outline: dict) -> Course:
@@ -71,6 +104,7 @@ def _course(outline: dict) -> Course:
             (level["system"], level["level"]) for level in outline["levels"]
         ),
         themes=tuple(outline["themes"]),
+        textbook=_textbook(outline["textbook"]),
     )
 
 

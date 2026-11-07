@@ -73,3 +73,46 @@ describe("a lesson as it arrives", () => {
     ).not.toBeNull();
   });
 });
+
+describe("a lesson on a topic of an official curriculum", () => {
+  it("says what it was written from, as the server sends it", () => {
+    const grounding = lessonViewOf(opened)!.lesson!.grounding!;
+
+    expect(grounding.authority).toBe("NERDC");
+    expect(grounding.objectives).toEqual(["Name the parts of a fraction."]);
+    expect(grounding.passages).toEqual([
+      { title: "3.1 What is a fraction?", chapter: "Chapter 3: Fractions" },
+    ]);
+    expect(grounding.textbook?.licence).toContain("Attribution");
+  });
+
+  it("has none when a model planned it", () => {
+    const planned = {
+      ...opened,
+      lesson: { ...opened.lesson, grounding: null },
+    };
+
+    expect(lessonViewOf(planned)!.lesson!.grounding).toBeNull();
+  });
+
+  it("keeps its objectives and says no passage is linked when the textbook is absent", () => {
+    const bare = {
+      ...opened,
+      lesson: {
+        ...opened.lesson,
+        grounding: {
+          authority: "NERDC",
+          edition: "September 2025",
+          objectives: [{ code: "a", statement: "Count in millions." }],
+          passages: [],
+          textbook: null,
+        },
+      },
+    };
+    const grounding = lessonViewOf(bare)!.lesson!.grounding!;
+
+    expect(grounding.objectives).toEqual(["Count in millions."]);
+    expect(grounding.passages).toEqual([]);
+    expect(grounding.textbook).toBeNull();
+  });
+});

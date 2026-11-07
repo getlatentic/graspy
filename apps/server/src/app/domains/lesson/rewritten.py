@@ -6,9 +6,6 @@ from __future__ import annotations
 
 import dspy
 
-from .prompts import GeneratePracticeQuestion, GenerateSlide
-from .staged import StagedPracticeQuestion, StagedSlide
-
 CHECK_PROBLEM = "check_problem"
 
 
@@ -21,9 +18,3 @@ def told_the_problem(signature: type[dspy.Signature]) -> type[dspy.Signature]:
         ),
         str,
     )
-
-
-RewrittenSlide = told_the_problem(GenerateSlide)
-RewrittenStagedSlide = told_the_problem(StagedSlide)
-RewrittenPracticeQuestion = told_the_problem(GeneratePracticeQuestion)
-RewrittenStagedPracticeQuestion = told_the_problem(StagedPracticeQuestion)

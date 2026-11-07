@@ -4,6 +4,7 @@ import { lessonViewOf, type LessonView as Content } from "@/lib/lesson";
 import { useToolResult } from "@/shared/use-tool-result";
 import { fill, type LessonWords } from "@/shared/words";
 import { buttonStyles } from "./button-styles";
+import { LessonSource } from "./lesson-source";
 import { Slide } from "./slide";
 import { useLessonStage } from "./stage";
 import { useLesson } from "./use-lesson";
@@ -51,6 +52,13 @@ function Lesson({
   return (
     <section aria-label={words.label} className="space-y-6 p-1">
       <Header content={view} words={words} />
+      {view.lesson?.grounding && (
+        <LessonSource
+          grounding={view.lesson.grounding}
+          words={words}
+          open={view.status === "making"}
+        />
+      )}
       {body}
     </section>
   );
@@ -133,7 +141,12 @@ function Making({ content, words }: { content: Content; words: LessonWords }) {
           {content.target.topic}
         </p>
       </div>
-      <Objectives objectives={content.lesson?.objectives ?? []} words={words} />
+      {!content.lesson?.grounding && (
+        <Objectives
+          objectives={content.lesson?.objectives ?? []}
+          words={words}
+        />
+      )}
     </>
   );
 }

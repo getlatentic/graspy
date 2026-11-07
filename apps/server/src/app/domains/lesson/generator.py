@@ -7,12 +7,10 @@ import dspy
 
 from ...education.stage import stage_of
 from .answers.written import written as written_value
+from .grounded import Grounding, Part
 from .lesson import LessonPractice, LessonSlide, LessonSlideAssessment
 from .options import as_option_lines, checked_answer, option_lines
 from .prompts import (
-    GenerateLessonPlan,
-    GeneratePracticeQuestion,
-    GenerateSlide,
     LessonPlan,
     PlanSummary,
     SlideSpec,
@@ -21,19 +19,9 @@ from .prompts import (
     TranslatePlanSummary,
     TranslateSlideText,
 )
-from .rewritten import (
-    CHECK_PROBLEM,
-    RewrittenPracticeQuestion,
-    RewrittenSlide,
-    RewrittenStagedPracticeQuestion,
-    RewrittenStagedSlide,
-)
-from .staged import (
-    StagedLessonPlan,
-    StagedPracticeQuestion,
-    StagedSlide,
-    stage_inputs,
-)
+from .rewritten import CHECK_PROBLEM
+from .staged import stage_inputs
+from .writers import signature_for
 
 NO_NOTES = "None: plan for a typical learner at this grade."
 # A slide written again is written with some sampling, or the model would
@@ -49,39 +37,33 @@ def _second_try(again: bool, problem: str) -> dict:
     return told | retried
 
 
-def _asked(
-    plain: dspy.Module, staged: dspy.Module, grade_level: str
-) -> tuple[dspy.Module, dict[str, str]]:
-    """The predictor for the learner, and the stage's inputs it needs."""
-    learner = stage_of(grade_level)
-    if learner is None:
-        return plain, {}
-    return staged, stage_inputs(learner)
-
-
 class StagedLessonGenerator(dspy.Module):
     def __init__(self):
         super().__init__()
-        self.plan_generator = dspy.ChainOfThought(GenerateLessonPlan)
-        self.slide_generator = dspy.ChainOfThought(GenerateSlide)
-        self.practice_generator = dspy.ChainOfThought(GeneratePracticeQuestion)
-        self.staged_plan_generator = dspy.ChainOfThought(StagedLessonPlan)
-        self.staged_slide_generator = dspy.ChainOfThought(StagedSlide)
-        self.staged_practice_generator = dspy.ChainOfThought(StagedPracticeQuestion)
-        self.rewritten_slide_generator = dspy.ChainOfThought(RewrittenSlide)
-        self.rewritten_staged_slide_generator = dspy.ChainOfThought(
-            RewrittenStagedSlide
-        )
-        self.rewritten_practice_generator = dspy.ChainOfThought(
-            RewrittenPracticeQuestion
-        )
-        self.rewritten_staged_practice_generator = dspy.ChainOfThought(
-            RewrittenStagedPracticeQuestion
-        )
         self.translate_summary = dspy.ChainOfThought(TranslatePlanSummary)
         self.translate_slide = dspy.ChainOfThought(TranslateLessonSlide)
         self.translate_slide_text = dspy.ChainOfThought(TranslateSlideText)
         self.translate_practice = dspy.ChainOfThought(TranslateLessonPractice)
+        self._writers: dict[tuple, dspy.Module] = {}
+
+    def _writer(
+        self,
+        part: Part,
+        grade_level: str,
+        grounding: Grounding | None,
+        rewritten: bool = False,
+    ) -> tuple[dspy.Module, dict[str, str]]:
+        """The predictor for this part and the inputs it needs: the learner's
+        stage where the catalogue places the class, the topic's objectives
+        and passages where a held curriculum has the topic."""
+        learner = stage_of(grade_level)
+        key = (part, learner is not None, grounding is not None, rewritten)
+        if key not in self._writers:
+            self._writers[key] = dspy.ChainOfThought(
+                signature_for(part, staged=key[1], grounded=key[2], rewritten=rewritten)
+            )
+        inputs = stage_inputs(learner) if learner else {}
+        return self._writers[key], inputs | (grounding.inputs() if grounding else {})
 
     async def generate_plan(
         self,
@@ -91,17 +73,16 @@ class StagedLessonGenerator(dspy.Module):
         topic: str,
         grade_level: str,
         learner_notes: str = "",
+        grounding: Grounding | None = None,
     ) -> LessonPlan:
-        planner, stage = _asked(
-            self.plan_generator, self.staged_plan_generator, grade_level
-        )
+        planner, extra = self._writer("plan", grade_level, grounding)
         prediction = await planner.acall(
             country=country,
             language=language,
             subject=subject,
             topic=topic,
             grade_level=grade_level,
-            **stage,
+            **extra,
             learner_notes=learner_notes or NO_NOTES,
         )
         return prediction.plan
@@ -117,18 +98,14 @@ class StagedLessonGenerator(dspy.Module):
         country: str,
         again: bool = False,
         problem: str = "",
+        grounding: Grounding | None = None,
     ) -> LessonSlide:
-        writers = (
-            (self.rewritten_slide_generator, self.rewritten_staged_slide_generator)
-            if problem
-            else (self.slide_generator, self.staged_slide_generator)
-        )
-        writer, stage = _asked(*writers, grade_level)
+        writer, extra = self._writer("slide", grade_level, grounding, bool(problem))
         written = await writer.acall(
             subject=subject,
             topic=topic,
             grade_level=grade_level,
-            **stage,
+            **extra,
             language=language,
             country=country,
             slide_spec=slide_spec,
@@ -158,21 +135,14 @@ class StagedLessonGenerator(dspy.Module):
         country: str,
         lesson_summary: str,
         problem: str = "",
+        grounding: Grounding | None = None,
     ) -> LessonPractice:
-        writers = (
-            (
-                self.rewritten_practice_generator,
-                self.rewritten_staged_practice_generator,
-            )
-            if problem
-            else (self.practice_generator, self.staged_practice_generator)
-        )
-        writer, stage = _asked(*writers, grade_level)
+        writer, extra = self._writer("practice", grade_level, grounding, bool(problem))
         written = await writer.acall(
             subject=subject,
             topic=topic,
             grade_level=grade_level,
-            **stage,
+            **extra,
             language=language,
             country=country,
             lesson_summary=lesson_summary,
