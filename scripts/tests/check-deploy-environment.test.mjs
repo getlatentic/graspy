@@ -166,7 +166,7 @@ for (const [name, bypass, shown] of [["lets administrators bypass", true, "true"
       environment: "production",
       answers: { [environmentPath("production")]: [200, production], [branchRulesPath]: [200, mainOnly] },
     });
-    assertFails(result, new RegExp(`administrators bypass its reviewer \\(can_admins_bypass is ${shown}\\)`));
+    assertFails(result, new RegExp(`administrators bypass its protection rules, the reviewer among them \\(can_admins_bypass is ${shown}\\)`));
   });
 }
 

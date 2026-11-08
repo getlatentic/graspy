@@ -2,7 +2,7 @@
 // the commit a run started on while that commit is on main, and never one that is not.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -12,14 +12,15 @@ const start = script.indexOf("require_head_on_main() {");
 const FUNCTION = script.slice(start, script.indexOf("\n}\n", start) + 3);
 
 const git = (cwd, ...args) => {
-  const run = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd, encoding: "utf8" });
+  const run = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" });
   assert.equal(run.status, 0, `git ${args.join(" ")}: ${run.stderr}`);
   return run.stdout.trim();
 };
 
-function commit(repo, name) {
-  writeFileSync(path.join(repo, name), name);
-  git(repo, "add", name);
+function commit(repo, name, file = name) {
+  mkdirSync(path.dirname(path.join(repo, file)), { recursive: true });
+  writeFileSync(path.join(repo, file), name);
+  git(repo, "add", file);
   git(repo, "commit", "-q", "-m", name);
   return git(repo, "rev-parse", "HEAD");
 }
@@ -57,7 +58,7 @@ test("HEAD is behind main: the approved commit is deployed and the output says m
     },
   });
   assert.equal(run.status, 0, run.output);
-  assert.match(run.output, /main has moved on by 2 commits/);
+  assert.match(run.output, /main has moved on by 2 commit\(s\)/);
 });
 
 test("HEAD is behind main in the workflow's shallow checkout", () => {
@@ -70,7 +71,7 @@ test("HEAD is behind main in the workflow's shallow checkout", () => {
     },
   });
   assert.equal(run.status, 0, run.output);
-  assert.match(run.output, /main has moved on by 3 commits/);
+  assert.match(run.output, /main has moved on by 3 commit\(s\)/);
 });
 
 test("HEAD is not on main in the workflow's shallow checkout: refused", () => {
@@ -106,4 +107,25 @@ test("HEAD is not on main, and main has moved: still refused", () => {
   });
   assert.notEqual(run.status, 0);
   assert.match(run.output, /is not on it/);
+});
+
+test("HEAD is behind main and main has a migration HEAD lacks: refused", () => {
+  const run = scenario({
+    setup: ({ origin, clone, b }) => {
+      git(clone, "checkout", "-q", "--detach", b);
+      commit(origin, "c", "apps/server/migrations/0001_new.sql");
+    },
+  });
+  assert.notEqual(run.status, 0);
+  assert.match(run.output, /main \([0-9a-f]+\) has migrations that [0-9a-f]+ lacks/);
+});
+
+test("HEAD is behind main and only code outside migrations changed: deployed", () => {
+  const run = scenario({
+    setup: ({ origin, clone, b }) => {
+      git(clone, "checkout", "-q", "--detach", b);
+      commit(origin, "c", "apps/web/page.txt");
+    },
+  });
+  assert.equal(run.status, 0, run.output);
 });

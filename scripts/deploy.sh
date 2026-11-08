@@ -61,17 +61,24 @@ require_clean_tree() {
 # approval moves main past it. That commit is still deployable while it is on main; a commit that is
 # not on main never is. The workflow's checkout is shallow; the fetch still brings every commit
 # between that one and main, so the ancestor test sees the whole path.
+# Migrations go before the code, so an older commit is refused once main has a migration it lacks:
+# its code would run on a database that main's migrations have already changed.
 require_head_on_main() {
   git fetch --quiet origin main
-  local head main behind
+  local head main behind status=0
   head="$(git rev-parse --short HEAD)"
   main="$(git rev-parse --short origin/main)"
-  git merge-base --is-ancestor HEAD origin/main ||
-    die "production deploys a commit on origin/main; $head is not on it (main is $main). Start the Deploy workflow again from main."
+  git merge-base --is-ancestor HEAD origin/main || status=$?
+  case "$status" in
+    0) ;;
+    1) die "production deploys a commit on origin/main; $head is not on it (main is $main). Start the Deploy workflow again from main." ;;
+    *) die "git could not tell whether $head is on origin/main (exit $status)." ;;
+  esac
   behind="$(git rev-list --count HEAD..origin/main)"
-  if [[ "$behind" -gt 0 ]]; then
-    echo "deploy: main has moved on by $behind commits (now $main); deploying the approved commit $head. Start the Deploy workflow again to deploy $main."
-  fi
+  [[ "$behind" -gt 0 ]] || return 0
+  git diff --quiet HEAD origin/main -- apps/server/migrations ||
+    die "main ($main) has migrations that $head lacks; deploying $head would run old code on a migrated database. Start the Deploy workflow again from main."
+  echo "deploy: main has moved on by $behind commit(s) (now $main); deploying the approved commit $head. Start the Deploy workflow again to deploy $main."
 }
 
 # Sign-in is hidden in a build without the Firebase web config, so a deploy without it is refused.

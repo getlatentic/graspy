@@ -78,7 +78,7 @@ read_deployment_branches() {
 require_production_protection() {
   local reviewers
   jq -e '.can_admins_bypass == false' <<< "$body" > /dev/null ||
-    fail "Production lets administrators bypass its reviewer (can_admins_bypass is $(jq -c '.can_admins_bypass' <<< "$body")). Put \"can_admins_bypass\": false in the production environment, as docs/DEPLOYING.md step 4 says."
+    fail "Production lets administrators bypass its protection rules, the reviewer among them (can_admins_bypass is $(jq -c '.can_admins_bypass' <<< "$body")). Put \"can_admins_bypass\": false in the production environment, as docs/DEPLOYING.md step 4 says."
   reviewers="$(jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]] | length' <<< "$body")"
   read_deployment_branches
   if [[ "$reviewers" -eq 0 || "$branches" != "branch main" ]]; then
