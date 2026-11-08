@@ -24,7 +24,7 @@ Both sign in with the Firebase project `graspy-f482e`. `APP_ENV=staging` behaves
 
 `scripts/deploy.sh` is the only way to deploy; the apps have no `npm run deploy`. It deploys nothing until all of these pass:
 
-1. The tree is clean, and the web build has its Firebase config (in the environment or `apps/web/.env.<environment>.local`). For production, `HEAD` is `origin/main`, and the deploy is confirmed.
+1. The tree is clean, and the web build has its Firebase config (in the environment or `apps/web/.env.<environment>.local`). For production, `HEAD` is on `origin/main` (a merge while the run waits for approval does not fail it; a commit that is not on main does), and the deploy is confirmed.
 2. `npm ci` with the npm that `package.json`'s `packageManager` names, run through `npx`. Another npm can skip a workspace's packages without an error. Then every package that the tutor, the admin UI and the web declare must be installed, and `uv sync --locked` for the API.
 3. The admin UI and the web app are built. The web build must call the API in the committed `apps/web/.env.<environment>` and not the other environment's; a `VITE_API_URL` in the shell is ignored. `public/_headers` allows production's API in `connect-src` (as `https://` and as `wss://`, for the chat's WebSocket) and `frame-src`; a staging build puts staging's API in its place.
 
@@ -73,7 +73,7 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
 
 3. **First staging deploy**, from `main` once this is merged: `scripts/deploy.sh staging`. It creates both Workers and applies every migration to the empty `graspy-staging`.
 
-4. **GitHub environments.** The Deploy workflow reads its secrets from the environments `staging` and `production`, never from the repository. Both deploy `main` only, and production waits for approval from `tosinamuda`. Until `staging` exists the workflow skips; it fails for production until production has its reviewer and branch rule. It also fails, for either, when GitHub's API gives any answer but the environment or a 404, and when a repository or organization secret has a deploy secret's name, since the deploy job would read it wherever the environment lacks that secret. `scripts/check-deploy-environment.sh` makes these checks. Make both, then check them:
+4. **GitHub environments.** The Deploy workflow reads its secrets from the environments `staging` and `production`, never from the repository. Both deploy `main` only, and production waits for approval from `tosinamuda`. Until `staging` exists the workflow skips; it fails for production until production has its reviewer, its branch rule and `can_admins_bypass` set to false, so that an administrator cannot skip the reviewer. It also fails, for either, when GitHub's API gives any answer but the environment or a 404, and when a repository or organization secret has a deploy secret's name, since the deploy job would read it wherever the environment lacks that secret. `scripts/check-deploy-environment.sh` makes these checks. Make both, then check them:
 
    ```bash
    repo=getlatentic/graspy
@@ -83,12 +83,14 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
    JSON
    gh api --method PUT "repos/$repo/environments/production" --input - <<JSON
    {"reviewers": [{"type": "User", "id": $owner_id}], "prevent_self_review": false,
+    "can_admins_bypass": false,
     "deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}
    JSON
    gh api --method POST "repos/$repo/environments/staging/deployment-branch-policies" -f name=main -f type=branch
    gh api --method POST "repos/$repo/environments/production/deployment-branch-policies" -f name=main -f type=branch
    gh api "repos/$repo/environments" --jq '.environments[] | {name, rules: [.protection_rules[].type]}'
    gh api "repos/$repo/environments/production/deployment-branch-policies" --jq '.branch_policies[] | {name, type}'
+   gh api "repos/$repo/environments/production" --jq .can_admins_bypass   # false
    ```
 
    `prevent_self_review` is false because the owner both starts and approves a production deploy.

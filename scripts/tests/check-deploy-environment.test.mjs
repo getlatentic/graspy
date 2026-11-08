@@ -35,6 +35,7 @@ const environmentPath = (name) => `repos/${REPOSITORY}/environments/${name}`;
 const branchRulesPath = `${environmentPath("production")}/deployment-branch-policies?per_page=100`;
 
 const protectedProduction = {
+  can_admins_bypass: false,
   protection_rules: [{ type: "required_reviewers", reviewers: [{ type: "User" }] }],
   deployment_branch_policy: { protected_branches: false, custom_branch_policies: true },
 };
@@ -156,6 +157,25 @@ test("production fails from a ref other than main", () => {
 test("production fails with no environment", () => {
   const result = run({ environment: "production", answers: { [environmentPath("production")]: [404, {}] } });
   assertFails(result, /No production environment/);
+});
+
+for (const [name, bypass, shown] of [["lets administrators bypass", true, "true"], ["does not say whether administrators bypass", undefined, "null"]]) {
+  test(`production fails when it ${name}`, () => {
+    const production = { ...protectedProduction, can_admins_bypass: bypass };
+    const result = run({
+      environment: "production",
+      answers: { [environmentPath("production")]: [200, production], [branchRulesPath]: [200, mainOnly] },
+    });
+    assertFails(result, new RegExp(`administrators bypass its reviewer \\(can_admins_bypass is ${shown}\\)`));
+  });
+}
+
+test("staging does not need can_admins_bypass off", () => {
+  const result = run({
+    environment: "staging",
+    answers: { [environmentPath("staging")]: [200, { can_admins_bypass: true }] },
+  });
+  assert.equal(result.ready, "ready=true\n");
 });
 
 test("production fails with no required reviewer", () => {
