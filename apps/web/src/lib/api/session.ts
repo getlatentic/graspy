@@ -305,10 +305,17 @@ export function endAccountSession(): void {
 }
 
 /** The parent's session is not made or kept without their signing in again. */
-export class ParentSignInNeeded extends Error {
+export class ParentSignInNeeded extends ApiError {
   constructor() {
-    super("Sign in again as the parent");
+    super("Sign in again as the parent", 401);
   }
+}
+
+/** When the parent's session ends, in milliseconds since the epoch, or null without one. */
+export function parentSessionEnds(): number | null {
+  return hasParentSession() && parent
+    ? parent.expiresAt - PARENT_MARGIN_MS
+    : null;
 }
 
 export function hasParentSession(): boolean {
@@ -345,6 +352,19 @@ export async function startParentSession(
   };
 }
 
+const REFUSED_SESSION = new Set(["session_invalid", "session_required"]);
+
+// The server refusing the session itself, not another 401 of the request such as a stale
+// sign-in sent in its body.
+async function sessionRefused(response: Response): Promise<boolean> {
+  if (response.status !== 401 && response.status !== 403) return false;
+  const { detail } = ((await toApiError(response.clone())).data ?? {}) as {
+    detail?: { code?: unknown };
+  };
+  const code = String(detail?.code);
+  return REFUSED_SESSION.has(code) || code === "account_required";
+}
+
 /** Sent as the parent, with the session `startParentSession` made, whichever learner is in
  * use. Without one, or once the server refuses it, the parent is asked to sign in again. */
 export async function fetchAsParent(
@@ -356,13 +376,9 @@ export async function fetchAsParent(
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${sent.token}`);
   const response = await fetch(input, { ...init, headers });
-  if (response.status === 401 || response.status === 403) {
-    const refused = await toApiError(response.clone());
-    const { detail } = (refused.data ?? {}) as { detail?: { code?: unknown } };
-    if (response.status === 401 || detail?.code === "account_required") {
-      if (parent === sent) parent = null;
-      throw new ParentSignInNeeded();
-    }
+  if (await sessionRefused(response)) {
+    if (parent === sent) parent = null;
+    throw new ParentSignInNeeded();
   }
   return response;
 }

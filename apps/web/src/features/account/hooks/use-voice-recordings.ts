@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { refusalCode } from "@/lib/account/account-call";
 import {
   hasParentSession,
+  parentSessionEnds,
   ParentSignInNeeded,
   startParentSession,
 } from "@/lib/api/session";
@@ -79,6 +80,15 @@ export function useVoiceRecordings(learner: string) {
     if (!needsParent) load();
   }, [learner, load, needsParent]);
 
+  // The server ends the parent's session after minutes: the page asks again then, where a
+  // call made after would only fail.
+  useEffect(() => {
+    const ends = parentSessionEnds();
+    if (needsParent || ends === null) return;
+    const timer = setTimeout(() => setNeedsParent(true), ends - Date.now());
+    return () => clearTimeout(timer);
+  }, [needsParent]);
+
   /** Takes the parent's session from a Google sign-in made just now. */
   const startAsParent = useCallback(async (firebaseIdToken: string) => {
     await startParentSession(firebaseIdToken);
@@ -118,7 +128,7 @@ export function useVoiceRecordings(learner: string) {
     [learner, settle, refused],
   );
 
-  const voice = held?.learner === learner ? held.voice : null;
+  const voice = !needsParent && held?.learner === learner ? held.voice : null;
   const loadProblem = problem?.learner === learner ? problem.problem : null;
 
   const more = useCallback(

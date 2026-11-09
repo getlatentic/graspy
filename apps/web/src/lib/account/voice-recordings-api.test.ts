@@ -175,3 +175,18 @@ describe("deleting until done", () => {
     await expect(api.untilDone(step)).rejects.toThrow("offline");
   });
 });
+
+describe("a parent whose session has ended", () => {
+  it.each([
+    ["a call", () => api.getVoice("a1b2c3d4e5f6")],
+    ["the audio", () => api.recordingAudio("a1b2c3d4e5f6", "gvm_1")],
+  ])("is told so for %s, not that the network failed", async (_name, ask) => {
+    const { ParentSignInNeeded } =
+      await vi.importActual<typeof import("@/lib/api/session")>(
+        "@/lib/api/session",
+      );
+    asParent.mockRejectedValueOnce(new ParentSignInNeeded());
+
+    await expect(ask()).rejects.toBeInstanceOf(ParentSignInNeeded);
+  });
+});

@@ -34,7 +34,10 @@ const rest: LessonMove = { kind: "rest", say: "try-tomorrow" };
 
 describe("the teacher's lines", () => {
   it("speaks the line of a lesson left for tomorrow, not only shows that it is over", async () => {
-    const state: LessonState = { phase: { name: "rest", move: rest }, note: null };
+    const state: LessonState = {
+      phase: { name: "rest", move: rest },
+      note: null,
+    };
 
     renderHook(() => useTeacherLines(state, () => undefined, "en"));
 

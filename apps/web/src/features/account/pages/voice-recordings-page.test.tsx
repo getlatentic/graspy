@@ -40,11 +40,13 @@ const { listLearners, signInAgain } = vi.hoisted(() => ({
 }));
 const parent = vi.hoisted(() => ({
   has: vi.fn(() => true),
+  ends: vi.fn<() => number | null>(() => null),
   start: vi.fn(),
 }));
 vi.mock("@/lib/api/session", async (original) => ({
   ...(await original<typeof import("@/lib/api/session")>()),
   hasParentSession: parent.has,
+  parentSessionEnds: parent.ends,
   startParentSession: parent.start,
 }));
 vi.mock("@/lib/account/voice-recordings-api", async (original) => ({
@@ -126,6 +128,7 @@ beforeEach(() => {
   listLearners.mockResolvedValue([listed(ADA, "Ada", AGREED)]);
   signInAgain.mockResolvedValue("fresh-token");
   parent.has.mockReturnValue(true);
+  parent.ends.mockReturnValue(null);
   parent.start.mockResolvedValue(undefined);
   api.stopKeepingRecordings.mockResolvedValue({ deleted: 0, more: false });
   api.deleteRecording.mockResolvedValue(undefined);
@@ -844,5 +847,17 @@ describe("the voice recordings page, for a learner's session", () => {
     await waitFor(() => expect(signInAgain).toHaveBeenCalled());
     expect(parent.start).not.toHaveBeenCalled();
     expect(api.getVoice).not.toHaveBeenCalled();
+  });
+});
+
+describe("the voice recordings page, as the parent's session runs out", () => {
+  it("asks the parent to sign in again when the minutes are up, and hides the recordings", async () => {
+    parent.ends.mockReturnValue(Date.now() + 60);
+    open(keeping(30, KEPT));
+    expect(await keepSwitch()).toBeTruthy();
+
+    expect(await screen.findByText("voiceRecordings.signInAgain")).toBeTruthy();
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(screen.queryByText("Counting to ten")).toBeNull();
   });
 });

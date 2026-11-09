@@ -37,10 +37,9 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         <li>
           <strong>Your Google account.</strong> Signing in uses Google, which
           tells our servers the account&rsquo;s id, name and email address. We
-          keep the id, and the name only to name a first learner. We
-          don&rsquo;t store the email address, but it stays in graspy&rsquo;s
-          Google sign-in records. Your name and email are also kept on your
-          device.
+          keep the id, and the name only to name a first learner. We don&rsquo;t
+          store the email address, but it stays in graspy&rsquo;s Google sign-in
+          records. Your name and email are also kept on your device.
         </li>
         <li>
           <strong>Each learner.</strong> A name, country, language, class or
@@ -56,8 +55,8 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           <strong>Voice.</strong> In voice lessons, a recording of what the
           learner says and a text transcript of it. The microphone is used only
           while a learner is answering, and only after they allow it. The
-          recording is deleted once it has been marked, unless a parent
-          agrees to keep it. The transcript and the result are kept.
+          recording is deleted once it has been marked, unless a parent agrees
+          to keep it. The transcript and the result are kept.
         </li>
         <li>
           <strong>On the web without signing in.</strong> A random device id
@@ -116,13 +115,13 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           runs the tutor and writes lessons. It receives what the learner types
           and the conversation so far with its summary, their country, language
           and class, the subject and topic, the topics they have finished, and
-          how they have done on practice.
-          It does not receive the learner&rsquo;s saved name.
+          how they have done on practice. It does not receive the
+          learner&rsquo;s saved name.
         </li>
         <li>
-          <strong>Cloudflare</strong> (Workers AI) turns a child&rsquo;s recording
-          in English into text; <strong>Intron</strong> does it for Yoruba and
-          Pidgin, and for English when Cloudflare cannot.{" "}
+          <strong>Cloudflare</strong> (Workers AI) turns a child&rsquo;s
+          recording in English into text; <strong>Intron</strong> does it for
+          Yoruba and Pidgin, and for English when Cloudflare cannot.{" "}
           <strong>Spitch</strong> turns the teacher&rsquo;s reply into speech;
           it receives only the teacher&rsquo;s words.
         </li>
@@ -133,17 +132,17 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     title: "How long we keep it",
     body: (
       <p>
-        A recording is deleted once it has been marked. If a parent agrees
-        to keep a learner&rsquo;s recordings, each is kept for the number of days
+        A recording is deleted once it has been marked. If a parent agrees to
+        keep a learner&rsquo;s recordings, each is kept for the number of days
         they choose (30, 90 or 365), and the parent can listen to it and delete
         it, or stop keeping recordings, whenever they like. Everything else,
         transcripts included, is kept until you remove the learner or the
         account. Lesson copies expire after 180 days. On Android, chats stay on
         the phone until you sign out or remove the learner there, and a
-        recording leaves the phone once graspy has it. On the web, a
-        recording waits in the browser only until it has been marked, and chats
-        and offline copies stay until you sign out, or for good if you never
-        signed in. The Android app is excluded from cloud backups.
+        recording leaves the phone once graspy has it. On the web, a recording
+        waits in the browser only until it has been marked, and chats and
+        offline copies stay until you sign out, or for good if you never signed
+        in. The Android app is excluded from cloud backups.
       </p>
     ),
   },

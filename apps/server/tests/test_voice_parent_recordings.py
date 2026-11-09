@@ -15,6 +15,7 @@ from app.account.learners import removed
 from app.api import account_routes as routes_of_accounts
 from app.api import routes
 from app.voice.curriculum import load_plans
+from app.security.session import issue
 from app.voice.recording_retention import sweep_audio
 
 PARENT_SESSION = "/api/account/parent-session"
@@ -166,6 +167,23 @@ async def test_a_device_has_no_parent_session(app):
 
     assert refused.status_code == 403
     assert refused.json()["detail"]["code"] == "account_required"
+
+
+async def test_the_parent_session_is_refused_once_its_minutes_are_up(app):
+    lapsed = issue("s", account=UID, parent=True, now=time.time() - 16 * 60)
+    async with client(app) as http:
+        http.headers["Authorization"] = f"Bearer {lapsed.token}"
+        refused = await http.get(voice("a1b2c3d4e5f6"))
+
+    assert refused.status_code == 401
+    assert refused.json()["detail"]["code"] == "session_invalid"
+
+
+async def test_asking_for_the_parent_session_needs_a_session_at_all(app):
+    async with client(app) as http:
+        refused = await http.post(PARENT_SESSION, json={"firebaseIdToken": "fresh"})
+
+    assert refused.status_code == 401
 
 
 async def test_the_parent_session_lasts_minutes_and_names_no_learner(app):

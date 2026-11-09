@@ -14,9 +14,9 @@ const countries = [
 ];
 
 const codes = (selected: string, current = "") =>
-  renderHook(() => useLocaleOptions(countries, undefined, selected, current)).result.current.languageOptions.map(
-    (option) => option.value,
-  );
+  renderHook(() =>
+    useLocaleOptions(countries, undefined, selected, current),
+  ).result.current.languageOptions.map((option) => option.value);
 
 describe("the languages a learner can choose", () => {
   it("are English alone, for a country that speaks others", () => {

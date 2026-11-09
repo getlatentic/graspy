@@ -101,7 +101,9 @@ describe("the parent's session", () => {
   it("is dropped when the server refuses it, and the parent is asked to sign in again", async () => {
     const { fetchAsParent, hasParentSession, ParentSignInNeeded } =
       await started();
-    fetchMock.mockResolvedValueOnce(answer(401));
+    fetchMock.mockResolvedValueOnce(
+      answer(401, { detail: { code: "session_invalid" } }),
+    );
 
     await expect(fetchAsParent("/a")).rejects.toBeInstanceOf(
       ParentSignInNeeded,
@@ -119,6 +121,18 @@ describe("the parent's session", () => {
     await expect(fetchAsParent("/a")).rejects.toBeInstanceOf(
       ParentSignInNeeded,
     );
+  });
+
+  it("keeps the session when a 401 is the request's own, such as a stale sign-in", async () => {
+    const { fetchAsParent, hasParentSession } = await started();
+    fetchMock.mockResolvedValueOnce(
+      answer(401, { detail: { code: "sign_in_stale" } }),
+    );
+
+    const refused = await fetchAsParent("/a");
+
+    expect(refused.status).toBe(401);
+    expect(hasParentSession()).toBe(true);
   });
 
   it("passes another refusal on, and keeps the session", async () => {
@@ -139,6 +153,17 @@ describe("the parent's session", () => {
 
     expect(hasParentSession()).toBe(false);
     vi.useRealTimers();
+  });
+
+  it("says when it ends, once there is one", async () => {
+    const { parentSessionEnds } = await load();
+    expect(parentSessionEnds()).toBeNull();
+
+    const started_ = await started();
+    const ends = started_.parentSessionEnds();
+
+    expect(ends).toBeGreaterThan(Date.now() + 14 * 60 * 1000 - 60_000);
+    expect(ends).toBeLessThan(Date.now() + 15 * 60 * 1000);
   });
 
   it("is not the next account's", async () => {
