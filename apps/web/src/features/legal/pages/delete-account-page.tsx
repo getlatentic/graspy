@@ -35,8 +35,9 @@ export default function DeleteAccountPage() {
             </Link>{" "}
             and choose <strong className="text-ink">Delete account</strong>.
             Every learner, everything graspy kept for them, and the Google
-            sign-in record graspy holds (its email and name) are deleted at
-            once.
+            sign-in record graspy holds (its email and name) are deleted. What a
+            phone or browser learned before anyone signed in is kept separately,
+            and the Google account itself stays yours: manage it at Google.
           </p>
         </section>
         <section className="mt-10">

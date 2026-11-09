@@ -36,15 +36,19 @@ async def sign(pem: str, message: bytes) -> bytes:
 class Google:
     """Answers as Google does, and remembers what it was asked."""
 
-    def __init__(self, deleting=200, token=200, delete_body="{}"):
+    def __init__(self, deleting=200, token=200, delete_body="{}", token_body=None):
         self.deleting, self.token, self.delete_body = deleting, token, delete_body
+        self.token_body = (
+            {"access_token": "ya29.token", "expires_in": 3599}
+            if token_body is None
+            else token_body
+        )
         self.asked: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         self.asked.append(request)
         if str(request.url) == TOKEN_URL:
-            body = {"access_token": "ya29.token", "expires_in": 3599}
-            return httpx.Response(self.token, json=body)
+            return httpx.Response(self.token, json=self.token_body)
         return httpx.Response(self.deleting, text=self.delete_body)
 
 
@@ -101,6 +105,8 @@ async def test_a_user_who_is_already_gone_counts_as_deleted():
         Google(deleting=403, delete_body="PERMISSION_DENIED"),
         Google(deleting=400, delete_body='{"error":{"message":"INVALID_LOCAL_ID"}}'),
         Google(token=400),
+        Google(token_body={"expires_in": 3599}),
+        Google(token_body=[]),
     ],
 )
 async def test_a_refusal_or_failure_of_google_is_a_removal_that_failed(google):
@@ -137,7 +143,17 @@ async def test_the_auth_emulator_is_asked_with_no_token():
     assert asked.url.path.endswith("/projects/demo-graspy/accounts:delete")
 
 
-@pytest.mark.parametrize("text", ["", "{}", "[]", '{"client_email": 1}', "nonsense"])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "",
+        "{}",
+        "[]",
+        '{"client_email": 1}',
+        "nonsense",
+        KEY.replace("AAAA", "not base64 !"),
+    ],
+)
 def test_a_secret_that_is_not_a_service_account_key_is_refused(text):
     with pytest.raises(NotConfigured):
         ServiceAccount.parse(text)
@@ -154,3 +170,80 @@ def test_a_deployed_server_with_sign_in_needs_the_service_account():
         Settings(_env_file=None, **deployed)
     assert Settings(_env_file=None, firebase_service_account=KEY, **deployed)
     assert Settings(_env_file=None, app_env="staging", session_secret="s")
+
+
+async def test_a_token_google_no_longer_accepts_is_made_again_once():
+    class Revoked(Google):
+        def __call__(self, request):
+            answer = super().__call__(request)
+            if str(request.url) == DELETE_URL and len(self.asked) == 2:
+                return httpx.Response(401, text="UNAUTHENTICATED")
+            return answer
+
+    google = Revoked()
+
+    await admin(google).remove_user("uid123")
+
+    assert [str(one.url) for one in google.asked] == [
+        TOKEN_URL,
+        DELETE_URL,
+        TOKEN_URL,
+        DELETE_URL,
+    ]
+
+
+async def test_a_token_google_keeps_refusing_is_one_retry_and_a_failed_removal():
+    google = Google(deleting=401)
+
+    with pytest.raises(RemovalFailed):
+        await admin(google).remove_user("uid123")
+
+    assert len(google.asked) == 4
+
+
+async def test_a_signer_that_fails_is_a_removal_that_failed():
+    async def broken(pem, message):
+        raise RuntimeError("importKey: parameter 5 is not of type 'Array'")
+
+    remover = FirebaseAdmin(
+        ServiceAccount.parse(KEY), broken, transport=httpx.MockTransport(Google())
+    )
+
+    with pytest.raises(RemovalFailed):
+        await remover.remove_user("uid123")
+
+
+async def test_the_assertion_is_signed_with_the_accounts_own_key():
+    """What Google verifies: the signature of the key's public half over the JWT."""
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import padding, rsa
+
+    from app.security.firebase_admin import signed_assertion
+    from app.security.rs256_worker import pkcs8_der
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pem = key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    ).decode()
+    assert pkcs8_der(pem) == key.private_bytes(
+        serialization.Encoding.DER,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    )
+
+    async def sign(given: str, message: bytes) -> bytes:
+        loaded = serialization.load_pem_private_key(given.encode(), None)
+        return loaded.sign(message, padding.PKCS1v15(), hashes.SHA256())
+
+    account = ServiceAccount("remover@x.iam.gserviceaccount.com", pem, "graspy-f482e")
+    jwt = await signed_assertion(account, sign, 1_000_000)
+
+    unsigned, signature = jwt.rsplit(".", 1)
+    key.public_key().verify(
+        base64.urlsafe_b64decode(signature + "=="),
+        unsigned.encode(),
+        padding.PKCS1v15(),
+        hashes.SHA256(),
+    )

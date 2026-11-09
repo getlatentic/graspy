@@ -6,16 +6,13 @@ from __future__ import annotations
 
 import base64
 import json
-import logging
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 import httpx
 
-from .rs256_worker import rs256_in_worker
-
-logger = logging.getLogger(__name__)
+from .rs256_worker import pkcs8_der, rs256_in_worker
 
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 SCOPE = "https://www.googleapis.com/auth/identitytoolkit"
@@ -51,12 +48,13 @@ class ServiceAccount:
     def parse(cls, text: str) -> ServiceAccount:
         try:
             key = json.loads(text)
+            pkcs8_der(key["private_key"])
             return cls(
                 email=key["client_email"],
                 private_key=key["private_key"],
                 project=key["project_id"],
             )
-        except (ValueError, KeyError, TypeError) as error:
+        except (ValueError, KeyError, TypeError, AttributeError) as error:
             raise NotConfigured(
                 "FIREBASE_SERVICE_ACCOUNT is not a service account key"
             ) from error
@@ -110,6 +108,10 @@ class FirebaseAdmin:
         ) as client:
             try:
                 response = await self._delete(client, uid)
+                if response.status_code == 401:
+                    # The token Google gave is no longer accepted: one made now is tried once.
+                    self._token = None
+                    response = await self._delete(client, uid)
             except httpx.HTTPError as error:
                 raise RemovalFailed(f"Identity Toolkit unreachable: {error}") from error
         if response.status_code == 200 or _user_not_found(response):
@@ -134,7 +136,14 @@ class FirebaseAdmin:
         if self._token and self._token[1] - TOKEN_MARGIN_SECONDS > now:
             return self._token[0]
         assert self._account is not None
-        assertion = await signed_assertion(self._account, self._sign, now)
+        try:
+            assertion = await signed_assertion(self._account, self._sign, now)
+        except (
+            Exception
+        ) as error:  # the signer is the runtime's, and raises its own types
+            raise RemovalFailed(
+                f"The token request could not be signed: {error}"
+            ) from error
         response = await client.post(
             TOKEN_URL,
             data={
@@ -146,11 +155,16 @@ class FirebaseAdmin:
             raise RemovalFailed(
                 f"Google refused the service account ({response.status_code}): {response.text[:200]}"
             )
-        body = response.json()
-        self._token = (
-            body["access_token"],
-            now + float(body.get("expires_in", TOKEN_SECONDS)),
-        )
+        try:
+            body = response.json()
+            self._token = (
+                body["access_token"],
+                now + float(body.get("expires_in", TOKEN_SECONDS)),
+            )
+        except (ValueError, KeyError, TypeError) as error:
+            raise RemovalFailed(
+                "Google's token reply was not an access token"
+            ) from error
         return self._token[0]
 
 

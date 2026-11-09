@@ -74,6 +74,8 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
    rm -r "$(dirname "$KEY")"
    ```
 
+   **A deletion asked for by email** (the page `/delete-account` promises one to someone who cannot sign in): reply to the sign-in address, and once the person confirms from it, run `scripts/delete-account-by-request.sh <email> production` with `KEY_FILE` set to a temporary key of the same service account (made and removed as above). It signs in as that uid and calls `DELETE /api/account`, so the learners, what is kept for them and the Firebase user go through the route the app uses. What a phone or browser learned before anyone signed in belongs to no account, and this does not remove it.
+
 2. **Custom domains.** The first deploy attaches `graspy-api-staging.getlatentic.com` and `graspy-staging.getlatentic.com`. Neither may have a DNS record of its own (code 100117). Check that nothing answers:
 
    ```bash
