@@ -14,8 +14,8 @@ from app.account.consents import DAY_MS
 from app.account.learners import removed
 from app.api import account_routes as routes_of_accounts
 from app.api import routes
-from app.voice.curriculum import load_plans
 from app.security.session import issue
+from app.voice.curriculum import load_plans
 from app.voice.recording_retention import sweep_audio
 
 PARENT_SESSION = "/api/account/parent-session"
