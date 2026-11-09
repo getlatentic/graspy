@@ -64,6 +64,8 @@
   },
   // Secrets, set with `npx wrangler secret put <NAME>`, never in this file:
   //   AWS_BEARER_TOKEN_BEDROCK, SESSION_SECRET, FIREBASE_API_KEY
+  //   FIREBASE_SERVICE_ACCOUNT (the JSON key of graspy-account-delete, which may only
+  //   delete Firebase users; required while FIREBASE_API_KEY is set)
   //   INTRON_API_KEY (hears the learner) and SPITCH_API_KEY (the teacher's
   //   voice), for voice lessons
 

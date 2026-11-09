@@ -65,6 +65,15 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
 
    The tutor runs one small model call to write the digits, signs and units of a spoken line as words. Production and staging run it on Bedrock. It defaults to Workers AI, with nothing to set up, if `SPELLER_HOST` is unset. To run it on Bedrock (the AWS credits, and Gemma 4 E2B, the model that measured best: see `datasets/number-spelling/README.md`), put the Bedrock key on the tutor and set `SPELLER_HOST` to `bedrock` in `apps/tutor/wrangler.jsonc` (in `vars` for production and in `env.staging.vars` for staging, which does not inherit it), then deploy the tutor: `grep '^AWS_BEARER_TOKEN_BEDROCK=' ../server/.env | cut -d= -f2- | tr -d '\n' | npx wrangler secret put AWS_BEARER_TOKEN_BEDROCK --env staging`, run from `apps/tutor`. `SPELLER_MODEL` names another model on either host. Set `SPELLER_HOST` back to `workers-ai` to switch back.
 
+   **`FIREBASE_SERVICE_ACCOUNT`** lets deleting an account delete its Firebase user (email and name). The server refuses to start in staging or production without it while `FIREBASE_API_KEY` is set. It is the JSON key of `graspy-account-delete@graspy-f482e`, whose role `graspyAccountDelete` holds one permission, `firebaseauth.users.delete`. Make a key into a file outside the repository, put it as the secret, and delete the file (one key per environment, so one can be revoked alone):
+
+   ```bash
+   KEY="$(mktemp -d)/key.json"
+   gcloud iam service-accounts keys create "$KEY" --iam-account graspy-account-delete@graspy-f482e.iam.gserviceaccount.com
+   npx wrangler secret put FIREBASE_SERVICE_ACCOUNT --env staging < "$KEY"   # --env="" for production
+   rm -r "$(dirname "$KEY")"
+   ```
+
 2. **Custom domains.** The first deploy attaches `graspy-api-staging.getlatentic.com` and `graspy-staging.getlatentic.com`. Neither may have a DNS record of its own (code 100117). Check that nothing answers:
 
    ```bash
