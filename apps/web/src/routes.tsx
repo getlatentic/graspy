@@ -18,6 +18,14 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "/delete-account",
+        lazy: async () => ({
+          Component: (
+            await import("@/features/legal/pages/delete-account-page")
+          ).default,
+        }),
+      },
+      {
         path: "/app",
         Component: AppShell,
         HydrateFallback: PageLoading,

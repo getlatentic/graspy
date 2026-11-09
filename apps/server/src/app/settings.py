@@ -22,6 +22,7 @@ DEPLOYMENT_KEYS = (
     "CLOUDFLARE_ACCOUNT_ID",
     "CLOUDFLARE_API_TOKEN",
     "FIREBASE_API_KEY",
+    "FIREBASE_SERVICE_ACCOUNT",
 )
 
 
@@ -66,6 +67,11 @@ class Settings(BaseSettings):
     # The Firebase project's web API key: public, but it names the project
     # whose sign-ins are accepted. Unset turns sign-in off.
     firebase_api_key: str | None = Field(default=None, alias="FIREBASE_API_KEY")
+    # The key (JSON) of a service account that may delete Firebase users: deleting an account
+    # removes the person's sign-in record too. A Worker secret.
+    firebase_service_account: str | None = Field(
+        default=None, alias="FIREBASE_SERVICE_ACCOUNT"
+    )
     # host:port of Firebase's Auth emulator, which vouches for any sign-in.
     firebase_auth_emulator_host: str | None = Field(
         default=None, alias="FIREBASE_AUTH_EMULATOR_HOST"
@@ -100,6 +106,21 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"FIREBASE_AUTH_EMULATOR_HOST is set in {self.app_env}, where it "
                 "would accept a sign-in nobody made."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def sign_in_removable_when_deployed(self) -> Settings:
+        """Deleting an account has to delete the sign-in record, or what the privacy notice
+        says is false."""
+        if (
+            self.is_deployed
+            and self.firebase_api_key
+            and not self.firebase_service_account
+        ):
+            raise ValueError(
+                f"FIREBASE_SERVICE_ACCOUNT is required in {self.app_env} while sign-in is on: "
+                "without it a deleted account's email and name would stay in Firebase."
             )
         return self
 

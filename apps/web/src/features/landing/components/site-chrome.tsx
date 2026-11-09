@@ -42,6 +42,9 @@ export function SiteFooter() {
           <Link to="/privacy" className="py-1 hover:text-ink">
             Privacy
           </Link>
+          <Link to="/delete-account" className="py-1 hover:text-ink">
+            Delete account
+          </Link>
           <a href={contactHref()} className="py-1 hover:text-ink">
             {CONTACT_EMAIL}
           </a>

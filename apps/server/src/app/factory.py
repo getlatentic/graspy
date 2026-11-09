@@ -47,6 +47,7 @@ from .llm.context import ModelContextMiddleware
 from .mcp.protocol import Server
 from .mcp.routes import MCP_PATH, PUBLIC_MCP_PATH, mcp_routes
 from .mcp.views import LocalViews, Views
+from .security import firebase_admin
 from .security.guard import SessionMiddleware
 from .security.headers import SecurityHeadersMiddleware
 from .security.rate_limit import Budgets, RateLimitMiddleware
@@ -185,6 +186,7 @@ def _add_state(
     app.state.subject_service = SubjectService()
     app.state.path_service = LearningPathService()
     app.state.keeping = keeping
+    app.state.firebase_admin = firebase_admin.configured(settings)
     app.state.origin_allowed = origin_matcher(origins)
     app.state.framing_hosts = origins
     public = urlsplit(settings.public_base_url)

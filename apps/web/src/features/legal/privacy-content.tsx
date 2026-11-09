@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router";
 import { CONTACT_EMAIL, contactHref } from "@/features/landing/constants";
 
-export const PRIVACY_UPDATED = "29 September 2026";
+export const PRIVACY_UPDATED = "10 November 2026";
 
 const emailUs = (
   <a
@@ -158,9 +159,16 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
           kept separately: email us to delete it.
         </li>
         <li>
-          Deleting the account does not delete graspy&rsquo;s Google sign-in
-          record of it (its email and name); email us to have that removed.
-          Manage the Google account itself at{" "}
+          <strong>Delete account</strong> also deletes the Google sign-in record
+          graspy holds of it (its email and name). If you can&rsquo;t sign in,
+          use{" "}
+          <Link
+            to="/delete-account"
+            className="font-medium text-accent-ink underline underline-offset-4"
+          >
+            Delete your account
+          </Link>
+          . Manage the Google account itself at{" "}
           <a
             href="https://myaccount.google.com"
             className="font-medium text-accent-ink underline underline-offset-4"
