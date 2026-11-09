@@ -1,5 +1,5 @@
 import { toApiError, toNetworkError } from "@/lib/api/errors";
-import { fetchWithSession } from "@/lib/api/session";
+import { fetchAsParent } from "@/lib/api/session";
 import { ACCOUNT_URL, call } from "./account-call";
 import type { RetentionDays } from "./consent-notices";
 import type { VoiceConsent } from "./learners-api";
@@ -43,6 +43,10 @@ export interface Deleted {
   more: boolean;
 }
 
+// The server refuses a learner's session these routes: they are the parent's.
+const asParent = <T>(url: string, method: string, body?: unknown) =>
+  call<T>(url, method, body, fetchAsParent);
+
 const voiceUrl = (learner: string) =>
   `${ACCOUNT_URL}/learners/${learner}/voice`;
 
@@ -53,7 +57,7 @@ export function getVoice(
   const query = after
     ? `?before=${after.before}&beforeId=${encodeURIComponent(after.beforeId)}`
     : "";
-  return call(`${voiceUrl(learner)}${query}`, "GET");
+  return asParent(`${voiceUrl(learner)}${query}`, "GET");
 }
 
 export function keepRecordings(
@@ -62,7 +66,7 @@ export function keepRecordings(
   retentionDays: RetentionDays,
   firebaseIdToken: string,
 ): Promise<RecordingsConsent> {
-  return call(`${voiceUrl(learner)}/consent`, "PUT", {
+  return asParent(`${voiceUrl(learner)}/consent`, "PUT", {
     noticeVersion,
     retentionDays,
     firebaseIdToken,
@@ -75,18 +79,18 @@ export function stopKeepingRecordings(
   deleteKept: boolean,
 ): Promise<Deleted> {
   const query = deleteKept ? "?deleteRecordings=true" : "";
-  return call(`${voiceUrl(learner)}/consent${query}`, "DELETE");
+  return asParent(`${voiceUrl(learner)}/consent${query}`, "DELETE");
 }
 
 export function deleteRecording(
   learner: string,
   recording: string,
 ): Promise<void> {
-  return call(`${voiceUrl(learner)}/recordings/${recording}`, "DELETE");
+  return asParent(`${voiceUrl(learner)}/recordings/${recording}`, "DELETE");
 }
 
 export function deleteRecordings(learner: string): Promise<Deleted> {
-  return call(`${voiceUrl(learner)}/recordings`, "DELETE");
+  return asParent(`${voiceUrl(learner)}/recordings`, "DELETE");
 }
 
 /** Asks again while the server says there is more to delete, and returns how many went. A
@@ -108,7 +112,7 @@ export async function recordingAudio(
 ): Promise<Blob> {
   let response: Response;
   try {
-    response = await fetchWithSession(
+    response = await fetchAsParent(
       `${voiceUrl(learner)}/recordings/${recording}/audio`,
     );
     if (response.ok) return await response.blob();

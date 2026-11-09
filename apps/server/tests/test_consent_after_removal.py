@@ -4,7 +4,7 @@ not when something other than the learner's absence is what fails."""
 
 import pytest
 from consent_sign_ins import consent_app
-from signed_in import UID, client, signed_in
+from signed_in import UID, as_parent, client, signed_in
 from voice_worker import worker_env
 
 from app.account.directory import LearnerRemoved, account_key
@@ -186,6 +186,7 @@ async def test_a_recordings_consent_for_a_learner_that_cannot_be_checked_answers
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")
         learner = await added_with_consent(http)
+        await as_parent(http)
         second_look_fails(monkeypatch, [True])
         failed = await http.put(
             voice_consent_url(learner), json={**CONSENT, "retentionDays": 30}

@@ -47,6 +47,14 @@ async def signed_in(http, **sent) -> dict:
     return use(http, (await http.post("/api/session", json=sent)).json())
 
 
+async def as_parent(http, token: str = "fresh") -> None:
+    """The signed-in account's holder signs in again, and is the parent for a few minutes."""
+    response = await http.post(
+        "/api/account/parent-session", json={"firebaseIdToken": token}
+    )
+    use(http, response.json())
+
+
 async def added(http, name: str) -> str:
     response = await http.post(
         "/api/account/learners", json={"name": name, "guardian": True}

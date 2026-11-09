@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 # leaked token is not a standing grant.
 TOKEN_TTL_SECONDS = 12 * 60 * 60
 
+# A parent's session is for the minutes after they signed in again, not for the day.
+PARENT_TOKEN_TTL_SECONDS = 15 * 60
+
 _SIGNATURE_ALGORITHM = sha256
 
 
@@ -54,15 +57,20 @@ def issue(
     *,
     learner: str | None = None,
     account: str | None = None,
+    parent: bool = False,
     now: float | None = None,
 ) -> IssuedToken:
     """``learner`` is whose record the session reads and writes; ``account``
-    is the signed-in account whose learners it may manage."""
+    is the signed-in account whose learners it may manage. ``parent`` marks a session
+    made just after the account's holder signed in again: it carries no learner."""
     issued_at = int(time.time() if now is None else now)
+    ttl = PARENT_TOKEN_TTL_SECONDS if parent else TOKEN_TTL_SECONDS
     claims: dict = {
         "jti": secrets.token_urlsafe(9),
-        "exp": issued_at + TOKEN_TTL_SECONDS,
+        "exp": issued_at + ttl,
     }
+    if parent:
+        claims["par"] = True
     if learner:
         claims["sub"] = learner
     if account:
@@ -71,7 +79,7 @@ def issue(
 
     return IssuedToken(
         token=f"{_encode(payload)}.{_signature(payload, secret)}",
-        expires_in=TOKEN_TTL_SECONDS,
+        expires_in=ttl,
     )
 
 
@@ -114,6 +122,10 @@ def _text_claim(claims: dict, name: str) -> str | None:
 
 def learner_of(claims: dict) -> str | None:
     return _text_claim(claims, "sub")
+
+
+def parent_of(claims: dict) -> bool:
+    return claims.get("par") is True
 
 
 def account_of(claims: dict) -> str | None:

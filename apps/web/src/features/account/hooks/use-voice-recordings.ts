@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { refusalCode } from "@/lib/account/account-call";
 import {
+  hasParentSession,
+  parentSessionEnds,
+  ParentSignInNeeded,
+  startParentSession,
+} from "@/lib/api/session";
+import {
   NOTICE_VERSION,
   type RetentionDays,
 } from "@/lib/account/consent-notices";
@@ -34,7 +40,16 @@ export function useVoiceRecordings(learner: string) {
   } | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Until the parent signs in again, the server refuses the recordings to a session that is
+  // only the learner's.
+  const [needsParent, setNeedsParent] = useState(() => !hasParentSession());
   const current = useRef(learner);
+
+  const refused = useCallback((error: unknown) => {
+    if (!(error instanceof ParentSignInNeeded)) return false;
+    setNeedsParent(true);
+    return true;
+  }, []);
 
   const settle = useCallback(
     (voice: VoiceOverview) => {
@@ -48,6 +63,7 @@ export function useVoiceRecordings(learner: string) {
     getVoice(learner)
       .then(settle)
       .catch((error: unknown) => {
+        if (refused(error)) return;
         console.warn("Loading the voice recordings failed:", error);
         if (current.current !== learner) return;
         setProblem({
@@ -56,13 +72,28 @@ export function useVoiceRecordings(learner: string) {
             refusalCode(error) === "no_such_learner" ? "notFound" : "failed",
         });
       });
-  }, [learner, settle]);
+  }, [learner, settle, refused]);
 
   useEffect(() => {
     current.current = learner;
     setFailed(false);
-    load();
-  }, [learner, load]);
+    if (!needsParent) load();
+  }, [learner, load, needsParent]);
+
+  // The server ends the parent's session after minutes: the page asks again then, where a
+  // call made after would only fail.
+  useEffect(() => {
+    const ends = parentSessionEnds();
+    if (needsParent || ends === null) return;
+    const timer = setTimeout(() => setNeedsParent(true), ends - Date.now());
+    return () => clearTimeout(timer);
+  }, [needsParent]);
+
+  /** Takes the parent's session from a Google sign-in made just now. */
+  const startAsParent = useCallback(async (firebaseIdToken: string) => {
+    await startParentSession(firebaseIdToken);
+    setNeedsParent(false);
+  }, []);
 
   const change = useCallback(
     (update: (voice: VoiceOverview) => VoiceOverview) =>
@@ -83,6 +114,7 @@ export function useVoiceRecordings(learner: string) {
         await work();
         return true;
       } catch (error) {
+        if (refused(error)) return false;
         console.warn("Changing the voice recordings failed:", error);
         setFailed(true);
         if (refreshOnFailure) {
@@ -93,10 +125,10 @@ export function useVoiceRecordings(learner: string) {
         setBusy(false);
       }
     },
-    [learner, settle],
+    [learner, settle, refused],
   );
 
-  const voice = held?.learner === learner ? held.voice : null;
+  const voice = !needsParent && held?.learner === learner ? held.voice : null;
   const loadProblem = problem?.learner === learner ? problem.problem : null;
 
   const more = useCallback(
@@ -181,6 +213,8 @@ export function useVoiceRecordings(learner: string) {
 
   return {
     voice,
+    needsParent,
+    startAsParent,
     loadProblem,
     busy,
     failed,

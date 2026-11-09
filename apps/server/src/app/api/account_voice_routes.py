@@ -1,6 +1,7 @@
-"""A parent's say over a learner's voice recordings: agree to keep them, or stop, and listen to and
-delete what was kept. Only a signed-in account session reaches these, for a learner the account
-holds; a device's own session never does. What the routes promise is in docs/API.md."""
+"""A parent's say over a learner's voice recordings: agree to keep them, or stop, and listen to
+and delete what was kept. Only the parent's own session reaches these, for a learner the account
+holds (see account_parent_routes.py); a device's session and a learner's never do. What the
+routes promise is in docs/API.md."""
 
 from __future__ import annotations
 
@@ -27,9 +28,9 @@ from ..voice.parent_recordings import (
 )
 from ..voice.samples import SAMPLE_ID
 from ..wire import Wire
+from .account_parent_routes import ParentUid as Uid
 from .account_routes import (
     KeepingDep,
-    Uid,
     grant_for_held_learner,
     require_learner,
 )

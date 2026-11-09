@@ -6,7 +6,7 @@ import time
 import pytest
 from consent_sign_ins import consent_app
 from service_agreed import service_agreed
-from signed_in import UID, added, chosen, client, signed_in
+from signed_in import UID, added, as_parent, chosen, client, signed_in
 from test_voice_routes import METADATA, T2, as_device, offered
 from voice_worker import worker_env
 
@@ -14,9 +14,11 @@ from app.account.consents import DAY_MS
 from app.account.learners import removed
 from app.api import account_routes as routes_of_accounts
 from app.api import routes
+from app.security.session import issue
 from app.voice.curriculum import load_plans
 from app.voice.recording_retention import sweep_audio
 
+PARENT_SESSION = "/api/account/parent-session"
 NOTICE_1 = {"noticeVersion": 1, "retentionDays": 30}
 WAV_OF_3_SECONDS = b"RIFF" + b"\0" * (40 + 3 * 16_000 * 2)
 
@@ -48,7 +50,9 @@ def voice(learner_id: str, path: str = "") -> str:
 async def parent(http, learner_id: str = "") -> str:
     """Signs in as the parent, with a learner of their own."""
     await signed_in(http, firebaseIdToken="good")
-    return learner_id or await added(http, "Ada")
+    learner_id = learner_id or await added(http, "Ada")
+    await as_parent(http)
+    return learner_id
 
 
 async def agree(http, learner_id: str, days: int = 30, token: str = "fresh"):
@@ -79,6 +83,7 @@ async def recorded(http, env, learner_id: str, n: int = 1, body: bytes = b"RIFF"
         assert marked.status_code == 200, marked.text
         samples.append(sample["sample_id"])
     await signed_in(http, firebaseIdToken="good")
+    await as_parent(http)
     return samples
 
 
@@ -98,6 +103,99 @@ async def test_only_a_signed_in_account_reaches_a_learners_recordings(app):
     assert {answer.json()["detail"]["code"] for answer in answers} == {
         "account_required"
     }
+
+
+async def every_recording_route(http, learner: str, sample: str):
+    return [
+        await http.get(voice(learner)),
+        await agree(http, learner),
+        await http.delete(voice(learner, "/consent?deleteRecordings=true")),
+        await http.get(voice(learner, f"/recordings/{sample}/audio")),
+        await http.delete(voice(learner, f"/recordings/{sample}")),
+        await http.delete(voice(learner, "/recordings")),
+    ]
+
+
+async def test_only_the_parents_own_session_reaches_the_recordings(app, env):
+    """A child's session and a plain sign-in carry the account's uid, and are not the parent's."""
+    async with client(app) as http:
+        learner = await parent(http)
+        await agree(http, learner)
+        sibling = await added(http, "Bola")
+        [sample] = await recorded(http, env, learner)
+        await service_agreed(env, sibling)
+        await chosen(http, sibling)
+        as_learner = await every_recording_route(http, learner, sample)
+        await signed_in(http, firebaseIdToken="good")
+        plain = await every_recording_route(http, learner, sample)
+        await as_parent(http)
+        kept = (await http.get(voice(learner))).json()
+
+    for answers in (as_learner, plain):
+        assert {answer.status_code for answer in answers} == {403}
+        assert {answer.json()["detail"]["code"] for answer in answers} == {
+            "account_required"
+        }
+    assert kept["consent"] is not None
+    assert [one["id"] for one in kept["recordings"]] == [sample]
+
+
+@pytest.mark.parametrize(
+    ("token", "status", "code"),
+    [
+        ("good", 401, "sign_in_stale"),
+        ("stale", 401, "sign_in_stale"),
+        ("other", 403, "sign_in_other_account"),
+        ("password", 403, "sign_in_not_google"),
+        ("nonsense", 401, "sign_in_invalid"),
+    ],
+)
+async def test_the_parent_session_needs_a_fresh_google_sign_in_of_the_account(
+    app, token, status, code
+):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        refused = await http.post(PARENT_SESSION, json={"firebaseIdToken": token})
+
+    assert (refused.status_code, refused.json()["detail"]["code"]) == (status, code)
+
+
+async def test_a_device_has_no_parent_session(app):
+    async with client(app) as http:
+        await as_device(http, "0a1b2c3d4e5f60718293a4b5c6d7e8f9")
+        refused = await http.post(PARENT_SESSION, json={"firebaseIdToken": "fresh"})
+
+    assert refused.status_code == 403
+    assert refused.json()["detail"]["code"] == "account_required"
+
+
+async def test_the_parent_session_is_refused_once_its_minutes_are_up(app):
+    lapsed = issue("s", account=UID, parent=True, now=time.time() - 16 * 60)
+    async with client(app) as http:
+        http.headers["Authorization"] = f"Bearer {lapsed.token}"
+        refused = await http.get(voice("a1b2c3d4e5f6"))
+
+    assert refused.status_code == 401
+    assert refused.json()["detail"]["code"] == "session_invalid"
+
+
+async def test_asking_for_the_parent_session_needs_a_session_at_all(app):
+    async with client(app) as http:
+        refused = await http.post(PARENT_SESSION, json={"firebaseIdToken": "fresh"})
+
+    assert refused.status_code == 401
+
+
+async def test_the_parent_session_lasts_minutes_and_names_no_learner(app):
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good")
+        await added(http, "Ada")
+        session = (
+            await http.post(PARENT_SESSION, json={"firebaseIdToken": "fresh"})
+        ).json()
+
+    assert session["expiresIn"] == 15 * 60
+    assert session["learner"] is None
 
 
 async def test_a_learner_the_account_does_not_hold_is_not_found(app):
@@ -358,6 +456,7 @@ async def test_stopping_keeps_what_was_kept_and_keeps_nothing_new(app, env):
         )
         await http.post(f"/api/voice/samples/{later.json()['sample_id']}/evaluation")
         await signed_in(http, firebaseIdToken="good")
+        await as_parent(http)
         overview = (await http.get(voice(learner))).json()
 
     assert stopped.json() == again.json() == {"deleted": 0, "more": False}
@@ -420,6 +519,7 @@ async def test_another_account_cannot_list_hear_or_delete_a_recording(app, env):
         [sample] = await recorded(http, env, learner)
         mine = http.headers["Authorization"]
         await signed_in(http, firebaseIdToken="good2")
+        await as_parent(http, "other")
         theirs = await added(http, "Grace")
         answers = [
             await http.get(voice(learner)),
@@ -474,6 +574,7 @@ async def test_a_recording_still_being_marked_is_not_the_parents_to_delete(app, 
             headers={"Content-Type": "audio/wav"},
         )
         await signed_in(http, firebaseIdToken="good")
+        await as_parent(http)
         deleted = await http.delete(
             voice(learner, f"/recordings/{sample['sample_id']}")
         )

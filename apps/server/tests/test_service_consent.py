@@ -6,7 +6,7 @@ import time
 
 import pytest
 from consent_sign_ins import consent_app
-from signed_in import UID, client, signed_in, signed_in_app
+from signed_in import UID, as_parent, client, signed_in, signed_in_app
 from voice_worker import worker_env
 
 from app.account.directory import account_key
@@ -175,6 +175,7 @@ async def test_the_two_consents_are_kept_apart(app, env):
                 "/api/account/learners", json=adding(firebaseIdToken="fresh")
             )
         ).json()["id"]
+        await as_parent(http)
         await http.put(
             f"/api/account/learners/{learner}/voice/consent",
             json={"noticeVersion": 1, "retentionDays": 90, "firebaseIdToken": "fresh"},

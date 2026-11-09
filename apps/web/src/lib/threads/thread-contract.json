@@ -44,9 +44,7 @@
             "timestamp": 1790000030000,
             "editedAt": 1790000050000,
             "metadata": {
-              "followUps": [
-                "What is a half as a decimal?"
-              ],
+              "followUps": ["What is a half as a decimal?"],
               "card": {
                 "resourceUri": "ui://graspy/practice",
                 "toolName": "give_practice",
@@ -56,10 +54,7 @@
                     {
                       "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
                       "working": "1 ÷ 4 = 0.25",
-                      "options": [
-                        "0.4",
-                        "0.25"
-                      ],
+                      "options": ["0.4", "0.25"],
                       "answer_index": 1,
                       "correct_feedback": "1 ÷ 4 = 0.25.",
                       "incorrect_feedback": "Divide 1 by 4.",
@@ -80,10 +75,7 @@
                     "questions": [
                       {
                         "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
-                        "options": [
-                          "0.4",
-                          "0.25"
-                        ],
+                        "options": ["0.4", "0.25"],
                         "answerIndex": 1,
                         "correctFeedback": "1 ÷ 4 = 0.25.",
                         "incorrectFeedback": "Divide 1 by 4.",
@@ -271,9 +263,7 @@
             "timestamp": 1790000030000,
             "editedAt": 1790000050000,
             "metadata": {
-              "followUps": [
-                "What is a half as a decimal?"
-              ],
+              "followUps": ["What is a half as a decimal?"],
               "card": {
                 "resourceUri": "ui://graspy/practice",
                 "toolName": "give_practice",
@@ -283,10 +273,7 @@
                     {
                       "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
                       "working": "1 ÷ 4 = 0.25",
-                      "options": [
-                        "0.4",
-                        "0.25"
-                      ],
+                      "options": ["0.4", "0.25"],
                       "answer_index": 1,
                       "correct_feedback": "1 ÷ 4 = 0.25.",
                       "incorrect_feedback": "Divide 1 by 4.",
@@ -307,10 +294,7 @@
                     "questions": [
                       {
                         "question": "Convert \\(\\frac{1}{4}\\) to a decimal.",
-                        "options": [
-                          "0.4",
-                          "0.25"
-                        ],
+                        "options": ["0.4", "0.25"],
                         "answerIndex": 1,
                         "correctFeedback": "1 ÷ 4 = 0.25.",
                         "incorrectFeedback": "Divide 1 by 4.",

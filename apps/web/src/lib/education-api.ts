@@ -39,7 +39,9 @@ export const nameIn = (names: Names, language: string): string =>
 /** The country's school systems as the web app serves them itself, or null when they are not there. */
 async function servedHere(country: string): Promise<SchoolSystem[] | null> {
   try {
-    const response = await fetch(`/education/countries/${encodeURIComponent(country)}.json`);
+    const response = await fetch(
+      `/education/countries/${encodeURIComponent(country)}.json`,
+    );
     const type = response.headers.get("content-type") ?? "";
     if (!response.ok || !type.includes("json")) return null;
     const systems: unknown = await response.json();

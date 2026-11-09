@@ -406,6 +406,7 @@
     "notKept": "لم يُحفظ ذلك. حاول مرة أخرى."
   },
   "voiceRecordings": {
+    "signInAgain": "Sign in again to see these recordings.",
     "title": "التسجيلات الصوتية",
     "off": "يحذف graspy كل تسجيل بمجرد أن يصحّح الإجابة. أما الكلمات التي سمعها فتبقى.",
     "keep": "الاحتفاظ بالتسجيلات",
