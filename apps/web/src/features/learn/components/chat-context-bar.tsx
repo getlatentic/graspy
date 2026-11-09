@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, X } from "lucide-react";
 import type { ThreadScope } from "@/lib/chat-db";
@@ -20,12 +20,15 @@ interface ChatContextBarProps {
   /** False beside a lesson, where the conversation is that lesson's. */
   changeable: boolean;
   onBackToLesson?: () => void;
+  /** Controls at the end of the bar, such as the one that hides the conversation. */
+  trailing?: ReactNode;
 }
 
 export function ChatContextBar({
   scope,
   changeable,
   onBackToLesson,
+  trailing,
 }: ChatContextBarProps) {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -53,6 +56,7 @@ export function ChatContextBar({
           {t("ask.change")}
         </button>
       )}
+      {trailing}
       {choosing && (
         <TopicSheet
           current={scope}

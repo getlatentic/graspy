@@ -59,7 +59,9 @@
     "topicReady": "“{topic}” ti ṣetán nígbà tí o bá ṣetán.",
     "subjectReady": "{subject} ti ṣetán nígbà tí o bá ṣetán.",
     "viewUnavailable": "A kò lè fi káàdì yìí hàn.",
-    "backToLesson": "Padà sí ẹ̀kọ́ náà"
+    "backToLesson": "Padà sí ẹ̀kọ́ náà",
+    "hide": "Fi ìjíròrò pamọ́",
+    "resize": "Yí ìwọ̀n ìjíròrò padà"
   },
   "menu": {
     "tagline": "Olùkọ́ tó tọ́ fún ọ"
@@ -201,7 +203,9 @@
     "home": "Ilé",
     "subjects": "Kókó-ẹ̀kọ́",
     "ask": "Béèrè",
-    "you": "Ìwọ"
+    "you": "Ìwọ",
+    "collapse": "Pa àtòjọ pọ̀",
+    "expand": "Ṣí àtòjọ"
   },
   "home": {
     "continueTitle": "Máa bá ẹ̀kọ́ lọ",

@@ -59,7 +59,9 @@
     "topicReady": "“{topic}” is ready when you are.",
     "subjectReady": "{subject} is ready when you are.",
     "viewUnavailable": "This card could not be shown.",
-    "backToLesson": "Back to the lesson"
+    "backToLesson": "Back to the lesson",
+    "hide": "Hide chat",
+    "resize": "Resize chat"
   },
   "menu": {
     "tagline": "The teacher for you"
@@ -201,7 +203,9 @@
     "home": "Home",
     "subjects": "Subjects",
     "ask": "Ask",
-    "you": "You"
+    "you": "You",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu"
   },
   "home": {
     "continueTitle": "Continue learning",
