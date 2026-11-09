@@ -20,7 +20,7 @@ vi.mock("@/lib/device-wipe", () => ({ wipeDevice: async () => undefined }));
 const fetchMock = vi.fn();
 
 function answer(status: number, body: object = {}) {
-  return { ok: status < 400, status, text: async () => JSON.stringify(body) };
+  return new Response(status === 204 ? null : JSON.stringify(body), { status });
 }
 
 const minted = (token: string) => answer(200, { token, expiresIn: 3600 });
@@ -30,8 +30,16 @@ async function load() {
   return import("./session");
 }
 
-function bodyOf(call: number) {
-  return JSON.parse(fetchMock.mock.calls[call][1].body);
+const sentWith = (call: number) =>
+  fetchMock.mock.calls[call][1].headers.get("Authorization");
+
+/** The session in use is minted, then the parent's session is asked for under it. */
+async function started(token = "parent-token") {
+  fetchMock.mockResolvedValueOnce(minted("learner-token"));
+  fetchMock.mockResolvedValueOnce(answer(200, { token, expiresIn: 900 }));
+  const session = await load();
+  await session.startParentSession("fresh-id-token");
+  return session;
 }
 
 beforeEach(() => {
@@ -56,62 +64,89 @@ beforeEach(() => {
   };
 });
 
-describe("fetchAsParent", () => {
-  it("asks for the account's session with no learner, though a learner is in use", async () => {
-    fetchMock.mockResolvedValueOnce(minted("parent-token"));
+describe("the parent's session", () => {
+  it("is asked for with the Google sign-in just made, under the session in use", async () => {
+    await started();
+
+    expect(fetchMock.mock.calls[1][0]).toContain("/account/parent-session");
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      firebaseIdToken: "fresh-id-token",
+    });
+    expect(sentWith(1)).toBe("Bearer learner-token");
+  });
+
+  it("is what recordings are fetched with, though a learner is in use", async () => {
+    const { fetchAsParent, hasParentSession } = await started();
     fetchMock.mockResolvedValueOnce(answer(204));
-    const { fetchAsParent } = await load();
 
     await fetchAsParent("/api/account/learners/x/voice");
 
-    expect(bodyOf(0)).toEqual({
-      deviceId: DEVICE,
-      firebaseIdToken: "id-token",
-    });
-    expect(fetchMock.mock.calls[1][1].headers.get("Authorization")).toBe(
-      "Bearer parent-token",
+    expect(hasParentSession()).toBe(true);
+    expect(sentWith(2)).toBe("Bearer parent-token");
+  });
+
+  it("is never made on its own: without a sign-in again, nothing is sent", async () => {
+    const { fetchAsParent, hasParentSession, ParentSignInNeeded } =
+      await load();
+
+    await expect(fetchAsParent("/a")).rejects.toBeInstanceOf(
+      ParentSignInNeeded,
+    );
+
+    expect(hasParentSession()).toBe(false);
+    expect(googleIdToken).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("is dropped when the server refuses it, and the parent is asked to sign in again", async () => {
+    const { fetchAsParent, hasParentSession, ParentSignInNeeded } =
+      await started();
+    fetchMock.mockResolvedValueOnce(answer(401));
+
+    await expect(fetchAsParent("/a")).rejects.toBeInstanceOf(
+      ParentSignInNeeded,
+    );
+
+    expect(hasParentSession()).toBe(false);
+  });
+
+  it("is dropped when the server says the session is not the parent's", async () => {
+    const { fetchAsParent, ParentSignInNeeded } = await started();
+    fetchMock.mockResolvedValueOnce(
+      answer(403, { detail: { code: "account_required" } }),
+    );
+
+    await expect(fetchAsParent("/a")).rejects.toBeInstanceOf(
+      ParentSignInNeeded,
     );
   });
 
-  it("keeps the parent's token for later calls", async () => {
-    fetchMock.mockResolvedValueOnce(minted("parent-token"));
-    fetchMock.mockResolvedValue(answer(204));
-    const { fetchAsParent } = await load();
-
-    await fetchAsParent("/a");
-    await fetchAsParent("/b");
-
-    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      expect.stringContaining("/session"),
-      "/a",
-      "/b",
-    ]);
-  });
-
-  it("makes a new session once when the server refuses the token", async () => {
-    fetchMock
-      .mockResolvedValueOnce(minted("old"))
-      .mockResolvedValueOnce(answer(401))
-      .mockResolvedValueOnce(minted("new"))
-      .mockResolvedValueOnce(answer(204));
-    const { fetchAsParent } = await load();
-
-    const response = await fetchAsParent("/a");
-
-    expect(response.status).toBe(204);
-    expect(fetchMock.mock.calls[3][1].headers.get("Authorization")).toBe(
-      "Bearer new",
+  it("passes another refusal on, and keeps the session", async () => {
+    const { fetchAsParent, hasParentSession } = await started();
+    fetchMock.mockResolvedValueOnce(
+      answer(403, { detail: { code: "sign_in_other_account" } }),
     );
+
+    const refused = await fetchAsParent("/a");
+
+    expect(refused.status).toBe(403);
+    expect(hasParentSession()).toBe(true);
   });
 
-  it("is a different session after the account signs out", async () => {
-    fetchMock.mockResolvedValue(minted("parent-token"));
-    const { fetchAsParent, endAccountSession } = await load();
-    await fetchAsParent("/a");
+  it("lapses with the minutes the server gave it", async () => {
+    const { hasParentSession } = await started();
+    vi.useFakeTimers({ now: Date.now() + 15 * 60 * 1000 });
+
+    expect(hasParentSession()).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it("is not the next account's", async () => {
+    const { hasParentSession, endAccountSession } = await started();
 
     endAccountSession();
-    signedIn = null;
+    signedIn = { ...(signedIn as object), uid: "uid-2" };
 
-    await expect(fetchAsParent("/b")).rejects.toThrow("Sign in first");
+    expect(hasParentSession()).toBe(false);
   });
 });

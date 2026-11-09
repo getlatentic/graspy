@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useI18n } from "@/lib/i18n-context";
 import { LEARNERS_PAGE } from "@/features/learn/lib/app-sections";
+import { ParentSignIn } from "../components/parent-sign-in";
 import { KeepingCard } from "../components/keeping-card";
 import { ProblemNote } from "../components/problem-note";
 import { RecordingList } from "../components/recording-list";
@@ -42,7 +43,9 @@ function Recordings({ learner }: { learner: string }) {
         </h1>
         {name && <p className="mt-1 text-muted">{name}</p>}
       </div>
-      {voice ? (
+      {recordings.needsParent ? (
+        <ParentSignIn start={recordings.startAsParent} />
+      ) : voice ? (
         <>
           <KeepingCard consent={voice.consent} recordings={recordings} />
           {(voice.consent || voice.recordings.length > 0) && (

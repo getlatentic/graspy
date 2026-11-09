@@ -38,6 +38,15 @@ const { listLearners, signInAgain } = vi.hoisted(() => ({
   listLearners: vi.fn(),
   signInAgain: vi.fn(),
 }));
+const parent = vi.hoisted(() => ({
+  has: vi.fn(() => true),
+  start: vi.fn(),
+}));
+vi.mock("@/lib/api/session", async (original) => ({
+  ...(await original<typeof import("@/lib/api/session")>()),
+  hasParentSession: parent.has,
+  startParentSession: parent.start,
+}));
 vi.mock("@/lib/account/voice-recordings-api", async (original) => ({
   ...(await original<typeof import("@/lib/account/voice-recordings-api")>()),
   ...api,
@@ -49,6 +58,7 @@ vi.mock("@/lib/account/sign-in", async (original) => ({
   signInAgain,
 }));
 
+const { ParentSignInNeeded } = await import("@/lib/api/session");
 const { default: VoiceRecordingsPage } =
   await import("./voice-recordings-page");
 const { useVoiceRecordings } = await import("../hooks/use-voice-recordings");
@@ -115,6 +125,8 @@ beforeEach(() => {
   URL.revokeObjectURL = vi.fn();
   listLearners.mockResolvedValue([listed(ADA, "Ada", AGREED)]);
   signInAgain.mockResolvedValue("fresh-token");
+  parent.has.mockReturnValue(true);
+  parent.start.mockResolvedValue(undefined);
   api.stopKeepingRecordings.mockResolvedValue({ deleted: 0, more: false });
   api.deleteRecording.mockResolvedValue(undefined);
 });
@@ -792,5 +804,45 @@ describe("for a screen reader and the keyboard", () => {
         screen.getByRole("button", { name: "voiceRecordings.deleteAll" }),
       ),
     );
+  });
+});
+
+describe("the voice recordings page, for a learner's session", () => {
+  it("asks the parent to sign in again, and shows no recordings until they have", async () => {
+    parent.has.mockReturnValue(false);
+    open(keeping(30, KEPT));
+
+    expect(await screen.findByText("voiceRecordings.signInAgain")).toBeTruthy();
+    expect(api.getVoice).not.toHaveBeenCalled();
+    expect(screen.queryByRole("switch")).toBeNull();
+
+    tap("you.signIn");
+
+    await waitFor(() => expect(api.getVoice).toHaveBeenCalledWith(ADA));
+    expect(parent.start).toHaveBeenCalledWith("fresh-token");
+    expect(await keepSwitch()).toBeTruthy();
+  });
+
+  it("asks again once the server no longer holds the parent's session", async () => {
+    api.getVoice.mockRejectedValue(new ParentSignInNeeded());
+    render(
+      <KeysApp at={`/learners/${ADA}/voice`} path="/learners/:learnerId/voice">
+        <VoiceRecordingsPage />
+      </KeysApp>,
+    );
+
+    expect(await screen.findByText("voiceRecordings.signInAgain")).toBeTruthy();
+  });
+
+  it("starts nothing for a parent who closed Google's window", async () => {
+    parent.has.mockReturnValue(false);
+    signInAgain.mockRejectedValueOnce(WINDOW_CLOSED);
+    open(keeping(30, KEPT));
+
+    tap("you.signIn");
+
+    await waitFor(() => expect(signInAgain).toHaveBeenCalled());
+    expect(parent.start).not.toHaveBeenCalled();
+    expect(api.getVoice).not.toHaveBeenCalled();
   });
 });

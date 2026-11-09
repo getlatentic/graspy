@@ -44,13 +44,16 @@ const STORAGE_KEY = "graspy.session";
 // So a token cannot lapse during a minutes-long stream.
 const RENEW_MARGIN_MS = 5 * 60 * 1000;
 
+// The parent's session is short, so only the last moments are left out.
+const PARENT_MARGIN_MS = 30 * 1000;
+
 let cached: Session | null = readStored();
 let pending: Promise<string> | null = null;
 
-// The parent's own session, with no learner chosen: what a learner's recordings are managed
-// under, as a learner's session is refused them. Held in memory only, for the signed-in account.
+// The parent's own session, made just after they signed in again: what a learner's recordings
+// are managed under, as a learner's session is refused them. Held in memory only, for the
+// signed-in account, and only for the minutes the server gives it.
 let parent: { token: string; expiresAt: number; account: string } | null = null;
-let parentPending: Promise<string> | null = null;
 
 function readStored(): Session | null {
   try {
@@ -301,60 +304,67 @@ export function endAccountSession(): void {
   keep(null);
 }
 
-async function mintParent(account: Account): Promise<string> {
-  const device = deviceId();
-  const send = (token: string) =>
-    post({ deviceId: device, firebaseIdToken: token });
-  let token = await idToken(false);
-  let response = token ? await send(token) : null;
-  if (response?.status === 401) {
-    token = await idToken(true);
-    response = token ? await send(token) : null;
+/** The parent's session is not made or kept without their signing in again. */
+export class ParentSignInNeeded extends Error {
+  constructor() {
+    super("Sign in again as the parent");
   }
-  if (!response) return signedOutElsewhere();
-  const { token: minted, expiresIn } = await issued(response);
-  if (currentAccount()?.uid === account.uid) {
-    parent = {
-      token: minted,
-      expiresAt: Date.now() + expiresIn * 1000,
-      account: account.uid,
-    };
-  }
-  return minted;
 }
 
-function parentToken(): Promise<string> {
+export function hasParentSession(): boolean {
   const account = currentAccount();
-  if (!account) return Promise.reject(new ApiError("Sign in first", 401));
-  if (
-    parent?.account === account.uid &&
-    parent.expiresAt - RENEW_MARGIN_MS > Date.now()
-  ) {
-    return Promise.resolve(parent.token);
-  }
-  if (!parentPending) {
-    const minting = mintParent(account).finally(() => {
-      if (parentPending === minting) parentPending = null;
-    });
-    parentPending = minting;
-  }
-  return parentPending;
+  return (
+    !!parent &&
+    parent.account === account?.uid &&
+    parent.expiresAt - PARENT_MARGIN_MS > Date.now()
+  );
 }
 
-/** Sent as the parent: with the account's own session, whichever learner is in use. */
+/** Exchanges a Google sign-in made just now for the parent's session, which the server
+ * keeps for minutes. Sent under the session in use, as the server checks it is the same
+ * account's. */
+export async function startParentSession(
+  firebaseIdToken: string,
+): Promise<void> {
+  const account = currentAccount();
+  if (!account) throw new ApiError("Sign in first", 401);
+  const response = await fetchWithSession(
+    `${API_BASE_URL}/account/parent-session`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firebaseIdToken }),
+    },
+  );
+  const { token, expiresIn } = await issued(response);
+  if (currentAccount()?.uid !== account.uid) return;
+  parent = {
+    token,
+    expiresAt: Date.now() + expiresIn * 1000,
+    account: account.uid,
+  };
+}
+
+/** Sent as the parent, with the session `startParentSession` made, whichever learner is in
+ * use. Without one, or once the server refuses it, the parent is asked to sign in again. */
 export async function fetchAsParent(
   input: string | URL,
   init: RequestInit = {},
 ): Promise<Response> {
-  const send = (token: string) => {
-    const headers = new Headers(init.headers);
-    headers.set("Authorization", `Bearer ${token}`);
-    return fetch(input, { ...init, headers });
-  };
-  const response = await send(await parentToken());
-  if (response.status !== 401) return response;
-  parent = null;
-  return send(await parentToken());
+  if (!hasParentSession() || !parent) throw new ParentSignInNeeded();
+  const sent = parent;
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${sent.token}`);
+  const response = await fetch(input, { ...init, headers });
+  if (response.status === 401 || response.status === 403) {
+    const refused = await toApiError(response.clone());
+    const { detail } = (refused.data ?? {}) as { detail?: { code?: unknown } };
+    if (response.status === 401 || detail?.code === "account_required") {
+      if (parent === sent) parent = null;
+      throw new ParentSignInNeeded();
+    }
+  }
+  return response;
 }
 
 /** Sent with the session in use. `still`, asked as each try is sent, may stop it: false, and

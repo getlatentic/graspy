@@ -425,6 +425,7 @@
     "gone": "That recording is gone.",
     "playFailed": "That recording didn't play. Try again.",
     "notFound": "This learner is not on your account.",
+    "signInAgain": "Sign in again to see these recordings.",
     "playAt": "Play the recording of {when}",
     "stopAt": "Stop the recording of {when}",
     "deleteAt": "Delete the recording of {when}"
