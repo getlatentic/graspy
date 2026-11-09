@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CHAT_WIDTH,
-  DEFAULT_LAYOUT,
+  defaultLayout,
   KEY_STEP,
   clampChatWidth,
   loadLayout,
@@ -14,6 +14,7 @@ import {
 afterEach(() => {
   window.localStorage.clear();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("clampChatWidth", () => {
@@ -52,12 +53,31 @@ describe("widthAfterKey", () => {
   });
 });
 
+describe("defaultLayout", () => {
+  const screen = (matches: boolean) =>
+    vi.stubGlobal("matchMedia", () => ({ matches }));
+
+  it("starts with the menu open on a roomy screen and folded on a narrower one", () => {
+    screen(true);
+    expect(defaultLayout().menuOpen).toBe(true);
+    screen(false);
+    expect(defaultLayout().menuOpen).toBe(false);
+  });
+
+  it("opens the conversation at its usual width", () => {
+    expect(defaultLayout()).toMatchObject({
+      chatOpen: true,
+      chatWidth: CHAT_WIDTH.initial,
+    });
+  });
+});
+
 describe("parseLayout", () => {
   it("is the default for nothing, for text that is not JSON, and for JSON that is not a layout", () => {
-    expect(parseLayout(null)).toEqual(DEFAULT_LAYOUT);
-    expect(parseLayout("{nope")).toEqual(DEFAULT_LAYOUT);
-    expect(parseLayout("42")).toEqual(DEFAULT_LAYOUT);
-    expect(parseLayout("null")).toEqual(DEFAULT_LAYOUT);
+    expect(parseLayout(null)).toEqual(defaultLayout());
+    expect(parseLayout("{nope")).toEqual(defaultLayout());
+    expect(parseLayout("42")).toEqual(defaultLayout());
+    expect(parseLayout("null")).toEqual(defaultLayout());
   });
 
   it("keeps what is valid and defaults and clamps the rest", () => {
@@ -67,14 +87,14 @@ describe("parseLayout", () => {
       ),
     ).toEqual({
       menuOpen: false,
-      chatOpen: DEFAULT_LAYOUT.chatOpen,
+      chatOpen: defaultLayout().chatOpen,
       chatWidth: CHAT_WIDTH.max,
     });
   });
 
   it("does not trust a width that is not a number", () => {
     expect(parseLayout(JSON.stringify({ chatWidth: "wide" })).chatWidth).toBe(
-      DEFAULT_LAYOUT.chatWidth,
+      defaultLayout().chatWidth,
     );
   });
 });
@@ -93,7 +113,7 @@ describe("the stored layout", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("full", "QuotaExceededError");
     });
-    expect(loadLayout()).toEqual(DEFAULT_LAYOUT);
-    expect(() => saveLayout(DEFAULT_LAYOUT)).not.toThrow();
+    expect(loadLayout()).toEqual(defaultLayout());
+    expect(() => saveLayout(defaultLayout())).not.toThrow();
   });
 });

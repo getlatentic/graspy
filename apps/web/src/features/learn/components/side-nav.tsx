@@ -23,7 +23,7 @@ export function SideNav({ sections, open, onToggle }: SideNavProps) {
       aria-label={t("nav.label")}
       className={cn(
         "hidden shrink-0 flex-col gap-1 border-e border-line bg-surface p-2 lg:flex",
-        open ? "w-56" : "w-14",
+        open ? "w-56" : "w-16",
       )}
     >
       {sections.map(({ id, path, labelKey, icon: Icon }) => {
@@ -49,7 +49,6 @@ export function SideNav({ sections, open, onToggle }: SideNavProps) {
       <button
         type="button"
         onClick={onToggle}
-        aria-expanded={open}
         aria-label={toggleLabel}
         title={toggleLabel}
         className="mt-auto flex items-center rounded-control p-3 text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
