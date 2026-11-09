@@ -1,18 +1,21 @@
 import { toApiError, toNetworkError } from "@/lib/api/errors";
 import { fetchWithSession } from "@/lib/api/session";
+
+type Send = typeof fetchWithSession;
 import { API_BASE_URL } from "@/lib/env";
 
 export const ACCOUNT_URL = `${API_BASE_URL}/account`;
 
-/** A call to the account's routes under the session in use. */
+/** A call to the account's routes under the session in use, or under `send`'s. */
 export async function call<T>(
   url: string,
   method: string,
   body?: unknown,
+  send: Send = fetchWithSession,
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetchWithSession(url, {
+    response = await send(url, {
       method,
       ...(body === undefined
         ? {}

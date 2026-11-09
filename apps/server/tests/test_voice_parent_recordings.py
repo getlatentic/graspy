@@ -100,6 +100,37 @@ async def test_only_a_signed_in_account_reaches_a_learners_recordings(app):
     }
 
 
+async def test_a_learners_own_session_reaches_none_of_the_recordings(app, env):
+    """A child's session carries the account's uid, but is not the parent's."""
+    async with client(app) as http:
+        learner = await parent(http)
+        await agree(http, learner)
+        sibling = await added(http, "Bola")
+        [sample] = await recorded(http, env, learner)
+        await service_agreed(env, sibling)
+        await chosen(http, sibling)
+        answers = [
+            await http.get(voice(learner)),
+            await http.put(
+                voice(learner, "/consent"),
+                json={**NOTICE_1, "firebaseIdToken": "fresh"},
+            ),
+            await http.delete(voice(learner, "/consent?deleteRecordings=true")),
+            await http.get(voice(learner, f"/recordings/{sample}/audio")),
+            await http.delete(voice(learner, f"/recordings/{sample}")),
+            await http.delete(voice(learner, "/recordings")),
+        ]
+        await signed_in(http, firebaseIdToken="good")
+        kept = (await http.get(voice(learner))).json()
+
+    assert {answer.status_code for answer in answers} == {403}
+    assert {answer.json()["detail"]["code"] for answer in answers} == {
+        "account_required"
+    }
+    assert kept["consent"] is not None
+    assert [one["id"] for one in kept["recordings"]] == [sample]
+
+
 async def test_a_learner_the_account_does_not_hold_is_not_found(app):
     async with client(app) as http:
         await parent(http)

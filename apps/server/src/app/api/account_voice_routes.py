@@ -1,12 +1,13 @@
 """A parent's say over a learner's voice recordings: agree to keep them, or stop, and listen to and
-delete what was kept. Only a signed-in account session reaches these, for a learner the account
-holds; a device's own session never does. What the routes promise is in docs/API.md."""
+delete what was kept. Only a signed-in account session that names no learner reaches these, for a learner the
+account holds: neither a device's own session nor a learner's does, so a child cannot reach a
+sibling's recordings. What the routes promise is in docs/API.md."""
 
 from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Path, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import Field
 from starlette.responses import Response
 
@@ -19,6 +20,7 @@ from ..account.consents import (
 from ..account.directory import LearnerId, learner_key
 from ..learner.time import now_ms
 from ..local_d1 import MAX_BOUND_INTEGER
+from ..security.guard import Session, require_session
 from ..voice.parent_recordings import (
     delete_kept,
     heard_recording,
@@ -29,7 +31,6 @@ from ..voice.samples import SAMPLE_ID
 from ..wire import Wire
 from .account_routes import (
     KeepingDep,
-    Uid,
     grant_for_held_learner,
     require_learner,
 )
@@ -40,6 +41,22 @@ from .voice_routes import EnvDep
 account_voice_router = APIRouter(
     prefix="/account/learners/{learner_id}/voice", tags=["voice recordings"]
 )
+
+
+async def _parent(session: Annotated[Session, Depends(require_session)]) -> str:
+    """The account's uid, for a session that is the parent's own: signed in, as no learner."""
+    if not session.account or session.learner:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "Open this as the parent, signed in with no learner chosen",
+                "code": "account_required",
+            },
+        )
+    return session.account
+
+
+Uid = Annotated[str, Depends(_parent)]
 
 
 async def _own_learner(uid: Uid, keeping: KeepingDep, learner_id: LearnerId) -> str:

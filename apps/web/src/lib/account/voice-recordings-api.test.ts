@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const fetchWithSession = vi.fn();
-vi.mock("@/lib/api/session", () => ({ fetchWithSession }));
+const asParent = vi.fn();
+// A learner's session is refused these routes, so every call is made as the parent.
+vi.mock("@/lib/api/session", () => ({
+  fetchWithSession: vi.fn(),
+  fetchAsParent: asParent,
+}));
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
 
 const api = await import("./voice-recordings-api");
@@ -10,7 +14,7 @@ const VOICE = "https://api.test/api/account/learners/a1b2c3d4e5f6/voice";
 const LEARNER = "a1b2c3d4e5f6";
 
 function answers(status: number, body?: unknown) {
-  fetchWithSession.mockResolvedValue({
+  asParent.mockResolvedValue({
     ok: status < 400,
     status,
     json: async () => body,
@@ -19,7 +23,7 @@ function answers(status: number, body?: unknown) {
 }
 
 const sent = (call = 0) => {
-  const [url, init] = fetchWithSession.mock.calls[call];
+  const [url, init] = asParent.mock.calls[call];
   return {
     url,
     method: init?.method ?? "GET",
@@ -27,7 +31,7 @@ const sent = (call = 0) => {
   };
 };
 
-beforeEach(() => fetchWithSession.mockReset());
+beforeEach(() => asParent.mockReset());
 
 describe("a learner's voice recordings", () => {
   it("are read with the consent and the kept recordings", async () => {
@@ -126,7 +130,7 @@ describe("a kept recording's audio", () => {
   });
 
   it("fails as a network error when nothing answers", async () => {
-    fetchWithSession.mockRejectedValueOnce(new TypeError("offline"));
+    asParent.mockRejectedValueOnce(new TypeError("offline"));
 
     const failed = await api
       .recordingAudio(LEARNER, "s1")

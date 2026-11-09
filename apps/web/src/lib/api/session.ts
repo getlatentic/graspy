@@ -47,6 +47,11 @@ const RENEW_MARGIN_MS = 5 * 60 * 1000;
 let cached: Session | null = readStored();
 let pending: Promise<string> | null = null;
 
+// The parent's own session, with no learner chosen: what a learner's recordings are managed
+// under, as a learner's session is refused them. Held in memory only, for the signed-in account.
+let parent: { token: string; expiresAt: number; account: string } | null = null;
+let parentPending: Promise<string> | null = null;
+
 function readStored(): Session | null {
   try {
     const raw = window.sessionStorage.getItem(STORAGE_KEY);
@@ -291,8 +296,65 @@ export function leaveLearnerSession(): void {
 /** Back to the device's own session. */
 export function endAccountSession(): void {
   pending = null;
+  parent = null;
   setAccount(null);
   keep(null);
+}
+
+async function mintParent(account: Account): Promise<string> {
+  const device = deviceId();
+  const send = (token: string) =>
+    post({ deviceId: device, firebaseIdToken: token });
+  let token = await idToken(false);
+  let response = token ? await send(token) : null;
+  if (response?.status === 401) {
+    token = await idToken(true);
+    response = token ? await send(token) : null;
+  }
+  if (!response) return signedOutElsewhere();
+  const { token: minted, expiresIn } = await issued(response);
+  if (currentAccount()?.uid === account.uid) {
+    parent = {
+      token: minted,
+      expiresAt: Date.now() + expiresIn * 1000,
+      account: account.uid,
+    };
+  }
+  return minted;
+}
+
+function parentToken(): Promise<string> {
+  const account = currentAccount();
+  if (!account) return Promise.reject(new ApiError("Sign in first", 401));
+  if (
+    parent?.account === account.uid &&
+    parent.expiresAt - RENEW_MARGIN_MS > Date.now()
+  ) {
+    return Promise.resolve(parent.token);
+  }
+  if (!parentPending) {
+    const minting = mintParent(account).finally(() => {
+      if (parentPending === minting) parentPending = null;
+    });
+    parentPending = minting;
+  }
+  return parentPending;
+}
+
+/** Sent as the parent: with the account's own session, whichever learner is in use. */
+export async function fetchAsParent(
+  input: string | URL,
+  init: RequestInit = {},
+): Promise<Response> {
+  const send = (token: string) => {
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetch(input, { ...init, headers });
+  };
+  const response = await send(await parentToken());
+  if (response.status !== 401) return response;
+  parent = null;
+  return send(await parentToken());
 }
 
 /** Sent with the session in use. `still`, asked as each try is sent, may stop it: false, and

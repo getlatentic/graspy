@@ -120,7 +120,7 @@ A recording is deleted as soon as its turn has ended (marked, heard to hold no s
 
 With a parent's consent a recording is kept until `expiresAt`, the days the parent chose counted from the end of its turn, and then deleted. Consent is one learner's, is given only by a signed-in account, and can be withdrawn at any time. A consent withdrawn while a recording is being marked wins: that recording is deleted. Recordings already kept stay until they expire, unless the parent asks for them to go. A parent changing the days changes the recordings made afterwards, not those already kept.
 
-These need a signed-in account session and a learner the account holds. A device's own session answers `403 account_required`, and another account's learner `404 no_such_learner`. Bodies and queries are camelCase.
+These need the parent's own session: signed in, with no learner chosen (`POST /api/session` with `firebaseIdToken` and no `learnerId`), and a learner the account holds. A device's own session and a learner's session, which carries the account but is a child's, answer `403 account_required`; another account's learner is `404 no_such_learner`. Bodies and queries are camelCase.
 
 | Endpoint | Method | Returns |
 |---|---|---|
@@ -151,7 +151,7 @@ A client turns `consent_required` into the agreement step: the learner's pages s
 | Status | Meaning |
 |---|---|
 | 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A sign-in Google refused is `sign_in_invalid`, and one for a consent that is older than 5 minutes, or does not say when it was, is `sign_in_stale` |
-| 403 | A device's session asked for the account's learners (`account_required`), or a consent came with a sign-in that is another account's (`sign_in_other_account`) or was not with Google (`sign_in_not_google`), or the learner has no active service consent (`consent_required`) |
+| 403 | A device's session asked for the account's learners, or a learner's session for a learner's voice recordings (`account_required`), or a consent came with a sign-in that is another account's (`sign_in_other_account`) or was not with Google (`sign_in_not_google`), or the learner has no active service consent (`consent_required`) |
 | 409 | An account session asked for a learner's record (`learner_required`), or the account holds 8 learners (`too_many_learners`) |
 | 422 | Invalid request. `detail` names the field, never the value. Among others: `retentionDays` other than 30, 90 or 365 for a consent, and a `before`, `since` or `upTo` above 2^52 |
 | 503 | Voice lessons outside the Worker (`voice_unavailable`), consent that cannot be kept outside the Worker, or cannot be read to decide whether a learner is served (`consent_unavailable`), a consent that could not be written, which is safe to send again (`consent_not_kept`), sign-in not set up (`sign_in_off`), or Google could not check a sign-in and a later try may pass (`sign_in_unchecked`) |
