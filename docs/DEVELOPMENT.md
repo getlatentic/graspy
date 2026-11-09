@@ -36,6 +36,7 @@ The server's environment holds only what changes between deployments or is secre
 | `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` | The account and a token with Workers AI access. Required for `workers-ai` |
 | `LLM_MODEL_ID` | Overrides the host's model id. Unset uses the host's gpt-oss-120b |
 | `FIREBASE_API_KEY` | The Firebase project's web API key: the project whose sign-ins are accepted. A Worker secret in production. Unset turns sign-in off |
+| `FIREBASE_SERVICE_ACCOUNT` | The JSON key of a service account that may delete Firebase users, so deleting an account also removes its Firebase user (email and name). A Worker secret; required in production and staging while `FIREBASE_API_KEY` is set. Locally the Auth emulator is asked instead, and with neither nothing is removed |
 | `FIREBASE_AUTH_EMULATOR_HOST` | The Auth emulator's `host:port`, which then checks sign-ins in place of Google. Development only: the server refuses to start with it in production |
 | `INTRON_API_KEY` | Intron's speech recognition, which hears the learner in voice lessons. Worker only: `.dev.vars` locally, a secret in production |
 | `YARNGPT_API_KEY` | YarnGPT's speech, used only by `scripts/voice/publish_teacher_audio.py` to record the English lines in Idera. In `apps/server/.dev.vars` or the environment of whoever publishes; never a Worker secret, since the Worker does not call YarnGPT |
@@ -98,7 +99,7 @@ D1 and R2 are local; Workers AI is remote, so `npx wrangler login` first. Signin
 Deploy with `scripts/deploy.sh staging|production`. [Deploying](DEPLOYING.md) has the two environments, the order and the one-time setup.
 
 - **Web:** `npm run build` writes `apps/web/dist` using `.env.production`; `npm run build:staging` uses `.env.staging`.
-- **Server:** needs the Workers Paid plan, because a lesson needs more than 10 ms of CPU. Each environment's Worker has the secrets `SESSION_SECRET`, `FIREBASE_API_KEY`, `INTRON_API_KEY`, `SPITCH_API_KEY` and the host's credentials (`AWS_BEARER_TOKEN_BEDROCK`, or `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`), set with `npx wrangler secret put <NAME> --env staging` or `--env=""` for production. The plain values and bindings are in `apps/server/wrangler.jsonc`.
+- **Server:** needs the Workers Paid plan, because a lesson needs more than 10 ms of CPU. Each environment's Worker has the secrets `SESSION_SECRET`, `FIREBASE_API_KEY`, `FIREBASE_SERVICE_ACCOUNT`, `INTRON_API_KEY`, `SPITCH_API_KEY` and the host's credentials (`AWS_BEARER_TOKEN_BEDROCK`, or `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`), set with `npx wrangler secret put <NAME> --env staging` or `--env=""` for production. The plain values and bindings are in `apps/server/wrangler.jsonc`.
 - **Imports that load at startup** grow the Worker's startup snapshot. It has a size cap, and past it a deploy fails with code 10013. Near the cap, the same build can pass or fail, so deploy a change that adds imports three times.
 - `pylock.toml` pins what the Worker vendors. `pywrangler` rewrites it when `pyproject.toml` changes. Commit it.
 

@@ -38,6 +38,7 @@ from ..account.learners import (
 from ..caller import Caller, Keeping
 from ..learner.record import DeviceJoined
 from ..learner.time import now_ms
+from ..security.firebase_admin import RemovalFailed
 from ..security.guard import Session, require_session
 from ..wire import Wire
 from .consent_proof import refusal, require_fresh_sign_in, require_known_notice
@@ -308,7 +309,22 @@ async def choose_learner(
 
 
 @account_router.delete("", status_code=204)
-async def delete_account(uid: Uid, keeping: KeepingDep) -> None:
-    """Every learner and everything kept for them. The Google account itself
-    is Google's."""
+async def delete_account(request: Request, uid: Uid, keeping: KeepingDep) -> None:
+    """Every learner and everything kept for them, then graspy's Firebase record of the
+    account (its email and name); the Google account itself is Google's. What is kept goes
+    first: a Firebase failure leaves nothing but that record, and asking again removes it,
+    where the other order could leave the data with no one able to sign in to ask."""
     await closed(keeping, uid)
+    admin = request.app.state.firebase_admin
+    if admin is None:
+        return
+    try:
+        await admin.remove_user(uid)
+    except RemovalFailed as failed:
+        logger.error("The Firebase user of an account was not removed: %s", failed)
+        raise refusal(
+            503,
+            "account_record_not_removed",
+            "Everything kept for the learners is deleted, but the sign-in record is not yet. "
+            "Try again.",
+        ) from failed

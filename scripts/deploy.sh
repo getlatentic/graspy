@@ -75,6 +75,13 @@ require_firebase_config() {
     die "the web build needs ${missing[*]}, in the environment or in $local_file."
 }
 
+# The API Worker refuses to start without it, so a deploy that lacks it is stopped here, before the
+# upload replaces a Worker that is serving.
+require_service_account_secret() {
+  (cd apps/server && npx wrangler secret list "$wrangler_env" 2>/dev/null) | grep -q '"FIREBASE_SERVICE_ACCOUNT"' ||
+    die "the API Worker needs the secret FIREBASE_SERVICE_ACCOUNT ($wrangler_env); see docs/DEPLOYING.md."
+}
+
 require_confirmation() {
   [[ "$confirmed" == "production" ]] && return
   [[ -t 0 ]] || die "production needs --confirm production when there is no terminal."
@@ -201,6 +208,7 @@ if [[ "$environment" == "production" ]]; then
   require_origin_main
   if [[ -z "$dry_run" ]]; then require_confirmation; fi
 fi
+if [[ -z "$dry_run" ]]; then require_service_account_secret; fi
 
 install_dependencies
 
