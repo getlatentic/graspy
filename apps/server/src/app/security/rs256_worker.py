@@ -26,7 +26,7 @@ async def rs256_in_worker(pem: str, message: bytes) -> bytes:
     )
     der = Uint8Array.new(len(pkcs8_der(pem)))
     der.assign(pkcs8_der(pem))
-    key = await crypto.subtle.importKey("pkcs8", der, algorithm, False, ["sign"])
+    key = await crypto.subtle.importKey("pkcs8", der, algorithm, False, to_js(["sign"]))
     data = Uint8Array.new(len(message))
     data.assign(message)
     signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, data)
