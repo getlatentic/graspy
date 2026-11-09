@@ -46,7 +46,8 @@ def _review(record: LearnerRecord, target: LessonTarget) -> list[int]:
     return [
         check.slide
         for check in due
-        if (check.subject_slug, check.topic) == (target.subject_slug, target.topic)
+        if (check.plan_id, check.subject_slug, check.topic)
+        == (target.plan_id, target.subject_slug, target.topic)
     ]
 
 

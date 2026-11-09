@@ -24,6 +24,7 @@ HINT_LEVELS = ("cue", "structure")
 
 @dataclass(frozen=True)
 class Due:
+    plan_id: str
     subject_slug: str
     topic: str
     slide: int
@@ -75,6 +76,7 @@ def _checks(record: LearnerRecord) -> list[Answer]:
             and answer.subject_slug
             and answer.topic
             and answer.lesson_id
+            and answer.lesson_id
             == record.lesson_on(answer.plan_id, answer.subject_slug, answer.topic)
         ),
         key=lambda answer: answer.at,
@@ -125,16 +127,20 @@ def due_checks(record: LearnerRecord, today: date) -> list[Due]:
         if alone or event.day >= today or progress[plan_id].mastered:
             continue
         answer = asked[plan_id]
-        due.append(Due(answer.subject_slug, answer.topic, answer.slide))
+        due.append(Due(answer.plan_id, answer.subject_slug, answer.topic, answer.slide))
     return due
 
 
 def due_topics(record: LearnerRecord, plan_id: str, today: date) -> list[TopicMark]:
     """The topics of one plan with a check owed, as the plan's own marks name them: the app lists topics by
     their place in the plan."""
-    owed = {(check.subject_slug, check.topic) for check in due_checks(record, today)}
+    owed = {
+        (check.plan_id, check.subject_slug, check.topic)
+        for check in due_checks(record, today)
+    }
     return [
         mark
         for mark in record.topics
-        if mark.plan_id == plan_id and (mark.subject_slug, mark.topic) in owed
+        if (mark.plan_id, mark.subject_slug, mark.topic) in owed
+        and mark.plan_id == plan_id
     ]

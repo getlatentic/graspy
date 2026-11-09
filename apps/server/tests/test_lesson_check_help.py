@@ -82,7 +82,6 @@ async def test_a_check_missed_yesterday_is_offered_again_in_its_lesson(server): 
         topic="Fractions",
         lesson_id="lesson-1",
         slide=0,
-        attempt=1,
         source="lesson",
         question=SLIDE.assessment.prompt,
         correct=False,
@@ -148,3 +147,26 @@ def test_the_first_try_of_a_later_day_does_not_replace_the_first_try_of_an_earli
 
     assert keys[0] != keys[1]
     assert keys[0].startswith("view-1:0:")
+
+
+async def test_a_wrong_try_survives_the_same_check_being_reopened_and_got_right(server):  # noqa: F811
+    keeping = server.state.keeping
+    await keeping.lessons.keep("lesson-1", LESSON)
+    await keeping.learners.change(
+        DEVICE, LessonKept(topic=FRACTIONS, lesson_id="lesson-1")
+    )
+
+    async with connected(server) as client:
+        await client.call_tool("answer_check", tried(1))
+        await client.call_tool("answer_check", tried(0))
+        await client.call_tool("answer_check", tried(1))
+
+    answers = sorted((await record_of(server))["answers"], key=lambda a: a["at"])
+    assert [a["correct"] for a in answers] == [False, True]
+
+
+async def test_a_check_key_too_long_to_extend_is_refused(server):  # noqa: F811
+    async with connected(server) as client:
+        refused = await client.call_tool("answer_check", {**tried(1), "key": "k" * 91})
+
+    assert refused.is_error

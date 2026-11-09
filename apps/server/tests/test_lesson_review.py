@@ -116,3 +116,28 @@ def test_the_lesson_day_turns_over_at_four_in_the_morning(day):
         update={"at": round(datetime(2026, 11, 3, 2, tzinfo=LAGOS).timestamp() * 1000)}
     )
     assert due(late, day=day) == ([] if day == 1 else [0])
+
+
+def test_an_answer_kept_with_no_lesson_is_not_read():
+    assert due(tried(1, 1, False, lesson_id=None), day=2) == []
+
+
+def test_a_check_of_another_plan_with_the_same_topic_is_not_offered_here():
+    other = tried(1, 1, False, plan_id="plan-2", lesson_id=LESSON)
+    owed = due_checks(
+        record(other).model_copy(
+            update={
+                "topics": [
+                    TopicMark(
+                        plan_id="plan-2",
+                        subject_slug="mathematics",
+                        topic_index=0,
+                        topic="Fractions",
+                        lesson_id=LESSON,
+                    )
+                ]
+            }
+        ),
+        date(2026, 11, 3),
+    )
+    assert [(d.plan_id, d.slide) for d in owed] == [("plan-2", 0)]

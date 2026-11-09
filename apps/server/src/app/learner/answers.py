@@ -17,6 +17,8 @@ from .time import now_ms
 
 MIN_OPTIONS = 2
 MAX_OPTIONS = 5
+# Room left in a key for the day and the option a try is kept under.
+MAX_CHECK_KEY = 90
 
 Text = Annotated[record.Text, Field(min_length=1)]
 
@@ -40,6 +42,8 @@ class PracticeAnswer(Wire):
                 raise ValueError(
                     f"{index} is not one of the {len(self.options)} options"
                 )
+        if self.slide is not None and self.key and len(self.key) > MAX_CHECK_KEY:
+            raise ValueError("The key of a check is too long")
         if self.answer_index in self.tried:
             raise ValueError("The right option is not a wrong try")
         return self
@@ -90,11 +94,11 @@ class PracticeAnswer(Wire):
         )
 
     def _key(self, at: int) -> str | None:
-        """A try has its own key, on its own day: the same try sent again replaces itself, and a later
-        day's first try never replaces the first try of the day before."""
+        """A try has its own key, by the option chosen and the day: the same choice sent again replaces
+        itself, a different choice never does, and a later day never replaces an earlier one."""
         if not self.key:
             return None
-        return f"{self.key}:{lesson_day(at).isoformat()}:{self.attempt}"
+        return f"{self.key}:{lesson_day(at).isoformat()}:{self.chosen_index}"
 
     def help(self, source: Literal["practice", "lesson"]) -> Help | None:
         """What a wrong answer to a lesson's check is given next."""
