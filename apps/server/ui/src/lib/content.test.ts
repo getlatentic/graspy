@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import contract from "./card-contract.json";
 import {
+  helpOf,
   isPassageSet,
   isPracticeSet,
   practiceAnswer,
@@ -69,5 +70,30 @@ describe("a practice set", () => {
     expect(isPracticeSet(setOfCount(0))).toBe(false);
     expect(isPracticeSet(setOfCount(5))).toBe(true);
     expect(isPracticeSet(setOfCount(6))).toBe(false);
+  });
+});
+
+describe("the help a wrong answer to a check is given", () => {
+  it("is read from answer_check's result", () => {
+    expect(helpOf({ help: { kind: "narrow", keep: [0, 3] } })).toEqual({
+      kind: "narrow",
+      keep: [0, 3],
+    });
+    expect(helpOf({ help: { kind: "told" } })).toEqual({
+      kind: "told",
+      keep: [],
+    });
+  });
+
+  it("keeps only the options it names by number", () => {
+    expect(helpOf({ help: { kind: "narrow", keep: [0, "1", 2.5, 3] } })).toEqual(
+      { kind: "narrow", keep: [0, 3] },
+    );
+  });
+
+  it("is none for a right answer, a kept call, or help it does not know", () => {
+    expect(helpOf({ correct: true })).toBeNull();
+    expect(helpOf(undefined)).toBeNull();
+    expect(helpOf({ help: { kind: "solve" } })).toBeNull();
   });
 });

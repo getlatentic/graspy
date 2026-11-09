@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { App } from "@modelcontextprotocol/ext-apps";
 import type { ToolResult } from "@/lib/content";
 import { lessonViewOf, type LessonView as Content } from "@/lib/lesson";
@@ -108,10 +109,14 @@ function Slides({
   onAskAgain: () => void;
 }) {
   const slides = content.lesson?.slides ?? [];
+  // The checks owed again when the lesson was opened: the lesson begins at the first, and each is open until
+  // it has been answered.
+  const [owed, setOwed] = useState(content.review);
   const place = useSlidePlace(
     viewUUID,
     slides.length,
     content.status === "making",
+    owed[0],
   );
   const record = useLessonRecord(app, content.target, viewUUID);
   return (
@@ -122,6 +127,10 @@ function Slides({
         place={place}
         words={words}
         record={record}
+        review={owed.includes(place.index)}
+        onReviewed={() =>
+          setOwed((left) => left.filter((slide) => slide !== place.index))
+        }
       />
       <Arrival content={content} words={words} onAskAgain={onAskAgain} />
     </>

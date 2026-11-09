@@ -5,11 +5,25 @@ type PlanMarks = ReturnType<typeof planMarks>;
 export interface TopicMarks {
   learnt: ReadonlySet<string>;
   ready: ReadonlySet<string>;
+  /** The topics with a check the learner is asked again today, in the order the server named them. */
+  review: readonly OwedTopic[];
 }
 
-export type Standing = "learnt" | "ready" | "not-started";
+export interface OwedTopic {
+  subjectSlug: string;
+  topicIndex: number;
+  topic: string;
+}
 
-export const NO_MARKS: TopicMarks = { learnt: new Set(), ready: new Set() };
+export type Standing = "learnt" | "ready" | "not-started" | "review";
+
+export const NO_MARKS: TopicMarks = {
+  learnt: new Set(),
+  ready: new Set(),
+  review: [],
+};
+
+type SetKind = "learnt" | "ready";
 
 const keyOf = (subjectSlug: string, topicIndex: number, topic: string) =>
   JSON.stringify([subjectSlug, topicIndex, topic]);
@@ -18,12 +32,20 @@ const keysOf = (refs: TopicRef[]) =>
   new Set(refs.map((ref) => keyOf(ref.subjectSlug, ref.topicIndex, ref.topic)));
 
 export function marksFrom(marks: PlanMarks): TopicMarks {
-  return { learnt: keysOf(marks.learnt), ready: keysOf(marks.ready) };
+  return {
+    learnt: keysOf(marks.learnt),
+    ready: keysOf(marks.ready),
+    review: marks.review.map(({ subjectSlug, topicIndex, topic }) => ({
+      subjectSlug,
+      topicIndex,
+      topic,
+    })),
+  };
 }
 
 export function withMark(
   marks: TopicMarks,
-  kind: keyof TopicMarks,
+  kind: SetKind,
   ref: Omit<TopicRef, "planId">,
 ): TopicMarks {
   const added = new Set(marks[kind]);
@@ -38,6 +60,11 @@ export function standingOf(
   topic: string,
 ): Standing {
   const key = keyOf(subjectSlug, topicIndex, topic);
+  const owed = marks.review.some(
+    (due) =>
+      keyOf(due.subjectSlug, due.topicIndex, due.topic) === key,
+  );
+  if (owed) return "review";
   if (marks.learnt.has(key)) return "learnt";
   return marks.ready.has(key) ? "ready" : "not-started";
 }

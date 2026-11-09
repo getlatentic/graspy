@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { App } from "@modelcontextprotocol/ext-apps";
-import { practiceAnswer } from "@/lib/content";
+import { helpOf, practiceAnswer, type Help } from "@/lib/content";
 import {
   topicOf,
   whereOf,
@@ -18,7 +18,14 @@ export function useLessonRecord(
 ) {
   const [finishing, setFinishing] = useState(false);
 
-  const answerCheck = (slide: number, check: LessonCheck, chosen: number) =>
+  // The help the server gives a wrong answer; none when it cannot be reached, as the answer is then
+  // kept to be sent later.
+  const answerCheck = (
+    slide: number,
+    check: LessonCheck,
+    chosen: number,
+    tried: number[],
+  ): Promise<Help | null> =>
     app
       .callServerTool({
         name: "answer_check",
@@ -27,9 +34,14 @@ export function useLessonRecord(
           chosen,
           whereOf(target),
           `${viewUUID}:${slide}`,
+          { slide, tried },
         ),
       })
-      .catch((error: unknown) => console.error("answer_check failed:", error));
+      .then((result) => helpOf(result.structuredContent))
+      .catch((error: unknown) => {
+        console.error("answer_check failed:", error);
+        return null;
+      });
 
   const finish = async () => {
     setFinishing(true);

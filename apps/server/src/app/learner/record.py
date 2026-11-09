@@ -72,6 +72,10 @@ class Answer(Where):
     right: Text = ""
     correct: bool
     at: int
+    # For a lesson's check: its slide, and the lesson it was asked in, so a lesson made again does not take
+    # over the old one's answers.
+    slide: int | None = Field(default=None, ge=0, le=200)
+    lesson_id: Id | None = None
 
 
 class LearnerRecord(Wire):

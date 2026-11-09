@@ -7,6 +7,7 @@ const STANDING_STYLE: Record<Standing, string> = {
   learnt: "bg-warning-soft text-warning",
   ready: "bg-accent-soft text-accent-ink",
   "not-started": "bg-track text-muted",
+  review: "bg-accent-soft text-accent-ink",
 };
 
 interface TopicListProps {
@@ -49,6 +50,7 @@ function TopicRow({ topic, number, standing, isGoal, onOpen }: TopicRowProps) {
     learnt: t("subject.learnt"),
     ready: t("subject.ready"),
     "not-started": t("subject.notStarted"),
+    review: t("subject.review"),
   };
   return (
     <button
@@ -57,7 +59,9 @@ function TopicRow({ topic, number, standing, isGoal, onOpen }: TopicRowProps) {
       className={cn(
         "flex w-full items-center gap-3 rounded-card border bg-surface px-4 py-4 text-start transition-colors hover:border-accent sm:px-5",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-        standing === "ready" ? "border-accent-line" : "border-line",
+        standing === "ready" || standing === "review"
+          ? "border-accent-line"
+          : "border-line",
       )}
     >
       <span className="nums w-5 shrink-0 text-sm font-semibold text-muted">

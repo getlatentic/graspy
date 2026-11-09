@@ -2,13 +2,14 @@ import { Check, X } from "lucide-react";
 import { cn } from "./cn";
 import { InlineMarkdown } from "./markdown";
 
-type Verdict = "correct" | "wrong" | "chosen" | "open";
+type Verdict = "correct" | "wrong" | "chosen" | "open" | "struck";
 
 const OPTION_STYLE: Record<Verdict, string> = {
   correct: "border-success bg-success-soft",
   wrong: "border-danger bg-danger-soft",
   chosen: "border-accent bg-accent-soft",
   open: "border-line bg-surface hover:border-accent",
+  struck: "border-line bg-surface opacity-50",
 };
 
 const MARK_STYLE: Record<Verdict, string> = {
@@ -16,6 +17,7 @@ const MARK_STYLE: Record<Verdict, string> = {
   wrong: "border-danger bg-danger text-white",
   chosen: "border-accent bg-accent text-white",
   open: "border-line",
+  struck: "border-line",
 };
 
 function verdictFor(
@@ -23,7 +25,9 @@ function verdictFor(
   chosen: number | undefined,
   answer: number,
   marked: boolean,
+  struck: boolean,
 ): Verdict {
+  if (struck && !(marked && index === answer)) return "struck";
   if (marked && index === answer) return "correct";
   if (marked && index === chosen) return "wrong";
   if (index === chosen) return "chosen";
@@ -35,20 +39,29 @@ export function AnswerOptions({
   answerIndex,
   chosen,
   marked,
+  struck,
   onChoose,
 }: {
   options: string[];
   answerIndex: number;
   chosen: number | undefined;
   marked: boolean;
+  /** Options taken out of the question by help: shown, but not to be chosen. */
+  struck?: ReadonlySet<number>;
   onChoose: (option: number) => void;
 }) {
   return options.map((text, index) => (
     <AnswerOption
       key={index}
       text={text}
-      verdict={verdictFor(index, chosen, answerIndex, marked)}
-      locked={marked}
+      verdict={verdictFor(
+        index,
+        chosen,
+        answerIndex,
+        marked,
+        struck?.has(index) ?? false,
+      )}
+      locked={marked || (struck?.has(index) ?? false)}
       onChoose={() => onChoose(index)}
     />
   ));

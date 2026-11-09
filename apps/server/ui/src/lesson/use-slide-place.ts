@@ -22,9 +22,13 @@ export function useSlidePlace(
   viewUUID: string,
   total: number,
   making: boolean,
+  /** Where to begin instead of where the learner left off: the first check owed again. */
+  startAt?: number,
 ): SlidePlace {
   const stateKey = `graspy.lesson.${viewUUID}`;
-  const [place, setPlace] = useState(() => readViewState(stateKey, isPlace, 0));
+  const [place, setPlace] = useState(
+    () => startAt ?? readViewState(stateKey, isPlace, 0),
+  );
   const [move, setMove] = useState<SlideMove>("none");
   const index = within(place, total);
 

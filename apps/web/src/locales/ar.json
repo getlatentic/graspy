@@ -75,7 +75,8 @@
     "topicsLoading": "جارٍ تحميل المواضيع...",
     "goal": "ما طلبته",
     "curriculum": "يتبع منهج {authority}، {edition}",
-    "modelWritten": "Written by the tutor, not from an official curriculum"
+    "modelWritten": "Written by the tutor, not from an official curriculum",
+    "review": "Practise again"
   },
   "lesson": {
     "backTo": "العودة إلى {subject}",
@@ -229,7 +230,8 @@
     "railAskTitle": "اسأل graspy",
     "railAskTopic": "اسأل عن {topic}",
     "railAskAnything": "أو اسأل عن أي شيء",
-    "railPractiseStart": "ابدأ التدريب"
+    "railPractiseStart": "ابدأ التدريب",
+    "reviewTitle": "Practise again"
   },
   "you": {
     "progress": "تقدّمك",

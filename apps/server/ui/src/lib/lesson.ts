@@ -59,6 +59,8 @@ export interface LessonView {
   whole: boolean;
   attempt: number;
   target: LessonTarget;
+  /** The slides whose checks the learner is asked again today. */
+  review: number[];
 }
 
 const STATUSES = new Set<string>(["making", "ready", "failed"]);
@@ -162,6 +164,9 @@ export function lessonViewOf(value: unknown): LessonView | null {
     whole: view.whole === true,
     attempt: Number.isInteger(view.attempt) ? view.attempt! : 0,
     target: view.target,
+    review: Array.isArray(view.review)
+      ? view.review.filter((slide) => Number.isInteger(slide) && slide >= 0)
+      : [],
   };
 }
 
