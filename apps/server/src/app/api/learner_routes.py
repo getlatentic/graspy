@@ -31,6 +31,8 @@ from ..learner.record import (
     TopicRef,
 )
 from ..learner.time import now_ms
+from ..lessons.review import due_topics
+from ..voice.lesson_store import lesson_day
 from ..wire import Wire
 from .service_consent import ConsentedSession
 
@@ -95,7 +97,12 @@ CallerDep = Annotated[Caller, Depends(learner_caller)]
 
 @learner_router.get("/learner", response_model=None)
 async def learner_record(caller: CallerDep, plan_id: PlanId) -> dict:
-    return (await caller.record()).for_app(plan_id)
+    record = await caller.record()
+    due = due_topics(record, plan_id, lesson_day(now_ms()))
+    return {
+        **record.for_app(plan_id),
+        "review": [mark.model_dump(by_alias=True) for mark in due],
+    }
 
 
 @learner_router.post("/learner/import", response_model=None)

@@ -12,8 +12,10 @@ from ..learner.answers import PracticeAnswer, answered
 from ..learner.notes import notes_for
 from ..learner.record import LearnerRecord, Learnt, TopicRef
 from ..learner.time import now_ms
+from ..voice.lesson_store import lesson_day
 from ..wire import Wire
 from .making import Job, LessonTarget, Making
+from .review import due_checks
 
 LESSON_UI = "ui://graspy/lesson"
 
@@ -34,6 +36,19 @@ class LessonView(Wire):
     # The record's id for the lesson, once it is kept: a copy on a device
     # names the lesson it holds, so one made anew is copied again.
     lesson_id: str | None = None
+    # The slides whose checks the learner did not get right alone and is asked again today, in the order
+    # they were first asked.
+    review: list[int] = Field(default_factory=list)
+
+
+def _review(record: LearnerRecord, target: LessonTarget) -> list[int]:
+    due = due_checks(record, lesson_day(now_ms()))
+    return [
+        check.slide
+        for check in due
+        if (check.plan_id, check.subject_slug, check.topic)
+        == (target.plan_id, target.subject_slug, target.topic)
+    ]
 
 
 async def _kept(
@@ -64,7 +79,9 @@ def _told(making: Making) -> str:
     return "The lesson could not be made. Ask for it again."
 
 
-def _result(target: LessonTarget, making: Making, caller: Caller) -> dict:
+def _result(
+    target: LessonTarget, making: Making, caller: Caller, record: LearnerRecord
+) -> dict:
     view = LessonView(
         status=making.status,
         lesson=making.lesson,
@@ -72,6 +89,7 @@ def _result(target: LessonTarget, making: Making, caller: Caller) -> dict:
         attempt=making.attempt,
         target=target,
         lesson_id=making.lesson_id,
+        review=_review(record, target) if making.status == "ready" else [],
     )
     return {
         "content": [{"type": "text", "text": _told(making)}],
@@ -104,15 +122,16 @@ async def give_lesson(ask: LessonAsk, caller: Caller) -> dict:
             notes=_notes(record, target),
         )
         making = await caller.keeping.making.start(target.key(caller.learner), job)
-    return _result(target, making, caller)
+    return _result(target, making, caller, record)
 
 
 async def lesson_progress(ask: LessonAsk, caller: Caller) -> dict:
     target = ask.target
-    making = await _kept(target, caller, await caller.record())
+    record = await caller.record()
+    making = await _kept(target, caller, record)
     making = making or await caller.keeping.making.progress(target.key(caller.learner))
     # Nothing under the key: never asked for here, or its maker has gone.
-    return _result(target, making or Making(status="failed"), caller)
+    return _result(target, making or Making(status="failed"), caller, record)
 
 
 async def finish_lesson(topic: TopicRef, caller: Caller) -> dict:

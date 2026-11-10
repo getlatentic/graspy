@@ -27,6 +27,7 @@ describe("the server's lesson", () => {
         expected.chosenIndex,
         whereOf(view.target),
         `${contract.lesson.meta.viewUUID}:0`,
+        { slide: 0, tried: [] },
       ),
     ).toEqual(expected);
   });
@@ -63,6 +64,15 @@ describe("a lesson as it arrives", () => {
 
     expect(lessonWith(["Name the parts", 3, null])).toEqual(["Name the parts"]);
     expect(lessonWith(undefined)).toEqual([]);
+  });
+
+  it("lists the checks owed again, and none when the server names none", () => {
+    const owed = (review: unknown) =>
+      lessonViewOf({ ...opened, review })?.review;
+
+    expect(owed([2, 0])).toEqual([2, 0]);
+    expect(owed([1, -1, "x", 1.5])).toEqual([1]);
+    expect(owed(undefined)).toEqual([]);
   });
 
   it("is refused without a status the view knows or a topic", () => {

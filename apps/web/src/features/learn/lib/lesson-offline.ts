@@ -30,6 +30,19 @@ const isWhole = (result: CallToolResult) => {
   return state?.status === "ready" && state.whole;
 };
 
+/** What is owed again is of the day the lesson was opened: a copy kept for later asks for nothing. */
+function withoutReview(card: TutorCard): TutorCard {
+  const content = card.toolResult.structuredContent;
+  if (!content) return card;
+  return {
+    ...card,
+    toolResult: {
+      ...card.toolResult,
+      structuredContent: { ...content, review: [] },
+    },
+  };
+}
+
 /** `onRecord` names the lesson for a server that leaves its id out of the result. */
 export async function keepIfWhole(
   target: LessonTarget,
@@ -38,7 +51,7 @@ export async function keepIfWhole(
 ): Promise<void> {
   if (!isWhole(card.toolResult)) return;
   const lessonId = lessonStateOf(card.toolResult)?.lessonId ?? onRecord;
-  await keepLessonCopy(target, card, lessonId).catch((error: unknown) =>
+  await keepLessonCopy(target, withoutReview(card), lessonId).catch((error: unknown) =>
     console.warn("Keeping a copy of the lesson failed:", error),
   );
 }

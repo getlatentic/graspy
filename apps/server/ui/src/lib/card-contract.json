@@ -131,7 +131,8 @@
         "gradeLevel": "JSS 1",
         "buildsOn": []
       },
-      "lessonId": "lesson-1"
+      "lessonId": "lesson-1",
+      "review": []
     }
   },
   "meta": {
@@ -198,7 +199,9 @@
           "subjectSlug": "mathematics",
           "topic": "Fractions"
         },
-        "key": "2e6f1ad2bc94f3e8952a1d8e58b08dec20328ff5:0"
+        "key": "2e6f1ad2bc94f3e8952a1d8e58b08dec20328ff5:0",
+        "slide": 0,
+        "tried": []
       }
     },
     "finish": {

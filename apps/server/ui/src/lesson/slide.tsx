@@ -33,9 +33,19 @@ interface SlideProps {
   place: SlidePlace;
   words: LessonWords;
   record: LessonRecord;
+  /** Asked again, having been missed before: the check is open, not behind its button. */
+  review: boolean;
+  onReviewed: () => void;
 }
 
-export function Slide({ slide, place, words, record }: SlideProps) {
+export function Slide({
+  slide,
+  place,
+  words,
+  record,
+  review,
+  onReviewed,
+}: SlideProps) {
   return (
     <section
       className={cn(
@@ -64,6 +74,8 @@ export function Slide({ slide, place, words, record }: SlideProps) {
           place={place}
           words={words}
           record={record}
+          review={review}
+          onReviewed={onReviewed}
         />
       ) : (
         place.isFinal && <FinishButton words={words} record={record} />
@@ -91,8 +103,10 @@ function SlideCheck({
   place,
   words,
   record,
+  review,
+  onReviewed,
 }: Omit<SlideProps, "slide"> & { check: LessonCheck }) {
-  const [checking, setChecking] = useState(false);
+  const [checking, setChecking] = useState(review);
 
   if (!checking) {
     return (
@@ -109,6 +123,7 @@ function SlideCheck({
   // Going on from the last slide there is so far stays on it, so the check
   // closes here rather than by the slide changing.
   const advance = () => {
+    onReviewed();
     if (place.isFinal) {
       void record.finish();
     } else {
@@ -123,8 +138,9 @@ function SlideCheck({
         check={check}
         isFinal={place.isFinal}
         words={words}
-        onAnswer={(chosen) =>
-          void record.answerCheck(place.index, check, chosen)
+        review={review}
+        onAnswer={(chosen, tried) =>
+          record.answerCheck(place.index, check, chosen, tried)
         }
         onClose={() => setChecking(false)}
         onAdvance={advance}

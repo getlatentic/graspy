@@ -1,17 +1,22 @@
 import { useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
+import type { Help } from "@/lib/content";
 import type { LessonCheck } from "@/lib/lesson";
 import { AnswerOptions } from "@/shared/answer-options";
 import { cn } from "@/shared/cn";
 import { InlineMarkdown } from "@/shared/markdown";
 import type { LessonWords } from "@/shared/words";
 import { buttonStyles } from "./button-styles";
+import { afterHelp, NO_HELP, struckOf, type HelpState } from "./help";
 
 interface CheckProps {
   check: LessonCheck;
   isFinal: boolean;
   words: LessonWords;
-  onAnswer: (chosen: number) => void;
+  /** Whether the learner is asked this check again, having missed it before. */
+  review: boolean;
+  /** Marks a choice; the help the server gives a wrong one, none when it could not be reached. */
+  onAnswer: (chosen: number, tried: number[]) => Promise<Help | null>;
   onClose: () => void;
   onAdvance: () => void;
 }
@@ -28,17 +33,34 @@ export function Check({
   check,
   isFinal,
   words,
+  review,
   onAnswer,
   onClose,
   onAdvance,
 }: CheckProps) {
   const [chosen, setChosen] = useState<number>();
   const [checked, setChecked] = useState(false);
+  const [marking, setMarking] = useState(false);
+  const [help, setHelp] = useState<HelpState>(NO_HELP);
+  const { given, tried } = help;
+  const struck = struckOf(help, check.options.length);
 
-  const mark = () => {
-    if (chosen === undefined) return;
-    setChecked(true);
-    onAnswer(chosen);
+  const mark = async () => {
+    if (chosen === undefined || marking) return;
+    if (chosen === check.answerIndex) {
+      setChecked(true);
+      void onAnswer(chosen, tried);
+      return;
+    }
+    setMarking(true);
+    const next = await onAnswer(chosen, tried);
+    setMarking(false);
+    if (next && next.kind !== "told") {
+      setHelp((before) => afterHelp(before, chosen, next));
+      setChosen(undefined);
+    } else {
+      setChecked(true);
+    }
   };
   // The way on takes Check answer's place, so without the guard the second
   // tap of a double tap would skip the feedback the first tap revealed.
@@ -51,7 +73,7 @@ export function Check({
     : {
         label: words.checkAnswer,
         onClick: mark,
-        disabled: chosen === undefined,
+        disabled: chosen === undefined || marking,
       };
 
   return (
@@ -60,12 +82,23 @@ export function Check({
       className="mt-6 space-y-4 rounded-card border border-accent-line bg-raised p-4 sm:p-6"
     >
       <CheckHeading isFinal={isFinal} words={words} onClose={onClose} />
+      {review && !checked && !given && (
+        <p className="text-sm font-medium text-accent-ink">
+          {words.reviewAgain}
+        </p>
+      )}
       <CheckQuestion
         check={check}
         chosen={chosen}
         checked={checked}
+        struck={struck}
         onChoose={setChosen}
       />
+      {given && !checked && (
+        <p role="status" className="text-sm font-medium text-ink">
+          {given === "narrow" ? words.hintNarrow : words.hintCue}
+        </p>
+      )}
       {checked && <Feedback check={check} chosen={chosen} words={words} />}
       <CheckActions primary={primary} words={words} onBack={onClose} />
     </section>
@@ -105,11 +138,13 @@ function CheckQuestion({
   check,
   chosen,
   checked,
+  struck,
   onChoose,
 }: {
   check: LessonCheck;
   chosen: number | undefined;
   checked: boolean;
+  struck: ReadonlySet<number>;
   onChoose: (option: number) => void;
 }) {
   return (
@@ -126,6 +161,7 @@ function CheckQuestion({
           answerIndex={check.answerIndex}
           chosen={chosen}
           marked={checked}
+          struck={struck}
           onChoose={onChoose}
         />
       </div>

@@ -75,7 +75,8 @@
     "topicsLoading": "Ń kó àkòrí jọ...",
     "goal": "Ohun tí o béèrè",
     "curriculum": "Ó tẹ̀lé ètò-ẹ̀kọ́ {authority}, {edition}",
-    "modelWritten": "Written by the tutor, not from an official curriculum"
+    "modelWritten": "Written by the tutor, not from an official curriculum",
+    "review": "Practise again"
   },
   "lesson": {
     "backTo": "Padà sí {subject}",
@@ -229,7 +230,8 @@
     "railAskTitle": "Béèrè lọ́wọ́ graspy",
     "railAskTopic": "Béèrè nípa {topic}",
     "railAskAnything": "Tàbí béèrè nípa ohunkóhun",
-    "railPractiseStart": "Bẹ̀rẹ̀ ìdánrawò"
+    "railPractiseStart": "Bẹ̀rẹ̀ ìdánrawò",
+    "reviewTitle": "Practise again"
   },
   "you": {
     "progress": "Ìtẹ̀síwájú rẹ",

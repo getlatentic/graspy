@@ -61,6 +61,9 @@
     "objectives": "في هذا الدرس ستتعلّم أن",
     "source": "Written from the {authority} curriculum, {edition}",
     "textbook": "Textbook passages from {title}",
-    "noPassages": "No textbook passage is linked to this topic, so this lesson is written from the objectives alone."
+    "noPassages": "No textbook passage is linked to this topic, so this lesson is written from the objectives alone.",
+    "hintCue": "Read the slide again, then try once more.",
+    "hintNarrow": "Two answers are left.",
+    "reviewAgain": "Try this one again."
   }
 }

@@ -72,6 +72,10 @@ class Answer(Where):
     right: Text = ""
     correct: bool
     at: int
+    # For a lesson's check: its slide, and the lesson it was asked in, so a lesson made again does not take
+    # over the old one's answers.
+    slide: int | None = Field(default=None, ge=0, le=200)
+    lesson_id: Id | None = None
 
 
 class LearnerRecord(Wire):
@@ -338,9 +342,11 @@ def _conversed(record: LearnerRecord, change: Conversed) -> LearnerRecord:
 def applied(record: LearnerRecord, change: Change) -> LearnerRecord:
     match change:
         case Answered(answer=answer):
-            others = [
-                a for a in record.answers if not (answer.key and a.key == answer.key)
-            ]
+            same = [a for a in record.answers if answer.key and a.key == answer.key]
+            others = [a for a in record.answers if a not in same]
+            if same and answer.slide is not None:
+                # A try sent again is still the try made first: it keeps its place in the day.
+                answer = answer.model_copy(update={"at": same[0].at})
             answers = [*others, answer][-MAX_ANSWERS:]
             return record.model_copy(update={"answers": answers})
         case LessonKept(topic=topic, lesson_id=lesson_id):

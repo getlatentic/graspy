@@ -127,6 +127,7 @@ const result = (
     status,
     whole,
     lessonId,
+    review: [] as number[],
     lesson: { title: lessonId ?? "t", slides: [] },
   },
 });
@@ -214,6 +215,19 @@ describe("a lesson without a connection", () => {
     await expect(
       lessonToolOrCopy(target, "lesson_progress", { target }),
     ).resolves.toEqual(result("ready"));
+  });
+
+  it("keeps no check owed again in the copy: it is of the day the lesson was opened", async () => {
+    const { keepIfWhole, lessonTarget, lessonToolOrCopy } = await fresh();
+    const target = lessonTarget(PLAN, MATHS, 1)!;
+    const owed = card("ready");
+    owed.toolResult.structuredContent.review = [2];
+    await keepIfWhole(target, owed);
+    goOffline();
+
+    const served = await lessonToolOrCopy(target, "lesson_progress", { target });
+
+    expect(served.structuredContent).toMatchObject({ review: [] });
   });
 
   it("does not answer the view from the copy when the server answered with an error", async () => {

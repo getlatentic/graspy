@@ -17,7 +17,11 @@ const at = (topicIndex: number, topic = TOPICS[topicIndex]) => ({
 });
 
 describe("topic marks", () => {
-  const marks = marksFrom({ learnt: [at(0)], ready: [at(0), at(1)] });
+  const marks = marksFrom({
+    learnt: [at(0)],
+    ready: [at(0), at(1)],
+    review: [],
+  });
 
   it("says where the learner stands on each topic", () => {
     expect(
@@ -28,7 +32,11 @@ describe("topic marks", () => {
   });
 
   it("does not credit a topic that moved into a position learnt before", () => {
-    const moved = marksFrom({ learnt: [at(1, "Decimals")], ready: [] });
+    const moved = marksFrom({
+      learnt: [at(1, "Decimals")],
+      ready: [],
+      review: [],
+    });
     expect(learntIn(moved, "mathematics", TOPICS)).toBe(0);
     expect(standingOf(moved, "mathematics", 1, "Fractions")).toBe(
       "not-started",
@@ -49,6 +57,31 @@ describe("topic marks", () => {
     expect(nextToLearn(NO_MARKS, "mathematics", TOPICS, 2)).toBe(2);
     const goalLearnt = withMark(NO_MARKS, "learnt", at(2));
     expect(nextToLearn(goalLearnt, "mathematics", TOPICS, 2)).toBe(0);
+  });
+
+  it("offers a topic again that has a check owed, whatever else it is", () => {
+    const owed = marksFrom({
+      learnt: [at(0)],
+      ready: [at(0), at(1)],
+      review: [at(0), at(2)],
+    });
+
+    expect(
+      TOPICS.map((topic, index) =>
+        standingOf(owed, "mathematics", index, topic),
+      ),
+    ).toEqual(["review", "ready", "review"]);
+    expect(learntIn(owed, "mathematics", TOPICS)).toBe(1);
+    expect(owed.review.map((topic) => topic.topicIndex)).toEqual([0, 2]);
+  });
+
+  it("does not offer again a topic whose name has moved", () => {
+    const owed = marksFrom({
+      learnt: [],
+      ready: [],
+      review: [at(1, "Decimals")],
+    });
+    expect(standingOf(owed, "mathematics", 1, "Fractions")).toBe("not-started");
   });
 
   it("adds a mark without changing the marks it was given", () => {

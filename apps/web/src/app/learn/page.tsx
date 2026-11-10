@@ -15,6 +15,7 @@ import { PlanBuilding } from "@/features/learn/components/plan-building";
 import { PlanErrorCard } from "@/features/learn/components/plan-error-card";
 import { HomeRail } from "@/features/learn/components/home-rail";
 import { ResumeCard } from "@/features/learn/components/resume-card";
+import { ReviewList } from "@/features/learn/components/review-list";
 import { SubjectTiles } from "@/features/learn/components/subject-tiles";
 import { TrySomethingNew } from "@/features/learn/components/try-something-new";
 import { usePlan, useProgress } from "@/features/learn/learner-context";
@@ -80,6 +81,8 @@ export default function HomePage() {
         <ContinueSection current={current} />
       )}
 
+      {parts.has("continue") && <ReviewSection />}
+
       {parts.has("rail") && (
         <div className="hidden lg:block">
           <HomeRail current={current} onAsk={ask} />
@@ -120,6 +123,23 @@ function ContinueSection({ current }: { current: CurrentTopic }) {
           navigate(lessonPath(current.subject.slug, index))
         }
         className="flex-1"
+      />
+    </HomeSection>
+  );
+}
+
+const MOST_REVIEWS = 3;
+
+function ReviewSection() {
+  const navigate = useNavigate();
+  const { t } = useI18n();
+  const { review } = useProgress();
+  if (review.length === 0) return null;
+  return (
+    <HomeSection title={t("home.reviewTitle")} className="lg:col-span-2">
+      <ReviewList
+        topics={review.slice(0, MOST_REVIEWS)}
+        onOpen={(owed) => navigate(lessonPath(owed.subjectSlug, owed.topicIndex))}
       />
     </HomeSection>
   );

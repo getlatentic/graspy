@@ -69,7 +69,7 @@ export function useTopicProgress(
   const { marks, setMarks, reread } = useRecordedMarks(plan, settled);
 
   const mark = useCallback(
-    (kind: keyof TopicMarks, topic: Topic) => {
+    (kind: "learnt" | "ready", topic: Topic) => {
       setMarks((prev) => withMark(prev, kind, topic));
       if (planId) rememberMark({ ...topic, planId }, kind);
     },
@@ -84,6 +84,8 @@ export function useTopicProgress(
         learntIn(marks, slug, topics),
       nextToLearn: (slug: string, topics: string[], goal?: number) =>
         nextToLearn(marks, slug, topics, goal),
+      /** What the learner is asked to practise again. */
+      review: marks.review,
       learnt: (topic: Topic) => mark("learnt", topic),
       ready: (topic: Topic) => mark("ready", topic),
       reread,

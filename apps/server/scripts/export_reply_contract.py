@@ -182,7 +182,7 @@ REQUEST = {
                     chosen_index=2,
                     where=WHERE,
                     key=f"{PRACTICE_VIEW}:0",
-                ).model_dump(by_alias=True),
+                ).model_dump(by_alias=True, exclude_defaults=True),
             },
         }
     ],
@@ -295,7 +295,8 @@ LESSON_CHECK = {
         chosen_index=1,
         where=WHERE,
         key=f"{OPENED['_meta']['viewUUID']}:0",
-    ).model_dump(by_alias=True),
+        slide=0,
+    ).model_dump(by_alias=True, exclude_none=True),
 }
 LESSON_FINISH = {
     "name": "finish_lesson",

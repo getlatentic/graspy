@@ -75,7 +75,8 @@
     "topicsLoading": "Loading topics...",
     "goal": "You asked for this",
     "curriculum": "Follows the {authority} curriculum, {edition}",
-    "modelWritten": "Written by the tutor, not from an official curriculum"
+    "modelWritten": "Written by the tutor, not from an official curriculum",
+    "review": "Practise again"
   },
   "lesson": {
     "backTo": "Back to {subject}",
@@ -229,7 +230,8 @@
     "railAskTitle": "Ask graspy",
     "railAskTopic": "Ask about {topic}",
     "railAskAnything": "Or ask about anything",
-    "railPractiseStart": "Start practice"
+    "railPractiseStart": "Start practice",
+    "reviewTitle": "Practise again"
   },
   "you": {
     "progress": "Your progress",

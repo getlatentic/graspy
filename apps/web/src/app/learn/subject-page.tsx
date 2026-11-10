@@ -19,14 +19,14 @@ export default function SubjectPage() {
   const { t } = useI18n();
   const userProfile = useUserProfile();
   const { curriculum } = usePlan();
-  const { standing, reread } = useProgress();
+  const { standing, learntIn, reread } = useProgress();
   // A lesson goes on being made after the learner leaves it.
   useEffect(reread, [reread]);
 
   const slug = decodeURIComponent(params.subject ?? "");
   const topics = topicsOf(curriculum, slug);
   const standings = topics.map((topic, index) => standing(slug, index, topic));
-  const learnt = standings.filter((s) => s === "learnt").length;
+  const learnt = learntIn(slug, topics);
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">

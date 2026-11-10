@@ -35,6 +35,8 @@ export interface RecordedAnswer {
 export interface LearnerRecord {
   topics: TopicMark[];
   answers: RecordedAnswer[];
+  /** The topics with a check the learner is asked again today; older servers leave it out. */
+  review?: TopicMark[];
 }
 
 type PlanChange =
@@ -158,10 +160,12 @@ export function changePlanRecord(change: PlanChange): Promise<void> {
 export function planMarks(record: LearnerRecord): {
   learnt: TopicMark[];
   ready: TopicMark[];
+  review: TopicMark[];
 } {
   return {
     learnt: record.topics.filter((mark) => mark.learntAt),
     ready: record.topics.filter((mark) => mark.lessonId),
+    review: record.review ?? [],
   };
 }
 
