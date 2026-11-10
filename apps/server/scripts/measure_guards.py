@@ -252,6 +252,12 @@ def main() -> None:
         tutor_module.signature_for = lambda _context: signature
     tutor_module.AnswerGate = RecordingGate
     tutor_module.SafetyScreen = NoScreen if options.without_safety else RecordingScreen
+    if options.without_safety:
+
+        async def every_follow_up(texts, said):
+            return texts
+
+        tutor_module.safe_ones = every_follow_up
     practice_module.key_leak = counting(practice_module.key_leak)
     passage_module.key_leak = counting(passage_module.key_leak)
     results = asyncio.run(

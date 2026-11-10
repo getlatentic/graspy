@@ -26,5 +26,5 @@ def said_by(
 ) -> Said:
     """The learner's side only, newest first: what the tutor itself wrote
     earlier is not a source for a detail."""
-    kept = "\n".join([app, studying, *earlier])
+    kept = "\n".join([*earlier, app, studying])
     return Said(message=message, learner=learner, earlier=kept[:EARLIER_CHARS])

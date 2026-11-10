@@ -6,6 +6,7 @@ request, so the rules hold those."""
 
 from __future__ import annotations
 
+import re
 from functools import cache
 from typing import Literal
 
@@ -68,10 +69,19 @@ def _judge() -> dspy.Predict:
     return dspy.Predict(ForAChild)
 
 
+_QUOTES = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"'})
+
+
+def _plain(text: str) -> str:
+    return " ".join(text.translate(_QUOTES).lower().split())
+
+
 def _quoted(quote: str, passage: str) -> bool:
-    """An unsafe verdict stands only when it points at words that are in the passage."""
-    words = " ".join(quote.split()).lower()
-    return bool(words) and words in " ".join(passage.split()).lower()
+    """An unsafe verdict stands only when it points at words that are in the passage;
+    the parts of a quote joined by an ellipsis are each looked for."""
+    parts = [_plain(part) for part in re.split(r"\.{3}|\u2026", quote)]
+    parts = [part for part in parts if part]
+    return bool(parts) and all(part in _plain(passage) for part in parts)
 
 
 async def judged(passage: str, before: str, said: Said) -> Verdict:

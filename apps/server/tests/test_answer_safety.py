@@ -160,3 +160,48 @@ async def test_an_unsafe_verdict_that_quotes_nothing_of_the_passage_is_not_one()
     lm = _judge_model("unsafe", "words that are not in it")
     with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
         assert await real_judge("A sentence.", "", Said("", "")) == "safe"
+
+
+async def test_a_stopped_answer_does_not_wait_for_the_model_to_finish(monkeypatch):
+    """The learner reads the fixed line when the block is stopped, and what the
+    model goes on to write is not used."""
+    import dspy
+    from test_event_loop import slow_model, tutor_turn
+
+    monkeypatch.setattr(safety_judge, "judged", judge_that({UNSAFE: "unsafe"}))
+    answer = f"Good question.\n\n{UNSAFE}\n\nThen add the water.\n\nDone."
+    lm = slow_model(*tutor_turn(answer, ["Another?"]), pieces=40)
+    with dspy.context(lm=lm):
+        items = [
+            item async for item in Tutor(InMemoryConversationStore()).stream("c1", "hi")
+        ]
+
+    sent = "".join(i.text for i in items if isinstance(i, AnswerDelta))
+    reply = items[-1]
+    assert sent == f"Good question.\n\n{UNSAFE_LINE}"
+    assert reply.answer == sent
+    assert reply.follow_ups == []
+    assert reply.cards == [] and reply.actions == []
+
+
+@pytest.mark.parametrize(
+    ("quote", "kept"),
+    [
+        ("A sentence", True),
+        ("a   SENTENCE", True),
+        ("A ... missing", False),
+        ("", False),
+    ],
+)
+async def test_which_quotes_count(quote, kept):
+    lm = _judge_model("unsafe", quote)
+    with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
+        verdict = await real_judge("A sentence is here.", "", Said("", ""))
+
+    assert verdict == ("unsafe" if kept else "safe")
+
+
+async def test_a_quote_with_smart_quotes_and_an_ellipsis_counts():
+    lm = _judge_model("unsafe", "it\u2019s ... here")
+    with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
+        assert await real_judge("It's a sentence here.", "", Said("", "")) == "unsafe"

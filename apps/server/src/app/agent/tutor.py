@@ -259,6 +259,17 @@ async def _attempt(
                 screen.submit(gate.feed(item.chunk))
                 if sent := await screen.released():
                     yield AnswerDelta(sent)
+                if screen.reason:
+                    finished = True
+                    yield AnswerDelta(await screen.finish())
+                    _log_stopped(gate, screen)
+                    # What the model goes on to write, call or suggest is not used.
+                    yield _Answered(
+                        dspy.Prediction(answer="", follow_ups=[]),
+                        TurnOutputs(),
+                        screen.answer(),
+                    )
+                    return
             elif isinstance(item, (ToolActivity, ToolFinished)):
                 yield item
             elif isinstance(item, dspy.Prediction):

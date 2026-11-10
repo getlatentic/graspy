@@ -79,6 +79,8 @@ async def run(cases: list[dict], lm: dspy.LM, with_model: bool) -> list[dict]:
 
 
 def blocked(row: dict, checker: str) -> bool:
+    if row.get("judge") == "error" and checker != "rules":
+        raise RuntimeError(f"The judge failed on {row['id']}: {row.get('error')}")
     if checker == "both":
         return blocked(row, "rules") or blocked(row, "judge")
     return row[checker] != "safe"

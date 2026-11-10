@@ -25,11 +25,16 @@ JUDGE_SECONDS = 6.0
 CHECKS_AT_ONCE = 4
 # A paragraph with no blank line is cut at a sentence end once it is this long.
 MAX_BLOCK = 700
+# Text with no sentence end or line break is cut anywhere once it is this long.
+HARD_BLOCK = 2100
 # The most of the reply before a block that the judge reads.
 BEFORE_CHARS = 600
 
 UNCHECKED = "unchecked"
-_SENTENCE_END = re.compile(r"(?<=[.!?])\s+|\n+")
+# "Mrs. Okafor" is one name, not two sentences.
+_SENTENCE_END = re.compile(
+    r"(?<=[.!?])(?<!\bMr\.)(?<!\bMrs\.)(?<!\bMs\.)(?<!\bDr\.)(?<!\bProf\.)(?<!\bSt\.)\s+|\n+"
+)
 _BLANK_LINE = re.compile(r"\n[ \t]*\n\s*")
 
 UNSAFE_LINE = (
@@ -37,7 +42,7 @@ UNSAFE_LINE = (
     "I can help with your lesson."
 )
 PERSONAL_LINE = (
-    "Please keep personal details, like your name, address and phone number, to yourself. "
+    "I do not ask for or use personal details, like your name, address and phone number. "
     "Ask me about your lesson instead."
 )
 UNCHECKED_LINE = (
@@ -63,11 +68,20 @@ async def reason_not_to_send(text: str, said: Said, before: str = "") -> str | N
         return None
     try:
         async with asyncio.timeout(JUDGE_SECONDS):
-            verdict = await safety_judge.judged(text, before[-BEFORE_CHARS:], said)
-    except Exception:
-        logger.exception("The safety judge did not answer")
+            verdict = await _judged_twice(text, before[-BEFORE_CHARS:], said)
+    except Exception as error:  # noqa: BLE001 - fail closed on any failure of the judge
+        # The error's name only: a parse error carries the judge's words.
+        logger.warning("The safety judge did not answer: %s", type(error).__name__)
         return UNCHECKED
     return None if verdict == "safe" else verdict
+
+
+async def _judged_twice(text: str, before: str, said: Said) -> str:
+    """One more try for a call that failed, inside the same time limit."""
+    try:
+        return await safety_judge.judged(text, before, said)
+    except Exception:  # noqa: BLE001 - the second try reports what the first did not
+        return await safety_judge.judged(text, before, said)
 
 
 @dataclass
@@ -165,6 +179,8 @@ def _completed(text: str) -> list[str]:
         stop = blank.end() if blank else None
         if stop is None and len(text) - start >= MAX_BLOCK:
             stop = _cut(text, start)
+        if stop is None and len(text) - start >= HARD_BLOCK:
+            stop = start + HARD_BLOCK
         if stop is None:
             return blocks
         blocks.append(text[start:stop])

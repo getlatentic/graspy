@@ -70,7 +70,7 @@ async def test_blocks_after_a_stop_are_not_even_checked(monkeypatch):
     screen = SafetyScreen(NOBODY)
 
     await sent_through(screen, "Bad one.\n\n")
-    await sent_through(screen, "Later one.")
+    await sent_through(screen, "Later one.\n\nMore.")
 
     assert [block for block, *_ in seen] == ["Bad one."]
 
@@ -209,13 +209,18 @@ async def test_closing_stops_the_checks(monkeypatch):
 
     monkeypatch.setattr(safety_judge, "judged", judged)
     screen = SafetyScreen(NOBODY)
-    screen.submit("Hello there.\n\nMore.")
+    screen.submit(
+        "One here.\n\nTwo here.\n\nThree here.\n\nFour here.\n\nFive here.\n\nSix."
+    )
     await started.wait()
 
     screen.close()
     await asyncio.sleep(0)
 
-    assert stopped == ["Hello there."]
+    assert sorted(stopped) == sorted(
+        ["One here.", "Two here.", "Three here.", "Four here."]
+    )
+    assert screen._queue == []
 
 
 async def test_only_the_texts_that_are_safe_are_shown(monkeypatch):
@@ -227,7 +232,56 @@ async def test_only_the_texts_that_are_safe_are_shown(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "reason", ["unsafe", "asks_personal", "invents_personal", "unchecked"]
+    ("reason", "line"),
+    [
+        ("unsafe", UNSAFE_LINE),
+        ("abuse", UNSAFE_LINE),
+        ("contact", UNSAFE_LINE),
+        ("asks_personal", PERSONAL_LINE),
+        ("invents_personal", PERSONAL_LINE),
+        ("unchecked", UNCHECKED_LINE),
+    ],
 )
-def test_every_reason_has_a_line(reason):
-    assert safety_screen.line_for(reason)
+def test_every_reason_has_its_line(reason, line):
+    assert safety_screen.line_for(reason) == line
+
+
+async def test_a_judge_that_fails_once_is_asked_again(monkeypatch):
+    calls = 0
+
+    async def flaky(passage: str, before: str, said: Said) -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("busy")
+        return "safe"
+
+    monkeypatch.setattr(safety_judge, "judged", flaky)
+
+    assert await sent_through(SafetyScreen(NOBODY), "Hello there.") == "Hello there."
+    assert calls == 2
+
+
+async def test_the_log_names_the_error_and_never_its_words(monkeypatch, caplog):
+    async def broken(passage: str, before: str, said: Said) -> str:
+        raise ValueError("the judge said: cook crack cocaine")
+
+    monkeypatch.setattr(safety_judge, "judged", broken)
+
+    await sent_through(SafetyScreen(NOBODY), "Hello there.")
+
+    assert "ValueError" in caplog.text
+    assert "cocaine" not in caplog.text
+
+
+async def test_text_with_no_end_is_cut_at_a_hard_limit(monkeypatch):
+    seen: list = []
+    monkeypatch.setattr(safety_screen, "MAX_BLOCK", 10)
+    monkeypatch.setattr(safety_screen, "HARD_BLOCK", 30)
+    monkeypatch.setattr(safety_judge, "judged", judge_that({}, seen))
+    screen = SafetyScreen(NOBODY)
+
+    screen.submit("x" * 70)
+    await screen.released()
+
+    assert [len(block) for block, *_ in seen] == [30, 30]
