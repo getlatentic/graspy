@@ -17,6 +17,8 @@ import asyncio
 import contextvars
 import json
 import re
+import statistics
+import time
 from collections import defaultdict
 from pathlib import Path
 
@@ -32,6 +34,8 @@ from app.agent.cards import Card
 from app.agent.choices import plain
 from app.agent.context import LearnerContext
 from app.agent.memory import InMemoryConversationStore
+from app.agent.safety_screen import SafetyScreen
+from app.agent.streaming import AnswerDelta
 from app.agent.tutor import Tutor, TutorReply
 from app.settings import Settings
 
@@ -39,12 +43,35 @@ CASES = Path(__file__).with_name("guard_cases.json")
 CONCURRENT_DRAWS = 6
 _GATES: contextvars.ContextVar[list[AnswerGate]] = contextvars.ContextVar("gates")
 _REFUSED: contextvars.ContextVar[list[str]] = contextvars.ContextVar("refused")
+_SCREENS: contextvars.ContextVar[list[SafetyScreen]] = contextvars.ContextVar("screens")
 
 
 class RecordingGate(AnswerGate):
     def __init__(self, *args) -> None:
         super().__init__(*args)
         _GATES.get().append(self)
+
+
+class RecordingScreen(SafetyScreen):
+    """Keeps the sentences it stopped, for reading here and never in the app's log."""
+
+    def __init__(self, *args) -> None:
+        super().__init__(*args)
+        self.stopped_sentences: list[tuple[str, str]] = []
+        _SCREENS.get().append(self)
+
+    async def _check(self, sentence: str, before: str) -> str | None:
+        reason = await super()._check(sentence, before)
+        if reason:
+            self.stopped_sentences.append((reason, sentence.strip()))
+        return reason
+
+
+class NoScreen(SafetyScreen):
+    """Every sentence passes unchecked: the turn as it was before the safety stage."""
+
+    async def _check(self, block: str, before: str) -> str | None:
+        return None
 
 
 def counting(original):
@@ -103,6 +130,10 @@ def note_leaks(cards: list[Card]) -> bool:
 
 def violates(case: dict, spec: dict, answer: str, reply: TutorReply) -> bool:
     kind = case["forbidden"]
+    if kind == "pattern":
+        return bool(re.search(case["pattern"], answer))
+    if kind == "blocked":
+        return False
     if kind == "card":
         return bool(reply.cards) and card_leaks(answer, reply.cards)
     if kind == "claims_done_without_action":
@@ -113,20 +144,25 @@ def violates(case: dict, spec: dict, answer: str, reply: TutorReply) -> bool:
 
 async def draw(spec: dict, case: dict, lm: dspy.LM) -> dict:
     _GATES.set([])
+    _SCREENS.set([])
     _REFUSED.set([])
     context = LearnerContext.model_validate(spec["context"])
     tapped = case["tapped"]
     calls = None if tapped is None else tap_of(spec["tap"], tapped)
+    items, first_text = [], None
+    started = time.perf_counter()
     with dspy.context(lm=lm.copy()):
-        items = [
-            item
-            async for item in Tutor(InMemoryConversationStore()).stream(
-                "c", case["message"], context, calls
-            )
-        ]
+        async for item in Tutor(InMemoryConversationStore()).stream(
+            "c", case["message"], context, calls
+        ):
+            if first_text is None and isinstance(item, AnswerDelta):
+                first_text = time.perf_counter() - started
+            items.append(item)
+    seconds = time.perf_counter() - started
     reply = items[-1]
     assert isinstance(reply, TutorReply)
     gates = _GATES.get()
+    stopped = [screen.reason for screen in _SCREENS.get() if screen.reason]
     return {
         "case": case["id"],
         "raw": gates[-1].raw,
@@ -134,6 +170,12 @@ async def draw(spec: dict, case: dict, lm: dspy.LM) -> dict:
         "raw_violation": violates(case, spec, gates[-1].raw, reply),
         "delivered_violation": violates(case, spec, reply.answer, reply),
         "dropped": [b.value for gate in gates for b in gate.breaches],
+        "stopped": stopped,
+        "stopped_sentences": [
+            found for screen in _SCREENS.get() for found in screen.stopped_sentences
+        ],
+        "seconds": seconds,
+        "first_text_seconds": first_text,
         "cards": len(reply.cards),
         "refused_for_notes": len(_REFUSED.get()),
         "delivered_note_leak": note_leaks(reply.cards),
@@ -163,7 +205,7 @@ def summary(results: list[dict]) -> str:
     for result in results:
         by_case[result["case"]].append(result)
     lines = [
-        "case | draws | failed | model wrote it | learner was sent it | cards | refused for notes | note leaks shown"
+        "case | draws | failed | model wrote it | learner was sent it | cards | refused for notes | note leaks shown | ended by the safety check"
     ]
     for case, rows in by_case.items():
         done = [r for r in rows if "error" not in r]
@@ -173,7 +215,14 @@ def summary(results: list[dict]) -> str:
             f"{sum(r['delivered_violation'] for r in done)} | "
             f"{sum(r['cards'] for r in done)} | "
             f"{sum(r['refused_for_notes'] for r in done)} | "
-            f"{sum(r['delivered_note_leak'] for r in done)}"
+            f"{sum(r['delivered_note_leak'] for r in done)} | "
+            f"{sum(bool(r['stopped']) for r in done)}"
+        )
+    timed = [r for r in results if r.get("first_text_seconds")]
+    if timed:
+        lines.append(
+            f"median seconds: first text {statistics.median(r['first_text_seconds'] for r in timed):.2f}, "
+            f"whole turn {statistics.median(r['seconds'] for r in timed):.2f}"
         )
     return "\n".join(lines)
 
@@ -184,8 +233,17 @@ def main() -> None:
     parser.add_argument("--draws", type=int)
     parser.add_argument("--instructions-file", type=Path)
     parser.add_argument("--env-file")
+    parser.add_argument("--only", help="comma-separated case ids")
+    parser.add_argument(
+        "--without-safety",
+        action="store_true",
+        help="send every sentence unchecked, to time the turn without the safety stage",
+    )
     options = parser.parse_args()
     spec = json.loads(CASES.read_text())
+    if options.only:
+        wanted = set(options.only.split(","))
+        spec["cases"] = [case for case in spec["cases"] if case["id"] in wanted]
     settings = Settings(_env_file=options.env_file) if options.env_file else Settings()
     if options.instructions_file:
         signature = tutor_module.TutorTurn.with_instructions(
@@ -193,6 +251,13 @@ def main() -> None:
         )
         tutor_module.signature_for = lambda _context: signature
     tutor_module.AnswerGate = RecordingGate
+    tutor_module.SafetyScreen = NoScreen if options.without_safety else RecordingScreen
+    if options.without_safety:
+
+        async def every_follow_up(texts, said):
+            return texts
+
+        tutor_module.safe_ones = every_follow_up
     practice_module.key_leak = counting(practice_module.key_leak)
     passage_module.key_leak = counting(passage_module.key_leak)
     results = asyncio.run(
