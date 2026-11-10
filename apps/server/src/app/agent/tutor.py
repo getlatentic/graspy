@@ -264,11 +264,7 @@ async def _attempt(
                     yield AnswerDelta(await screen.finish())
                     _log_stopped(gate, screen)
                     # What the model goes on to write, call or suggest is not used.
-                    yield _Answered(
-                        dspy.Prediction(answer="", follow_ups=[]),
-                        TurnOutputs(),
-                        screen.answer(),
-                    )
+                    yield _stopped_answer(screen)
                     return
             elif isinstance(item, (ToolActivity, ToolFinished)):
                 yield item
@@ -279,7 +275,11 @@ async def _attempt(
                 if sent := await screen.finish():
                     yield AnswerDelta(sent)
                 _log_stopped(gate, screen)
-                yield _Answered(item, outputs, screen.answer())
+                yield (
+                    _stopped_answer(screen)
+                    if screen.reason
+                    else _Answered(item, outputs, screen.answer())
+                )
     except BaseExceptionGroup as group:
         # streamify runs the turn in a task group; the caller wants the
         # model's own error, not the group around it.
@@ -291,6 +291,13 @@ async def _attempt(
         await _stopped(items)
     if not finished:
         raise RuntimeError("The tutor turn ended without an answer")
+
+
+def _stopped_answer(screen: SafetyScreen) -> _Answered:
+    """What the model goes on to write, call or suggest is not used."""
+    return _Answered(
+        dspy.Prediction(answer="", follow_ups=[]), TurnOutputs(), screen.answer()
+    )
 
 
 def _log_stopped(gate: AnswerGate, screen: SafetyScreen) -> None:

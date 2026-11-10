@@ -20,7 +20,7 @@ class Unsafe(Enum):
 # Words no school answer needs, in English. Insults and the mild words ("damn", "stupid") are
 # not here: a lesson may quote them, and the judge reads an insult.
 _ABUSE = re.compile(
-    r"\b(?:fuck\w*|shit(?:s|ty|head)?|bitch\w*|assholes?|cunts?|dickheads?|pussy|slut\w*"
+    r"\b(?:fuck\w*|shit(?:s|ty|head)?|bitch\w*|assholes?|cunts?|dickheads?|slut\w*"
     r"|motherfuck\w*|nigg(?:a|er)s?)\b",
     re.IGNORECASE,
 )
@@ -32,7 +32,7 @@ _PLATFORM = (
 # number is the judge's to read: a lesson on a CV or a letter shows made-up ones.
 _CONTACT = re.compile(
     r"\bt\.me/|\bwa\.me/|\bbit\.ly/"
-    rf"|\b(?:add|dm|message|text|{_PLATFORM})\s+me\b"
+    rf"|\b(?:add|dm|{_PLATFORM})\s+me\b"
     rf"|\b(?:my|our)\s+{_PLATFORM}\b",
     re.IGNORECASE,
 )
@@ -50,7 +50,6 @@ _ASKS = re.compile(
     rf"|\b(?:share|type|enter|write|send|post)\s+(?:me\s+)?your\s+{_DETAIL}[^.?!]*?\b{_HERE}\b"
     r"|\bwhere (?:do|does) you(?:r \w+)? live\b"
     r"|\b(?:which|what)\s+(?:street|town|area|school|church|mosque|class|village)\s+(?:do|does|did|are|is)\s+you\b"
-    r"|\bwhich (?:street|town|area|school|church|mosque)\b[^.?!]*\b(?:you|your)\b"
     r"|\bhow old are you\b|\bwhen (?:is|was) your birthday\b|\bwhat(?:'s|\s+is)\s+your\s+(?:mother|father|mum|dad|parents?)'?s?\s+name"
     r"|\b(?:send|share|show|give)\s+(?:me\s+)?(?:a\s+|your\s+)?(?:photos?|pictures?|pics?|selfies?|videos?)\s+of\s+(?:you|yourself)"
     r"|\bwhat are your parents'?\s+names|\bwhere do your (?:parents|mother|father)\b",
@@ -89,12 +88,11 @@ _CLAIMS = (
     ),
     # An age: "you are a ten-year-old", "you're 11 years old"; "you are 3 steps away" is arithmetic.
     re.compile(
-        r"\b(?:you(?:'re| are)|as)\s+an?\s+(?P<v>\w+)[ -]years?[ -]old\b"
-        r"|\byou(?:'re| are)\s+(?P<v2>\d{1,2})\s+years?\s+old\b",
-        re.IGNORECASE,
+        rf"{_NOT_A_CLAIM}(?i:\b(?:you(?:'re| are)|as)\s+an?\s+)(?P<v>\w+)(?i:[ -]years?[ -]old\b)"
+        rf"|{_NOT_A_CLAIM}(?i:\byou(?:'re| are)\s+)(?P<v2>\d{{1,2}})(?i:\s+years?\s+old\b)"
     ),
     re.compile(
-        r"\byour\s+(?:parents|mother|father|mum|dad)\s+(?P<v>(?:drinks?|smokes?|beats?|fights?|works?|divorced)\b[^,.;!?]*)",
+        r"\byour\s+(?:parents|mother|father|mum|dad)\s+(?P<v>(?:drinks?|smokes?|beats?|fights?|divorced)\b[^,.;!?]*)",
         re.IGNORECASE,
     ),
 )
@@ -119,11 +117,11 @@ def _invents(sentence: str, known: str) -> bool:
 
 # "Never type your name here" warns; only a request to share, type or send can be one.
 _WARNED = re.compile(
-    r"\b(?:never|not|don't|dont|do not|should not|must not|mustn't|avoid|before you"
-    r"|ask (?:a|an|your) (?:grown-up|adult|parent|teacher))\b[^.?!]{0,30}$",
+    r"\b(?:never|not|don't|dont|do not|should not|must not|mustn't|avoid)\s+(?:\w+\s+)?$"
+    r"|\bbefore you\s+$",
     re.IGNORECASE,
 )
-_SHARING = re.compile(r"(?:share|type|enter|write|send|post)\b", re.IGNORECASE)
+_SHARING = re.compile(r"(?:share|type|enter|write|post|send(?!\s+me))\b", re.IGNORECASE)
 
 
 def _asks(sentence: str) -> bool:

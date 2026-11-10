@@ -60,18 +60,18 @@ def line_for(reason: str) -> str:
 async def reason_not_to_send(text: str, said: Said, before: str = "") -> str | None:
     """Why the text may not be sent: a rule's name, `unsafe` from the judge, or
     `unchecked` when the judge could not say. None when it may."""
-    for sentence in filter(None, _sentences(text)):
-        found = unsafe_in(sentence, said.text)
-        if found is not None:
-            return found.value
-    if not any(character.isalpha() for character in text):
-        return None
     try:
+        for part in (*filter(None, _sentences(text)), " ".join(text.split())):
+            found = unsafe_in(part, said.text)
+            if found is not None:
+                return found.value
+        if not any(character.isalpha() for character in text):
+            return None
         async with asyncio.timeout(JUDGE_SECONDS):
             verdict = await _judged_twice(text, before[-BEFORE_CHARS:], said)
-    except Exception as error:  # noqa: BLE001 - fail closed on any failure of the judge
+    except Exception as error:  # noqa: BLE001 - fail closed on any failure
         # The error's name only: a parse error carries the judge's words.
-        logger.warning("The safety judge did not answer: %s", type(error).__name__)
+        logger.warning("The safety check did not finish: %s", type(error).__name__)
         return UNCHECKED
     return None if verdict == "safe" else verdict
 
@@ -104,7 +104,7 @@ class SafetyScreen:
         """Takes in text; each block it completes starts being checked."""
         if self.reason is not None:
             return
-        self._open += text
+        self._open += text.replace("\r\n", "\n")
         for block in _completed(self._open):
             self._start(block)
             self._open = self._open[len(block) :]

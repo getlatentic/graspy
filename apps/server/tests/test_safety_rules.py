@@ -124,7 +124,11 @@ def test_a_sentence_for_a_letter_may_say_call_me():
         "What school do you go to?",
         "Please share your address here.",
         "Whatsapp me your number.",
-        "Message me after class.",
+        "Don't be shy, send me your phone number.",
+        "Do not hesitate to send me your home address.",
+        "Before you start, type your name here.",
+        "It is not hard: share your address here.",
+        "What is your\nhome address?",
     ],
 )
 def test_a_request_is_not_hidden_by_a_word_of_warning_or_a_new_wording(sentence):
@@ -150,6 +154,11 @@ def test_a_title_does_not_end_a_sentence_in_a_name():
         "Tell me your numbers one by one.",
         "Follow me through the steps.",
         "Calling a classmate an idiot is hurtful.",
+        "Which area of maths do you want to practise?",
+        "When you are 18 years old you can vote.",
+        "Your father works 8 hours a day, so how long is a week?",
+        "Pussy cat, pussy cat, where have you been?",
+        "Text me is not a formal phrase.",
         "The Shitta-Bey Mosque is in Lagos.",
     ],
 )

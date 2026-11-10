@@ -114,6 +114,14 @@ async def test_a_long_paragraph_is_cut_at_a_sentence_end(monkeypatch):
     assert out == "First sentence here. Second sentence here. Third sen"
 
 
+async def test_a_request_split_over_two_lines_is_still_a_request(monkeypatch):
+    monkeypatch.setattr(safety_judge, "judged", judge_that({}))
+
+    out = await sent_through(SafetyScreen(NOBODY), "What is your\nhome address?")
+
+    assert out == PERSONAL_LINE
+
+
 async def test_a_rule_stops_a_block_without_asking_the_judge(monkeypatch):
     seen: list = []
     monkeypatch.setattr(safety_judge, "judged", judge_that({}, seen))

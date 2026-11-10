@@ -205,3 +205,30 @@ async def test_a_quote_with_smart_quotes_and_an_ellipsis_counts():
     lm = _judge_model("unsafe", "it\u2019s ... here")
     with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
         assert await real_judge("It's a sentence here.", "", Said("", "")) == "unsafe"
+
+
+async def test_a_stop_found_at_the_end_uses_none_of_the_models_output(monkeypatch):
+    monkeypatch.setattr(safety_judge, "judged", judge_that({UNSAFE: "unsafe"}))
+
+    reply, _, _ = await turn(finish(UNSAFE, follow_ups=["Another?"]))
+
+    assert reply.answer == UNSAFE_LINE
+    assert reply.follow_ups == [] and reply.cards == [] and reply.actions == []
+
+
+async def test_an_unsafe_verdict_with_no_real_quote_is_logged_and_dropped(caplog):
+    lm = _judge_model("unsafe", "a")
+    with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
+        assert await real_judge("A sentence.", "", Said("", "")) == "safe"
+    assert "quoted nothing" in caplog.text
+
+
+async def test_a_quote_of_a_table_row_counts_without_its_markup():
+    lm = _judge_model("unsafe", "Phone Number Provide a number")
+    with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
+        assert (
+            await real_judge(
+                "| **Phone Number** | Provide a number |", "", Said("", "")
+            )
+            == "unsafe"
+        )

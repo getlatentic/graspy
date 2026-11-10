@@ -6,6 +6,7 @@ request, so the rules hold those."""
 
 from __future__ import annotations
 
+import logging
 import re
 from functools import cache
 from typing import Literal
@@ -14,6 +15,8 @@ import dspy
 
 from .labels import DATA_ONLY
 from .said import Said
+
+logger = logging.getLogger(__name__)
 
 JUDGE_EFFORT = "low"
 JUDGE_MAX_TOKENS = 600
@@ -69,7 +72,19 @@ def _judge() -> dspy.Predict:
     return dspy.Predict(ForAChild)
 
 
-_QUOTES = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"'})
+_QUOTES = str.maketrans(
+    {
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2013": "-",
+        "\u2014": "-",
+    }
+    | {mark: " " for mark in "*_|`#>\u202f\u00a0"}
+)
+# A quote shorter than this points at nothing.
+MIN_QUOTE = 3
 
 
 def _plain(text: str) -> str:
@@ -80,7 +95,7 @@ def _quoted(quote: str, passage: str) -> bool:
     """An unsafe verdict stands only when it points at words that are in the passage;
     the parts of a quote joined by an ellipsis are each looked for."""
     parts = [_plain(part) for part in re.split(r"\.{3}|\u2026", quote)]
-    parts = [part for part in parts if part]
+    parts = [part for part in parts if len(part) >= MIN_QUOTE]
     return bool(parts) and all(part in _plain(passage) for part in parts)
 
 
@@ -98,4 +113,9 @@ async def judged(passage: str, before: str, said: Said) -> Verdict:
             learner=said.learner,
             known=said.earlier,
         )
-        return prediction.verdict if _quoted(prediction.quote, passage) else "safe"
+        if prediction.verdict == "unsafe" and not _quoted(prediction.quote, passage):
+            logger.warning(
+                "An unsafe verdict quoted nothing of the passage, so it is dropped"
+            )
+            return "safe"
+        return prediction.verdict
