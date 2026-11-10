@@ -22,6 +22,8 @@ from .memory import ConversationStore, Exchange
 from .persona import WITHOUT_STAGE, persona
 from .reply import Action
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
+from .safety_screen import SafetyScreen, safe_ones
+from .said import Said, said_by
 from .streaming import AnswerDelta, AnswerRestart, Silent, ToolActivity, ToolFinished
 from .summary import recalled
 from .toolkit import Turn, TurnOutputs, tools_for
@@ -188,7 +190,8 @@ class Tutor:
         ) or verdicts_in(
             earlier.exchanges[-1].get("app", "") if earlier.exchanges else ""
         )
-        async for item in _answered(context, inputs, verdicts):
+        said = said_by_learner(context, inputs, earlier.exchanges, missed)
+        async for item in _answered(context, inputs, verdicts, said):
             if isinstance(item, _Answered):
                 answered = item
             else:
@@ -207,14 +210,16 @@ class Tutor:
             await self._memory.append(conversation_id, exchange, turn=named)
         yield TutorReply(
             answer=answer,
-            follow_ups=clean_follow_ups(answered.prediction.follow_ups),
+            follow_ups=await safe_ones(
+                clean_follow_ups(answered.prediction.follow_ups), said
+            ),
             actions=answered.outputs.actions[-1:],
             cards=cards,
         )
 
 
 async def _answered(
-    context: LearnerContext, inputs: dict, verdicts: tuple[bool, ...]
+    context: LearnerContext, inputs: dict, verdicts: tuple[bool, ...], said: Said
 ) -> AsyncIterator[
     AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | _Answered
 ]:
@@ -222,7 +227,7 @@ async def _answered(
     some sampling."""
     for again in (False, True):
         try:
-            async for item in _attempt(context, inputs, verdicts, again):
+            async for item in _attempt(context, inputs, verdicts, said, again):
                 yield item
             return
         except (Runaway, AdapterParseError) as error:
@@ -233,34 +238,37 @@ async def _answered(
 
 
 async def _attempt(
-    context: LearnerContext, inputs: dict, verdicts: tuple[bool, ...], again: bool
+    context: LearnerContext,
+    inputs: dict,
+    verdicts: tuple[bool, ...],
+    said: Said,
+    again: bool,
 ) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | _Answered]:
     """Closing it stops the model."""
     outputs = TurnOutputs()
     agent = _streamed_agent(Turn(context, inputs["message"]), outputs, again)
     watch = RunawayWatch()
     gate = AnswerGate(outputs, verdicts)
+    screen = SafetyScreen(said)
     finished = False
     items = agent(**inputs)
     try:
         async for item in items:
             if isinstance(item, StreamResponse):
                 watch.add(item.chunk)
-                if sent := gate.feed(item.chunk):
+                screen.submit(gate.feed(item.chunk))
+                if sent := await screen.released():
                     yield AnswerDelta(sent)
             elif isinstance(item, (ToolActivity, ToolFinished)):
                 yield item
             elif isinstance(item, dspy.Prediction):
                 finished = True
                 unstreamed = "" if gate.fed else gate.feed(item.answer)
-                if sent := unstreamed + gate.finish():
+                screen.submit(unstreamed + gate.finish())
+                if sent := await screen.finish():
                     yield AnswerDelta(sent)
-                if gate.breaches:
-                    logger.warning(
-                        "Sentences of the answer were dropped: %s",
-                        sorted({breach.value for breach in gate.breaches}),
-                    )
-                yield _Answered(item, outputs, gate.answer())
+                _log_stopped(gate, screen)
+                yield _Answered(item, outputs, screen.answer())
     except BaseExceptionGroup as group:
         # streamify runs the turn in a task group; the caller wants the
         # model's own error, not the group around it.
@@ -268,9 +276,37 @@ async def _attempt(
             raise group.exceptions[0] from None
         raise
     finally:
+        screen.close()
         await _stopped(items)
     if not finished:
         raise RuntimeError("The tutor turn ended without an answer")
+
+
+def _log_stopped(gate: AnswerGate, screen: SafetyScreen) -> None:
+    """What stopped a sentence, never the sentence."""
+    if gate.breaches:
+        logger.warning(
+            "Sentences of the answer were dropped: %s",
+            sorted({breach.value for breach in gate.breaches}),
+        )
+    if screen.reason:
+        logger.warning("The answer was ended by the safety check: %s", screen.reason)
+
+
+def said_by_learner(
+    context: LearnerContext,
+    inputs: dict,
+    exchanges: list[Exchange],
+    missed: list[Exchange],
+) -> Said:
+    earlier = [exchange["message"] for exchange in reversed([*missed, *exchanges])]
+    return said_by(
+        inputs["message"],
+        context.describe_learner(),
+        inputs["app"],
+        context.describe_studying(),
+        earlier,
+    )
 
 
 def signature_for(context: LearnerContext) -> type[dspy.Signature]:

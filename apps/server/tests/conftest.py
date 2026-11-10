@@ -31,3 +31,16 @@ def no_dspy_state():
     dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
     yield
     dspy.configure(lm=None)
+
+
+async def _judged_safe(sentence: str, before: str, said) -> str:
+    return "safe"
+
+
+@pytest.fixture(autouse=True)
+def judge_says_safe(monkeypatch):
+    """The safety judge is a model call, which a scripted tutor model would
+    answer in place of the tutor. A test of the judge sets its own."""
+    from app.agent import safety_judge
+
+    monkeypatch.setattr(safety_judge, "judged", _judged_safe)
