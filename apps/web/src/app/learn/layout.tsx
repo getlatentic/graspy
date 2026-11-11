@@ -6,9 +6,15 @@ import { cn } from "@/lib/cn";
 import TopMenu from "@/features/learn/components/top-menu";
 import { ChatView } from "@/features/learn/components/chat-view";
 import { ChatContextBar } from "@/features/learn/components/chat-context-bar";
+import {
+  ChatPane,
+  HideChatButton,
+} from "@/features/learn/components/chat-pane";
+import { SideNav } from "@/features/learn/components/side-nav";
 import { TutorAskBar } from "@/features/learn/components/tutor-ask-bar";
 import { AppTabBar } from "@/features/learn/components/app-tab-bar";
 import { useOpenChat } from "@/features/learn/hooks/use-open-chat";
+import { usePaneLayout } from "@/features/learn/hooks/use-pane-layout";
 import { useLearnerChosen } from "@/features/learn/hooks/use-learner-chosen";
 import { useLearnerStart } from "@/features/learn/hooks/use-learner-start";
 import { useKeptAnswers } from "@/features/voice/hooks/use-kept-answers";
@@ -32,6 +38,7 @@ function DashboardLayoutContent() {
   const { pathname } = useLocation();
   const userProfile = useLearnerStart();
   useKeptAnswers();
+  const { layout, change } = usePaneLayout();
   const voiceOnly = useVoiceOnly() === true;
   const redirect = pageRedirect(pathname, voiceOnly);
   const sections = sectionsFor(voiceOnly);
@@ -59,10 +66,23 @@ function DashboardLayoutContent() {
           : "h-dvh",
       )}
     >
-      <TopMenu sections={sections} />
+      <TopMenu />
       <div className="flex min-h-0 flex-1">
+        <SideNav
+          sections={sections}
+          open={layout.menuOpen}
+          onToggle={() => change({ menuOpen: !layout.menuOpen })}
+        />
         <PageArea chat={chat} redirect={redirect} />
-        {lesson && <LessonChat lesson={lesson} />}
+        {lesson && (
+          <LessonChat
+            lesson={lesson}
+            open={layout.chatOpen}
+            width={layout.chatWidth}
+            onOpenChange={(chatOpen) => change({ chatOpen })}
+            onResize={(chatWidth) => change({ chatWidth })}
+          />
+        )}
       </div>
       <ShellFooter lesson={lesson} chat={chat} sections={sections} />
     </div>
@@ -107,20 +127,45 @@ function PageArea({
   );
 }
 
-function LessonChat({ lesson }: { lesson: ChatTarget }) {
+interface LessonChatProps {
+  lesson: ChatTarget;
+  open: boolean;
+  width: number;
+  onOpenChange: (open: boolean) => void;
+  onResize: (width: number) => void;
+}
+
+function LessonChat({
+  lesson,
+  open,
+  width,
+  onOpenChange,
+  onResize,
+}: LessonChatProps) {
   const { pathname } = useLocation();
   const { curriculum } = usePlan();
   const wide = useMediaQuery(WIDE_SCREEN);
   const scope = scopeOf(lesson, curriculum);
   if (!wide || !scope) return null;
   return (
-    <aside className="flex w-90 shrink-0 flex-col border-l border-line">
+    <ChatPane
+      open={open}
+      width={width}
+      onOpen={() => onOpenChange(true)}
+      onResize={onResize}
+    >
       <ChatView
         key={pathname}
         scope={scope}
-        header={<ChatContextBar scope={scope} changeable={false} />}
+        header={
+          <ChatContextBar
+            scope={scope}
+            changeable={false}
+            trailing={<HideChatButton onHide={() => onOpenChange(false)} />}
+          />
+        }
       />
-    </aside>
+    </ChatPane>
   );
 }
 

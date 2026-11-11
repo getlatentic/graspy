@@ -59,7 +59,9 @@
     "topicReady": "«{topic}» جاهز متى شئت.",
     "subjectReady": "{subject} جاهزة متى شئت.",
     "viewUnavailable": "تعذّر عرض هذه البطاقة.",
-    "backToLesson": "العودة إلى الدرس"
+    "backToLesson": "العودة إلى الدرس",
+    "hide": "إخفاء المحادثة",
+    "resize": "تغيير حجم المحادثة"
   },
   "menu": {
     "tagline": "المعلم المناسب لك"
@@ -202,7 +204,9 @@
     "home": "الرئيسية",
     "subjects": "المواد",
     "ask": "اسأل",
-    "you": "أنت"
+    "you": "أنت",
+    "collapse": "طيّ القائمة",
+    "expand": "توسيع القائمة"
   },
   "home": {
     "continueTitle": "تابع التعلّم",
