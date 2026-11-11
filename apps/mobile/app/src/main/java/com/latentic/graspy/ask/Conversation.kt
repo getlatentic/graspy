@@ -118,7 +118,7 @@ private fun ChatLog(
         if (answering) {
             item(key = "answering") {
                 TutorSays(learn) {
-                    val waiting = turn.activity?.let(learn.chat.activity::get) ?: learn.chat.tutorThinking
+                    val waiting = if (turn.reconnecting) learn.chat.reconnecting else turn.activity?.let(learn.chat.activity::get) ?: learn.chat.tutorThinking
                     PlainReply(turn.streaming.ifEmpty { waiting }, quiet = turn.streaming.isEmpty())
                 }
             }

@@ -41,6 +41,14 @@ A learner's page does not hold the turn; it follows it, and can follow it again 
   words so far (a stop before any words keeps nothing; the page sends the message as unanswered with the next one), and finishes the turn `status=stopped` with those words as the reply. A stop is in the
   log, so a restart finds it.
 
+**Android** (`apps/mobile/.../ask/TutorRun.kt`) keeps the A2A `SendStreamingMessage` as the way a turn begins, with
+the thread's `contextId` (a new chat's id is made on the phone) and one `messageId` per question, which is the turn
+id. A stream that drops after it opened is followed by server-sent events from cursor 0 (the A2A stream carries no
+seq), with `Last-Event-ID` from the last frame applied after that; what the A2A stream had shown is withdrawn, as the
+frames show the turn again. A read that is answered 404 means the message began no turn, so it is sent again with
+the same id. Stop is the `POST .../stop` route; the turn ends `stopped` and its words are kept as the reply. No
+socket: server-sent events only.
+
 Limits: a chat's object holds at most 8 sockets, and a socket is opened only for a turn the chat holds. A start spends the agent budget, as an A2A message does. The socket is opened by the Worker
 before the app's middleware, so it spends none; it needs a valid session and the chat's owner.
 
@@ -76,6 +84,5 @@ that cannot progress ends `failed` with a cause in the runner tests (`tests/test
 
 ## Not here
 
-The client still sends a new message id on each retry (`askAgent` in `apps/web/src/lib/a2a/client.ts`), so a
-retry is a new turn; joining by id and a resume endpoint with a cursor are planning #710. Production has no
-`CHAT_TURNS` binding yet.
+The web's fallback `askAgent` (`apps/web/src/lib/a2a/client.ts`) still sends a new message id on each retry.
+Production has no `CHAT_TURNS` binding yet.
