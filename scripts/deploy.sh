@@ -57,10 +57,28 @@ require_clean_tree() {
   [[ -z "$(git status --porcelain)" ]] || die "the working tree has changes; deploy a commit, not a working tree."
 }
 
-require_origin_main() {
+# The Deploy workflow checks out the commit it was started on, and a merge while the run waits for
+# approval moves main past it. That commit is still deployable while it is on main; a commit that is
+# not on main never is. The workflow's checkout is shallow; the fetch still brings every commit
+# between that one and main, so the ancestor test sees the whole path.
+# Migrations go before the code, so an older commit is refused once main has a migration it lacks:
+# its code would run on a database that main's migrations have already changed.
+require_head_on_main() {
   git fetch --quiet origin main
-  [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]] ||
-    die "production deploys origin/main only; HEAD is $(git rev-parse --short HEAD)."
+  local head main behind status=0
+  head="$(git rev-parse --short HEAD)"
+  main="$(git rev-parse --short origin/main)"
+  git merge-base --is-ancestor HEAD origin/main || status=$?
+  case "$status" in
+    0) ;;
+    1) die "production deploys a commit on origin/main; $head is not on it (main is $main). Start the Deploy workflow again from main." ;;
+    *) die "git could not tell whether $head is on origin/main (exit $status)." ;;
+  esac
+  behind="$(git rev-list --count HEAD..origin/main)"
+  [[ "$behind" -gt 0 ]] || return 0
+  git diff --quiet HEAD origin/main -- apps/server/migrations ||
+    die "main ($main) has migrations that $head lacks; deploying $head would run old code on a migrated database. Start the Deploy workflow again from main."
+  echo "deploy: main has moved on by $behind commit(s) (now $main); deploying the approved commit $head. Start the Deploy workflow again to deploy $main."
 }
 
 # Sign-in is hidden in a build without the Firebase web config, so a deploy without it is refused.
@@ -205,7 +223,7 @@ step "Checking $(git rev-parse --short HEAD) for $environment"
 require_clean_tree
 require_firebase_config
 if [[ "$environment" == "production" ]]; then
-  require_origin_main
+  require_head_on_main
   if [[ -z "$dry_run" ]]; then require_confirmation; fi
 fi
 if [[ -z "$dry_run" ]]; then require_service_account_secret; fi

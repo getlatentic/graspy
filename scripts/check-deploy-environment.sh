@@ -7,7 +7,8 @@
 #   whenever its environment lacks that secret, and any branch's workflow can read it;
 # - the GitHub API does not answer as expected. Only a 404 for staging's environment means that
 #   staging is not set up yet, and skips the deploy;
-# - production has no environment, no required reviewer, or a branch rule other than main.
+# - production has no environment, no required reviewer, a branch rule other than main, or lets
+#   administrators bypass its protection rules (can_admins_bypass is not false).
 #
 # The workflow passes, for each deploy secret, REPOSITORY_SECRET_<name> as true or false: whether
 # a job with no environment sees a secret of that name. docs/DEPLOYING.md.
@@ -76,6 +77,8 @@ read_deployment_branches() {
 
 require_production_protection() {
   local reviewers
+  jq -e '.can_admins_bypass == false' <<< "$body" > /dev/null ||
+    fail "Production lets administrators bypass its protection rules, the reviewer among them (can_admins_bypass is $(jq -c '.can_admins_bypass' <<< "$body")). Put \"can_admins_bypass\": false in the production environment, as docs/DEPLOYING.md step 4 says."
   reviewers="$(jq '[.protection_rules[]? | select(.type == "required_reviewers") | .reviewers[]] | length' <<< "$body")"
   read_deployment_branches
   if [[ "$reviewers" -eq 0 || "$branches" != "branch main" ]]; then
