@@ -2,7 +2,7 @@ import { ArrowRight, ChevronRight, Circle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { SubjectBadge } from "@/features/learn/components/subject-icon";
+import { SubjectPicture } from "@/features/learn/components/subject-picture";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 import type { CurrentTopic } from "@/features/learn/lib/current-topic";
@@ -32,10 +32,10 @@ export function ResumeCard({
     <Card className={cn("p-0", className)}>
       <div className="p-3 sm:p-6 lg:p-8">
         <div className="flex items-center gap-3 sm:items-start sm:gap-5">
-          <SubjectBadge
+          <SubjectPicture
             name={subject.name}
-            className="size-14 rounded-2xl sm:size-16 lg:size-20"
-            iconClassName="size-7 sm:size-8 lg:size-10"
+            className="size-16 shrink-0 rounded-control sm:size-24 lg:size-32"
+            iconClassName="size-8 sm:size-10 lg:size-14"
           />
           <ResumeProgress
             topic={topic}
