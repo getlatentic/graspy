@@ -58,6 +58,18 @@ describe("the play card", () => {
     expect(card!.textContent).toContain("Title a");
   });
 
+  it("shows the lesson's picture, decorative and loaded at once", () => {
+    show(LESSONS);
+
+    const card = screen
+      .getAllByRole("link")
+      .find((a) => a.querySelector('[role="img"]'))!;
+    const picture = card.querySelector("img")!;
+    expect(picture.getAttribute("src")).toContain("/alphabet");
+    expect(picture.getAttribute("alt")).toBe("");
+    expect(picture.getAttribute("loading")).toBe("eager");
+  });
+
   it("says in hidden text that the lesson is next and how many days were right", () => {
     show(LESSONS);
 
