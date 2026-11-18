@@ -4,6 +4,7 @@ import { isOnlyTheAnswer, needFor } from "../src/safety";
 import { ACTIONS, SETTING, mayBeAnAnswer, routeUtterance, type Action, type Route } from "../src/router";
 import { soundsLike } from "../src/sounds-like";
 import { routeWithObserver } from "../src/hedge-route";
+import { bedrockPath } from "../src/speller-host";
 import { observe, observeAndDecide } from "../src/observer";
 import { decide, THRESHOLD } from "../src/policy";
 import { observeWithClef } from "./clef-observer";
@@ -38,6 +39,24 @@ async function routeWithClef(env: Env, model: "clef" | "clef-flash", prompt: str
   return p >= threshold ? { action: action as Action } : null;
 }
 
+const GENERATOR_MODEL = "openai.gpt-oss-120b";
+
+/**
+ * Plain text from gpt-oss-120b on Bedrock, by the same host and key as src/bedrock-chat.ts. Its structured output on this wire is
+ * unreliable (a stray character or a doubled brace before the JSON, in about one reply in two), so the scripts ask for one item
+ * to a line and read the lines.
+ */
+async function generate(env: Env, system: string, user: string): Promise<string | null> {
+  const response = await fetch(`https://bedrock-mantle.${env.AWS_REGION || "us-east-1"}.api.aws${bedrockPath(GENERATOR_MODEL)}/chat/completions`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" },
+    body: JSON.stringify({ model: GENERATOR_MODEL, messages: [{ role: "system", content: system }, { role: "user", content: user }], temperature: 0.8, max_completion_tokens: 8000, reasoning_effort: "low" }),
+    signal: AbortSignal.timeout(120_000),
+  });
+  if (!response.ok) return null;
+  return ((await response.json()) as { choices?: { message?: { content?: string | null } }[] }).choices?.[0]?.message?.content ?? null;
+}
+
 async function timed<T>(work: Promise<T>): Promise<[T, number]> {
   const started = Date.now();
   return [await work, Date.now() - started];
@@ -63,6 +82,11 @@ async function handle(request: Request, env: Env): Promise<Response> {
       // Clef has no number to give and no reply to write; Gemma's answer is checked by sound.
       const accepted = model === "gemma" && route?.action === "mark_answer" && route.said !== undefined && soundsLike(heard, route.said);
       return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard), soundsLikeTheAnswer: isOnlyTheAnswer(heard, 10), foundBySafetyRule: need !== null });
+    }
+    if (new URL(request.url).pathname === "/generate") {
+      // One structured-output call to gpt-oss-120b on Bedrock, for the scripts that write and check cases (bench/add-model-cases.ts). Never a Claude model.
+      const { system, user } = (await request.json()) as { system: string; user: string };
+      return Response.json({ text: await generate(env, system, user) });
     }
     if (new URL(request.url).pathname === "/hedge") {
       // The router alone (with its own second request) against the router with the observer started beside that second request.
