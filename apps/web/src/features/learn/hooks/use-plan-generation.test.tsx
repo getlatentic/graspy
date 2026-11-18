@@ -151,6 +151,16 @@ describe("making a plan", () => {
     expect(mocks.prepareFirstLesson).not.toHaveBeenCalled();
   });
 
+  it("reaches the error with its retry when the stream ends with no subject", async () => {
+    mocks.streamCurriculum.mockReturnValue(events());
+    const { result } = setup();
+
+    await act(() => result.current.generate(REQUEST, t));
+
+    expect(result.current.error).toBe("chat.temporaryProblem");
+    expect(mocks.saveCurriculum).not.toHaveBeenCalled();
+  });
+
   it("can be tried again after it failed", async () => {
     mocks.streamCurriculum.mockReturnValueOnce(
       failingStream(new ApiError("quiet", 504)),

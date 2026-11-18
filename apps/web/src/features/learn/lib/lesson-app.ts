@@ -144,6 +144,7 @@ async function watchLesson(
   let state = lessonStateOf((await openLesson(target)).toolResult);
   while (state?.status === "making" && !overdue()) {
     await wait(WATCH_MS);
+    if (overdue()) break;
     state = lessonStateOf(await callAppTool(LESSON_PROGRESS, { target }));
   }
   if (state?.status !== "ready" || !state.lesson) {

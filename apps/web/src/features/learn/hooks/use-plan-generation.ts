@@ -96,8 +96,11 @@ async function makePlan(
   });
   if (failure) return failure;
   timer.streamDone();
+  // The request's own subjects are in the plan before any topic comes; with none, nothing was made.
   const first = deps.next() ?? accumulator.firstSubject;
-  if (!first) return null;
+  if (!first || Object.keys(accumulator.topics).length === 0) {
+    throw new ApiError("The plan stream ended with no topics", 502);
+  }
 
   const plan = planNow();
   await saveCurriculum(plan);

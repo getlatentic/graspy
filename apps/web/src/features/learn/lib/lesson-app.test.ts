@@ -89,9 +89,10 @@ describe("a topic's lesson", () => {
     await vi.advanceTimersByTimeAsync(10_000);
 
     expect(await failed).toBeInstanceOf(LessonTooSlow);
-    const calls = callAppTool.mock.calls.length;
+    // Polls at 2.5, 5 and 7.5 s; the one due at 10 s is not made.
+    expect(callAppTool).toHaveBeenCalledTimes(3);
     await vi.advanceTimersByTimeAsync(30_000);
-    expect(callAppTool.mock.calls.length).toBe(calls);
+    expect(callAppTool).toHaveBeenCalledTimes(3);
   });
 
   it("stops waiting when one call to the server never answers", async () => {
