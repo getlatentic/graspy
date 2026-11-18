@@ -34,5 +34,6 @@ describe("themeIcon", () => {
 
   it("gives a theme it does not know the neutral icon", () => {
     expect(themeIcon("astronomy")).toBe(NEUTRAL_THEME_ICON);
+    expect(themeIcon("constructor")).toBe(NEUTRAL_THEME_ICON);
   });
 });

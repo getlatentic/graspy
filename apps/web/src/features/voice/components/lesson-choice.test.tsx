@@ -103,6 +103,7 @@ describe("the tiles", () => {
       expect(node.closest(".sr-only")).not.toBeNull();
     }
     const tile = (title: RegExp) => screen.getByRole("link", { name: title });
+    expect(tile(/^Title a/).textContent).toContain("voice.topics.alphabet");
     expect(tile(/^Title a/).textContent).toContain("voice.standing.started");
     expect(tile(/^Title b/).textContent).toContain("voice.standing.untouched");
     expect(tile(/^Title c/).textContent).toContain("voice.standing.learnt");

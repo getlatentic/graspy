@@ -34,6 +34,7 @@ export function LessonTile({
           {lesson.title[language] ?? lesson.title.en}
         </span>
         <span className="sr-only">
+          {t(`voice.topics.${lesson.topic}`)}.{" "}
           {t(`voice.standing.${lesson.standing}`)}
         </span>
       </Link>

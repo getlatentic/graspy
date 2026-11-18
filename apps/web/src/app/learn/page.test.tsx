@@ -7,6 +7,7 @@ import { LearnerApp } from "@/test/learner-app";
 import { learnerIn, loadedPlan, routeAnswer } from "@/test/learner";
 import { setAccount } from "@/lib/account/account-store";
 import { signedInAs } from "@/test/account-session";
+import { TEACHER } from "@/features/voice/lib/teacher";
 import HomePage from "./page";
 
 const { callAppTool, shown } = vi.hoisted(() => ({
@@ -47,7 +48,7 @@ describe("Home of a class that learns by voice alone", () => {
     homeOfVoiceOnly("nursery-1");
 
     const title = screen.getByRole("heading", { level: 1 });
-    expect(title.textContent).toBe("Aunty Chioma");
+    expect(title.textContent).toBe(TEACHER.name);
   });
 
   it("says the app has no voice lessons for a class it does not know, and leads to the details", () => {

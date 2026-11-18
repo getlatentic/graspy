@@ -27,4 +27,4 @@ const THEME_ICONS: Record<string, LucideIcon> = {
 export const NEUTRAL_THEME_ICON: LucideIcon = Sparkles;
 
 export const themeIcon = (topic: string): LucideIcon =>
-  THEME_ICONS[topic] ?? NEUTRAL_THEME_ICON;
+  Object.hasOwn(THEME_ICONS, topic) ? THEME_ICONS[topic] : NEUTRAL_THEME_ICON;
