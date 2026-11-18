@@ -93,6 +93,14 @@ async def test_a_device_keeps_what_is_not_the_chat(app, method, url):
     assert reached.status_code not in (401, 403, 409), reached.text
 
 
+async def test_a_device_can_still_stop_a_turn(app):
+    async with client(app) as http:
+        await on_a_device(http)
+        stopped = await http.post(f"/api/chats/{CHAT}/turns/{TURN}/stop")
+
+    assert stopped.status_code not in (401, 403, 409)
+
+
 class Upgrade:
     def __init__(self, token: str) -> None:
         self.headers = {"Sec-WebSocket-Protocol": f"{PROTOCOL}, {token}"}
@@ -114,3 +122,19 @@ async def test_the_turn_socket_is_refused_like_the_chat(
     token = issue(app.state.session_secret, **claims).token
 
     assert await connect(env, app, Upgrade(token), (CHAT, TURN, 0)) == refused
+
+
+async def test_the_turn_socket_of_a_learner_the_account_holds_gets_as_far_as_the_chat(
+    app, env, monkeypatch
+):
+    monkeypatch.setattr(
+        "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
+    )
+    await service_agreed(env, "a" * 12)
+    token = issue(
+        app.state.session_secret, learner=f"account:{UID}/{'a' * 12}", account=UID
+    ).token
+
+    reached = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert reached == (404, "chat_not_found")
