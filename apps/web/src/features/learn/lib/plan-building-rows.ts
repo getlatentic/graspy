@@ -13,9 +13,9 @@ export type BuildingRow =
     }
   | { kind: "lesson"; state: RowState };
 
-/** What the plan has so far, as the rows of its progress: each subject once its topics have come,
- * and the first lesson once the plan is ready for it. Before the plan names a subject there is
- * only the choosing of them. */
+/** What the plan has so far, as the rows of its progress: each subject done once its topics have
+ * come, the first one without topics being worked on, and the first lesson last. Before the plan
+ * names a subject there is only the choosing of them. */
 export function buildingRows(
   plan: CurriculumData | null,
   makingFirstLesson: boolean,
@@ -27,16 +27,15 @@ export function buildingRows(
       { kind: "lesson", state: "waiting" },
     ];
   }
-  const rows: BuildingRow[] = subjects.map(({ slug, name }) => {
-    const topicCount = topicsOf(plan, slug).length;
-    return {
-      kind: "subject",
-      slug,
-      name,
-      topicCount,
-      state: topicCount > 0 ? "done" : "working",
-    };
-  });
+  const counts = subjects.map(({ slug }) => topicsOf(plan, slug).length);
+  const first = counts.findIndex((count) => count === 0);
+  const rows: BuildingRow[] = subjects.map(({ slug, name }, index) => ({
+    kind: "subject",
+    slug,
+    name,
+    topicCount: counts[index],
+    state: counts[index] > 0 ? "done" : index === first ? "working" : "waiting",
+  }));
   return [
     ...rows,
     { kind: "lesson", state: makingFirstLesson ? "working" : "waiting" },

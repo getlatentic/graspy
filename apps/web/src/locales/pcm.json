@@ -4,7 +4,11 @@
     "choosing": "Choosing your subjects",
     "topic": "1 topic",
     "topics": "{count} topics",
-    "lesson": "Getting your first lesson ready"
+    "lesson": "Getting your first lesson ready",
+    "done": "Done",
+    "working": "In progress",
+    "waiting": "Waiting",
+    "progress": "{done} of {total} subjects ready"
   },
   "chat": {
     "aiTutorTitle": "graspy tutor",

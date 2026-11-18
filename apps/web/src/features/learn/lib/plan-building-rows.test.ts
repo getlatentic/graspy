@@ -32,6 +32,25 @@ describe("buildingRows", () => {
     ).toHaveLength(2);
   });
 
+  it("works on one subject at a time and has the others wait", () => {
+    const three = buildCurriculum({
+      country: "NG",
+      language: "en",
+      subjects: [
+        { name: "Mathematics", slug: "mathematics" },
+        { name: "English", slug: "english" },
+        { name: "Science", slug: "science" },
+      ],
+      topics: { mathematics: ["Fractions"] },
+    });
+    expect(buildingRows(three, false).map((row) => row.state)).toEqual([
+      "done",
+      "working",
+      "waiting",
+      "waiting",
+    ]);
+  });
+
   it("has a subject working until its topics come, and done with their count after", () => {
     const rows = buildingRows(
       plan({ mathematics: ["Fractions", "Algebra"] }),
