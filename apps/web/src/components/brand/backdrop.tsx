@@ -2,7 +2,7 @@
 export function Backdrop() {
   return (
     <div className="absolute inset-0 -z-10" aria-hidden="true">
-      <picture>
+      <picture className="contents">
         <source
           media="(min-width: 64rem)"
           srcSet="/brand/backdrop-landscape.webp"
@@ -13,7 +13,7 @@ export function Backdrop() {
           width={720}
           height={1520}
           decoding="async"
-          className="size-full object-cover"
+          className="absolute inset-0 size-full object-cover"
         />
       </picture>
     </div>
