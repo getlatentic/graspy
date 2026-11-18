@@ -84,7 +84,7 @@ def load(source: str) -> Revision:
     """A package from a file path, or from `REV:PATH` in git history."""
     if Path(source).is_file():
         payload, digest = read_package(Path(source))
-    elif ":" in source:
+    elif ":" in source and not source.startswith("-"):
         payload, digest = _from_git(source)
     else:
         raise FileNotFoundError(f"{source}: not a file, and not REV:PATH")

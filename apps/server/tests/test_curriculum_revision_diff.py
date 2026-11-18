@@ -208,3 +208,10 @@ def test_a_package_that_does_not_hang_together_is_refused(tmp_path):
     }
     with pytest.raises(ValueError, match="cycle"):
         tool._place(cycle, "x")
+
+
+def test_a_source_that_looks_like_a_git_option_is_not_given_to_git(tmp_path):
+    target = tmp_path / "written"
+    with pytest.raises(FileNotFoundError):
+        tool.load(f"--output={target}:x")
+    assert not target.exists()
