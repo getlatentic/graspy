@@ -28,7 +28,7 @@ export function SignIn() {
         <GoogleSignInButton
           variant="primary"
           size="lg"
-          className="w-full whitespace-nowrap px-4"
+          className="w-full whitespace-nowrap px-3 text-sm sm:px-6 sm:text-base"
         />
       </div>
       <p className="border-t border-line pt-5 text-balance text-center text-sm text-muted">

@@ -60,6 +60,9 @@ describe("the sign-in card", () => {
     card();
     const button = screen.getByRole("button", { name: en.you.signIn });
     expect(button.className).toContain("whitespace-nowrap");
+    expect(button.className).toContain("px-3");
+    expect(button.className).toContain("text-sm");
+    expect(button.className).toContain("sm:text-base");
     expect(button.querySelector("svg")?.getAttribute("class")).toContain(
       "shrink-0",
     );
