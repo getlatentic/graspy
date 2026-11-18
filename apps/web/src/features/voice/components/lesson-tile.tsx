@@ -1,11 +1,11 @@
 import { Link } from "react-router";
 import { useI18n } from "@/lib/i18n-context";
 import type { CatalogueLesson, LessonLanguage } from "@/lib/voice/voice-types";
-import { themeIcon } from "../lib/theme-icons";
 import { voiceLessonPath } from "../lib/voice-paths";
-import { StandingSymbol } from "./standing-symbol";
+import { LessonPicture } from "./lesson-picture";
+import { StandingBadge } from "./standing-badge";
 
-/** One lesson, as a picture for its theme, its title and a symbol for where the learner stands. */
+/** One lesson, as its picture with a badge for where the learner stands, and its title. */
 export function LessonTile({
   lesson,
   language,
@@ -14,23 +14,19 @@ export function LessonTile({
   language: LessonLanguage;
 }) {
   const { t } = useI18n();
-  const Icon = themeIcon(lesson.topic);
   return (
     <li>
       <Link
         to={voiceLessonPath(lesson.current ? undefined : lesson.plan_id)}
-        className="flex h-full flex-col gap-3 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-accent"
+        className="flex h-full flex-col gap-2 rounded-2xl border border-line bg-surface p-2 transition-colors hover:border-accent"
       >
-        <span className="flex items-start justify-between gap-2">
-          <span
-            aria-hidden="true"
-            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-ink"
-          >
-            <Icon className="size-6" />
+        <span className="relative block">
+          <LessonPicture lesson={lesson} />
+          <span className="absolute end-2 top-2">
+            <StandingBadge standing={lesson.standing} />
           </span>
-          <StandingSymbol standing={lesson.standing} />
         </span>
-        <span className="break-words font-medium text-ink">
+        <span className="break-words px-1 pb-1 font-medium text-ink">
           {lesson.title[language] ?? lesson.title.en}
         </span>
         <span className="sr-only">
