@@ -1,12 +1,21 @@
 import type { ArtName } from "@/components/brand/art";
 
 // Generated subject names are an open set, so patterns decide, first match
-// wins ("Computer Science" is ICT); a subject with no picture shows its icon.
+// wins ("Agricultural Technology" is agriculture, "Computer Science" is ICT,
+// "Political Science" is civic); a subject with no picture shows its icon.
 const ART: Array<[RegExp, ArtName]> = [
+  [/agric|farming|\bcrops?\b/, "agriculture"],
   [/\bict\b|computer|technology|coding/, "ict"],
   [/math|algebra|geometry|statistic|arithmetic|calculus/, "math"],
+  [/(?<!home )econom|commerce|business|account|financ/, "business"],
+  [/civic|government|citizen|moral|political/, "civic"],
   [/chemistry|science|physics|biology/, "science"],
   [/english|literature|reading|language|grammar/, "english"],
+  [/history|heritage/, "history"],
+  [/geograph|social studies/, "geography"],
+  [/music/, "music"],
+  [/physical|\bsports?\b|\bpe\b|martial/, "pe"],
+  [/\barts?\b|design|\bcrafts?\b|paint|drawing/, "art"],
 ];
 
 export function subjectArt(name: string): ArtName | null {

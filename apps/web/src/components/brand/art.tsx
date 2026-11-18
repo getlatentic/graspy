@@ -7,6 +7,14 @@ const ART = {
   science: "/brand/art/science.webp",
   english: "/brand/art/english.webp",
   ict: "/brand/art/ict.webp",
+  history: "/brand/art/history.webp",
+  geography: "/brand/art/geography.webp",
+  music: "/brand/art/music.webp",
+  art: "/brand/art/art.webp",
+  pe: "/brand/art/pe.webp",
+  agriculture: "/brand/art/agriculture.webp",
+  business: "/brand/art/business.webp",
+  civic: "/brand/art/civic.webp",
 } as const;
 
 export type ArtName = keyof typeof ART;
