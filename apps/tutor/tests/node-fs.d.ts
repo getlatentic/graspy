@@ -2,6 +2,9 @@
 declare module "node:fs" {
   export function readdirSync(path: string): string[];
   export function readFileSync(path: string, encoding: "utf8"): string;
+  export function appendFileSync(path: string, data: string): void;
+  export function writeFileSync(path: string, data: string): void;
+  export function mkdtempSync(prefix: string): string;
   export function statSync(path: string): { isDirectory(): boolean };
 }
 declare module "node:path" {
@@ -9,4 +12,7 @@ declare module "node:path" {
 }
 interface ImportMeta {
   url: string;
+}
+declare module "node:os" {
+  export function tmpdir(): string;
 }

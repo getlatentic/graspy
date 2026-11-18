@@ -87,3 +87,7 @@ apps/mobile/local.properties
 *.iml
 # The Firebase client config: kept out of the repository (apps/mobile/README.md).
 apps/mobile/app/google-services.json
+
+# Real children's turns for the observation bench stay out of git (apps/tutor/bench/REAL_TURNS.md)
+*.real.jsonl
+apps/tutor/bench/real/
