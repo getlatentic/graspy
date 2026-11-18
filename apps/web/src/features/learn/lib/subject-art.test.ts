@@ -8,6 +8,15 @@ describe("subjectArt", () => {
     ["English Language", "english"],
     ["ICT", "ict"],
     ["Computer Science", "ict"],
+    ["Agricultural Science", "agriculture"],
+    ["Business Studies", "business"],
+    ["History", "history"],
+    ["Social Studies", "geography"],
+    ["Music", "music"],
+    ["Creative Arts", "art"],
+    ["English Language Arts", "english"],
+    ["Physical Education", "pe"],
+    ["Civic Education", "civic"],
   ])("gives %s the %s picture", (name, art) => {
     expect(subjectArt(name)).toBe(art);
   });
@@ -17,6 +26,6 @@ describe("subjectArt", () => {
   });
 
   it("gives a subject with no picture none", () => {
-    expect(subjectArt("Music")).toBeNull();
+    expect(subjectArt("Religious Studies")).toBeNull();
   });
 });
