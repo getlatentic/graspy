@@ -47,7 +47,7 @@ describe("Home of a class that learns by voice alone", () => {
     homeOfVoiceOnly("nursery-1");
 
     const title = screen.getByRole("heading", { level: 1 });
-    expect(title.textContent).toBe("voice.title");
+    expect(title.textContent).toBe("Aunty Chioma");
   });
 
   it("says the app has no voice lessons for a class it does not know, and leads to the details", () => {

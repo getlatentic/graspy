@@ -350,7 +350,8 @@
   "voice": {
     "title": "Voice lessons",
     "start": "Start",
-    "startHere": "Start here",
+    "next": "Next lesson",
+    "daysRight": "{count} of {total} days right",
     "ok": "OK",
     "note": "graspy dey send your voice make e check your answers. Once e don mark am, dem go delete the recording, unless parent choose to keep am.",
     "loading": "Dey bring your lessons…",
