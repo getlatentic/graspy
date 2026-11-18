@@ -56,7 +56,7 @@ describe("the sign-in card", () => {
     ).toBe("/app");
   });
 
-  it("keeps the button's label on one line and its icon whole down to a phone of 320px, and balances the line under it", () => {
+  it("keeps the button's label on one line and its icon whole down to a phone of 320px, and breaks the line under it only between its question and its link", () => {
     card();
     const button = screen.getByRole("button", { name: en.you.signIn });
     expect(button.className).toContain("whitespace-nowrap");
@@ -69,6 +69,12 @@ describe("the sign-in card", () => {
     const line = screen.getByRole("link", {
       name: en.signIn.start,
     }).parentElement!;
-    expect(line.className).toContain("text-balance");
+    expect(line.className).not.toContain("text-balance");
+    expect(screen.getByText(en.signIn.newHere).className).toContain(
+      "whitespace-nowrap",
+    );
+    expect(
+      screen.getByRole("link", { name: en.signIn.start }).className,
+    ).toContain("whitespace-nowrap");
   });
 });

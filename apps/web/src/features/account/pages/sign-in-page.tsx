@@ -31,11 +31,11 @@ export function SignIn() {
           className="w-full whitespace-nowrap px-3 text-sm sm:px-6 sm:text-base"
         />
       </div>
-      <p className="border-t border-line pt-5 text-balance text-center text-sm text-muted">
-        {t("signIn.newHere")}{" "}
+      <p className="border-t border-line pt-5 text-center text-sm text-muted">
+        <span className="whitespace-nowrap">{t("signIn.newHere")}</span>{" "}
         <Link
           to="/app"
-          className="font-semibold text-accent-ink hover:underline"
+          className="whitespace-nowrap font-semibold text-accent-ink hover:underline"
         >
           {t("signIn.start")}
         </Link>
