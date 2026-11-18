@@ -2,17 +2,19 @@ import { Link, Navigate } from "react-router";
 import { useAccount } from "@/lib/account/use-account";
 import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
+import { contactHref } from "@/features/landing/constants";
 import { Logo } from "@/components/brand/logo";
 import { Scene } from "@/components/brand/scene";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
 
 /** Signing in opens "Who's learning?" once Google answers. */
 export default function SignInPage() {
+  const { t } = useI18n();
   const account = useAccount();
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="grid min-h-screen grid-rows-[auto_1fr] bg-canvas lg:grid-cols-2 lg:grid-rows-1">
+    <main className="grid min-h-dvh grid-rows-[auto_1fr] bg-canvas lg:grid-cols-2 lg:grid-rows-1">
       <div className="h-56 sm:h-72 lg:h-auto">
         <Scene />
       </div>
@@ -21,6 +23,12 @@ export default function SignInPage() {
         <div className="w-full max-w-sm">
           <SignIn />
         </div>
+        <a
+          href={contactHref()}
+          className="text-sm font-medium text-muted hover:text-ink"
+        >
+          {t("onboarding.contact")}
+        </a>
       </div>
     </main>
   );
