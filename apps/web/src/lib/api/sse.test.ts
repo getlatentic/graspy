@@ -125,7 +125,10 @@ it("reassembles events split at any byte boundary", async () => {
 });
 
 describe("an idle limit", () => {
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 
   const silentStream = () => {
     const reader = {
@@ -153,8 +156,35 @@ describe("an idle limit", () => {
 
     const error = (await failure) as ApiError;
     expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(504);
     expect(error.retryable).toBe(true);
     expect(reader.cancel).toHaveBeenCalled();
+  });
+
+  it("stays the 504 when letting go of the aborted body fails", async () => {
+    vi.useFakeTimers();
+    const reader = silentStream();
+    reader.cancel.mockRejectedValue(new DOMException("aborted", "AbortError"));
+
+    const failure = collectWith({ idleMs: 5_000 }).catch((e: unknown) => e);
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(((await failure) as ApiError).status).toBe(504);
+  });
+
+  it("does not fire while the page is in the background, and does once it is back", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("document", { hidden: true });
+    silentStream();
+    let failed: unknown = null;
+    void collectWith({ idleMs: 5_000 }).catch((e: unknown) => (failed = e));
+
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(failed).toBeNull();
+
+    vi.stubGlobal("document", { hidden: false });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect((failed as ApiError).status).toBe(504);
   });
 
   it("is kept from firing by heartbeats, which are bytes like any other", async () => {

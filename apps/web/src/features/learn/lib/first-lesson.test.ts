@@ -36,7 +36,7 @@ describe("the first lesson made ahead", () => {
     );
     expect(lessonMade).toHaveBeenCalledWith(
       expect.objectContaining({ topic: "Fractions", topicIndex: 0 }),
-      FIRST_LESSON_LIMIT_MS,
+      { limitMs: FIRST_LESSON_LIMIT_MS, signal: undefined },
     );
   });
 
@@ -47,6 +47,29 @@ describe("the first lesson made ahead", () => {
       false,
     );
     expect(console.warn).toHaveBeenCalled();
+  });
+
+  it("is stopped without a warning when the learner has moved on", async () => {
+    const stop = new AbortController();
+    lessonMade.mockImplementation(async () => {
+      stop.abort();
+      throw new Error("stopped");
+    });
+
+    await expect(
+      prepareFirstLesson(PLAN, PLAN.subjects[0], stop.signal),
+    ).resolves.toBe(false);
+    expect(lessonMade).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ signal: stop.signal }),
+    );
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it("never rejects, whatever is wrong with the plan it is given", async () => {
+    await expect(
+      prepareFirstLesson(undefined as never, PLAN.subjects[0]),
+    ).resolves.toBe(false);
   });
 
   it("is nothing to make for a subject with no topics", async () => {

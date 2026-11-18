@@ -6,8 +6,14 @@ const callAppTool = vi.fn();
 const openToolView = vi.fn();
 vi.mock("@/lib/mcp/server", () => ({ callAppTool, openToolView }));
 
-const { LessonTooSlow, lessonMade, lessonTarget, nextLesson, objectivesOf } =
-  await import("./lesson-app");
+const {
+  LessonTooSlow,
+  LessonWaitStopped,
+  lessonMade,
+  lessonTarget,
+  nextLesson,
+  objectivesOf,
+} = await import("./lesson-app");
 
 const PLAN: CurriculumData = {
   id: "c1",
@@ -84,7 +90,7 @@ describe("a topic's lesson", () => {
     openToolView.mockResolvedValue({ toolResult: state("making") });
     callAppTool.mockResolvedValue(state("making"));
 
-    const made = lessonMade(target, 10_000);
+    const made = lessonMade(target, { limitMs: 10_000 });
     const failed = made.catch((error: unknown) => error);
     await vi.advanceTimersByTimeAsync(10_000);
 
@@ -100,7 +106,9 @@ describe("a topic's lesson", () => {
     const target = lessonTarget(PLAN, MATHS, 0)!;
     openToolView.mockReturnValue(new Promise(() => {}));
 
-    const failed = lessonMade(target, 10_000).catch((error: unknown) => error);
+    const failed = lessonMade(target, { limitMs: 10_000 }).catch(
+      (error: unknown) => error,
+    );
     await vi.advanceTimersByTimeAsync(10_000);
 
     expect(await failed).toBeInstanceOf(LessonTooSlow);
@@ -112,10 +120,39 @@ describe("a topic's lesson", () => {
     openToolView.mockResolvedValue({ toolResult: state("making") });
     callAppTool.mockResolvedValueOnce(state("ready", { keyPoints: ["k"] }));
 
-    const made = lessonMade(target, 10_000);
+    const made = lessonMade(target, { limitMs: 10_000 });
     await vi.advanceTimersByTimeAsync(3_000);
 
     await expect(made).resolves.toMatchObject({ status: "ready" });
+  });
+
+  it("stops waiting, and polling, when the wait is aborted", async () => {
+    vi.useFakeTimers();
+    const target = lessonTarget(PLAN, MATHS, 0)!;
+    openToolView.mockResolvedValue({ toolResult: state("making") });
+    callAppTool.mockResolvedValue(state("making"));
+    const stop = new AbortController();
+
+    const failed = lessonMade(target, { signal: stop.signal }).catch(
+      (error: unknown) => error,
+    );
+    await vi.advanceTimersByTimeAsync(3_000);
+    stop.abort();
+
+    expect(await failed).toBeInstanceOf(LessonWaitStopped);
+    expect(callAppTool).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(callAppTool).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks the server for nothing when it was aborted already", async () => {
+    const stop = new AbortController();
+    stop.abort();
+
+    await expect(
+      lessonMade(lessonTarget(PLAN, MATHS, 0)!, { signal: stop.signal }),
+    ).rejects.toBeInstanceOf(LessonWaitStopped);
+    expect(openToolView).not.toHaveBeenCalled();
   });
 
   it("fails the wait when the server could not make it", async () => {

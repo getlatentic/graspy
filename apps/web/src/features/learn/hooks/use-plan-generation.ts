@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/errors";
 import { streamCurriculum, type CurriculumRequest } from "@/lib/curriculum-api";
 import { saveCurriculum } from "@/lib/curriculum-db";
@@ -23,6 +23,13 @@ interface PlanGenerationDeps {
   next: () => CurriculumSubject | null;
   chooseNext: (subject: CurriculumSubject | null) => void;
   gradeLevel: string | undefined;
+  /** Shows the plan the device holds again, once a new one could not be made. */
+  restore: () => Promise<void>;
+}
+
+interface MakePlanDeps extends Omit<PlanGenerationDeps, "restore"> {
+  /** Ends the first lesson's wait when the learner moves on from this plan. */
+  signal: AbortSignal;
 }
 
 async function followPlanStream(
@@ -51,23 +58,45 @@ function learnerPlanDetails(currentGrade: string | undefined) {
   return { ...details, gradeLevel: details.gradeLevel || currentGrade };
 }
 
+/** The first subject that has topics, the chosen next one if it does. */
+function firstWithTopics(
+  accumulator: CurriculumAccumulator,
+  chosen: CurriculumSubject | null,
+): CurriculumSubject | null {
+  const topics = accumulator.topics;
+  const has = (subject: CurriculumSubject) => !!topics[subject.slug]?.length;
+  if (chosen && has(chosen)) return chosen;
+  return accumulator.subjects.find(has) ?? null;
+}
+
 /** Made after the plan is kept and shown, so a slow or failed lesson never holds the plan back. */
 async function primeFirstLesson(
   plan: CurriculumData,
   first: CurriculumSubject,
   timer: PlanTimer,
+  signal: AbortSignal,
 ): Promise<void> {
   timer.lessonStarted();
-  const made = await prepareFirstLesson(plan, first);
+  const made = await prepareFirstLesson(plan, first, signal);
   if (made) timer.lessonDone();
   reportPlanTimings(timer.timings(plan.subjects.length));
+}
+
+/** The plan is on the screen already; a device that cannot keep it (no room, private mode) still
+ * lets the learner in, and the plan is made again the next time the app starts. */
+async function keepPlan(plan: CurriculumData): Promise<void> {
+  try {
+    await saveCurriculum(plan);
+  } catch (error) {
+    console.warn("The plan could not be kept on this device:", error);
+  }
 }
 
 /** Returns the stream's own error message; throws on any other failure. The plan is kept once its
  * topics are in, and the first lesson is made after, in the background. */
 async function makePlan(
   request: CurriculumRequest,
-  deps: PlanGenerationDeps,
+  deps: MakePlanDeps,
 ): Promise<string | null> {
   const timer = new PlanTimer();
   const createdAt = Date.now();
@@ -96,15 +125,14 @@ async function makePlan(
   });
   if (failure) return failure;
   timer.streamDone();
-  // The request's own subjects are in the plan before any topic comes; with none, nothing was made.
-  const first = deps.next() ?? accumulator.firstSubject;
-  if (!first || Object.keys(accumulator.topics).length === 0) {
-    throw new ApiError("The plan stream ended with no topics", 502);
-  }
+  // The request's own subjects are in the plan before any topic comes.
+  const first = firstWithTopics(accumulator, deps.next());
+  if (!first) throw new ApiError("The plan stream ended with no topics", 502);
 
   const plan = planNow();
-  await saveCurriculum(plan);
-  void primeFirstLesson(plan, first, timer);
+  deps.show(plan);
+  await keepPlan(plan);
+  void primeFirstLesson(plan, first, timer, deps.signal);
   return null;
 }
 
@@ -113,11 +141,15 @@ export function usePlanGeneration({
   next,
   chooseNext,
   gradeLevel,
+  restore,
 }: PlanGenerationDeps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Repeated taps land before isGenerating re-renders.
   const inFlightRef = useRef(false);
+  // One first lesson is waited for at a time, and none once the learner has moved on.
+  const primingRef = useRef<AbortController | null>(null);
+  useEffect(() => () => primingRef.current?.abort(), []);
 
   const generate = useCallback(
     async (request: CurriculumRequest, t: Translate) => {
@@ -125,22 +157,33 @@ export function usePlanGeneration({
       inFlightRef.current = true;
       setIsGenerating(true);
       setError(null);
+      primingRef.current?.abort();
+      const priming = new AbortController();
+      primingRef.current = priming;
+      // What the learner had stays on the screen as it stays on the device.
+      const giveUp = async (message: string) => {
+        setError(message);
+        await restore().catch((err: unknown) =>
+          console.warn("Showing the kept plan again failed:", err),
+        );
+      };
       try {
         const failure = await makePlan(request, {
           show,
           next,
           chooseNext,
           gradeLevel,
+          signal: priming.signal,
         });
-        if (failure) setError(failure);
+        if (failure) await giveUp(failure);
       } catch (err) {
-        setError(failureMessage(err, t));
+        await giveUp(failureMessage(err, t));
       } finally {
         inFlightRef.current = false;
         setIsGenerating(false);
       }
     },
-    [chooseNext, gradeLevel, next, show],
+    [chooseNext, gradeLevel, next, restore, show],
   );
 
   return { generate, isGenerating, error };

@@ -17,18 +17,24 @@ export class IdleLimit {
   }
 
   async within<T>(work: Promise<T>): Promise<T> {
-    if (this.ms === undefined) return work;
+    const ms = this.ms;
+    if (ms === undefined) return work;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const quiet = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => {
-        this.controller?.abort();
-        reject(
-          new ApiError(
-            `Nothing arrived for ${Math.round((this.ms ?? 0) / 1000)} seconds`,
-            GATEWAY_TIMEOUT,
-          ),
-        );
-      }, this.ms);
+      const arm = () => {
+        timer = setTimeout(() => {
+          // A page in the background is not told of bytes that came meanwhile: wait on for the learner.
+          if (typeof document !== "undefined" && document.hidden) return arm();
+          this.controller?.abort();
+          reject(
+            new ApiError(
+              `Nothing arrived for ${Math.round(ms / 1000)} seconds`,
+              GATEWAY_TIMEOUT,
+            ),
+          );
+        }, ms);
+      };
+      arm();
     });
     try {
       return await Promise.race([work, quiet]);
