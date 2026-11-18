@@ -1,6 +1,6 @@
 # Grounded against ungrounded lessons: the rubric
 
-Fixed on 2026-11-18, before any lesson of this study was generated or scored (planning issue getlatentic/planning#537).
+Fixed on 2026-11-18 in commit `ad2a2d2`, before any lesson of this study was generated or scored (planning issue getlatentic/planning#537).
 
 ## The question
 
@@ -31,13 +31,14 @@ Not scored: length, wording style, or whether the lesson mentions its sources.
 
 ## The judge, and its limits
 
-- Judge: `openai.gpt-oss-120b` on Bedrock. No Claude model for anything in this study (owner's rule), including writing cases.
+- Judge: `openai.gpt-oss-120b` on Bedrock. No Claude model writes or judges a lesson (owner's rule: nothing graspy runs may be a Claude model). The scripts refuse a Claude model and record the model id and temperature in every output file.
+- Claude Code (the assistant that built the study, a Claude model) wrote the scripts and is the second reader below. The owner's rule allows Claude Code to author data and code; its readings are labelled as such and are not a human's.
 - The judge is the model that writes both arms. It may favour its own style; the same bias is in both arms, so a difference between arms is less affected than the absolute level. This is a stated limit, not a correction.
-- A sample of each arm is read by hand, shuffled and unlabelled, with scores written down before the judge's scores or the arm key are opened. Where the two disagree is reported.
+- A sample of each arm is read by a second reader, Claude Code, shuffled and unlabelled, with scores written down before the judge's scores or the arm key are opened. Where the two disagree is reported. The second reader designed the study and is not a teacher; a human or teacher reading is the stronger check and is not part of this study.
 
 ## Deciding
 
 - Difference per topic (grounded minus ungrounded, mean of draws) on each criterion; the mean difference, and how many of the 24 topics favour each arm (sign test, two-sided).
-- A difference counts as real only if it is in the same direction in the hand reading and the judge, and the sign test on the 24 topics gives p < 0.05. Otherwise the sample is called too small to decide.
+- A difference counts as real only if it is in the same direction in the second reader's scores and the judge's, and the sign test on the 24 topics gives p < 0.05. Otherwise the sample is called too small to decide. Same direction on 8 lessons per arm is weak evidence; the sign test on the topics is the gate. The report adds a signed-rank test and Holm's correction across the six measures.
 - Failures are counted separately and read: a wrong marked answer, an invented claim, a lesson that did not finish.
 - Recommendation is one of: keep grounding, change it, make it optional.

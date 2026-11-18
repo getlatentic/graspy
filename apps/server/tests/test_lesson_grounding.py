@@ -128,6 +128,27 @@ async def test_a_request_switched_to_ungrounded_asks_a_held_topic_without_the_cu
     assert wire(events[-1]["payload"].lesson)["grounding"] is None
 
 
+async def test_the_two_arms_of_a_study_differ_only_in_the_objectives_and_the_passages():
+    grounded, _ = await _lesson()
+    lm, context = stand_in(_answers())
+    request = LessonRequest(
+        COUNTRY, "English", "Mathematics", HELD_TOPIC, JSS_1, grounded=False
+    )
+    with context:
+        _ = [event async for event in LessonService().events(request)]
+    ungrounded = lm
+
+    assert len(grounded.history) == len(ungrounded.history) == CALLS
+    for call in range(CALLS):
+        asked = inputs(grounded, call)
+        assert {"curriculum_objectives", "source_passages"} <= set(asked)
+        assert {
+            k: v
+            for k, v in asked.items()
+            if k not in ("curriculum_objectives", "source_passages")
+        } == inputs(ungrounded, call)
+
+
 async def test_a_class_the_catalogue_cannot_place_is_not_grounded():
     lm, _ = await _lesson(grade="JSS 1")
 

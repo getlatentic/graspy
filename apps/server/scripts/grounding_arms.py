@@ -2,7 +2,8 @@
 passages, as the lesson service writes it, and ungrounded, the same request with the curriculum switched off.
 
 The model and settings are those of .env, DSPy's cache is off, and the lessons are English. Each lesson is one
-record of the output file; a draw that fails is recorded with its error and counted, never dropped.
+record of the output file, saved as it finishes, with the model and its settings; a draw that fails is recorded
+with its error and counted, never dropped.
 
     uv run python scripts/grounding_arms.py --env-file ../.env --draws 2 --out arms.json
     uv run python scripts/grounding_arms.py --env-file ../.env --topics 2 --draws 1 --out try.json
@@ -14,17 +15,16 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import logging
 from pathlib import Path
 
 import dspy
+from grounding_common import error_text, save_json, study_lm
 
 from app.domains.curriculum.packages import held_course
 from app.domains.lesson.service import LessonRequest, LessonService
 from app.education.catalogue import systems
 from app.education.route import descriptor
-from app.llm.client import build_lm
 from app.settings import Settings
 
 logger = logging.getLogger("grounding_arms")
@@ -62,7 +62,7 @@ async def lesson_record(
             raise RuntimeError("The lesson pipeline ended without a lesson")
     except Exception as error:
         logger.exception("%s (%s) draw %d failed", topic, record["arm"], draw)
-        record["error"] = f"{type(error).__name__}: {error}"
+        record["error"] = error_text(error)
         return record
     wire = finished.lesson.model_dump(by_alias=True, mode="json")
     record["complete"] = finished.success
@@ -71,17 +71,22 @@ async def lesson_record(
     return record
 
 
-async def write_all(settings: Settings, topics: list[str], draws: int) -> list[dict]:
+async def write_all(
+    settings: Settings, topics: list[str], draws: int, out: Path
+) -> list[dict]:
+    """Every lesson is saved to `out` as it finishes, so a crash keeps what was paid for."""
     dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
-    lm = build_lm(settings).copy(cache=False)
+    lm, meta = study_lm(settings)
     grade_level = jss_1()
     gate = asyncio.Semaphore(CONCURRENT_LESSONS)
+    records: list[dict] = []
 
-    async def gated(topic: str, grounded: bool, draw: int) -> dict:
+    async def gated(topic: str, grounded: bool, draw: int) -> None:
         async with gate:
-            return await lesson_record(topic, grounded, draw, lm, grade_level)
+            records.append(await lesson_record(topic, grounded, draw, lm, grade_level))
+            save_json(out, {"meta": meta, "records": records})
 
-    return await asyncio.gather(
+    await asyncio.gather(
         *(
             gated(topic, grounded, draw)
             for topic in topics
@@ -89,6 +94,7 @@ async def write_all(settings: Settings, topics: list[str], draws: int) -> list[d
             for grounded in (True, False)
         )
     )
+    return records
 
 
 def main() -> None:
@@ -108,8 +114,7 @@ def main() -> None:
     settings = Settings(_env_file=args.env_file) if args.env_file else Settings()
     course = held_course("NG", "jss-1", SUBJECT)
     topics = course.topics()[: args.topics]
-    records = asyncio.run(write_all(settings, topics, args.draws))
-    args.out.write_text(json.dumps(records, ensure_ascii=False, indent=1))
+    records = asyncio.run(write_all(settings, topics, args.draws, args.out))
     failed = [r for r in records if r["error"]]
     print(f"lessons: {len(records)}  failed: {len(failed)}  written to {args.out}")
 

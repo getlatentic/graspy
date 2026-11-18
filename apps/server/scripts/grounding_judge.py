@@ -1,7 +1,8 @@
 """Scores the lessons of grounding_arms.py against the rubric of docs/GROUNDING_RUBRIC.md with a model that is
-shown one lesson at a time and never its arm, and prepares a blind sample for reading by hand.
+shown one lesson at a time and never its arm, and prepares a blind sample for a second reader.
 
-The judge is gpt-oss-120b on Bedrock (the model in .env), never a Claude model. Each lesson is judged three times.
+The judge is the model in .env (gpt-oss-120b on Bedrock); the script refuses a Claude model. Each lesson is judged
+three times, at the temperature of .env, which is recorded in the output beside the model and the seed.
 
     uv run python scripts/grounding_judge.py judge --arms arms.json --out judged.json --env-file ../.env
     uv run python scripts/grounding_judge.py sample --arms arms.json --per-arm 8 --out sample
@@ -19,12 +20,12 @@ from pathlib import Path
 from typing import Annotated
 
 import dspy
+from grounding_common import error_text, save_json, study_lm
 from grounding_report import report
 from judge_stage_writing import lesson_text
 from pydantic import BaseModel, Field
 
 from app.domains.curriculum.packages import held_course
-from app.llm.client import build_lm
 from app.settings import Settings
 
 logger = logging.getLogger("grounding_judge")
@@ -71,13 +72,15 @@ class JudgeLesson(dspy.Signature):
 
 def numbered_objectives(topic: str) -> list[str]:
     course = held_course("NG", "jss-1", "Mathematics")
-    return [o.statement for o in course.topic(topic).objectives]
+    held = course.topic(topic)
+    objectives = [o.statement for o in held.objectives] if held else []
+    if not objectives:
+        raise ValueError(f"No official objectives for {topic}")
+    return objectives
 
 
 async def judged(record: dict, repeat: int, judge: dspy.LM) -> dict:
     objectives = numbered_objectives(record["topic"])
-    if not objectives:
-        raise ValueError(f"No official objectives for {record['topic']}")
     out = {
         "id": record["id"],
         "repeat": repeat,
@@ -94,7 +97,7 @@ async def judged(record: dict, repeat: int, judge: dspy.LM) -> dict:
             )
     except Exception as error:
         logger.exception("Judging %s failed", record["id"])
-        out["error"] = f"{type(error).__name__}: {error}"
+        out["error"] = error_text(error)
         return out
     return out | result.verdict.model_dump()
 
@@ -106,16 +109,31 @@ def with_ids(records: list[dict], seed: int) -> list[dict]:
     return [r | {"id": f"L{n}"} for r, n in zip(made, ids, strict=True)]
 
 
-async def judge_all(records: list[dict], settings: Settings) -> list[dict]:
+def lesson_key(records: list[dict]) -> dict[str, dict]:
+    return {
+        r["id"]: {k: r[k] for k in ("arm", "topic", "draw", "complete")}
+        for r in records
+    }
+
+
+async def judge_all(
+    records: list[dict], settings: Settings, seed: int, out: Path
+) -> list[dict]:
+    """Every judgment is saved to `out` as it finishes, with the key, the model and the seed of the ids."""
     dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
-    lm = build_lm(settings).copy(cache=False)
+    lm, meta = study_lm(settings)
+    meta |= {"seed": seed, "repeats": REPEATS}
+    key = lesson_key(records)
     gate = asyncio.Semaphore(CONCURRENT_CALLS)
+    results: list[dict] = []
 
-    async def gated(record: dict, repeat: int) -> dict:
+    async def gated(record: dict, repeat: int) -> None:
         async with gate:
-            return await judged(record, repeat, lm)
+            results.append(await judged(record, repeat, lm))
+            save_json(out, {"meta": meta, "key": key, "results": results})
 
-    return await asyncio.gather(*(gated(r, n) for n in range(REPEATS) for r in records))
+    await asyncio.gather(*(gated(r, n) for n in range(REPEATS) for r in records))
+    return results
 
 
 def write_sample(records: list[dict], per_arm: int, seed: int, out: Path) -> None:
@@ -136,11 +154,9 @@ def write_sample(records: list[dict], per_arm: int, seed: int, out: Path) -> Non
             f"{lesson_text(r['lesson_wire'])}\n"
         )
     out.with_name(out.name + ".md").write_text("\n".join(parts))
-    key = {
-        r["id"]: {"arm": r["arm"], "topic": r["topic"], "draw": r["draw"]}
-        for r in chosen
-    }
-    out.with_name(out.name + "-key.json").write_text(json.dumps(key, indent=1))
+    meta = {"seed": seed, "per_arm": per_arm}
+    key = {"meta": meta, "lessons": lesson_key(chosen)}
+    save_json(out.with_name(out.name + "-key.json"), key)
 
 
 def main() -> None:
@@ -163,17 +179,14 @@ def main() -> None:
     if args.mode == "report":
         report(args.judged, args.hand, args.key)
         return
-    records = with_ids(json.loads(args.arms.read_text()), args.seed)
+    records = with_ids(json.loads(args.arms.read_text())["records"], args.seed)
     if args.mode == "sample":
         write_sample(records, args.per_arm, args.seed, args.out)
         return
+    for topic in {r["topic"] for r in records}:
+        numbered_objectives(topic)
     settings = Settings(_env_file=args.env_file) if args.env_file else Settings()
-    results = asyncio.run(judge_all(records, settings))
-    key = {
-        r["id"]: {k: r[k] for k in ("arm", "topic", "draw", "complete")}
-        for r in records
-    }
-    args.out.write_text(json.dumps({"key": key, "results": results}, indent=1))
+    results = asyncio.run(judge_all(records, settings, args.seed, args.out))
     print(f"scored {len(results)} judgments of {len(records)} lessons -> {args.out}")
 
 
