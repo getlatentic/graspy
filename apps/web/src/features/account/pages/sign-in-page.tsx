@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { contactHref } from "@/features/landing/constants";
 import { Logo } from "@/components/brand/logo";
 import { Art } from "@/components/brand/art";
+import { Backdrop } from "@/components/brand/backdrop";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
 
 /** Signing in opens "Who's learning?" once Google answers. */
@@ -14,15 +15,16 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="flex min-h-dvh flex-col bg-art-ground lg:grid lg:grid-cols-2">
-      <div className="relative min-h-72 min-w-0 flex-1 overflow-hidden lg:flex-none">
+    <main className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-art-ground text-on-art lg:grid lg:grid-cols-2">
+      <Backdrop />
+      <div className="flex min-h-0 flex-1 items-end justify-center px-6 pb-6 pt-8 lg:items-end lg:px-12 lg:pt-12">
         <Art
           name="tablet"
           eager
-          className="fade-edge absolute inset-0 object-top"
+          className="max-h-full max-w-md object-contain object-bottom lg:max-w-xl"
         />
       </div>
-      <div className="flex min-w-0 flex-col items-center justify-center gap-8 px-5 pb-10 -mt-4 lg:mt-0 lg:py-10 sm:px-10">
+      <div className="flex min-w-0 flex-col items-center justify-center gap-8 px-5 py-8 sm:px-10 lg:py-10">
         <span className="brightness-50">
           <Logo />
         </span>
@@ -31,7 +33,7 @@ export default function SignInPage() {
         </div>
         <a
           href={contactHref()}
-          className="text-sm font-semibold text-ink hover:underline"
+          className="text-sm font-semibold hover:underline"
         >
           {t("onboarding.contact")}
         </a>
@@ -44,7 +46,7 @@ export function SignIn() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-balance text-center font-display text-4xl font-bold text-ink">
+      <h1 className="text-balance text-center font-display text-4xl font-bold">
         {t("signIn.title")}
       </h1>
       <div className="flex flex-col gap-3">
@@ -54,11 +56,11 @@ export function SignIn() {
           className="w-full whitespace-nowrap px-3 text-sm sm:px-6 sm:text-base"
         />
       </div>
-      <p className="border-t border-ink/15 pt-5 text-center text-sm text-ink">
+      <p className="border-t border-on-art/15 pt-5 text-center text-sm">
         <span className="whitespace-nowrap">{t("signIn.newHere")}</span>{" "}
         <Link
           to="/app"
-          className="whitespace-nowrap font-semibold text-ink underline hover:no-underline"
+          className="whitespace-nowrap font-semibold underline hover:no-underline"
         >
           {t("signIn.start")}
         </Link>

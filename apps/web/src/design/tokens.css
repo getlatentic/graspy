@@ -1,4 +1,4 @@
-/* graspy-tokens source=2027c8b8050d5448e7dc8058b2f47db5cfc7f3043b48bf75b840fb053e5131c6 content=64b19553a9c2634f6c596affd7093d8db4de41a39f096ae28ade8672d343cab9 */
+/* graspy-tokens source=e0783c7bdcfc7515e3c4b7f057abbafa9e37f9952f3c504ee11e4f912d53b8e9 content=3c6fa5b5165b882c2741ec84393cfca0d1aaa443eabb70cf67bf15bf7098d1b3 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -59,8 +59,10 @@
   --color-tint-purple-soft: #f0ecfc;
   /* Text on a danger fill. */
   --color-on-danger: #ffffff;
-  /* The sky behind the learner pictures, so a picture fades into the screen; text on it is ink. */
+  /* The sky of the art screens (sign-in): bright in dark mode too, because the picture behind it is. */
   --color-art-ground: #96d5f6;
+  /* Text on art-ground; 7.6:1. */
+  --color-on-art: #12232e;
 
   --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -133,6 +135,5 @@
     --color-tint-purple: #a994f2;
     --color-tint-purple-soft: #241f47;
     --color-on-danger: #3a1714;
-    --color-art-ground: #12303e;
   }
 }
