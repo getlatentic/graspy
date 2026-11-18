@@ -24,7 +24,7 @@ export function PracticeRecordCard() {
   });
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="flex flex-col gap-3 border-accent-line bg-accent-soft">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-muted">
         <PencilLine className="size-4 text-accent-ink" aria-hidden="true" />
         {t("you.practice")}

@@ -13,9 +13,9 @@ export function ProgressSummary() {
   if (total === 0) return null;
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="flex flex-col gap-3 border-accent-line bg-accent-soft">
       <p className="nums text-sm text-ink">
-        <span className="font-display text-2xl font-semibold text-accent-ink">
+        <span className="font-display text-4xl font-bold text-accent-ink">
           {completed}
         </span>{" "}
         {t("home.topicsCompletedOf", { total })}
