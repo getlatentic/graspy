@@ -29,6 +29,7 @@ const LESSONS = [
   lesson("b", { topic: "alphabet", standing: "untouched" }),
   lesson("c", { topic: "number", standing: "learnt" }),
   lesson("d", { topic: "astronomy", standing: "mastered", days_correct: 2 }),
+  lesson("english.alphabet.letter-sounds", { topic: "alphabet" }),
 ];
 
 const show = (lessons: CatalogueLesson[]) =>
@@ -112,37 +113,58 @@ describe("the tiles", () => {
     expect(document.body.textContent).not.toMatch(/\d\s*\/\s*\d/);
   });
 
-  it("draw a different symbol for each standing, green only for known", () => {
+  it("draw a different badge for each standing", () => {
     show(LESSONS);
 
-    const symbolOf = (title: RegExp) =>
-      screen.getByRole("link", { name: title }).querySelector("[data-symbol]")!;
-    const symbols: Record<Standing, Element> = {
-      started: symbolOf(/^Title a/),
-      untouched: symbolOf(/^Title b/),
-      learnt: symbolOf(/^Title c/),
-      mastered: symbolOf(/^Title d/),
-    };
-    for (const [standing, node] of Object.entries(symbols))
-      expect(node.getAttribute("data-symbol")).toBe(standing);
-    expect(symbols.mastered.className).toContain("bg-success");
-    expect(symbols.learnt.className).toContain("bg-accent");
-    expect(symbols.learnt.className).not.toContain("bg-success");
-    expect(symbols.mastered.querySelector("svg")).not.toBeNull();
-    expect(symbols.started.querySelector("path")).not.toBeNull();
-    expect(symbols.untouched.querySelector("path")).toBeNull();
-  });
-
-  it("draw the icon of the theme, and the neutral one for a theme not known", () => {
-    show(LESSONS);
-
-    const iconOf = (title: RegExp) =>
+    const badgeOf = (title: RegExp) =>
       screen
         .getByRole("link", { name: title })
-        .querySelector("svg.lucide")!
-        .getAttribute("class");
-    expect(iconOf(/^Title b/)).toContain("lucide-type");
+        .querySelector<HTMLImageElement>("img[data-standing]")!;
+    const badges: Record<Standing, HTMLImageElement> = {
+      started: badgeOf(/^Title a/),
+      untouched: badgeOf(/^Title b/),
+      learnt: badgeOf(/^Title c/),
+      mastered: badgeOf(/^Title d/),
+    };
+    const files = {
+      started: "started",
+      untouched: "not-yet",
+      learnt: "learnt",
+      mastered: "known",
+    };
+    for (const [standing, node] of Object.entries(badges)) {
+      expect(node.getAttribute("data-standing")).toBe(standing);
+      expect(node.getAttribute("src")).toContain(files[standing as Standing]);
+    }
+    expect(new Set(Object.values(badges).map((n) => n.src)).size).toBe(4);
+  });
+
+  it("show the lesson's own picture, then its theme's, then the theme's icon", () => {
+    show(LESSONS);
+
+    const tile = (title: RegExp) => screen.getByRole("link", { name: title });
+    const pictureOf = (title: RegExp) =>
+      tile(title)
+        .querySelector("img:not([data-standing])")
+        ?.getAttribute("src");
+    expect(pictureOf(/^Title b/)).toContain("/alphabet");
+    expect(pictureOf(/^Title english.alphabet.letter-sounds/)).toContain(
+      "letter-sounds",
+    );
+    const iconOf = (title: RegExp) =>
+      tile(title).querySelector("svg.lucide")!.getAttribute("class");
+    expect(pictureOf(/^Title c/)).toBeUndefined();
     expect(iconOf(/^Title c/)).toContain("lucide-hash");
+    expect(pictureOf(/^Title d/)).toBeUndefined();
     expect(iconOf(/^Title d/)).toContain("lucide-sparkles");
+  });
+
+  it("keep every picture and badge decorative: the title and the hidden text name the lesson", () => {
+    show(LESSONS);
+
+    const list = screen.getByRole("list");
+    for (const image of list.querySelectorAll("img"))
+      expect(image.getAttribute("alt")).toBe("");
+    expect(list.querySelectorAll("img").length).toBeGreaterThan(LESSONS.length);
   });
 });
