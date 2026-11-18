@@ -17,17 +17,17 @@ export default function SignInPage() {
   );
 }
 
-function SignIn() {
+export function SignIn() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-balance font-display text-3xl font-bold text-ink">
+      <h1 className="text-balance text-center font-display text-3xl font-bold text-ink">
         {t("signIn.title")}
       </h1>
       <div className="flex flex-col gap-3">
         <GoogleSignInButton variant="primary" size="lg" className="w-full" />
       </div>
-      <p className="border-t border-line pt-5 text-sm text-muted">
+      <p className="border-t border-line pt-5 text-center text-sm text-muted">
         {t("signIn.newHere")}{" "}
         <Link
           to="/app"
