@@ -128,7 +128,7 @@ async def test_a_request_switched_to_ungrounded_asks_a_held_topic_without_the_cu
     assert wire(events[-1]["payload"].lesson)["grounding"] is None
 
 
-async def test_the_two_arms_of_a_study_differ_only_in_the_objectives_and_the_passages():
+async def test_the_two_arms_of_a_study_are_given_the_same_inputs_but_the_objectives_and_the_passages():
     grounded, _ = await _lesson()
     lm, context = stand_in(_answers())
     request = LessonRequest(

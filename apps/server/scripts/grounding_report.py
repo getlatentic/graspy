@@ -114,6 +114,8 @@ def self_agreement(results: list[dict]) -> list[str]:
     kappa of the first two scores. A judge at the top of the scale agrees with itself almost by default, so the kappa
     is the number to read."""
     kept = [rs for rs in _judgments(results).values() if len(rs) >= MIN_REPEATS]
+    if not kept:
+        return [f"judge against itself: no lesson has {MIN_REPEATS} scores"]
     lines = [f"judge against itself, {len(kept)} lessons with {MIN_REPEATS}+ repeats"]
     for c in CRITERIA:
         same = sum(len({r[c] for r in rs}) == 1 for rs in kept) / len(kept)
@@ -191,13 +193,22 @@ def _counts(scored: dict[str, dict], key: dict[str, dict]) -> list[str]:
     return lines
 
 
-def compare_with_reader(scored: dict, reader: dict, key: dict) -> list[str]:
+def compare_with_reader(
+    scored: dict, reader: dict, key: dict, judged_key: dict
+) -> list[str]:
     """Per criterion, the mean second-reader score minus the mean judge score on the lessons both scored, how often
     they give the same score and how often they are within one point."""
     lines = [
         f"{'criterion':<13}{'reader':>7}{'judge':>7}{'reader-judge':>13}{'same':>7}{'within 1':>10}"
     ]
     ids = [i for i in reader if i in scored]
+    for i in ids:
+        mine = {k: key[i][k] for k in ("arm", "topic", "draw")}
+        theirs = {k: judged_key[i][k] for k in ("arm", "topic", "draw")}
+        if mine != theirs:
+            raise ValueError(f"{i} in the sample key is not the lesson judged as {i}")
+    if not ids:
+        return ["the reader scored none of the judged lessons"]
     for c in CRITERIA:
         r = [reader[i][c] for i in ids]
         j = [scored[i][c] for i in ids]
@@ -209,6 +220,8 @@ def compare_with_reader(scored: dict, reader: dict, key: dict) -> list[str]:
         )
     for arm in ARMS:
         of_arm = [i for i in ids if key[i]["arm"] == arm]
+        if not of_arm:
+            continue
         for c in ("coverage", "correctness"):
             lines.append(
                 f"  {arm:<11} {c:<12} reader {statistics.mean(reader[i][c] for i in of_arm):.2f}"
@@ -249,4 +262,4 @@ def report(judged: Path, reader: Path | None, reader_key: Path | None) -> None:
         print("Second reader against the judge, on the lessons the reader scored:")
         reads = json.loads(reader.read_text())
         shown = json.loads(reader_key.read_text())["lessons"]
-        print("\n".join(compare_with_reader(scored, reads, shown)))
+        print("\n".join(compare_with_reader(scored, reads, shown, key)))

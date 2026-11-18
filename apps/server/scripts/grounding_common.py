@@ -21,6 +21,8 @@ def study_lm(settings: Settings) -> tuple[dspy.LM, dict]:
     if any(word in model.lower() for word in FORBIDDEN_IN_MODEL):
         raise SystemExit(f"{model} is a Claude model; the study may not run one")
     lm = build_lm(settings).copy(cache=False)
+    if any(word in lm.model.lower() for word in FORBIDDEN_IN_MODEL):
+        raise SystemExit(f"{lm.model} is a Claude model; the study may not run one")
     meta = {
         "model": lm.model,
         "temperature": lm.kwargs.get("temperature"),

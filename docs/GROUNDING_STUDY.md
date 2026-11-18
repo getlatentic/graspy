@@ -20,11 +20,11 @@ Two changes follow from the failures below, and neither is about grounding:
 - **Lessons:** written by `openai.gpt-oss-120b` on Bedrock (temperature 0.0, reasoning effort low), the model of `.env`.
 - **Judge:** the same model, one lesson at a time, shown the topic's official objectives and the lesson, never the arm.
 - **Second reader:** Claude Code, the assistant that built this study, so a Claude model, not a human and not a teacher. The owner's rule is that no Claude model is used in anything graspy runs, a judge included; Claude Code authoring data and code is allowed. No Claude model wrote or judged a lesson. The readings below are Claude Code's, and it also designed the rubric and the scripts, so it is not independent of the study.
-- The scripts now refuse a Claude model and write the model id, temperature and seed into every output file. The files of this run were written before that and have the model added from `.env` as it was after the run (marked in their `meta`).
+- The scripts now refuse a Claude model and write the model id, temperature and reasoning effort into every output file, and the seed of the lesson ids into the judge's and the sample's. The files of this run were written before that and have the model added from `.env` as it was after the run (marked in their `meta`).
 
 ## What was measured
 
-All 24 topics of NERDC JSS 1 Mathematics (September 2025), English, written two ways with the same model, the same sampling, the same stage inputs and the same answer checks. Grounded is `main` as it is. Ungrounded is the same request with `LessonRequest(grounded=False)`: no objectives and no passages, nothing else changed (a test asserts that every model call has the same inputs except those two). Two draws per topic per arm.
+All 24 topics of NERDC JSS 1 Mathematics (September 2025), English, written two ways with the same model, the same sampling, the same stage inputs and the same answer checks. Grounded is `main` as it is. Ungrounded is the same request with `LessonRequest(grounded=False)`: no objectives and no passages. Every model call has the same inputs except those two (a test asserts it), but the grounded writers' instructions also tell the model to teach what the objectives name and nothing beyond them, and that the slides together cover every objective. So the study measures grounding as shipped (data plus those instructions), not the data alone. Two draws per topic per arm.
 
 - **Lessons generated: 96**, plus 2 trial lessons. All from a laptop straight to Bedrock; staging's API was not called.
 - 95 finished. The one that did not was ungrounded (Data Collection, draw 1): the practice question came back with 8 options and the lesson model allows 5. Grounded: 48 of 48 finished. One failure in 48 against none in 48 is no evidence of anything. Every table below is the same with and without unfinished lessons, since none of the judged lessons was unfinished.
@@ -85,7 +85,7 @@ For coverage, yes: 24 topics, 17 to 2, the reader and the judge agree, and it ho
 - The second reader is a Claude model and the study's designer, read 16 lessons, and was blind to arm but not to the rubric. It is not a teacher.
 - Coverage was scored against NERDC's objectives, which only the grounded arm saw.
 - The judge is run at temperature 0.0, so its repeats understate its noise.
-- One model, one subject, one class, English only, one run of two draws.
+- One model, one subject, one class, English only, one run of two draws. At temperature 0.0 the two draws of a topic are close, so the evidence is about 24 topics, not 48 lessons per arm; the tests use the topic as the unit.
 
 ## What I would do next
 

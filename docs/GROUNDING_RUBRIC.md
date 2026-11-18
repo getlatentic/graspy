@@ -9,7 +9,7 @@ Does a lesson written from the official objectives and textbook passages of its 
 ## The two arms
 
 - **Grounded.** The lesson service as it is: the topic's objectives and passages are inputs to the plan, slide and practice writers.
-- **Ungrounded.** The same service, same model, same sampling, same stage inputs and checks; the topic has no objectives and no passages. Only the objectives and passages differ.
+- **Ungrounded.** The same service, same model, same sampling, same stage inputs and checks; the topic has no objectives and no passages. Only the objectives and passages differ as inputs; the grounded writers' instructions also refer to them.
 
 Each topic is written twice per arm (two draws), so each arm has 48 lessons.
 

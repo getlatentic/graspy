@@ -73,3 +73,13 @@ def test_a_difference_that_is_only_float_error_is_a_tie():
 def test_the_kappa_of_scores_that_never_vary_is_undefined_and_of_identical_varied_scores_is_one():
     assert report.weighted_kappa([5, 5, 5], [5, 5, 5]) is None
     assert report.weighted_kappa([1, 3, 5, 5], [1, 3, 5, 5]) == pytest.approx(1.0)
+
+
+def test_a_sample_key_from_another_run_is_refused():
+    scored = {"L1": {c: 3.0 for c in report.CRITERIA}}
+    reader = {"L1": {c: 3 for c in report.CRITERIA}}
+    shown = {"L1": {"arm": "grounded", "topic": "A", "draw": 0}}
+    judged = {"L1": {"arm": "ungrounded", "topic": "A", "draw": 0}}
+
+    with pytest.raises(ValueError, match="not the lesson judged"):
+        report.compare_with_reader(scored, reader, shown, judged)
