@@ -67,6 +67,13 @@ def test_a_question_reaches_the_app_as_a_card_and_the_model_is_told_not_to_repea
     assert "Never write the questions, their options or answers" in result["done"]
 
 
+def test_feedback_that_corrects_itself_is_sent_back_to_the_model():
+    result, cards = give(correct_feedback="Yes! Oops, I mean 0.325.")
+
+    assert "correct_feedback corrects itself ('Oops')" in result["error"]
+    assert cards == []
+
+
 def test_whitespace_is_tidied_and_blank_options_dropped():
     _, cards = give(options=["  0.325 ", "", "0.35\n", "3.25"], answer_index=0)
 

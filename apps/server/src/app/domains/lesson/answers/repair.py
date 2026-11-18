@@ -9,10 +9,8 @@ from decimal import Decimal, localcontext
 from fractions import Fraction
 
 from .asked import Asked
-from .maths_text import plain_maths
-from .tokens import Form, numbers_in
+from .feedback import names
 from .verdict import Found, Verdict, terminates
-from .written import written
 
 # A check keeps at least this many options when code takes the extra right
 # ones out; fewer is a guess, and it is written again instead.
@@ -29,30 +27,13 @@ class Check:
     incorrect_feedback: str
 
 
-# 2 and 2.0 are one form; 2/5 and 0.4 are not, so feedback repeating a
-# question's "2/5" does not name an option "0.4".
-_SAME_FORM = {Form.WHOLE: Form.DECIMAL}
-
-
-def _names(feedback: str, option: str) -> bool:
-    """Whether the feedback gives the option's number, as the option writes it."""
-    read = written(option)
-    if read is None:
-        return False
-    form = _SAME_FORM.get(read.form, read.form)
-    return any(
-        number.value == read.value and _SAME_FORM.get(number.form, number.form) is form
-        for number in numbers_in(plain_maths(feedback))
-    )
-
-
 def _feedback(check: Check, was: str, now: str) -> Check:
     """Feedback that names the option wrongly marked right now names the
     right one: it may call the wrong answer right, even beside the right one
     ("250 cm is 2.5 m, so the answer is 0.25 m")."""
 
     def mended(feedback: str, told: str) -> str:
-        return told if _names(feedback, was) else feedback
+        return told if names(feedback, was) else feedback
 
     return replace(
         check,
@@ -97,7 +78,7 @@ def repaired(
             return rekeyed(check, verdict.right[0])
         case Found.DOUBLE_RIGHT:
             return trimmed(check, verdict.right, fewest)
-        case Found.NO_RIGHT_OPTION:
+        case Found.NO_RIGHT_OPTION | Found.CONTRADICTED:
             return None
     return check
 
@@ -122,8 +103,15 @@ def _answer(asked: Asked) -> str:
 
 def problem(check: Check, verdict: Verdict) -> str:
     """What was wrong, for the model writing the check again."""
-    answer = _answer(verdict.asked)
     asked = f"The check {check.question!r}"
+    if verdict.found is Found.CONTRADICTED:
+        return (
+            f"{asked} contradicts itself: {verdict.reason}. Work the answer "
+            "out first, write the options with exactly one right, and write "
+            "feedback that agrees with answer_index, with no correction or "
+            "second thought inside it."
+        )
+    answer = _answer(verdict.asked)
     if verdict.found is Found.DOUBLE_RIGHT:
         both = ", ".join(repr(check.options[at]) for at in verdict.right)
         return (

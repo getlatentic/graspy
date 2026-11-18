@@ -21,6 +21,8 @@ _BLANK = re.compile(r"(?:\\_|_){2,}|\\square|\\Box|□")
 # Digits grouped in threes by a thin or no-break space, as "10\,000" and
 # "1 000" are written; an ordinary space is left, as "2 1/2" needs it.
 _GROUP_SPACE = re.compile(r"(?<=\d)[\u2009\u202f\u00a0](?=\d{3}(?![\d/⁄]))")
+# A dash straight before a digit and after a space or bracket is a minus: "–5".
+_DASH_MINUS = re.compile(r"(?<![\w)])[–—](?=\d)")
 _SPACES = re.compile(r"[\u2009\u202f\u00a0]|\\[;: !]|\\q?quad|~")
 _UNICODE_FRACTION = re.compile(r"(\d?)([½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞])")
 _VULGAR = {
@@ -85,6 +87,7 @@ def plain_maths(text: str) -> str:
     text = _BLANK.sub(" _ ", text)
     for written, plain in _SYMBOLS:
         text = text.replace(written, plain)
+    text = _DASH_MINUS.sub("-", text)
     text = _UNICODE_FRACTION.sub(_vulgar, text)
     text = _GROUP_SPACE.sub("", text)
     return " ".join(_SPACES.sub(" ", text).split())

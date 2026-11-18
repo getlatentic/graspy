@@ -22,6 +22,10 @@ WRONG_KEY = {
 }
 RIGHT_KEY = {**WRONG_KEY, "answer_index": 1, "correct_feedback": "Yes: 0.4."}
 NO_RIGHT_OPTION = {**WRONG_KEY, "options": ["0.2", "0.5", "2.5", "0.25"]}
+SELF_CORRECTING = {
+    **RIGHT_KEY,
+    "correct_feedback": "Well done! Oops, the answer is actually 0.45.",
+}
 DOUBLE_RIGHT = {
     "question": "Which fraction is equivalent to 0.6?",
     "options": ["3/5", "6/10", "2/5", "1/6"],
@@ -280,20 +284,44 @@ async def test_a_practice_question_written_again_is_told_why():
     assert _lesson(events)["practice"]["answerIndex"] == 1
 
 
-async def test_a_practice_question_still_wrong_is_left_out(caplog):
-    _, events = await _made(
+async def test_a_practice_question_is_written_again_twice_each_time_told_why():
+    lm, events = await _made(
         [
             {"reasoning": "r", "plan": PLAN},
             _written(PLAIN),
             _written(PLAIN),
             _written(PLAIN),
             _practice(NO_RIGHT_OPTION),
+            _practice(SELF_CORRECTING),
+            _practice(RIGHT_KEY),
+        ]
+    )
+
+    assert "has the answer 2/5 (0.4)" in inputs(lm, 5)["check_problem"]
+    assert "contradicts itself" in inputs(lm, 6)["check_problem"]
+    assert _lesson(events)["practice"]["answerIndex"] == 1
+
+
+async def test_a_lesson_whose_practice_question_stays_wrong_ends_with_its_last_slide_question(
+    caplog,
+):
+    last = {**PLAIN, "question": "What is a numerator?", "options": ["Top", "Bottom"]}
+    _, events = await _made(
+        [
+            {"reasoning": "r", "plan": PLAN},
+            _written(PLAIN),
+            _written(PLAIN),
+            _written(last),
+            _practice(NO_RIGHT_OPTION),
+            _practice(NO_RIGHT_OPTION),
             _practice(NO_RIGHT_OPTION),
         ]
     )
 
-    assert "practice" not in [event["type"] for event in events]
-    assert _lesson(events)["practice"] is None
+    practice = _lesson(events)["practice"]
+    assert practice["question"] == "What is a numerator?"
+    assert practice["options"] == ["Top", "Bottom"]
+    assert "practice" in [event["type"] for event in events]
     assert events[-1]["payload"]["success"] is True
     assert _reports(caplog) == [
         (
@@ -302,6 +330,60 @@ async def test_a_practice_question_still_wrong_is_left_out(caplog):
             Outcome.DROPPED,
         )
     ]
+
+
+async def test_a_lesson_with_no_question_left_anywhere_ends_without_one(caplog):
+    answers = [{"reasoning": "r", "plan": PLAN}]
+    for _ in range(3):
+        answers += [_written(NO_RIGHT_OPTION), _written(NO_RIGHT_OPTION)]
+    answers += [_practice(NO_RIGHT_OPTION)] * 3
+    _, events = await _made(answers)
+
+    assert _lesson(events)["practice"] is None
+    assert all(slide["assessment"] is None for slide in _lesson(events)["slides"])
+    assert "has no practice question" in caplog.text
+
+
+async def test_a_check_whose_feedback_corrects_itself_is_written_again_told_why(caplog):
+    lm, events = await _made(
+        [
+            {"reasoning": "r", "plan": PLAN},
+            _written(SELF_CORRECTING),
+            _written(RIGHT_KEY),
+            _written(PLAIN),
+            _written(PLAIN),
+            _practice(PLAIN),
+        ]
+    )
+
+    assert "corrects itself ('Oops')" in inputs(lm, 2)["check_problem"]
+    assert _lesson(events)["slides"][0]["assessment"]["correctFeedback"] == "Yes: 0.4."
+    assert _reports(caplog) == [
+        (
+            "slide 1 of Mathematics/Fractions",
+            Found.CONTRADICTED,
+            Outcome.REWRITTEN,
+        )
+    ]
+
+
+async def test_a_wrong_key_moved_to_the_right_option_still_contradicting_its_feedback_is_written_again():
+    wrong_and_unsure = {
+        **WRONG_KEY,
+        "incorrect_feedback": "Not quite. Oops, I mean 0.4.",
+    }
+    _, events = await _made(
+        [
+            {"reasoning": "r", "plan": PLAN},
+            _written(wrong_and_unsure),
+            _written(RIGHT_KEY),
+            _written(PLAIN),
+            _written(PLAIN),
+            _practice(PLAIN),
+        ]
+    )
+
+    assert _lesson(events)["slides"][0]["assessment"]["correctFeedback"] == "Yes: 0.4."
 
 
 async def test_a_translated_lesson_is_checked_in_english_and_translated_in_order():

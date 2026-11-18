@@ -3,10 +3,11 @@ learner sees them, where the answer can be worked out (answers/).
 
 A wrong key is moved to the one right option, and extra right options are
 taken out. A check code cannot repair, with no right option or with too
-many, is written again once, told why. One still wrong after that is taken
-out: a slide without its check, or a lesson without its practice question,
-teaches nothing wrong, where a wrong key tells the learner a wrong answer is
-right.
+many, or whose feedback contradicts its key, is written again, told why: once
+for a slide, twice for the practice question. One still wrong after that is
+taken out: a slide without its check teaches nothing wrong, where a wrong key
+tells the learner a wrong answer is right. A lesson whose practice question is
+taken out ends with its last checked slide question instead (practice_from).
 
 Each repair is logged, with no learner data, so repairs can be counted."""
 
@@ -18,7 +19,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
 
-from .answers.repair import FEWEST_ALLOWED, Check, problem, repaired
+from .answers.contradiction import contradiction
+from .answers.repair import FEWEST_ALLOWED, FEWEST_OPTIONS, Check, problem, repaired
 from .answers.verdict import Found, Verdict, verdict
 from .lesson import LessonPractice, LessonSlide
 
@@ -61,6 +63,20 @@ def _judged(check: Check) -> Verdict:
     return verdict(check.question, check.options, check.answer_index)
 
 
+def _judgement(
+    check: Check, fewest: int = FEWEST_OPTIONS
+) -> tuple[Verdict, Check | None]:
+    """What the check is found to be, and the check as a learner may see it:
+    repaired where code can repair it, and None when it must be written again,
+    as when its feedback contradicts its key."""
+    found = _judged(check)
+    fixed = repaired(check, found, fewest)
+    reason = contradiction(fixed) if fixed else None
+    if reason:
+        return Verdict(Found.CONTRADICTED, found.asked, reason=reason), None
+    return found, fixed
+
+
 def _log(report: CheckReport) -> None:
     level = logging.DEBUG if report.outcome is Outcome.KEPT else logging.WARNING
     logger.log(
@@ -78,10 +94,12 @@ async def checked[Part](
     checks: Checks[Part],
     rewrite: Callable[[str], Awaitable[Part]],
     where: str,
+    rewrites: int = 1,
 ) -> Part | None:
-    """The part with its check repaired, written again, or taken out."""
+    """The part with its check repaired, written again (up to ``rewrites``
+    times, each told what was wrong), or taken out."""
     before = checks.read(part)
-    found = _judged(before)
+    found, fixed = _judgement(before)
     report = partial(
         CheckReport,
         where,
@@ -89,9 +107,8 @@ async def checked[Part](
         worked=found.asked.worked.value if found.asked else None,
         before=before,
     )
-    fixed = repaired(before, found)
     if fixed is None:
-        return await _written_again(part, checks, rewrite, found, report)
+        return await _written_again(part, checks, rewrite, found, report, rewrites)
     _log(report(outcome=_REPAIRED.get(found.found, Outcome.KEPT), after=fixed))
     return checks.write(part, fixed)
 
@@ -102,27 +119,37 @@ async def _written_again[Part](
     rewrite: Callable[[str], Awaitable[Part]],
     found: Verdict,
     report: Callable[..., CheckReport],
+    rewrites: int,
 ) -> Part | None:
-    """Written again once, told why; failing that, the first check trimmed
-    to two options when that makes it right, or taken out."""
+    """Written again, told why each time; failing that, the first check
+    trimmed to two options when that makes it right, or taken out."""
     before = checks.read(part)
-    try:
-        again = await rewrite(problem(before, found))
-    except Exception:
-        logger.warning("A check was not written again", exc_info=True)
-        again = None
-    second = _judged(checks.read(again)) if again is not None else None
-    fixed = repaired(checks.read(again), second) if second else None
-    reported = partial(
-        report, asked_again=True, rewrite_found=second.found if second else None
-    )
-    if fixed is not None:
-        _log(reported(outcome=Outcome.REWRITTEN, after=fixed))
-        return checks.write(again, fixed)
-    fallback = repaired(before, found, fewest=FEWEST_ALLOWED)
+    told, second = problem(before, found), None
+    for _ in range(rewrites):
+        try:
+            again = await rewrite(told)
+        except Exception:
+            logger.warning("A check was not written again", exc_info=True)
+            break
+        second, fixed = _judgement(checks.read(again))
+        if fixed is not None:
+            _log(
+                report(
+                    asked_again=True,
+                    rewrite_found=second.found,
+                    outcome=Outcome.REWRITTEN,
+                    after=fixed,
+                )
+            )
+            return checks.write(again, fixed)
+        told = problem(checks.read(again), second)
+    fallback = _judgement(before, FEWEST_ALLOWED)[1]
     _log(
-        reported(
-            outcome=Outcome.TRIMMED if fallback else Outcome.DROPPED, after=fallback
+        report(
+            asked_again=True,
+            rewrite_found=second.found if second else None,
+            outcome=Outcome.TRIMMED if fallback else Outcome.DROPPED,
+            after=fallback,
         )
     )
     return checks.write(part, fallback)
@@ -176,6 +203,27 @@ def _practice_with(
             "incorrect_feedback": check.incorrect_feedback,
         }
     )
+
+
+# The practice question is the lesson's last question and must not be missing,
+# so it is written again once more than a slide's check.
+PRACTICE_REWRITES = 2
+
+
+def practice_from(slides: list[LessonSlide]) -> LessonPractice | None:
+    """The last slide question that survived checking, as the practice
+    question, for a lesson whose own practice question could not be made
+    right; None when no slide kept one."""
+    for slide in reversed(slides):
+        if (check := slide.assessment) is not None:
+            return LessonPractice(
+                question=check.prompt,
+                options=check.options,
+                answer_index=check.answer_index,
+                correct_feedback=check.correct_feedback,
+                incorrect_feedback=check.incorrect_feedback,
+            )
+    return None
 
 
 SLIDE_CHECKS = Checks(_slide_check, _slide_with)

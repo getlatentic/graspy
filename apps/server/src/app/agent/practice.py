@@ -9,6 +9,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 
+from ..domains.lesson.answers.self_correction import self_correction
 from .cards import (
     PracticeCard,
     PracticeResult,
@@ -114,13 +115,26 @@ def _key_problem(marked: str, working: str, check: str) -> str | None:
     return None
 
 
+def _unsure(written: PracticeQuestion) -> str | None:
+    """A feedback that corrects itself, as the lesson gate refuses it too."""
+    for name in ("correct_feedback", "incorrect_feedback"):
+        if said := self_correction(getattr(written, name)):
+            return (
+                f"The {name} corrects itself ({said!r}). Work the answer out "
+                "first, then write feedback that states it once."
+            )
+    return None
+
+
 def _checked(written: PracticeQuestion) -> Question | str:
     """The question as the card shows it, or why it cannot be."""
     choices = [clean(option) for option in written.options if clean(option)]
     problem = options_problem(
         clean(written.question), choices, written.answer_index
     ) or _key_problem(choices[written.answer_index], written.working, written.check)
-    problem = problem or key_leak(written, choices, written.question)
+    problem = (
+        problem or _unsure(written) or key_leak(written, choices, written.question)
+    )
     if problem:
         return problem
     return shown(written, choices)
