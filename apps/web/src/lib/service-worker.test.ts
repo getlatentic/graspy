@@ -28,7 +28,7 @@ function fakeCaches() {
 }
 
 /** The worker run against a fake browser, with the network answering `network`. */
-function startWorker(network: () => Promise<Response>) {
+function startWorker(network: (url?: string) => Promise<Response>) {
   const listeners: Record<string, (event: unknown) => void> = {};
   const told: unknown[] = [];
   const asker = { postMessage: (message: unknown) => told.push(message) };
@@ -158,5 +158,41 @@ describe("the service worker's page", () => {
     const { answer } = await worker.open();
     await answer.catch(error);
     expect(error).toHaveBeenCalledOnce();
+  });
+});
+
+describe("the service worker's new build", () => {
+  const entry = "/assets/index-NEW.js";
+  const withScripts = `<html><script src="${entry}"></script><link rel="modulepreload" href="/assets/cn-NEW.js"></html>`;
+
+  it("keeps the new build's startup files before telling the page", async () => {
+    const fetched: string[] = [];
+    const worker = startWorker(async (url) => {
+      fetched.push(String(url));
+      return new Response(String(url) === "/" ? withScripts : "script");
+    });
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    await answer;
+    await settled();
+    await worker.check();
+    const files = await worker.caches.open("graspy-files-v1");
+    for (const name of [entry, "/assets/cn-NEW.js"]) {
+      expect(await files.match(ORIGIN + name)).toBeDefined();
+    }
+    expect(worker.told).toEqual([{ type: "update-ready" }]);
+  });
+
+  it("still tells the page when a file cannot be kept", async () => {
+    const worker = startWorker(async (url) => {
+      if (String(url) !== "/") throw new TypeError("Failed to fetch");
+      return new Response(withScripts);
+    });
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    await answer;
+    await settled();
+    await worker.check();
+    expect(worker.told).toEqual([{ type: "update-ready" }]);
   });
 });

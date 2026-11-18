@@ -58,13 +58,33 @@ async function trimmed(cache) {
 // found it; the page asks once it is loaded (see "check" below).
 let latestChanged = Promise.resolve(false);
 
+// The files a document names under /assets: its entry script and the ones it preloads.
+const NAMED_FILE = /(?:src|href)="(\/assets\/[^"]+)"/g;
+
+// A new build's startup files, kept before the page is told to reload into it, so the reload
+// finds them here and does not fetch them cold. One that fails is fetched when it is needed.
+async function precache(html) {
+  const files = await caches.open(FILES);
+  const names = [...html.matchAll(NAMED_FILE)].map(([, name]) => name);
+  await Promise.all(
+    names.map(async (name) => {
+      const url = new URL(name, self.location.origin).href;
+      if (await files.match(url)) return;
+      const response = await fetch(url);
+      if (response.ok) await files.put(url, response);
+    }),
+  );
+  await trimmed(files);
+}
+
 // The document as the network has it now. The copy is replaced when it differs from the one kept.
 async function refresh(cache, kept) {
   const response = await fetch(APP, { cache: "no-cache" });
   if (!response.ok) return { response, changed: false };
-  const changed =
-    !!kept && (await kept.text()) !== (await response.clone().text());
+  const html = await response.clone().text();
+  const changed = !!kept && (await kept.text()) !== html;
   if (!kept || changed) await cache.put(APP, response.clone());
+  if (changed) await precache(html).catch(() => undefined);
   return { response, changed };
 }
 
