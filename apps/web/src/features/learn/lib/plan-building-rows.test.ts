@@ -14,11 +14,9 @@ const plan = (topics: Record<string, string[]>) =>
   });
 
 describe("buildingRows", () => {
-  it("is the choosing of subjects, then the lesson to wait for, before any subject is named", () => {
-    expect(buildingRows(null, false)).toEqual([
-      { kind: "choosing", state: "working" },
-      { kind: "lesson", state: "waiting" },
-    ]);
+  it("is the choosing of subjects alone before any subject is named", () => {
+    const choosing = [{ kind: "choosing", state: "working" }];
+    expect(buildingRows(null)).toEqual(choosing);
     expect(
       buildingRows(
         buildCurriculum({
@@ -27,9 +25,8 @@ describe("buildingRows", () => {
           subjects: [],
           topics: {},
         }),
-        false,
       ),
-    ).toHaveLength(2);
+    ).toEqual(choosing);
   });
 
   it("works on one subject at a time and has the others wait", () => {
@@ -43,19 +40,15 @@ describe("buildingRows", () => {
       ],
       topics: { mathematics: ["Fractions"] },
     });
-    expect(buildingRows(three, false).map((row) => row.state)).toEqual([
+    expect(buildingRows(three).map((row) => row.state)).toEqual([
       "done",
       "working",
-      "waiting",
       "waiting",
     ]);
   });
 
   it("has a subject working until its topics come, and done with their count after", () => {
-    const rows = buildingRows(
-      plan({ mathematics: ["Fractions", "Algebra"] }),
-      false,
-    );
+    const rows = buildingRows(plan({ mathematics: ["Fractions", "Algebra"] }));
     expect(rows[0]).toMatchObject({
       kind: "subject",
       name: "Mathematics",
@@ -70,15 +63,11 @@ describe("buildingRows", () => {
     });
   });
 
-  it("makes the first lesson the last row, waiting until the lesson is being made", () => {
-    const topics = { mathematics: ["Fractions"], english: ["Nouns"] };
-    expect(buildingRows(plan(topics), false).at(-1)).toEqual({
-      kind: "lesson",
-      state: "waiting",
-    });
-    expect(buildingRows(plan(topics), true).at(-1)).toEqual({
-      kind: "lesson",
-      state: "working",
-    });
+  it("ends with the subjects: the plan is done when its topics are in, not when its first lesson is", () => {
+    const rows = buildingRows(
+      plan({ mathematics: ["Fractions"], english: ["Nouns"] }),
+    );
+    expect(rows.map((row) => row.kind)).toEqual(["subject", "subject"]);
+    expect(rows.every((row) => row.state === "done")).toBe(true);
   });
 });

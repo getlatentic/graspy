@@ -5,7 +5,7 @@ import { CONTACT_EMAIL, PAGE, contactHref } from "@/features/landing/constants";
 import { SiteFooter } from "@/features/landing/components/site-chrome";
 import { LEARNERS_PAGE } from "@/features/learn/lib/app-sections";
 
-export const DELETE_REQUEST = contactHref("Delete my account");
+const DELETE_REQUEST = contactHref("Delete my account");
 
 /** How to have an account deleted, public so that someone who cannot sign in can read it. */
 export default function DeleteAccountPage() {

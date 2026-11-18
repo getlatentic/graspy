@@ -39,6 +39,19 @@ describe("currentTopic", () => {
     });
   });
 
+  it("is the first topic, offered as a start, in a new plan whose first lesson no one has opened", () => {
+    expect(currentTopic(plan(), MATHS)).toMatchObject({
+      topic: "Fractions",
+      topicIndex: 0,
+      started: false,
+    });
+    expect(currentTopic(plan(), null)).toMatchObject({
+      subject: MATHS,
+      topicIndex: 0,
+      started: false,
+    });
+  });
+
   it("is the next subject's first topic otherwise", () => {
     expect(currentTopic(plan(DECIMALS_OPEN), SCIENCE)).toMatchObject({
       topic: "Living things",

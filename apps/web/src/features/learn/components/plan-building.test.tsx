@@ -34,13 +34,11 @@ const plan = (topics: Record<string, string[]>, named = true) =>
     topics,
   });
 
-const inApp = (curriculum: CurriculumData, priming: boolean) => (
+const inApp = (curriculum: CurriculumData) => (
   <I18nContext.Provider
     value={{ t, locale: "en", setLocale: () => {} } as never}
   >
-    <PlanContext.Provider
-      value={{ curriculum, isPrimingLesson: priming } as unknown as LearnerPlan}
-    >
+    <PlanContext.Provider value={{ curriculum } as unknown as LearnerPlan}>
       <PlanBuilding />
     </PlanContext.Provider>
   </I18nContext.Provider>
@@ -56,59 +54,43 @@ afterEach(cleanup);
 
 describe("PlanBuilding", () => {
   it("says it can take a minute", () => {
-    render(inApp(plan({}), false));
+    render(inApp(plan({})));
     expect(screen.getByText(en.onboarding.generating.wait)).toBeTruthy();
   });
 
   it("is the choosing of subjects before the plan names one", () => {
-    render(inApp(plan({}, false), false));
+    render(inApp(plan({}, false)));
     expect(rows()).toEqual([
       {
         text: `${en.planBuilding.choosing}${en.planBuilding.working}`,
         state: "working",
       },
-      {
-        text: `${en.planBuilding.lesson}${en.planBuilding.waiting}`,
-        state: "waiting",
-      },
     ]);
     expect(screen.getByRole("status").textContent).toBe("");
   });
 
-  it("lists each subject with what it is doing, and the first lesson last", () => {
-    render(inApp(plan({ mathematics: ["Fractions", "Algebra"] }), false));
+  it("lists each subject with what it is doing", () => {
+    render(inApp(plan({ mathematics: ["Fractions", "Algebra"] })));
     expect(rows()).toEqual([
       { text: "Mathematics2 topicsDone", state: "done" },
       { text: "EnglishIn progress", state: "working" },
-      { text: "Getting your first lesson readyWaiting", state: "waiting" },
     ]);
   });
 
   it("says one topic in the singular", () => {
-    render(inApp(plan({ mathematics: ["Fractions"] }), false));
+    render(inApp(plan({ mathematics: ["Fractions"] })));
     expect(rows()[0].text).toBe("Mathematics1 topicDone");
   });
 
-  it("works on the first lesson once the topics are all in", () => {
-    render(
-      inApp(plan({ mathematics: ["Fractions"], english: ["Nouns"] }), true),
-    );
-    expect(rows().map((row) => row.state)).toEqual(["done", "done", "working"]);
-  });
-
   it("tells a screen reader how many subjects are ready, and again as more come", () => {
-    const view = render(inApp(plan({}), false));
+    const view = render(inApp(plan({})));
     expect(screen.getByRole("status").textContent).toBe(
       "0 of 2 subjects ready",
     );
-    view.rerender(inApp(plan({ mathematics: ["Fractions"] }), false));
+    view.rerender(inApp(plan({ mathematics: ["Fractions"] })));
     expect(screen.getByRole("status").textContent).toBe(
       "1 of 2 subjects ready",
     );
-    expect(rows().map((row) => row.state)).toEqual([
-      "done",
-      "working",
-      "waiting",
-    ]);
+    expect(rows().map((row) => row.state)).toEqual(["done", "working"]);
   });
 });

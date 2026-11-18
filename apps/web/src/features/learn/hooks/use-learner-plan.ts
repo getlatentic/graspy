@@ -62,11 +62,16 @@ export function useLearnerPlan() {
   const { nextSubject, chooseNext, nextOf } = useNextSubject();
   const present = usePresent(setCurriculum, chooseNext);
   const { isLoaded, loadSaved } = useSavedPlan(present);
-  const { generate, isGenerating, isPrimingLesson, error } = usePlanGeneration({
+  const restore = useCallback(async () => {
+    const kept = await getCurriculum();
+    if (kept) present(kept);
+  }, [present]);
+  const { generate, isGenerating, error } = usePlanGeneration({
     show: setCurriculum,
     next: nextOf,
     chooseNext,
     gradeLevel: curriculum?.gradeLevel,
+    restore,
   });
   const sync = usePlanSync(isLoaded && !isGenerating, present);
 
@@ -95,7 +100,6 @@ export function useLearnerPlan() {
     curriculum,
     isLoaded,
     isGenerating,
-    isPrimingLesson,
     error,
     generate,
     regenerate,

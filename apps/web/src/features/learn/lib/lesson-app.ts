@@ -130,14 +130,68 @@ export const isLessonTool = (name: string) =>
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function lessonMade(target: LessonTarget): Promise<LessonState> {
+export class LessonTooSlow extends Error {
+  constructor() {
+    super("The lesson took too long to make");
+    this.name = "LessonTooSlow";
+  }
+}
+
+export class LessonWaitStopped extends Error {
+  constructor() {
+    super("Nobody is waiting for the lesson any more");
+    this.name = "LessonWaitStopped";
+  }
+}
+
+async function watchLesson(
+  target: LessonTarget,
+  stopped: () => boolean,
+): Promise<LessonState> {
   let state = lessonStateOf((await openLesson(target)).toolResult);
-  while (state?.status === "making") {
+  while (state?.status === "making" && !stopped()) {
     await wait(WATCH_MS);
+    if (stopped()) break;
     state = lessonStateOf(await callAppTool(LESSON_PROGRESS, { target }));
   }
   if (state?.status !== "ready" || !state.lesson) {
     throw new Error("The lesson could not be made");
   }
   return state;
+}
+
+export interface LessonWait {
+  /** The longest wait in all; one call that hangs counts. Unset, for ever. */
+  limitMs?: number;
+  /** Ends the wait, and its polling, when aborted. */
+  signal?: AbortSignal;
+}
+
+/** Waits until the lesson is made. The server keeps making it however the wait ends. */
+export async function lessonMade(
+  target: LessonTarget,
+  { limitMs, signal }: LessonWait = {},
+): Promise<LessonState> {
+  if (signal?.aborted) throw new LessonWaitStopped();
+  if (limitMs === undefined && !signal) return watchLesson(target, () => false);
+  let stopped = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort = () => {};
+  const ended = new Promise<never>((_, reject) => {
+    const end = (error: Error) => {
+      stopped = true;
+      reject(error);
+    };
+    onAbort = () => end(new LessonWaitStopped());
+    if (limitMs !== undefined) {
+      timer = setTimeout(() => end(new LessonTooSlow()), limitMs);
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+  try {
+    return await Promise.race([watchLesson(target, () => stopped), ended]);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
+  }
 }
