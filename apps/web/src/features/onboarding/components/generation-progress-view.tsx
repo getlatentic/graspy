@@ -74,7 +74,7 @@ function GenerationFailed({
           type="button"
           onClick={onRetry}
           disabled={isRetrying}
-          className="inline-flex flex-1 items-center justify-center rounded-xl bg-danger px-6 py-3 text-sm font-semibold text-on-accent transition disabled:cursor-not-allowed"
+          className="inline-flex flex-1 items-center justify-center rounded-xl bg-danger px-6 py-3 text-sm font-semibold text-on-danger transition disabled:cursor-not-allowed"
         >
           {t("onboarding.generating.tryAgain")}
         </button>

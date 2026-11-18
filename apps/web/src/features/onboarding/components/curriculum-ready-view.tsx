@@ -34,7 +34,7 @@ export default function CurriculumReadyView({
         <button
           type="button"
           onClick={onContinue}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         >
           {t("onboarding.ready.continue")}
           <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />

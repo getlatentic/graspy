@@ -109,7 +109,7 @@ function StepButtons({
         type="button"
         onClick={onNext}
         disabled={!enabled}
-        className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-4 text-lg font-semibold transition sm:flex-none sm:px-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+        className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-4 text-lg font-semibold transition sm:flex-none sm:px-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
           enabled
             ? "bg-accent text-on-accent"
             : "cursor-not-allowed bg-line text-muted"

@@ -31,7 +31,7 @@ export function Switch({
       >
         <span
           className={cn(
-            "absolute top-1 size-5 rounded-full bg-surface shadow-sm transition-[inset-inline-start] motion-reduce:transition-none",
+            "absolute top-1 size-5 rounded-full bg-on-accent shadow-sm transition-[inset-inline-start] motion-reduce:transition-none",
             checked ? "start-6" : "start-1",
           )}
         />

@@ -1,4 +1,4 @@
-/* graspy-tokens source=ac72b14c792b31060ca55610605bcfe11d2a971da72378db8d5cc6783da812b7 content=40341f5654afc0e0e4486bef8bf8c1c1d456f6a17fb075ba207aa159500ccfbf */
+/* graspy-tokens source=a198774b960ca16ed67660c1d3c3b3558359ccc23b3e59007a2eb52511cb8358 content=c5632a9a048648a801f5a7fe080ce307b82bbeb38dfe51786467741c6838dec2 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -57,6 +57,8 @@
   --color-tint-purple: #7057d1;
   /* Subject tiles only. */
   --color-tint-purple-soft: #f0ecfc;
+  /* Text on a danger fill. */
+  --color-on-danger: #ffffff;
 
   --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -93,7 +95,7 @@
   --shadow-card: 0 1px 2px rgb(18 35 46 / 0.06), 0 4px 12px rgb(18 35 46 / 0.06);
   --shadow-lift: 0 2px 4px rgb(18 35 46 / 0.08), 0 10px 24px rgb(18 35 46 / 0.12);
   --shadow-sheet: 0 8px 16px rgb(18 35 46 / 0.1), 0 24px 48px rgb(18 35 46 / 0.18);
-  --shadow-press: 0 4px 0 #1f7099;
+  --shadow-press: 0 4px 0 var(--color-accent-strong);
 
   --spacing: 0.25rem;
 }
@@ -110,7 +112,7 @@
     --color-line: #27404f;
     --color-track: #223744;
     --color-accent: #2893c8;
-    --color-accent-strong: #62b9e4;
+    --color-accent-strong: #1f7099;
     --color-accent-ink: #74c3ec;
     --color-accent-soft: #12303e;
     --color-accent-line: #1d4a5f;
@@ -128,5 +130,6 @@
     --color-tint-orange-soft: #3a2514;
     --color-tint-purple: #a994f2;
     --color-tint-purple-soft: #241f47;
+    --color-on-danger: #3a1714;
   }
 }
