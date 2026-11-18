@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n-context";
 import type { StepKey } from "../lib/onboarding-steps";
 
@@ -26,7 +27,7 @@ export function StepHeading({
         <span className="text-sm font-semibold text-accent-ink">
           {t("onboarding.stepOf", { current: index + 1, total: count })}
         </span>
-        <div className="h-2 rounded-full bg-accent-soft">
+        <div className="h-3 rounded-full bg-track">
           <div
             className="h-full rounded-full bg-accent transition-all duration-300"
             style={{ width: `${percent}%` }}
@@ -92,32 +93,23 @@ function StepButtons({
   return (
     <>
       {onBack ? (
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={busy}
-          className="inline-flex shrink-0 items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-base sm:px-6 font-semibold text-muted transition hover:bg-raised hover:text-ink disabled:cursor-not-allowed disabled:bg-track disabled:text-line"
-        >
+        <Button variant="secondary" onClick={onBack} disabled={busy}>
           <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
           {t("onboarding.back")}
-        </button>
+        </Button>
       ) : (
-        <span className="invisible inline-flex shrink-0 items-center gap-2 rounded-2xl px-4 py-3 sm:px-6" />
+        <span className="invisible inline-flex shrink-0 px-4 py-3 sm:px-6" />
       )}
 
-      <button
-        type="button"
+      <Button
+        size="lg"
         onClick={onNext}
         disabled={!enabled}
-        className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-4 text-lg font-semibold transition sm:flex-none sm:px-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
-          enabled
-            ? "bg-accent text-on-accent"
-            : "cursor-not-allowed bg-line text-muted"
-        }`}
+        className="min-w-0 flex-1 sm:flex-none"
       >
         {nextLabel}
         <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
-      </button>
+      </Button>
     </>
   );
 }

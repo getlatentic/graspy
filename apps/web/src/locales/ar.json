@@ -114,8 +114,6 @@
   "onboarding": {
     "contact": "اتصل بنا",
     "home": "الصفحة الرئيسية لـ graspy",
-    "heroTitle": "تعلّم في أي مكان،",
-    "heroHighlight": "وبالسرعة التي تناسبك",
     "stepOf": "الخطوة {current} من {total}",
     "back": "رجوع",
     "next": "التالي",

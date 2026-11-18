@@ -114,8 +114,6 @@
   "onboarding": {
     "contact": "Contact",
     "home": "graspy home",
-    "heroTitle": "Learn anywhere,",
-    "heroHighlight": "at your own pace",
     "stepOf": "Step {current} of {total}",
     "back": "Back",
     "next": "Next",
