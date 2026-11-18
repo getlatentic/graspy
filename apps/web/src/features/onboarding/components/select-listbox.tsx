@@ -37,7 +37,7 @@ export default function SelectListbox(props: SelectListboxProps) {
         id={`${id}-listbox`}
         role="listbox"
         aria-label={props.label}
-        className="max-h-96 w-full overflow-auto rounded-2xl border border-accent-line bg-surface shadow-xl shadow-accent-soft"
+        className="max-h-96 w-full overflow-auto rounded-control border-2 border-line bg-surface shadow-lift"
       >
         {combobox.matches.length === 0 ? (
           <div className="px-4 py-3 text-sm text-muted">

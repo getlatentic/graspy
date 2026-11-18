@@ -18,7 +18,7 @@ function inputClass(disabled: boolean): string {
   const ground = disabled
     ? "bg-track cursor-not-allowed text-muted placeholder:text-muted"
     : "bg-surface";
-  return `w-full px-4 py-3 border border-accent-line rounded-2xl focus:border-accent focus:ring-2 focus:ring-accent focus:ring-offset-0 text-base text-ink placeholder:text-muted shadow-sm transition ${ground} ${FIELD}`;
+  return `w-full placeholder:text-muted ${ground} ${FIELD}`;
 }
 
 export default function SearchableSelect(props: SearchableSelectProps) {
