@@ -1,4 +1,4 @@
-import type { ArtName } from "@/components/brand/art";
+import type { ArtName } from "@/components/brand/art-urls";
 
 // Generated subject names are an open set, so patterns decide, first match
 // wins ("Agricultural Technology" is agriculture, "Computer Science" is ICT,

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router";
 import { useUserProfile } from "@/lib/use-user-profile";
+import { ageBand } from "@/lib/age-band";
 import { useI18n } from "@/lib/i18n-context";
 import { levelLabel } from "@/lib/learner-level";
 import { curriculumRequest } from "@/features/learn/lib/curriculum-request";
@@ -125,6 +126,7 @@ function ContinueSection({ current }: { current: CurrentTopic }) {
       <ResumeCard
         current={current}
         grade={userProfile ? levelLabel(userProfile, t) : ""}
+        band={userProfile ? ageBand(userProfile) : "child"}
         completed={learntIn(current.subject.slug, current.topics)}
         onOpenTopic={(index) =>
           navigate(lessonPath(current.subject.slug, index))
@@ -146,7 +148,9 @@ function ReviewSection() {
     <HomeSection title={t("home.reviewTitle")} className="lg:col-span-2">
       <ReviewList
         topics={review.slice(0, MOST_REVIEWS)}
-        onOpen={(owed) => navigate(lessonPath(owed.subjectSlug, owed.topicIndex))}
+        onOpen={(owed) =>
+          navigate(lessonPath(owed.subjectSlug, owed.topicIndex))
+        }
       />
     </HomeSection>
   );
@@ -155,6 +159,7 @@ function ReviewSection() {
 function SubjectsSection({ subjects }: { subjects: CurriculumSubject[] }) {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const userProfile = useUserProfile();
   return (
     <div className="min-w-0 lg:col-span-2">
       <HomeSection
@@ -163,6 +168,7 @@ function SubjectsSection({ subjects }: { subjects: CurriculumSubject[] }) {
       >
         <SubjectTiles
           subjects={subjects}
+          band={userProfile ? ageBand(userProfile) : "child"}
           onSelect={(subject) => navigate(subjectPath(subject.slug))}
         />
       </HomeSection>
