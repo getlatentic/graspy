@@ -48,7 +48,7 @@ describe("WelcomeLine", () => {
     signedInAs({ id: "ada000000001", name: "Ada" });
     welcome();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Welcome, Ada",
+      "Welcome, \u2068Ada\u2069",
     );
     expect(screen.getByText("We're making your JSS 1 plan.")).toBeTruthy();
   });
@@ -65,8 +65,38 @@ describe("WelcomeLine", () => {
     signedInAs({ id: "ada000000001", name: "Ada" });
     welcome();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Welcome, Ada",
+      "Welcome, \u2068Ada\u2069",
     );
     expect(screen.queryByText(/plan\./)).toBeNull();
+  });
+
+  it("greets a learner whose name is only spaces as it greets one with none", () => {
+    signedInAs({ id: "ada000000001", name: "   " });
+    welcome();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      "Welcome",
+    );
+  });
+
+  it("keeps a name written right to left apart from the words around it", () => {
+    signedInAs({ id: "maryam00001", name: "مريم" });
+    welcome();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      "Welcome, \u2068مريم\u2069",
+    );
+  });
+
+  it("leaves out the class line when the class has no name", () => {
+    shown.profile = { ...learnerIn("jss-1"), gradeLevel: "  " };
+    signedInAs({ id: "ada000000001", name: "Ada" });
+    welcome();
+    expect(screen.queryByText(/We're making/)).toBeNull();
+  });
+
+  it("keeps the whole of a long name for a pointer to show", () => {
+    const long = "A".repeat(100);
+    signedInAs({ id: "ada000000001", name: long });
+    welcome();
+    expect(screen.getByRole("heading", { level: 1 }).title).toContain(long);
   });
 });

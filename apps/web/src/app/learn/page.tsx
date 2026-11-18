@@ -146,9 +146,7 @@ function ReviewSection() {
     <HomeSection title={t("home.reviewTitle")} className="lg:col-span-2">
       <ReviewList
         topics={review.slice(0, MOST_REVIEWS)}
-        onOpen={(owed) =>
-          navigate(lessonPath(owed.subjectSlug, owed.topicIndex))
-        }
+        onOpen={(owed) => navigate(lessonPath(owed.subjectSlug, owed.topicIndex))}
       />
     </HomeSection>
   );
