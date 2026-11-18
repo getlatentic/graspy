@@ -14,22 +14,24 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="grid min-h-dvh grid-cols-1 grid-rows-[auto_1fr] bg-canvas lg:grid-cols-2 lg:grid-rows-1">
-      <div className="aspect-4/3 max-h-96 min-w-0 overflow-hidden sm:aspect-video lg:relative lg:aspect-auto lg:max-h-none">
+    <main className="flex min-h-dvh flex-col bg-art-ground lg:grid lg:grid-cols-2">
+      <div className="relative min-h-72 min-w-0 flex-1 overflow-hidden lg:flex-none">
         <Art
           name="tablet"
           eager
-          className="object-top lg:absolute lg:inset-0"
+          className="fade-edge absolute inset-0 object-top"
         />
       </div>
-      <div className="flex min-w-0 flex-col items-center justify-center gap-10 px-5 py-10 sm:px-10">
-        <Logo />
+      <div className="flex min-w-0 flex-col items-center justify-center gap-8 px-5 pb-10 -mt-4 lg:mt-0 lg:py-10 sm:px-10">
+        <span className="brightness-50">
+          <Logo />
+        </span>
         <div className="w-full max-w-sm">
           <SignIn />
         </div>
         <a
           href={contactHref()}
-          className="text-sm font-medium text-muted hover:text-ink"
+          className="text-sm font-semibold text-ink hover:underline"
         >
           {t("onboarding.contact")}
         </a>
@@ -52,11 +54,11 @@ export function SignIn() {
           className="w-full whitespace-nowrap px-3 text-sm sm:px-6 sm:text-base"
         />
       </div>
-      <p className="border-t border-line pt-5 text-center text-sm text-muted">
+      <p className="border-t border-ink/15 pt-5 text-center text-sm text-ink">
         <span className="whitespace-nowrap">{t("signIn.newHere")}</span>{" "}
         <Link
           to="/app"
-          className="whitespace-nowrap font-semibold text-accent-ink hover:underline"
+          className="whitespace-nowrap font-semibold text-ink underline hover:no-underline"
         >
           {t("signIn.start")}
         </Link>

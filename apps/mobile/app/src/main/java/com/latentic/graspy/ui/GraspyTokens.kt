@@ -1,4 +1,4 @@
-// graspy-tokens source=a198774b960ca16ed67660c1d3c3b3558359ccc23b3e59007a2eb52511cb8358 content=a34415b88ef13f1d81470475b6a8a7724f6bccd9c253aa7f256362472e489347
+// graspy-tokens source=2027c8b8050d5448e7dc8058b2f47db5cfc7f3043b48bf75b840fb053e5131c6 content=8f25edb6edcdd09a2dc153d41777cb9d777c7f9a87eed728ea8b754c0bdb0dd3
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -76,6 +76,8 @@ object GraspyColor {
     val TintPurpleSoft = Color(0xFFF0ECFC)
     /** Text on a danger fill. */
     val OnDanger = Color(0xFFFFFFFF)
+    /** The sky behind the learner pictures, so a picture fades into the screen; text on it is ink. */
+    val ArtGround = Color(0xFF96D5F6)
 }
 
 /** Headings. Poppins cannot stack a tone mark over a dot-below letter (Yoruba "ẹ́"), so Yoruba headings use sans. */

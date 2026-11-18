@@ -38,6 +38,17 @@
   font-family: var(--font-sans);
 }
 
+/* A picture that dissolves into the screen behind it: downwards on a phone, to the right beside the form. */
+.fade-edge {
+  mask-image: linear-gradient(var(--fade-dir, to bottom), #000 65%, transparent);
+}
+
+@media (min-width: 64rem) {
+  .fade-edge {
+    --fade-dir: to right;
+  }
+}
+
 .nums {
   font-variant-numeric: tabular-nums;
 }

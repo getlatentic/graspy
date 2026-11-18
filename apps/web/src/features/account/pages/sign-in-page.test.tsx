@@ -44,13 +44,13 @@ describe("the sign-in card", () => {
     expect(line.className).toContain("text-center");
   });
 
-  it("keeps the button's icon and the blue link to start learning", () => {
+  it("keeps the button's icon and the underlined link to start learning", () => {
     card();
     const button = screen.getByRole("button", { name: en.you.signIn });
     expect(button.querySelector("svg")).toBeTruthy();
     expect(
       screen.getByRole("link", { name: en.signIn.start }).className,
-    ).toContain("text-accent-ink");
+    ).toContain("underline");
     expect(
       screen.getByRole("link", { name: en.signIn.start }).getAttribute("href"),
     ).toBe("/app");
