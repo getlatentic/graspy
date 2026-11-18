@@ -99,9 +99,11 @@ def _from_git(source: str) -> tuple[dict, str]:
         ["git", "show", source],
         cwd=REPOSITORY,
         capture_output=True,
-        check=True,
+        check=False,
         timeout=GIT_TIMEOUT_SECONDS,
     )
+    if shown.returncode:
+        raise ValueError(f"{source}: {shown.stderr.decode(errors='replace').strip()}")
     with tempfile.TemporaryDirectory() as folder:
         path = Path(folder) / "package"
         path.write_bytes(shown.stdout)
@@ -127,13 +129,12 @@ def diff_course(old: dict[str, Objective], new: dict[str, Objective]) -> CourseD
 def diff(
     old: Revision, new: Revision, only: str | None = None
 ) -> dict[str, CourseDiff]:
-    """The change in every course both revisions hold; a course in one only is an error to look at, not a diff."""
+    """The change in every course both revisions hold, or in `only`, which both must hold."""
     if old.package_id != new.package_id:
         raise ValueError(f"different packages: {old.package_id} and {new.package_id}")
-    keys = [only] if only else sorted(set(old.courses) | set(new.courses))
-    missing = [k for k in keys if k not in old.courses or k not in new.courses]
-    if missing:
-        raise ValueError(f"course not in both revisions: {', '.join(missing)}")
+    if only and not (only in old.courses and only in new.courses):
+        raise ValueError(f"course not in both revisions: {only}")
+    keys = [only] if only else sorted(set(old.courses) & set(new.courses))
     return {k: diff_course(old.courses[k], new.courses[k]) for k in keys}
 
 
@@ -141,10 +142,24 @@ def _where(objective: Objective) -> str:
     return f"{objective.topic} / {objective.subtopic}"
 
 
-def render(old: Revision, new: Revision, changes: dict[str, CourseDiff]) -> str:
+def render(
+    old: Revision,
+    new: Revision,
+    changes: dict[str, CourseDiff],
+    only: str | None = None,
+) -> str:
     lines = [
         f"{new.package_id}: revision {old.number} ({old.sha256[:12]}) -> {new.number} ({new.sha256[:12]})"
     ]
+    if only is None:
+        lines += [
+            f"\ncourse {k} is only in revision {old.number}"
+            for k in sorted(old.courses.keys() - new.courses.keys())
+        ]
+        lines += [
+            f"\ncourse {k} is only in revision {new.number}"
+            for k in sorted(new.courses.keys() - old.courses.keys())
+        ]
     for key, change in changes.items():
         lines.append(f"\ncourse {key}")
         if change.empty():
@@ -179,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         old, new = load(args.old), load(args.new)
-        print(render(old, new, diff(old, new, args.course)))
+        print(render(old, new, diff(old, new, args.course), args.course))
     except (
         ValueError,
         OSError,

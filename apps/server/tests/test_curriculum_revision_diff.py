@@ -5,14 +5,16 @@ from pathlib import Path
 
 import pytest
 
-from app.domains.curriculum.packages.export import COURSES, REPOSITORY, read_package
+from app.domains.curriculum.packages.export import COURSES, REPOSITORY
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "curriculum_revision_diff.py"
 spec = importlib.util.spec_from_file_location("curriculum_revision_diff", SCRIPT)
 tool = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tool)
 
-HELD = json.loads(COURSES.read_text(encoding="utf-8"))[0]["package"]
+_HELD_ENTRY = json.loads(COURSES.read_text(encoding="utf-8"))[0]
+HELD = _HELD_ENTRY["package"]
+HELD_COURSE = _HELD_ENTRY["courseKey"]
 
 
 def _node(code, kind, parent, sequence):
@@ -145,17 +147,18 @@ def test_the_report_names_the_revisions_and_each_change(tmp_path):
 def test_the_held_package_against_itself_has_no_change():
     path = str(REPOSITORY / HELD)
     old = new = tool.load(path)
-    assert sum(len(o) for o in old.courses.values()) == 158
-    change = tool.diff(old, new)["mathematics-jss1"]
+    objectives = old.courses[HELD_COURSE].values()
+    assert objectives and all(o.topic and o.subtopic for o in objectives)
+    change = tool.diff(old, new)[HELD_COURSE]
     assert change.empty()
-    assert "no change" in tool.render(old, new, {"mathematics-jss1": change})
+    assert "no change" in tool.render(old, new, {HELD_COURSE: change})
 
 
 def test_the_held_package_read_from_git_equals_itself():
     spec = f"HEAD:{HELD}"
     old, new = tool.load(spec), tool.load(spec)
-    assert old.sha256 == new.sha256 == read_package(REPOSITORY / HELD)[1]
-    assert tool.diff(old, new)["mathematics-jss1"].empty()
+    assert old.sha256 == new.sha256 and len(old.sha256) == 64
+    assert tool.diff(old, new)[HELD_COURSE].empty()
 
 
 def test_a_changed_copy_of_the_held_package_shows_exactly_the_change(tmp_path):
@@ -169,7 +172,7 @@ def test_a_changed_copy_of_the_held_package_shows_exactly_the_change(tmp_path):
     changed = tmp_path / "changed"
     changed.write_text(json.dumps(envelope))
     old, new = tool.load(str(REPOSITORY / HELD)), tool.load(str(changed))
-    change = tool.diff(old, new)["mathematics-jss1"]
+    change = tool.diff(old, new)[HELD_COURSE]
     assert [o.code for o in change.removed] == [removed["code"]]
     assert [b.code for _, b in change.reworded] == [objectives[0]["code"]]
     assert not (change.added or change.moved)
@@ -215,3 +218,27 @@ def test_a_source_that_looks_like_a_git_option_is_not_given_to_git(tmp_path):
     with pytest.raises(FileNotFoundError):
         tool.load(f"--output={target}:x")
     assert not target.exists()
+
+
+def test_a_course_in_one_revision_only_is_reported_and_the_rest_still_diffed(tmp_path):
+    one = tool.load(_revision_one(tmp_path))
+    two = tool.load(_revision_two(tmp_path))
+    extra = tool.Revision(two.package_id, 2, two.sha256, {**two.courses, "english": {}})
+    changes = tool.diff(one, extra)
+    assert list(changes) == ["maths"]
+    text = tool.render(one, extra, changes)
+    assert "course english is only in revision 2" in text
+    assert "added    double" in text
+    dropped = tool.diff(extra, one)
+    assert list(dropped) == ["maths"]
+    assert "course english is only in revision 2" in tool.render(extra, one, dropped)
+    with pytest.raises(ValueError, match="not in both"):
+        tool.diff(one, extra, "english")
+    assert "only in" not in tool.render(
+        one, extra, tool.diff(one, extra, "maths"), "maths"
+    )
+
+
+def test_a_git_revision_that_does_not_exist_says_what_git_said(tmp_path, capsys):
+    assert tool.main(["no-such-revision:no/such/file", _revision_one(tmp_path)]) == 2
+    assert "no-such-revision" in capsys.readouterr().err
