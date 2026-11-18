@@ -26,7 +26,7 @@ export default function SubjectsStep({
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 sm:gap-4">
       <SubjectsNotices chosen={selected.length} loading={loading} />
-      <div className="relative flex-1 min-h-0 rounded-2xl border border-line bg-white/90">
+      <div className="relative flex-1 min-h-0 rounded-2xl border border-line bg-surface/90">
         {!loading && !error && (
           <>
             <div className="pointer-events-none absolute inset-x-0 top-0 h-6 rounded-t-2xl bg-surface" />
@@ -177,7 +177,7 @@ function SubjectButton({
       className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-start transition motion-safe:animate-enter ${
         chosen
           ? "border-accent bg-accent-soft text-ink"
-          : "border-line bg-white hover:border-accent hover:bg-raised"
+          : "border-line bg-surface hover:border-accent hover:bg-raised"
       }`}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -195,7 +195,7 @@ function SubjectButton({
       <span
         className={`flex size-5 shrink-0 items-center justify-center rounded-full border text-xs ${
           chosen
-            ? "border-accent bg-accent text-white"
+            ? "border-accent bg-accent text-on-accent"
             : "border-line text-muted"
         }`}
       >

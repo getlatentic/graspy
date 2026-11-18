@@ -135,7 +135,7 @@ function RenameForm({
         value={draft}
         maxLength={40}
         onChange={(event) => setDraft(event.target.value)}
-        className="min-w-0 flex-1 rounded-2xl border border-accent-line bg-white px-4 py-2 text-base text-ink shadow-sm focus:border-accent focus:ring-2 focus:ring-accent"
+        className="min-w-0 flex-1 rounded-2xl border border-accent-line bg-surface px-4 py-2 text-base text-ink shadow-sm focus:border-accent focus:ring-2 focus:ring-accent"
       />
       <Button type="submit" size="sm" disabled={busy || !draft.trim()}>
         {t("learners.save")}

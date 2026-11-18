@@ -56,7 +56,7 @@ export function StepFooter({
   const enabled = canNext && !busy;
   return (
     // Sticky on a short screen, where iOS Safari's toolbar would cover it.
-    <div className="sticky bottom-0 -mx-8 mt-6 flex flex-col gap-3 bg-white/95 px-8 py-4 backdrop-blur sm:-mx-10 sm:px-10 lg:static lg:mx-0 lg:mt-10 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+    <div className="sticky bottom-0 -mx-8 mt-6 flex flex-col gap-3 bg-surface/95 px-8 py-4 backdrop-blur sm:-mx-10 sm:px-10 lg:static lg:mx-0 lg:mt-10 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
       {problem && (
         <p role="alert" className="text-sm text-danger">
           {problem}
@@ -96,7 +96,7 @@ function StepButtons({
           type="button"
           onClick={onBack}
           disabled={busy}
-          className="inline-flex shrink-0 items-center gap-2 rounded-2xl border border-line bg-white px-4 py-3 text-base sm:px-6 font-semibold text-muted transition hover:bg-raised hover:text-ink disabled:cursor-not-allowed disabled:bg-track disabled:text-line"
+          className="inline-flex shrink-0 items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-base sm:px-6 font-semibold text-muted transition hover:bg-raised hover:text-ink disabled:cursor-not-allowed disabled:bg-track disabled:text-line"
         >
           <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
           {t("onboarding.back")}
@@ -109,9 +109,9 @@ function StepButtons({
         type="button"
         onClick={onNext}
         disabled={!enabled}
-        className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-4 text-lg font-semibold transition sm:flex-none sm:px-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+        className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl px-5 py-4 text-lg font-semibold transition sm:flex-none sm:px-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
           enabled
-            ? "bg-accent text-white"
+            ? "bg-accent text-on-accent"
             : "cursor-not-allowed bg-line text-muted"
         }`}
       >

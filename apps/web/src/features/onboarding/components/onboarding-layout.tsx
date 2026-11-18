@@ -15,7 +15,7 @@ export default function OnboardingLayout({
           <Welcome />
 
           <div className="flex h-full lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)]">
-            <div className="relative w-full rounded-4xl bg-white/85 p-8 shadow-2xl shadow-accent/15 ring-1 ring-white/50 backdrop-blur min-h-160 sm:p-10 lg:h-full lg:p-12 xl:min-h-0">
+            <div className="relative w-full rounded-4xl bg-surface/85 p-8 shadow-2xl shadow-accent/15 ring-1 ring-line backdrop-blur min-h-160 sm:p-10 lg:h-full lg:p-12 xl:min-h-0">
               <div
                 className="absolute inset-x-10 top-0 h-20 rounded-t-4xl bg-surface"
                 aria-hidden

@@ -37,7 +37,7 @@ export default function SelectListbox(props: SelectListboxProps) {
         id={`${id}-listbox`}
         role="listbox"
         aria-label={props.label}
-        className="max-h-96 w-full overflow-auto rounded-2xl border border-accent-line bg-white shadow-xl shadow-accent-soft"
+        className="max-h-96 w-full overflow-auto rounded-2xl border border-accent-line bg-surface shadow-xl shadow-accent-soft"
       >
         {combobox.matches.length === 0 ? (
           <div className="px-4 py-3 text-sm text-muted">
@@ -71,7 +71,7 @@ function OptionGroup({
   return (
     <div>
       {heading && (
-        <div className="sticky top-0 z-10 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
+        <div className="sticky top-0 z-10 bg-surface px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
           {heading}
         </div>
       )}
@@ -109,7 +109,7 @@ function ListOption({
     ? "bg-accent-soft"
     : highlighted
       ? "bg-raised"
-      : "bg-white";
+      : "bg-surface";
   const text = selected ? "font-medium text-accent-ink" : "text-ink";
   return (
     <button

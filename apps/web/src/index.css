@@ -13,6 +13,10 @@
 }
 
 @layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
   body {
     background: var(--color-canvas);
     color: var(--color-ink);
