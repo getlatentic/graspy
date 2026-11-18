@@ -1,12 +1,20 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { Button } from "./button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 
 afterEach(cleanup);
 
 describe("the Base UI components", () => {
+  it("a button never submits a form it sits in", () => {
+    render(<Button>Next</Button>);
+    expect(
+      screen.getByRole("button", { name: "Next" }).getAttribute("type"),
+    ).toBe("button");
+  });
+
   it("tabs show the panel of the selected tab", () => {
     render(
       <Tabs defaultValue="a">
