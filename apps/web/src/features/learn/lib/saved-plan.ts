@@ -4,6 +4,7 @@ import type { CurriculumData } from "@/lib/curriculum-record";
 import { followPlan } from "@/lib/follow-plan";
 import { pinLearner } from "@/lib/learner-pin";
 import { changePlanRecord } from "@/lib/learner-record";
+import { tellPlanKept } from "@/lib/plan-kept";
 import { completedPlan } from "@/lib/plan-details";
 import { syncPlan } from "@/lib/plan-sync";
 import { getUserProfile } from "@/lib/user-storage";
@@ -39,7 +40,7 @@ export async function loadSavedPlan(): Promise<CurriculumData | null> {
   // than this one, whose record plan_kept would drop.
   if (currentAccount()) return saved ?? accountPlan();
   if (!saved) return null;
-  changePlanRecord({ kind: "plan_kept", planId: saved.planId }).catch((err) =>
+  tellPlanKept(saved.planId).catch((err) =>
     console.warn("Dropping an earlier plan's record failed:", err),
   );
   return saved;

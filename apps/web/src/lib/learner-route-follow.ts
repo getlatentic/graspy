@@ -1,4 +1,5 @@
-import { askRoute, routeKey } from "@/lib/learner-route";
+import { askRoute, keptRoute, routeKey } from "@/lib/learner-route";
+import { whenIdle } from "@/lib/when-idle";
 import type { ClassDetails } from "@/lib/voice/voice-learner";
 
 // A class with no answer, from the server or kept from an earlier visit, is asked again
@@ -41,6 +42,8 @@ async function askUntilAnswered(
   stop: AbortSignal,
   wait: Wait,
 ): Promise<void> {
+  // The screen shows the answer kept from an earlier visit; asking again can wait for idle.
+  if (keptRoute(details) !== null) await whenIdle();
   for (let attempt = 0; !stop.aborted; attempt += 1) {
     if ((await askRoute(details)) !== null) return;
     await wait(retryDelay(attempt), stop);

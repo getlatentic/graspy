@@ -14,6 +14,7 @@ from ..account.directory import (
     parsed_directory,
     serialised_change,
 )
+from ..timing import span
 from .record import Change, LearnerRecord, changed, parsed, serialised
 
 MEMORY_LEARNERS = 500
@@ -88,13 +89,16 @@ class DurableObjectLearnerStore:
         self._namespace = namespace
 
     async def load(self, learner: str) -> LearnerRecord:
-        return parsed(await self._namespace.getByName(learner).load())
+        async with span("learner_do"):
+            return parsed(await self._namespace.getByName(learner).load())
 
     async def change(self, learner: str, change: Change) -> None:
-        await self._namespace.getByName(learner).change(serialised(change))
+        async with span("learner_do"):
+            await self._namespace.getByName(learner).change(serialised(change))
 
     async def plan(self, learner: str) -> str | None:
-        return await self._namespace.getByName(learner).plan() or None
+        async with span("learner_do"):
+            return await self._namespace.getByName(learner).plan() or None
 
     async def keep_plan(self, learner: str, plan_json: str) -> None:
         await self._namespace.getByName(learner).keep_plan(plan_json)

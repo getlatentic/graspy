@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/brand/sprout.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- The API's connection (DNS, TCP, TLS) opens while the scripts download; only the origin of the URL is used. -->
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="graspy" />
     <meta name="theme-color" content="#FFFFFF" />

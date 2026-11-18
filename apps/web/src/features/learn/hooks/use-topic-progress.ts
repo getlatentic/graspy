@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAccount } from "@/lib/account/use-account";
+import { keptRoute } from "@/lib/learner-route";
+import { getUserProfile } from "@/lib/user-storage";
+import { classOf } from "@/lib/voice/voice-learner";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import {
   keptRecord,
@@ -36,6 +39,10 @@ function useRecordedMarks(plan: CurriculumData | null, settled: boolean) {
 
   useEffect(() => {
     if (!planId || !loadKey) return;
+    // A class that learns by voice alone has no slide topics to mark, and the server's record
+    // costs a wait on the learner's cold record.
+    const details = classOf(planNow.current, getUserProfile());
+    if (details && keptRoute(details) === true) return;
     // Show the last kept record at once; the server's answer replaces it.
     const kept = keptRecord(planId);
     if (kept) setMarks(marksFrom(planMarks(kept)));
