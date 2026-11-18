@@ -111,6 +111,23 @@ async def test_a_lesson_a_model_planned_is_asked_word_for_word_as_before(
     assert WITHOUT_STAGE["GenerateLessonPlan"].split("\n")[0] in system
 
 
+async def test_a_request_switched_to_ungrounded_asks_a_held_topic_without_the_curriculum():
+    lm, context = stand_in(_answers())
+    request = LessonRequest(
+        COUNTRY, "English", "Mathematics", HELD_TOPIC, JSS_1, grounded=False
+    )
+    with context:
+        events = [event async for event in LessonService().events(request)]
+
+    for call in range(CALLS):
+        asked = inputs(lm, call)
+        assert "curriculum_objectives" not in asked
+        assert "source_passages" not in asked
+        assert "stage" in asked
+    assert "grounding" not in {event["type"] for event in events}
+    assert wire(events[-1]["payload"].lesson)["grounding"] is None
+
+
 async def test_a_class_the_catalogue_cannot_place_is_not_grounded():
     lm, _ = await _lesson(grade="JSS 1")
 

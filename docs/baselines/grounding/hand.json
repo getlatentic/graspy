@@ -1,0 +1,114 @@
+{
+ "L1135": {
+  "coverage": 3,
+  "correctness": 2,
+  "level_fit": 3,
+  "teachable": 3,
+  "no_invention": 5
+ },
+ "L4809": {
+  "coverage": 2,
+  "correctness": 3,
+  "level_fit": 2,
+  "teachable": 2,
+  "no_invention": 4
+ },
+ "L4472": {
+  "coverage": 5,
+  "correctness": 5,
+  "level_fit": 5,
+  "teachable": 4,
+  "no_invention": 5
+ },
+ "L2652": {
+  "coverage": 5,
+  "correctness": 3,
+  "level_fit": 4,
+  "teachable": 3,
+  "no_invention": 4
+ },
+ "L6883": {
+  "coverage": 5,
+  "correctness": 2,
+  "level_fit": 4,
+  "teachable": 3,
+  "no_invention": 4
+ },
+ "L8155": {
+  "coverage": 2,
+  "correctness": 2,
+  "level_fit": 5,
+  "teachable": 3,
+  "no_invention": 5
+ },
+ "L3270": {
+  "coverage": 5,
+  "correctness": 2,
+  "level_fit": 4,
+  "teachable": 2,
+  "no_invention": 5
+ },
+ "L9602": {
+  "coverage": 5,
+  "correctness": 2,
+  "level_fit": 4,
+  "teachable": 3,
+  "no_invention": 5
+ },
+ "L8520": {
+  "coverage": 5,
+  "correctness": 5,
+  "level_fit": 5,
+  "teachable": 4,
+  "no_invention": 5
+ },
+ "L5799": {
+  "coverage": 3,
+  "correctness": 1,
+  "level_fit": 4,
+  "teachable": 2,
+  "no_invention": 5
+ },
+ "L1384": {
+  "coverage": 3,
+  "correctness": 5,
+  "level_fit": 5,
+  "teachable": 3,
+  "no_invention": 5
+ },
+ "L4311": {
+  "coverage": 2,
+  "correctness": 2,
+  "level_fit": 4,
+  "teachable": 2,
+  "no_invention": 2
+ },
+ "L5428": {
+  "coverage": 4,
+  "correctness": 3,
+  "level_fit": 3,
+  "teachable": 3,
+  "no_invention": 5
+ },
+ "L4720": {
+  "coverage": 5,
+  "correctness": 3,
+  "level_fit": 4,
+  "teachable": 2,
+  "no_invention": 3
+ },
+ "L1867": {
+  "coverage": 5,
+  "correctness": 5,
+  "level_fit": 4,
+  "teachable": 4,
+  "no_invention": 5
+ },
+ "L5663": {
+  "coverage": 2,
+  "correctness": 5,
+  "level_fit": 3,
+  "teachable": 3,
+  "no_invention": 4
+ }
+}

@@ -46,6 +46,8 @@ class LessonRequest:
     topic: str
     grade_level: str
     learner_notes: str = ""
+    # False writes a held topic as if no curriculum were held, to measure what grounding adds.
+    grounded: bool = True
 
     @property
     def should_translate(self) -> bool:
@@ -67,6 +69,8 @@ class LessonRequest:
     @property
     def grounding(self) -> Grounding | None:
         """What a held curriculum gives this topic to be written from; None for a topic a model planned."""
+        if not self.grounded:
+            return None
         return grounding_for(self.grade_level, self.subject, self.topic)
 
 
