@@ -1,4 +1,4 @@
-import { SceneBand } from "@/components/brand/scene";
+import { Art } from "@/components/brand/art";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
@@ -15,11 +15,13 @@ export function YouHero({
 }) {
   const { t } = useI18n();
   return (
-    <Card className={cn("overflow-hidden p-0 pb-5", className)}>
-      <div className="h-32 lg:h-44">
-        <SceneBand />
+    <Card
+      className={cn("flex items-center gap-5 p-4 lg:gap-8 lg:p-6", className)}
+    >
+      <div className="size-28 shrink-0 overflow-hidden rounded-control lg:size-44">
+        <Art name="english" eager className="object-top" />
       </div>
-      <h2 className="px-5 font-display text-2xl font-semibold text-ink">
+      <h2 className="font-display text-2xl font-semibold text-ink lg:text-4xl">
         {levelLabel(profile, t)}
       </h2>
     </Card>

@@ -4,7 +4,7 @@ import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
 import { contactHref } from "@/features/landing/constants";
 import { Logo } from "@/components/brand/logo";
-import { Scene, SceneBand } from "@/components/brand/scene";
+import { Art } from "@/components/brand/art";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
 
 /** Signing in opens "Who's learning?" once Google answers. */
@@ -15,9 +15,8 @@ export default function SignInPage() {
   if (account) return <Navigate to="/app/learners" replace />;
   return (
     <main className="grid min-h-dvh grid-rows-[auto_1fr] bg-canvas lg:grid-cols-2 lg:grid-rows-1">
-      <div className="h-56 sm:h-72 lg:h-auto">
-        <SceneBand className="lg:hidden" />
-        <Scene className="hidden lg:block" />
+      <div className="aspect-4/3 max-h-96 sm:aspect-video lg:aspect-auto lg:max-h-none">
+        <Art name="tablet" eager className="object-top" />
       </div>
       <div className="flex flex-col items-center justify-center gap-10 px-5 py-10 sm:px-10">
         <Logo />
