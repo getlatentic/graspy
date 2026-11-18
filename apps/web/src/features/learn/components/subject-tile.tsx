@@ -1,26 +1,20 @@
-import { cn } from "@/lib/cn";
-import { SubjectIcon } from "@/features/learn/components/subject-icon";
-import { subjectTintClasses } from "@/features/learn/lib/subject-icons";
+import { SubjectPicture } from "@/features/learn/components/subject-picture";
 
 interface SubjectTileProps {
   name: string;
   onSelect: () => void;
 }
 
-/** Stacked in a phone's narrow tile; side by side in a wider one, where a
-    centred icon and name would leave the tile half empty. */
+/** A picture over the subject's name, like the lesson tiles of the voice Home. */
 export function SubjectTile({ name, onSelect }: SubjectTileProps) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={cn(
-        "flex h-full w-full flex-col items-center justify-center gap-1 rounded-card px-1 py-2.5 text-center transition-[filter] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-h-16 sm:flex-row sm:justify-start sm:gap-3 sm:px-4 sm:py-3 sm:text-start lg:min-h-24 lg:gap-4 lg:px-5",
-        subjectTintClasses(name),
-      )}
+      className="flex h-full w-full flex-col overflow-hidden rounded-card border border-line bg-surface text-start shadow-card transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none"
     >
-      <SubjectIcon name={name} className="size-6 shrink-0 lg:size-8" />
-      <span className="line-clamp-2 text-xs leading-tight font-semibold text-ink sm:text-sm lg:text-base">
+      <SubjectPicture name={name} className="w-full" />
+      <span className="line-clamp-2 px-3 py-3 text-sm font-semibold text-ink lg:text-base">
         {name}
       </span>
     </button>
