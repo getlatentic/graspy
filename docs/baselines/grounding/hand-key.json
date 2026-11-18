@@ -1,0 +1,104 @@
+{
+ "meta": {
+  "seed": 537,
+  "per_arm": 8
+ },
+ "lessons": {
+  "L1135": {
+   "arm": "grounded",
+   "topic": "Data Presentation",
+   "draw": 0,
+   "complete": true
+  },
+  "L4809": {
+   "arm": "ungrounded",
+   "topic": "Three dimensional figures",
+   "draw": 1,
+   "complete": true
+  },
+  "L4472": {
+   "arm": "grounded",
+   "topic": "Addition and Subtraction of Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L2652": {
+   "arm": "ungrounded",
+   "topic": "Conversion of base 10 numerals to binary numbers",
+   "draw": 0,
+   "complete": true
+  },
+  "L6883": {
+   "arm": "ungrounded",
+   "topic": "Data Collection",
+   "draw": 0,
+   "complete": true
+  },
+  "L8155": {
+   "arm": "ungrounded",
+   "topic": "Approximation",
+   "draw": 0,
+   "complete": true
+  },
+  "L3270": {
+   "arm": "ungrounded",
+   "topic": "LCM",
+   "draw": 1,
+   "complete": true
+  },
+  "L9602": {
+   "arm": "grounded",
+   "topic": "Addition and Subtraction of Fractions",
+   "draw": 0,
+   "complete": true
+  },
+  "L8520": {
+   "arm": "grounded",
+   "topic": "LCM",
+   "draw": 0,
+   "complete": true
+  },
+  "L5799": {
+   "arm": "ungrounded",
+   "topic": "Multiplications and Divisions of Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L1384": {
+   "arm": "grounded",
+   "topic": "Use of Symbols",
+   "draw": 0,
+   "complete": true
+  },
+  "L4311": {
+   "arm": "ungrounded",
+   "topic": "Plane shapes",
+   "draw": 0,
+   "complete": true
+  },
+  "L5428": {
+   "arm": "grounded",
+   "topic": "Use of Symbols",
+   "draw": 1,
+   "complete": true
+  },
+  "L4720": {
+   "arm": "grounded",
+   "topic": "Multiplication of Numbers in Base 2 Numerals",
+   "draw": 1,
+   "complete": true
+  },
+  "L1867": {
+   "arm": "grounded",
+   "topic": "Simple Equations",
+   "draw": 1,
+   "complete": true
+  },
+  "L5663": {
+   "arm": "ungrounded",
+   "topic": "Three dimensional figures",
+   "draw": 0,
+   "complete": true
+  }
+ }
+}

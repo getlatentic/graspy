@@ -111,6 +111,44 @@ async def test_a_lesson_a_model_planned_is_asked_word_for_word_as_before(
     assert WITHOUT_STAGE["GenerateLessonPlan"].split("\n")[0] in system
 
 
+async def test_a_request_switched_to_ungrounded_asks_a_held_topic_without_the_curriculum():
+    lm, context = stand_in(_answers())
+    request = LessonRequest(
+        COUNTRY, "English", "Mathematics", HELD_TOPIC, JSS_1, grounded=False
+    )
+    with context:
+        events = [event async for event in LessonService().events(request)]
+
+    for call in range(CALLS):
+        asked = inputs(lm, call)
+        assert "curriculum_objectives" not in asked
+        assert "source_passages" not in asked
+        assert "stage" in asked
+    assert "grounding" not in {event["type"] for event in events}
+    assert wire(events[-1]["payload"].lesson)["grounding"] is None
+
+
+async def test_the_two_arms_of_a_study_are_given_the_same_inputs_but_the_objectives_and_the_passages():
+    grounded, _ = await _lesson()
+    lm, context = stand_in(_answers())
+    request = LessonRequest(
+        COUNTRY, "English", "Mathematics", HELD_TOPIC, JSS_1, grounded=False
+    )
+    with context:
+        _ = [event async for event in LessonService().events(request)]
+    ungrounded = lm
+
+    assert len(grounded.history) == len(ungrounded.history) == CALLS
+    for call in range(CALLS):
+        asked = inputs(grounded, call)
+        assert {"curriculum_objectives", "source_passages"} <= set(asked)
+        assert {
+            k: v
+            for k, v in asked.items()
+            if k not in ("curriculum_objectives", "source_passages")
+        } == inputs(ungrounded, call)
+
+
 async def test_a_class_the_catalogue_cannot_place_is_not_grounded():
     lm, _ = await _lesson(grade="JSS 1")
 

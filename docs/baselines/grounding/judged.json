@@ -1,0 +1,6183 @@
+{
+ "meta": {
+  "model": "bedrock-mantle-chat:openai.gpt-oss-120b",
+  "temperature": 0.0,
+  "reasoning_effort": "low",
+  "note": "model and settings read from .env on 2026-11-18 after the run; the run itself did not record them",
+  "seed": 537,
+  "repeats": 3
+ },
+ "key": {
+  "L8278": {
+   "arm": "grounded",
+   "topic": "Whole Numbers",
+   "draw": 0,
+   "complete": true
+  },
+  "L5092": {
+   "arm": "ungrounded",
+   "topic": "Whole Numbers",
+   "draw": 0,
+   "complete": true
+  },
+  "L4654": {
+   "arm": "grounded",
+   "topic": "Whole Numbers",
+   "draw": 1,
+   "complete": true
+  },
+  "L1684": {
+   "arm": "ungrounded",
+   "topic": "Whole Numbers",
+   "draw": 1,
+   "complete": true
+  },
+  "L8520": {
+   "arm": "grounded",
+   "topic": "LCM",
+   "draw": 0,
+   "complete": true
+  },
+  "L9492": {
+   "arm": "ungrounded",
+   "topic": "LCM",
+   "draw": 0,
+   "complete": true
+  },
+  "L8045": {
+   "arm": "grounded",
+   "topic": "LCM",
+   "draw": 1,
+   "complete": true
+  },
+  "L3270": {
+   "arm": "ungrounded",
+   "topic": "LCM",
+   "draw": 1,
+   "complete": true
+  },
+  "L9728": {
+   "arm": "grounded",
+   "topic": "HCF",
+   "draw": 0,
+   "complete": true
+  },
+  "L5587": {
+   "arm": "ungrounded",
+   "topic": "HCF",
+   "draw": 0,
+   "complete": true
+  },
+  "L6157": {
+   "arm": "grounded",
+   "topic": "HCF",
+   "draw": 1,
+   "complete": true
+  },
+  "L1933": {
+   "arm": "ungrounded",
+   "topic": "HCF",
+   "draw": 1,
+   "complete": true
+  },
+  "L7797": {
+   "arm": "grounded",
+   "topic": "Counting in Base 2",
+   "draw": 0,
+   "complete": true
+  },
+  "L7430": {
+   "arm": "ungrounded",
+   "topic": "Counting in Base 2",
+   "draw": 0,
+   "complete": true
+  },
+  "L9123": {
+   "arm": "grounded",
+   "topic": "Counting in Base 2",
+   "draw": 1,
+   "complete": true
+  },
+  "L6805": {
+   "arm": "ungrounded",
+   "topic": "Counting in Base 2",
+   "draw": 1,
+   "complete": true
+  },
+  "L2139": {
+   "arm": "grounded",
+   "topic": "Conversion of base 10 numerals to binary numbers",
+   "draw": 0,
+   "complete": true
+  },
+  "L2652": {
+   "arm": "ungrounded",
+   "topic": "Conversion of base 10 numerals to binary numbers",
+   "draw": 0,
+   "complete": true
+  },
+  "L5379": {
+   "arm": "grounded",
+   "topic": "Conversion of base 10 numerals to binary numbers",
+   "draw": 1,
+   "complete": true
+  },
+  "L4201": {
+   "arm": "ungrounded",
+   "topic": "Conversion of base 10 numerals to binary numbers",
+   "draw": 1,
+   "complete": true
+  },
+  "L4769": {
+   "arm": "grounded",
+   "topic": "Fractions",
+   "draw": 0,
+   "complete": true
+  },
+  "L3334": {
+   "arm": "ungrounded",
+   "topic": "Fractions",
+   "draw": 0,
+   "complete": true
+  },
+  "L5856": {
+   "arm": "grounded",
+   "topic": "Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L7226": {
+   "arm": "ungrounded",
+   "topic": "Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L1196": {
+   "arm": "grounded",
+   "topic": "Addition and Subtraction",
+   "draw": 0,
+   "complete": true
+  },
+  "L4398": {
+   "arm": "ungrounded",
+   "topic": "Addition and Subtraction",
+   "draw": 0,
+   "complete": true
+  },
+  "L7601": {
+   "arm": "grounded",
+   "topic": "Addition and Subtraction",
+   "draw": 1,
+   "complete": true
+  },
+  "L9154": {
+   "arm": "ungrounded",
+   "topic": "Addition and Subtraction",
+   "draw": 1,
+   "complete": true
+  },
+  "L9602": {
+   "arm": "grounded",
+   "topic": "Addition and Subtraction of Fractions",
+   "draw": 0,
+   "complete": true
+  },
+  "L6355": {
+   "arm": "ungrounded",
+   "topic": "Addition and Subtraction of Fractions",
+   "draw": 0,
+   "complete": true
+  },
+  "L4472": {
+   "arm": "grounded",
+   "topic": "Addition and Subtraction of Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L4380": {
+   "arm": "ungrounded",
+   "topic": "Addition and Subtraction of Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L6535": {
+   "arm": "grounded",
+   "topic": "Multiplications and Divisions of Fractions",
+   "draw": 0,
+   "complete": true
+  },
+  "L3892": {
+   "arm": "ungrounded",
+   "topic": "Multiplications and Divisions of Fractions",
+   "draw": 0,
+   "complete": true
+  },
+  "L4802": {
+   "arm": "grounded",
+   "topic": "Multiplications and Divisions of Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L5799": {
+   "arm": "ungrounded",
+   "topic": "Multiplications and Divisions of Fractions",
+   "draw": 1,
+   "complete": true
+  },
+  "L1642": {
+   "arm": "grounded",
+   "topic": "Estimation",
+   "draw": 0,
+   "complete": true
+  },
+  "L6708": {
+   "arm": "ungrounded",
+   "topic": "Estimation",
+   "draw": 0,
+   "complete": true
+  },
+  "L3256": {
+   "arm": "grounded",
+   "topic": "Estimation",
+   "draw": 1,
+   "complete": true
+  },
+  "L1697": {
+   "arm": "ungrounded",
+   "topic": "Estimation",
+   "draw": 1,
+   "complete": true
+  },
+  "L7476": {
+   "arm": "grounded",
+   "topic": "Approximation",
+   "draw": 0,
+   "complete": true
+  },
+  "L8155": {
+   "arm": "ungrounded",
+   "topic": "Approximation",
+   "draw": 0,
+   "complete": true
+  },
+  "L4259": {
+   "arm": "grounded",
+   "topic": "Approximation",
+   "draw": 1,
+   "complete": true
+  },
+  "L6928": {
+   "arm": "ungrounded",
+   "topic": "Approximation",
+   "draw": 1,
+   "complete": true
+  },
+  "L8237": {
+   "arm": "grounded",
+   "topic": "Addition of Numbers in Base 2 Numerals",
+   "draw": 0,
+   "complete": true
+  },
+  "L4202": {
+   "arm": "ungrounded",
+   "topic": "Addition of Numbers in Base 2 Numerals",
+   "draw": 0,
+   "complete": true
+  },
+  "L3443": {
+   "arm": "grounded",
+   "topic": "Addition of Numbers in Base 2 Numerals",
+   "draw": 1,
+   "complete": true
+  },
+  "L2835": {
+   "arm": "ungrounded",
+   "topic": "Addition of Numbers in Base 2 Numerals",
+   "draw": 1,
+   "complete": true
+  },
+  "L1817": {
+   "arm": "grounded",
+   "topic": "Subtraction of Numbers in Base 2 Numerals",
+   "draw": 0,
+   "complete": true
+  },
+  "L3850": {
+   "arm": "ungrounded",
+   "topic": "Subtraction of Numbers in Base 2 Numerals",
+   "draw": 0,
+   "complete": true
+  },
+  "L3707": {
+   "arm": "grounded",
+   "topic": "Subtraction of Numbers in Base 2 Numerals",
+   "draw": 1,
+   "complete": true
+  },
+  "L7790": {
+   "arm": "ungrounded",
+   "topic": "Subtraction of Numbers in Base 2 Numerals",
+   "draw": 1,
+   "complete": true
+  },
+  "L4374": {
+   "arm": "grounded",
+   "topic": "Multiplication of Numbers in Base 2 Numerals",
+   "draw": 0,
+   "complete": true
+  },
+  "L4727": {
+   "arm": "ungrounded",
+   "topic": "Multiplication of Numbers in Base 2 Numerals",
+   "draw": 0,
+   "complete": true
+  },
+  "L4720": {
+   "arm": "grounded",
+   "topic": "Multiplication of Numbers in Base 2 Numerals",
+   "draw": 1,
+   "complete": true
+  },
+  "L8012": {
+   "arm": "ungrounded",
+   "topic": "Multiplication of Numbers in Base 2 Numerals",
+   "draw": 1,
+   "complete": true
+  },
+  "L1384": {
+   "arm": "grounded",
+   "topic": "Use of Symbols",
+   "draw": 0,
+   "complete": true
+  },
+  "L5089": {
+   "arm": "ungrounded",
+   "topic": "Use of Symbols",
+   "draw": 0,
+   "complete": true
+  },
+  "L5428": {
+   "arm": "grounded",
+   "topic": "Use of Symbols",
+   "draw": 1,
+   "complete": true
+  },
+  "L1788": {
+   "arm": "ungrounded",
+   "topic": "Use of Symbols",
+   "draw": 1,
+   "complete": true
+  },
+  "L4977": {
+   "arm": "grounded",
+   "topic": "Simplification of Algebraic Expressions",
+   "draw": 0,
+   "complete": true
+  },
+  "L6450": {
+   "arm": "ungrounded",
+   "topic": "Simplification of Algebraic Expressions",
+   "draw": 0,
+   "complete": true
+  },
+  "L4915": {
+   "arm": "grounded",
+   "topic": "Simplification of Algebraic Expressions",
+   "draw": 1,
+   "complete": true
+  },
+  "L3585": {
+   "arm": "ungrounded",
+   "topic": "Simplification of Algebraic Expressions",
+   "draw": 1,
+   "complete": true
+  },
+  "L9415": {
+   "arm": "grounded",
+   "topic": "Simple Equations",
+   "draw": 0,
+   "complete": true
+  },
+  "L6624": {
+   "arm": "ungrounded",
+   "topic": "Simple Equations",
+   "draw": 0,
+   "complete": true
+  },
+  "L1867": {
+   "arm": "grounded",
+   "topic": "Simple Equations",
+   "draw": 1,
+   "complete": true
+  },
+  "L1016": {
+   "arm": "ungrounded",
+   "topic": "Simple Equations",
+   "draw": 1,
+   "complete": true
+  },
+  "L7593": {
+   "arm": "grounded",
+   "topic": "Plane shapes",
+   "draw": 0,
+   "complete": true
+  },
+  "L4311": {
+   "arm": "ungrounded",
+   "topic": "Plane shapes",
+   "draw": 0,
+   "complete": true
+  },
+  "L1334": {
+   "arm": "grounded",
+   "topic": "Plane shapes",
+   "draw": 1,
+   "complete": true
+  },
+  "L3917": {
+   "arm": "ungrounded",
+   "topic": "Plane shapes",
+   "draw": 1,
+   "complete": true
+  },
+  "L4356": {
+   "arm": "grounded",
+   "topic": "Three dimensional figures",
+   "draw": 0,
+   "complete": true
+  },
+  "L5663": {
+   "arm": "ungrounded",
+   "topic": "Three dimensional figures",
+   "draw": 0,
+   "complete": true
+  },
+  "L7006": {
+   "arm": "grounded",
+   "topic": "Three dimensional figures",
+   "draw": 1,
+   "complete": true
+  },
+  "L4809": {
+   "arm": "ungrounded",
+   "topic": "Three dimensional figures",
+   "draw": 1,
+   "complete": true
+  },
+  "L9375": {
+   "arm": "grounded",
+   "topic": "Construction",
+   "draw": 0,
+   "complete": true
+  },
+  "L7988": {
+   "arm": "ungrounded",
+   "topic": "Construction",
+   "draw": 0,
+   "complete": true
+  },
+  "L3052": {
+   "arm": "grounded",
+   "topic": "Construction",
+   "draw": 1,
+   "complete": true
+  },
+  "L2047": {
+   "arm": "ungrounded",
+   "topic": "Construction",
+   "draw": 1,
+   "complete": true
+  },
+  "L3040": {
+   "arm": "grounded",
+   "topic": "Angles",
+   "draw": 0,
+   "complete": true
+  },
+  "L2643": {
+   "arm": "ungrounded",
+   "topic": "Angles",
+   "draw": 0,
+   "complete": true
+  },
+  "L8779": {
+   "arm": "grounded",
+   "topic": "Angles",
+   "draw": 1,
+   "complete": true
+  },
+  "L9852": {
+   "arm": "ungrounded",
+   "topic": "Angles",
+   "draw": 1,
+   "complete": true
+  },
+  "L5271": {
+   "arm": "grounded",
+   "topic": "Need for Statistics",
+   "draw": 0,
+   "complete": true
+  },
+  "L1410": {
+   "arm": "ungrounded",
+   "topic": "Need for Statistics",
+   "draw": 0,
+   "complete": true
+  },
+  "L7178": {
+   "arm": "grounded",
+   "topic": "Need for Statistics",
+   "draw": 1,
+   "complete": true
+  },
+  "L3795": {
+   "arm": "ungrounded",
+   "topic": "Need for Statistics",
+   "draw": 1,
+   "complete": true
+  },
+  "L6038": {
+   "arm": "grounded",
+   "topic": "Data Collection",
+   "draw": 0,
+   "complete": true
+  },
+  "L6883": {
+   "arm": "ungrounded",
+   "topic": "Data Collection",
+   "draw": 0,
+   "complete": true
+  },
+  "L6354": {
+   "arm": "grounded",
+   "topic": "Data Collection",
+   "draw": 1,
+   "complete": true
+  },
+  "L1135": {
+   "arm": "grounded",
+   "topic": "Data Presentation",
+   "draw": 0,
+   "complete": true
+  },
+  "L8194": {
+   "arm": "ungrounded",
+   "topic": "Data Presentation",
+   "draw": 0,
+   "complete": true
+  },
+  "L5623": {
+   "arm": "grounded",
+   "topic": "Data Presentation",
+   "draw": 1,
+   "complete": true
+  },
+  "L2277": {
+   "arm": "ungrounded",
+   "topic": "Data Presentation",
+   "draw": 1,
+   "complete": true
+  }
+ },
+ "results": [
+  {
+   "id": "L8278",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5092",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 2,
+   "wrong_items": [
+    "The lesson states that negative numbers are whole numbers (e.g., \"the whole‑number prices are ₦ 250, ₦ 3 000 and ₦ ‑50 (negative numbers are still whole numbers)\") which is mathematically incorrect.",
+    "In the same practice question the explanation says \"adding the two smallest (‑50 + 250) gives 200\" then later claims the answer should be 500, showing contradictory and incorrect reasoning.",
+    "The feedback for the last question incorrectly treats \"‑50\" as a whole number and also mixes up the definition of whole numbers (non‑negative integers)."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 2,
+   "invented_claims": [
+    "The lesson claims that negative numbers are whole numbers, which is not supported by the curriculum definition of whole numbers.",
+    "The lesson invents a rule that the sum of the two smallest positive whole‑number prices is 500, despite the story providing different numbers."
+   ]
+  },
+  {
+   "id": "L4654",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1684",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 2,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8520",
+   "repeat": 0,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9492",
+   "repeat": 0,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8045",
+   "repeat": 0,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3270",
+   "repeat": 0,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The practice question about the market inspector has an incorrect marked right answer (option 4) and an erroneous explanation; the correct answer should be 14 visits, not 3."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9728",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5587",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6157",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1933",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7797",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7430",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 3,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9123",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6805",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 2,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2139",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2652",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5379",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4201",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4769",
+   "repeat": 0,
+   "objectives": 17,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 3: after multiplying 7/8 by 25/25 the lesson simplifies 175/200 to 87.5/100, which is not a valid integer numerator.",
+    "Slide 5 feedback incorrectly states that option B is false when it is actually true, causing contradictory guidance.",
+    "Practice question marks 4.75 as the correct answer but then states the correct answer is 4.6, showing inconsistent marking."
+   ],
+   "level_fit": 4,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3334",
+   "repeat": 0,
+   "objectives": 17,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    6,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5856",
+   "repeat": 0,
+   "objectives": 17,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    14,
+    15,
+    16
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7226",
+   "repeat": 0,
+   "objectives": 17,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [
+    1,
+    2,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1196",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4398",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7601",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9154",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9602",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the subtraction of fractions check (2/7 - 1/3), the marked right answer is given as 5/21, which is mathematically incorrect; the correct result is -1/21. The feedback also incorrectly states that the result should be 5/21 because we subtract the smaller from the larger."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6355",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4472",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4380",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the practice question at the end, the option marked right (31/105) is mathematically incorrect; the correct result of the described operations is 52/105."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6535",
+   "repeat": 0,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3892",
+   "repeat": 0,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4802",
+   "repeat": 0,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5799",
+   "repeat": 0,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the first 'Your turn' question the marked right answer is 4 cakes, but the explanation states both that 27/32 of a bag per cake and that 9/4 ÷ 3/8 = 6 cakes, which is contradictory and mathematically incorrect."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1642",
+   "repeat": 0,
+   "objectives": 6,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6708",
+   "repeat": 0,
+   "objectives": 6,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    5,
+    6
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3256",
+   "repeat": 0,
+   "objectives": 6,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the practice question about textbook mass, the marked right answer is 60 t, but the correct estimate is 6 t."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1697",
+   "repeat": 0,
+   "objectives": 6,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    2,
+    5,
+    6
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 3: The marked right answer is ₦140, but the explanation shows the correct estimate should be ₦135."
+   ],
+   "level_fit": 4,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7476",
+   "repeat": 0,
+   "objectives": 15,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    11,
+    12,
+    13,
+    9,
+    10,
+    14
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8155",
+   "repeat": 0,
+   "objectives": 15,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    11,
+    12,
+    14,
+    15
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 3 marks the answer ₦ 190 as correct, but the feedback explains that the correct rounding of ₦ 184 to the nearest ten is ₦ 180, creating a contradiction."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4259",
+   "repeat": 0,
+   "objectives": 15,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6928",
+   "repeat": 0,
+   "objectives": 15,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    2,
+    4,
+    5,
+    11,
+    12,
+    14,
+    15
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8237",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4202",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3443",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 2, Step 2 – Twos column: the lesson states 1+1+1 = 11, but for adding 101₂ and 111₂ the twos column digits are 0 and 1, so with the carry it should be 0+1+1 = 10."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2835",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1817",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Worked example 1011_2 - 110_2 is incorrectly given as 1001_2; the correct result is 0101_2."
+   ],
+   "level_fit": 4,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3850",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3707",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7790",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 2,
+   "invented_claims": [
+    "Many digital price displays at Nigerian market stalls show numbers in binary when the internal computer processes them.",
+    "The bars are displayed using binary counters inside the phone’s processor. If the signal drops, the processor *borrows* from a higher‑order digit to turn a “0” into a “1”.",
+    "A 24‑hour digital clock stores the time in binary."
+   ]
+  },
+  {
+   "id": "L4374",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4727",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4720",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8012",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1384",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5089",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5428",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1788",
+   "repeat": 0,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the Bayo bags of oranges question the option marked right (₦1,080) is incorrect; the correct total is ₦900."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4977",
+   "repeat": 0,
+   "objectives": 13,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6450",
+   "repeat": 0,
+   "objectives": 13,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    12
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4915",
+   "repeat": 0,
+   "objectives": 13,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3585",
+   "repeat": 0,
+   "objectives": 13,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9415",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6624",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1867",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1016",
+   "repeat": 0,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7593",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4311",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1334",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3917",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4356",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5663",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7006",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    9,
+    10
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Practice question: correct answer should be 3000 cm³ but the option marked right is 4500 cm³"
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4809",
+   "repeat": 0,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9375",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7988",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The last practice question marks option 3 as correct, but the explanation calculates a total of 86 naira, not 82, showing inconsistency and an incorrect marked answer."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3052",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2047",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3040",
+   "repeat": 0,
+   "objectives": 16,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    13,
+    14,
+    15,
+    16
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 5 feedback for the triangle missing‑angle question incorrectly states that the correct answer is 75° while the marked right option is 75° and the explanation shows the correct answer should be 65°."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2643",
+   "repeat": 0,
+   "objectives": 16,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8779",
+   "repeat": 0,
+   "objectives": 16,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9852",
+   "repeat": 0,
+   "objectives": 16,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5271",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 5 check: option '90 bottles' is marked right but the correct answer is 78 bottles"
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1410",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    5
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The practice question about the mean total number of fruits sold per day marks the answer 160 as correct, but the correct mean is 156.4 (rounded to 156), so the marked right answer is wrong."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7178",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3795",
+   "repeat": 0,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6038",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6883",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6354",
+   "repeat": 0,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1135",
+   "repeat": 0,
+   "objectives": 12,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    4,
+    5,
+    10,
+    11,
+    12
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8194",
+   "repeat": 0,
+   "objectives": 12,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    4,
+    5,
+    6,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5623",
+   "repeat": 0,
+   "objectives": 12,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "correctness": 3,
+   "wrong_items": [
+    "In Slide 5 the ordered list for the data set is incorrect; it includes values (2 and 10) that are not in the original data set."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2277",
+   "repeat": 0,
+   "objectives": 12,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8278",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5092",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 1,
+   "wrong_items": [
+    "The lesson later claims that negative numbers are whole numbers (practice question), which contradicts the correct definition given earlier.",
+    "The feedback for the practice question states that -50 is a whole number, which is mathematically incorrect.",
+    "The explanation of the sum in the practice question is contradictory and does not follow the steps shown.",
+    "The marked right answer for the sum (500) does not follow from the stated operations."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 2,
+   "invented_claims": [
+    "Claim that negative numbers are whole numbers.",
+    "Claim that whole‑number prices can include a negative price."
+   ]
+  },
+  {
+   "id": "L4654",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1684",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8520",
+   "repeat": 1,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9492",
+   "repeat": 1,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8045",
+   "repeat": 1,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3270",
+   "repeat": 1,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the practice question about traders and inspector, the marked right answer is option 4, but the explanation states the correct answer is option 3, creating a contradiction."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9728",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5587",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6157",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1933",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7797",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7430",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 2,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9123",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6805",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 2,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2139",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2652",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5379",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4201",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4769",
+   "repeat": 1,
+   "objectives": 17,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the practice question about 4 ¾ bags of rice the feedback marks 4.75 as the correct answer but then states the correct answer is 4.6, which is contradictory.",
+    "In the conversion of 7/8 to a decimal the explanation multiplies by 25/25 to get 175/200 and then claims simplifying to a denominator of 100 gives 87.5/100, which is not a proper fraction representation."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3334",
+   "repeat": 1,
+   "objectives": 17,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    6,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5856",
+   "repeat": 1,
+   "objectives": 17,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    14,
+    15,
+    16
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7226",
+   "repeat": 1,
+   "objectives": 17,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [
+    1,
+    2,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1196",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4398",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7601",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9154",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9602",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The marked correct answer for the question \"What is the correct result of \\frac{2}{7} - \\frac{1}{3}?\" is given as \\frac{5}{21}, which is mathematically incorrect (the correct result is -\\frac{1}{21})."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6355",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4472",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4380",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In Slide 5, the practice question marks the answer \\frac{31}{105} as correct, but the correct result of the described operations is \\frac{52}{105}."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6535",
+   "repeat": 1,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3892",
+   "repeat": 1,
+   "objectives": 7,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4802",
+   "repeat": 1,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5799",
+   "repeat": 1,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the first practice question the marked correct answer is 4 cakes, but the correct answer is 6 cakes; the explanation also contains contradictory statements."
+   ],
+   "level_fit": 3,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1642",
+   "repeat": 1,
+   "objectives": 6,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6708",
+   "repeat": 1,
+   "objectives": 6,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    6
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 2: The correct estimate for 42 N, 67 N, 81 N is 190 N, but the marked right answer is option 210, which is incorrect."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3256",
+   "repeat": 1,
+   "objectives": 6,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "correctness": 3,
+   "wrong_items": [
+    "Feedback for the textbook mass question incorrectly states that 60 t is the nearest option to the correct 6 t."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 2,
+   "invented_claims": [
+    "The practice question feedback claims that 60 t is the closest estimate to 6 t, which is mathematically incorrect."
+   ]
+  },
+  {
+   "id": "L1697",
+   "repeat": 1,
+   "objectives": 6,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    2,
+    5,
+    6
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 3 multiple‑choice answer is marked right as '₦140' but the explanation shows the correct estimate is ₦135."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7476",
+   "repeat": 1,
+   "objectives": 15,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    4,
+    5,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8155",
+   "repeat": 1,
+   "objectives": 15,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    7,
+    11,
+    12
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 3: The question asks for rounding ₦184 to the nearest ten. The option marked as correct is '₦190', but the explanation and correct rounding rule indicate the correct answer should be '₦180'. This inconsistency constitutes a wrong marked answer."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4259",
+   "repeat": 1,
+   "objectives": 15,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6928",
+   "repeat": 1,
+   "objectives": 15,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8237",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4202",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3443",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2835",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1817",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Worked example 1011_2 - 110_2 is incorrectly given as 1001_2; the correct result is 0101_2."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3850",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3707",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7790",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4374",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4727",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4720",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8012",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1384",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5089",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5428",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1788",
+   "repeat": 1,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the Bayo bags of oranges question the option marked right (₦1,080) is incorrect; the correct total is ₦900."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4977",
+   "repeat": 1,
+   "objectives": 13,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6450",
+   "repeat": 1,
+   "objectives": 13,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    12
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4915",
+   "repeat": 1,
+   "objectives": 13,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3585",
+   "repeat": 1,
+   "objectives": 13,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9415",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6624",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1867",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1016",
+   "repeat": 1,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7593",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4311",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1334",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3917",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4356",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5663",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7006",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    9,
+    10
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Practice question marked answer 4500 cm³ is incorrect; the correct volume for 20 cm × 15 cm × 10 cm is 3000 cm³."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4809",
+   "repeat": 1,
+   "objectives": 10,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9375",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7988",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The marked‑right answer for the biscuit‑price problem is inconsistent with the provided calculation (the work yields ₦86, not ₦82)."
+   ],
+   "level_fit": 4,
+   "teachable": 3,
+   "no_invention": 2,
+   "invented_claims": [
+    "The final word problem combines digit‑based construction with biscuit pricing and claims the answer is ₦82 despite the worked calculation giving ₦86, which is not supported by the official objectives."
+   ]
+  },
+  {
+   "id": "L3052",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2047",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 2,
+   "wrong_items": [
+    "The lesson does not address any of the listed objectives (parallel, perpendicular, bisecting, constructing 90° or 60° angles).",
+    "The last practice question marks an incorrect answer as right and provides a contradictory explanation."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3040",
+   "repeat": 1,
+   "objectives": 16,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2643",
+   "repeat": 1,
+   "objectives": 16,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8779",
+   "repeat": 1,
+   "objectives": 16,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9852",
+   "repeat": 1,
+   "objectives": 16,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5271",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 5: the marked right answer for the expected daily usage with 0.5 probability of rain is given as 90 bottles, which is mathematically incorrect (the correct answer is 78 bottles)."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1410",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The practice question about the mean total number of fruits sold per day marks the answer 160 as correct, but the correct mean is 156.4 (rounded to 156), so the marked right answer is wrong."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7178",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3795",
+   "repeat": 1,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6038",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6883",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6354",
+   "repeat": 1,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1135",
+   "repeat": 1,
+   "objectives": 12,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    4,
+    5,
+    10,
+    11,
+    12
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8194",
+   "repeat": 1,
+   "objectives": 12,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    4,
+    5,
+    6,
+    7
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the pictogram example the feedback says to round down to 6 pictures despite 27/4 = 6.75 which would normally be rounded to 7; this inconsistency is mathematically incorrect."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5623",
+   "repeat": 1,
+   "objectives": 12,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "correctness": 3,
+   "wrong_items": [
+    "In the mean/median/mode worked example, the ordered list shown (2,4,5,6,7,7,7,9,10) does not correspond to the original data set {4,7,5,9,7,6,7} and introduces extra values."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2277",
+   "repeat": 1,
+   "objectives": 12,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8278",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5092",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 2,
+   "wrong_items": [
+    "The practice question treats ₦ ‑50 as a whole number, which is incorrect because whole numbers are non‑negative.",
+    "The feedback for the practice question gives an inconsistent and mathematically incorrect explanation of the sum.",
+    "The lesson claims that 0 cannot be added to other whole numbers (option presented), which contradicts the definition that 0 behaves like any other whole number."
+   ],
+   "level_fit": 3,
+   "teachable": 4,
+   "no_invention": 2,
+   "invented_claims": [
+    "Negative numbers are whole numbers.",
+    "The whole‑number set includes negative integers.",
+    "The sum of the two smallest whole‑number prices is 500 (based on adding 250 twice)."
+   ]
+  },
+  {
+   "id": "L4654",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1684",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8520",
+   "repeat": 2,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9492",
+   "repeat": 2,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8045",
+   "repeat": 2,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3270",
+   "repeat": 2,
+   "objectives": 2,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the practice question about the market inspector, the option marked right (4) does not match the explanation, which states the correct answer is option 3."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9728",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5587",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6157",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1933",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7797",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7430",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 2,
+   "invented_claims": [
+    "Identify the place values in base‑2 (1, 2, 4, 8, …).",
+    "Convert a given decimal number (0‑31) to its binary representation using repeated division by 2.",
+    "Read a binary number and state its decimal value.",
+    "Explain one everyday use of binary numbers in digital devices."
+   ]
+  },
+  {
+   "id": "L9123",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6805",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 2,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2139",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2652",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5379",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4201",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4769",
+   "repeat": 2,
+   "objectives": 17,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    14
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 5 multiple‑choice question marks C as the only correct answer, but B (the mixed‑number conversion) is also correct.",
+    "Practice question on 4 ¾ bags of rice marks 4.75 as the correct decimal, then states the correct answer is actually 4.6, creating contradictory feedback.",
+    "Slide 3 conversion of 7/8 to a denominator of 100 yields 87.5/100, which is not an integer numerator and is an improper way to express an equivalent fraction."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3334",
+   "repeat": 2,
+   "objectives": 17,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    6,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5856",
+   "repeat": 2,
+   "objectives": 17,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    14,
+    15,
+    16
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7226",
+   "repeat": 2,
+   "objectives": 17,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1196",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4398",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7601",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9154",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9602",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the subtraction example (Slide 3), the lesson states that 2/7 - 1/3 = 5/21, which is mathematically incorrect; the correct result is -1/21."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6355",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4472",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4380",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6535",
+   "repeat": 2,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3892",
+   "repeat": 2,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4802",
+   "repeat": 2,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5799",
+   "repeat": 2,
+   "objectives": 7,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Marked answer '4' for the baker cakes problem is incorrect; the correct answer is 6 cakes. The feedback also gives a contradictory explanation."
+   ],
+   "level_fit": 4,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1642",
+   "repeat": 2,
+   "objectives": 6,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6708",
+   "repeat": 2,
+   "objectives": 6,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    5,
+    6
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3256",
+   "repeat": 2,
+   "objectives": 6,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The practice question about estimating total mass of textbooks marks the answer '60 t' as correct, but 1 200 × 5 kg = 6 000 kg = 6 t, so the correct choice should be 6 t. The lesson’s feedback is mathematically incorrect."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1697",
+   "repeat": 2,
+   "objectives": 6,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    2,
+    5,
+    6
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 2: The option marked right (170 Naira) is incorrect; the correct estimate is 180 Naira.",
+    "Slide 3: The option marked right (140 Naira) is incorrect; the correct estimate is 135 Naira.",
+    "Slide 5: The final practice question's marked right answer (200 Naira) is inconsistent with the explanation; the correct estimate should be 190 Naira."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7476",
+   "repeat": 2,
+   "objectives": 15,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8155",
+   "repeat": 2,
+   "objectives": 15,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    7,
+    11,
+    12,
+    14,
+    15
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 3: The marked right answer for rounding ₦184 to the nearest ten is 190, but the correct answer is ₦180."
+   ],
+   "level_fit": 4,
+   "teachable": 4,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4259",
+   "repeat": 2,
+   "objectives": 15,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6928",
+   "repeat": 2,
+   "objectives": 15,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    4,
+    11,
+    12,
+    14,
+    15
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 5: The marked right answer is ₦ 4 300, which contradicts the explanation that the correct estimate should be ₦ 4 000."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8237",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4202",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3443",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2835",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1817",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Result of 1011_2 - 110_2 given as 1001_2 (should be 0101_2)"
+   ],
+   "level_fit": 4,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3850",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3707",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7790",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 2,
+   "invented_claims": [
+    "Many digital price displays at Nigerian market stalls show numbers in binary when the internal computer processes them.",
+    "Mobile phone signal bars are displayed using binary counters inside the phone’s processor."
+   ]
+  },
+  {
+   "id": "L4374",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4727",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4720",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8012",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1384",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5089",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5428",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1788",
+   "repeat": 2,
+   "objectives": 8,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the Bayo bags of oranges question the option marked right (₦1,080) is incorrect; the correct answer is ₦900."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4977",
+   "repeat": 2,
+   "objectives": 13,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6450",
+   "repeat": 2,
+   "objectives": 13,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4915",
+   "repeat": 2,
+   "objectives": 13,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3585",
+   "repeat": 2,
+   "objectives": 13,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9415",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6624",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1867",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1016",
+   "repeat": 2,
+   "objectives": 4,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7593",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4311",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1334",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3917",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4356",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5663",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    4
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7006",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    9,
+    10
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the practice question about the storage box, the marked right answer is 4500 cm³, but the correct volume is 3000 cm³ (20 × 15 × 10). The feedback also incorrectly states 3000 cm³ while the option marked right is 4500 cm³."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L4809",
+   "repeat": 2,
+   "objectives": 10,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    9,
+    10
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9375",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7988",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    2,
+    3,
+    4
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The last practice question marks option 3 (₦82) as correct, but the provided solution calculations are inconsistent and do not actually yield ₦82."
+   ],
+   "level_fit": 4,
+   "teachable": 3,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3052",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2047",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 1,
+   "objectives_taught": [],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3040",
+   "repeat": 2,
+   "objectives": 16,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In Slide 5 the feedback for the triangle missing‑angle question marks option 75° as correct, but the worked solution shows the correct answer is 65°."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2643",
+   "repeat": 2,
+   "objectives": 16,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8779",
+   "repeat": 2,
+   "objectives": 16,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L9852",
+   "repeat": 2,
+   "objectives": 16,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    3
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5271",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "Slide 5 check: option '90 bottles' was marked right, but the correct answer is 78 bottles."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1410",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "The practice question marks option 3 (160) as the correct answer, but the correct mean total is 156.4 (≈156), so the marked right answer is wrong."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L7178",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L3795",
+   "repeat": 2,
+   "objectives": 5,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6038",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 4,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6883",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L6354",
+   "repeat": 2,
+   "objectives": 1,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L1135",
+   "repeat": 2,
+   "objectives": 12,
+   "error": null,
+   "coverage": 3,
+   "objectives_taught": [
+    1,
+    4,
+    5,
+    10,
+    11,
+    12
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L8194",
+   "repeat": 2,
+   "objectives": 12,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    4,
+    5,
+    6,
+    7
+   ],
+   "correctness": 2,
+   "wrong_items": [
+    "In the pictogram question feedback it states that 27/4 = 6.75 rounds down to 6 pictures, which is mathematically incorrect; the usual rounding would give 7 pictures."
+   ],
+   "level_fit": 4,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L5623",
+   "repeat": 2,
+   "objectives": 12,
+   "error": null,
+   "coverage": 5,
+   "objectives_taught": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "correctness": 4,
+   "wrong_items": [
+    "In Slide 5, the ordered list of data includes values (2 and 10) that are not present in the original data set, making the ordering step incorrect."
+   ],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  },
+  {
+   "id": "L2277",
+   "repeat": 2,
+   "objectives": 12,
+   "error": null,
+   "coverage": 2,
+   "objectives_taught": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    7
+   ],
+   "correctness": 5,
+   "wrong_items": [],
+   "level_fit": 5,
+   "teachable": 5,
+   "no_invention": 5,
+   "invented_claims": []
+  }
+ ]
+}
