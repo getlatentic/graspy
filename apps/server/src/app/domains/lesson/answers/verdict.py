@@ -22,6 +22,7 @@ class Found(StrEnum):
     WRONG_KEY = "wrong key"
     DOUBLE_RIGHT = "double right"
     NO_RIGHT_OPTION = "no right option"
+    CONTRADICTED = "contradicted"
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,8 @@ class Verdict:
     asked: Asked | None = None
     # The options that answer the question, in the form it asks for.
     right: tuple[int, ...] = ()
+    # For a check that contradicts itself: what contradicts what.
+    reason: str = ""
 
 
 NOT_COMPUTABLE = Verdict(Found.NOT_COMPUTABLE)
@@ -75,6 +78,18 @@ def terminates(value: Fraction) -> bool:
     return denominator == 1
 
 
+_EXACT_FORMS = frozenset({Form.FRACTION, Form.MIXED})
+
+
+def _rounded_from(value: Fraction, options: list[Written]) -> bool:
+    """Whether options such as 0.33 for 1/3 may be rounded from an answer
+    that never ends. Options that are all exact fractions are not: none of
+    them being 1/3 means none is right."""
+    return not terminates(value) and any(
+        option.form not in _EXACT_FORMS for option in options
+    )
+
+
 def _found(right: list[int], answer_index: int) -> Found:
     if not right:
         return Found.NO_RIGHT_OPTION
@@ -102,10 +117,7 @@ def verdict(question: str, options: list[str], answer_index: int) -> Verdict:
         for at, option in enumerate(read)
         if _value(option, answer.unit) == answer.value
     ]
-    # Options rounded from an answer that never ends, such as 0.33 for 1/3,
-    # or a form asked for that no option is written in, mean the question
-    # was not read as its writer meant it.
-    if not shaped or (not equal and not terminates(answer.value)):
+    if not shaped or (not equal and _rounded_from(answer.value, read)):
         return NOT_COMPUTABLE
     right = [at for at in equal if at in shaped]
     return Verdict(_found(right, answer_index), answer, tuple(right))

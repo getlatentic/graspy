@@ -1,0 +1,272 @@
+[
+ {
+  "topic": "Approximation",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "s3",
+  "what": "Round 184 to the nearest ten, marked 190 (180)",
+  "found_by": "judge+hand",
+  "kind": "worked out from the question"
+ },
+ {
+  "topic": "Addition and Subtraction of Fractions",
+  "arm": "grounded",
+  "draw": 0,
+  "where": "s3",
+  "what": "2/7 - 1/3 marked 5/21; it is -1/21 and no option is",
+  "found_by": "judge+hand",
+  "kind": "worked out from the question"
+ },
+ {
+  "topic": "Estimation",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "s2",
+  "what": "42 + 59 + 77 estimated to the nearest ten, marked 170 (180)",
+  "found_by": "judge",
+  "kind": "worked out from the question"
+ },
+ {
+  "topic": "Estimation",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "38 + 57 + 24 + 69 estimated to the nearest ten, marked 200 (190)",
+  "found_by": "judge",
+  "kind": "worked out from the question"
+ },
+ {
+  "topic": "Data Collection",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "practice",
+  "what": "Median asked of fruit names",
+  "found_by": "hand",
+  "kind": "worked out from the question"
+ },
+ {
+  "topic": "Data Presentation",
+  "arm": "grounded",
+  "draw": 0,
+  "where": "s5",
+  "what": "35 in 20, 22, 19, 35, 21, 20, 18 is an outlier; marked 'no extreme outlier'",
+  "found_by": "hand",
+  "kind": "worked out from the question"
+ },
+ {
+  "topic": "Estimation",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "s3",
+  "what": "Estimated fare marked 140; the feedback works 135",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "LCM",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "Market inspector visits: 72-day LCM and visits every 5 days; no option is right and the feedback names another",
+  "found_by": "judge+hand",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Multiplications and Divisions of Fractions",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "Cost per classmate marked 40; the feedback works 25",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Fractions",
+  "arm": "grounded",
+  "draw": 0,
+  "where": "practice",
+  "what": "4 3/5 as a decimal marked 4.75; the feedback works 4.6",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Estimation",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "s2",
+  "what": "42 + 67 + 81 estimated marked 210; the feedback works 190",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Approximation",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "s5",
+  "what": "Estimated spend marked 4300; the feedback ends in 4000 'however'",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Use of Symbols",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "s2",
+  "what": "Bayo's oranges marked 1,080; the feedback says sorry, 900",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Three dimensional figures",
+  "arm": "grounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "Volume 20 x 15 x 10 marked 4500; the feedback says oops, 3000",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Angles",
+  "arm": "grounded",
+  "draw": 0,
+  "where": "s5",
+  "what": "Third angle of 30 and 85 marked 75; the feedback says actually 65",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Need for Statistics",
+  "arm": "grounded",
+  "draw": 0,
+  "where": "s5",
+  "what": "Expected bottles marked 90; the feedback says oops, 78",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Whole Numbers",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "practice",
+  "what": "Whole-number prices with -50 counted whole; the feedback chooses an 'intended interpretation'",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Construction",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "Tens digit of 109 marked 5; the feedback chooses an 'intended interpretation'",
+  "found_by": "judge",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Multiplications and Divisions of Fractions",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "s1",
+  "what": "9/4 divided by 3/8 is 6 cakes, marked 4",
+  "found_by": "judge+hand",
+  "kind": "a word problem a model must read"
+ },
+ {
+  "topic": "Addition and Subtraction of Fractions",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "3/7 + 2/5 - 1/3 is 52/105, marked 31/105",
+  "found_by": "judge",
+  "kind": "a word problem a model must read"
+ },
+ {
+  "topic": "Estimation",
+  "arm": "grounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "1 200 books at 5 kg is 6 t, marked 60 t",
+  "found_by": "judge",
+  "kind": "a word problem a model must read"
+ },
+ {
+  "topic": "Construction",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "practice",
+  "what": "A canteen puzzle whose working gives 86 and whose key is 82",
+  "found_by": "judge",
+  "kind": "a word problem a model must read"
+ },
+ {
+  "topic": "Need for Statistics",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "practice",
+  "what": "Mean of five daily totals is 156.4, marked 160",
+  "found_by": "judge",
+  "kind": "a word problem a model must read"
+ },
+ {
+  "topic": "Three dimensional figures",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "s5",
+  "what": "Packing 120 oranges in a box smaller than the oranges",
+  "found_by": "hand",
+  "kind": "needs judgement about meaning"
+ },
+ {
+  "topic": "Fractions",
+  "arm": "grounded",
+  "draw": 0,
+  "where": "s5",
+  "what": "Two statements are right (9/4 is 2 1/4, and 45/20 is equivalent); one is marked",
+  "found_by": "judge",
+  "kind": "needs judgement about meaning"
+ },
+ {
+  "topic": "Data Presentation",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "s3",
+  "what": "27/4 pictures marked 6 where 7 is the usual rounding",
+  "found_by": "judge",
+  "kind": "needs judgement about meaning"
+ },
+ {
+  "topic": "Data Presentation",
+  "arm": "grounded",
+  "draw": 1,
+  "where": "practice",
+  "what": "Mean of 24, 18, 30, 12 is 21.0, marked 22.0",
+  "found_by": "this issue",
+  "kind": "contradicted by its own feedback"
+ },
+ {
+  "topic": "Estimation",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "practice",
+  "what": "3 kg at 128, 2 kg at 57 and 4 bottles at 23 estimate to 590; no option is near it",
+  "found_by": "this issue",
+  "kind": "a word problem a model must read"
+ },
+ {
+  "topic": "Multiplications and Divisions of Fractions",
+  "arm": "ungrounded",
+  "draw": 0,
+  "where": "s4",
+  "what": "Marked option '35/24 (or 1 2/3)': 35/24 is 1 11/24",
+  "found_by": "this issue",
+  "kind": "needs judgement about meaning"
+ },
+ {
+  "topic": "Multiplications and Divisions of Fractions",
+  "arm": "ungrounded",
+  "draw": 1,
+  "where": "s4",
+  "what": "Three of the four options are the same answer (428.57, 428.57 ≈ 429, 429)",
+  "found_by": "this issue",
+  "kind": "needs judgement about meaning"
+ }
+]

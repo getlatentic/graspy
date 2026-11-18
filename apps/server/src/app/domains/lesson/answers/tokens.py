@@ -6,7 +6,7 @@ from __future__ import annotations
 import math
 import re
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from fractions import Fraction
 
@@ -156,6 +156,16 @@ def tokens(text: str) -> list[Token] | None:
     return _read_in_place(found)
 
 
+def _negated(text: str, start: int) -> bool:
+    """A minus sign straight before the number, with no value before the sign:
+    "at -2", but not "5-2"."""
+    return (
+        start > 0
+        and text[start - 1] == "-"
+        and (start == 1 or not (text[start - 2].isalnum() or text[start - 2] in ")]"))
+    )
+
+
 def numbers_in(text: str) -> Iterator[Number]:
     """Every number written in text, whatever is around it: "40%" is the
     percentage 2/5."""
@@ -167,6 +177,8 @@ def numbers_in(text: str) -> Iterator[Number]:
             continue
         if text[match.end() :].lstrip().startswith("%"):
             number = Number(number.value / 100, Form.PERCENT)
+        if _negated(text, match.start()):
+            number = replace(number, value=-number.value)
         yield number
 
 

@@ -22,7 +22,13 @@ from ...config.languages import (
     generation_language_for,
     needs_translation,
 )
-from .checked import PRACTICE_CHECKS, SLIDE_CHECKS, checked
+from .checked import (
+    PRACTICE_CHECKS,
+    PRACTICE_REWRITES,
+    SLIDE_CHECKS,
+    checked,
+    practice_from,
+)
 from .generator import StagedLessonGenerator
 from .grounded import Grounding, grounding_for
 from .lesson import (
@@ -261,6 +267,13 @@ class LessonService:
         yield _status("generating_practice", "Generating practice question...")
         practice = await self._written_practice(request, lesson)
         if practice is None:
+            practice = practice_from(lesson.written)
+        if practice is None:
+            logger.warning(
+                "Lesson for %s/%s has no practice question",
+                request.subject,
+                request.topic,
+            )
             return
         if request.should_translate:
             yield _status(
@@ -292,7 +305,7 @@ class LessonService:
     async def _written_practice(
         self, request: LessonRequest, lesson: _Draft
     ) -> LessonPractice | None:
-        """None when its check was taken out."""
+        """None when its check was taken out, even after it was written again."""
         grounding = lesson.grounding
         written = (
             request.subject,
@@ -312,6 +325,7 @@ class LessonService:
                 *written, problem=problem, grounding=grounding
             ),
             request.part("the practice question"),
+            PRACTICE_REWRITES,
         )
 
     async def _localise_slide(

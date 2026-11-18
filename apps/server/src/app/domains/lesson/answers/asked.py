@@ -16,6 +16,9 @@ class Worked(StrEnum):
     CONVERSION = "conversion"
     UNITS = "units"
     EQUATION = "equation"
+    ROUNDING = "rounding"
+    DIVISORS = "divisors"
+    STATISTIC = "statistic"
 
 
 @dataclass(frozen=True)

@@ -215,7 +215,6 @@ def test_a_unit_named_in_the_question_is_asked_for_and_one_worked_out_is_not():
         # Comparing, estimating, rounding.
         "Which is bigger, 1/2 or 1/3?",
         "Which is greater: 0.5 or 0.45?",
-        "Round 3.46 to one decimal place.",
         "What is 1/3 + 1/4 to the nearest tenth?",
         # Questions about a number, not its value.
         "What is the numerator of 3/5?",
