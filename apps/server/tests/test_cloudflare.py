@@ -14,7 +14,10 @@ from a2a.types import Message, Role, SendMessageRequest
 from dspy.utils.dummies import DummyLM
 from fastapi.testclient import TestClient
 from lesson_example import LESSON, wire
+from service_agreed import service_agreed
+from signed_in import UID
 
+from app.account.directory import learner_key
 from app.agent.memory import DurableObjectConversationStore
 from app.chatlog.conversations import LogConversationStore
 from app.cloudflare import (
@@ -31,6 +34,7 @@ from app.lessons.making import Job, LessonTarget, started
 from app.lessons.store import DurableObjectLessonStore
 from app.local_d1 import LocalD1
 from app.mcp.sandbox import build_of
+from app.security.session import issue
 from app.settings import DEPLOYMENT_KEYS
 from app.threads.wire import SentThreads
 
@@ -270,9 +274,10 @@ async def test_the_tutor_remembers_a_conversation_in_the_durable_object():
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as http:
-        http.headers["Authorization"] = (
-            f"Bearer {(await http.post('/api/session')).json()['token']}"
-        )
+        learner = learner_key(UID, "a1b2c3d4e5f6")
+        await service_agreed(env, "a1b2c3d4e5f6")
+        token = issue(app.state.session_secret, learner=learner, account=UID)
+        http.headers["Authorization"] = f"Bearer {token.token}"
         client = await create_client(
             "http://test", client_config=ClientConfig(httpx_client=http)
         )

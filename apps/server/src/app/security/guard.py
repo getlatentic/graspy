@@ -59,9 +59,9 @@ async def require_session(request: Request) -> Session:
     return session
 
 
-# Asked of each session the middleware lets through; a refusal ends the request with its status
-# and detail.
-SessionCheck = Callable[[Session], Awaitable[HTTPException | None]]
+# Asked of each session the middleware lets through, with the path it asks for; a refusal ends the
+# request with its status and detail.
+SessionCheck = Callable[[Session, str], Awaitable[HTTPException | None]]
 
 
 class SessionMiddleware:
@@ -103,7 +103,9 @@ class SessionMiddleware:
             return
         refused = checked(_authorization(scope), self.secret)
         if isinstance(refused, Session):
-            turned_away = await self.check(refused) if self.check else None
+            turned_away = (
+                await self.check(refused, scope["path"]) if self.check else None
+            )
             if turned_away is None:
                 # request.auth, which the A2A SDK copies into each call's context.
                 scope["auth"] = refused

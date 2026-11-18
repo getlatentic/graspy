@@ -1,5 +1,6 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
+import { useAccount } from "@/lib/account/use-account";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { cn } from "@/lib/cn";
@@ -145,8 +146,10 @@ function LessonChat({
   const { pathname } = useLocation();
   const { curriculum } = usePlan();
   const wide = useMediaQuery(WIDE_SCREEN);
+  const signedIn = useAccount() !== null;
   const scope = scopeOf(lesson, curriculum);
-  if (!wide || !scope) return null;
+  // The chat is for an account's learner; a signed-out device has the lesson alone.
+  if (!wide || !scope || !signedIn) return null;
   return (
     <ChatPane
       open={open}

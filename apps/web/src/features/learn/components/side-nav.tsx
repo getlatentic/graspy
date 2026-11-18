@@ -1,6 +1,11 @@
 import { Link, useLocation } from "react-router";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { sectionOf, type Section } from "@/features/learn/lib/app-sections";
+import {
+  labelKeyOf,
+  sectionOf,
+  type Section,
+} from "@/features/learn/lib/app-sections";
+import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 
@@ -14,6 +19,7 @@ interface SideNavProps {
  * a phone has the tab bar. */
 export function SideNav({ sections, open, onToggle }: SideNavProps) {
   const { t } = useI18n();
+  const signedIn = useAccount() !== null;
   const current = sectionOf(useLocation().pathname);
   const Toggle = open ? PanelLeftClose : PanelLeftOpen;
   const toggleLabel = t(open ? "nav.collapse" : "nav.expand");
@@ -26,14 +32,16 @@ export function SideNav({ sections, open, onToggle }: SideNavProps) {
         open ? "w-56" : "w-16",
       )}
     >
-      {sections.map(({ id, path, labelKey, icon: Icon }) => {
+      {sections.map((section) => {
+        const { id, path, icon: Icon } = section;
+        const label = t(labelKeyOf(section, signedIn));
         const active = id === current;
         return (
           <Link
             key={id}
             to={path}
             aria-current={active ? "page" : undefined}
-            title={open ? undefined : t(labelKey)}
+            title={open ? undefined : label}
             className={cn(
               "flex items-center gap-3 rounded-control p-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
               active
@@ -42,7 +50,7 @@ export function SideNav({ sections, open, onToggle }: SideNavProps) {
             )}
           >
             <Icon className="size-5 shrink-0" aria-hidden="true" />
-            <span className={open ? "truncate" : "sr-only"}>{t(labelKey)}</span>
+            <span className={open ? "truncate" : "sr-only"}>{label}</span>
           </Link>
         );
       })}

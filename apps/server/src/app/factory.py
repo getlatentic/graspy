@@ -25,6 +25,7 @@ from .agent.tutor import Tutor
 from .api.account_parent_routes import parent_session_router
 from .api.account_routes import account_router
 from .api.account_voice_routes import account_voice_router
+from .api.chat_access import chat_refusal
 from .api.chat_routes import chat_router
 from .api.education_routes import education_router
 from .api.learner_routes import learner_router
@@ -208,6 +209,15 @@ def _origins(settings: Settings) -> list[str]:
     return origins
 
 
+async def _session_refusal(app: FastAPI, session, path: str, settings: Settings):
+    """The tutor chat (A2A) needs an account's learner; MCP, which carries the lessons' cards,
+    needs only the consent a learner's session already implies."""
+    prefix = "/" + settings.a2a_path_prefix.strip("/")
+    if path == prefix or path.startswith(f"{prefix}/"):
+        return await chat_refusal(app, session)
+    return await session_consent_refusal(app, session)
+
+
 def _add_middleware(
     app: FastAPI,
     settings: Settings,
@@ -225,7 +235,7 @@ def _add_middleware(
         prefixes=(settings.a2a_path_prefix, MCP_PATH),
         secret=session_secret,
         open_paths=(PUBLIC_MCP_PATH,),
-        check=lambda session: session_consent_refusal(app, session),
+        check=lambda session, path: _session_refusal(app, session, path, settings),
     )
     if budgets is not None:
         app.add_middleware(

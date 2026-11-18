@@ -8,6 +8,7 @@ import {
   leaveLearnerSession,
   type Issued,
 } from "@/lib/api/session";
+import { takeChat } from "@/lib/account/chat-return";
 import { getCurriculum } from "@/lib/curriculum-db";
 import { deviceId } from "@/lib/device-id";
 import { wipeLearnerData } from "@/lib/device-wipe";
@@ -81,11 +82,13 @@ export async function leaveLearner(): Promise<void> {
   await wipeLearnerData();
 }
 
-/** Where the learner starts: their plan, or onboarding to make one. */
+/** Where the learner starts: the chat they asked for before signing in, else their plan, or
+ * onboarding to make one. */
 async function startPage(): Promise<string> {
+  const chat = takeChat();
   if (!(await getCurriculum())) return "/app/onboarding";
   saveUserProfile({ onboardingCompleted: true });
-  return "/app/learn";
+  return chat ?? "/app/learn";
 }
 
 async function joinFirst(learner: Learner): Promise<void> {

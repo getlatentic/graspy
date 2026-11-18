@@ -30,6 +30,10 @@ export const SECTIONS: readonly Section[] = [
   { id: "you", path: "/app/learn/you", labelKey: "nav.you", icon: UserRound },
 ];
 
+/** Ask says what it takes while nobody is signed in: the chat is for an account's learner. */
+export const labelKeyOf = (section: Section, signedIn: boolean): string =>
+  section.id === "ask" && !signedIn ? "signIn.link" : section.labelKey;
+
 // Subjects and Ask are read, so a class that learns by voice alone has neither.
 const VOICE_ONLY_SECTIONS = SECTIONS.filter(
   ({ id }) => id === "home" || id === "you",

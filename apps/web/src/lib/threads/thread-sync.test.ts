@@ -226,6 +226,22 @@ describe("sending what this device has not sent", () => {
     expect(server.reads).toEqual([]);
     expect(await db.unsentThreads()).toHaveLength(1);
   });
+
+  it("gives the conversations a signed-out device kept to the first learner chosen", async () => {
+    signedIn = null;
+    const db = await device();
+    const { thread, message } = await asked(db, "Before signing in");
+    await db.syncThreads();
+    expect(server.sent).toEqual([]);
+
+    signedIn = { uid: "uid-1", learner: { id: "ada" } };
+    await db.syncThreads();
+
+    const [[sent]] = server.sent;
+    expect(sent).toMatchObject({ id: thread.id, scope: FRACTIONS });
+    expect(sent.messages.map((kept) => kept.id)).toEqual([message.id]);
+    expect(await db.unsentThreads()).toEqual([]);
+  });
 });
 
 describe("taking in what the learner's other devices sent", () => {

@@ -7,6 +7,7 @@ import httpx
 import pytest
 from test_a2a import KEEPING, FakeTutor
 
+from app.account.directory import learner_key
 from app.agent.streaming import AnswerDelta, ToolActivity
 from app.chatlog import kinds
 from app.chatlog.log import ChatLog
@@ -23,8 +24,12 @@ TURN = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
 BASE = "http://test"
 
 
-def bearer(learner: str | None = "dev1") -> dict:
-    return {"Authorization": f"Bearer {issue(SECRET, learner=learner).token}"}
+def bearer(learner: str = "dev1") -> dict:
+    """A signed-in account's learner: the chat is for no other."""
+    held = learner_key("uid123", learner.ljust(12, "0"))
+    return {
+        "Authorization": f"Bearer {issue(SECRET, learner=held, account='uid123').token}"
+    }
 
 
 class Hanging(FakeTutor):
