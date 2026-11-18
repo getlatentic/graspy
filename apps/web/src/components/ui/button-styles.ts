@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
-export type Variant = "primary" | "secondary" | "ghost";
-export type Size = "sm" | "md" | "lg";
+export type Variant = "primary" | "secondary" | "ghost" | "danger";
+export type Size = "sm" | "md" | "lg" | "icon";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
@@ -9,12 +9,15 @@ const VARIANTS: Record<Variant, string> = {
   secondary:
     "border border-accent-line bg-accent-soft text-accent-ink hover:border-accent",
   ghost: "text-accent-ink hover:bg-accent-soft",
+  danger:
+    "border border-danger-soft bg-danger-soft text-danger hover:border-danger",
 };
 
 const SIZES: Record<Size, string> = {
   sm: "px-3 py-1.5 text-sm gap-1.5 pointer-coarse:min-h-11",
   md: "px-5 py-3 text-base gap-2",
   lg: "px-6 py-4 text-lg gap-2",
+  icon: "size-10 shrink-0",
 };
 
 /** For links styled as buttons; `<Button>` for buttons. */
