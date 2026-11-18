@@ -273,4 +273,53 @@ describe("a voice lesson", () => {
       run({ type: "start" }, { type: "loaded", move: rest }).phase,
     ).toEqual({ name: "rest", move: rest });
   });
+
+  const silentTake: LessonEvent[] = [
+    { type: "recordStarted" },
+    { type: "nothingHeard" },
+  ];
+
+  it("starts counting silent takes again on the next step", () => {
+    const next = run(
+      ...toYourTurn,
+      ...silentTake,
+      ...silentTake,
+      { type: "loaded", move: { ...ASKED, event_id: "e3", say: "plan.e3" } },
+      { type: "taught", spoken: "heard" },
+      ...silentTake,
+    );
+    expect(next.quiet).toBe(1);
+  });
+
+  it("does not count a refusal that answers another take", () => {
+    const checking = run(
+      ...toYourTurn,
+      { type: "recordStarted" },
+      { type: "recorded", key: "k1" },
+    );
+    const other = lessonReducer(checking, {
+      type: "settled",
+      key: "k0",
+      sent: { kind: "refused", code: "no_speech", status: 422 },
+    });
+    expect(other).toBe(checking);
+    expect(other.quiet).toBeUndefined();
+  });
+
+  it("starts again once an answer is marked", () => {
+    const marked = run(
+      ...toYourTurn,
+      ...silentTake,
+      { type: "recordStarted" },
+      { type: "recorded", key: "k1" },
+      { type: "settled", key: "k1", sent: { kind: "marked", turn: TURN } },
+    );
+    expect(marked.quiet).toBeUndefined();
+  });
+
+  it("starts again with a fresh start of the lesson", () => {
+    expect(run(...toYourTurn, ...silentTake, { type: "start" }).quiet).toBe(
+      undefined,
+    );
+  });
 });
