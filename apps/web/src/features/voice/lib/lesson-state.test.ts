@@ -176,6 +176,39 @@ describe("a voice lesson", () => {
     ).toMatchObject({ phase: { name: "your-turn" }, note: "micDenied" });
   });
 
+  it("counts the takes in a row in which nobody spoke, and starts again with a step or an answer", () => {
+    const silent: LessonEvent[] = [
+      { type: "recordStarted" },
+      { type: "nothingHeard" },
+    ];
+    expect(run(...toYourTurn, ...silent).quiet).toBe(1);
+    expect(run(...toYourTurn, ...silent, ...silent).quiet).toBe(2);
+    expect(run(...toYourTurn, ...silent, { type: "recordStarted" }).quiet).toBe(
+      1,
+    );
+    expect(
+      run(...toYourTurn, ...silent, ...silent, {
+        type: "loaded",
+        move: TAUGHT,
+      }).quiet,
+    ).toBeUndefined();
+  });
+
+  it("counts a take the server found empty with the ones the page found empty", () => {
+    const refused = (key: string): LessonEvent[] => [
+      { type: "recordStarted" },
+      { type: "recorded", key },
+      {
+        type: "settled",
+        key,
+        sent: { kind: "refused", code: "no_speech", status: 422 },
+      },
+    ];
+    expect(run(...toYourTurn, ...refused("k1"), ...refused("k2")).quiet).toBe(
+      2,
+    );
+  });
+
   it("gives the turn back, with nothing to say, when a take ends unsent out of sight", () => {
     expect(
       run(

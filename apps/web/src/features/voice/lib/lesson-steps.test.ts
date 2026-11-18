@@ -113,6 +113,7 @@ describe("a voice lesson reloaded with an answer kept", () => {
     expect(page.state).toEqual({
       phase: { name: "your-turn", move: ASKED },
       note: "noSpeech",
+      quiet: 1,
     });
   });
 

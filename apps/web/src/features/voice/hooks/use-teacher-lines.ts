@@ -2,7 +2,11 @@ import { useEffect, useRef, type Dispatch } from "react";
 import { replyAudio, teacherAudio } from "@/lib/voice/voice-api";
 import { TeacherVoice } from "@/lib/voice/teacher-voice";
 import type { LessonLanguage } from "@/lib/voice/voice-types";
-import type { LessonEvent, LessonState } from "../lib/lesson-state";
+import {
+  QUIET_TAKES_BEFORE_HELP,
+  type LessonEvent,
+  type LessonState,
+} from "../lib/lesson-state";
 
 /** Her line for a take in which nobody spoke. */
 const NO_SPEECH = "no-speech";
@@ -18,6 +22,15 @@ function currentLine(state: LessonState, language: LessonLanguage) {
   return null;
 }
 
+/** A child who stayed silent more than once may not have understood: she asks the question again. */
+function asksAgain(state: LessonState): boolean {
+  return (
+    state.phase.name === "your-turn" &&
+    state.note === "noSpeech" &&
+    (state.quiet ?? 0) >= QUIET_TAKES_BEFORE_HELP
+  );
+}
+
 /** She says each step, her reply to each answer, and a word when she heard nothing. */
 export function useTeacherLines(
   state: LessonState,
@@ -27,6 +40,7 @@ export function useTeacherLines(
   const voice = useRef<TeacherVoice | null>(null);
   voice.current ??= new TeacherVoice();
   const { phase } = state;
+  const helps = asksAgain(state);
 
   useEffect(() => () => voice.current?.close(), []);
 
@@ -38,12 +52,14 @@ export function useTeacherLines(
       if (!live) return;
       if (phase.name === "teaching") dispatch({ type: "taught", spoken });
       if (phase.name === "result") dispatch({ type: "replied" });
+      if (helps && phase.name === "your-turn")
+        void voice.current!.say(() => teacherAudio(phase.move.say, language));
     });
     return () => {
       live = false;
       voice.current?.stop();
     };
-  }, [phase, state.note, dispatch, language]);
+  }, [phase, state.note, helps, dispatch, language]);
 
   return {
     unlock: () => voice.current!.unlock(),
