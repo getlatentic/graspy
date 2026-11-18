@@ -1,6 +1,10 @@
 {
   "planBuilding": {
-    "making": "Making your plan…"
+    "making": "Making your plan…",
+    "choosing": "Choosing your subjects",
+    "topic": "1 topic",
+    "topics": "{count} topics",
+    "lesson": "Getting your first lesson ready"
   },
   "chat": {
     "aiTutorTitle": "graspy tutor",
