@@ -14,15 +14,15 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="grid min-h-dvh grid-rows-[auto_1fr] bg-canvas lg:grid-cols-2 lg:grid-rows-1">
-      <div className="aspect-4/3 max-h-96 sm:aspect-video lg:relative lg:aspect-auto lg:max-h-none">
+    <main className="grid min-h-dvh grid-cols-1 grid-rows-[auto_1fr] bg-canvas lg:grid-cols-2 lg:grid-rows-1">
+      <div className="aspect-4/3 max-h-96 min-w-0 overflow-hidden sm:aspect-video lg:relative lg:aspect-auto lg:max-h-none">
         <Art
           name="tablet"
           eager
           className="object-top lg:absolute lg:inset-0"
         />
       </div>
-      <div className="flex flex-col items-center justify-center gap-10 px-5 py-10 sm:px-10">
+      <div className="flex min-w-0 flex-col items-center justify-center gap-10 px-5 py-10 sm:px-10">
         <Logo />
         <div className="w-full max-w-sm">
           <SignIn />
