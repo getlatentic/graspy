@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
+import type { AgeBand } from "@/lib/age-band";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 import type { CurrentTopic } from "@/features/learn/lib/current-topic";
@@ -12,6 +13,7 @@ const UP_NEXT = 4;
 interface ResumeCardProps {
   current: CurrentTopic;
   grade: string;
+  band: AgeBand;
   completed: number;
   onOpenTopic: (index: number) => void;
   className?: string;
@@ -20,6 +22,7 @@ interface ResumeCardProps {
 export function ResumeCard({
   current,
   grade,
+  band,
   completed,
   onOpenTopic,
   className,
@@ -34,6 +37,7 @@ export function ResumeCard({
         <div className="flex items-center gap-3 sm:items-start sm:gap-5">
           <SubjectPicture
             name={subject.name}
+            band={band}
             className="size-16 shrink-0 rounded-control sm:size-24 lg:size-32"
             iconClassName="size-8 sm:size-10 lg:size-14"
           />
