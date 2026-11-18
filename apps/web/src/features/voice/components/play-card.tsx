@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 import type { CatalogueLesson, LessonLanguage } from "@/lib/voice/voice-types";
 import { MASTERY_DAYS, daysRight } from "../lib/mastery";
 import { voiceLessonPath } from "../lib/voice-paths";
+import { LessonPicture } from "./lesson-picture";
 
 /** The days the lesson was right, one dot for each day needed. */
 function DayDots({ right }: { right: number }) {
@@ -38,12 +39,15 @@ export function PlayCard({
       to={voiceLessonPath()}
       className="flex flex-col items-center gap-4 rounded-3xl border border-accent-line bg-accent-soft p-6 text-center transition-colors hover:border-accent sm:flex-row sm:gap-8 sm:p-8 sm:text-start"
     >
-      <span
-        role="img"
-        aria-label={t("voice.start")}
-        className="flex size-28 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent sm:size-36"
-      >
-        <Play aria-hidden="true" className="size-12 fill-current sm:size-16" />
+      <span className="relative block w-full max-w-60 shrink-0 sm:w-48">
+        <LessonPicture lesson={lesson} eager />
+        <span
+          role="img"
+          aria-label={t("voice.start")}
+          className="absolute -bottom-3 end-3 flex size-16 items-center justify-center rounded-full border-4 border-accent-soft bg-accent text-on-accent sm:size-20"
+        >
+          <Play aria-hidden="true" className="size-7 fill-current sm:size-9" />
+        </span>
       </span>
       <span className="flex min-w-0 flex-col items-center gap-3 sm:items-start">
         <span className="sr-only">{t("voice.next")}</span>
