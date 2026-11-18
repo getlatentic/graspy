@@ -193,11 +193,11 @@ The labeller and the writer are the same model, so a misreading it shares is not
 ### The baseline
 
 `node bench/run-observation.ts http://localhost:8799 gemma dev`, the observer as it is on main (Gemma 26B on Bedrock, `src/observation.ts`,
-policy thresholds as in `src/policy.ts`), the bench Worker running locally. Twice, with the same counts both times:
+policy thresholds as in `src/policy.ts`), the bench Worker running locally. Three runs: two gave the counts below, the third one more right and no missed need (temperature 0 on the host is not deterministic), so read the table as 147 to 148 right:
 
 | as decided, dev (167 cases) | right | left to marking | need or safety missed | wrong number | marked a non-answer | wrong action | no observation | median |
 |---|---|---|---|---|---|---|---|---|
-| observation, Gemma 26B | 147 | 17 | 1 | 0 | 1 | 1 | 0 | 1.0 to 1.2 s |
+| observation, Gemma 26B | 147 (148) | 17 | 1 (0) | 0 | 1 | 1 | 0 | 1.0 to 1.2 s |
 
 Right by source: hand 20 of 24, template 38 of 42, staging 11 of 16, gpt-oss-120b 78 of 85. By field at its threshold (precision, recall):
 not knowing 100%, 100%; asking again 100%, 100%; garbled 100%, 86%; physical need 95%, 100%; safety 98%, 98%; question or something else 41%, 100%;
@@ -222,6 +222,8 @@ node bench/add-model-cases.ts            # asks gpt-oss-120b; ids it already hol
 node bench/screen-model-cases.ts http://localhost:8799 screen.json   # blind second reading of the lines nobody has read; then read the differences
 node bench/run-observation.ts http://localhost:8799 gemma dev
 ```
+
+The scripts import each other with `.ts` extensions so Node can run them, which is why `tsconfig.json` has `allowImportingTsExtensions`.
 
 `tests/observation-set.test.ts` fails when the split rule moves a case, an id is used twice, the same words are put to the same question twice, a
 real turn is in the file, or a field has fewer than thirty cases.

@@ -84,7 +84,9 @@ async function handle(request: Request, env: Env): Promise<Response> {
       return Response.json({ route, ms, accepted, mayBeAnAnswer: mayBeAnAnswer(heard), soundsLikeTheAnswer: isOnlyTheAnswer(heard, 10), foundBySafetyRule: need !== null });
     }
     if (new URL(request.url).pathname === "/generate") {
-      // One structured-output call to gpt-oss-120b on Bedrock, for the scripts that write and check cases (bench/add-model-cases.ts). Never a Claude model.
+      // One plain-text call to gpt-oss-120b on Bedrock, for the scripts that write and check cases (bench/add-model-cases.ts). Never a Claude model.
+      // It spends the Bedrock key for whoever asks, so it answers only on this machine.
+      if (!["localhost", "127.0.0.1"].includes(new URL(request.url).hostname)) return new Response("local only", { status: 403 });
       const { system, user } = (await request.json()) as { system: string; user: string };
       return Response.json({ text: await generate(env, system, user) });
     }

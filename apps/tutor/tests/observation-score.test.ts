@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Labels, Row } from "../bench/observation-set";
-import { ideal, render, score, type Reply } from "../bench/observation-score";
+import { ideal, render, renderReal, score, wilson, type Reply } from "../bench/observation-score";
 
 const NONE: Labels = { answer: null, dont_know: false, repeat_request: false, physical_need: null, safety: null, child_question: false, off_topic: false, unintelligible: false };
 const row = (id: string, heard: string, labels: Partial<Labels>, source: Row["source"] = "hand"): Row => ({ id, source, heard, prompt: "What is five plus five?", expected: 10, labels: { ...NONE, ...labels } });
@@ -66,5 +66,41 @@ describe("scoring an observer", () => {
     const text = render(real, "real").join("\n");
     expect(text).toContain("wanted needs_grownup, got nothing: c");
     for (const words of ["my tummy hurts", "toilet please", "heap of oranges"]) expect(text).not.toContain(words);
+  });
+});
+
+describe("the report on real children's turns", () => {
+  const realRows = (n: number) => Array.from({ length: n }, (_, at): Row => ({ ...row(`real-${at}`, `a child said thing ${at}`, at % 2 === 0 ? { physical_need: "toilet" } : { answer: 10 }), source: "real" }));
+  const repliesFor = (rowsIn: Row[]) => rowsIn.map((r) => (r.labels.answer !== null ? reply({ answer: { value: 10, confidence: 0.9 } }, { action: "mark_answer", said: 10 }) : reply({ physicalNeed: { toilet: 0.9 } }, { action: "needs_help" })));
+
+  it("gives a 95% Wilson interval, which is wide for few turns", () => {
+    expect(wilson(8, 10)).toEqual([49, 94]);
+    expect(wilson(0, 0)).toEqual([0, 100]);
+    expect(wilson(90, 100)).toEqual([83, 94]);
+  });
+
+  it("quotes no rate below 100 turns, however good the counts", () => {
+    const few = realRows(40);
+    const text = renderReal(score(few, repliesFor(few), false)).join("\n");
+    expect(text).toContain("right no estimate (40/40)");
+    expect(text).not.toMatch(/100%/);
+  });
+
+  it("quotes a rate with its interval at 100 turns, and a field only with 20 cases that have it", () => {
+    const many = realRows(100);
+    const text = renderReal(score(many, repliesFor(many), false)).join("\n");
+    expect(text).toContain("right 100% (96 to 100%)");
+    expect(text).toMatch(/physical need\s+recall 100% \(93 to 100%\)/);
+    expect(text).toMatch(/dont_know\s+recall no estimate \(0\/0\)/);
+  });
+
+  it("puts a missed need and a wrong number first, and holds none of the words", () => {
+    const some = realRows(6);
+    const replies = repliesFor(some);
+    replies[0] = reply({}, null);
+    const text = renderReal(score(some, replies, false));
+    expect(text[1]).toContain("need or safety missed 1 | wrong number 0");
+    expect(text.join("\n")).not.toContain("a child said");
+    expect(text.join("\n")).toContain("real-0");
   });
 });

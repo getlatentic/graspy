@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { loadSet } from "../bench/observation-set";
-import { numberWords, sameWords, saysNumber, templateCases, TEMPLATES } from "../bench/template-cases";
+import { loadSet, sameWords } from "../bench/observation-set";
+import { numberWords, saysNumber, templateCases, TEMPLATES } from "../bench/template-cases";
 
 describe("number words", () => {
   it("spells a number the way a child says it", () => {
     expect([0, 7, 13, 20, 42, 99].map(numberWords)).toEqual(["zero", "seven", "thirteen", "twenty", "forty two", "ninety nine"]);
+  });
+
+  it("is not asked for what it cannot spell", () => {
+    for (const bad of [-1, 100, 2.5]) expect(() => numberWords(bad)).toThrow(RangeError);
   });
 
   it("finds a number said as digits or words, with or without a hyphen, and not inside another number", () => {

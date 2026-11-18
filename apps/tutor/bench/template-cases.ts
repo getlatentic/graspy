@@ -3,7 +3,7 @@
 // kept is decided by the hash of the case id, so the choice is the same on every run and spreads over the prompts and phrases.
 // bench/add-template-cases.ts appends the ones whose ids are not in observation.jsonl yet.
 import { createHash } from "node:crypto";
-import type { Labels, Row } from "./observation-set.ts";
+import { sameWords, type Labels, type Row } from "./observation-set.ts";
 
 export const PROMPTS: { prompt: string; expected: number }[] = [
   { prompt: "One heap has five oranges. How many oranges are in two heaps?", expected: 10 },
@@ -25,6 +25,7 @@ export const PROMPTS: { prompt: string; expected: number }[] = [
 const ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split(" ");
 const TENS = "- - twenty thirty forty fifty sixty seventy eighty ninety".split(" ");
 export function numberWords(n: number): string {
+  if (!Number.isInteger(n) || n < 0 || n > 99) throw new RangeError(`numberWords spells 0 to 99, not ${n}`);
   if (n < 20) return ONES[n];
   const [tens, ones] = [Math.floor(n / 10), n % 10];
   return ones === 0 ? TENS[tens] : `${TENS[tens]} ${ONES[ones]}`;
@@ -75,9 +76,6 @@ export function saysNumber(heard: string, number: number): boolean {
   const words = heard.toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ");
   return new RegExp(`(^|[^a-z0-9])(${number}|${numberWords(number)})($|[^a-z0-9])`).test(words);
 }
-
-/** The words of a case without case or punctuation: "Ten." and "ten" are one case. */
-export const sameWords = (row: Pick<Row, "prompt" | "heard">) => `${row.prompt}\n${row.heard.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim()}`;
 
 const bucket = (text: string) => createHash("sha256").update(text).digest("hex");
 const shape = (text: string, sentenceCase: boolean) => (sentenceCase ? text.charAt(0).toUpperCase() + text.slice(1) : text);

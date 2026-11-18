@@ -1,6 +1,7 @@
-import { readFileSync } from "node:fs";
+import { appendFileSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { canTuneOn, casesOf, loadSet, parseReal, problems, splitOf, type Row } from "../bench/observation-set";
+import { appendRows, canTuneOn, casesOf, loadReal, loadSet, parseReal, problems, REPO_ROOT, splitOf, type Row } from "../bench/observation-set";
 
 const set = loadSet();
 const row = (id: string, heard = "ten"): Row => ({
@@ -69,10 +70,11 @@ describe("the committed set", () => {
 });
 
 describe("what is wrong with a set", () => {
-  it("names an id used twice, the same words to the same question, a stored split and a real turn", () => {
+  it("names an id used twice, the same words to the same question (ignoring case and punctuation), a stored split and a real turn", () => {
     const found = problems([row("a"), row("a", "eleven"), row("b", "Ten."), { ...row("c", "twelve"), split: "dev" } as Row, { ...row("d", "thirteen"), source: "real" }]);
-    expect(found).toEqual(expect.arrayContaining(["id used twice: a", expect.stringContaining("c: stores a split"), expect.stringContaining("d: a real child's turn is in the synthetic set")]));
-    expect(problems([row("e"), row("f")])).toEqual(["f: the same words to the same question as an earlier case"]);
+    expect(found).toEqual(expect.arrayContaining(["id used twice: a", "b: the same words (ignoring case and punctuation) to the same question as an earlier case", expect.stringContaining("c: stores a split"), expect.stringContaining("d: a real child's turn is in the synthetic set")]));
+    expect(problems([row("e"), row("f", "ten")])).toEqual(["f: the same words (ignoring case and punctuation) to the same question as an earlier case"]);
+    expect(problems([row("g"), row("h", "eleven")])).toEqual([]);
   });
 
   it("refuses labels that cannot both be true", () => {
@@ -93,8 +95,38 @@ describe("the file of real turns", () => {
     expect(() => parseReal(real("hand-3", "real"))).toThrow("not real turns");
   });
 
-  it("is never inside this repository: the ignore rules keep a stray copy out of git", () => {
-    const ignore = readFileSync(new URL("../../../.gitignore", import.meta.url).pathname, "utf8");
+  it("names a bad line by its number, never by what the parser quotes of it", () => {
+    const secret = "my name is Ada and I live at 5 Oak Road";
+    const attempt = () => parseReal(`${real("real-1", "real")}\n{"heard": "${secret}",}`);
+    expect(attempt).toThrow("line 2 of the real turns is not JSON");
+    try {
+      attempt();
+    } catch (error) {
+      expect(String(error)).not.toContain("Ada");
+    }
+  });
+
+  it("is read only from an absolute path outside this repository", () => {
+    expect(() => loadReal("turns.real.jsonl")).toThrow("absolute path");
+    expect(() => loadReal(`${REPO_ROOT}apps/tutor/bench/turns.real.jsonl`)).toThrow("outside this repository");
+    const file = `${mkdtempSync(`${tmpdir()}/real-`)}/turns.real.jsonl`;
+    writeFileSync(file, real("real-1", "real") + "\n");
+    expect(loadReal(file)).toHaveLength(1);
+  });
+
+  it("is kept out of git by a rule of its own, not only by living elsewhere", () => {
+    const ignore = readFileSync(new URL("../../../.gitignore", import.meta.url).pathname, "utf8").split("\n");
     expect(ignore).toContain("*.real.jsonl");
+    expect(ignore).toContain("apps/tutor/bench/real/");
+  });
+});
+
+describe("adding cases to the file", () => {
+  it("starts a new line when the file does not end with one, so two rows are never one line", () => {
+    const file = `${mkdtempSync(`${tmpdir()}/set-`)}/set.jsonl`;
+    writeFileSync(file, JSON.stringify(row("a")));
+    appendRows([row("b", "eleven")], file);
+    appendFileSync(file, "");
+    expect(readFileSync(file, "utf8").trim().split("\n").map((line) => (JSON.parse(line) as Row).id)).toEqual(["a", "b"]);
   });
 });

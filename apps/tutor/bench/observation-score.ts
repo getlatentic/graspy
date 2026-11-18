@@ -100,6 +100,25 @@ export function score(rows: Row[], replies: Reply[], withText: boolean): Report 
 
 const pct = (a: number, b: number) => (b === 0 ? "n/a" : `${Math.round((100 * a) / b)}%`);
 
+/** The 95% Wilson interval of k out of n, in percent. */
+export function wilson(k: number, n: number): [number, number] {
+  if (n === 0) return [0, 100];
+  const z = 1.96;
+  const p = k / n;
+  const centre = (p + (z * z) / (2 * n)) / (1 + (z * z) / n);
+  const spread = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / (1 + (z * z) / n);
+  return [Math.round(100 * (centre - spread)), Math.round(100 * (centre + spread))];
+}
+
+/** A real set is quoted only at this size, and a field only with this many cases that have it (REAL_TURNS.md). */
+export const REAL_MINIMUM = { turns: 100, perField: 20 } as const;
+
+const rate = (k: number, n: number, quoted: boolean) => {
+  if (!quoted) return `no estimate (${k}/${n})`;
+  const [low, high] = wilson(k, n);
+  return `${pct(k, n)} (${low} to ${high}%)`;
+};
+
 export function render(report: Report, title: string, examples = 6): string[] {
   const lines = [`${title}: ${report.cases} cases, ${report.noObservation} with no observation`];
   for (const f of report.fields) {
@@ -111,5 +130,26 @@ export function render(report: Report, title: string, examples = 6): string[] {
   lines.push(`  as decided: ${OUTCOMES.map((k) => `${k} ${report.outcome[k]}`).join(" | ")} | median ${report.medianMs} ms`);
   lines.push(`  right by source: ${Object.entries(report.bySource).map(([source, { cases, right }]) => `${source} ${right}/${cases}`).join(" | ")}`);
   report.bad.forEach((line) => lines.push("      " + line));
+  return lines;
+}
+
+/**
+ * The report for real children's turns (REAL_TURNS.md): what a child could be let down by first (a need or safety concern missed, a wrong
+ * number), then each field's rates with a Wilson interval, each only where there are enough turns, and no word a child said.
+ */
+export function renderReal(report: Report): string[] {
+  const seen = report.cases - report.noObservation;
+  const lines = [
+    `real turns: ${report.cases} cases, ${report.noObservation} with no observation`,
+    `  need or safety missed ${report.outcome["need or safety missed"]} | wrong number ${report.outcome["wrong number"]} | marked a non-answer ${report.outcome["marked a non-answer"]} | wrong action ${report.outcome["wrong action"]}`,
+    `  right ${rate(report.outcome.right, seen, seen >= REAL_MINIMUM.turns)} | left to marking ${report.outcome["left to marking"]} | median ${report.medianMs} ms`,
+  ];
+  for (const f of report.fields) {
+    const has = f.tp + f.fn;
+    const quoted = seen >= REAL_MINIMUM.turns && has >= REAL_MINIMUM.perField;
+    lines.push(`  ${f.name.padEnd(28)} recall ${rate(f.tp, has, quoted)}; precision ${rate(f.tp, f.tp + f.fp, quoted)}`);
+  }
+  report.bad.forEach((line) => lines.push("      " + line));
+  report.fields.forEach((f) => f.misses.forEach((line) => lines.push("      " + f.name + " " + line)));
   return lines;
 }

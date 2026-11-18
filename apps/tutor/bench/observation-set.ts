@@ -1,6 +1,9 @@
 // The labelled set the observer is scored on (bench/observation.jsonl) and the rule that says which split each case is in.
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
+
+/** The root of this repository: a file of real turns must not be under it. */
+export const REPO_ROOT = new URL("../../../", import.meta.url).pathname;
 
 export const SET_PATH = new URL("./observation.jsonl", import.meta.url).pathname;
 
@@ -55,19 +58,41 @@ export function splitOf(id: string): Split {
 
 export const parseRows = (text: string): Row[] => text.trim().split("\n").map((line) => JSON.parse(line) as Row);
 
+/** The words of a case without case or punctuation: "Ten." and "ten" are one case. */
+export const sameWords = (row: Pick<Row, "prompt" | "heard">) => `${row.prompt}\n${row.heard.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim()}`;
+
+/** Appends rows to the set, one to a line, starting a new line first where the file does not end with one. */
+export function appendRows(rows: Row[], path = SET_PATH): void {
+  if (rows.length === 0) return;
+  const text = readFileSync(path, "utf8");
+  appendFileSync(path, (text === "" || text.endsWith("\n") ? "" : "\n") + rows.map((row) => JSON.stringify(row) + "\n").join(""));
+}
+
 export const loadSet = (path = SET_PATH): Row[] => parseRows(readFileSync(path, "utf8"));
 
 /** Where a tuning run may be scored, and where it may not: thresholds are chosen on dev, never on test or on real turns. */
 export const canTuneOn = (which: string) => which === "dev" || which === "train";
 
 /**
- * The real children's turns, from the file the environment names (never a path in this repository). Every row must say it is real,
- * so a synthetic file cannot be scored as held out by mistake and a real one cannot be mistaken for a synthetic set.
+ * The real children's turns, from the file the environment names. The path must be absolute and outside this repository (a link
+ * into it is not looked through), and every row must say it is real, so a synthetic file cannot be scored as held out by mistake
+ * and a real one cannot be mistaken for a synthetic set.
  */
-export const loadReal = (path: string): Row[] => parseReal(readFileSync(path, "utf8"));
+export function loadReal(path: string): Row[] {
+  if (!path.startsWith("/")) throw new Error("the file of real turns is named by an absolute path");
+  if (path.startsWith(REPO_ROOT)) throw new Error("the file of real turns must be outside this repository");
+  return parseReal(readFileSync(path, "utf8"));
+}
 
+/** The rows of a file of real turns. A line that is not JSON is reported by its number only: the parser's own message quotes the text. */
 export function parseReal(text: string): Row[] {
-  const rows = parseRows(text);
+  const rows = text.trim().split("\n").map((line, at) => {
+    try {
+      return JSON.parse(line) as Row;
+    } catch {
+      throw new Error(`line ${at + 1} of the real turns is not JSON`);
+    }
+  });
   const wrong = rows.filter((row) => row.source !== "real" || !/^real-\d+$/.test(row.id));
   if (wrong.length > 0) throw new Error(`${wrong.length} rows are not real turns (source "real", id "real-<number>")`);
   return rows;
@@ -86,8 +111,8 @@ export function problems(rows: Row[]): string[] {
     if (typeof row.id !== "string" || row.id === "") found.push(`a case has no id: ${JSON.stringify(row.heard)}`);
     if (ids.has(row.id)) found.push(`id used twice: ${row.id}`);
     ids.add(row.id);
-    const text = `${row.prompt}\n${row.heard}`;
-    if (texts.has(text)) found.push(`${row.id}: the same words to the same question as an earlier case`);
+    const text = sameWords(row);
+    if (texts.has(text)) found.push(`${row.id}: the same words (ignoring case and punctuation) to the same question as an earlier case`);
     texts.add(text);
     if (row.source === "real") found.push(`${row.id}: a real child's turn is in the synthetic set`);
     if ("split" in row) found.push(`${row.id}: stores a split; the id decides it`);

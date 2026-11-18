@@ -2,10 +2,9 @@
 // A request whose ids are already in the file is not asked again, so a rerun adds nothing and an id never changes meaning.
 //   npx wrangler dev --config bench/wrangler.jsonc --port 8799   (with AWS_BEARER_TOKEN_BEDROCK in bench/.dev.vars)
 //   node bench/add-model-cases.ts [http://localhost:8799]
-import { appendFileSync } from "node:fs";
-import { loadSet, SET_PATH, type Row } from "./observation-set.ts";
+import { appendRows, loadSet, sameWords, type Row } from "./observation-set.ts";
 import { PER_REQUEST, SPECS, SYSTEM, linesOf, requestFor } from "./model-cases.ts";
-import { PROMPTS, sameWords, saysNumber } from "./template-cases.ts";
+import { PROMPTS, saysNumber } from "./template-cases.ts";
 
 const URL_ = process.argv[2] ?? "http://localhost:8799";
 const have = loadSet();
@@ -33,7 +32,7 @@ for (const [specAt, spec] of SPECS.entries()) {
       texts.add(sameWords(row));
       fresh.push(row);
     });
-    appendFileSync(SET_PATH, fresh.map((row) => JSON.stringify(row) + "\n").join(""));
+    appendRows(fresh);
     fresh.forEach((row) => ids.add(row.id));
     added += fresh.length;
     console.log(`${stem}: ${fresh.length} of ${lines.length}`);

@@ -8,9 +8,9 @@
 //  - where the words hold a different number than the one meant ("14" for forty, "210" for ten) the case is left out, since
 //    it cannot be told apart from a child who said that number.
 // Node 24.2 or later:  node bench/add-staging-cases.ts
-import { appendFileSync, readFileSync } from "node:fs";
-import { loadSet, SET_PATH, type Labels, type Row } from "./observation-set.ts";
-import { numberWords, PROMPTS, sameWords } from "./template-cases.ts";
+import { readFileSync } from "node:fs";
+import { appendRows, loadSet, sameWords, type Labels, type Row } from "./observation-set.ts";
+import { numberWords, PROMPTS } from "./template-cases.ts";
 
 interface Recorded { truth: "number" | "dont_know" | "unclear"; value?: number; meant: string; heard: string }
 
@@ -46,5 +46,5 @@ recorded.forEach((row, at) => {
   texts.add(sameWords(made));
   fresh.push(made);
 });
-appendFileSync(SET_PATH, fresh.map((row) => JSON.stringify(row) + "\n").join(""));
+appendRows(fresh);
 console.log(`${fresh.length} staging cases added`);

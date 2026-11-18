@@ -11,7 +11,7 @@ communicated.
 - One JSONL file **outside this repository**, whose path is in the environment variable `GRASPY_REAL_TURNS`, on the owner's encrypted disk. Not in `apps/`, not in a
   branch, not in a pull request, an issue, a chat or a log. The root `.gitignore` also ignores `*.real.jsonl` and `apps/tutor/bench/real/` as a net under a mistake.
 - Same row as the synthetic set (`Row` in `observation-set.ts`) with `source: "real"` and `id: "real-<number>"`, numbered in the order turns are added and never reused.
-  There is no split field and the split rule is never applied to it: a real turn is not train, dev or test, it is `real`. `loadReal` refuses a file with a row that is not `real`,
+  There is no split field and the split rule is never applied to it: a real turn is not train, dev or test, it is `real`. `loadReal` refuses a relative path, a path under this repository (a link into it is not looked through) and a file with a row that is not `real`,
   and `problems` refuses a `real` row in `observation.jsonl`, so neither set can be mistaken for the other.
 - A row holds the words, the question, the number it asks for and the labels, and nothing else: no name, learner id, device, audio, time of day or school.
 
@@ -26,7 +26,7 @@ communicated.
 ## What it may never be used for
 
 - Never to tune: not thresholds, prompts, templates, few-shot examples, fine-tuning, the choice between models, or the choice of what to build next from a particular turn.
-  `run-observation.ts` refuses thresholds on `real` (and on `test`).
+  `run-observation.ts` refuses thresholds on `real` (and on `test`), and sends real turns only to a bench Worker on localhost and only to the Gemma observer (not to Clef, not to a Worker elsewhere). A line of the file that is not JSON is reported by its number, never quoted.
 - A failure seen on real turns is fixed by writing synthetic cases for the kind of failure, in new words (never the child's words, never a paraphrase kept close), into the
   synthetic set, where their hash puts them in train, dev or test.
 - Not sent to any model that writes or labels cases. The only model that reads a real turn is the one being scored, on the host the tutor already sends that turn to.
@@ -48,5 +48,5 @@ GRASPY_REAL_TURNS=/path/outside/the/repo/turns.real.jsonl node bench/run-observa
   safety concern that is missed, and a wrong number, are reported first.
 - It is run once for each model or policy that was chosen on dev, after the choice is made, and its result is reported next to the dev result as the gap between synthetic and real. A worse score on real
   turns than on dev is a finding about the synthetic set, not a reason to retune on the real one.
-- A number is quoted for a field only with at least 100 real turns in all and 20 that have that field; below that the report says "no estimate". Rates come with a 95% interval (Wilson), not a bare percent.
+- A number is quoted for a field only with at least 100 real turns in all and 20 that have that field; below that the report says "no estimate". Rates come with a 95% interval (Wilson), not a bare percent. `renderReal` in `observation-score.ts` does both, and puts a missed need or safety concern and a wrong number first.
 - The set grows only by adding turns; a turn already scored is not edited to change a result.
