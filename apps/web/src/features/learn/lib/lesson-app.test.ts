@@ -6,7 +6,7 @@ const callAppTool = vi.fn();
 const openToolView = vi.fn();
 vi.mock("@/lib/mcp/server", () => ({ callAppTool, openToolView }));
 
-const { lessonMade, lessonTarget, nextLesson, objectivesOf } =
+const { LessonTooSlow, lessonMade, lessonTarget, nextLesson, objectivesOf } =
   await import("./lesson-app");
 
 const PLAN: CurriculumData = {
@@ -76,6 +76,45 @@ describe("a topic's lesson", () => {
 
     await expect(made).resolves.toMatchObject({ status: "ready" });
     expect(callAppTool).toHaveBeenCalledWith("lesson_progress", { target });
+  });
+
+  it("stops waiting once the time limit passes, though the server still says making", async () => {
+    vi.useFakeTimers();
+    const target = lessonTarget(PLAN, MATHS, 0)!;
+    openToolView.mockResolvedValue({ toolResult: state("making") });
+    callAppTool.mockResolvedValue(state("making"));
+
+    const made = lessonMade(target, 10_000);
+    const failed = made.catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(await failed).toBeInstanceOf(LessonTooSlow);
+    const calls = callAppTool.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(callAppTool.mock.calls.length).toBe(calls);
+  });
+
+  it("stops waiting when one call to the server never answers", async () => {
+    vi.useFakeTimers();
+    const target = lessonTarget(PLAN, MATHS, 0)!;
+    openToolView.mockReturnValue(new Promise(() => {}));
+
+    const failed = lessonMade(target, 10_000).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(await failed).toBeInstanceOf(LessonTooSlow);
+  });
+
+  it("is made within the limit without error", async () => {
+    vi.useFakeTimers();
+    const target = lessonTarget(PLAN, MATHS, 0)!;
+    openToolView.mockResolvedValue({ toolResult: state("making") });
+    callAppTool.mockResolvedValueOnce(state("ready", { keyPoints: ["k"] }));
+
+    const made = lessonMade(target, 10_000);
+    await vi.advanceTimersByTimeAsync(3_000);
+
+    await expect(made).resolves.toMatchObject({ status: "ready" });
   });
 
   it("fails the wait when the server could not make it", async () => {

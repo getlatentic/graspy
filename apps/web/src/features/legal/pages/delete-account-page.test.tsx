@@ -3,9 +3,10 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
 import { router } from "@/routes";
+import { contactHref } from "@/features/landing/constants";
 import { SiteFooter } from "@/features/landing/components/site-chrome";
 import { LEARNERS_PAGE } from "@/features/learn/lib/app-sections";
-import DeleteAccountPage, { DELETE_REQUEST } from "./delete-account-page";
+import DeleteAccountPage from "./delete-account-page";
 import PrivacyPage from "./privacy-page";
 
 afterEach(cleanup);
@@ -30,8 +31,9 @@ describe("the page for deleting an account", () => {
     const hrefs = screen
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(hrefs).toContain(DELETE_REQUEST);
-    expect(DELETE_REQUEST).toMatch(/^mailto:.+\?subject=.*Delete/);
+    const request = contactHref("Delete my account");
+    expect(hrefs).toContain(request);
+    expect(request).toMatch(/^mailto:.+\?subject=.*Delete/);
   });
 
   it("is a route of the site, needing no sign-in", () => {

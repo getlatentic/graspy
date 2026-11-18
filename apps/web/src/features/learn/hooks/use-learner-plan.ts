@@ -62,7 +62,7 @@ export function useLearnerPlan() {
   const { nextSubject, chooseNext, nextOf } = useNextSubject();
   const present = usePresent(setCurriculum, chooseNext);
   const { isLoaded, loadSaved } = useSavedPlan(present);
-  const { generate, isGenerating, isPrimingLesson, error } = usePlanGeneration({
+  const { generate, isGenerating, error } = usePlanGeneration({
     show: setCurriculum,
     next: nextOf,
     chooseNext,
@@ -95,7 +95,6 @@ export function useLearnerPlan() {
     curriculum,
     isLoaded,
     isGenerating,
-    isPrimingLesson,
     error,
     generate,
     regenerate,

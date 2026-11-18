@@ -4,19 +4,30 @@ import {
   toApiError,
   toNetworkError,
 } from "./errors";
+import { IdleLimit } from "./idle-limit";
 import { fetchWithSession } from "./session";
 
 const HEARTBEAT_EVENT = "ping";
 const DONE = Symbol("done");
 
+export interface StreamOptions {
+  /** Longest wait for the answer to start, or for the next bytes (a heartbeat counts), in
+   * milliseconds. A stream with no heartbeat must not set it. Unset, the stream waits for ever. */
+  idleMs?: number;
+}
+
 async function openStream(
   url: string,
+  limit: IdleLimit,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> {
   let response: Response;
   try {
-    response = await fetchWithSession(url, {
-      headers: { Accept: "text/event-stream" },
-    });
+    response = await limit.within(
+      fetchWithSession(url, {
+        headers: { Accept: "text/event-stream" },
+        signal: limit.signal,
+      }),
+    );
   } catch (cause) {
     throw toNetworkError(cause);
   }
@@ -45,15 +56,19 @@ function parseEvent<T>(event: string): T | typeof DONE | null {
   }
 }
 
-export async function* createSSEStream<T>(url: string): AsyncGenerator<T> {
-  const reader = await openStream(url);
+export async function* createSSEStream<T>(
+  url: string,
+  { idleMs }: StreamOptions = {},
+): AsyncGenerator<T> {
+  const limit = new IdleLimit(idleMs);
+  const reader = await openStream(url, limit);
   const decoder = new TextDecoder();
   let buffer = "";
   try {
     for (
-      let read = await reader.read();
+      let read = await limit.within(reader.read());
       !read.done;
-      read = await reader.read()
+      read = await limit.within(reader.read())
     ) {
       buffer += decoder.decode(read.value, { stream: true });
       const events = buffer.split(/\n\n|\r\n\r\n/);

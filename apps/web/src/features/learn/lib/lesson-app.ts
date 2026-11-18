@@ -130,9 +130,19 @@ export const isLessonTool = (name: string) =>
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function lessonMade(target: LessonTarget): Promise<LessonState> {
+export class LessonTooSlow extends Error {
+  constructor() {
+    super("The lesson took too long to make");
+    this.name = "LessonTooSlow";
+  }
+}
+
+async function watchLesson(
+  target: LessonTarget,
+  overdue: () => boolean,
+): Promise<LessonState> {
   let state = lessonStateOf((await openLesson(target)).toolResult);
-  while (state?.status === "making") {
+  while (state?.status === "making" && !overdue()) {
     await wait(WATCH_MS);
     state = lessonStateOf(await callAppTool(LESSON_PROGRESS, { target }));
   }
@@ -140,4 +150,25 @@ export async function lessonMade(target: LessonTarget): Promise<LessonState> {
     throw new Error("The lesson could not be made");
   }
   return state;
+}
+
+/** Waits until the lesson is made: for ever, or for `limitMs` in all (one call that hangs counts). */
+export async function lessonMade(
+  target: LessonTarget,
+  limitMs?: number,
+): Promise<LessonState> {
+  if (limitMs === undefined) return watchLesson(target, () => false);
+  let overdue = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const tooSlow = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      overdue = true;
+      reject(new LessonTooSlow());
+    }, limitMs);
+  });
+  try {
+    return await Promise.race([watchLesson(target, () => overdue), tooSlow]);
+  } finally {
+    clearTimeout(timer);
+  }
 }

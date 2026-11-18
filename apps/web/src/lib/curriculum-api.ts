@@ -67,6 +67,9 @@ export async function planLearningPath(request: {
   );
 }
 
+// The server sends a heartbeat every 20 seconds, so this is three missed in a row.
+const PLAN_STREAM_IDLE_MS = 60_000;
+
 export function streamCurriculum(
   request: CurriculumRequest,
 ): AsyncGenerator<CurriculumStreamEvent> {
@@ -80,5 +83,7 @@ export function streamCurriculum(
   }
   if (request.system) url.searchParams.set("system", request.system);
   if (request.level) url.searchParams.set("level", request.level);
-  return createSSEStream<CurriculumStreamEvent>(url.toString());
+  return createSSEStream<CurriculumStreamEvent>(url.toString(), {
+    idleMs: PLAN_STREAM_IDLE_MS,
+  });
 }

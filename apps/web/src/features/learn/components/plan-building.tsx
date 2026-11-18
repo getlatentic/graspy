@@ -13,8 +13,8 @@ import { usePlan } from "@/features/learn/learner-context";
  * where the learner's next lesson will, under a title that says what it is. */
 export function PlanBuilding() {
   const { t } = useI18n();
-  const { curriculum, isPrimingLesson } = usePlan();
-  const rows = buildingRows(curriculum, isPrimingLesson);
+  const { curriculum } = usePlan();
+  const rows = buildingRows(curriculum);
   const subjects = rows.filter((row) => row.kind === "subject");
   const done = subjects.filter((row) => row.state === "done").length;
 
@@ -64,12 +64,8 @@ function ProgressRow({ row, t }: { row: BuildingRow; t: Translate }) {
   );
 }
 
-function rowLabel(row: BuildingRow, t: Translate) {
-  if (row.kind === "subject") return row.name;
-  return t(
-    row.kind === "choosing" ? "planBuilding.choosing" : "planBuilding.lesson",
-  );
-}
+const rowLabel = (row: BuildingRow, t: Translate) =>
+  row.kind === "subject" ? row.name : t("planBuilding.choosing");
 
 // Done is a check, working a turning ring (a filled dot when motion is reduced), waiting an empty ring.
 function Marker({ state }: { state: RowState }) {
