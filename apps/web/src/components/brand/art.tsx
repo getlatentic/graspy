@@ -11,7 +11,7 @@ const ART = {
 
 export type ArtName = keyof typeof ART;
 
-/** A learner picture that fills its box; `position` picks the part kept when the box is not square. */
+/** A learner picture that fills its box; an `object-*` class picks the part kept when the box is not square. */
 export function Art({
   name,
   className,

@@ -31,7 +31,7 @@ function Welcome() {
   return (
     <div className="hidden lg:sticky lg:top-8 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col lg:justify-center">
       <div className="aspect-4/5 max-h-full overflow-hidden rounded-sheet">
-        <Art name="math" eager />
+        <Art name="math" />
       </div>
     </div>
   );
