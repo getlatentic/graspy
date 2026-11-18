@@ -165,6 +165,10 @@ describe("the tiles", () => {
     const list = screen.getByRole("list");
     for (const image of list.querySelectorAll("img"))
       expect(image.getAttribute("alt")).toBe("");
-    expect(list.querySelectorAll("img").length).toBeGreaterThan(LESSONS.length);
+    // One badge on every tile, and a picture on the three lessons that have one.
+    expect(list.querySelectorAll("img[data-standing]")).toHaveLength(
+      LESSONS.length,
+    );
+    expect(list.querySelectorAll("img:not([data-standing])")).toHaveLength(3);
   });
 });

@@ -14,7 +14,7 @@ export const PICTURE_URLS: Record<string, string> = Object.fromEntries(
   ]),
 );
 
-// A lesson with a picture of its own.
+// Lessons with a picture that fits them by name: counting and adding are shared by the lessons of one kind.
 const PICTURE_BY_LESSON: Record<string, string> = {
   "english.alphabet.letter-sounds": "letter-sounds",
   "mathematics.number.counting-to-ten": "counting",
