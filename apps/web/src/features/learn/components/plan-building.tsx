@@ -9,7 +9,8 @@ import {
 } from "@/features/learn/lib/plan-building-rows";
 import { usePlan } from "@/features/learn/learner-context";
 
-/** The plan being made, with what it has so far: the learner sees it move, not a spinner. */
+/** The plan being made, with what it has so far: the learner sees it move, not a spinner. It sits
+ * where the learner's next lesson will, under a title that says what it is. */
 export function PlanBuilding() {
   const { t } = useI18n();
   const { curriculum, isPrimingLesson } = usePlan();
@@ -19,9 +20,6 @@ export function PlanBuilding() {
 
   return (
     <Card className="flex flex-col gap-4">
-      <h2 className="text-sm font-semibold text-ink">
-        {t("planBuilding.making")}
-      </h2>
       <p role="status" className="sr-only">
         {subjects.length > 0 &&
           t("planBuilding.progress", { done, total: subjects.length })}

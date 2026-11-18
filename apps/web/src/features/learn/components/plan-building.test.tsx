@@ -55,11 +55,8 @@ const rows = () =>
 afterEach(cleanup);
 
 describe("PlanBuilding", () => {
-  it("names the plan being made and says it can take a minute", () => {
+  it("says it can take a minute", () => {
     render(inApp(plan({}), false));
-    expect(
-      screen.getByRole("heading", { name: en.planBuilding.making }),
-    ).toBeTruthy();
     expect(screen.getByText(en.onboarding.generating.wait)).toBeTruthy();
   });
 

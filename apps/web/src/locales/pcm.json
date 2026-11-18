@@ -8,7 +8,10 @@
     "done": "Done",
     "working": "In progress",
     "waiting": "Waiting",
-    "progress": "{done} of {total} subjects ready"
+    "progress": "{done} of {total} subjects ready",
+    "welcome": "Welcome, {name}",
+    "welcomeAnonymous": "Welcome",
+    "intro": "We dey make your {level} plan."
   },
   "chat": {
     "aiTutorTitle": "graspy tutor",

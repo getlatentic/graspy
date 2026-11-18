@@ -5,6 +5,8 @@ import { keepRoute } from "@/lib/learner-route";
 import type { UserProfile } from "@/lib/user-storage";
 import { LearnerApp } from "@/test/learner-app";
 import { learnerIn, loadedPlan, routeAnswer } from "@/test/learner";
+import { setAccount } from "@/lib/account/account-store";
+import { signedInAs } from "@/test/account-session";
 import HomePage from "./page";
 
 const { callAppTool, shown } = vi.hoisted(() => ({
@@ -55,5 +57,37 @@ describe("Home of a class that learns by voice alone", () => {
     const change = screen.getByRole("link", { name: "you.change" });
     expect(change.getAttribute("href")).toBe("/app/learn/you/details");
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+  });
+});
+
+describe("Home while the plan is made", () => {
+  const building = () => {
+    shown.profile = { ...learnerIn("jss-1"), gradeLevel: "JSS 1" };
+    callAppTool.mockResolvedValue(routeAnswer(false));
+    return render(
+      <LearnerApp plan={{ ...loadedPlan(), isGenerating: true }}>
+        <HomePage />
+      </LearnerApp>,
+    );
+  };
+
+  afterEach(() => setAccount(null));
+
+  it("welcomes the learner and puts the plan's progress under a title of its own", () => {
+    signedInAs({ id: "ada000000001", name: "Ada" });
+    building();
+
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      "planBuilding.welcome",
+    );
+    expect(
+      screen.getByRole("heading", { level: 2, name: "planBuilding.making" }),
+    ).toBeTruthy();
+    expect(screen.getAllByRole("listitem").length).toBeGreaterThan(0);
+  });
+
+  it("is not Home's usual sections yet", () => {
+    building();
+    expect(screen.queryByText("home.subjectsTitle")).toBeNull();
   });
 });
