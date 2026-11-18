@@ -194,6 +194,20 @@ describe("a voice lesson", () => {
     ).toBeUndefined();
   });
 
+  it("does not count silent takes that are not in a row", () => {
+    expect(
+      run(
+        ...toYourTurn,
+        { type: "recordStarted" },
+        { type: "nothingHeard" },
+        { type: "recordStarted" },
+        { type: "recordFailed", note: "micFailed" },
+        { type: "recordStarted" },
+        { type: "nothingHeard" },
+      ).quiet,
+    ).toBe(1);
+  });
+
   it("counts a take the server found empty with the ones the page found empty", () => {
     const refused = (key: string): LessonEvent[] => [
       { type: "recordStarted" },

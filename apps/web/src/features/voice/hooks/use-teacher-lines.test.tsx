@@ -64,6 +64,8 @@ describe("the teacher's lines", () => {
     renderHook(() => useTeacherLines(state, () => undefined, "en"));
 
     await waitFor(() => expect(said).toEqual(["no-speech"]));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(said).toEqual(["no-speech"]);
   });
 
   it("asks the question again after two silent takes in a row", async () => {

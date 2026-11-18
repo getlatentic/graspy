@@ -176,7 +176,13 @@ function countQuiet(
 ): LessonState {
   if (after === before) return after;
   const { quiet: _, ...rest } = after;
-  if (event.type === "start" || ENDS_QUIET.has(after.phase.name)) return rest;
+  const otherTrouble = after.note !== null && after.note !== "noSpeech";
+  if (
+    event.type === "start" ||
+    otherTrouble ||
+    ENDS_QUIET.has(after.phase.name)
+  )
+    return rest;
   const silent =
     after.note === "noSpeech" &&
     (event.type === "nothingHeard" || event.type === "settled");
