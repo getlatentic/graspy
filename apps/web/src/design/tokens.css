@@ -1,4 +1,4 @@
-/* graspy-tokens source=be2a6c31f90b885d96c8b48d81ded6626884a4f474c44e2c88f9e47502982224 content=bb4f651ec0401fd92138b0eea580c9848cf3e0466732999a4c633efd1cd24e88 */
+/* graspy-tokens source=ac72b14c792b31060ca55610605bcfe11d2a971da72378db8d5cc6783da812b7 content=40341f5654afc0e0e4486bef8bf8c1c1d456f6a17fb075ba207aa159500ccfbf */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -84,9 +84,49 @@
   --text-numeral--line-height: calc(72 / 64);
   --text-numeral--letter-spacing: -0.015em;
 
-  --radius-card: 12px;
-  --radius-control: 8px;
-  --radius-pill: 9999px;
+  --radius-card: 1.25rem;
+  --radius-control: 0.75rem;
+  --radius-pill: 624.9375rem;
+  --radius-small: 0.5rem;
+  --radius-sheet: 1.75rem;
+
+  --shadow-card: 0 1px 2px rgb(18 35 46 / 0.06), 0 4px 12px rgb(18 35 46 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(18 35 46 / 0.08), 0 10px 24px rgb(18 35 46 / 0.12);
+  --shadow-sheet: 0 8px 16px rgb(18 35 46 / 0.1), 0 24px 48px rgb(18 35 46 / 0.18);
+  --shadow-press: 0 4px 0 #1f7099;
 
   --spacing: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: #0d1a22;
+    --color-surface: #15252f;
+    --color-raised: #1a2d39;
+    --color-ink: #eaf2f7;
+    --color-muted: #a6b5c0;
+    --color-subtle: #97a8b4;
+    --color-faint: #72848f;
+    --color-line: #27404f;
+    --color-track: #223744;
+    --color-accent: #2893c8;
+    --color-accent-strong: #62b9e4;
+    --color-accent-ink: #74c3ec;
+    --color-accent-soft: #12303e;
+    --color-accent-line: #1d4a5f;
+    --color-on-accent: #ffffff;
+    --color-success: #62d08c;
+    --color-success-soft: #11301f;
+    --color-warning: #e8c46e;
+    --color-warning-soft: #33280d;
+    --color-warning-line: #5a4716;
+    --color-danger: #ff8d7d;
+    --color-danger-soft: #3a1714;
+    --color-tint-green: #4cc592;
+    --color-tint-green-soft: #102f27;
+    --color-tint-orange: #f0975a;
+    --color-tint-orange-soft: #3a2514;
+    --color-tint-purple: #a994f2;
+    --color-tint-purple-soft: #241f47;
+  }
 }

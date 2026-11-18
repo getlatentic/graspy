@@ -69,7 +69,7 @@ function SubjectCheck({ name, chosen, disabled, onToggle }: SubjectCheckProps) {
       <span
         className={cn(
           "flex size-5 shrink-0 items-center justify-center rounded-full border",
-          chosen ? "border-accent bg-accent text-white" : "border-line",
+          chosen ? "border-accent bg-accent text-on-accent" : "border-line",
         )}
       >
         {chosen && <Check className="size-4" aria-hidden="true" />}

@@ -8,7 +8,7 @@ export function AccountFrame({ children }: { children: ReactNode }) {
   return (
     <OnboardingFrame>
       <main className="flex flex-1 py-6 sm:pb-24">
-        <div className="m-auto w-full max-w-xl rounded-4xl bg-white/85 p-5 shadow-2xl shadow-accent/15 ring-1 ring-white/50 backdrop-blur sm:p-10">
+        <div className="m-auto w-full max-w-xl rounded-4xl bg-surface/85 p-5 shadow-2xl shadow-accent/15 ring-1 ring-line backdrop-blur sm:p-10">
           {children}
         </div>
       </main>

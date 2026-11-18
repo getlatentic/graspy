@@ -66,6 +66,23 @@ function cssText(tokens) {
   });
 }
 
+/** The dark palette: only colours that give a `dark` value change. */
+function cssDark(tokens) {
+  const lines = Object.entries(tokens.color)
+    .filter(([, { dark }]) => dark !== undefined)
+    .map(([name, { dark }]) => `    --color-${name}: ${dark};`);
+  return [
+    "@media (prefers-color-scheme: dark) {",
+    "  :root {",
+    ...lines,
+    "  }",
+    "}",
+  ];
+}
+
+/** Android keeps its own radius where a token names one. */
+const androidRadius = ({ value, android }) => android ?? value;
+
 function renderCss(tokens) {
   const body = [
     `/* Generated from content/design/tokens.json; do not edit. Regenerate: ${REGENERATE} */`,
@@ -79,11 +96,17 @@ function renderCss(tokens) {
     ...cssText(tokens),
     "",
     ...Object.entries(tokens.radius).map(
-      ([name, { value }]) => `  --radius-${name}: ${value}px;`,
+      ([name, { value }]) => `  --radius-${name}: ${rem(value)};`,
+    ),
+    "",
+    ...Object.entries(tokens.shadow).map(
+      ([name, { value }]) => `  --shadow-${name}: ${value};`,
     ),
     "",
     `  --spacing: ${rem(tokens.space.unit.value)};`,
     "}",
+    "",
+    ...cssDark(tokens),
     "",
   ].join("\n");
   return stamp("/* ", body, " */");
@@ -161,9 +184,9 @@ function renderKotlin(tokens) {
     "}",
     "",
     "object GraspyRadius {",
-    ...Object.entries(tokens.radius).flatMap(([name, { value, description }]) => [
+    ...Object.entries(tokens.radius).flatMap(([name, { value, android, description }]) => [
       ...kotlinDoc(description),
-      `    val ${pascal(name)} = ${value}.dp`,
+      `    val ${pascal(name)} = ${androidRadius({ value, android })}.dp`,
     ]),
     "}",
     "",
@@ -197,7 +220,7 @@ function renderPageCss(tokens) {
     ":root {",
     ...Object.entries(tokens.color).map(([name, { value }]) => `  --color-${name}: ${value};`),
     ...Object.entries(tokens.font).map(([name, font]) => `  --font-${name}: ${fontStack(font)};`),
-    ...Object.entries(tokens.radius).map(([name, { value }]) => `  --radius-${name}: ${value}px;`),
+    ...Object.entries(tokens.radius).map(([name, token]) => `  --radius-${name}: ${androidRadius(token)}px;`),
     `  --spacing: ${rem(tokens.space.unit.value)};`,
     "}",
     "",

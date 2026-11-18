@@ -1,4 +1,4 @@
-/* graspy-tokens source=be2a6c31f90b885d96c8b48d81ded6626884a4f474c44e2c88f9e47502982224 content=cdd652e76ad9d158259757ab86fa18961351467a4cb9f9e4dde90cfd686d7137 */
+/* graspy-tokens source=ac72b14c792b31060ca55610605bcfe11d2a971da72378db8d5cc6783da812b7 content=1775da0f9082e91b8d3a83d6c5f76a89b8f1cbf5cf95adb4627104b22aaa8dbd */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 :root {
   --color-canvas: #f5f8fa;
@@ -34,5 +34,7 @@
   --radius-card: 12px;
   --radius-control: 8px;
   --radius-pill: 9999px;
+  --radius-small: 8px;
+  --radius-sheet: 28px;
   --spacing: 0.25rem;
 }

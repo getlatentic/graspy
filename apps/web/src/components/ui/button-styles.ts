@@ -4,15 +4,17 @@ export type Variant = "primary" | "secondary" | "ghost";
 export type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-accent text-on-accent hover:bg-accent-strong",
-  secondary: "border border-line bg-surface text-ink hover:bg-accent-soft",
-  ghost: "text-ink hover:bg-accent-soft",
+  primary:
+    "bg-accent text-on-accent shadow-press hover:bg-accent-strong active:translate-y-0.5 active:shadow-none",
+  secondary:
+    "border border-accent-line bg-accent-soft text-accent-ink hover:border-accent",
+  ghost: "text-accent-ink hover:bg-accent-soft",
 };
 
 const SIZES: Record<Size, string> = {
   sm: "px-3 py-1.5 text-sm gap-1.5 pointer-coarse:min-h-11",
-  md: "px-5 py-2.5 text-sm gap-2",
-  lg: "px-6 py-3 text-base gap-2",
+  md: "px-5 py-3 text-base gap-2",
+  lg: "px-6 py-4 text-lg gap-2",
 };
 
 /** For links styled as buttons; `<Button>` for buttons. */

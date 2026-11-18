@@ -108,7 +108,7 @@ function SystemChoice({
               "rounded-2xl border px-4 py-2.5 text-start text-sm font-semibold text-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
               option.id === chosen
                 ? "border-accent bg-accent-soft"
-                : "border-line bg-white hover:border-accent-line",
+                : "border-line bg-surface hover:border-accent-line",
             )}
           >
             {nameIn(option.name, language)}

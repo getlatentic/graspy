@@ -30,11 +30,11 @@ export default function CurriculumReadyView({
       </div>
 
       {/* Sticky on a short screen, where iOS Safari's toolbar would cover it. */}
-      <div className="sticky bottom-0 -mx-6 mt-6 bg-white px-6 py-4 sm:static sm:mx-0 sm:mt-10 sm:p-0">
+      <div className="sticky bottom-0 -mx-6 mt-6 bg-surface px-6 py-4 sm:static sm:mx-0 sm:mt-10 sm:p-0">
         <button
           type="button"
           onClick={onContinue}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-4 text-lg font-semibold text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           {t("onboarding.ready.continue")}
           <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />

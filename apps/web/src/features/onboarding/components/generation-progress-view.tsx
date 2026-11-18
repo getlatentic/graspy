@@ -74,14 +74,14 @@ function GenerationFailed({
           type="button"
           onClick={onRetry}
           disabled={isRetrying}
-          className="inline-flex flex-1 items-center justify-center rounded-xl bg-danger px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed"
+          className="inline-flex flex-1 items-center justify-center rounded-xl bg-danger px-6 py-3 text-sm font-semibold text-on-accent transition disabled:cursor-not-allowed"
         >
           {t("onboarding.generating.tryAgain")}
         </button>
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex flex-1 items-center justify-center rounded-xl border border-danger/30 bg-white px-6 py-3 text-sm font-semibold text-danger transition hover:border-danger"
+          className="inline-flex flex-1 items-center justify-center rounded-xl border border-danger/30 bg-surface px-6 py-3 text-sm font-semibold text-danger transition hover:border-danger"
         >
           {t("onboarding.generating.adjust")}
         </button>

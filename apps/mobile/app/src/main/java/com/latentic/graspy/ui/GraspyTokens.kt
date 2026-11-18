@@ -1,4 +1,4 @@
-// graspy-tokens source=be2a6c31f90b885d96c8b48d81ded6626884a4f474c44e2c88f9e47502982224 content=830a389e4b8b4f63d1ad531d33f8e2d4254231b5e7847735a191f12283fa9d0f
+// graspy-tokens source=ac72b14c792b31060ca55610605bcfe11d2a971da72378db8d5cc6783da812b7 content=306483d43a5df4c7ddf5cb98567cd450451b712bf7c2147b5fac91aacb7124ed
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -116,6 +116,10 @@ object GraspyRadius {
     val Control = 8.dp
     /** Fully round: chips, the selected tab, progress bars. */
     val Pill = 9999.dp
+    /** Chips and small marks inside a control. */
+    val Small = 8.dp
+    /** Dialogs, the onboarding card and other large surfaces. */
+    val Sheet = 28.dp
 }
 
 /** One step of the spacing scale; a gap of n steps is n times this (the web's p-4 is 16px). */
