@@ -8,7 +8,7 @@ import { AccountFrame } from "./account-frame";
 afterEach(cleanup);
 
 describe("AccountFrame", () => {
-  it("puts its card in the middle of the room under the header, both ways", () => {
+  it("keeps its card in a padded room that centres it with auto margins, so a tall card is not cut off", () => {
     render(
       <MemoryRouter>
         <I18nContext.Provider
@@ -29,8 +29,9 @@ describe("AccountFrame", () => {
 
     const room = screen.getByRole("main");
     expect(room.className).toContain("flex-1");
-    expect(room.className).toContain("items-center");
-    expect(room.className).toContain("justify-center");
+    expect(room.className).toContain("py-6");
+    expect(room.className).not.toMatch(/\bitems-center\b|\bjustify-center\b/);
+    expect(room.firstElementChild?.className).toContain("m-auto");
     expect(room.textContent).toBe("the card");
   });
 });
