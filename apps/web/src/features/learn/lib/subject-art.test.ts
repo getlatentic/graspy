@@ -17,12 +17,19 @@ describe("subjectArt", () => {
     ["English Language Arts", "english"],
     ["Physical Education", "pe"],
     ["Civic Education", "civic"],
+    ["Agricultural Technology", "agriculture"],
+    ["Political Science", "civic"],
+    ["Martial Arts", "pe"],
   ])("gives %s the %s picture", (name, art) => {
     expect(subjectArt(name)).toBe(art);
   });
 
-  it("does not take ict from inside another word", () => {
+  it("does not take a keyword from inside another word", () => {
     expect(subjectArt("Dictation")).toBeNull();
+    expect(subjectArt("Microprocessor Systems")).toBeNull();
+    expect(subjectArt("Aircraft Maintenance")).toBeNull();
+    expect(subjectArt("Transport Studies")).toBeNull();
+    expect(subjectArt("Home Economics")).toBeNull();
   });
 
   it("gives a subject with no picture none", () => {
