@@ -26,7 +26,7 @@ export default function YouPage() {
         {t("nav.you")}
       </h1>
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <YouHero profile={profile} className="lg:col-span-2" />
 
         {!voiceOnly && <ProgressSummary />}
@@ -48,7 +48,7 @@ function EditSubjects() {
   return (
     <Link
       to="/app/learn/plan"
-      className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 shadow-card hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 shadow-card hover:border-accent lg:col-span-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <Pencil className="size-5 text-accent-ink" aria-hidden="true" />
       <span className="flex-1 font-medium text-ink">
