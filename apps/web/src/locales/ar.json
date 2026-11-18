@@ -1,6 +1,14 @@
 {
   "planBuilding": {
-    "making": "نُعدّ خطتك…"
+    "making": "نُعدّ خطتك…",
+    "choosing": "نختار موادك",
+    "topic": "موضوع واحد",
+    "topics": "{count} موضوعات",
+    "lesson": "نجهّز درسك الأول",
+    "done": "تم",
+    "working": "قيد العمل",
+    "waiting": "في الانتظار",
+    "progress": "{done} من {total} مواد جاهزة"
   },
   "chat": {
     "aiTutorTitle": "graspy المعلم الذكي",

@@ -1,6 +1,14 @@
 {
   "planBuilding": {
-    "making": "À ń ṣe ètò rẹ…"
+    "making": "À ń ṣe ètò rẹ…",
+    "choosing": "À ń yan àwọn kókó-ẹ̀kọ́ rẹ",
+    "topic": "Ẹ̀kọ́ 1",
+    "topics": "Ẹ̀kọ́ {count}",
+    "lesson": "À ń múra ẹ̀kọ́ àkọ́kọ́ rẹ sílẹ̀",
+    "done": "Ti parí",
+    "working": "Ó ń lọ lọ́wọ́",
+    "waiting": "Ó ń dúró",
+    "progress": "{done} nínú {total} kókó-ẹ̀kọ́ ti ṣetán"
   },
   "chat": {
     "aiTutorTitle": "Olùkọ́ graspy",
