@@ -30,6 +30,7 @@ const PICTURE_BY_LESSON: Record<string, string> = {
 // A theme whose one picture fits every lesson in it.
 const PICTURE_BY_THEME: Record<string, string> = {
   alphabet: "alphabet",
+  number: "number",
   multiplication: "times-tables",
   time: "telling-the-time",
   money: "naira-and-kobo",
