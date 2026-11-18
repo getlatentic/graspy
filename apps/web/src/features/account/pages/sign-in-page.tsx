@@ -2,7 +2,8 @@ import { Link, Navigate } from "react-router";
 import { useAccount } from "@/lib/account/use-account";
 import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
-import { AccountFrame } from "../components/account-frame";
+import { Logo } from "@/components/brand/logo";
+import { Scene } from "@/components/brand/scene";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
 
 /** Signing in opens "Who's learning?" once Google answers. */
@@ -11,9 +12,17 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <AccountFrame>
-      <SignIn />
-    </AccountFrame>
+    <main className="grid min-h-screen grid-rows-[auto_1fr] bg-canvas lg:grid-cols-2 lg:grid-rows-1">
+      <div className="h-56 sm:h-72 lg:h-auto">
+        <Scene />
+      </div>
+      <div className="flex flex-col items-center justify-center gap-10 px-5 py-10 sm:px-10">
+        <Logo />
+        <div className="w-full max-w-sm">
+          <SignIn />
+        </div>
+      </div>
+    </main>
   );
 }
 
@@ -21,7 +30,7 @@ export function SignIn() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-balance text-center font-display text-3xl font-bold text-ink">
+      <h1 className="text-balance text-center font-display text-4xl font-bold text-ink">
         {t("signIn.title")}
       </h1>
       <div className="flex flex-col gap-3">
