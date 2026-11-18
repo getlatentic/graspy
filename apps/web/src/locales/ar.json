@@ -8,7 +8,10 @@
     "done": "تم",
     "working": "قيد العمل",
     "waiting": "في الانتظار",
-    "progress": "{done} من {total} مواد جاهزة"
+    "progress": "{done} من {total} مواد جاهزة",
+    "welcome": "مرحبًا، {name}",
+    "welcomeAnonymous": "مرحبًا",
+    "intro": "نحن نُعدّ خطتك لـ {level}."
   },
   "chat": {
     "aiTutorTitle": "graspy المعلم الذكي",

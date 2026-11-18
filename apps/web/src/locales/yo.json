@@ -8,7 +8,10 @@
     "done": "Ti parí",
     "working": "Ó ń lọ lọ́wọ́",
     "waiting": "Ó ń dúró",
-    "progress": "{done} nínú {total} kókó-ẹ̀kọ́ ti ṣetán"
+    "progress": "{done} nínú {total} kókó-ẹ̀kọ́ ti ṣetán",
+    "welcome": "Káàbọ̀, {name}",
+    "welcomeAnonymous": "Káàbọ̀",
+    "intro": "À ń ṣe ètò {level} rẹ."
   },
   "chat": {
     "aiTutorTitle": "Olùkọ́ graspy",

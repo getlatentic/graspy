@@ -12,6 +12,7 @@ import { lessonPath, subjectPath } from "@/lib/learn-paths";
 import { useAskIdeas } from "@/features/learn/hooks/use-ask-ideas";
 import { HomeSection } from "@/features/learn/components/home-section";
 import { PlanBuilding } from "@/features/learn/components/plan-building";
+import { WelcomeLine } from "@/features/learn/components/welcome-line";
 import { PlanErrorCard } from "@/features/learn/components/plan-error-card";
 import { HomeRail } from "@/features/learn/components/home-rail";
 import { ResumeCard } from "@/features/learn/components/resume-card";
@@ -26,6 +27,9 @@ import {
   useVoiceOnly,
 } from "@/features/voice/hooks/use-voice-learner";
 import { homeParts } from "@/features/learn/lib/home-parts";
+
+const HOME_GRID =
+  "mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-12";
 
 export default function HomePage() {
   const { t } = useI18n();
@@ -64,9 +68,12 @@ export default function HomePage() {
 
   if (isGenerating) {
     return (
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        {errorAlert}
-        <PlanBuilding />
+      <div className={HOME_GRID}>
+        <WelcomeLine className="lg:col-span-2" />
+        {errorAlert && <div className="lg:col-span-2">{errorAlert}</div>}
+        <HomeSection title={t("planBuilding.making")}>
+          <PlanBuilding />
+        </HomeSection>
       </div>
     );
   }
@@ -74,7 +81,7 @@ export default function HomePage() {
   return (
     // From lg, subjects span the full width: a column beside the lesson
     // would cramp them.
-    <div className="mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-12">
+    <div className={HOME_GRID}>
       {errorAlert && <div className="lg:col-span-2">{errorAlert}</div>}
 
       {current && parts.has("continue") && (
