@@ -3,12 +3,12 @@ import { ChevronRight, Pencil } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n-context";
 import { getCountryName, getLanguageName } from "@/lib/locale";
-import { levelLabel } from "@/lib/learner-level";
 import { DETAILS_PAGE } from "@/features/learn/lib/app-sections";
 import { useUserProfile } from "@/lib/use-user-profile";
 import type { UserProfile } from "@/lib/user-storage";
 import { ProgressSummary } from "@/features/learn/components/progress-summary";
 import { PracticeRecordCard } from "@/features/learn/components/practice-record-card";
+import { YouHero } from "@/features/learn/components/you-hero";
 import { AccountCard } from "@/features/learn/components/account-card";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 
@@ -21,20 +21,24 @@ export default function YouPage() {
   if (!profile) return null;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <h1 className="font-display text-2xl font-semibold text-ink">
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 lg:max-w-5xl">
+      <h1 className="font-display text-3xl font-bold text-ink">
         {t("nav.you")}
       </h1>
 
-      {!voiceOnly && <ProgressSummary />}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+        <YouHero profile={profile} className="lg:col-span-2" />
 
-      {!voiceOnly && <PracticeRecordCard />}
+        {!voiceOnly && <ProgressSummary />}
 
-      <DetailsCard profile={profile} />
+        {!voiceOnly && <PracticeRecordCard />}
 
-      <AccountCard />
+        <DetailsCard profile={profile} />
 
-      {!voiceOnly && <EditSubjects />}
+        <AccountCard />
+
+        {!voiceOnly && <EditSubjects />}
+      </div>
     </div>
   );
 }
@@ -44,7 +48,7 @@ function EditSubjects() {
   return (
     <Link
       to="/app/learn/plan"
-      className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 shadow-card hover:border-accent lg:col-span-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <Pencil className="size-5 text-accent-ink" aria-hidden="true" />
       <span className="flex-1 font-medium text-ink">
@@ -66,7 +70,6 @@ function DetailsCard({ profile }: { profile: UserProfile }) {
       label: t("you.language"),
       value: getLanguageName(profile.language, locale),
     },
-    { label: t("you.grade"), value: levelLabel(profile, t) },
   ];
 
   return (
