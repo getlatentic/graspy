@@ -176,6 +176,53 @@ describe("a voice lesson", () => {
     ).toMatchObject({ phase: { name: "your-turn" }, note: "micDenied" });
   });
 
+  it("counts the takes in a row in which nobody spoke, and starts again with a step or an answer", () => {
+    const silent: LessonEvent[] = [
+      { type: "recordStarted" },
+      { type: "nothingHeard" },
+    ];
+    expect(run(...toYourTurn, ...silent).quiet).toBe(1);
+    expect(run(...toYourTurn, ...silent, ...silent).quiet).toBe(2);
+    expect(run(...toYourTurn, ...silent, { type: "recordStarted" }).quiet).toBe(
+      1,
+    );
+    expect(
+      run(...toYourTurn, ...silent, ...silent, {
+        type: "loaded",
+        move: TAUGHT,
+      }).quiet,
+    ).toBeUndefined();
+  });
+
+  it("does not count silent takes that are not in a row", () => {
+    expect(
+      run(
+        ...toYourTurn,
+        { type: "recordStarted" },
+        { type: "nothingHeard" },
+        { type: "recordStarted" },
+        { type: "recordFailed", note: "micFailed" },
+        { type: "recordStarted" },
+        { type: "nothingHeard" },
+      ).quiet,
+    ).toBe(1);
+  });
+
+  it("counts a take the server found empty with the ones the page found empty", () => {
+    const refused = (key: string): LessonEvent[] => [
+      { type: "recordStarted" },
+      { type: "recorded", key },
+      {
+        type: "settled",
+        key,
+        sent: { kind: "refused", code: "no_speech", status: 422 },
+      },
+    ];
+    expect(run(...toYourTurn, ...refused("k1"), ...refused("k2")).quiet).toBe(
+      2,
+    );
+  });
+
   it("gives the turn back, with nothing to say, when a take ends unsent out of sight", () => {
     expect(
       run(
@@ -225,5 +272,54 @@ describe("a voice lesson", () => {
     expect(
       run({ type: "start" }, { type: "loaded", move: rest }).phase,
     ).toEqual({ name: "rest", move: rest });
+  });
+
+  const silentTake: LessonEvent[] = [
+    { type: "recordStarted" },
+    { type: "nothingHeard" },
+  ];
+
+  it("starts counting silent takes again on the next step", () => {
+    const next = run(
+      ...toYourTurn,
+      ...silentTake,
+      ...silentTake,
+      { type: "loaded", move: { ...ASKED, event_id: "e3", say: "plan.e3" } },
+      { type: "taught", spoken: "heard" },
+      ...silentTake,
+    );
+    expect(next.quiet).toBe(1);
+  });
+
+  it("does not count a refusal that answers another take", () => {
+    const checking = run(
+      ...toYourTurn,
+      { type: "recordStarted" },
+      { type: "recorded", key: "k1" },
+    );
+    const other = lessonReducer(checking, {
+      type: "settled",
+      key: "k0",
+      sent: { kind: "refused", code: "no_speech", status: 422 },
+    });
+    expect(other).toBe(checking);
+    expect(other.quiet).toBeUndefined();
+  });
+
+  it("starts again once an answer is marked", () => {
+    const marked = run(
+      ...toYourTurn,
+      ...silentTake,
+      { type: "recordStarted" },
+      { type: "recorded", key: "k1" },
+      { type: "settled", key: "k1", sent: { kind: "marked", turn: TURN } },
+    );
+    expect(marked.quiet).toBeUndefined();
+  });
+
+  it("starts again with a fresh start of the lesson", () => {
+    expect(run(...toYourTurn, ...silentTake, { type: "start" }).quiet).toBe(
+      undefined,
+    );
   });
 });

@@ -35,7 +35,12 @@ export type Phase =
 export interface LessonState {
   phase: Phase;
   note: Note | null;
+  /** Takes in a row on this step in which nobody spoke; absent when none. */
+  quiet?: number;
 }
+
+/** From this many silent takes in a row she asks the question again herself. */
+export const QUIET_TAKES_BEFORE_HELP = 2;
 
 export type LessonEvent =
   | { type: "start" }
@@ -154,10 +159,45 @@ function inTurn(state: LessonState, next: (move: LessonMove) => LessonState) {
     : state;
 }
 
+const ENDS_QUIET: ReadonlySet<Phase["name"]> = new Set([
+  "teaching",
+  "rest",
+  "result",
+  "kept",
+  "moving-on",
+  "failed",
+]);
+
+/** Counts the silent takes in a row: a new step, or any answer that got somewhere, starts again. */
+function countQuiet(
+  before: LessonState,
+  event: LessonEvent,
+  after: LessonState,
+): LessonState {
+  if (after === before) return after;
+  const { quiet: _, ...rest } = after;
+  const otherTrouble = after.note !== null && after.note !== "noSpeech";
+  if (
+    event.type === "start" ||
+    otherTrouble ||
+    ENDS_QUIET.has(after.phase.name)
+  )
+    return rest;
+  const silent =
+    after.note === "noSpeech" &&
+    (event.type === "nothingHeard" || event.type === "settled");
+  const quiet = (before.quiet ?? 0) + (silent ? 1 : 0);
+  return quiet > 0 ? { ...rest, quiet } : rest;
+}
+
 export function lessonReducer(
   state: LessonState,
   event: LessonEvent,
 ): LessonState {
+  return countQuiet(state, event, step(state, event));
+}
+
+function step(state: LessonState, event: LessonEvent): LessonState {
   switch (event.type) {
     case "start":
       return { phase: { name: "loading" }, note: null };
