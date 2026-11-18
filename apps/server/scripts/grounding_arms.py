@@ -52,11 +52,14 @@ async def lesson_record(
     request = LessonRequest(
         COUNTRY, "English", SUBJECT, topic, grade_level, grounded=grounded
     )
+    finished = None
     try:
         with dspy.context(lm=lm.copy()):
             async for event in LessonService().events(request):
                 if event["type"] == "complete":
                     finished = event["payload"]
+        if finished is None:
+            raise RuntimeError("The lesson pipeline ended without a lesson")
     except Exception as error:
         logger.exception("%s (%s) draw %d failed", topic, record["arm"], draw)
         record["error"] = f"{type(error).__name__}: {error}"

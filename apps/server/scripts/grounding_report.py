@@ -138,6 +138,12 @@ def report(judged: Path, hand: Path | None, hand_key: Path | None) -> None:
     print(
         f"lessons judged: {len(scored)}  judge calls failed: {failed} of {len(results)}"
     )
+    for arm in ARMS:
+        mine = [i for i in scored if key[i]["arm"] == arm]
+        unfinished = sum(1 for i in mine if not key[i].get("complete", True))
+        print(f"  {arm}: {len(mine)} lessons judged, {unfinished} unfinished")
+    paired = sum(1 for t in topics.values() if set(ARMS) <= set(t))
+    print(f"  topics with both arms: {paired} of {len(topics)}")
     print(
         f"judge agrees with itself (within {AGREE_WITHIN} point over 3 repeats): {agreement(results):.0%}\n"
     )

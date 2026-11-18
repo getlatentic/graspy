@@ -76,6 +76,8 @@ def numbered_objectives(topic: str) -> list[str]:
 
 async def judged(record: dict, repeat: int, judge: dspy.LM) -> dict:
     objectives = numbered_objectives(record["topic"])
+    if not objectives:
+        raise ValueError(f"No official objectives for {record['topic']}")
     out = {
         "id": record["id"],
         "repeat": repeat,
@@ -133,7 +135,7 @@ def write_sample(records: list[dict], per_arm: int, seed: int, out: Path) -> Non
             f"=====  {r['id']}  =====\nTopic: {r['topic']}\nOfficial objectives:\n{objectives}\n\n"
             f"{lesson_text(r['lesson_wire'])}\n"
         )
-    out.with_suffix(".md").write_text("\n".join(parts))
+    out.with_name(out.name + ".md").write_text("\n".join(parts))
     key = {
         r["id"]: {"arm": r["arm"], "topic": r["topic"], "draw": r["draw"]}
         for r in chosen
@@ -167,7 +169,10 @@ def main() -> None:
         return
     settings = Settings(_env_file=args.env_file) if args.env_file else Settings()
     results = asyncio.run(judge_all(records, settings))
-    key = {r["id"]: {k: r[k] for k in ("arm", "topic", "draw")} for r in records}
+    key = {
+        r["id"]: {k: r[k] for k in ("arm", "topic", "draw", "complete")}
+        for r in records
+    }
     args.out.write_text(json.dumps({"key": key, "results": results}, indent=1))
     print(f"scored {len(results)} judgments of {len(records)} lessons -> {args.out}")
 
