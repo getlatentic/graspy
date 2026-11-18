@@ -16,6 +16,7 @@ from fastapi import Depends, HTTPException, Request
 
 from ..account.consents import SERVICE, active_consent
 from ..security.guard import Session, require_session
+from ..timing import span
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,10 @@ async def service_consent_refusal(app: Any, learner_key: str) -> HTTPException |
     if voice is None:
         return None
     try:
-        agreed = await asyncio.wait_for(
-            active_consent(voice.DB, learner_key, SERVICE), READ_TIMEOUT_SECONDS
-        )
+        async with span("consent_d1"):
+            agreed = await asyncio.wait_for(
+                active_consent(voice.DB, learner_key, SERVICE), READ_TIMEOUT_SECONDS
+            )
     except Exception:
         logger.exception("Whether a parent agreed could not be read")
         return _refusal(

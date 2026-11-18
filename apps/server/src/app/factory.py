@@ -55,6 +55,7 @@ from .security.rate_limit import Budgets, RateLimitMiddleware
 from .security.session import resolve_secret
 from .settings import Settings, get_settings
 from .threads.store import ThreadStore
+from .timing import ServerTimingMiddleware
 from .turns.durable import DurableTurns
 from .voice.keeping import NO_VOICE, BoundVoice
 
@@ -256,6 +257,7 @@ def _add_middleware(
         allow_headers=["*"],
     )
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(ServerTimingMiddleware)
 
 
 def _add_exception_handlers(app: FastAPI) -> None:

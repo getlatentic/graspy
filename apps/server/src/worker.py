@@ -167,6 +167,7 @@ from app.chatlog.log import ChatLog
 from app.cloudflare import build_lesson_runner, build_turn_alarm, build_worker_app
 from app.cloudflare_sockets import JsSocket, accept, connect, socket_target
 from app.lessons.store import KEEP_DAYS
+from app.timing import note_build
 from app.turns.sockets import ChatSockets
 from app.voice.recording_retention import sweep_audio
 
@@ -194,7 +195,9 @@ def _app_for(env):
     # built, which startup refuses.
     global _app
     if _app is None:
+        begun = time.monotonic()
         _app = build_worker_app(env, _js_object)
+        note_build(time.monotonic() - begun)
     return _app
 
 
