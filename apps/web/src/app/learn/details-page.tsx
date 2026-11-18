@@ -42,7 +42,7 @@ export default function DetailsPage() {
   if (!profile) return null;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8">
+    <div className="mx-auto flex max-w-xl flex-col gap-6">
       <div>
         <Link
           to={YOU}
@@ -51,13 +51,15 @@ export default function DetailsPage() {
           <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
           {t("details.back")}
         </Link>
-        <h1 className="mt-4 text-balance text-2xl font-semibold text-ink">
+        <h1 className="mt-4 text-balance font-display text-3xl font-bold text-ink">
           {t("details.title")}
         </h1>
       </div>
       <FormProvider {...methods}>
-        <ProfileStep suggestedCountry={profile.country} />
-        <SaveDetails profile={profile} />
+        <Card className="flex flex-col gap-8 p-5 sm:p-8">
+          <ProfileStep suggestedCountry={profile.country} />
+          <SaveDetails profile={profile} />
+        </Card>
       </FormProvider>
     </div>
   );
@@ -115,7 +117,8 @@ function SaveDetails({ profile }: { profile: UserProfile }) {
       disabled={
         keeping || !detailsChanged(profile, values) || !detailsComplete(values)
       }
-      className="self-start"
+      size="lg"
+      className="w-full sm:w-auto sm:self-start"
     >
       {t("details.save")}
     </Button>
