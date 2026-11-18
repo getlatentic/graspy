@@ -27,7 +27,7 @@ const LESSONS = [
     days_correct: 1,
   }),
   lesson("b", { topic: "alphabet", standing: "untouched" }),
-  lesson("c", { topic: "number", standing: "learnt" }),
+  lesson("c", { topic: "operations", standing: "learnt" }),
   lesson("d", { topic: "astronomy", standing: "mastered", days_correct: 2 }),
   lesson("english.alphabet.letter-sounds", { topic: "alphabet" }),
 ];
@@ -166,7 +166,7 @@ describe("the tiles", () => {
     const iconOf = (title: RegExp) =>
       tile(title).querySelector("svg.lucide")!.getAttribute("class");
     expect(pictureOf(/^Title c/)).toBeUndefined();
-    expect(iconOf(/^Title c/)).toContain("lucide-hash");
+    expect(iconOf(/^Title c/)).toContain("lucide-plus");
     expect(pictureOf(/^Title d/)).toBeUndefined();
     expect(iconOf(/^Title d/)).toContain("lucide-sparkles");
   });

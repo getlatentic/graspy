@@ -42,6 +42,9 @@ describe("pictureNameOf", () => {
       ),
     ).toBe("times-tables");
     expect(
+      pictureNameOf(lesson("mathematics.number.prime-numbers", "number")),
+    ).toBe("number");
+    expect(
       pictureNameOf(lesson("mathematics.time.telling-the-time", "time")),
     ).toBe("telling-the-time");
     expect(
@@ -62,9 +65,6 @@ describe("pictureNameOf", () => {
 
   it("gives a lesson no picture fits nothing, even for a name that is built into objects", () => {
     expect(
-      pictureNameOf(lesson("mathematics.number.prime-numbers", "number")),
-    ).toBeUndefined();
-    expect(
       pictureNameOf(
         lesson("mathematics.operations.division-facts", "operations"),
       ),
@@ -79,15 +79,17 @@ describe("lessonPicture", () => {
       expect(PICTURE_URLS[name], name).toBeTruthy();
   });
 
-  it("is a different file for each of the nine pictures", () => {
+  it("is a different file for each of the ten pictures", () => {
     expect(new Set(pictureNames().map((name) => PICTURE_URLS[name])).size).toBe(
-      9,
+      10,
     );
   });
 
   it("is nothing for a lesson without a picture", () => {
     expect(
-      lessonPicture(lesson("mathematics.number.roman-numerals", "number")),
+      lessonPicture(
+        lesson("mathematics.operations.division-facts", "operations"),
+      ),
     ).toBeUndefined();
   });
 });
