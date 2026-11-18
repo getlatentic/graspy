@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import source from "../../public/sw.js?raw";
 
 const ORIGIN = "https://app.test";
-const OLD = "<html>old build</html>";
-const NEW = "<html>new build</html>";
+const ROOT = '<div id="root"></div>';
+const OLD = `<html>old build${ROOT}</html>`;
+const NEW = `<html>new build${ROOT}</html>`;
 
 function fakeCaches() {
   const stores = new Map<string, Map<string, Response>>();
@@ -62,7 +63,18 @@ function startWorker(network: (url?: string) => Promise<Response>) {
     });
     await Promise.all(waits);
   }
-  return { open, caches, told, check };
+  /** A script the page asks for. */
+  async function openFile(path: string) {
+    let answer: Promise<Response> = new Promise(() => undefined);
+    const request = { method: "GET", url: ORIGIN + path, mode: "no-cors" };
+    listeners.fetch({
+      request,
+      respondWith: (response: Promise<Response>) => void (answer = response),
+      waitUntil: () => undefined,
+    });
+    return answer;
+  }
+  return { open, openFile, caches, told, check };
 }
 
 const page = (body: string) => async () => new Response(body);
@@ -163,7 +175,7 @@ describe("the service worker's page", () => {
 
 describe("the service worker's new build", () => {
   const entry = "/assets/index-NEW.js";
-  const withScripts = `<html><script src="${entry}"></script><link rel="modulepreload" href="/assets/cn-NEW.js"></html>`;
+  const withScripts = `<html>${ROOT}<script src="${entry}"></script><link rel="modulepreload" href="/assets/cn-NEW.js"></html>`;
 
   it("keeps the new build's startup files before telling the page", async () => {
     const fetched: string[] = [];
@@ -183,7 +195,7 @@ describe("the service worker's new build", () => {
     expect(worker.told).toEqual([{ type: "update-ready" }]);
   });
 
-  it("still tells the page when a file cannot be kept", async () => {
+  it("keeps the old document, and says nothing, when a file cannot be kept", async () => {
     const worker = startWorker(async (url) => {
       if (String(url) !== "/") throw new TypeError("Failed to fetch");
       return new Response(withScripts);
@@ -193,6 +205,56 @@ describe("the service worker's new build", () => {
     await answer;
     await settled();
     await worker.check();
-    expect(worker.told).toEqual([{ type: "update-ready" }]);
+    const cache = await worker.caches.open("graspy-shell-v1");
+    expect(await (await cache.match("/"))!.text()).toBe(OLD);
+    expect(worker.told).toEqual([]);
+  });
+
+  it("does not keep the document when a file comes back as a page", async () => {
+    const html = { headers: { "content-type": "text/html" } };
+    const worker = startWorker(async (url) =>
+      String(url) === "/"
+        ? new Response(withScripts)
+        : new Response(OLD, html),
+    );
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    await answer;
+    await settled();
+    const cache = await worker.caches.open("graspy-shell-v1");
+    expect(await (await cache.match("/"))!.text()).toBe(OLD);
+    const files = await worker.caches.open("graspy-files-v1");
+    expect(await files.match(ORIGIN + entry)).toBeUndefined();
+  });
+});
+
+describe("the service worker's refusal to keep what is not the app", () => {
+  it("keeps a captive portal's page out of the document's copy", async () => {
+    const worker = startWorker(page("<html>Sign in to the Wi-Fi</html>"));
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    expect(await (await answer).text()).toBe(OLD);
+    await settled();
+    await worker.check();
+    const cache = await worker.caches.open("graspy-shell-v1");
+    expect(await (await cache.match("/"))!.text()).toBe(OLD);
+    expect(worker.told).toEqual([]);
+  });
+
+  it("keeps a script it fetched, so the next ask is answered from the copy", async () => {
+    const worker = startWorker(async () => new Response("script"));
+    await worker.openFile("/assets/a.js");
+    const files = await worker.caches.open("graspy-files-v1");
+    expect(await files.match(ORIGIN + "/assets/a.js")).toBeDefined();
+  });
+
+  it("does not keep a page answered for a file that is not there", async () => {
+    const worker = startWorker(
+      async () =>
+        new Response(OLD, { headers: { "content-type": "text/html" } }),
+    );
+    await worker.openFile("/assets/missing.js");
+    const files = await worker.caches.open("graspy-files-v1");
+    expect(await files.match(ORIGIN + "/assets/missing.js")).toBeUndefined();
   });
 });

@@ -61,8 +61,17 @@ let latestChanged = Promise.resolve(false);
 // The files a document names under /assets: its entry script and the ones it preloads.
 const NAMED_FILE = /(?:src|href)="(\/assets\/[^"]+)"/g;
 
-// A new build's startup files, kept before the page is told to reload into it, so the reload
-// finds them here and does not fetch them cold. One that fails is fetched when it is needed.
+// What the app's document always holds; a captive portal's page or an error page does not.
+const APP_MARKER = 'id="root"';
+
+// Pages answers 200 with the document for a file it does not have, and a captive portal answers
+// 200 with its own page; neither may be kept under a file's address, where it would stay.
+const isFileReply = (response) =>
+  response.ok && !(response.headers.get("content-type") || "").includes("text/html");
+
+// A new build's startup files, kept before its document is, so the reload (or an offline visit)
+// finds them here and does not fetch them cold. One that cannot be kept fails the whole set: the
+// copy of the document stays the old build's, whose files are all here.
 async function precache(html) {
   const files = await caches.open(FILES);
   const names = [...html.matchAll(NAMED_FILE)].map(([, name]) => name);
@@ -71,20 +80,23 @@ async function precache(html) {
       const url = new URL(name, self.location.origin).href;
       if (await files.match(url)) return;
       const response = await fetch(url);
-      if (response.ok) await files.put(url, response);
+      if (!isFileReply(response)) throw new Error(`${name} could not be kept`);
+      await files.put(url, response);
     }),
   );
   await trimmed(files);
 }
 
-// The document as the network has it now. The copy is replaced when it differs from the one kept.
+// The document as the network has it now. The copy is replaced when it differs from the one kept,
+// once the new build's startup files are kept; a reply that is not the app's document is not kept.
 async function refresh(cache, kept) {
   const response = await fetch(APP, { cache: "no-cache" });
   if (!response.ok) return { response, changed: false };
   const html = await response.clone().text();
+  if (!html.includes(APP_MARKER)) return { response, changed: false };
   const changed = !!kept && (await kept.text()) !== html;
+  if (changed) await precache(html);
   if (!kept || changed) await cache.put(APP, response.clone());
-  if (changed) await precache(html).catch(() => undefined);
   return { response, changed };
 }
 
@@ -104,7 +116,7 @@ async function file(request) {
   const kept = await cache.match(request);
   if (kept) return kept;
   const response = await fetch(request);
-  if (response.ok) {
+  if (isFileReply(response)) {
     await cache.put(request, response.clone());
     await trimmed(cache);
   }
@@ -122,8 +134,11 @@ async function keep(urls) {
       const cache = url.pathname === APP ? shell : isFile(url) ? files : null;
       if (!cache || (await cache.match(url.href))) return;
       const response = await fetch(url.href);
-      if (response.ok) {
-        await cache.put(url.pathname === APP ? APP : url.href, response);
+      if (url.pathname === APP) {
+        const html = await response.clone().text();
+        if (response.ok && html.includes(APP_MARKER)) await cache.put(APP, response);
+      } else if (isFileReply(response)) {
+        await cache.put(url.href, response);
       }
     }),
   );
