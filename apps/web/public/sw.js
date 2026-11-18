@@ -1,9 +1,14 @@
-// The app's service worker, so graspy opens without a connection once it has
-// opened with one. It answers two kinds of request from this origin: a page,
-// which is the one app document, from the network while there is one and
-// from its last copy when not; and the build's files, which are hashed and
-// never change, from its cache first. Everything else, the API included,
-// goes to the network as if it were not here.
+// The app's service worker, so graspy opens at once, and without a connection
+// once it has opened with one. It answers two kinds of request from this
+// origin: a page, which is the one app document, from its last copy at once
+// while it asks the network for a newer one; and the build's files, which are
+// hashed and never change, from its cache first. Everything else, the API
+// included, goes to the network as if it were not here.
+//
+// A page answered from the last copy may be a deploy behind. When the network's
+// document differs the copy is replaced, and the page, which asks once it has
+// loaded, is told: one the learner has not touched reloads into the new build,
+// and any other opens it on the next visit (src/lib/app-update.ts).
 "use strict";
 
 const SHELL = "graspy-shell-v1";
@@ -14,6 +19,8 @@ const APP = "/";
 // A deploy leaves the last one's hashed files behind; past this many, the
 // oldest go.
 const MAX_FILES = 200;
+// What the page is told when the document changed; src/lib/app-update.ts listens for it.
+const UPDATE_READY = "update-ready";
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -47,17 +54,29 @@ async function trimmed(cache) {
   );
 }
 
-async function page(request) {
+// Whether the document the network has now differs from the copy kept, as the page last answered
+// found it; the page asks once it is loaded (see "check" below).
+let latestChanged = Promise.resolve(false);
+
+// The document as the network has it now. The copy is replaced when it differs from the one kept.
+async function refresh(cache, kept) {
+  const response = await fetch(APP, { cache: "no-cache" });
+  if (!response.ok) return { response, changed: false };
+  const changed =
+    !!kept && (await kept.text()) !== (await response.clone().text());
+  if (!kept || changed) await cache.put(APP, response.clone());
+  return { response, changed };
+}
+
+async function page(event) {
   const cache = await caches.open(SHELL);
-  try {
-    const response = await fetch(request);
-    if (response.ok) await cache.put(APP, response.clone());
-    return response;
-  } catch (error) {
-    const kept = await cache.match(APP);
-    if (kept) return kept;
-    throw error;
-  }
+  const kept = await cache.match(APP);
+  const refreshing = refresh(cache, kept && kept.clone());
+  if (!kept) return (await refreshing).response;
+  // The learner does not wait for the network; a failed refresh leaves the copy as it is.
+  latestChanged = refreshing.then(({ changed }) => changed).catch(() => false);
+  event.waitUntil(latestChanged);
+  return kept;
 }
 
 async function file(request) {
@@ -93,6 +112,14 @@ async function keep(urls) {
 
 self.addEventListener("message", (event) => {
   const { type, urls } = event.data || {};
+  // The page asks, rather than being told, because a page still loading may not be there to hear.
+  if (type === "check") {
+    event.waitUntil(
+      latestChanged.then((changed) => {
+        if (changed) event.source.postMessage({ type: UPDATE_READY });
+      }),
+    );
+  }
   if (type === "keep" && Array.isArray(urls)) {
     event.waitUntil(keep(urls.filter((url) => typeof url === "string")));
   }
@@ -102,6 +129,6 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
-  if (request.mode === "navigate") event.respondWith(page(request));
+  if (request.mode === "navigate") event.respondWith(page(event));
   else if (isFile(url)) event.respondWith(file(request));
 });

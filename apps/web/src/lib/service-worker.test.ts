@@ -1,0 +1,162 @@
+import { describe, expect, it, vi } from "vitest";
+import source from "../../public/sw.js?raw";
+
+const ORIGIN = "https://app.test";
+const OLD = "<html>old build</html>";
+const NEW = "<html>new build</html>";
+
+function fakeCaches() {
+  const stores = new Map<string, Map<string, Response>>();
+  const keyOf = (key: unknown) =>
+    typeof key === "string" ? key : String((key as Request).url);
+  return {
+    stores,
+    async open(name: string) {
+      const store = stores.get(name) ?? new Map<string, Response>();
+      stores.set(name, store);
+      return {
+        match: async (key: unknown) => store.get(keyOf(key))?.clone(),
+        put: async (key: unknown, response: Response) =>
+          void store.set(keyOf(key), response),
+        keys: async () => [...store.keys()],
+        delete: async (key: unknown) => store.delete(keyOf(key)),
+      };
+    },
+    keys: async () => [...stores.keys()],
+    delete: async (name: string) => stores.delete(name),
+  };
+}
+
+/** The worker run against a fake browser, with the network answering `network`. */
+function startWorker(network: () => Promise<Response>) {
+  const listeners: Record<string, (event: unknown) => void> = {};
+  const told: unknown[] = [];
+  const asker = { postMessage: (message: unknown) => told.push(message) };
+  const caches = fakeCaches();
+  const self = {
+    addEventListener: (type: string, listener: (event: unknown) => void) =>
+      void (listeners[type] = listener),
+    skipWaiting: () => undefined,
+    location: { origin: ORIGIN },
+    clients: { claim: async () => undefined },
+  };
+  new Function("self", "caches", "fetch", source)(self, caches, network);
+
+  async function open(path = "/app/learn") {
+    const waits: Promise<unknown>[] = [];
+    let answer: Promise<Response> = new Promise(() => undefined);
+    listeners.fetch({
+      request: { method: "GET", url: ORIGIN + path, mode: "navigate" },
+      respondWith: (response: Promise<Response>) => void (answer = response),
+      waitUntil: (work: Promise<unknown>) => void waits.push(work),
+    });
+    return { answer, settled: () => Promise.all(waits) };
+  }
+  /** The loaded page asking whether the document it was served was a deploy behind. */
+  async function check() {
+    const waits: Promise<unknown>[] = [];
+    listeners.message({
+      data: { type: "check" },
+      source: asker,
+      waitUntil: (work: Promise<unknown>) => void waits.push(work),
+    });
+    await Promise.all(waits);
+  }
+  return { open, caches, told, check };
+}
+
+const page = (body: string) => async () => new Response(body);
+const kept = async (worker: ReturnType<typeof startWorker>, body: string) => {
+  const cache = await worker.caches.open("graspy-shell-v1");
+  await cache.put("/", new Response(body));
+};
+
+describe("the service worker's page", () => {
+  it("answers from the kept copy without waiting for the network", async () => {
+    const network = new Promise<Response>(() => undefined);
+    const worker = startWorker(() => network);
+    await kept(worker, OLD);
+    const { answer } = await worker.open();
+    expect(await (await answer).text()).toBe(OLD);
+  });
+
+  it("keeps a newer document and tells the page that asks", async () => {
+    const worker = startWorker(page(NEW));
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    await answer;
+    await settled();
+    const cache = await worker.caches.open("graspy-shell-v1");
+    expect(await (await cache.match("/"))!.text()).toBe(NEW);
+    await worker.check();
+    expect(worker.told).toEqual([{ type: "update-ready" }]);
+  });
+
+  it("is on the new build after one reload", async () => {
+    const worker = startWorker(page(NEW));
+    await kept(worker, OLD);
+    const first = await worker.open();
+    expect(await (await first.answer).text()).toBe(OLD);
+    await first.settled();
+    await worker.check();
+    expect(worker.told).toHaveLength(1);
+    const reload = await worker.open();
+    expect(await (await reload.answer).text()).toBe(NEW);
+    await reload.settled();
+    await worker.check();
+    expect(worker.told).toHaveLength(1);
+  });
+
+  it("says nothing when the document is the same", async () => {
+    const worker = startWorker(page(OLD));
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    await answer;
+    await settled();
+    await worker.check();
+    expect(worker.told).toEqual([]);
+  });
+
+  it("tells a page that asks before the network has answered, once it has", async () => {
+    let answerNetwork: (response: Response) => void = () => undefined;
+    const worker = startWorker(
+      () => new Promise<Response>((resolve) => (answerNetwork = resolve)),
+    );
+    await kept(worker, OLD);
+    await (await worker.open()).answer;
+    const asked = worker.check();
+    answerNetwork(new Response(NEW));
+    await asked;
+    expect(worker.told).toEqual([{ type: "update-ready" }]);
+  });
+
+  it("takes the network's document on the first visit, and keeps it", async () => {
+    const worker = startWorker(page(NEW));
+    const { answer, settled } = await worker.open();
+    expect(await (await answer).text()).toBe(NEW);
+    await settled();
+    const cache = await worker.caches.open("graspy-shell-v1");
+    expect(await (await cache.match("/"))!.text()).toBe(NEW);
+    expect(worker.told).toEqual([]);
+  });
+
+  it("opens from the kept copy with no connection", async () => {
+    const worker = startWorker(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    expect(await (await answer).text()).toBe(OLD);
+    await expect(settled()).resolves.toBeDefined();
+  });
+
+  it("fails on the first visit with no connection", async () => {
+    const error = vi.fn();
+    const worker = startWorker(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    const { answer } = await worker.open();
+    await answer.catch(error);
+    expect(error).toHaveBeenCalledOnce();
+  });
+});
