@@ -10,8 +10,8 @@ export function Scene({ className }: { className?: string }) {
       className={cn("block size-full", className)}
     >
       <rect width="400" height="300" className="fill-accent-soft" />
-      <circle cx="292" cy="86" r="48" className="fill-accent" />
-      <circle cx="292" cy="86" r="16" className="fill-surface" />
+      <circle cx="244" cy="80" r="40" className="fill-accent" />
+      <circle cx="244" cy="80" r="13" className="fill-surface" />
       <ellipse
         cx="90"
         cy="300"
