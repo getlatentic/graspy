@@ -55,4 +55,17 @@ describe("the sign-in card", () => {
       screen.getByRole("link", { name: en.signIn.start }).getAttribute("href"),
     ).toBe("/app");
   });
+
+  it("keeps the button's label on one line and its icon whole down to a phone of 320px, and balances the line under it", () => {
+    card();
+    const button = screen.getByRole("button", { name: en.you.signIn });
+    expect(button.className).toContain("whitespace-nowrap");
+    expect(button.querySelector("svg")?.getAttribute("class")).toContain(
+      "shrink-0",
+    );
+    const line = screen.getByRole("link", {
+      name: en.signIn.start,
+    }).parentElement!;
+    expect(line.className).toContain("text-balance");
+  });
 });

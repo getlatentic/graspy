@@ -25,9 +25,13 @@ export function SignIn() {
         {t("signIn.title")}
       </h1>
       <div className="flex flex-col gap-3">
-        <GoogleSignInButton variant="primary" size="lg" className="w-full" />
+        <GoogleSignInButton
+          variant="primary"
+          size="lg"
+          className="w-full whitespace-nowrap px-4"
+        />
       </div>
-      <p className="border-t border-line pt-5 text-center text-sm text-muted">
+      <p className="border-t border-line pt-5 text-balance text-center text-sm text-muted">
         {t("signIn.newHere")}{" "}
         <Link
           to="/app"
