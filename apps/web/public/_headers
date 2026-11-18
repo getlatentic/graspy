@@ -28,6 +28,11 @@
 /sw.js
   Cache-Control: no-cache
 
+# Every file the build puts in /assets is named for its content, so a changed file has a new
+# name and a file under one name never changes.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
 # The school systems the app serves itself, the same for everyone.
 /education/*
   Cache-Control: public, max-age=3600
