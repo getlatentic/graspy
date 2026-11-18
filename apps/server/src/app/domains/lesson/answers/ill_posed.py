@@ -14,7 +14,8 @@ from .tokens import numbers_in
 
 _PARENTHESISED = re.compile(r"\(([\d.,\s-]+)\)")
 _NONE = re.compile(
-    r"\b(?:no|not\s+an?|without|isn't|aren't)\b[^.;]{0,25}\boutliers?\b"
+    r"\bno\s+(?:extreme\s+|obvious\s+|clear\s+)?outliers?\b"
+    r"|\bnot\s+an?\s+(?:extreme\s+)?outlier\b|\bwithout\s+(?:any\s+)?outliers?\b"
     r"|\boutliers?\s+(?:is|are)\s+not\b|\bdoes\s+not\s+contain\b[^.;]{0,25}\boutlier",
     re.IGNORECASE,
 )
@@ -22,6 +23,8 @@ _SOME = re.compile(r"\boutliers?\b", re.IGNORECASE)
 FEWEST_VALUES = 5
 MOST_VALUES = 40
 _FENCE = Fraction(3, 2)
+# "No outlier" is refused only when a value is beyond this, which no one calls mild.
+_FAR_FENCE = Fraction(3)
 
 
 def _median(ordered: list[Fraction]) -> Fraction:
@@ -40,17 +43,22 @@ def _quartiles(ordered: list[Fraction], keep_middle: bool) -> tuple[Fraction, Fr
     return _median(lower), _median(upper)
 
 
-def _outliers(values: list[Fraction], keep_middle: bool) -> list[Fraction]:
+def _outliers(
+    values: list[Fraction], keep_middle: bool, fence: Fraction = _FENCE
+) -> list[Fraction]:
     ordered = sorted(values)
     low, high = _quartiles(ordered, keep_middle)
-    reach = _FENCE * (high - low)
+    reach = fence * (high - low)
     return [v for v in ordered if v < low - reach or v > high + reach]
 
 
-def outliers_in(values: list[Fraction]) -> list[Fraction] | None:
-    """The outliers by the 1.5 × IQR rule; None when the two ways of taking
+def outliers_in(
+    values: list[Fraction], fence: Fraction = _FENCE
+) -> list[Fraction] | None:
+    """The outliers beyond ``fence`` × IQR; None when the two ways of taking
     the quartiles disagree."""
-    exclusive, inclusive = _outliers(values, False), _outliers(values, True)
+    exclusive = _outliers(values, False, fence)
+    inclusive = _outliers(values, True, fence)
     return exclusive if exclusive == inclusive else None
 
 
@@ -75,11 +83,11 @@ def outlier_claim(question: str, options: list[str], marked: int) -> str | None:
     says_none = _says_none(options[marked])
     if values is None or says_none is None:
         return None
-    found = outliers_in(values)
+    found = outliers_in(values, _FAR_FENCE if says_none else _FENCE)
     if found is None or bool(found) != says_none:
         return None
     if found:
-        return f"the data has an outlier ({found[0]}) by the 1.5 × IQR rule, but the option marked right says it has none"
+        return f"the data has an outlier ({found[0]}) far beyond the rest (3 × IQR), but the option marked right says it has none"
     return "the data has no outlier by the 1.5 × IQR rule, but the option marked right says it has one"
 
 
@@ -108,7 +116,9 @@ def median_of_names(question: str, options: list[str], marked: int) -> str | Non
     names = {row[0].casefold() for row in rows[1:] if row[0]}
     if any(re.fullmatch(r"[\d.,\s-]+", name) for name in names):
         return None
-    if not re.search(r"\bmedian\b", question, re.IGNORECASE):
+    if not re.search(r"\bmedian\b", question, re.IGNORECASE) or re.search(
+        r"\b(?:can't|cannot|why|not)\b", question, re.IGNORECASE
+    ):
         return None
     given = {part.casefold() for part in _SPLIT.split(options[marked])}
     if given & names:

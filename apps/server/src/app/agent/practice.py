@@ -118,7 +118,7 @@ def _key_problem(marked: str, working: str, check: str) -> str | None:
 def _unsure(written: PracticeQuestion) -> str | None:
     """A feedback that corrects itself, as the lesson gate refuses it too."""
     for name in ("correct_feedback", "incorrect_feedback"):
-        if said := self_correction(getattr(written, name)):
+        if said := self_correction(getattr(written, name), name == "correct_feedback"):
             return (
                 f"The {name} corrects itself ({said!r}). Work the answer out "
                 "first, then write feedback that states it once."

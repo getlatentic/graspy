@@ -20,7 +20,7 @@ _WORD_AT = {
     "first": 0, "second": 1, "third": 2, "fourth": 3, "fifth": 4,
 }  # fmt: skip
 _BY_POSITION = re.compile(
-    r"""(?:\b(?:option|choice)\s+(?:number\s+)?(?P<number>\d|[A-E](?![A-Za-z])|one|two|three|four|five)\b
+    r"""(?:\b(?:option|choice)\s+(?:number\s+)?(?P<number>\d|(?-i:[A-E])(?![A-Za-z])|one|two|three|four|five)\b
       |\b(?P<ordinal>first|second|third|fourth|fifth)\s+(?:option|choice)\b
       |\bindex\s+(?P<index>\d)\b)""",
     re.VERBOSE | re.IGNORECASE,
@@ -57,23 +57,35 @@ def pointed_at(feedback: str) -> set[int]:
     return {_position(found) for found in _BY_POSITION.finditer(feedback)}
 
 
+# Numbers a feedback states as a result, not the ones it works from.
+_STATED = re.compile(
+    r"(?:=|\b(?:is|are|gives?|equals?|makes?|be|answer|estimate|total)\b)[^.;\n]{0,40}",
+    re.IGNORECASE,
+)
+
+
 def _named(feedback: str, options: list[str]) -> set[int]:
-    return {at for at, option in enumerate(options) if names(feedback, option)}
+    stated = " ".join(found.group() for found in _STATED.finditer(feedback))
+    return {at for at, option in enumerate(options) if names(stated, option)}
 
 
 def contradiction(
     options: list[str], marked: int, right_feedback: str, wrong_feedback: str
 ) -> str | None:
     """Why the feedback cannot be shown beside the key, or None."""
-    for text in (right_feedback, wrong_feedback):
-        if said := self_correction(text):
+    for text, right in ((right_feedback, True), (wrong_feedback, False)):
+        if said := self_correction(text, right):
             return f"the feedback corrects itself ({said!r})"
     pointed = pointed_at(right_feedback)
     if pointed and marked not in pointed:
         return "the feedback points at an option other than the one marked right"
     named = _named(right_feedback, options)
     # An option that is not a plain number cannot be looked for in the text.
-    if named and marked not in named and written(options[marked]) is not None:
+    if (
+        named
+        and written(options[marked]) is not None
+        and not names(right_feedback, options[marked])
+    ):
         other = options[min(named)]
         return f"the feedback gives {other!r}, not the option marked right"
     return None

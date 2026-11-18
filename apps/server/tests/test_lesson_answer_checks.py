@@ -370,7 +370,7 @@ async def test_a_check_whose_feedback_corrects_itself_is_written_again_told_why(
 async def test_a_wrong_key_moved_to_the_right_option_still_contradicting_its_feedback_is_written_again():
     wrong_and_unsure = {
         **WRONG_KEY,
-        "incorrect_feedback": "Not quite. Oops, I mean 0.4.",
+        "incorrect_feedback": "Not quite. I made a typo, I mean 0.4.",
     }
     _, events = await _made(
         [

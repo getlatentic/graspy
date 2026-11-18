@@ -34,8 +34,15 @@ _SIGNIFICANT = re.compile(
 )
 # "which number rounds to 200" works backwards; a list item "1." is not a number.
 _BACKWARDS = re.compile(
-    r"\brounds?\s+(?:up\s+|down\s+)?to\b|\bround(?:ed)?\s+to\s+\d", re.IGNORECASE
+    r"\brounds?\s+(?:up\s+|down\s+)?to\b"
+    r"|\bround(?:ed)?\s+to\s+\d+(?!\s*(?:decimal|d\.?p|significant|s\.?f))",
+    re.IGNORECASE,
 )
+_NEGATED = re.compile(
+    r"\b(?:not|except|incorrect|incorrectly|false|wrong)\b", re.IGNORECASE
+)
+MOST_PLACES = 10
+MAX_VALUE = 10**15
 _LIST_ITEM = re.compile(r"(?m)^\s*\d+[.)]\s")
 _EACH = re.compile(
     r"\bround(?:ed|ing)?\s+each\b|\beach\s+\w+\s+(?:is\s+|are\s+)?rounded\b",
@@ -63,8 +70,13 @@ def _step(spec: re.Match, kind: str, value: Fraction) -> Fraction:
     """The size of one step to round to."""
     if kind == "nearest":
         place = spec["place"].lower()
-        return _PLACE_VALUES[place] if place in _PLACE_VALUES else Fraction(int(place))
+        step = _PLACE_VALUES[place] if place in _PLACE_VALUES else Fraction(int(place))
+        if step == 0:
+            raise NotComputable("rounding to the nearest zero")
+        return step
     places = _count(spec["n"])
+    if places > MOST_PLACES:
+        raise NotComputable("too many places")
     if kind == "decimal":
         return Fraction(1, 10**places)
     if value == 0 or places == 0:
@@ -93,10 +105,20 @@ def _without(text: str, specs: list[tuple[str, re.Match]]) -> str:
 
 def rounded(text: str) -> Asked:
     specs = _specs(text)
-    if not specs or _BACKWARDS.search(text) or _LIST_ITEM.search(text):
+    if (
+        not specs
+        or _BACKWARDS.search(text)
+        or _NEGATED.search(text)
+        or _LIST_ITEM.search(text)
+    ):
         raise NotComputable("not a number to round")
     values = [number.value for number in numbers_in(_without(text, specs))]
-    if not values or len(values) > MOST_NUMBERS or min(values) < 0:
+    if (
+        not values
+        or len(values) > MOST_NUMBERS
+        or min(values) < 0
+        or max(values) > MAX_VALUE
+    ):
         raise NotComputable(
             "no numbers, too many, or a negative one, which has no one rounding"
         )

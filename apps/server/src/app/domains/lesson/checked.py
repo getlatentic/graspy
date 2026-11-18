@@ -130,7 +130,7 @@ async def _written_again[Part](
             again = await rewrite(told)
         except Exception:
             logger.warning("A check was not written again", exc_info=True)
-            break
+            continue
         second, fixed = _judgement(checks.read(again))
         if fixed is not None:
             _log(

@@ -7,17 +7,24 @@ from __future__ import annotations
 
 import re
 
-_MARKERS = re.compile(
+# Said in a wrong-answer note, "Oops! Not quite" is friendly; said in the note
+# for a right answer it is the model changing its mind.
+_MILD = re.compile(
     r"""\b(?:
         oops|whoops|oop
       | wait\s*[-–—,.:!]
       | sorry
-      | typo
+      | actually,?\s+(?:the\s+)?(?:correct|right|real|answer)
+    )""",
+    re.IGNORECASE | re.VERBOSE,
+)
+_MARKERS = re.compile(
+    r"""\b(?:
+        typo
       | my\ mistake
       | i\ made\ an?\ (?:mistake|error|typo)
       | mistake\ in\ the\ options?
       | correction\s*:
-      | actually,?\s+(?:the\s+)?(?:correct|right|real|answer)
       | however,?\ the\ (?:answer|correct|options?)
       | intended\ (?:interpretation|answer)
       | answer\ index
@@ -26,7 +33,8 @@ _MARKERS = re.compile(
 )
 
 
-def self_correction(text: str) -> str | None:
-    """The words in ``text`` that correct what it said before, or None."""
-    found = _MARKERS.search(text)
+def self_correction(text: str, right_answer: bool = True) -> str | None:
+    """The words in ``text`` that correct what it said before, or None.
+    ``right_answer`` is whether it is the note shown for a right answer."""
+    found = _MARKERS.search(text) or (right_answer and _MILD.search(text))
     return found.group().strip() if found else None

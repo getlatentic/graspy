@@ -32,6 +32,12 @@ def _items(listed: str) -> list[str]:
     return re.findall(_ITEM, listed)
 
 
+def _denominator(item: str) -> int:
+    """5 is 5/1."""
+    parts = re.split(r"[/⁄]", item)
+    return int(parts[1]) if len(parts) == 2 else 1
+
+
 def divisor(text: str) -> Asked:
     found = _QUESTION.match(text)
     if found is None or _THOUSANDS.search(text):
@@ -40,7 +46,7 @@ def divisor(text: str) -> Asked:
     if not 2 <= len(items) <= MOST_ITEMS:
         raise NotComputable("too few or too many numbers")
     if found["least"] and _LEAST_OF_DENOMINATORS.search(found["least"]):
-        numbers = [int(re.split(r"[/⁄]", item)[-1]) for item in items]
+        numbers = [_denominator(item) for item in items]
     elif any(re.search(r"[/⁄]", item) for item in items):
         raise NotComputable("fractions have no LCM or HCF here")
     else:
