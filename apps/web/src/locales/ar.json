@@ -350,7 +350,8 @@
   "voice": {
     "title": "دروس صوتية",
     "start": "ابدأ",
-    "startHere": "ابدأ من هنا",
+    "next": "Next lesson",
+    "daysRight": "{count} of {total} days right",
     "ok": "حسنًا",
     "note": "يرسل graspy صوتك للتحقّق من إجاباتك. وبعد تصحيحها يُحذف التسجيل، ما لم يُبقِه أحد الوالدين.",
     "loading": "جارٍ جلب دروسك…",

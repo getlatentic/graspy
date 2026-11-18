@@ -350,7 +350,8 @@
   "voice": {
     "title": "Ẹ̀kọ́ ohùn",
     "start": "Bẹ̀rẹ̀",
-    "startHere": "Bẹ̀rẹ̀ níbí",
+    "next": "Next lesson",
+    "daysRight": "{count} of {total} days right",
     "ok": "Ó dáa",
     "note": "graspy ń fi ohùn rẹ ránṣẹ́ láti yẹ ìdáhùn rẹ wò. Ní kété tí ó bá ti yẹ̀ ẹ́ wò, a óò pa ohùn náà rẹ́, àfi tí òbí bá pa á mọ́.",
     "loading": "Ń mú àwọn ẹ̀kọ́ rẹ wá…",

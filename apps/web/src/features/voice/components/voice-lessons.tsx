@@ -4,9 +4,8 @@ import { useI18n } from "@/lib/i18n-context";
 import { getLanguageNativeName } from "@/lib/locale";
 import { useVoiceCatalogue } from "../hooks/use-voice-catalogue";
 import { useVoiceLearner, type VoiceLearner } from "../hooks/use-voice-learner";
-import { byTopic } from "../lib/catalogue-groups";
-import { TeacherStrip } from "./teacher-strip";
-import { VoiceLessonList } from "./voice-lesson-list";
+import { LessonChoice } from "./lesson-choice";
+import { TeacherHeader } from "./teacher-header";
 
 function Lessons({ learner }: { learner: VoiceLearner }) {
   const { t } = useI18n();
@@ -25,26 +24,17 @@ function Lessons({ learner }: { learner: VoiceLearner }) {
   }
   if (state.lessons.length === 0)
     return <p className="text-muted">{t("voice.noLessons")}</p>;
-  return (
-    <VoiceLessonList
-      groups={byTopic(state.lessons)}
-      language={learner.language}
-    />
-  );
+  return <LessonChoice lessons={state.lessons} language={learner.language} />;
 }
 
-/** Every voice lesson of the learner's class, by theme, and where they stand on each; nothing for a
- * class without voice lessons. */
+/** The next voice lesson as one big play button, then every lesson of the class as a tile;
+ * nothing for a class without voice lessons. */
 export function VoiceLessons() {
-  const { t } = useI18n();
   const learner = useVoiceLearner();
   if (!learner) return null;
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <h1 className="text-balance text-2xl font-semibold text-ink">
-        {t("voice.title")}
-      </h1>
-      <TeacherStrip detail={getLanguageNativeName(learner.language)} />
+    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+      <TeacherHeader language={getLanguageNativeName(learner.language)} />
       <Lessons learner={learner} />
     </div>
   );
