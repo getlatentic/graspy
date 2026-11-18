@@ -12,7 +12,7 @@ import json
 import re
 from typing import Any
 
-from .api.service_consent import session_consent_refusal
+from .api.chat_access import chat_refusal
 from .chatlog import kinds
 from .chatlog.log import ChatLog
 from .security.guard import Session, checked
@@ -93,7 +93,7 @@ async def connect(
     )
     if session is None:
         return refusal(401, "session_invalid")
-    unconsented = await session_consent_refusal(app, session)
+    unconsented = await chat_refusal(app, session)
     if unconsented is not None:
         return refusal(unconsented.status_code, unconsented.detail["code"])
     log = ChatLog(env.DB)

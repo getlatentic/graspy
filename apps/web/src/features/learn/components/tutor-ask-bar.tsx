@@ -1,5 +1,6 @@
 import { MessageCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { UnreadDot } from "@/features/learn/components/unread-dot";
 
@@ -12,6 +13,7 @@ interface TutorAskBarProps {
 /** On a phone, tabs would compete with the lesson's own controls. */
 export function TutorAskBar({ busy, unread, onOpen }: TutorAskBarProps) {
   const { t } = useI18n();
+  const signedIn = useAccount() !== null;
 
   return (
     <div className="border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
@@ -28,7 +30,9 @@ export function TutorAskBar({ busy, unread, onOpen }: TutorAskBarProps) {
             aria-hidden="true"
           />
         )}
-        <span className="min-w-0 flex-1 truncate">{t("chat.openTutor")}</span>
+        <span className="min-w-0 flex-1 truncate">
+          {t(signedIn ? "chat.openTutor" : "chat.signInToAsk")}
+        </span>
         {unread && <UnreadDot className="size-2.5 shrink-0" />}
       </button>
     </div>

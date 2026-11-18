@@ -45,6 +45,8 @@ const syncPlan = vi.fn(async () => {
   return null;
 });
 vi.mock("@/lib/plan-sync", () => ({ syncPlan }));
+const takeChat = vi.fn<() => string | null>(() => null);
+vi.mock("@/lib/account/chat-return", () => ({ takeChat }));
 const wipeOnNextStart = vi.fn();
 vi.mock("@/lib/wipe-pending", () => ({ wipeOnNextStart }));
 const saveUserProfile = vi.fn();
@@ -83,6 +85,22 @@ describe("the first learner chosen after signing in", () => {
     expect(api.learnerSession).toHaveBeenCalledWith(ADA.id, "device-1");
     expect(steps).toEqual([`keep ${ADA.id}`, "sync"]);
     expect(saveUserProfile).toHaveBeenCalledWith({ onboardingCompleted: true });
+  });
+
+  it("starts in the chat asked for before signing in, once the learner has a plan", async () => {
+    takeChat.mockReturnValueOnce("/app/learn/ask/mathematics/2");
+
+    await expect(chooseLearner(ADA)).resolves.toBe(
+      "/app/learn/ask/mathematics/2",
+    );
+  });
+
+  it("makes the plan first when the learner has none, and drops the chat asked for", async () => {
+    plan = null;
+    takeChat.mockReturnValueOnce("/app/learn/ask");
+
+    await expect(chooseLearner(ADA)).resolves.toBe("/app/onboarding");
+    expect(takeChat).toHaveBeenCalledOnce();
   });
 
   it("is chosen even when the plan joins later, offline", async () => {

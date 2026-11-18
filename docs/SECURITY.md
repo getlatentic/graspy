@@ -1,6 +1,6 @@
 # Security
 
-Signing in is optional and goes through Google by Firebase, so graspy keeps no passwords. The assets are the model budget, the service itself and the learner's record. Everything a learner types reaches a model, and the model can repeat it, so all model output is untrusted.
+Signing in is optional, except for the tutor chat, and goes through Google by Firebase, so graspy keeps no passwords. The assets are the model budget, the service itself and the learner's record. Everything a learner types reaches a model, and the model can repeat it, so all model output is untrusted.
 
 ## Controls (OWASP Top 10, 2021)
 

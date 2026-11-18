@@ -1,11 +1,12 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, type RouteObject } from "react-router";
 import LandingPage from "@/features/landing/pages/landing-page";
 import AppEntry from "@/app/entry";
-import { chatLink } from "@/app/chat-link";
+import { requireAccount } from "@/app/chat-gate";
+import { chatLinks } from "@/app/chat-link";
 import { lazyPage } from "@/app/page-chunks";
 import { AppShell, PageLoading, RouteError } from "@/app/shell";
 
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
   {
     ErrorBoundary: RouteError,
     children: [
@@ -25,13 +26,13 @@ export const router = createBrowserRouter([
           ).default,
         }),
       },
+      ...chatLinks,
       {
         path: "/app",
         Component: AppShell,
         HydrateFallback: PageLoading,
         children: [
           { index: true, Component: AppEntry },
-          chatLink,
           { path: "onboarding", lazy: lazyPage("onboarding") },
           { path: "learners", lazy: lazyPage("learners") },
           { path: "sign-in", lazy: lazyPage("signIn") },
@@ -48,10 +49,15 @@ export const router = createBrowserRouter([
                 path: "you/learners/:learnerId/voice",
                 lazy: lazyPage("learnerVoice"),
               },
-              { path: "ask", lazy: lazyPage("ask") },
-              { path: "ask/:subject", lazy: lazyPage("chat") },
-              { path: "ask/subject/:subjectSlug", lazy: lazyPage("chat") },
-              { path: "ask/:subject/:topicIndex", lazy: lazyPage("chat") },
+              {
+                loader: requireAccount,
+                children: [
+                  { path: "ask", lazy: lazyPage("ask") },
+                  { path: "ask/:subject", lazy: lazyPage("chat") },
+                  { path: "ask/subject/:subjectSlug", lazy: lazyPage("chat") },
+                  { path: "ask/:subject/:topicIndex", lazy: lazyPage("chat") },
+                ],
+              },
               { path: "plan", lazy: lazyPage("plan") },
               { path: "voice", lazy: lazyPage("voice") },
               { path: "voice/lesson", lazy: lazyPage("voiceLesson") },
@@ -63,4 +69,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+];
+
+export const router = createBrowserRouter(routes);

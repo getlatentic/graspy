@@ -24,7 +24,7 @@ from ..turns.access import may_follow, may_start
 from ..turns.durable import DurableTurns
 from ..turns.frames import read
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
-from .service_consent import ConsentedSession
+from .chat_access import ChatSession
 from .sse import SSE_HEADERS
 
 # A window of reading, after which the client asks again from its cursor: a request that reads the
@@ -94,7 +94,7 @@ def _message(parts: list[dict[str, Any]]) -> str:
 async def start_turn(
     chat: ChatId,
     body: StartTurn,
-    session: ConsentedSession,
+    session: ChatSession,
     request: Request,
 ) -> StartedTurn:
     turns = _turns(request)
@@ -138,7 +138,7 @@ async def _stream(
 async def turn_events(
     chat: ChatId,
     turn: TurnId,
-    session: ConsentedSession,
+    session: ChatSession,
     request: Request,
     last_event_id: Annotated[int | None, Header(ge=0)] = None,
     after: Annotated[int | None, Query(ge=0)] = None,
