@@ -8,6 +8,7 @@ and times are read; the lines that may hold a child's words are never copied int
 from __future__ import annotations
 
 import json
+import math
 import statistics
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -15,6 +16,9 @@ from pathlib import Path
 # The API's own stages, one after another in a turn: their sum is what the child waited. The tutor's parts run
 # inside "teach", so they are listed beside it and never added to it.
 API_STAGES = ("fetch_audio", "detect_language", "transcribe", "teach")
+# detect_language runs only for a recording of unknown language. A turn missing any of these has a partial
+# capture, or failed before the reply, and is left out of the whole-turn times.
+WHOLE_TURN = ("fetch_audio", "transcribe", "teach")
 
 
 def json_values(text: str):
@@ -45,7 +49,8 @@ def log_lines(text: str) -> list[dict]:
 
 
 def quantile(sorted_values: list[int], p: float) -> int:
-    return sorted_values[min(len(sorted_values) - 1, int(len(sorted_values) * p))]
+    """Nearest rank: the smallest value that at least p of the values are at or below."""
+    return sorted_values[max(0, math.ceil(len(sorted_values) * p) - 1)]
 
 
 def spread(values: list[int]) -> dict:
@@ -75,16 +80,20 @@ def summarize(lines: list[dict]) -> dict:
     """Per-part times, whole-turn times where a turn shows every API stage it passed through, and how often the
     safety rule answered a need."""
     timed = _timed(lines)
+    # A turn logged twice (a retry, or two captures that overlap) counts once: the last line of each part wins.
+    latest: dict[tuple[str, str], int] = {}
+    for line in timed:
+        latest[(line["turn"], line["part"])] = round(line["ms"])
     by_part: dict[str, list[int]] = defaultdict(list)
     by_turn: dict[str, dict[str, int]] = defaultdict(dict)
-    for line in timed:
-        by_part[line["part"]].append(round(line["ms"]))
-        if line["part"] in API_STAGES:
-            by_turn[line["turn"]][line["part"]] = round(line["ms"])
+    for (turn, part), ms in latest.items():
+        by_part[part].append(ms)
+        if part in API_STAGES:
+            by_turn[turn][part] = ms
     whole = [
         sum(stages.values())
         for stages in by_turn.values()
-        if "transcribe" in stages and "teach" in stages
+        if all(stage in stages for stage in WHOLE_TURN)
     ]
     rule = Counter(
         str(line.get("taken"))
@@ -94,6 +103,7 @@ def summarize(lines: list[dict]) -> dict:
     return {
         "turns_in_logs": len(by_turn),
         "whole_turn_ms": spread(whole),
+        "turns_without_every_stage": len(by_turn) - len(whole),
         "parts": {part: spread(values) for part, values in sorted(by_part.items())},
         "rule_activations": dict(sorted(rule.items())),
     }

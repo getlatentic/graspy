@@ -51,6 +51,16 @@ def _in(column: str, lines: list[str]) -> str:
     return f"{column} IN ({', '.join(_sql_text(line) for line in lines)})"
 
 
+def _within_cap(rows: list[dict]) -> list[int]:
+    """The recognition times; a range with more turns than the cap is refused, since cutting the slowest would
+    make the percentiles look better than they were."""
+    if len(rows) > LATENCY_CAP:
+        raise RuntimeError(
+            f"more than {LATENCY_CAP} turns in the range: narrow it with --since and --until"
+        )
+    return [r["latency_ms"] for r in rows]
+
+
 def collect(read: Reader, since_ms: int, until_ms: int) -> dict:
     """Every count and time in the report, from one database, for turns last updated in [since_ms, until_ms)."""
 
@@ -84,13 +94,12 @@ def collect(read: Reader, since_ms: int, until_ms: int) -> dict:
             "SELECT COALESCE(provider, 'none') AS provider, COUNT(*) AS n FROM tutoring_turns "
             f"WHERE state = 'complete' AND {span} GROUP BY provider ORDER BY n DESC"
         ),
-        "recognition_ms": [
-            r["latency_ms"]
-            for r in read(
+        "recognition_ms": _within_cap(
+            read(
                 "SELECT latency_ms FROM tutoring_turns WHERE state = 'complete' "
-                f"AND {span} ORDER BY latency_ms LIMIT {LATENCY_CAP}"
+                f"AND latency_ms IS NOT NULL AND {span} ORDER BY latency_ms LIMIT {LATENCY_CAP + 1}"
             )
-        ],
+        ),
         "needs": read(
             f"SELECT COALESCE(SUM({_in('feedback', needs_help)}), 0) AS needs_help, "
             f"COALESCE(SUM({_in('feedback', needs_grownup)}), 0) AS needs_grownup "
@@ -129,13 +138,25 @@ def render(data: dict, logs: dict | None, header: dict) -> str:
         "## Turns",
         "",
         *_table(
-            ["Turns", "Complete", "Failed", "Processing", "Failed share", "Learners"],
+            [
+                "Turns",
+                "Complete",
+                "Failed",
+                "Processing",
+                "Other",
+                "Failed share",
+                "Learners",
+            ],
             [
                 [
                     total,
                     complete,
                     states.get("failed", 0),
                     states.get("processing", 0),
+                    total
+                    - complete
+                    - states.get("failed", 0)
+                    - states.get("processing", 0),
                     _share(states.get("failed", 0), total),
                     data["learners"],
                 ]
@@ -197,7 +218,12 @@ def _render_logs(logs: dict | None) -> list[str]:
         or "none logged"
     )
     return [
-        f"Turns seen in the logs: {logs['turns_in_logs']}. Whole turn = fetch_audio + detect_language + transcribe + teach.",
+        (
+            f"Turns seen in the logs: {logs['turns_in_logs']}; {logs['turns_without_every_stage']} left out of the "
+            "whole-turn row for lacking fetch_audio, transcribe or teach (a partial capture, or a turn that failed "
+            "first). Whole turn = fetch_audio + detect_language + transcribe + teach; a part logged twice for a "
+            "turn counts once."
+        ),
         "",
         *_table(
             ["Time (ms)", "Lines", "Median", "p90", "Max"],

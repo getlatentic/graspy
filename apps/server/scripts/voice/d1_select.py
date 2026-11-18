@@ -17,7 +17,8 @@ TIMEOUT_SECONDS = 120
 def select_only(sql: str) -> str:
     """The statement, when it is one SELECT; anything else is refused before it leaves this machine."""
     statement = sql.strip().rstrip(";").strip()
-    if not re.match(r"select\b", statement, re.IGNORECASE) or ";" in statement:
+    outside_text = re.sub(r"'(?:[^']|'')*'", "''", statement)
+    if not re.match(r"select\b", statement, re.IGNORECASE) or ";" in outside_text:
         raise ValueError("only a single SELECT statement may be run")
     return statement
 

@@ -3,13 +3,13 @@
 - Database: `graspy`, read-only (SELECT only)
 - Turns last updated: the first turn to now (UTC)
 - Release: production at f2234ae, as the owner stated; taken before the next production deploy
-- Taken: 2026-11-18 01:25 UTC
+- Taken: 2026-11-18 01:28 UTC
 
 ## Turns
 
-| Turns | Complete | Failed | Processing | Failed share | Learners |
-|---|---|---|---|---|---|
-| 139 | 103 | 36 | 0 | 25.9 % | 9 |
+| Turns | Complete | Failed | Processing | Other | Failed share | Learners |
+|---|---|---|---|---|---|---|
+| 139 | 103 | 36 | 0 | 0 | 25.9 % | 9 |
 
 | Day (UTC) | Turns | Failed |
 |---|---|---|
