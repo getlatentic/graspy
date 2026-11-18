@@ -24,7 +24,10 @@ export function GoogleSignInButton({
         onClick={google.signIn}
         disabled={google.busy}
       >
-        <LogIn className="size-4 rtl:-scale-x-100" aria-hidden="true" />
+        <LogIn
+          className="size-4 shrink-0 rtl:-scale-x-100"
+          aria-hidden="true"
+        />
         {google.busy ? t("you.signingIn") : t("you.signIn")}
       </Button>
       {google.problem && (
