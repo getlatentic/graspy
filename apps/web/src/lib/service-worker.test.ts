@@ -135,7 +135,9 @@ describe("the service worker's page", () => {
       () => new Promise<Response>((resolve) => (answerNetwork = resolve)),
     );
     await kept(worker, OLD);
-    await (await worker.open()).answer;
+    await (
+      await worker.open()
+    ).answer;
     const asked = worker.check();
     answerNetwork(new Response(NEW));
     await asked;
@@ -213,9 +215,7 @@ describe("the service worker's new build", () => {
   it("does not keep the document when a file comes back as a page", async () => {
     const html = { headers: { "content-type": "text/html" } };
     const worker = startWorker(async (url) =>
-      String(url) === "/"
-        ? new Response(withScripts)
-        : new Response(OLD, html),
+      String(url) === "/" ? new Response(withScripts) : new Response(OLD, html),
     );
     await kept(worker, OLD);
     const { answer, settled } = await worker.open();

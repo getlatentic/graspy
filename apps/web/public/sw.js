@@ -67,7 +67,8 @@ const APP_MARKER = 'id="root"';
 // Pages answers 200 with the document for a file it does not have, and a captive portal answers
 // 200 with its own page; neither may be kept under a file's address, where it would stay.
 const isFileReply = (response) =>
-  response.ok && !(response.headers.get("content-type") || "").includes("text/html");
+  response.ok &&
+  !(response.headers.get("content-type") || "").includes("text/html");
 
 // A new build's startup files, kept before its document is, so the reload (or an offline visit)
 // finds them here and does not fetch them cold. One that cannot be kept fails the whole set: the
@@ -136,7 +137,8 @@ async function keep(urls) {
       const response = await fetch(url.href);
       if (url.pathname === APP) {
         const html = await response.clone().text();
-        if (response.ok && html.includes(APP_MARKER)) await cache.put(APP, response);
+        if (response.ok && html.includes(APP_MARKER))
+          await cache.put(APP, response);
       } else if (isFileReply(response)) {
         await cache.put(url.href, response);
       }
