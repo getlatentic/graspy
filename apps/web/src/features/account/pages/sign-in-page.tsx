@@ -27,14 +27,14 @@ export default function SignInPage() {
         eager
         className="max-h-[32dvh] max-w-80 object-contain object-bottom lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:max-h-[64dvh] lg:max-w-xl lg:self-center lg:justify-self-center"
       />
-      <div className="w-full max-w-sm lg:col-start-1 lg:row-start-2 lg:max-w-lg">
+      <div className="w-full max-w-sm lg:col-start-1 lg:row-start-2 lg:max-w-md">
         <SignIn />
       </div>
     </main>
   );
 }
 
-/** Soft shapes behind everything: a wave along the foot, and from lg a blob in each top corner. */
+/** Behind everything: a wave along the foot on a phone, and from lg a wide sky with a blob in each top corner and a wave. */
 function Shapes() {
   return (
     <>
@@ -42,7 +42,7 @@ function Shapes() {
         aria-hidden="true"
         viewBox="0 0 1440 200"
         preserveAspectRatio="none"
-        className="absolute inset-x-0 bottom-0 -z-10 h-24 w-full text-art-wave lg:h-40"
+        className="absolute inset-x-0 bottom-0 -z-10 h-24 w-full text-art-wave lg:hidden"
       >
         <path
           fill="currentColor"
@@ -50,13 +50,14 @@ function Shapes() {
           d="M0 120C240 40 480 40 720 100s480 80 720-20v120H0z"
         />
       </svg>
-      <span
-        aria-hidden="true"
-        className="absolute -start-24 -top-28 -z-10 hidden size-80 rounded-full bg-art-wave/40 lg:block"
-      />
-      <span
-        aria-hidden="true"
-        className="absolute -end-20 top-10 -z-10 hidden h-48 w-96 rounded-full bg-art-wave/50 lg:block"
+      <img
+        src="/brand/sign-in-landscape.webp"
+        alt=""
+        width={1600}
+        height={1000}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 -z-10 hidden size-full object-cover lg:block"
       />
     </>
   );
@@ -70,7 +71,7 @@ export function SignIn() {
         <h1 className="text-balance font-display text-3xl font-semibold lg:text-5xl">
           {t("signIn.ready")}
         </h1>
-        <p className="text-pretty">{t("signIn.explain")}</p>
+        <p className="text-pretty lg:text-lg">{t("signIn.explain")}</p>
       </div>
       <div className="flex flex-col gap-3">
         <GoogleSignInButton
