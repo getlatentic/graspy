@@ -15,16 +15,16 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-art-ground text-on-art lg:grid lg:grid-cols-2">
+    <main className="relative isolate flex min-h-dvh flex-col justify-center overflow-x-hidden bg-art-ground text-on-art lg:grid lg:grid-cols-2">
       <Backdrop />
-      <div className="flex min-h-0 flex-1 items-end justify-center px-6 pb-6 pt-8 lg:items-end lg:px-12 lg:pt-12">
+      <div className="flex min-h-0 items-end justify-center px-6 pt-6 lg:px-12 lg:pb-6 lg:pt-12">
         <Art
           name="tablet"
           eager
-          className="max-h-full max-w-md object-contain object-bottom lg:max-w-xl"
+          className="max-h-[34dvh] max-w-md object-contain object-bottom lg:max-h-full lg:max-w-xl"
         />
       </div>
-      <div className="flex min-w-0 flex-col items-center justify-center gap-8 px-5 py-8 sm:px-10 lg:py-10">
+      <div className="flex min-w-0 flex-col items-center justify-center gap-6 px-5 py-6 sm:px-10 lg:gap-8 lg:py-10">
         <span className="brightness-50">
           <Logo />
         </span>
@@ -46,7 +46,7 @@ export function SignIn() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-balance text-center font-display text-4xl font-bold">
+      <h1 className="text-balance text-center font-display text-3xl font-bold lg:text-4xl">
         {t("signIn.title")}
       </h1>
       <div className="flex flex-col gap-3">
