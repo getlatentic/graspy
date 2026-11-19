@@ -30,7 +30,7 @@ import {
 import { homeParts } from "@/features/learn/lib/home-parts";
 
 const HOME_GRID =
-  "mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-12";
+  "mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-10";
 
 export default function HomePage() {
   const { t } = useI18n();
@@ -80,28 +80,31 @@ export default function HomePage() {
   }
 
   return (
-    // From lg, subjects span the full width: a column beside the lesson
-    // would cramp them.
+    // From lg the lesson, what is owed, the voice card and the subjects stack in
+    // one column, with the rail beside it. The voice card keeps its place before
+    // the subjects at every width.
     <div className={HOME_GRID}>
       <WelcomeLine withClass={false} className="lg:col-span-2" />
 
       {errorAlert && <div className="lg:col-span-2">{errorAlert}</div>}
 
-      {current && parts.has("continue") && (
-        <ContinueSection current={current} />
-      )}
+      <div className="flex min-w-0 flex-col gap-8 lg:gap-10">
+        {current && parts.has("continue") && (
+          <ContinueSection current={current} />
+        )}
 
-      {parts.has("continue") && <ReviewSection />}
+        {parts.has("continue") && <ReviewSection />}
+
+        {parts.has("voice") && <VoiceCard />}
+
+        {parts.has("subjects") && <SubjectsSection subjects={subjects} />}
+      </div>
 
       {parts.has("rail") && (
         <div className="hidden lg:block">
           <HomeRail current={current} onAsk={ask} />
         </div>
       )}
-
-      {parts.has("voice") && <VoiceCard className="lg:col-span-2" />}
-
-      {parts.has("subjects") && <SubjectsSection subjects={subjects} />}
 
       {parts.has("try") && (
         <div className="lg:hidden">
@@ -121,10 +124,7 @@ function ContinueSection({ current }: { current: CurrentTopic }) {
   const userProfile = useUserProfile();
   const { learntIn } = useProgress();
   return (
-    <HomeSection
-      title={t("home.continueTitle")}
-      className="flex flex-col lg:h-full"
-    >
+    <HomeSection title={t("home.continueTitle")}>
       <ResumeCard
         current={current}
         grade={userProfile ? levelLabel(userProfile, t) : ""}
@@ -133,7 +133,6 @@ function ContinueSection({ current }: { current: CurrentTopic }) {
         onOpenTopic={(index) =>
           navigate(lessonPath(current.subject.slug, index))
         }
-        className="flex-1"
       />
     </HomeSection>
   );
@@ -147,7 +146,7 @@ function ReviewSection() {
   const { review } = useProgress();
   if (review.length === 0) return null;
   return (
-    <HomeSection title={t("home.reviewTitle")} className="lg:col-span-2">
+    <HomeSection title={t("home.reviewTitle")}>
       <ReviewList
         topics={review.slice(0, MOST_REVIEWS)}
         onOpen={(owed) =>
@@ -163,7 +162,7 @@ function SubjectsSection({ subjects }: { subjects: CurriculumSubject[] }) {
   const { t } = useI18n();
   const userProfile = useUserProfile();
   return (
-    <div className="min-w-0 lg:col-span-2">
+    <div className="min-w-0">
       <HomeSection
         title={t("home.subjectsTitle")}
         more={{ label: t("home.seeAll"), to: "/app/learn/subjects" }}

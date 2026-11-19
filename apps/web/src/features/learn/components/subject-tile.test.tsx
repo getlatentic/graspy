@@ -12,12 +12,18 @@ describe("SubjectTile", () => {
     render(<SubjectTile name="Mathematics" band="child" onSelect={() => {}} />);
     expect(picture()).not.toBeNull();
     expect(screen.getByRole("button").className).toContain("flex-col");
+    expect(screen.getByRole("button").firstElementChild?.className).toContain(
+      "aspect-4/3",
+    );
   });
 
-  it("a tween sees a small picture beside the name", () => {
+  it("a tween sees a wider, shorter picture over the name", () => {
     render(<SubjectTile name="Mathematics" band="tween" onSelect={() => {}} />);
     expect(picture()).not.toBeNull();
-    expect(screen.getByRole("button").className).not.toContain("flex-col");
+    expect(screen.getByRole("button").className).toContain("flex-col");
+    expect(screen.getByRole("button").firstElementChild?.className).toContain(
+      "aspect-video",
+    );
   });
 
   it("a teen or university learner sees an icon and no cartoon", () => {
