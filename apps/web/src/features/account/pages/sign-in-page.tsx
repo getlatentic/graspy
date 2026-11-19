@@ -20,7 +20,7 @@ export default function SignInPage() {
         alt="graspy"
         width={640}
         height={136}
-        className="h-12 w-auto lg:col-start-1 lg:row-start-1 lg:mb-14 lg:h-14 lg:self-end lg:justify-self-start"
+        className="h-12 w-auto lg:absolute lg:start-20 lg:top-16"
       />
       <Art
         name="tablet"
