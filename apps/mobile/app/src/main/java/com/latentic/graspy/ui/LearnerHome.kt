@@ -64,8 +64,9 @@ fun LearnerHome(
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }
     val phone = ConfigurationCompat.getLocales(LocalConfiguration.current).get(0) ?: Locale.getDefault()
 
-    val radii = remember(ready) { radiiFor(ready?.let { ageBandOf(it.level, it.gradeLevel) }) }
-    CompositionLocalProvider(LocalGraspyRadii provides radii) {
+    val band = remember(ready) { ready?.let { ageBandOf(it.level, it.gradeLevel) } }
+    val radii = remember(band) { radiiFor(band) }
+    CompositionLocalProvider(LocalGraspyRadii provides radii, LocalAgeBand provides (band ?: AgeBand.Tween)) {
         when {
             plan == PlanState.Loading -> Box(Modifier.fillMaxSize().background(GraspyColor.Canvas), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = GraspyColor.Accent)

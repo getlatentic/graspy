@@ -1,9 +1,13 @@
 package com.latentic.graspy.ui
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.latentic.graspy.plan.AFTER_SCHOOL
 
 /** The learner's age band, which sets the look of cards and buttons; the web's `ageBand` holds the same rule. */
 enum class AgeBand { Child, Tween, Teen }
+
+/** The band of the learner whose screens are shown: the tween look until the class is known. */
+val LocalAgeBand = staticCompositionLocalOf { AgeBand.Tween }
 
 /** Where the younger look gives way to the next. */
 private const val TWEEN_FROM = 11
