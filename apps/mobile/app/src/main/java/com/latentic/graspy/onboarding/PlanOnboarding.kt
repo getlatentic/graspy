@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -36,8 +33,8 @@ import com.latentic.graspy.localization.filled
 import com.latentic.graspy.plan.LearnerDetails
 import com.latentic.graspy.plan.LearnerPlan
 import com.latentic.graspy.ui.GraspyColor
-import com.latentic.graspy.ui.GraspyHeader
 import com.latentic.graspy.ui.GraspyRadius
+import com.latentic.graspy.ui.OnboardingFrame
 import com.latentic.graspy.ui.PageTitle
 import com.latentic.graspy.ui.PrimaryButton
 import com.latentic.graspy.ui.ProblemNote
@@ -76,11 +73,11 @@ fun PlanOnboarding(
     val voiceOnly = values.learnsByVoiceAlone(now = false)
     val notKept = notKeptYet && voiceOnly
     val finish = { if (voiceOnly) setup.keep(values.details(), keep, onDone) else setup.make(values.details(), make) }
-    Frame {
+    OnboardingFrame {
         val made = building
         if (made != null) {
             SetupView(words, setup.chosenLabels, made, onRetry = finish, onAdjust = setup::adjust) { made.made?.let(onDone) }
-            return@Frame
+            return@OnboardingFrame
         }
         val index = step.ordinal
         val steps = if (voiceOnly) 1 else SetupStep.entries.size
@@ -111,19 +108,6 @@ fun PlanOnboarding(
                 else -> onBack
             },
             onNext = { if (last) finish() else setup.toSubjects(values.details()) },
-        )
-    }
-}
-
-/** Each part of onboarding under the header the rest of the app has, as the web's onboarding frame shows it. */
-@Composable
-private fun Frame(content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxSize().background(GraspyColor.Canvas)) {
-        GraspyHeader()
-        Column(
-            Modifier.weight(1f).navigationBarsPadding().imePadding().padding(horizontal = space(6), vertical = space(6)),
-            verticalArrangement = Arrangement.spacedBy(space(6)),
-            content = content,
         )
     }
 }
