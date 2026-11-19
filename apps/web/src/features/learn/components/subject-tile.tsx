@@ -53,7 +53,7 @@ export function SubjectTile({
       )}
       <span
         className={cn(
-          "line-clamp-2 text-sm font-semibold text-ink lg:text-base",
+          "min-w-0 line-clamp-2 break-words text-sm font-semibold text-ink lg:text-base",
           band === "child" && "px-3 py-3",
         )}
       >
