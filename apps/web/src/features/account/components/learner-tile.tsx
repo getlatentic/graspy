@@ -60,7 +60,7 @@ export function LearnerTile({
       face={
         <span
           className={cn(
-            "flex size-20 items-center justify-center rounded-full bg-accent-soft font-display text-3xl font-bold text-accent-ink ring-2 transition group-hover:ring-accent",
+            "flex size-20 items-center justify-center rounded-full bg-accent-soft font-display text-3xl font-semibold text-accent-ink ring-2 transition group-hover:ring-accent",
             inUse ? "ring-accent" : "ring-transparent",
           )}
           aria-hidden="true"

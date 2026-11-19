@@ -109,7 +109,7 @@ export default function GenerationProgressView({
   return (
     <>
       <div className="mb-6 text-center sm:mb-10">
-        <h2 className="text-balance text-2xl font-bold text-ink sm:text-3xl">
+        <h2 className="text-balance text-2xl font-semibold text-ink sm:text-3xl">
           {t("onboarding.generating.title")}
         </h2>
       </div>

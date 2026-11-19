@@ -1,4 +1,4 @@
-/* graspy-tokens source=5a45f8041a21622bb26821b002aff682575319ad4552ec298e96cfc0683ad411 content=0dc3a2f6047e57e6ab7defafe48844add15ab4f5371762bd361296e7d3efab30 */
+/* graspy-tokens source=3d12cef46c6c12a70310c6a3e06ca00a411512ce17fa6bb75f6bd63924464cff content=d0ce2ebcbcdbb26f8cdda29b9fef5f53057279e92355b7b934402da80c5c60c9 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -64,8 +64,9 @@
   /* Text on art-ground; 7.6:1. */
   --color-on-art: #12232e;
 
-  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-number: "IBM Plex Serif", ui-serif, Georgia, serif;
 
   --text-xs: 0.75rem;
   --text-xs--line-height: calc(16 / 12);
@@ -90,7 +91,7 @@
   --text-numeral--line-height: calc(72 / 64);
   --text-numeral--letter-spacing: -0.015em;
 
-  --radius-card: 1.25rem;
+  --radius-card: 1rem;
   --radius-control: 0.75rem;
   --radius-pill: 624.9375rem;
   --radius-small: 0.5rem;
@@ -102,6 +103,16 @@
   --shadow-press: 0 4px 0 var(--color-accent-strong);
 
   --spacing: 0.25rem;
+}
+
+[data-age="child"] {
+  --radius-card: 1.5rem;
+  --radius-control: 1rem;
+}
+
+[data-age="teen"] {
+  --radius-card: 0.75rem;
+  --radius-control: 0.625rem;
 }
 
 @media (prefers-color-scheme: dark) {

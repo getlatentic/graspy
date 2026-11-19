@@ -114,7 +114,7 @@ function Choosing({
     <>
       <div>
         {account.learner && <BackToYou />}
-        <h1 className="text-balance font-display text-3xl font-bold text-ink">
+        <h1 className="text-balance font-display text-3xl font-semibold text-ink">
           {t("learners.title")}
         </h1>
       </div>

@@ -22,7 +22,7 @@ export default function YouPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 lg:max-w-5xl">
-      <h1 className="font-display text-3xl font-bold text-ink">
+      <h1 className="font-display text-3xl font-semibold text-ink">
         {t("nav.you")}
       </h1>
 

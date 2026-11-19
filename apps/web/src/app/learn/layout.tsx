@@ -4,6 +4,7 @@ import { useAccount } from "@/lib/account/use-account";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { cn } from "@/lib/cn";
+import { ageBand } from "@/lib/age-band";
 import TopMenu from "@/features/learn/components/top-menu";
 import { ChatView } from "@/features/learn/components/chat-view";
 import { ChatContextBar } from "@/features/learn/components/chat-context-bar";
@@ -52,6 +53,7 @@ function DashboardLayoutContent() {
 
   return (
     <div
+      data-age={ageBand(userProfile)}
       style={
         visible
           ? ({

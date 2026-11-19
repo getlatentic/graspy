@@ -23,7 +23,7 @@ export function AddLearnerForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
-      <h1 className="font-display text-2xl font-bold text-ink">
+      <h1 className="font-display text-2xl font-semibold text-ink">
         {t("learners.addTitle")}
       </h1>
       <div className="flex flex-col gap-2">
