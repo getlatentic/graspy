@@ -2,9 +2,20 @@ package com.latentic.graspy.ui
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.Dp
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AgeBandTest {
+    @get:Rule
+    val compose = createComposeRule()
+
     @Test
     fun `the age in the class decides the band`() {
         assertEquals(AgeBand.Child, ageBandOf("primary-3", "Standard 3, Kenya, age 9"))
@@ -35,7 +46,17 @@ class AgeBandTest {
 
     @Test
     fun `a younger learner has rounder cards and buttons`() {
-        assert(ChildRadii.card > TweenRadii.card && TweenRadii.card > TeenRadii.card)
-        assert(ChildRadii.control > TweenRadii.control && TweenRadii.control > TeenRadii.control)
+        assertTrue(ChildRadii.card > TweenRadii.card && TweenRadii.card > TeenRadii.card)
+        assertTrue(ChildRadii.control > TweenRadii.control && TweenRadii.control > TeenRadii.control)
+    }
+
+    @Test
+    fun `GraspyRadius reads the band the learner's screens are given`() {
+        var seen: Pair<Dp, Dp>? = null
+        compose.setContent {
+            CompositionLocalProvider(LocalGraspyRadii provides ChildRadii) { seen = GraspyRadius.Card to GraspyRadius.Control }
+        }
+        compose.waitForIdle()
+        assertEquals(ChildRadii.card to ChildRadii.control, seen)
     }
 }

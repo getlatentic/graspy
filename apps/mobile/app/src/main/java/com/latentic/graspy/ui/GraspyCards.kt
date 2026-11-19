@@ -45,12 +45,13 @@ fun GraspyCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val shape = cardShape()
     Column(
         modifier
             .fillMaxWidth()
-            .clip(cardShape())
+            .clip(shape)
             .background(GraspyColor.Surface)
-            .border(1.dp, border, cardShape())
+            .border(1.dp, border, shape)
             .then(if (onClick != null) Modifier.clickable(onClick = tapping(onClick)) else Modifier)
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(gap),

@@ -11,7 +11,10 @@ private const val TEEN_FROM = 15
 
 private val AGE = Regex("""\bage (\d{1,2})\b""")
 
-/** The age in the class's descriptor ("JSS 1 (Junior Secondary School), Nigeria, age 12"), or teen after school. */
+/**
+ * The age in the class's descriptor ("JSS 1 (Junior Secondary School), Nigeria, age 12"), or teen after school.
+ * A known class that names no age is a child, as on the web; a class not known yet has no band at all.
+ */
 fun ageBandOf(level: String?, gradeLevel: String): AgeBand {
     if (level in AFTER_SCHOOL) return AgeBand.Teen
     val age = AGE.find(gradeLevel)?.groupValues?.get(1)?.toInt() ?: return AgeBand.Child

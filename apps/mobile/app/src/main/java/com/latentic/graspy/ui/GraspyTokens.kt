@@ -1,4 +1,4 @@
-// graspy-tokens source=4e80da5cad9dbca30074d7b4b3dfe1d5b094265175269c8b55c3306d3cbc1a50 content=b04686d4e022b8a766e4499244d57cf010246be7036aeee77e86fab0d02ba4f3
+// graspy-tokens source=7208e190555abfe606f187ed3f087e7df06b0e8568b68c83b39532116d677127 content=35ce9d3a66eb422fbb1a7c0ad4595b2b6c71a2569e12e47d72c1bc3e86742cb5
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -128,9 +128,9 @@ val TeenRadii = GraspyRadii(card = 8.dp, control = 6.dp)
 val LocalGraspyRadii = staticCompositionLocalOf { TweenRadii }
 
 object GraspyRadius {
-    /** Cards and tiles. The value is the tween look; child and teen learners get the radius under age. */
+    /** Cards and tiles. The value is the tween look; child and teen learners get the radius under age (web) or androidAge (Android). */
     val Card: Dp @Composable @ReadOnlyComposable get() = LocalGraspyRadii.current.card
-    /** Buttons and inputs. The value is the tween look. */
+    /** Buttons and inputs. The value is the tween look; child and teen learners get the radius under age (web) or androidAge (Android). */
     val Control: Dp @Composable @ReadOnlyComposable get() = LocalGraspyRadii.current.control
     /** Fully round: chips, the selected tab, progress bars. */
     val Pill = 9999.dp

@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -63,7 +64,7 @@ fun LearnerHome(
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }
     val phone = ConfigurationCompat.getLocales(LocalConfiguration.current).get(0) ?: Locale.getDefault()
 
-    val radii = radiiFor(ready?.let { ageBandOf(it.level, it.gradeLevel) })
+    val radii = remember(ready) { radiiFor(ready?.let { ageBandOf(it.level, it.gradeLevel) }) }
     CompositionLocalProvider(LocalGraspyRadii provides radii) {
         when {
             plan == PlanState.Loading -> Box(Modifier.fillMaxSize().background(GraspyColor.Canvas), contentAlignment = Alignment.Center) {
