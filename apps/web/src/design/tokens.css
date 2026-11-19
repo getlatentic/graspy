@@ -1,4 +1,4 @@
-/* graspy-tokens source=e0783c7bdcfc7515e3c4b7f057abbafa9e37f9952f3c504ee11e4f912d53b8e9 content=3c6fa5b5165b882c2741ec84393cfca0d1aaa443eabb70cf67bf15bf7098d1b3 */
+/* graspy-tokens source=6a46d120fed5b8a020024d09297fa03ada65f3d7ec89c697edcc64c3c500fbea content=1a0b8f6b40a903881c2b17da2c65cfaf4c15ef05b5ba28d1b4c72f7d204cd4d0 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -19,10 +19,10 @@
   --color-line: #e5e9ee;
   /* The empty part of a progress bar. */
   --color-track: #eef1f4;
-  /* The brand blue. 3.4:1: fills, borders, focus rings and button labels, never body text. */
-  --color-accent: #2893c8;
-  /* A pressed or hovered accent fill. 5.5:1. */
-  --color-accent-strong: #1f7099;
+  /* The brand blue. 5.5:1 under white labels: fills, borders, focus rings and button labels. */
+  --color-accent: #1f7099;
+  /* A pressed or hovered accent fill, and the lip under a button. 8.4:1. */
+  --color-accent-strong: #175573;
   /* Blue text and links. 5.5:1; 4.9:1 on accent-soft. */
   --color-accent-ink: #1f6f9c;
   /* A selected row, the selected tab's pill, the tutor's ground. */
@@ -115,8 +115,8 @@
     --color-faint: #72848f;
     --color-line: #27404f;
     --color-track: #223744;
-    --color-accent: #2893c8;
-    --color-accent-strong: #1f7099;
+    --color-accent: #1f7099;
+    --color-accent-strong: #175573;
     --color-accent-ink: #74c3ec;
     --color-accent-soft: #12303e;
     --color-accent-line: #1d4a5f;

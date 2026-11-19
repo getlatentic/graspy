@@ -1,4 +1,4 @@
-// graspy-tokens source=e0783c7bdcfc7515e3c4b7f057abbafa9e37f9952f3c504ee11e4f912d53b8e9 content=3ff80fc8f12e702010da20971ff615997c891633fbaae58b4dc5e11872c45974
+// graspy-tokens source=6a46d120fed5b8a020024d09297fa03ada65f3d7ec89c697edcc64c3c500fbea content=8cb700f06f5ba43f4fcaf34698a599df57c2251dbc36613e39f3d5e22914c55d
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -36,10 +36,10 @@ object GraspyColor {
     val Line = Color(0xFFE5E9EE)
     /** The empty part of a progress bar. */
     val Track = Color(0xFFEEF1F4)
-    /** The brand blue. 3.4:1: fills, borders, focus rings and button labels, never body text. */
-    val Accent = Color(0xFF2893C8)
-    /** A pressed or hovered accent fill. 5.5:1. */
-    val AccentStrong = Color(0xFF1F7099)
+    /** The brand blue. 5.5:1 under white labels: fills, borders, focus rings and button labels. */
+    val Accent = Color(0xFF1F7099)
+    /** A pressed or hovered accent fill, and the lip under a button. 8.4:1. */
+    val AccentStrong = Color(0xFF175573)
     /** Blue text and links. 5.5:1; 4.9:1 on accent-soft. */
     val AccentInk = Color(0xFF1F6F9C)
     /** A selected row, the selected tab's pill, the tutor's ground. */
