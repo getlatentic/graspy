@@ -20,6 +20,8 @@ describe("subjectArt", () => {
     ["Agricultural Technology", "agriculture"],
     ["Political Science", "civic"],
     ["Martial Arts", "pe"],
+    ["Basic Science and Technology", "science"],
+    ["Information Technology", "ict"],
   ])("gives %s the %s picture", (name, art) => {
     expect(subjectArt(name)).toBe(art);
   });
@@ -30,6 +32,7 @@ describe("subjectArt", () => {
     expect(subjectArt("Aircraft Maintenance")).toBeNull();
     expect(subjectArt("Transport Studies")).toBeNull();
     expect(subjectArt("Home Economics")).toBeNull();
+    expect(subjectArt("Yoruba Language")).toBeNull();
   });
 
   it("gives a subject with no picture none", () => {
