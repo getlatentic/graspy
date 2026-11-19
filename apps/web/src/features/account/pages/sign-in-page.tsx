@@ -15,7 +15,7 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="relative isolate flex min-h-dvh flex-col justify-center overflow-hidden bg-art-ground text-on-art lg:grid lg:grid-cols-2">
+    <main className="relative isolate flex min-h-dvh flex-col justify-center overflow-x-hidden bg-art-ground text-on-art lg:grid lg:grid-cols-2">
       <Backdrop />
       <div className="flex min-h-0 items-end justify-center px-6 pt-6 lg:px-12 lg:pb-6 lg:pt-12">
         <Art
@@ -46,7 +46,7 @@ export function SignIn() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-balance text-center font-display text-3xl font-bold">
+      <h1 className="text-balance text-center font-display text-3xl font-bold lg:text-4xl">
         {t("signIn.title")}
       </h1>
       <div className="flex flex-col gap-3">
