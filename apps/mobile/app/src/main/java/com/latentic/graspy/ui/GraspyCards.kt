@@ -32,7 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.latentic.graspy.ui.icons.Lucide
 import com.latentic.graspy.ui.icons.rememberLucide
 
-private val CardShape = RoundedCornerShape(GraspyRadius.Card)
+@Composable
+private fun cardShape() = RoundedCornerShape(GraspyRadius.Card)
 
 /** The web's Card: a white card with a hairline border. */
 @Composable
@@ -47,9 +48,9 @@ fun GraspyCard(
     Column(
         modifier
             .fillMaxWidth()
-            .clip(CardShape)
+            .clip(cardShape())
             .background(GraspyColor.Surface)
-            .border(1.dp, border, CardShape)
+            .border(1.dp, border, cardShape())
             .then(if (onClick != null) Modifier.clickable(onClick = tapping(onClick)) else Modifier)
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(gap),

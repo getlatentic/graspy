@@ -1,9 +1,12 @@
-// graspy-tokens source=3d34e312361087b412653984d864b2d28a62068113ffff73a3c8b253182b24c8 content=b7a5a36b7f69e06c6cf769d41ba517d96e44fccc9df2634ce945120b5cf15072
+// graspy-tokens source=4e80da5cad9dbca30074d7b4b3dfe1d5b094265175269c8b55c3306d3cbc1a50 content=b04686d4e022b8a766e4499244d57cf010246be7036aeee77e86fab0d02ba4f3
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
 package com.latentic.graspy.ui
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
@@ -114,11 +117,21 @@ object GraspyText {
     val Numeral = TextStyle(fontSize = 64.sp, lineHeight = 72.sp, letterSpacing = (-0.015).em)
 }
 
+/** The radii that follow the learner's age band. */
+class GraspyRadii(val card: Dp, val control: Dp)
+
+val ChildRadii = GraspyRadii(card = 18.dp, control = 12.dp)
+val TweenRadii = GraspyRadii(card = 12.dp, control = 8.dp)
+val TeenRadii = GraspyRadii(card = 8.dp, control = 6.dp)
+
+/** The tween look until the learner's class is known. */
+val LocalGraspyRadii = staticCompositionLocalOf { TweenRadii }
+
 object GraspyRadius {
     /** Cards and tiles. The value is the tween look; child and teen learners get the radius under age. */
-    val Card = 12.dp
+    val Card: Dp @Composable @ReadOnlyComposable get() = LocalGraspyRadii.current.card
     /** Buttons and inputs. The value is the tween look. */
-    val Control = 8.dp
+    val Control: Dp @Composable @ReadOnlyComposable get() = LocalGraspyRadii.current.control
     /** Fully round: chips, the selected tab, progress bars. */
     val Pill = 9999.dp
     /** Chips and small marks inside a control. */

@@ -171,6 +171,34 @@ function kotlinFont(name, font) {
   ];
 }
 
+/** The radii that change with age are read from the learner's band; the rest are fixed. */
+function kotlinRadius(tokens) {
+  const entries = Object.entries(tokens.radius);
+  const banded = entries.filter(([, token]) => token.androidAge);
+  const band = (name, pick) =>
+    `val ${name}Radii = GraspyRadii(${banded.map(([key, token]) => `${key} = ${pick(token)}.dp`).join(", ")})`;
+  return [
+    "/** The radii that follow the learner's age band. */",
+    `class GraspyRadii(${banded.map(([key]) => `val ${key}: Dp`).join(", ")})`,
+    "",
+    band("Child", (token) => token.androidAge.child),
+    band("Tween", androidRadius),
+    band("Teen", (token) => token.androidAge.teen),
+    "",
+    "/** The tween look until the learner's class is known. */",
+    "val LocalGraspyRadii = staticCompositionLocalOf { TweenRadii }",
+    "",
+    "object GraspyRadius {",
+    ...entries.flatMap(([name, token]) => [
+      ...kotlinDoc(token.description),
+      ...(token.androidAge
+        ? [`    val ${pascal(name)}: Dp @Composable @ReadOnlyComposable get() = LocalGraspyRadii.current.${name}`]
+        : [`    val ${pascal(name)} = ${androidRadius(token)}.dp`]),
+    ]),
+    "}",
+  ];
+}
+
 function renderKotlin(tokens) {
   const body = [
     `// Generated from content/design/tokens.json; do not edit. Regenerate: ${REGENERATE}`,
@@ -178,6 +206,9 @@ function renderKotlin(tokens) {
     "",
     "package com.latentic.graspy.ui",
     "",
+    "import androidx.compose.runtime.Composable",
+    "import androidx.compose.runtime.ReadOnlyComposable",
+    "import androidx.compose.runtime.staticCompositionLocalOf",
     "import androidx.compose.ui.graphics.Color",
     "import androidx.compose.ui.text.ExperimentalTextApi",
     "import androidx.compose.ui.text.TextStyle",
@@ -200,12 +231,7 @@ function renderKotlin(tokens) {
     ...kotlinText(tokens),
     "}",
     "",
-    "object GraspyRadius {",
-    ...Object.entries(tokens.radius).flatMap(([name, { value, android, description }]) => [
-      ...kotlinDoc(description),
-      `    val ${pascal(name)} = ${androidRadius({ value, android })}.dp`,
-    ]),
-    "}",
+    ...kotlinRadius(tokens),
     "",
     ...kotlinDoc(tokens.space.unit.description, ""),
     `val SpaceUnit = ${tokens.space.unit.value}.dp`,
