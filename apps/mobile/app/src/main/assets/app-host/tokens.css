@@ -1,4 +1,4 @@
-/* graspy-tokens source=e0783c7bdcfc7515e3c4b7f057abbafa9e37f9952f3c504ee11e4f912d53b8e9 content=be7ce93848534a621ef7a5dee195e4a75dfe7b3b3281124fe2e1a3cd9145f266 */
+/* graspy-tokens source=5a45f8041a21622bb26821b002aff682575319ad4552ec298e96cfc0683ad411 content=bc3b50caf8bb7e2d7ef47da6234c5a9b0bc47e92bed8e09d90ca54d5369de29e */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 :root {
   --color-canvas: #f5f8fa;
@@ -10,8 +10,8 @@
   --color-faint: #8a95a0;
   --color-line: #e5e9ee;
   --color-track: #eef1f4;
-  --color-accent: #2893c8;
-  --color-accent-strong: #1f7099;
+  --color-accent: #1f7099;
+  --color-accent-strong: #175573;
   --color-accent-ink: #1f6f9c;
   --color-accent-soft: #eaf4fa;
   --color-accent-line: #cfe7f3;
