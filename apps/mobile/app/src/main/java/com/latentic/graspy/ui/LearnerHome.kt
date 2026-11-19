@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -62,34 +64,37 @@ fun LearnerHome(
     LaunchedEffect(ready) { ready?.let { followPlan(it, learnerKey, voice, profiles, onWords) } }
     val phone = ConfigurationCompat.getLocales(LocalConfiguration.current).get(0) ?: Locale.getDefault()
 
-    when {
-        plan == PlanState.Loading -> Box(Modifier.fillMaxSize().background(GraspyColor.Canvas), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = GraspyColor.Accent)
-        }
-        plan == PlanState.None || setupActive -> {
-            LaunchedEffect(Unit) {
-                if (!setup.active.value) {
-                    form.start(null, phone.country, phone.language)
-                    setup.begin(replanFor = null)
-                }
+    val radii = remember(ready) { radiiFor(ready?.let { ageBandOf(it.level, it.gradeLevel) }) }
+    CompositionLocalProvider(LocalGraspyRadii provides radii) {
+        when {
+            plan == PlanState.Loading -> Box(Modifier.fillMaxSize().background(GraspyColor.Canvas), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = GraspyColor.Accent)
             }
-            PlanOnboarding(
-                learn = learnCopyFor(interfaceLanguage),
-                form = form,
-                setup = setup,
-                suggestedCountry = phone.country.takeIf { it.isNotBlank() },
-                display = Locale.forLanguageTag(interfaceLanguage.tag),
-                make = planViewModel::make,
-                keep = { details ->
-                    // The catalogue's word stands for the class until the server is asked about it.
-                    planViewModel.keepVoiceOnly(details).also { views.routes.keep(it.classAsk(), voiceOnly = true) }
-                },
-                onBack = if (replanning) setup::finish else null,
-                onDone = { setup.finish() },
-            )
-        }
-        else -> GraspyRoot(copy, appLanguage, interfaceLanguage, voiceShown(voice.value, ready), account, menu) {
-            setup.begin(replanFor = form.form.value.details())
+            plan == PlanState.None || setupActive -> {
+                LaunchedEffect(Unit) {
+                    if (!setup.active.value) {
+                        form.start(null, phone.country, phone.language)
+                        setup.begin(replanFor = null)
+                    }
+                }
+                PlanOnboarding(
+                    learn = learnCopyFor(interfaceLanguage),
+                    form = form,
+                    setup = setup,
+                    suggestedCountry = phone.country.takeIf { it.isNotBlank() },
+                    display = Locale.forLanguageTag(interfaceLanguage.tag),
+                    make = planViewModel::make,
+                    keep = { details ->
+                        // The catalogue's word stands for the class until the server is asked about it.
+                        planViewModel.keepVoiceOnly(details).also { views.routes.keep(it.classAsk(), voiceOnly = true) }
+                    },
+                    onBack = if (replanning) setup::finish else null,
+                    onDone = { setup.finish() },
+                )
+            }
+            else -> GraspyRoot(copy, appLanguage, interfaceLanguage, voiceShown(voice.value, ready), account, menu) {
+                setup.begin(replanFor = form.form.value.details())
+            }
         }
     }
 }

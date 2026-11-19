@@ -23,7 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.latentic.graspy.ui.icons.Lucide
 import com.latentic.graspy.ui.icons.rememberLucide
 
-private val ButtonShape = RoundedCornerShape(GraspyRadius.Control)
+@Composable
+private fun buttonShape() = RoundedCornerShape(GraspyRadius.Control)
 
 /** The one thing a screen asks for. */
 @Composable
@@ -32,7 +33,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
         onClick = tapping(onClick),
         enabled = enabled,
         modifier = modifier.heightIn(min = 48.dp),
-        shape = ButtonShape,
+        shape = buttonShape(),
         colors = ButtonDefaults.buttonColors(
             containerColor = GraspyColor.Accent,
             contentColor = GraspyColor.OnAccent,
@@ -67,7 +68,7 @@ fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
         onClick = tapping(onClick),
         enabled = enabled,
         modifier = modifier.heightIn(min = 48.dp),
-        shape = ButtonShape,
+        shape = buttonShape(),
         border = BorderStroke(1.dp, GraspyColor.Line),
         colors = ButtonDefaults.outlinedButtonColors(containerColor = GraspyColor.Surface, contentColor = GraspyColor.Ink),
     ) {
