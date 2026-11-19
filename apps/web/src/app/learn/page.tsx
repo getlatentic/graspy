@@ -83,6 +83,8 @@ export default function HomePage() {
     // From lg, subjects span the full width: a column beside the lesson
     // would cramp them.
     <div className={HOME_GRID}>
+      <WelcomeLine withClass={false} className="lg:col-span-2" />
+
       {errorAlert && <div className="lg:col-span-2">{errorAlert}</div>}
 
       {current && parts.has("continue") && (

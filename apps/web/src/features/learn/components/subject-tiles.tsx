@@ -8,12 +8,12 @@ interface SubjectTilesProps {
   onSelect: (subject: CurriculumSubject) => void;
 }
 
-/** On a phone the next tile shows half in view, so the row reads as scrollable. */
+/** Two tiles across on a phone and four from sm, the same grid for every age band. */
 export function SubjectTiles({ subjects, band, onSelect }: SubjectTilesProps) {
   return (
-    <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0">
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {subjects.map((subject) => (
-        <li key={subject.slug} className="w-36 shrink-0 snap-start sm:w-auto">
+        <li key={subject.slug}>
           <SubjectTile
             name={subject.name}
             band={band}
