@@ -33,7 +33,7 @@ export function ResumeCard({
 
   return (
     <Card className={cn("p-0", className)}>
-      <div className="p-3 sm:p-6 lg:p-8">
+      <div className="p-3 sm:p-6">
         <div className="flex items-center gap-3 sm:items-start sm:gap-5">
           <SubjectPicture
             name={subject.name}
@@ -116,11 +116,11 @@ function UpNext({ topics, from, onOpenTopic }: UpNextProps) {
     .slice(from, from + UP_NEXT);
   if (upNext.length === 0) return null;
   return (
-    <div className="hidden border-t border-line px-6 py-4 sm:block lg:px-8">
+    <div className="hidden border-t border-line px-6 py-4 sm:block">
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
         {t("home.upNext")}
       </p>
-      <ul>
+      <ul className="lg:grid lg:grid-cols-2 lg:gap-x-6">
         {upNext.map(({ title, index }) => (
           <li key={index}>
             <button
