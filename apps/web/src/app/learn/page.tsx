@@ -84,7 +84,11 @@ export default function HomePage() {
     // one column, with the rail beside it. The voice card keeps its place before
     // the subjects at every width.
     <div className={HOME_GRID}>
-      <WelcomeLine withClass={false} className="lg:col-span-2" />
+      <WelcomeLine
+        withClass={false}
+        pickUp={current?.started ?? false}
+        className="lg:col-span-2"
+      />
 
       {errorAlert && <div className="lg:col-span-2">{errorAlert}</div>}
 
