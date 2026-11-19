@@ -50,6 +50,8 @@ function Welcome({ band }: { band: AgeBand | null }) {
             alt=""
             width={1024}
             height={1280}
+            loading="lazy"
+            decoding="async"
             className="block size-full object-cover"
           />
         )}
