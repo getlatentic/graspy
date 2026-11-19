@@ -5,6 +5,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
+import com.latentic.graspy.learners.AccountFrame
+import org.robolectric.annotation.Config
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,5 +24,14 @@ class OnboardingFrameTest {
         compose.setContent { GraspyTheme { OnboardingFrame { Text("Who's learning?") } } }
         compose.onNodeWithContentDescription("graspy").assertIsDisplayed()
         compose.onNodeWithText("Who's learning?").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h480dp")
+    fun `an account screen taller than the window scrolls to its last line`() {
+        compose.setContent {
+            GraspyTheme { AccountFrame { repeat(40) { Text("Line $it") } } }
+        }
+        compose.onNodeWithText("Line 39").performScrollTo().assertIsDisplayed()
     }
 }
