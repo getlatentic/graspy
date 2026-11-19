@@ -6,12 +6,18 @@ import { useUserProfile } from "@/lib/use-user-profile";
 // Isolates a typed name from the words around it, so a name written the other way round keeps its place.
 const isolated = (name: string) => `\u2068${name}\u2069`;
 
-/** Who the plan is for, while it is being made: Home has nothing else to say yet. */
-export function WelcomeLine({ className }: { className?: string }) {
+/** Who Home is for. While the plan is made it adds the class, as Home has nothing else to say yet. */
+export function WelcomeLine({
+  className,
+  withClass = true,
+}: {
+  className?: string;
+  withClass?: boolean;
+}) {
   const { t } = useI18n();
   const name = useAccount()?.learner?.name.trim();
   const profile = useUserProfile();
-  const level = profile ? levelLabel(profile, t).trim() : "";
+  const level = withClass && profile ? levelLabel(profile, t).trim() : "";
   const title = name
     ? t("planBuilding.welcome", { name: isolated(name) })
     : t("planBuilding.welcomeAnonymous");

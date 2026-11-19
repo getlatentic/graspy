@@ -27,12 +27,12 @@ const t = (key: string, values?: Record<string, string | number>) => {
   );
 };
 
-const welcome = () =>
+const welcome = (props: { withClass?: boolean } = {}) =>
   render(
     <I18nContext.Provider
       value={{ t, locale: "en", setLocale: () => {} } as never}
     >
-      <WelcomeLine />
+      <WelcomeLine {...props} />
     </I18nContext.Provider>,
   );
 
@@ -51,6 +51,12 @@ describe("WelcomeLine", () => {
       "Welcome, \u2068Ada\u2069",
     );
     expect(screen.getByText("We're making your JSS 1 plan.")).toBeTruthy();
+  });
+
+  it("leaves the plan sentence out once the plan is made", () => {
+    signedInAs({ id: "ada000000001", name: "Ada" });
+    welcome({ withClass: false });
+    expect(screen.queryByText(/plan\./)).toBeNull();
   });
 
   it("greets without a name when the device has no learner chosen", () => {

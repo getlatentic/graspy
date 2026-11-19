@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import type { AgeBand } from "@/lib/age-band";
 import { SubjectTile } from "@/features/learn/components/subject-tile";
 import type { CurriculumSubject } from "@/lib/curriculum-record";
@@ -8,12 +9,17 @@ interface SubjectTilesProps {
   onSelect: (subject: CurriculumSubject) => void;
 }
 
-/** On a phone the next tile shows half in view, so the row reads as scrollable. */
+/** Two tiles across on a phone. Child tiles stack a picture, so four fit from sm; the side-by-side builds need the width, so four from lg. */
 export function SubjectTiles({ subjects, band, onSelect }: SubjectTilesProps) {
   return (
-    <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0">
+    <ul
+      className={cn(
+        "grid grid-cols-2 gap-3",
+        band === "child" ? "sm:grid-cols-4" : "lg:grid-cols-4",
+      )}
+    >
       {subjects.map((subject) => (
-        <li key={subject.slug} className="w-36 shrink-0 snap-start sm:w-auto">
+        <li key={subject.slug}>
           <SubjectTile
             name={subject.name}
             band={band}
