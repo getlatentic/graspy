@@ -46,7 +46,7 @@ class RecordingsScreenTest {
 
     private fun show() {
         val model = RecordingsViewModel(application, VoiceKeeping(api, File(folder.root, "kept")), parent, playback)
-        compose.setContent { GraspyTheme(InterfaceLanguage.ENGLISH) { RecordingsScreen(copy, LearnerDto(LEARNER, "Ada", 1L), model, onBack = {}) } }
+        compose.setContent { GraspyTheme { RecordingsScreen(copy, LearnerDto(LEARNER, "Ada", 1L), model, onBack = {}) } }
         compose.waitUntilText("Keep recordings")
     }
 

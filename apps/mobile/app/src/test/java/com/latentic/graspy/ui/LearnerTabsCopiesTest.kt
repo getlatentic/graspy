@@ -65,7 +65,7 @@ class LearnerTabsCopiesTest {
         val copy = copyFor(InterfaceLanguage.ENGLISH)
         compose.setContent {
             LearnerScope(ada, viewModels) {
-                GraspyTheme(InterfaceLanguage.ENGLISH) {
+                GraspyTheme {
                     LearnerTabs(
                         copy = copy,
                         learn = learnCopyFor(InterfaceLanguage.ENGLISH),

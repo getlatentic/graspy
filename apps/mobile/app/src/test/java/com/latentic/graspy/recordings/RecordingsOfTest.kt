@@ -64,7 +64,7 @@ class RecordingsOfTest {
 
     private fun show() {
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 CompositionLocalProvider(LocalLifecycleOwner provides owner) {
                     if (shown) {
                         RecordingsOf(copy, LearnerDto("aaaaaaaaaaaa", "Ada", 1L), onBack = {}) {

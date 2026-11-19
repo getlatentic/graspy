@@ -54,7 +54,7 @@ class ConsentScreensTest {
     fun `adding a learner shows the service notice in place of the guardian tick box, and agreeing needs a name`() {
         val agreedFor = mutableListOf<String>()
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) { AddLearnerForm(copy, busy = false, onAgree = { agreedFor += it }, onCancel = {}) }
+            GraspyTheme { AddLearnerForm(copy, busy = false, onAgree = { agreedFor += it }, onCancel = {}) }
         }
 
         compose.onNodeWithText(SERVICE_NOTICE).assertIsDisplayed()
@@ -71,7 +71,7 @@ class ConsentScreensTest {
         var cancelled = 0
         val agreedFor = mutableListOf<String>()
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) { AddLearnerForm(copy, busy = false, onAgree = { agreedFor += it }, onCancel = { cancelled += 1 }) }
+            GraspyTheme { AddLearnerForm(copy, busy = false, onAgree = { agreedFor += it }, onCancel = { cancelled += 1 }) }
         }
 
         compose.onNodeWithText("Agree as the learner, or their parent or guardian. You'll sign in with Google again to confirm it's you.").assertIsDisplayed()
@@ -84,7 +84,7 @@ class ConsentScreensTest {
     @Test
     fun `a learner's tile says their parent has not agreed yet, and the tile of one agreed for says nothing of it`() {
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 Column {
                     LearnerTile(CARA, inUse = false, copy = copy, enabled = true) {}
                     LearnerTile(ADA, inUse = true, copy = copy, enabled = true) {}
@@ -146,7 +146,7 @@ class ConsentScreensTest {
     private fun showGate(accounts: AccountStore, onSwitch: () -> Unit) {
         val model = ServiceConsentViewModel(application, ServiceConsents(api, accounts), parent)
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 val account by accounts.account.collectAsState()
                 account?.learner?.let { ServiceConsentGate(copy, it, model, onSwitch) { Text("Lessons") } }
             }

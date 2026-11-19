@@ -126,7 +126,7 @@ class FirstPlanKeepTest {
     private fun shown() {
         compose.setContent {
             LearnerScope(ada, viewModels) {
-                GraspyTheme(InterfaceLanguage.ENGLISH) {
+                GraspyTheme {
                     LearnerHome(
                         copy = copyFor(InterfaceLanguage.ENGLISH),
                         appLanguage = AppLanguage.ENGLISH,

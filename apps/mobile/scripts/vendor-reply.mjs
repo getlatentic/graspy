@@ -16,11 +16,11 @@ const copies = [
   ["katex/dist/katex.min.js", "katex.min.js"],
   ["katex/dist/katex.min.css", "katex.min.css"],
   ["katex/LICENSE", "katex-LICENSE.txt"],
-  ["@fontsource/inter/LICENSE", "inter-OFL.txt"],
+  ["@fontsource/ibm-plex-sans/LICENSE", "ibm-plex-OFL.txt"],
   ...["latin", "latin-ext"].flatMap((range) =>
     [400, 600].map((weight) => [
-      `@fontsource/inter/files/inter-${range}-${weight}-normal.woff2`,
-      `fonts/inter-${range}-${weight}-normal.woff2`,
+      `@fontsource/ibm-plex-sans/files/ibm-plex-sans-${range}-${weight}-normal.woff2`,
+      `fonts/ibm-plex-sans-${range}-${weight}-normal.woff2`,
     ]),
   ),
   // KaTeX's stylesheet asks for its fonts beside it; woff2 is all a WebView needs.

@@ -61,7 +61,7 @@ fun GraspyApp() {
     val signOut: SignOutViewModel = viewModel()
     val signingOut by signOut.state.collectAsStateWithLifecycle()
 
-    GraspyTheme(languages.words) {
+    GraspyTheme {
         CompositionLocalProvider(LocalLayoutDirection provides languages.words.layoutDirection) {
             val signedIn = account
             if (signedIn == null) {

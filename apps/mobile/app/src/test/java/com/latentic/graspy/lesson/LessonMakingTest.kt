@@ -54,7 +54,7 @@ class LessonMakingTest {
     private fun show(server: Server) {
         val lessons = OfflineLessons(inMemoryDatabase().lessonCopyDao(), "uid/ada", server, stillLearning = { true })
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 TopicLesson(learn, "en", server, lessons, target, onBack = {}, onLearnt = {})
             }
         }
