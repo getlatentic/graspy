@@ -13,6 +13,7 @@ import SubjectsStep from "../components/steps/subjects-step";
 import { useOnboardingForm } from "../hooks/use-onboarding-form";
 import { useOnboardingSteps } from "../hooks/use-onboarding-steps";
 import { usePlanSetup } from "../hooks/use-plan-setup";
+import { chosenBand } from "../lib/chosen-band";
 import { nextLabelKey, notKeptAtOnce } from "../lib/onboarding-steps";
 import type { DetailsSchema } from "../schemas/onboarding-schema";
 
@@ -50,7 +51,7 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
   const notKept = notKeptAtOnce(setup.error !== null, form.watch());
 
   return (
-    <OnboardingLayout>
+    <OnboardingLayout band={chosenBand(form.watch())}>
       <StepHeading step={steps.step} index={steps.index} count={steps.count} />
       <div
         key={steps.step}
