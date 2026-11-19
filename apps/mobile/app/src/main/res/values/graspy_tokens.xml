@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- graspy-tokens source=6a46d120fed5b8a020024d09297fa03ada65f3d7ec89c697edcc64c3c500fbea content=29e1079c6c21a15d4b195e10b2ef66763f11539da5fbca9479b681f4f553b6c1 -->
+<!-- graspy-tokens source=5a45f8041a21622bb26821b002aff682575319ad4552ec298e96cfc0683ad411 content=29e1079c6c21a15d4b195e10b2ef66763f11539da5fbca9479b681f4f553b6c1 -->
 <!-- Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
     <color name="graspy_canvas">#f5f8fa</color>
