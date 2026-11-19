@@ -24,7 +24,7 @@ fun graspyTypography() = Typography(
     // The web's section label: small capitals spaced wide.
     labelMedium = GraspyText.Xs.set(SansFont, FontWeight.SemiBold).copy(letterSpacing = 0.1.em),
     labelSmall = GraspyText.Xs.set(SansFont, FontWeight.Medium),
-    displayLarge = GraspyText.Numeral.set(SansFont, FontWeight.ExtraBold),
+    displayLarge = GraspyText.Numeral.set(SansFont, FontWeight.SemiBold),
 )
 
 @Composable
