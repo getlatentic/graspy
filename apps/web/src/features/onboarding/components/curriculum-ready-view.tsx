@@ -18,7 +18,7 @@ export default function CurriculumReadyView({
       <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-accent-soft">
         <CheckCircle className="h-14 w-14 text-accent-ink" />
       </div>
-      <h2 className="text-balance text-4xl font-bold text-ink">
+      <h2 className="text-balance text-4xl font-semibold text-ink">
         {t("onboarding.ready.title")}
       </h2>
       <p className="mt-4 text-base text-muted">
@@ -34,7 +34,7 @@ export default function CurriculumReadyView({
         <button
           type="button"
           onClick={onContinue}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         >
           {t("onboarding.ready.continue")}
           <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />

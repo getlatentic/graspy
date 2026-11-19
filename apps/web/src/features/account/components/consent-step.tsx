@@ -45,7 +45,7 @@ export function ConsentStep({
       <Heading
         id="consent-title"
         className={cn(
-          "text-balance font-display font-bold text-ink",
+          "text-balance font-display font-semibold text-ink",
           Heading === "h1" ? "text-2xl" : "text-xl",
         )}
       >
@@ -54,7 +54,7 @@ export function ConsentStep({
       <p
         lang="en"
         dir="ltr"
-        className="text-pretty rounded-2xl bg-accent-soft/60 p-4 text-base text-ink"
+        className="text-pretty rounded-card bg-accent-soft/60 p-4 text-base text-ink"
       >
         {notice}
       </p>

@@ -1,4 +1,4 @@
-// graspy-tokens source=5a45f8041a21622bb26821b002aff682575319ad4552ec298e96cfc0683ad411 content=7fe9f27319f471654efda1afc5c71d03d0b0cb24396246560dc42c2b5a13e5f9
+// graspy-tokens source=3d12cef46c6c12a70310c6a3e06ca00a411512ce17fa6bb75f6bd63924464cff content=55950410fe6da99867fbe69035e8b51262313bf44d3b9e6aeaace82aa5f3cff4
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -82,13 +82,13 @@ object GraspyColor {
     val OnArt = Color(0xFF12232E)
 }
 
-/** Headings. Poppins cannot stack a tone mark over a dot-below letter (Yoruba "ẹ́"), so Yoruba headings use sans. */
+/** Headings. The web uses IBM Plex Sans, the same family as body text; Android keeps Poppins until its font files move. */
 val DisplayFont = FontFamily(
     Font(R.font.poppins_medium, FontWeight.W500),
     Font(R.font.poppins_semibold, FontWeight.W600),
 )
 
-/** Body, labels and numbers. */
+/** Body and labels. The web uses IBM Plex Sans; Android keeps Inter until its font files move. */
 val SansFont = FontFamily(
     Font(R.font.inter_variable, FontWeight.W100, variationSettings = FontVariation.Settings(FontVariation.weight(100))),
     Font(R.font.inter_variable, FontWeight.W200, variationSettings = FontVariation.Settings(FontVariation.weight(200))),
@@ -116,9 +116,9 @@ object GraspyText {
 }
 
 object GraspyRadius {
-    /** Cards and sheets. */
+    /** Cards and tiles. The value is the tween look; child and teen learners get the radius under age. */
     val Card = 12.dp
-    /** Buttons, inputs and small tiles. */
+    /** Buttons and inputs. The value is the tween look. */
     val Control = 8.dp
     /** Fully round: chips, the selected tab, progress bars. */
     val Pill = 9999.dp

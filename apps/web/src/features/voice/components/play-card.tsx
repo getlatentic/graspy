@@ -37,7 +37,7 @@ export function PlayCard({
   return (
     <Link
       to={voiceLessonPath()}
-      className="flex flex-col items-center gap-4 rounded-3xl border border-accent-line bg-accent-soft p-6 text-center transition-colors hover:border-accent sm:flex-row sm:gap-8 sm:p-8 sm:text-start"
+      className="flex flex-col items-center gap-4 rounded-card border border-accent-line bg-accent-soft p-6 text-center transition-colors hover:border-accent sm:flex-row sm:gap-8 sm:p-8 sm:text-start"
     >
       <span className="relative block w-full max-w-60 shrink-0 sm:w-48">
         <LessonPicture lesson={lesson} eager />

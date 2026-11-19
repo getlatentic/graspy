@@ -46,7 +46,7 @@ export function SignIn() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-balance text-center font-display text-3xl font-bold lg:text-4xl">
+      <h1 className="text-balance text-center font-display text-3xl font-semibold lg:text-4xl">
         {t("signIn.title")}
       </h1>
       <div className="flex flex-col gap-3">

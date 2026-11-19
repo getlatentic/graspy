@@ -83,6 +83,19 @@ function cssDark(tokens) {
 /** Android keeps its own radius where a token names one. */
 const androidRadius = ({ value, android }) => android ?? value;
 
+/** One rule per age band that re-points the radii the age changes; the tween look is the base. */
+function cssAge(tokens) {
+  const bands = ["child", "teen"];
+  return bands.flatMap((band) => [
+    `[data-age="${band}"] {`,
+    ...Object.entries(tokens.radius)
+      .filter(([, token]) => token.age?.[band] !== undefined)
+      .map(([name, token]) => `  --radius-${name}: ${rem(token.age[band])};`),
+    "}",
+    "",
+  ]);
+}
+
 function renderCss(tokens) {
   const body = [
     `/* Generated from content/design/tokens.json; do not edit. Regenerate: ${REGENERATE} */`,
@@ -90,6 +103,10 @@ function renderCss(tokens) {
     ...cssColors(tokens),
     "",
     ...Object.entries(tokens.font).map(
+      ([name, font]) =>
+        `  --font-${name}: ${fontStack({ ...font, family: font.web ?? font.family })};`,
+    ),
+    ...Object.entries(tokens.webOnlyFont).map(
       ([name, font]) => `  --font-${name}: ${fontStack(font)};`,
     ),
     "",
@@ -106,6 +123,7 @@ function renderCss(tokens) {
     `  --spacing: ${rem(tokens.space.unit.value)};`,
     "}",
     "",
+    ...cssAge(tokens),
     ...cssDark(tokens),
     "",
   ].join("\n");

@@ -18,7 +18,7 @@ export function StepHeading({
     <>
       <h1
         key={step}
-        className="text-3xl font-bold text-ink motion-safe:animate-enter sm:text-4xl"
+        className="text-3xl font-semibold text-ink motion-safe:animate-enter sm:text-4xl"
       >
         {t(`onboarding.steps.${step}.title`)}
       </h1>

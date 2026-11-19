@@ -31,13 +31,6 @@
   }
 }
 
-/* Poppins cannot stack a tone mark over a dot-below letter (Yoruba "ẹ́"); Inter can. */
-:lang(yo) :is(h1, h2, h3, .font-display),
-:lang(ig) :is(h1, h2, h3, .font-display),
-:lang(ha) :is(h1, h2, h3, .font-display) {
-  font-family: var(--font-sans);
-}
-
 .nums {
   font-variant-numeric: tabular-nums;
 }

@@ -23,7 +23,7 @@ export function AddLearnerForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
-      <h1 className="font-display text-2xl font-bold text-ink">
+      <h1 className="font-display text-2xl font-semibold text-ink">
         {t("learners.addTitle")}
       </h1>
       <div className="flex flex-col gap-2">
@@ -37,7 +37,7 @@ export function AddLearnerForm({
           autoComplete="off"
           autoFocus
           onChange={(event) => onName(event.target.value)}
-          className="w-full rounded-2xl border border-accent-line bg-surface px-4 py-3 text-base text-ink shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
+          className="w-full rounded-control border border-accent-line bg-surface px-4 py-3 text-base text-ink shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
       <div className="flex flex-wrap gap-2">

@@ -4,6 +4,7 @@ import { useAccount } from "@/lib/account/use-account";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { cn } from "@/lib/cn";
+import { ageBand } from "@/lib/age-band";
 import TopMenu from "@/features/learn/components/top-menu";
 import { ChatView } from "@/features/learn/components/chat-view";
 import { ChatContextBar } from "@/features/learn/components/chat-context-bar";
@@ -35,6 +36,17 @@ import { useChat, usePlan } from "@/features/learn/learner-context";
 // Tailwind's lg breakpoint, where a lesson's conversation sits beside it.
 const WIDE_SCREEN = "(min-width: 64rem)";
 
+/** Dialogs and menus render outside the shell, so the band is set on the page itself. */
+function useAgeBandOnPage(band: string | null) {
+  useEffect(() => {
+    if (!band) return;
+    document.documentElement.dataset.age = band;
+    return () => {
+      delete document.documentElement.dataset.age;
+    };
+  }, [band]);
+}
+
 function DashboardLayoutContent() {
   const { pathname } = useLocation();
   const userProfile = useLearnerStart();
@@ -47,6 +59,9 @@ function DashboardLayoutContent() {
   const lesson = redirect ? null : lessonChatTarget(pathname);
   // iOS keeps dvh at full height while the keyboard is open.
   const visible = useVisualViewport(chat);
+
+  const band = userProfile ? ageBand(userProfile) : null;
+  useAgeBandOnPage(band);
 
   if (!userProfile) return null;
 

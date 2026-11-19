@@ -33,7 +33,7 @@ export function PracticeRecordCard() {
         <p className="text-sm text-muted">{t("you.practiceNone")}</p>
       ) : (
         <>
-          <p className="nums font-display text-2xl font-semibold text-accent-ink">
+          <p className="nums font-number text-2xl font-semibold text-accent-ink">
             {t("you.practiceRight", { ...total })}
           </p>
           <SubjectPractice subjects={subjects} />

@@ -1,4 +1,3 @@
-import "@fontsource/inter/latin-700.css";
 import type { ReactNode } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { ChevronRight } from "lucide-react";

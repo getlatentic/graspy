@@ -51,7 +51,7 @@ export default function DetailsPage() {
           <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
           {t("details.back")}
         </Link>
-        <h1 className="mt-4 text-balance font-display text-3xl font-bold text-ink">
+        <h1 className="mt-4 text-balance font-display text-3xl font-semibold text-ink">
           {t("details.title")}
         </h1>
       </div>
