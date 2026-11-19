@@ -94,7 +94,7 @@ private fun Beside(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit, 
 
 @Composable
 private fun Logo() {
-    Image(painterResource(R.drawable.sign_in_logo), contentDescription = "graspy", modifier = Modifier.height(LOGO_HEIGHT))
+    Image(painterResource(R.drawable.logo_lockup), contentDescription = "graspy", modifier = Modifier.height(LOGO_HEIGHT))
 }
 
 @Composable
