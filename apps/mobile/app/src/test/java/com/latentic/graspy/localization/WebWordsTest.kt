@@ -35,4 +35,14 @@ class WebWordsTest {
             .onEach { it.isAccessible = true }
             .flatMap { strings(it.get(value), path + it.name) }
     }
+
+    @Test
+    fun `the sign-in screen says the web's question and its line about keeping learning`() {
+        InterfaceLanguage.entries.forEach { language ->
+            val web = Json.parseToJsonElement(File(locales, "${language.tag}.json").readText()).jsonObject
+            val copy = accountCopyFor(language)
+            assertEquals(language.tag, webString(web, listOf("signIn", "ready")), copy.ready)
+            assertEquals(language.tag, webString(web, listOf("you", "signInPrompt")), copy.signInPrompt)
+        }
+    }
 }
