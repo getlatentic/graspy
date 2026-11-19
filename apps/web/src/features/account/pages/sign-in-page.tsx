@@ -34,7 +34,7 @@ export default function SignInPage() {
   );
 }
 
-/** Behind everything: a wave along the foot on a phone, and from lg ChatGPT's wide sky with its blobs and wave. */
+/** Behind everything: a wave along the foot on a phone, and from lg a wide sky with a blob in each top corner and a wave. */
 function Shapes() {
   return (
     <>
@@ -55,6 +55,7 @@ function Shapes() {
         alt=""
         width={1600}
         height={1000}
+        loading="lazy"
         decoding="async"
         className="absolute inset-0 -z-10 hidden size-full object-cover lg:block"
       />
