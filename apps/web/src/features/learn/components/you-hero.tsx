@@ -16,7 +16,7 @@ export function YouHero({
   profile: UserProfile;
   className?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const band = ageBand(profile);
   const name = useAccount()?.learner?.name.trim();
   const level = levelLabel(profile, t);
@@ -28,17 +28,17 @@ export function YouHero({
         className,
       )}
     >
-      <Portrait band={band} name={name} />
+      <Portrait band={band} name={name} locale={locale} />
       <div className="min-w-0">
         {name ? (
           <>
-            <h2 className="truncate font-display text-3xl font-semibold text-ink lg:text-4xl">
+            <h2 className="line-clamp-2 break-words font-display text-3xl font-semibold text-ink lg:text-4xl">
               {name}
             </h2>
             <p className="mt-1 text-lg text-muted">{level}</p>
           </>
         ) : (
-          <h2 className="font-display text-2xl font-semibold text-ink lg:text-4xl">
+          <h2 className="break-words font-display text-2xl font-semibold text-ink lg:text-4xl">
             {level}
           </h2>
         )}
@@ -48,12 +48,23 @@ export function YouHero({
 }
 
 /** A child and a tween see a drawn learner; a teen or university learner a monogram, with no cartoon. */
-function Portrait({ band, name }: { band: AgeBand; name: string | undefined }) {
+function Portrait({
+  band,
+  name,
+  locale,
+}: {
+  band: AgeBand;
+  name: string | undefined;
+  locale: string;
+}) {
   if (band === "teen") {
     return (
-      <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-accent font-display text-3xl font-semibold text-on-accent lg:size-32 lg:text-5xl">
+      <div
+        aria-hidden="true"
+        className="flex size-20 shrink-0 items-center justify-center rounded-full bg-accent font-display text-3xl font-semibold text-on-accent lg:size-32 lg:text-5xl"
+      >
         {name ? (
-          name.charAt(0).toUpperCase()
+          initialOf(name, locale)
         ) : (
           <UserRound className="size-1/2" aria-hidden="true" />
         )}
@@ -70,4 +81,12 @@ function Portrait({ band, name }: { band: AgeBand; name: string | undefined }) {
       <Art name="english" band={band} eager className="object-top" />
     </div>
   );
+}
+
+/** The first letter the learner sees, whole: an emoji or an accented letter is not cut in half. */
+function initialOf(name: string, locale: string): string {
+  const [first] = new Intl.Segmenter(locale, {
+    granularity: "grapheme",
+  }).segment(name);
+  return (first?.segment ?? "").toLocaleUpperCase(locale);
 }
