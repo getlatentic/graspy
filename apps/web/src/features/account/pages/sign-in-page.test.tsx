@@ -49,7 +49,7 @@ describe("the sign-in card", () => {
     card();
     const link = screen.getByRole("link", { name: en.signIn.start });
     expect(link.getAttribute("href")).toBe("/app");
-    expect(link.className).toContain("border-accent");
+    expect(link.className).toContain("border-on-art");
   });
 
   it("keeps both labels on one line down to a phone of 320px", () => {

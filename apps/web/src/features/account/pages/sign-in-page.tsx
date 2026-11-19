@@ -82,7 +82,7 @@ export function SignIn() {
           to="/app"
           className={cn(
             buttonStyles("secondary", "lg"),
-            "w-full whitespace-nowrap border-2 border-accent bg-transparent px-3 text-base sm:px-6",
+            "w-full whitespace-nowrap border-2 border-on-art bg-transparent text-on-art hover:bg-white/40 px-3 text-base sm:px-6",
           )}
         >
           {t("signIn.start")}
