@@ -2,6 +2,8 @@ package com.latentic.graspy.auth
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -49,6 +51,28 @@ class SignInScreenTest {
         show(onSignIn = { taps++ })
         compose.onNodeWithText(copy.signIn).performClick()
         assertEquals(1, taps)
+    }
+
+    @Test
+    @Config(qualifiers = "w640dp-h360dp-land")
+    fun `a short window with the failure note still shows the way in on screen`() {
+        show(SignInState(failed = true))
+        compose.onNodeWithText(copy.signIn).assertIsDisplayed()
+        compose.onNodeWithText(copy.signInFailed).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the question is a heading`() {
+        show()
+        compose.onNode(isHeading()).assertTextEquals(copy.ready)
+    }
+
+    @Test
+    fun `while signing in the button waits and a tap does nothing`() {
+        var taps = 0
+        show(SignInState(busy = true), onSignIn = { taps++ })
+        compose.onNodeWithText(copy.signingIn).performClick()
+        assertEquals(0, taps)
     }
 
     @Test

@@ -6,18 +6,21 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +30,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.latentic.graspy.R
 import com.latentic.graspy.localization.AccountCopy
@@ -40,6 +46,9 @@ private val LOGO_HEIGHT = 48.dp
 private val WAVE_HEIGHT = 96.dp
 private val CONTENT_WIDTH = 384.dp
 
+/** The share of the window's height the picture takes on a phone held upright. */
+private const val LEARNER_SHARE = 0.38f
+
 /**
  * The web's sign-in: the logo, the learner with a tablet, a question and one way in, on the sky ground.
  * A phone held across puts the words beside the picture, as the web does from its wide breakpoint.
@@ -49,30 +58,37 @@ fun SignInScreen(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit) {
     val wide = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     Box(Modifier.fillMaxSize().background(GraspyColor.ArtSky)) {
         Wave(Modifier.align(Alignment.BottomCenter))
-        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = space(5), vertical = space(6))) {
-            if (wide) Beside(copy, state, onSignIn) else Stacked(copy, state, onSignIn)
+        BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = space(5), vertical = space(6))) {
+            if (wide) Beside(copy, state, onSignIn, maxHeight) else Stacked(copy, state, onSignIn, maxHeight)
         }
     }
 }
 
+/** The words scroll when the window is short or the text large, so the way in is never out of reach. */
 @Composable
-private fun Stacked(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit) {
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+private fun Stacked(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit, height: Dp) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).heightIn(min = height),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Logo()
-        Learner(Modifier.weight(1f).padding(vertical = space(4)))
-        Words(copy, state, onSignIn, TextAlign.Center, Modifier.widthIn(max = CONTENT_WIDTH))
+        Learner(Modifier.height(height * LEARNER_SHARE).padding(vertical = space(4)))
+        Words(copy, state, onSignIn, TextAlign.Center, Alignment.CenterHorizontally, Modifier.widthIn(max = CONTENT_WIDTH))
     }
 }
 
 @Composable
-private fun Beside(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit) {
+private fun Beside(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit, height: Dp) {
     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(space(8)), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(
+            Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).heightIn(min = height),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
             Logo()
-            Words(copy, state, onSignIn, TextAlign.Start, Modifier.widthIn(max = CONTENT_WIDTH))
-            Spacer(Modifier.height(LOGO_HEIGHT))
+            Words(copy, state, onSignIn, TextAlign.Start, Alignment.Start, Modifier.widthIn(max = CONTENT_WIDTH).padding(vertical = space(4)))
         }
-        Learner(Modifier.weight(1f))
+        Learner(Modifier.weight(1f).fillMaxHeight())
     }
 }
 
@@ -93,9 +109,9 @@ private fun Learner(modifier: Modifier) {
 }
 
 @Composable
-private fun Words(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit, align: TextAlign, modifier: Modifier) {
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(space(3))) {
-        Text(copy.ready, color = GraspyColor.OnArt, style = MaterialTheme.typography.headlineLarge, textAlign = align, modifier = Modifier.fillMaxWidth())
+private fun Words(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit, align: TextAlign, across: Alignment.Horizontal, modifier: Modifier) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(space(3)), horizontalAlignment = across) {
+        Text(copy.ready, color = GraspyColor.OnArt, style = MaterialTheme.typography.headlineLarge, textAlign = align, modifier = Modifier.fillMaxWidth().semantics { heading() })
         Text(copy.signInPrompt, color = GraspyColor.OnArt, style = MaterialTheme.typography.bodyLarge, textAlign = align, modifier = Modifier.fillMaxWidth())
         if (state.failed) ProblemNote(copy.signInFailed)
         PrimaryButton(if (state.busy) copy.signingIn else copy.signIn, onSignIn, Modifier.fillMaxWidth(), enabled = !state.busy)
