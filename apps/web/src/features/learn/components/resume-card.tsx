@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, Circle } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 import type { CurrentTopic } from "@/features/learn/lib/current-topic";
 
-const UP_NEXT = 4;
+const UP_NEXT = 3;
 
 interface ResumeCardProps {
   current: CurrentTopic;
@@ -58,7 +58,7 @@ export function ResumeCard({
         <Button
           size="lg"
           onClick={onStart}
-          className="mt-6 hidden rounded-full px-8 sm:inline-flex"
+          className="mt-4 hidden rounded-full px-8 sm:inline-flex"
         >
           {started ? t("home.continueLearning") : t("home.startLearning")}
           <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />
@@ -94,7 +94,7 @@ function ResumeProgress({
       <ProgressBar
         percent={(completed / total) * 100}
         label=""
-        className="mt-2 sm:mt-4 sm:h-2"
+        className="mt-2 h-2.5 sm:mt-4 sm:h-3"
       />
       <p className="nums mt-1 text-xs text-muted sm:mt-2 sm:text-sm">
         {t("home.topicsCompleted", { completed, total })}
@@ -120,18 +120,25 @@ function UpNext({ topics, from, onOpenTopic }: UpNextProps) {
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
         {t("home.upNext")}
       </p>
-      <ul className="lg:grid lg:grid-cols-2 lg:gap-x-6">
-        {upNext.map(({ title, index }) => (
+      <ul>
+        {upNext.map(({ title, index }, place) => (
           <li key={index}>
             <button
               type="button"
               onClick={() => onOpenTopic(index)}
               className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-control px-2 py-2.5 text-start text-sm text-ink transition-colors hover:bg-raised focus-visible:outline-2 focus-visible:outline-accent"
             >
-              <Circle
-                className="size-4 shrink-0 text-line"
+              <span
                 aria-hidden="true"
-              />
+                className={cn(
+                  "nums flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                  place === 0
+                    ? "border-accent bg-accent text-on-accent"
+                    : "border-line text-muted",
+                )}
+              >
+                {place + 1}
+              </span>
               <span className="min-w-0 flex-1 truncate">{title}</span>
               <ChevronRight
                 className="size-4 shrink-0 text-muted rtl:rotate-180"

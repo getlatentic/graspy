@@ -6,7 +6,6 @@ import { useI18n } from "@/lib/i18n-context";
 import type { AskIdea } from "@/lib/start-intent";
 import type { CurrentTopic } from "@/features/learn/lib/current-topic";
 import { useOpenChat } from "@/features/learn/hooks/use-open-chat";
-import { HomeSection } from "@/features/learn/components/home-section";
 import { ProgressSummary } from "@/features/learn/components/progress-summary";
 
 interface HomeRailProps {
@@ -19,8 +18,8 @@ export function HomeRail({ current, onAsk }: HomeRailProps) {
   const openChat = useOpenChat();
 
   return (
-    <div className="flex flex-col gap-8">
-      <HomeSection title={t("home.railAskTitle")}>
+    <Card className="flex flex-col gap-0 divide-y divide-line p-0">
+      <RailBlock title={t("home.railAskTitle")}>
         <Action
           icon={MessageCircle}
           label={
@@ -48,20 +47,37 @@ export function HomeRail({ current, onAsk }: HomeRailProps) {
             </button>
           )}
         </Action>
-      </HomeSection>
+      </RailBlock>
 
-      <HomeSection title={t("home.practiseTitle")}>
+      <RailBlock title={t("home.practiseTitle")}>
         <Action
           icon={Pencil}
           label={t("home.railPractiseStart")}
           onClick={() => onAsk("practise")}
         />
-      </HomeSection>
+      </RailBlock>
 
-      <HomeSection title={t("you.progress")}>
-        <ProgressSummary />
-      </HomeSection>
-    </div>
+      <RailBlock title={t("you.progress")}>
+        <ProgressSummary bare />
+      </RailBlock>
+    </Card>
+  );
+}
+
+function RailBlock({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="p-5">
+      <h2 className="mb-3 font-sans text-base font-semibold text-ink">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
@@ -77,12 +93,12 @@ function Action({
   children?: ReactNode;
 }) {
   return (
-    <Card className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <Button variant="secondary" onClick={onClick} className="w-full">
         <Icon className="size-5 shrink-0 text-accent" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </Button>
       {children}
-    </Card>
+    </div>
   );
 }

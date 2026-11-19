@@ -135,7 +135,7 @@ function PageArea({
         // shrinks to its content and can outgrow the screen.
         chat
           ? "flex flex-col"
-          : "overflow-y-auto overscroll-contain p-4 sm:p-6",
+          : "overflow-y-auto overscroll-contain bg-linear-to-b from-accent-soft to-canvas to-60% p-4 sm:p-6",
       )}
     >
       {isLoaded && (redirect ? <Navigate to={redirect} replace /> : <Outlet />)}

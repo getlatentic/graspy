@@ -218,6 +218,7 @@
     "expand": "توسيع القائمة"
   },
   "home": {
+    "pickUp": "أكمل من حيث توقفت.",
     "continueTitle": "تابع التعلّم",
     "resumeMeta": "{subject} · {grade}",
     "continue": "تابع",

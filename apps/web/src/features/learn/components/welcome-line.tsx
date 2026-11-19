@@ -26,12 +26,15 @@ export function WelcomeLine({
     <header className={className}>
       <h1
         title={title}
-        className="line-clamp-2 text-balance break-words text-2xl font-semibold text-ink"
+        className="line-clamp-2 text-balance break-words font-display text-3xl font-semibold text-ink lg:text-4xl"
       >
         {title}
       </h1>
       {level && (
         <p className="mt-1 text-muted">{t("planBuilding.intro", { level })}</p>
+      )}
+      {!withClass && (
+        <p className="mt-1 text-lg text-muted">{t("home.pickUp")}</p>
       )}
     </header>
   );
