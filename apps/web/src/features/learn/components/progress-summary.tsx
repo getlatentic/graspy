@@ -24,7 +24,7 @@ export function ProgressSummary({ bare = false }: { bare?: boolean }) {
       <ProgressBar
         percent={(completed / total) * 100}
         label={t("home.topicsCompleted", { completed, total })}
-        className="h-3"
+        className={bare ? "h-3" : "h-3 bg-surface"}
       />
     </>
   );

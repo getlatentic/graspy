@@ -48,7 +48,7 @@ function EditSubjects() {
   return (
     <Link
       to="/app/learn/plan"
-      className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 shadow-card hover:border-accent lg:col-span-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 shadow-card hover:border-accent lg:self-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <Pencil className="size-5 text-accent-ink" aria-hidden="true" />
       <span className="flex-1 font-medium text-ink">
