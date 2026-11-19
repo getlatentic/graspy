@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,7 +58,7 @@ fun SubjectTiles(subjects: List<PlanSubject>, onOpenSubject: (PlanSubject) -> Un
 @Composable
 private fun SubjectTile(name: String, band: AgeBand, onOpen: () -> Unit) {
     val shape = RoundedCornerShape(GraspyRadius.Card)
-    val tile = Modifier.clip(shape).background(GraspyColor.Surface).border(1.dp, GraspyColor.Line, shape).clickable(onClick = tapping(onOpen))
+    val tile = Modifier.clip(shape).background(GraspyColor.Surface).border(1.dp, GraspyColor.Line, shape).clickable(role = Role.Button, onClick = tapping(onOpen))
     if (band == AgeBand.Teen) {
         Row(tile.width(ICON_TILE_WIDTH).padding(space(3)), horizontalArrangement = Arrangement.spacedBy(space(3)), verticalAlignment = Alignment.CenterVertically) {
             val tint = subjectTint(name)
@@ -67,7 +68,7 @@ private fun SubjectTile(name: String, band: AgeBand, onOpen: () -> Unit) {
                 tint = tint.ink,
                 modifier = Modifier.size(space(10)).clip(RoundedCornerShape(GraspyRadius.Control)).background(tint.ground).padding(space(2)),
             )
-            TileName(name, Modifier.weight(1f))
+            TileName(name, Modifier.weight(1f), lines = 2)
         }
     } else {
         Column(tile.width(PICTURE_TILE_WIDTH)) {
@@ -77,9 +78,9 @@ private fun SubjectTile(name: String, band: AgeBand, onOpen: () -> Unit) {
     }
 }
 
-/** The name is held to two lines; a picture tile keeps both so the tiles in a row are as tall as each other. */
+/** The name is held to two lines; every tile keeps both so the tiles in a row are as tall as each other. */
 @Composable
-private fun TileName(name: String, modifier: Modifier, lines: Int = 1) {
+private fun TileName(name: String, modifier: Modifier, lines: Int) {
     Text(
         name,
         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),

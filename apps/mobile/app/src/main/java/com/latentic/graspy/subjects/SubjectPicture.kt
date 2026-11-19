@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -20,7 +21,7 @@ import com.latentic.graspy.ui.space
 @Composable
 fun SubjectPicture(name: String, band: AgeBand, modifier: Modifier = Modifier, iconSize: Dp = space(8)) {
     val tint = subjectTint(name)
-    val art = SubjectArt.of(name)
+    val art = remember(name) { SubjectArt.of(name) }
     Box(modifier.background(tint.ground), contentAlignment = Alignment.Center) {
         if (art != null) {
             Image(painterResource(art.drawable(band)), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
