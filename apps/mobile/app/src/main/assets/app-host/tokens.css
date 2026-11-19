@@ -1,4 +1,4 @@
-/* graspy-tokens source=a5e04a6d9c64db2a10b15c6930a5696f57efde50cedcd73af391a0c73f437e2c content=7ecc39b47dd8a0b3b3f9d25817349456dab952c7b5dbecb1087ae10a20b77c81 */
+/* graspy-tokens source=3d34e312361087b412653984d864b2d28a62068113ffff73a3c8b253182b24c8 content=255089faf2333e236240dad665c6ace5f0ba2024f8e0be5c494e1e60d6ef49f7 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 :root {
   --color-canvas: #f5f8fa;
@@ -34,8 +34,8 @@
   --color-art-sky: #d4edfb;
   --color-art-wave: #a9dcf7;
   --color-on-art: #12232e;
-  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --radius-card: 12px;
   --radius-control: 8px;
   --radius-pill: 9999px;

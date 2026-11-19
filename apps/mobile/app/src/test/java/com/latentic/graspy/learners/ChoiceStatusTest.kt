@@ -25,7 +25,7 @@ class ChoiceStatusTest {
     private val taps = mutableListOf<String>()
 
     private fun show(problem: ChoiceProblem) = compose.setContent {
-        GraspyTheme(InterfaceLanguage.ENGLISH) {
+        GraspyTheme {
             ChoiceStatus(copy, PickerState(problem = problem), { taps += "anyway" }, { taps += "cancel" })
         }
     }

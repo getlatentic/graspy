@@ -1,14 +1,14 @@
 /* The tutor's reply, drawn as the web draws it (apps/web features/learn/components/chat-message.tsx). */
 @font-face {
-  font-family: "Inter";
+  font-family: "IBM Plex Sans";
   font-weight: 400;
-  src: url(vendor/fonts/inter-latin-400-normal.woff2) format("woff2"), url(vendor/fonts/inter-latin-ext-400-normal.woff2) format("woff2");
+  src: url(vendor/fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2"), url(vendor/fonts/ibm-plex-sans-latin-ext-400-normal.woff2) format("woff2");
 }
 
 @font-face {
-  font-family: "Inter";
+  font-family: "IBM Plex Sans";
   font-weight: 600;
-  src: url(vendor/fonts/inter-latin-600-normal.woff2) format("woff2"), url(vendor/fonts/inter-latin-ext-600-normal.woff2) format("woff2");
+  src: url(vendor/fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2"), url(vendor/fonts/ibm-plex-sans-latin-ext-600-normal.woff2) format("woff2");
 }
 
 html,

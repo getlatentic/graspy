@@ -39,7 +39,7 @@ class LearnerRowTest {
     fun `the row has the learner's name and a way to their recordings`() {
         var opened = 0
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 LearnerRow(copy, ADA, inUse = false, busy = false, onRename = { _, _ -> }, onRemove = {}, onRecordings = { opened += 1 })
             }
         }
@@ -53,7 +53,7 @@ class LearnerRowTest {
     @Test
     fun `the way to their recordings is a button at least 48dp tall`() {
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 LearnerRow(copy, ADA, inUse = false, busy = false, onRename = { _, _ -> }, onRemove = {}, onRecordings = {})
             }
         }

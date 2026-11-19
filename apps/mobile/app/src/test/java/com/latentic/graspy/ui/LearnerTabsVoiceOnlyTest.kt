@@ -224,7 +224,7 @@ class LearnerTabsVoiceOnlyTest {
     private fun shown(voice: LearnerProfile?, answered: Boolean = true) {
         compose.setContent {
             LearnerScope(ada, viewModels) {
-                GraspyTheme(InterfaceLanguage.ENGLISH) {
+                GraspyTheme {
                     LearnerTabs(
                         copy = copy,
                         learn = learn,

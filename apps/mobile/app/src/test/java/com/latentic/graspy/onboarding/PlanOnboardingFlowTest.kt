@@ -165,7 +165,7 @@ class PlanOnboardingFlowTest {
         setup.begin(replanFor = null)
 
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 PlanOnboarding(
                     learn = learn,
                     form = form,

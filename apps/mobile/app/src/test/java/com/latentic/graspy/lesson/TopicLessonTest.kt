@@ -63,7 +63,7 @@ class TopicLessonTest {
         var answered: JsonObject? = null
 
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 TopicLesson(
                     learn = learnCopyFor(InterfaceLanguage.ENGLISH),
                     locale = "en",
@@ -106,7 +106,7 @@ class TopicLessonTest {
         var viewsMade = 0
 
         compose.setContent {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 TopicLesson(
                     learn = learn,
                     locale = "en",

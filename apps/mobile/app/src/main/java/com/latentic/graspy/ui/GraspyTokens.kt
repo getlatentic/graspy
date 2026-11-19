@@ -1,4 +1,4 @@
-// graspy-tokens source=a5e04a6d9c64db2a10b15c6930a5696f57efde50cedcd73af391a0c73f437e2c content=e43b11ad9f69ef1a128fce3435f1f3617273d1644681c88589de9f6d471ef5da
+// graspy-tokens source=3d34e312361087b412653984d864b2d28a62068113ffff73a3c8b253182b24c8 content=b7a5a36b7f69e06c6cf769d41ba517d96e44fccc9df2634ce945120b5cf15072
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -86,23 +86,18 @@ object GraspyColor {
     val OnArt = Color(0xFF12232E)
 }
 
-/** Headings. The web uses IBM Plex Sans, the same family as body text; Android keeps Poppins until its font files move. */
+/** Headings: the same family as the body, at 600. */
 val DisplayFont = FontFamily(
-    Font(R.font.poppins_medium, FontWeight.W500),
-    Font(R.font.poppins_semibold, FontWeight.W600),
+    Font(R.font.ibm_plex_sans_regular, FontWeight.W400),
+    Font(R.font.ibm_plex_sans_medium, FontWeight.W500),
+    Font(R.font.ibm_plex_sans_semibold, FontWeight.W600),
 )
 
-/** Body and labels. The web uses IBM Plex Sans; Android keeps Inter until its font files move. */
+/** Body and labels. */
 val SansFont = FontFamily(
-    Font(R.font.inter_variable, FontWeight.W100, variationSettings = FontVariation.Settings(FontVariation.weight(100))),
-    Font(R.font.inter_variable, FontWeight.W200, variationSettings = FontVariation.Settings(FontVariation.weight(200))),
-    Font(R.font.inter_variable, FontWeight.W300, variationSettings = FontVariation.Settings(FontVariation.weight(300))),
-    Font(R.font.inter_variable, FontWeight.W400, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
-    Font(R.font.inter_variable, FontWeight.W500, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
-    Font(R.font.inter_variable, FontWeight.W600, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
-    Font(R.font.inter_variable, FontWeight.W700, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
-    Font(R.font.inter_variable, FontWeight.W800, variationSettings = FontVariation.Settings(FontVariation.weight(800))),
-    Font(R.font.inter_variable, FontWeight.W900, variationSettings = FontVariation.Settings(FontVariation.weight(900))),
+    Font(R.font.ibm_plex_sans_regular, FontWeight.W400),
+    Font(R.font.ibm_plex_sans_medium, FontWeight.W500),
+    Font(R.font.ibm_plex_sans_semibold, FontWeight.W600),
 )
 
 object GraspyText {

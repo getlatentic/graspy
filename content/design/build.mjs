@@ -103,8 +103,7 @@ function renderCss(tokens) {
     ...cssColors(tokens),
     "",
     ...Object.entries(tokens.font).map(
-      ([name, font]) =>
-        `  --font-${name}: ${fontStack({ ...font, family: font.web ?? font.family })};`,
+      ([name, font]) => `  --font-${name}: ${fontStack(font)};`,
     ),
     ...Object.entries(tokens.webOnlyFont).map(
       ([name, font]) => `  --font-${name}: ${fontStack(font)};`,

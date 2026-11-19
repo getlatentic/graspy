@@ -180,7 +180,7 @@ class VoiceLessonApp(private val compose: LessonRule) {
     private fun App() {
         val (voice, language) = learner ?: return
         LearnerScope(ada, viewModels) {
-            GraspyTheme(InterfaceLanguage.ENGLISH) {
+            GraspyTheme {
                 GraspyRoot(
                     copy = copyFor(InterfaceLanguage.ENGLISH),
                     appLanguage = language,
