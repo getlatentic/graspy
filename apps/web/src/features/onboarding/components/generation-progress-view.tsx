@@ -43,7 +43,7 @@ function TimelineStage({
   const look = STANDING[standing];
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border-2 p-3 transition-all sm:p-4 ${look.box}`}
+      className={`flex items-center gap-3 rounded-control border-2 p-3 transition-all sm:p-4 ${look.box}`}
     >
       {look.icon}
       <p className={`font-semibold ${look.label}`}>
@@ -64,7 +64,7 @@ function GenerationFailed({
 }) {
   const { t } = useI18n();
   return (
-    <div className="mt-10 space-y-4 rounded-2xl border border-danger/30 bg-danger-soft p-5 text-danger">
+    <div className="mt-10 space-y-4 rounded-card border border-danger/30 bg-danger-soft p-5 text-danger">
       <p className="font-semibold">{t("onboarding.generating.failed")}</p>
       <p className="text-sm text-danger">
         {t("onboarding.generating.failedBody")}
@@ -74,14 +74,14 @@ function GenerationFailed({
           type="button"
           onClick={onRetry}
           disabled={isRetrying}
-          className="inline-flex flex-1 items-center justify-center rounded-xl bg-danger px-6 py-3 text-sm font-semibold text-on-danger transition disabled:cursor-not-allowed"
+          className="inline-flex flex-1 items-center justify-center rounded-control bg-danger px-6 py-3 text-sm font-semibold text-on-danger transition disabled:cursor-not-allowed"
         >
           {t("onboarding.generating.tryAgain")}
         </button>
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex flex-1 items-center justify-center rounded-xl border border-danger/30 bg-surface px-6 py-3 text-sm font-semibold text-danger transition hover:border-danger"
+          className="inline-flex flex-1 items-center justify-center rounded-control border border-danger/30 bg-surface px-6 py-3 text-sm font-semibold text-danger transition hover:border-danger"
         >
           {t("onboarding.generating.adjust")}
         </button>
@@ -120,7 +120,7 @@ export default function GenerationProgressView({
 
       <Timeline step={step} />
 
-      <p className="mt-6 flex items-center gap-2 rounded-xl sm:mt-10 border border-accent-line bg-accent-soft px-4 py-3 text-sm text-accent-ink">
+      <p className="mt-6 flex items-center gap-2 rounded-control sm:mt-10 border border-accent-line bg-accent-soft px-4 py-3 text-sm text-accent-ink">
         <Clock className="size-4 shrink-0" aria-hidden="true" />
         {t("onboarding.generating.wait")}
       </p>

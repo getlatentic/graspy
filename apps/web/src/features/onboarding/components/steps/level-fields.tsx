@@ -105,7 +105,7 @@ function SystemChoice({
             aria-pressed={option.id === chosen}
             onClick={() => onChoose(option.id)}
             className={cn(
-              "rounded-2xl border px-4 py-2.5 text-start text-sm font-semibold text-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+              "rounded-control border px-4 py-2.5 text-start text-sm font-semibold text-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
               option.id === chosen
                 ? "border-accent bg-accent-soft"
                 : "border-line bg-surface hover:border-accent-line",

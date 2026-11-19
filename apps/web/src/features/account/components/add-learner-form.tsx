@@ -37,7 +37,7 @@ export function AddLearnerForm({
           autoComplete="off"
           autoFocus
           onChange={(event) => onName(event.target.value)}
-          className="w-full rounded-2xl border border-accent-line bg-surface px-4 py-3 text-base text-ink shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
+          className="w-full rounded-control border border-accent-line bg-surface px-4 py-3 text-base text-ink shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
       <div className="flex flex-wrap gap-2">

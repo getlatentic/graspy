@@ -26,7 +26,7 @@ export default function SubjectsStep({
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 sm:gap-4">
       <SubjectsNotices chosen={selected.length} loading={loading} />
-      <div className="relative flex-1 min-h-0 rounded-2xl border border-line bg-surface/90">
+      <div className="relative flex-1 min-h-0 rounded-card border border-line bg-surface/90">
         {!loading && !error && (
           <>
             <div className="pointer-events-none absolute inset-x-0 top-0 h-6 rounded-t-2xl bg-surface" />

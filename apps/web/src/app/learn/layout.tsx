@@ -36,6 +36,17 @@ import { useChat, usePlan } from "@/features/learn/learner-context";
 // Tailwind's lg breakpoint, where a lesson's conversation sits beside it.
 const WIDE_SCREEN = "(min-width: 64rem)";
 
+/** Dialogs and menus render outside the shell, so the band is set on the page itself. */
+function useAgeBandOnPage(band: string | null) {
+  useEffect(() => {
+    if (!band) return;
+    document.documentElement.dataset.age = band;
+    return () => {
+      delete document.documentElement.dataset.age;
+    };
+  }, [band]);
+}
+
 function DashboardLayoutContent() {
   const { pathname } = useLocation();
   const userProfile = useLearnerStart();
@@ -49,11 +60,13 @@ function DashboardLayoutContent() {
   // iOS keeps dvh at full height while the keyboard is open.
   const visible = useVisualViewport(chat);
 
+  const band = userProfile ? ageBand(userProfile) : null;
+  useAgeBandOnPage(band);
+
   if (!userProfile) return null;
 
   return (
     <div
-      data-age={ageBand(userProfile)}
       style={
         visible
           ? ({

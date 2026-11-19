@@ -18,7 +18,7 @@ export default function PlanSetupView({
         <div
           key={readyStats ? "ready" : "progress"}
           className={cn(
-            "w-full max-w-2xl rounded-3xl bg-surface p-6 shadow-2xl motion-safe:animate-enter sm:p-10",
+            "w-full max-w-2xl rounded-sheet bg-surface p-6 shadow-2xl motion-safe:animate-enter sm:p-10",
             readyStats && "text-center",
           )}
         >

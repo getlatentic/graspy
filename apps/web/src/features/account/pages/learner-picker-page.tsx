@@ -137,7 +137,7 @@ function Choosing({
       </ul>
       {full && <p className="text-sm text-muted">{t("learners.full")}</p>}
       {devicePlan && (
-        <p className="rounded-2xl bg-accent-soft/60 p-4 text-sm text-ink">
+        <p className="rounded-card bg-accent-soft/60 p-4 text-sm text-ink">
           {t("learners.devicePlan")}
         </p>
       )}

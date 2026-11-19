@@ -54,7 +54,7 @@ export function ConsentStep({
       <p
         lang="en"
         dir="ltr"
-        className="text-pretty rounded-2xl bg-accent-soft/60 p-4 text-base text-ink"
+        className="text-pretty rounded-card bg-accent-soft/60 p-4 text-base text-ink"
       >
         {notice}
       </p>

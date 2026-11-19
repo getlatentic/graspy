@@ -28,7 +28,7 @@ function Tile({
       disabled={disabled}
       onClick={onClick}
       data-restore-focus={restoreKey}
-      className="group flex w-full flex-col items-center gap-3 rounded-3xl p-3 text-center transition hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60"
+      className="group flex w-full flex-col items-center gap-3 rounded-card p-3 text-center transition hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60"
     >
       {face}
       <span className="w-full truncate text-base font-semibold text-ink">

@@ -13,7 +13,6 @@ export function Hero() {
       )}
     >
       <div>
-        {/* The design sets the headline in a close grotesk. */}
         <h1 className="font-sans text-hero font-semibold text-ink sm:text-6xl sm:tracking-tight">
           Understand
           <br />

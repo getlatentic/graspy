@@ -18,7 +18,7 @@ export function LessonTile({
     <li>
       <Link
         to={voiceLessonPath(lesson.current ? undefined : lesson.plan_id)}
-        className="flex h-full flex-col gap-2 rounded-2xl border border-line bg-surface p-2 transition-colors hover:border-accent"
+        className="flex h-full flex-col gap-2 rounded-card border border-line bg-surface p-2 transition-colors hover:border-accent"
       >
         <span className="relative block">
           <LessonPicture lesson={lesson} />
