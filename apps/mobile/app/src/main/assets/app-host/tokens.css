@@ -1,4 +1,4 @@
-/* graspy-tokens source=3d12cef46c6c12a70310c6a3e06ca00a411512ce17fa6bb75f6bd63924464cff content=bc3b50caf8bb7e2d7ef47da6234c5a9b0bc47e92bed8e09d90ca54d5369de29e */
+/* graspy-tokens source=a5e04a6d9c64db2a10b15c6930a5696f57efde50cedcd73af391a0c73f437e2c content=7ecc39b47dd8a0b3b3f9d25817349456dab952c7b5dbecb1087ae10a20b77c81 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 :root {
   --color-canvas: #f5f8fa;
@@ -31,6 +31,8 @@
   --color-tint-purple-soft: #f0ecfc;
   --color-on-danger: #ffffff;
   --color-art-ground: #96d5f6;
+  --color-art-sky: #d4edfb;
+  --color-art-wave: #a9dcf7;
   --color-on-art: #12232e;
   --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;

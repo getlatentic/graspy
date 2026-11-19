@@ -1,4 +1,4 @@
-// graspy-tokens source=3d12cef46c6c12a70310c6a3e06ca00a411512ce17fa6bb75f6bd63924464cff content=55950410fe6da99867fbe69035e8b51262313bf44d3b9e6aeaace82aa5f3cff4
+// graspy-tokens source=a5e04a6d9c64db2a10b15c6930a5696f57efde50cedcd73af391a0c73f437e2c content=e43b11ad9f69ef1a128fce3435f1f3617273d1644681c88589de9f6d471ef5da
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -78,6 +78,10 @@ object GraspyColor {
     val OnDanger = Color(0xFFFFFFFF)
     /** The sky of the art screens (sign-in): bright in dark mode too, because the picture behind it is. */
     val ArtGround = Color(0xFF96D5F6)
+    /** The pale sky of the sign-in screen; light in dark mode too. */
+    val ArtSky = Color(0xFFD4EDFB)
+    /** The wave at the foot of the sign-in screen. */
+    val ArtWave = Color(0xFFA9DCF7)
     /** Text on art-ground; 7.6:1. */
     val OnArt = Color(0xFF12232E)
 }

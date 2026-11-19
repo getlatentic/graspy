@@ -33,48 +33,33 @@ describe("the sign-in card", () => {
       </MemoryRouter>,
     );
 
-  it("centres its heading and the line under the button, as the button's own label is", () => {
+  it("asks one question and says what each way in does", () => {
     card();
-    expect(
-      screen.getByRole("heading", { name: en.signIn.title }).className,
-    ).toContain("text-center");
-    const line = screen.getByRole("link", {
-      name: en.signIn.start,
-    }).parentElement!;
-    expect(line.className).toContain("text-center");
+    expect(screen.getByRole("heading", { name: en.signIn.ready })).toBeTruthy();
+    expect(screen.getByText(en.signIn.explain)).toBeTruthy();
   });
 
-  it("keeps the button's icon and the underlined link to start learning", () => {
+  it("puts Google's own mark in the button", () => {
     card();
     const button = screen.getByRole("button", { name: en.you.signIn });
-    expect(button.querySelector("svg")).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: en.signIn.start }).className,
-    ).toContain("underline");
-    expect(
-      screen.getByRole("link", { name: en.signIn.start }).getAttribute("href"),
-    ).toBe("/app");
+    expect(button.querySelector("svg path[fill='#4285F4']")).toBeTruthy();
   });
 
-  it("keeps the button's label on one line and its icon whole down to a phone of 320px, and breaks the line under it only between its question and its link", () => {
+  it("offers to start without an account as a second button that opens the app", () => {
+    card();
+    const link = screen.getByRole("link", { name: en.signIn.start });
+    expect(link.getAttribute("href")).toBe("/app");
+    expect(link.className).toContain("border-accent");
+  });
+
+  it("keeps both labels on one line down to a phone of 320px", () => {
     card();
     const button = screen.getByRole("button", { name: en.you.signIn });
-    expect(button.className).toContain("whitespace-nowrap");
-    expect(button.className).toContain("px-3");
-    expect(button.className).toContain("text-sm");
-    expect(button.className).toContain("sm:text-base");
-    expect(button.querySelector("svg")?.getAttribute("class")).toContain(
-      "shrink-0",
-    );
-    const line = screen.getByRole("link", {
-      name: en.signIn.start,
-    }).parentElement!;
-    expect(line.className).not.toContain("text-balance");
-    expect(screen.getByText(en.signIn.newHere).className).toContain(
-      "whitespace-nowrap",
-    );
-    expect(
-      screen.getByRole("link", { name: en.signIn.start }).className,
-    ).toContain("whitespace-nowrap");
+    const link = screen.getByRole("link", { name: en.signIn.start });
+    for (const control of [button, link]) {
+      expect(control.className).toContain("whitespace-nowrap");
+      expect(control.className).toContain("px-3");
+    }
+    expect(button.querySelector("span")?.className).toContain("shrink-0");
   });
 });
