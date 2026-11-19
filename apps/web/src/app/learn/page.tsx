@@ -30,7 +30,7 @@ import {
 import { homeParts } from "@/features/learn/lib/home-parts";
 
 const HOME_GRID =
-  "mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-10";
+  "mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-6";
 
 export default function HomePage() {
   const { t } = useI18n();
@@ -84,11 +84,15 @@ export default function HomePage() {
     // one column, with the rail beside it. The voice card keeps its place before
     // the subjects at every width.
     <div className={HOME_GRID}>
-      <WelcomeLine withClass={false} className="lg:col-span-2" />
+      <WelcomeLine
+        withClass={false}
+        pickUp={current?.started ?? false}
+        className="lg:col-span-2"
+      />
 
       {errorAlert && <div className="lg:col-span-2">{errorAlert}</div>}
 
-      <div className="flex min-w-0 flex-col gap-8 lg:gap-10">
+      <div className="flex min-w-0 flex-col gap-8 lg:gap-6">
         {current && parts.has("continue") && (
           <ContinueSection current={current} />
         )}

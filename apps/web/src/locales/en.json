@@ -218,6 +218,7 @@
     "expand": "Expand menu"
   },
   "home": {
+    "pickUp": "Pick up where you left off.",
     "continueTitle": "Continue learning",
     "resumeMeta": "{subject} · {grade}",
     "continue": "Continue",

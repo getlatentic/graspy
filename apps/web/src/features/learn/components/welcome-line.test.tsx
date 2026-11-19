@@ -27,7 +27,7 @@ const t = (key: string, values?: Record<string, string | number>) => {
   );
 };
 
-const welcome = (props: { withClass?: boolean } = {}) =>
+const welcome = (props: { withClass?: boolean; pickUp?: boolean } = {}) =>
   render(
     <I18nContext.Provider
       value={{ t, locale: "en", setLocale: () => {} } as never}
@@ -57,6 +57,15 @@ describe("WelcomeLine", () => {
     signedInAs({ id: "ada000000001", name: "Ada" });
     welcome({ withClass: false });
     expect(screen.queryByText(/plan\./)).toBeNull();
+  });
+
+  it("tells a learner who has begun to pick up where they left off, and one who has not nothing of the kind", () => {
+    signedInAs({ id: "ada000000001", name: "Ada" });
+    welcome({ withClass: false, pickUp: true });
+    expect(screen.getByText(en.home.pickUp)).toBeTruthy();
+    cleanup();
+    welcome({ withClass: false });
+    expect(screen.queryByText(en.home.pickUp)).toBeNull();
   });
 
   it("greets without a name when the device has no learner chosen", () => {

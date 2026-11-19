@@ -10,9 +10,12 @@ const isolated = (name: string) => `\u2068${name}\u2069`;
 export function WelcomeLine({
   className,
   withClass = true,
+  pickUp = false,
 }: {
   className?: string;
   withClass?: boolean;
+  /** Says to carry on where the learner stopped, for one who has begun a lesson. */
+  pickUp?: boolean;
 }) {
   const { t } = useI18n();
   const name = useAccount()?.learner?.name.trim();
@@ -26,13 +29,14 @@ export function WelcomeLine({
     <header className={className}>
       <h1
         title={title}
-        className="line-clamp-2 text-balance break-words text-2xl font-semibold text-ink"
+        className="line-clamp-2 text-balance break-words font-display text-3xl font-semibold text-ink lg:text-4xl"
       >
         {title}
       </h1>
       {level && (
         <p className="mt-1 text-muted">{t("planBuilding.intro", { level })}</p>
       )}
+      {pickUp && <p className="mt-1 text-lg text-muted">{t("home.pickUp")}</p>}
     </header>
   );
 }
