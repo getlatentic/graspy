@@ -1,4 +1,4 @@
-import { LogIn } from "lucide-react";
+import { GoogleMark } from "@/components/brand/google-mark";
 import { Button } from "@/components/ui/button";
 import type { Size, Variant } from "@/components/ui/button-styles";
 import { useI18n } from "@/lib/i18n-context";
@@ -24,10 +24,9 @@ export function GoogleSignInButton({
         onClick={google.signIn}
         disabled={google.busy}
       >
-        <LogIn
-          className="size-4 shrink-0 rtl:-scale-x-100"
-          aria-hidden="true"
-        />
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white">
+          <GoogleMark className="size-4" />
+        </span>
         {google.busy ? t("you.signingIn") : t("you.signIn")}
       </Button>
       {google.problem && (

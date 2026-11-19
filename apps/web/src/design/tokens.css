@@ -1,4 +1,4 @@
-/* graspy-tokens source=3d12cef46c6c12a70310c6a3e06ca00a411512ce17fa6bb75f6bd63924464cff content=d0ce2ebcbcdbb26f8cdda29b9fef5f53057279e92355b7b934402da80c5c60c9 */
+/* graspy-tokens source=a5e04a6d9c64db2a10b15c6930a5696f57efde50cedcd73af391a0c73f437e2c content=bbb99740c50e909614282d3bda6336cfb2ff2cf81af001ad240f148fab5c2ee4 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -61,6 +61,10 @@
   --color-on-danger: #ffffff;
   /* The sky of the art screens (sign-in): bright in dark mode too, because the picture behind it is. */
   --color-art-ground: #96d5f6;
+  /* The pale sky of the sign-in screen; light in dark mode too. */
+  --color-art-sky: #d4edfb;
+  /* The wave at the foot of the sign-in screen. */
+  --color-art-wave: #a9dcf7;
   /* Text on art-ground; 7.6:1. */
   --color-on-art: #12232e;
 

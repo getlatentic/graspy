@@ -340,8 +340,8 @@
   "signIn": {
     "link": "Sign in",
     "returning": "Already learning with graspy?",
-    "title": "Sign in",
-    "newHere": "New to graspy?",
+    "ready": "Ready to learn?",
+    "explain": "Sign in to save progress, or explore first.",
     "start": "Try without an account"
   },
   "voice": {

@@ -340,8 +340,8 @@
   "signIn": {
     "link": "Wọlé",
     "returning": "Ṣé o ti ń kẹ́kọ̀ọ́ pẹ̀lú graspy?",
-    "title": "Wọlé",
-    "newHere": "Ṣé o jẹ́ tuntun sí graspy?",
+    "ready": "Ṣé o ṣetán láti kẹ́kọ̀ọ́?",
+    "explain": "Wọlé láti fi ìtẹ̀síwájú rẹ pamọ́, tàbí kọ́kọ́ ṣàwárí.",
     "start": "Gbìyànjú láìsí àkọọ́lẹ̀"
   },
   "voice": {
