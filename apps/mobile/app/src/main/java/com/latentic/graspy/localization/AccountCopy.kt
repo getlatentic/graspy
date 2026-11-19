@@ -5,6 +5,8 @@ package com.latentic.graspy.localization
  * words in every language (apps/web/src/locales).
  */
 data class AccountCopy(
+    val ready: String,
+    val signInPrompt: String,
     val signIn: String,
     val signingIn: String,
     val signInFailed: String,
@@ -56,6 +58,8 @@ fun accountCopyFor(language: InterfaceLanguage): AccountCopy = when (language) {
 }
 
 private val ENGLISH = AccountCopy(
+    ready = "Ready to learn?",
+    signInPrompt = "Keep your learning on every device.",
     signIn = "Continue with Google",
     signingIn = "Signing in…",
     signInFailed = "Sign-in didn't work. Try again.",
@@ -97,6 +101,8 @@ private val ENGLISH = AccountCopy(
 )
 
 private val YORUBA = AccountCopy(
+    ready = "Ṣé o ṣetán láti kẹ́kọ̀ọ́?",
+    signInPrompt = "Jẹ́ kí ẹ̀kọ́ rẹ wà lórí gbogbo ẹ̀rọ rẹ.",
     signIn = "Tẹ̀síwájú pẹ̀lú Google",
     signingIn = "Ó ń wọlé…",
     signInFailed = "Ìwọlé kò ṣiṣẹ́. Tún gbìyànjú.",
@@ -138,6 +144,8 @@ private val YORUBA = AccountCopy(
 )
 
 private val PIDGIN = AccountCopy(
+    ready = "You ready to learn?",
+    signInPrompt = "Keep your learning for every device.",
     signIn = "Continue with Google",
     signingIn = "E dey sign in…",
     signInFailed = "Sign-in no work. Try again.",
@@ -179,6 +187,8 @@ private val PIDGIN = AccountCopy(
 )
 
 private val ARABIC = AccountCopy(
+    ready = "هل أنت مستعد للتعلّم؟",
+    signInPrompt = "احتفظ بتعلّمك على كل أجهزتك.",
     signIn = "المتابعة باستخدام Google",
     signingIn = "جارٍ تسجيل الدخول…",
     signInFailed = "لم ينجح تسجيل الدخول. حاول مرة أخرى.",
