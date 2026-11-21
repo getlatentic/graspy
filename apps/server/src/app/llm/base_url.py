@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 from urllib.parse import urlsplit
 
 from ..settings import Settings
@@ -18,9 +19,23 @@ LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 HTTPS_PORT = 443
 PLAIN_HOST = re.compile(r"[a-z0-9]([a-z0-9.-]*[a-z0-9])?")
 
-# A hostname the key may go to, and the path prefix ("" for any) that names
-# this deployment on a host shared with others.
-OwnBase = tuple[str, str]
+
+@dataclass(frozen=True)
+class OwnBase:
+    """Hostnames the key may go to: those matching `hostname`, described by
+    `label` in errors, and the path prefix ("" for any) that names this
+    deployment on a host shared with others."""
+
+    label: str
+    hostname: re.Pattern[str]
+    path: str = ""
+
+    def accepts(self, host: str, path: str) -> bool:
+        return bool(self.hostname.fullmatch(host)) and _under(path, self.path)
+
+
+def exact_host(name: str, path: str = "") -> OwnBase:
+    return OwnBase(name, re.compile(re.escape(name)), path)
 
 
 def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None:
@@ -58,7 +73,7 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
     if port not in (None, HTTPS_PORT):
         raise RuntimeError("LLM_BASE_URL must use the https port.")
     host = raw_host.lower().rstrip(".")
-    if any(host == name and _under(parts.path, prefix) for name, prefix in own):
+    if any(base.accepts(host, parts.path) for base in own):
         return url.rstrip("/")
     if allowed and host == allowed:
         logger.warning(
@@ -67,7 +82,7 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
         return url.rstrip("/")
     raise RuntimeError(
         f"LLM_BASE_URL host {host} and path are not this deployment's own "
-        f"({', '.join(name for name, _ in own) or 'the host needs more settings'}); "
+        f"({', '.join(base.label for base in own) or 'the host needs more settings'}); "
         "to send the key elsewhere, set LLM_BASE_URL_ALLOW to that exact host."
     )
 

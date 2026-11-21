@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-import re
+import logging
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -9,6 +10,9 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .llm.profiles import profile_named
+
+logger = logging.getLogger(__name__)
+_warned_of_region = False
 
 # A Worker receives these as bindings on `env`, not in the process
 # environment; worker.py copies exactly these across.
@@ -24,7 +28,6 @@ DEPLOYMENT_KEYS = (
     "LLM_BASE_URL",
     "LLM_BASE_URL_ALLOW",
     "LLM_NATIVE_TOOLS",
-    "AWS_REGION",
     "AWS_BEARER_TOKEN_BEDROCK",
     "CLOUDFLARE_ACCOUNT_ID",
     "CLOUDFLARE_API_TOKEN",
@@ -68,13 +71,12 @@ class Settings(BaseSettings):
     )
     # Unset means the host's own gpt-oss-120b id.
     llm_model_id: str | None = Field(default=None, alias="LLM_MODEL_ID")
-    # Unset means the host's own URL. Checked by llm/base_url.py.
+    # Unset means the host's default URL. Checked by llm/base_url.py.
     llm_base_url: str | None = Field(default=None, alias="LLM_BASE_URL")
     # The one host, beyond the model host's own, that LLM_BASE_URL may name.
     llm_base_url_allow: str | None = Field(default=None, alias="LLM_BASE_URL_ALLOW")
     # The tutor's tools travel as native tool calls, not as text in fields.
     llm_native_tools: bool = Field(default=False, alias="LLM_NATIVE_TOOLS")
-    aws_region: str = Field(default="us-east-1", alias="AWS_REGION")
     aws_bearer_token_bedrock: str | None = Field(
         default=None, alias="AWS_BEARER_TOKEN_BEDROCK"
     )
@@ -133,14 +135,16 @@ class Settings(BaseSettings):
             profile_named(value.strip())
         return value
 
-    @field_validator("aws_region")
-    @classmethod
-    def region_is_a_dns_label(cls, value):
-        """It becomes part of a hostname the bearer key is sent to."""
-        region = value.strip().lower()
-        if not re.fullmatch(r"[a-z0-9-]+", region):
-            raise ValueError("AWS_REGION must be letters, digits and hyphens.")
-        return region
+    @model_validator(mode="after")
+    def warn_of_unused_region(self) -> Settings:
+        """A deployment that still sets AWS_REGION keeps starting."""
+        global _warned_of_region
+        if not _warned_of_region and "AWS_REGION" in os.environ:
+            _warned_of_region = True
+            logger.warning(
+                "AWS_REGION is unused: the Bedrock host is set by LLM_BASE_URL alone."
+            )
+        return self
 
     @model_validator(mode="after")
     def fill_from_profile(self) -> Settings:
@@ -160,7 +164,7 @@ class Settings(BaseSettings):
         self.llm_host = profile.host
         for field, value in (
             ("llm_model_id", profile.model_id),
-            ("llm_base_url", profile.url_in(self.aws_region)),
+            ("llm_base_url", profile.base_url),
         ):
             if field not in given or not (getattr(self, field) or "").strip():
                 setattr(self, field, value)

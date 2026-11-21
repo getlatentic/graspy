@@ -24,6 +24,7 @@ BASE = {
     "cloudflare_api_token": "cf-secret-value",
     "_env_file": None,
 }
+DEFAULT_URL = "https://bedrock-mantle.us-east-1.api.aws/v1"
 GEMMA_URL = "https://bedrock-mantle.us-east-1.api.aws/openai/v1"
 
 
@@ -35,7 +36,6 @@ def no_llm_settings_from_the_environment(monkeypatch):
         "LLM_MODEL_ID",
         "LLM_BASE_URL",
         "LLM_BASE_URL_ALLOW",
-        "AWS_REGION",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -70,7 +70,12 @@ def test_the_gpt_oss_profile_is_the_default_model():
 @pytest.mark.parametrize(
     ("name", "host", "model", "url"),
     [
-        ("gpt-oss-120b", "bedrock", "bedrock-mantle-chat:openai.gpt-oss-120b", None),
+        (
+            "gpt-oss-120b",
+            "bedrock",
+            "bedrock-mantle-chat:openai.gpt-oss-120b",
+            DEFAULT_URL,
+        ),
         (
             "gemma-4-31b",
             "bedrock",
@@ -103,13 +108,15 @@ def test_the_gemma_profile_sends_to_the_openai_path_of_the_region():
     assert config.transport._old == "https://bedrock-mantle.us-east-1.api.aws/v1"
 
 
-def test_the_gemma_profile_follows_the_region():
-    west = settings(llm_profile="gemma-4-31b", aws_region="eu-west-1")
+def test_the_gemma_profile_can_be_moved_to_another_region_by_its_url():
+    west_url = "https://bedrock-mantle.eu-west-1.api.aws/openai/v1"
+    west = settings(llm_profile="gemma-4-31b", llm_base_url=west_url)
     config = HOSTS["bedrock"].config(west, None)
 
-    assert west.llm_base_url == ("https://bedrock-mantle.eu-west-1.api.aws/openai/v1")
+    assert west.llm_base_url == west_url
     assert config.settings == {"bedrock-mantle-chat": {"region": "eu-west-1"}}
     assert config.transport._old == "https://bedrock-mantle.eu-west-1.api.aws/v1"
+    assert config.transport._new == west_url
     assert HOSTS["bedrock"].endpoint(west) == "bedrock-mantle.eu-west-1.api.aws"
 
 
@@ -132,8 +139,8 @@ def test_explicit_model_and_url_win_over_the_profile():
     )
 
     assert resolve_model(named) == "bedrock-mantle-chat:google.gemma-4-12b"
-    config = HOSTS["bedrock"].config(named, None)
-    assert config.transport._new == "https://bedrock-mantle.us-east-1.api.aws/v1"
+    assert HOSTS["bedrock"].base_url(named) == DEFAULT_URL
+    assert HOSTS["bedrock"].config(named, None).transport is None
 
 
 def test_a_host_that_disagrees_with_the_profile_is_refused_naming_both():

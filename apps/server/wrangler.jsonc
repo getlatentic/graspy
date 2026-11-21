@@ -60,7 +60,6 @@
     // Who hears English, always with Intron asked when the first cannot answer or hears nothing: "whisper",
     // "nova" (Deepgram Nova-3, never followed by Whisper), or "intron" alone. Nova-3 is on in staging first.
     "ENGLISH_ASR": "whisper",
-    "AWS_REGION": "us-east-1",
     "PUBLIC_BASE_URL": "https://graspy-api.getlatentic.com",
     "A2A_PATH_PREFIX": "/a2a",
     "CORS_ORIGINS": "https://graspy.getlatentic.com,https://graspy.tosinamuda.com,https://graspy.pages.dev,https://*.graspy.pages.dev"
@@ -129,7 +128,6 @@
         "CHAT_LOG": "on",
         // A turn is run by the chat's ChatTurn object and read from the log, so it outlives its request.
         "DURABLE_TURNS": "on",
-        "AWS_REGION": "us-east-1",
         "PUBLIC_BASE_URL": "https://graspy-api-staging.getlatentic.com",
         "A2A_PATH_PREFIX": "/a2a",
         "CORS_ORIGINS": "https://graspy-staging.getlatentic.com"

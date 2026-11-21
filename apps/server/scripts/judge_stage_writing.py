@@ -9,7 +9,7 @@ on each dimension of the rubric, gives a short reason and a preference.
 
 The judge is not the model that wrote either run (gpt-oss-120b), so it does
 not favour its own writing, and never a Claude model. Its id is one Bedrock
-serves on bedrock-mantle in AWS_REGION.
+serves on bedrock-mantle at LLM_BASE_URL.
 
     uv run python scripts/judge_stage_writing.py --probe --env-file ../.env
     uv run python scripts/judge_stage_writing.py \\

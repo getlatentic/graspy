@@ -11,18 +11,17 @@ from dataclasses import dataclass
 class Profile:
     host: str
     model_id: str
-    # May name the deployment's {region}.
+    # None where the URL depends on the deployment's account.
     base_url: str | None = None
 
-    def url_in(self, region: str) -> str | None:
-        return self.base_url.format(region=region) if self.base_url else None
 
-
-BEDROCK_OPENAI_PATH = "https://bedrock-mantle.{region}.api.aws/openai/v1"
+BEDROCK_MANTLE = "https://bedrock-mantle.us-east-1.api.aws"
 
 PROFILES: dict[str, Profile] = {
-    "gpt-oss-120b": Profile("bedrock", "openai.gpt-oss-120b"),
-    "gemma-4-31b": Profile("bedrock", "google.gemma-4-31b", BEDROCK_OPENAI_PATH),
+    "gpt-oss-120b": Profile("bedrock", "openai.gpt-oss-120b", BEDROCK_MANTLE + "/v1"),
+    "gemma-4-31b": Profile(
+        "bedrock", "google.gemma-4-31b", BEDROCK_MANTLE + "/openai/v1"
+    ),
     "gpt-oss-120b-workers-ai": Profile("workers-ai", "@cf/openai/gpt-oss-120b"),
 }
 

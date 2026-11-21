@@ -12,7 +12,7 @@ then scores what came out:
     navigation  asked to go to a topic, whether the right one opened.
 
 The judge is a third model so neither candidate grades itself, and not a
-Claude model. Every id is one Bedrock serves on bedrock-mantle in AWS_REGION.
+Claude model. Every id is one Bedrock serves on bedrock-mantle at LLM_BASE_URL.
 
     uv run python scripts/compare_models.py \\
         --models openai.gpt-oss-120b openai.gpt-oss-20b --runs 2
