@@ -131,19 +131,22 @@ def test_loading_on_a_new_topic_starts_there():
 
 
 def test_the_text_in_effect_is_each_skills_current_body_within_the_bounds():
-    text = rendered((MISTAKE, EXAMPLE))
+    text = rendered({MISTAKE: 0, EXAMPLE: 1})
 
-    assert skills()[MISTAKE].body in text and skills()[EXAMPLE].body in text
-    assert len(text.split()) <= MAX_ACTIVE * (MAX_BODY_WORDS + 6)
-    assert rendered(()) == NONE_IN_EFFECT
+    assert skills()[MISTAKE].for_turn(1) in text
+    assert skills()[EXAMPLE].for_turn(2) in text
+    assert len(text.split()) <= MAX_ACTIVE * (MAX_BODY_WORDS + 12)
+    assert f"Skill in effect: {MISTAKE} (turn 1 of using it)" in text
+    assert f"Skill in effect: {EXAMPLE} (turn 2 of using it)" in text
+    assert rendered({}) == NONE_IN_EFFECT
 
 
-def test_loading_a_skill_in_effect_is_told_to_use_it_and_still_counts_as_loaded():
+def test_loading_a_carried_skill_is_told_to_use_it_and_keeps_its_age():
     result = load_skill_for_turn([MISTAKE])(MISTAKE)
 
     assert isinstance(result, Outcome)
     assert result.told == {"skill": MISTAKE, "note": "Already in effect: use it."}
-    assert result.skill == MISTAKE
+    assert result.skill is None
 
 
 def test_loading_another_skill_gives_its_text():
@@ -167,7 +170,7 @@ async def test_turn_two_has_the_text_in_its_input_and_asks_no_model_for_it():
         items = [i async for i in Tutor(memory).stream("c", "3/5?", MATHS)]
 
     assert isinstance(items[-1], TutorReply)
-    assert skills()[MISTAKE].body in inputs(lm, 0)["skills_in_effect"]
+    assert skills()[MISTAKE].for_turn(2) in inputs(lm, 0)["skills_in_effect"]
     # The tool step and the answer: no call is made to read the skill.
     assert len(lm.history) == 2
 
@@ -207,7 +210,7 @@ async def test_a_skill_loaded_in_a_turn_is_kept_by_name_with_the_topic():
     assert skills()[MISTAKE].body not in kept["answer"]
 
 
-async def test_a_skill_in_effect_that_the_tutor_loads_again_stays_in_effect():
+async def test_a_skill_in_effect_that_the_tutor_loads_again_keeps_its_age():
     memory = InMemoryConversationStore()
     await memory.append("c", kept_in_effect(MISTAKE))
     _, context = stand_in(loads(MISTAKE))
@@ -216,7 +219,7 @@ async def test_a_skill_in_effect_that_the_tutor_loads_again_stays_in_effect():
         async for _ in Tutor(memory).stream("c", "3/5?", MATHS):
             pass
 
-    assert (await memory.load("c")).exchanges[-1]["skills"] == {MISTAKE: 0}
+    assert (await memory.load("c")).exchanges[-1]["skills"] == {MISTAKE: 1}
 
 
 async def test_a_skill_in_effect_the_tutor_does_not_load_again_is_carried_on():

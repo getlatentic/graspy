@@ -8,7 +8,7 @@ in a deploy applies at once."""
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from ..memory import Exchange
 from .registry import skills
@@ -61,9 +61,13 @@ def stamped(
     return exchange
 
 
-def rendered(names: Sequence[str]) -> str:
-    """The text of each skill in effect, for the tutor's input."""
-    if not names:
+def rendered(ages: Mapping[str, int]) -> str:
+    """The text of each skill in effect, for the tutor's input, headed by which
+    turn of using it this is: the turn it was loaded is turn 1."""
+    if not ages:
         return NONE_IN_EFFECT
     known = skills()
-    return "\n\n".join(f"Skill in effect: {name}\n{known[name].body}" for name in names)
+    return "\n\n".join(
+        f"Skill in effect: {name} (turn {age + 1} of using it)\n{known[name].for_turn(age + 1)}"
+        for name, age in ages.items()
+    )

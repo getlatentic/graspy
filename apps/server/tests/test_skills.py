@@ -11,7 +11,7 @@ from test_agent_tools import maths
 
 from app.agent.skills.load import MAX_NAME_ECHO
 from app.agent.skills.registry import SKILLS_DIR, catalogue, read_all, skills
-from app.agent.skills.skill import MAX_BODY_WORDS, MAX_DESCRIPTION_WORDS, parse
+from app.agent.skills.skill import MAX_BODY_WORDS, MAX_DESCRIPTION_WORDS, Skill, parse
 from app.agent.toolkit import Turn, TurnOutputs, tools_for
 from app.agent.tutor import signature_for
 
@@ -97,6 +97,14 @@ def test_load_skill_gives_the_body_of_the_skill():
     }
 
 
+def test_load_skill_gives_only_the_first_turns_step_of_a_stepped_skill():
+    guidance = load_skill_of_a_turn()("explaining-a-mistake")["guidance"]
+
+    assert guidance == skills()["explaining-a-mistake"].for_turn(1)
+    assert "Name the one step" in guidance
+    assert "Ask no further question" not in guidance
+
+
 def test_a_skill_loaded_twice_in_a_turn_is_told_to_use_what_it_has():
     load = load_skill_of_a_turn()
     load("worked-example")
@@ -154,6 +162,13 @@ def test_the_tutor_has_the_load_skill_tool():
         ("---\nname: a\ndescription: |\n  literal\n---\nbody", "block scalar"),
         ("---\nname: a\ndescription: d\ndescription: e\n---\nbody", "given twice"),
         ("---\nname: a\ndescription: d\n  more\n---\nbody", "not key: value"),
+        ("---\nname: a\ndescription: d\n---\n## Turn 2\nx", "count up from Turn 1"),
+        ("---\nname: a\ndescription: d\n---\n## Turn 1\nx\n## turn 2\ny", "must read"),
+        ("---\nname: a\ndescription: d\n---\n## Turn 1\n## Turn 2\ny", "is empty"),
+        (
+            "---\nname: a\ndescription: d\n---\n## Turn 1\nx\n## Turn 1\ny",
+            "count up from Turn 1",
+        ),
     ],
 )
 def test_a_skill_that_breaks_the_format_is_refused_naming_the_file(
@@ -224,10 +239,37 @@ def test_explaining_a_mistake_describes_the_ladder_its_body_gives():
 
     assert "retry once" not in skill.description
     assert "one worked line" in skill.description
-    assert "would be the answer itself" in skill.body
+    assert "Turn 3 or later" in skill.body
+    assert "Ask no further question about this problem" in skill.body
 
 
 def test_checking_understanding_ends_a_run_of_questions_with_a_worked_example():
     body = skills()["checking-understanding"].body
 
     assert "a second time" in body and "worked example" in body
+
+
+STEPPED = Skill(
+    name="a",
+    description="d",
+    body="Intro.\n\n## Turn 1\nfirst\n\n## Turn 2\nsecond\n\n## Turn 3 or later\nlast",
+)
+
+
+@pytest.mark.parametrize(
+    ("turn", "step"), [(1, "first"), (2, "second"), (3, "last"), (9, "last")]
+)
+def test_a_stepped_skill_shows_the_intro_and_only_the_step_reached(turn, step):
+    assert STEPPED.for_turn(turn) == f"Intro.\n\n{step}"
+
+
+def test_a_skill_without_steps_is_shown_whole_on_every_turn():
+    plain = Skill(name="a", description="d", body="Do this.\n\nThen that.")
+
+    assert plain.for_turn(1) == plain.for_turn(5) == plain.body
+
+
+def test_a_stepped_skill_with_no_intro_shows_no_blank_lead():
+    bare = Skill(name="a", description="d", body="## Turn 1\nfirst\n## Turn 2\nsecond")
+
+    assert bare.for_turn(1) == "first"
