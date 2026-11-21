@@ -53,6 +53,9 @@
 
   "vars": {
     "APP_ENV": "production",
+    // LLM_PROFILE (src/app/llm/profiles.py) names a model with its host. A profile on another
+    // host than LLM_HOST stops startup: set LLM_PROFILE for an environment on bedrock as is,
+    // and for gpt-oss-120b-workers-ai remove this LLM_HOST line in that environment.
     "LLM_HOST": "bedrock",
     // Who hears English, always with Intron asked when the first cannot answer or hears nothing: "whisper",
     // "nova" (Deepgram Nova-3, never followed by Whisper), or "intron" alone. Nova-3 is on in staging first.

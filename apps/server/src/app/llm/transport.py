@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import replace
 
 import httpx
 
@@ -43,6 +44,9 @@ class HttpxTransport:
                 timeout=_timeout_for(request),
             ),
             stream=True,
+            # The key is in this request's headers; a redirect answer goes to
+            # the caller as it is and is never followed.
+            follow_redirects=False,
         )
 
         async def release(_body_consumed: bool) -> None:
@@ -63,6 +67,26 @@ class HttpxTransport:
             )
         finally:
             await response.aclose()
+
+
+class RebasedTransport:
+    """Sends lm15's requests for one base URL to another, so a route keeps its
+    own dialect, credentials and region while a different path of the same host
+    serves the model. lm15 builds a cloud door's URL from its region and takes
+    no whole URL for it."""
+
+    def __init__(self, inner: object, old_base: str, new_base: str) -> None:
+        self._inner = inner
+        self._old = old_base
+        self._new = new_base
+
+    def stream(self, request: TransportRequest):
+        if not request.url.startswith(self._old + "/"):
+            raise RuntimeError(
+                f"Expected a request under {self._old}, got one for another URL."
+            )
+        rebased = replace(request, url=self._new + request.url[len(self._old) :])
+        return self._inner.stream(rebased)
 
 
 def _timeout_for(request: TransportRequest) -> httpx.Timeout:

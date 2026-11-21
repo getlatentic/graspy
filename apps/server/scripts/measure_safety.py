@@ -18,13 +18,12 @@ import time
 from pathlib import Path
 
 import dspy
-from measure_stage_writing import model
+from measure_stage_writing import add_profile_option, model, settings_from
 
 from app.agent import safety_judge
 from app.agent.safety_judge import judged
 from app.agent.safety_rules import unsafe_in
 from app.agent.said import Said
-from app.settings import Settings
 
 CASES = Path(__file__).with_name("safety_cases.json")
 CONCURRENT = 8
@@ -124,6 +123,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--env-file")
+    add_profile_option(parser)
     parser.add_argument("--rules-only", action="store_true")
     parser.add_argument("--effort", default="low")
     parser.add_argument("--judge-effort", help="reasoning effort of the judge itself")
@@ -133,7 +133,7 @@ def main() -> None:
     cases = json.loads(CASES.read_text())["cases"]
     if options.judge_effort:
         safety_judge.JUDGE_EFFORT = options.judge_effort
-    settings = Settings(_env_file=options.env_file) if options.env_file else Settings()
+    settings = settings_from(options)
     lm = (
         model(settings).copy(reasoning_effort=options.effort)
         if not options.rules_only

@@ -38,7 +38,9 @@ from app.domains.lesson.service import LessonService
 from app.education.catalogue import systems
 from app.education.route import descriptor
 from app.education.stage import stage_of
-from app.llm.client import build_lm
+from app.llm.client import build_lm, resolve_model
+from app.llm.hosts import host_of
+from app.llm.profiles import PROFILES
 from app.llm.transport import HttpxTransport
 from app.settings import Settings
 
@@ -175,6 +177,45 @@ def model(settings: Settings, transport: HttpxTransport | None = None) -> dspy.L
     return build_lm(settings, transport).copy(cache=False)
 
 
+def add_profile_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--profile",
+        choices=sorted(PROFILES),
+        help="named model from app.llm.profiles; unset uses LLM_PROFILE or the host defaults",
+    )
+
+
+def settings_from(options: argparse.Namespace) -> Settings:
+    """The settings for a run. Prints the host, endpoint and model that will
+    produce the results, and any environment value that overrode the profile."""
+    given = {"llm_profile": options.profile} if options.profile else {}
+    if options.env_file:
+        given["_env_file"] = options.env_file
+    settings = Settings(**given)
+    host = host_of(settings)
+    print(
+        f"model: profile={settings.llm_profile or 'default'} host={settings.llm_host} "
+        f"endpoint={host.endpoint(settings)} {resolve_model(settings)}"
+    )
+    if options.profile:
+        profile = PROFILES[options.profile]
+        overridden = [
+            name
+            for name, chosen, wanted in (
+                ("LLM_MODEL_ID", settings.llm_model_id, profile.model_id),
+                (
+                    "LLM_BASE_URL",
+                    settings.llm_base_url,
+                    profile.url_in(settings.aws_region),
+                ),
+            )
+            if (chosen or None) != wanted
+        ]
+        if overridden:
+            print(f"overridden by the environment: {', '.join(overridden)}")
+    return settings
+
+
 async def measure(settings: Settings, chosen: list[Learner], draws: int) -> list[dict]:
     lm = model(settings)
     gate = asyncio.Semaphore(CONCURRENT_DRAWS)
@@ -213,6 +254,7 @@ def _load(path: Path) -> list[dict]:
 def arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--env-file", type=Path, default=None)
+    add_profile_option(parser)
     parser.add_argument("--draws", type=int, default=3)
     parser.add_argument("--out", type=Path, default=Path("stage_writing.json"))
     parser.add_argument("--inspect", action="store_true")
@@ -236,7 +278,7 @@ async def main() -> None:
     if options.compare:
         report(options.compare, chosen, _load)
         return
-    settings = Settings(_env_file=options.env_file) if options.env_file else Settings()
+    settings = settings_from(options)
     if options.inspect:
         await inspect(settings)
         return
