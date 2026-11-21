@@ -4,7 +4,7 @@ import { isOnlyTheAnswer, needFor } from "../src/safety";
 import { ACTIONS, SETTING, mayBeAnAnswer, routeUtterance, type Action, type Route } from "../src/router";
 import { soundsLike } from "../src/sounds-like";
 import { routeWithObserver } from "../src/hedge-route";
-import { bedrockPath } from "../src/speller-host";
+import { chatCompletionsUrl } from "../src/bedrock-url";
 import { observe, observeAndDecide } from "../src/observer";
 import { decide, THRESHOLD } from "../src/policy";
 import { observeWithClef } from "./clef-observer";
@@ -47,7 +47,7 @@ const GENERATOR_MODEL = "openai.gpt-oss-120b";
  * to a line and read the lines.
  */
 async function generate(env: Env, system: string, user: string): Promise<string | null> {
-  const response = await fetch(`https://bedrock-mantle.${env.AWS_REGION || "us-east-1"}.api.aws${bedrockPath(GENERATOR_MODEL)}/chat/completions`, {
+  const response = await fetch(chatCompletionsUrl(env, GENERATOR_MODEL), {
     method: "POST",
     headers: { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" },
     body: JSON.stringify({ model: GENERATOR_MODEL, messages: [{ role: "system", content: system }, { role: "user", content: user }], temperature: 0.8, max_completion_tokens: 8000, reasoning_effort: "low" }),

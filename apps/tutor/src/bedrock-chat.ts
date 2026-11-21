@@ -1,5 +1,5 @@
 import { HEDGE_AFTER_MS, hedged } from "./hedge";
-import { bedrockPath } from "./speller-host";
+import { chatCompletionsUrl } from "./bedrock-url";
 
 export interface ToolCall {
   name: string;
@@ -23,7 +23,7 @@ type Message = { content?: string | null; tool_calls?: { function?: { name?: str
 
 async function complete(env: Env, request: Request, extra: object): Promise<Message | null> {
   if (!env.AWS_BEARER_TOKEN_BEDROCK) return null;
-  const url = `https://bedrock-mantle.${env.AWS_REGION || "us-east-1"}.api.aws${bedrockPath(request.model)}/chat/completions`;
+  const url = chatCompletionsUrl(env, request.model);
   const body = JSON.stringify({
     model: request.model,
     messages: [{ role: "system", content: request.system }, { role: "user", content: request.user }],

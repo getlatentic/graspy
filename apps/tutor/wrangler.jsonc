@@ -12,6 +12,8 @@
   "ai": { "binding": "AI" },
   // workers-ai or bedrock (with google.gemma-4-e2b, or SPELLER_MODEL). Bedrock also needs the secret
   // AWS_BEARER_TOKEN_BEDROCK, which is set as a secret on graspy-tutor and graspy-tutor-staging.
+  // The Bedrock host is LLM_BASE_URL (src/bedrock-url.ts), a plain var that is the only region setting:
+  // unset is https://bedrock-mantle.us-east-1.api.aws, and a var is added per environment to change it.
   "vars": { "SPELLER_HOST": "bedrock" },
   "durable_objects": {
     "bindings": [{ "name": "Learner", "class_name": "Learner" }]

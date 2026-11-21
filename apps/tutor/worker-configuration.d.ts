@@ -8,9 +8,10 @@ interface Env {
   SPELLER_HOST?: string;
   /** The model on that host; each host has a default. */
   SPELLER_MODEL?: string;
-  /** Bedrock's key and region, needed only when SPELLER_HOST is bedrock. Secret and variable. */
+  /** Bedrock's key, needed only when SPELLER_HOST is bedrock. A secret. */
   AWS_BEARER_TOKEN_BEDROCK?: string;
-  AWS_REGION?: string;
+  /** Bedrock's base URL, https://bedrock-mantle.<region>.api.aws with an optional path (src/bedrock-url.ts); unset is us-east-1. The only region setting. A variable. */
+  LLM_BASE_URL?: string;
   /** "clef" reads what a child meant with Cloudflare's Clef decision model (src/interpret.ts); unset keeps the small reader. */
   INTERPRETER?: string;
   /** "on" routes what a child said that is no number to an action (src/router.ts); unset leaves the usual marking. */
