@@ -20,47 +20,58 @@ import contextvars
 import dataclasses
 import json
 import time
+import traceback
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import measure_skill_loading as base
 from dspy.lm15 import RouterConfig
 from measure_stage_writing import model
+from wire_record import RecordingTransport, message_of
 
 from app.llm import hosts
-from app.llm.transport import HttpxTransport
 from app.settings import Settings
 
 # The model calls of the draw being run, one list per turn, in order.
 TURNS: contextvars.ContextVar[list[list[dict]]] = contextvars.ContextVar("turns")
 
 
-class CapturingTransport(HttpxTransport):
-    """Keeps each request and the whole reply of every model call."""
+class CapturingTransport(RecordingTransport):
+    """Keeps each request and the whole reply of every model call, and feeds
+    the same call to wire_record, which reads the tutor's calls off the bytes."""
 
     @asynccontextmanager
     async def stream(self, request):
-        call = {"request": json.loads(request.body)}
+        call = {"request": json.loads(request.body), "status": None}
         started = time.perf_counter()
-        async with super().stream(request) as response:
-            call["status"] = response.status
-            chunks: list[bytes] = []
+        chunks: list[bytes] = []
+        try:
+            async with super().stream(request) as response:
+                call["status"] = response.status
 
-            async def tee():
-                async for chunk in inner:
-                    chunks.append(chunk)
-                    yield chunk
+                async def tee():
+                    async for chunk in inner:
+                        chunks.append(chunk)
+                        yield chunk
 
-            inner = response._chunks
-            response._chunks = tee()
-            try:
+                inner = response._chunks
+                response._chunks = tee()
                 yield response
-            finally:
-                call["seconds"] = round(time.perf_counter() - started, 2)
+        except BaseException as error:
+            # A call that was cancelled or failed before its reply is kept too.
+            call["raised"] = type(error).__name__
+            raise
+        finally:
+            call["seconds"] = round(time.perf_counter() - started, 2)
+            try:
                 call["reply"] = parse_reply(b"".join(chunks))
-                turns = TURNS.get(None)
-                if turns:
-                    turns[-1].append(call)
+            except ValueError:
+                call["reply"] = {
+                    "unparsed": b"".join(chunks)[:400].decode("utf-8", "replace")
+                }
+            turns = TURNS.get(None)
+            if turns:
+                turns[-1].append(call)
 
 
 def parse_reply(raw: bytes) -> dict:
@@ -94,6 +105,7 @@ def parse_reply(raw: bytes) -> dict:
             )
             if part.get("tool_calls"):
                 reply["native_tool_calls"] = True
+    reply["tool_calls"] = message_of(raw)["tool_calls"]
     return reply
 
 
@@ -128,7 +140,17 @@ def route_to(base_url: str) -> None:
 def wired(draw):
     async def run(case, lm):
         TURNS.set([])
-        result = await draw(case, lm)
+        try:
+            result = await draw(case, lm)
+        except Exception as error:  # noqa: BLE001 - a failed turn is a result to count
+            # The calls made before it failed are what says why.
+            return {
+                "case": case[0],
+                "group": case[1],
+                "error": repr(error)[:300],
+                "trace": "".join(traceback.format_exception(error))[-2000:],
+                "calls": TURNS.get(),
+            }
         result["calls"] = TURNS.get()
         return result
 
