@@ -17,6 +17,7 @@ DEPLOYMENT_KEYS = (
     "SESSION_SECRET",
     "LLM_HOST",
     "LLM_MODEL_ID",
+    "LLM_BASE_URL",
     "LLM_NATIVE_TOOLS",
     "AWS_REGION",
     "AWS_BEARER_TOKEN_BEDROCK",
@@ -57,6 +58,8 @@ class Settings(BaseSettings):
     )
     # Unset means the host's own gpt-oss-120b id.
     llm_model_id: str | None = Field(default=None, alias="LLM_MODEL_ID")
+    # Unset means the host's own URL. Checked by llm/base_url.py.
+    llm_base_url: str | None = Field(default=None, alias="LLM_BASE_URL")
     # The tutor's tools travel as native tool calls, not as text in fields.
     llm_native_tools: bool = Field(default=False, alias="LLM_NATIVE_TOOLS")
     aws_region: str = Field(default="us-east-1", alias="AWS_REGION")
