@@ -42,8 +42,11 @@ class TurnSource(Protocol):
         `ToolFinished` and, last, the `TutorReply`."""
         ...
 
-    async def keep_stopped(self, job: dict, turn: str, answer: str) -> None:
-        """Keeps the exchange of a turn the learner stopped, with the words it had written."""
+    async def keep_stopped(
+        self, job: dict, turn: str, answer: str, skills: tuple[str, ...]
+    ) -> None:
+        """Keeps the exchange of a turn the learner stopped, with the words it had written and the
+        skills it had loaded."""
         ...
 
 
@@ -150,7 +153,7 @@ class TurnRunner:
             )
         answer = state.answer.strip()
         if answer:
-            await self._source.keep_stopped(state.job, state.turn, answer)
+            await self._source.keep_stopped(state.job, state.turn, answer, state.skills)
         await self._finish(chat, state, "stopped", reply=words_payload(answer))
 
     async def _oldest_unfinished(self, chat: str) -> TurnState | None:
@@ -202,7 +205,8 @@ class TurnRunner:
                     await flush()
                     await keep(kinds.TOOL_STARTED, tool=item.tool)
                 elif isinstance(item, ToolFinished):
-                    await keep(kinds.TOOL, tool=item.tool)
+                    skill = {"skill": item.skill} if item.skill else {}
+                    await keep(kinds.TOOL, tool=item.tool, **skill)
                 else:
                     reply = item
         except asyncio.CancelledError:

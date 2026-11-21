@@ -7,7 +7,7 @@ A turn is one message and its answer. Its events carry the turn's id in `data["t
     turn.resumed   {turn, run}            a run of the turn began (the first run too)
     text           {turn, run, text}      words of the answer, as they were written
     tool.started   {turn, run, tool}      a tool was called
-    tool           {turn, run, tool}      the tool answered
+    tool           {turn, run, tool, skill?}   the tool answered; `skill` is the skill it loaded
     round.aborted  {turn, run, reason}    what the run wrote of the answer is withdrawn
     assistant      {turn, text, card?}    the answer, kept
     turn.stop      {turn}                 the learner stopped the turn
@@ -66,6 +66,8 @@ class TurnState:
     # The words of the answer that nothing has withdrawn.
     answer: str
     stop_requested: bool
+    # The skills the run loaded that nothing has withdrawn, in the order loaded.
+    skills: tuple[str, ...]
 
 
 def _note_run(stalled: int, progressed: bool) -> int:
@@ -93,6 +95,7 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
                 "text": False,
                 "answer": "",
                 "stop": False,
+                "skills": [],
             }
             continue
         state = states.get(turn)
@@ -115,12 +118,20 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
             state["cause"] = str(event.data.get("reason", ""))
             state["text"] = False
             state["answer"] = ""
+            state["skills"] = []
         elif event.kind in PROGRESS:
             state["progressed"] = True
             state["progressed_at"] = event.at
             if event.kind == TEXT:
                 state["text"] = True
                 state["answer"] += str(event.data.get("text", ""))
+            skill = event.data.get("skill")
+            if (
+                event.kind == TOOL
+                and isinstance(skill, str)
+                and skill not in state["skills"]
+            ):
+                state["skills"].append(skill)
             if event.kind == TOOL_STARTED:
                 state["open"].append(str(event.data.get("tool", "")))
             elif (
@@ -143,6 +154,7 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
             text_open=kept["text"],
             answer=kept["answer"],
             stop_requested=kept["stop"],
+            skills=tuple(kept["skills"]),
         )
         for turn, kept in states.items()
     }

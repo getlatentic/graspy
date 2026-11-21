@@ -254,7 +254,7 @@ async def test_a_stopped_turn_keeps_the_skills_in_effect_and_the_topic():
         metadata={"learner": {"topic": TOPIC}},
     ).model_dump(mode="json")
 
-    await source.keep_stopped(job, "t", "Half an ans")
+    await source.keep_stopped(job, "t", "Half an ans", ())
 
     stopped = (await memory.load("c")).exchanges[-1]
     assert stopped["answer"] == "Half an ans"

@@ -44,7 +44,7 @@ class Script:
         self.called: list[tuple[dict, str]] = []
         self.stopped: list[tuple[str, str]] = []
 
-    async def keep_stopped(self, job: dict, turn: str, answer: str) -> None:
+    async def keep_stopped(self, job: dict, turn: str, answer: str, skills=()) -> None:
         self.stopped.append((turn, answer))
 
     async def stream(self, job: dict, turn: str):
