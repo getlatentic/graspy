@@ -70,7 +70,7 @@ jobs:
           npx vitest run
           python3 -m unittest discover -s scripts/tests -t .
       - name: Deploy scripts
-        run: node --test 'scripts/tests/*.test.mjs'
+        run: node --test 'scripts/tests/*.test.mjs' 'apps/alexa/*.test.mjs'
 
   android:
     runs-on: ubuntu-latest
