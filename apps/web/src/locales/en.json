@@ -62,7 +62,8 @@
       "change_subjects": "Updating your subjects...",
       "rebuild_plan": "Getting ready to rebuild your plan...",
       "give_practice": "Writing a question for you...",
-      "give_passage": "Writing a passage for you..."
+      "give_passage": "Writing a passage for you...",
+      "load_skill": "Choosing how to teach this..."
     },
     "openLesson": "Open lesson",
     "openSubject": "Open subject",

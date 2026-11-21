@@ -127,3 +127,12 @@ npm run tauri dev     # the app, with the Vite server on port 1420
 1. Write the function. The model reads its name and docstring. It returns a `dict`, or an `Outcome` when the app must act on it or show a card.
 2. Add it to `TOOLS` in `apps/server/src/app/agent/toolkit.py`.
 3. A new action or card is a model in `agent/reply.py`. Add an example to `scripts/export_reply_contract.py`, then run that script. The web app's and views' tests fail until they handle the new action or card.
+4. Give it a `chat.activity.<name>` line in every web locale and in `LearnCopy.kt`; the reply contract's test fails without it.
+
+## Add a tutor skill
+
+A skill is a teaching method the tutor loads with the `load_skill` tool when a message calls for it, so the guidance is not in every prompt.
+
+1. Make `apps/server/src/app/agent/skills/<name>/SKILL.md`: frontmatter with `name` (the folder's name) and a one-line `description`, then a Markdown body of at most 250 words.
+2. Nothing else. The tutor's catalogue is built from the folders, and `wrangler.jsonc` uploads every `SKILL.md` under `app/agent/skills/`. `tests/test_skills.py` fails on a folder without a SKILL.md, a name that differs from its folder, a missing description, or a body over the cap.
+3. The description decides when the tutor loads it. Measure a change with `scripts/measure_skill_loading.py`.

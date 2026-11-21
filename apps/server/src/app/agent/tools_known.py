@@ -12,5 +12,6 @@ READ_ONLY_TOOLS = frozenset(
         "rebuild_plan",
         "give_practice",
         "give_passage",
+        "load_skill",
     }
 )
