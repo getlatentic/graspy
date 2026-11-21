@@ -106,8 +106,24 @@ export async function takeTurn({ complete, mcp, tools, history, said, instructio
   return { reply: "Let's try that again. What would you like to practise?", history: messages, trace };
 }
 
-export function bedrock({ key, region = "us-east-1", model = "openai.gpt-oss-120b", fetchImpl = fetch }) {
-  const url = `https://bedrock-mantle.${region}.api.aws/v1/chat/completions`;
+const DEFAULT_BASE_URL = "https://bedrock-mantle.us-east-1.api.aws/v1";
+const BEDROCK_HOST = /^bedrock-mantle\.[a-z0-9-]+\.api\.aws$/;
+
+export function chatCompletionsUrl(baseUrl = DEFAULT_BASE_URL) {
+  let url;
+  try {
+    url = new URL(baseUrl);
+  } catch {
+    throw new Error(`LLM_BASE_URL is not a URL: ${baseUrl}`);
+  }
+  const ok = url.protocol === "https:" && BEDROCK_HOST.test(url.hostname) && !url.port && !url.username && !url.password && !url.search && !url.hash;
+  if (!ok) throw new Error("LLM_BASE_URL must be https://bedrock-mantle.<region>.api.aws, with an optional path and no port, credentials, query or fragment: the Bedrock key is sent there.");
+  const path = url.pathname.replace(/\/+$/, "") || "/v1";
+  return `${url.origin}${path}/chat/completions`;
+}
+
+export function bedrock({ key, baseUrl, model = "openai.gpt-oss-120b", fetchImpl = fetch }) {
+  const url = chatCompletionsUrl(baseUrl);
   return async (messages, tools) => {
     const response = await fetchImpl(url, {
       method: "POST",

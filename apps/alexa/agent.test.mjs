@@ -1,7 +1,7 @@
 // node --test apps/alexa
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { completeClean, instructionsFrom, takeTurn, usable } from "./agent.mjs";
+import { chatCompletionsUrl, completeClean, instructionsFrom, takeTurn, usable } from "./agent.mjs";
 import { McpClient } from "./mcp-client.mjs";
 
 const tools = [{ name: "check_answer", description: "Mark it.", inputSchema: { type: "object", properties: { answer: { type: "string" } } } }];
@@ -169,4 +169,19 @@ test("two tool calls in one message follow up once", async () => {
   const turn = await takeTurn({ complete, mcp, tools, instructions: "x", history: [], said: "x" });
   assert.equal(turn.trace.filter((step) => step.tool === "next_question").length, 1);
   assert.match(turn.reply, /^Yes, 7 times 10 is 70\. Here is another one\./);
+});
+
+test("the Bedrock URL defaults to us-east-1 and is only ever a mantle host", () => {
+  assert.equal(chatCompletionsUrl(), "https://bedrock-mantle.us-east-1.api.aws/v1/chat/completions");
+  assert.equal(chatCompletionsUrl("https://bedrock-mantle.eu-west-1.api.aws"), "https://bedrock-mantle.eu-west-1.api.aws/v1/chat/completions");
+  assert.equal(chatCompletionsUrl("https://bedrock-mantle.us-east-1.api.aws/openai/v1/"), "https://bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions");
+  for (const bad of [
+    "http://bedrock-mantle.us-east-1.api.aws/v1",
+    "https://bedrock-mantle.us-east-1.api.aws.evil.com/v1",
+    "https://bedrock-mantle.us-east-1.api.aws@evil.com/v1",
+    "https://user:pw@bedrock-mantle.us-east-1.api.aws/v1",
+    "https://bedrock-mantle.us-east-1.api.aws:8443/v1",
+    "https://evil.com/v1",
+    "not a url",
+  ]) assert.throws(() => chatCompletionsUrl(bad), /LLM_BASE_URL/, bad);
 });

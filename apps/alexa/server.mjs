@@ -15,7 +15,7 @@ if (!KEY) throw new Error("Set AWS_BEARER_TOKEN_BEDROCK: the model that plays Al
 
 const SKILL = new URL("../../plugins/graspy/skills/teach-maths-with-graspy/SKILL.md", import.meta.url);
 const instructions = instructionsFrom(await readFile(SKILL, "utf8"));
-const complete = bedrock({ key: KEY, region: process.env.AWS_REGION, model: process.env.MODEL });
+const complete = bedrock({ key: KEY, baseUrl: process.env.LLM_BASE_URL, model: process.env.MODEL });
 const SESSION_MS = 6 * 60 * 60 * 1000;
 let connection = null;
 

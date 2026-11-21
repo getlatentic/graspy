@@ -1,5 +1,7 @@
 # Alexa+ with graspy
 
+This is a development tool, not shipped to learners: a stand-in for Alexa+ and an end-to-end check of graspy's `/mcp/public` tools. It can be retired when Amazon opens add-on access to us (planning issue getlatentic/planning#720).
+
 A simulated Alexa+ that teaches a child maths by calling graspy's tutor as tools over MCP.
 
 Alexa+ is the assistant the child talks to: the voice, the conversation, everything that is not maths. graspy is a tool she calls when the child wants to practise. The split is deliberate:
@@ -26,7 +28,7 @@ cd apps/alexa
 AWS_BEARER_TOKEN_BEDROCK=... node server.mjs   # http://127.0.0.1:8790
 ```
 
-Open the page and talk or type. The microphone and the voice need Chrome or Edge. `GRASPY_URL` points the simulator at another graspy server, `MODEL` and `AWS_REGION` at another model.
+Open the page and talk or type. The microphone and the voice need Chrome or Edge. `GRASPY_URL` points the simulator at another graspy server, `MODEL` at another model, and `LLM_BASE_URL` at another Bedrock base URL (default `https://bedrock-mantle.us-east-1.api.aws/v1`; an origin alone gets `/v1`). Like the server, it sends the key only to `bedrock-mantle.<region>.api.aws` over https on port 443 and stops at startup on anything else.
 
 ```bash
 node --test agent.test.mjs
