@@ -24,6 +24,7 @@ from .reply import Action
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
 from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
+from .skills.registry import catalogue
 from .streaming import AnswerDelta, AnswerRestart, Silent, ToolActivity, ToolFinished
 from .summary import recalled
 from .toolkit import Turn, TurnOutputs, tools_for
@@ -328,11 +329,15 @@ def said_by_learner(
 
 
 def signature_for(context: LearnerContext) -> type[dspy.Signature]:
-    """The tutor for the learner's own stage of schooling."""
+    """The tutor for the learner's own stage of schooling, told of its skills.
+    The catalogue is read here, not at import: Worker startup reads no files."""
     learner = stage_of(context.grade_level)
-    if learner is None:
-        return TutorTurn
-    return TutorTurn.with_instructions(f"{persona(learner)}\n\n{TUTOR_RULES}")
+    instructions = (
+        TutorTurn.instructions
+        if learner is None
+        else f"{persona(learner)}\n\n{TUTOR_RULES}"
+    )
+    return TutorTurn.with_instructions(f"{instructions}\n\n{catalogue()}")
 
 
 def _streamed_agent(turn: Turn, outputs: TurnOutputs, again: bool):

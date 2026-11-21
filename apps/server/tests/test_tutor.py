@@ -13,6 +13,7 @@ from app.agent.context import (
     LearnerContext,
 )
 from app.agent.memory import Exchange, InMemoryConversationStore
+from app.agent.skills.registry import catalogue
 from app.agent.streaming import ToolActivity
 from app.agent.transcript import render
 from app.agent.tutor import (
@@ -523,9 +524,8 @@ async def test_a_class_the_catalogue_cannot_place_meets_the_tutor_as_before(
 ):
     lm = await turn_for(grade_level)
 
-    assert signature_for(MATHS.model_copy(update={"grade_level": grade_level})) is (
-        TutorTurn
-    )
+    signature = signature_for(MATHS.model_copy(update={"grade_level": grade_level}))
+    assert signature.instructions == f"{WITHOUT_STAGE}\n\n{catalogue()}"
     assert " ".join(WITHOUT_STAGE.split()) in instructions(lm)
     assert "This learner is in" not in instructions(lm)
     assert "; stage:" not in inputs(lm, 0)["learner"]

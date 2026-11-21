@@ -148,6 +148,7 @@ REFUSALS = [
     ("change_subjects", {"remove": ["Mathematics"]}, PLAN, True),
     ("change_subjects", {"add": ["Physics"]}, MANY, True),
     ("rebuild_plan", {}, NOTHING_SENT, True),
+    ("load_skill", {"name": "astrology"}, PLAN, True),
     ("give_practice", {"instruction": "x", "questions": []}, PLAN, True),
     (
         "give_practice",

@@ -23,12 +23,12 @@
   // served straight from the assets, before the Worker runs.
   "assets": { "directory": "./assets", "binding": "ASSETS" },
 
-  // The school-system catalogue is read from files beside its module; JSON
-  // is not uploaded by default.
+  // The school-system catalogue and the tutor's skills are read from files
+  // beside their modules; neither JSON nor Markdown is uploaded by default.
   "rules": [
     {
       "type": "Text",
-      "globs": ["app/education/data/**/*.json"],
+      "globs": ["app/education/data/**/*.json", "app/agent/skills/**/SKILL.md"],
       "fallthrough": true
     }
   ],
