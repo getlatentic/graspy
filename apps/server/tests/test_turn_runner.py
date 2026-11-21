@@ -5,7 +5,13 @@ import asyncio
 
 import pytest
 
-from app.agent.streaming import AnswerDelta, AnswerRestart, ToolActivity, ToolFinished
+from app.agent.streaming import (
+    AnswerDelta,
+    AnswerRestart,
+    SkillLoaded,
+    ToolActivity,
+    ToolFinished,
+)
 from app.agent.tutor import TutorReply
 from app.chatlog import kinds
 from app.chatlog.log import ChatLog
@@ -43,9 +49,11 @@ class Script:
         self.runs = list(runs)
         self.called: list[tuple[dict, str]] = []
         self.stopped: list[tuple[str, str]] = []
+        self.stopped_skills: list[tuple[str, ...]] = []
 
     async def keep_stopped(self, job: dict, turn: str, answer: str, skills=()) -> None:
         self.stopped.append((turn, answer))
+        self.stopped_skills.append(tuple(skills))
 
     async def stream(self, job: dict, turn: str):
         self.called.append((job, turn))
@@ -536,3 +544,42 @@ async def test_a_stop_that_comes_before_the_run_is_registered_still_ends_the_run
     finished = (await seen(log))[-1][1]
     assert finished["status"] == "stopped"
     assert script.called == []
+
+
+async def test_a_skill_the_run_loaded_is_kept_and_a_tool_event_has_no_skill_key(
+    log, clock, alarm
+):
+    await begin(log, clock)
+    script = Script(
+        [
+            ToolActivity("calculate"),
+            ToolFinished("calculate"),
+            SkillLoaded("worked-example"),
+            REPLY,
+        ]
+    )
+
+    await run_to_the_end(runner_for(log, clock, alarm, script), clock)
+
+    events = await seen(log)
+    assert (
+        "skill.loaded",
+        {"turn": "t1", "run": 1, "skill": "worked-example"},
+    ) in events
+    assert ("tool", {"turn": "t1", "run": 1, "tool": "calculate"}) in events
+
+
+async def test_a_turn_stopped_after_loading_a_skill_hands_it_to_the_source(
+    log, clock, alarm
+):
+    await begin(log, clock)
+    script = Script([SkillLoaded("worked-example"), AnswerDelta("Forty"), Script.HANG])
+    runner = runner_for(log, clock, alarm, script)
+    running = asyncio.create_task(runner.advance("c"))
+    await until(log, kinds.SKILL_LOADED)
+
+    await runner.stop("c", "t1")
+    await running
+    await runner.advance("c")
+
+    assert script.stopped_skills == [("worked-example",)]

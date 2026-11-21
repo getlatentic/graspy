@@ -81,10 +81,6 @@ class TurnOutputs:
     skills: list[str] = field(default_factory=list)
 
 
-def skill_of(result: dict | Outcome | None) -> str | None:
-    return result.skill if isinstance(result, Outcome) else None
-
-
 def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., dict]:
     """The tool as the model sees it: announced as it starts, and returning
     only its words, with what it did for the app kept in ``outputs``."""
@@ -105,24 +101,20 @@ def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., 
         @functools.wraps(tool)
         async def run_async(*args, **kwargs) -> dict:
             announce(tool.__name__)
-            result = None
             try:
-                result = await tool(*args, **kwargs)
-                return kept(result)
+                return kept(await tool(*args, **kwargs))
             finally:
-                announce_done(tool.__name__, skill_of(result))
+                announce_done(tool.__name__)
 
         return run_async
 
     @functools.wraps(tool)
     def run(*args, **kwargs) -> dict:
         announce(tool.__name__)
-        result = None
         try:
-            result = tool(*args, **kwargs)
-            return kept(result)
+            return kept(tool(*args, **kwargs))
         finally:
-            announce_done(tool.__name__, skill_of(result))
+            announce_done(tool.__name__)
 
     return run
 

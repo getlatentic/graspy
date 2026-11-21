@@ -26,7 +26,14 @@ from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
 from .skills.active import in_effect, rendered, stamped
 from .skills.registry import catalogue
-from .streaming import AnswerDelta, AnswerRestart, Silent, ToolActivity, ToolFinished
+from .streaming import (
+    AnswerDelta,
+    AnswerRestart,
+    Silent,
+    SkillLoaded,
+    ToolActivity,
+    ToolFinished,
+)
 from .summary import recalled
 from .toolkit import Turn, TurnOutputs, tools_for
 from .transcript import render
@@ -171,7 +178,12 @@ class Tutor:
         record: str = NOTHING_YET,
         turn: str | None = None,
     ) -> AsyncIterator[
-        AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | TutorReply
+        AnswerDelta
+        | AnswerRestart
+        | ToolActivity
+        | ToolFinished
+        | SkillLoaded
+        | TutorReply
     ]:
         """Tools as they start, the answer as it is written, and last the
         finished reply. ``unanswered`` are the learner's messages whose turns
@@ -245,7 +257,7 @@ async def _answered(
     said: Said,
     active: tuple[str, ...],
 ) -> AsyncIterator[
-    AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | _Answered
+    AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | SkillLoaded | _Answered
 ]:
     """An answer that runs away is withdrawn and written again, once, with
     some sampling."""
@@ -268,7 +280,7 @@ async def _attempt(
     said: Said,
     active: tuple[str, ...],
     again: bool,
-) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | _Answered]:
+) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | SkillLoaded | _Answered]:
     """Closing it stops the model."""
     outputs = TurnOutputs()
     agent = _streamed_agent(Turn(context, inputs["message"], active), outputs, again)
@@ -277,8 +289,12 @@ async def _attempt(
     screen = SafetyScreen(said)
     finished = False
     items = agent(**inputs)
+    announced = 0
     try:
         async for item in items:
+            for name in outputs.skills[announced:]:
+                yield SkillLoaded(name)
+            announced = len(outputs.skills)
             if isinstance(item, StreamResponse):
                 watch.add(item.chunk)
                 screen.submit(gate.feed(item.chunk))

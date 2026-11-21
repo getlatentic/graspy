@@ -13,7 +13,13 @@ import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any, Protocol
 
-from ..agent.streaming import AnswerDelta, AnswerRestart, ToolActivity, ToolFinished
+from ..agent.streaming import (
+    AnswerDelta,
+    AnswerRestart,
+    SkillLoaded,
+    ToolActivity,
+    ToolFinished,
+)
 from ..agent.tutor import TutorReply
 from ..chatlog import kinds
 from ..chatlog.log import PAGE, ChatLog
@@ -205,8 +211,9 @@ class TurnRunner:
                     await flush()
                     await keep(kinds.TOOL_STARTED, tool=item.tool)
                 elif isinstance(item, ToolFinished):
-                    skill = {"skill": item.skill} if item.skill else {}
-                    await keep(kinds.TOOL, tool=item.tool, **skill)
+                    await keep(kinds.TOOL, tool=item.tool)
+                elif isinstance(item, SkillLoaded):
+                    await keep(kinds.SKILL_LOADED, skill=item.skill)
                 else:
                     reply = item
         except asyncio.CancelledError:

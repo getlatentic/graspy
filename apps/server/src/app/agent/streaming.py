@@ -27,11 +27,17 @@ class ToolActivity:
 
 @dataclass(frozen=True)
 class ToolFinished:
-    """A tool the turn called has answered, or failed. `skill` is the skill the
-    call loaded, which the turn's record keeps if the turn is stopped."""
+    """A tool the turn called has answered, or failed."""
 
     tool: str
-    skill: str | None = None
+
+
+@dataclass(frozen=True)
+class SkillLoaded:
+    """The turn loaded a skill. It travels with the turn's own items, which a
+    full status buffer cannot drop, so a stopped turn still knows the skill."""
+
+    skill: str
 
 
 class Silent(StatusMessageProvider):
@@ -59,6 +65,6 @@ def announce(tool: str) -> None:
     _send(ToolActivity(tool))
 
 
-def announce_done(tool: str, skill: str | None = None) -> None:
+def announce_done(tool: str) -> None:
     """Says the tool has answered, in the same way."""
-    _send(ToolFinished(tool, skill))
+    _send(ToolFinished(tool))

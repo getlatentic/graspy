@@ -7,7 +7,8 @@ A turn is one message and its answer. Its events carry the turn's id in `data["t
     turn.resumed   {turn, run}            a run of the turn began (the first run too)
     text           {turn, run, text}      words of the answer, as they were written
     tool.started   {turn, run, tool}      a tool was called
-    tool           {turn, run, tool, skill?}   the tool answered; `skill` is the skill it loaded
+    tool           {turn, run, tool}      the tool answered
+    skill.loaded   {turn, run, skill}     the run loaded a skill
     round.aborted  {turn, run, reason}    what the run wrote of the answer is withdrawn
     assistant      {turn, text, card?}    the answer, kept
     turn.stop      {turn}                 the learner stopped the turn
@@ -24,6 +25,7 @@ from dataclasses import dataclass
 from ..chatlog.kinds import (
     ASSISTANT,
     ROUND_ABORTED,
+    SKILL_LOADED,
     TEXT,
     TOOL,
     TOOL_CANCELLED,
@@ -44,6 +46,7 @@ FOLDED = (
     TURN_STOP,
     ROUND_ABORTED,
     TOOL_CANCELLED,
+    SKILL_LOADED,
     *PROGRESS,
 )
 
@@ -113,7 +116,17 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
         elif event.kind == TURN_RESUMED:
             if state["runs"]:
                 state["stalled"] = _note_run(state["stalled"], state["progressed"])
-            state.update(runs=state["runs"] + 1, progressed=False, open=[], text=False)
+            state.update(
+                runs=state["runs"] + 1,
+                progressed=False,
+                open=[],
+                text=False,
+                skills=[],
+            )
+        elif event.kind == SKILL_LOADED:
+            skill = event.data.get("skill")
+            if isinstance(skill, str) and skill not in state["skills"]:
+                state["skills"].append(skill)
         elif event.kind == ROUND_ABORTED:
             state["cause"] = str(event.data.get("reason", ""))
             state["text"] = False
@@ -125,13 +138,6 @@ def folded(events: Iterable[Event]) -> dict[str, TurnState]:
             if event.kind == TEXT:
                 state["text"] = True
                 state["answer"] += str(event.data.get("text", ""))
-            skill = event.data.get("skill")
-            if (
-                event.kind == TOOL
-                and isinstance(skill, str)
-                and skill not in state["skills"]
-            ):
-                state["skills"].append(skill)
             if event.kind == TOOL_STARTED:
                 state["open"].append(str(event.data.get("tool", "")))
             elif (

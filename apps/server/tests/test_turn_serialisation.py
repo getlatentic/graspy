@@ -8,7 +8,7 @@ from test_a2a import KEEPING
 
 from app.agent.memory import Exchange, InMemoryConversationStore
 from app.agent.skills.active import stamped
-from app.agent.streaming import AnswerDelta, ToolActivity, ToolFinished
+from app.agent.streaming import AnswerDelta, SkillLoaded, ToolActivity, ToolFinished
 from app.agent.tutor import TutorReply
 from app.chatlog.log import ChatLog
 from app.local_d1 import LocalD1
@@ -40,7 +40,8 @@ class CarryingTutor:
             loaded = [self.loads[message]] if message in self.loads else []
             for name in loaded:
                 yield ToolActivity("load_skill")
-                yield ToolFinished("load_skill", name)
+                yield ToolFinished("load_skill")
+                yield SkillLoaded(name)
             exchange = stamped(
                 Exchange(message=message, answer="ok"), history, TOPIC, loaded
             )
@@ -81,12 +82,15 @@ async def test_overlapping_turns_of_one_chat_run_one_at_a_time_and_carry_in_orde
 async def test_a_stopped_turn_keeps_the_skill_it_loaded():
     memory = InMemoryConversationStore()
     release = asyncio.Event()
+    waiting = asyncio.Event()
 
     class Slow:
         async def stream(self, *args, **kwargs):
             yield ToolActivity("load_skill")
-            yield ToolFinished("load_skill", MISTAKE)
+            yield ToolFinished("load_skill")
+            yield SkillLoaded(MISTAKE)
             yield AnswerDelta("Half an ans")
+            waiting.set()
             await release.wait()
             yield TutorReply(answer="never")
 
@@ -97,8 +101,7 @@ async def test_a_stopped_turn_keeps_the_skill_it_loaded():
         clock=lambda: next(clock),
     )
     await host.start(job("t", "3/5?"))
-    for _ in range(50):
-        await asyncio.sleep(0)
+    await asyncio.wait_for(waiting.wait(), timeout=5)
     await host.stop("c", "t")
     await host.idle()
 
