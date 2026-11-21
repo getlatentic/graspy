@@ -171,7 +171,7 @@ async def test_the_skills_a_turn_loaded_come_back_with_its_exchange(store):
     kept = Exchange(
         message="q",
         answer="a",
-        skills=["explaining-a-mistake", "worked-example"],
+        skills={"explaining-a-mistake": 0, "worked-example": 2},
         topic="Fractions",
     )
     await store.append("c", kept)
@@ -183,8 +183,10 @@ async def test_the_skills_a_turn_loaded_come_back_with_its_exchange(store):
 async def test_a_fold_keeps_the_skills_of_the_exchanges_it_leaves(store):
     for n in range(3):
         await store.append("c", exchange(n))
-    await store.append("c", Exchange(message="q", answer="a", skills=["x"], topic=""))
+    await store.append(
+        "c", Exchange(message="q", answer="a", skills={"x": 3}, topic="")
+    )
 
     await store.fold("c", "summary", 2)
 
-    assert (await store.load("c")).exchanges[-1]["skills"] == ["x"]
+    assert (await store.load("c")).exchanges[-1]["skills"] == {"x": 3}

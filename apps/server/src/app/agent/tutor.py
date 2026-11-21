@@ -24,7 +24,7 @@ from .reply import Action
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
 from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
-from .skills.active import active_names, rendered, still_shipped
+from .skills.active import in_effect, rendered, stamped
 from .skills.registry import catalogue
 from .streaming import AnswerDelta, AnswerRestart, Silent, ToolActivity, ToolFinished
 from .summary import recalled
@@ -179,17 +179,19 @@ class Tutor:
         once per turn is not made to keep it twice by a turn run again."""
         context = context or LearnerContext()
         earlier = await recalled(self._memory, conversation_id)
-        missed = [Exchange(message=text, answer=NO_ANSWER) for text in unanswered or []]
-        in_effect = still_shipped(
-            active_names([*earlier.exchanges, *missed], context.topic)
-        )
+        history = list(earlier.exchanges)
+        for text in unanswered or []:
+            missed_one = Exchange(message=text, answer=NO_ANSWER)
+            history.append(stamped(missed_one, history, context.topic))
+        missed = history[len(earlier.exchanges) :]
+        active = tuple(in_effect(history, context.topic))
         inputs = {
             "learner": context.describe_learner(),
             "studying": context.describe_studying(),
             "record": record,
             "conversation": render([*earlier.exchanges, *missed], earlier.summary),
             "app": describe_calls(calls) if calls else NO_APP_CALLS,
-            "skills_in_effect": rendered(in_effect),
+            "skills_in_effect": rendered(active),
             "message": message,
         }
         # A tap marked in this turn; or the last one, when the learner asks about it next.
@@ -201,7 +203,7 @@ class Tutor:
             earlier.exchanges[-1].get("app", "") if earlier.exchanges else ""
         )
         said = said_by_learner(context, inputs, earlier.exchanges, missed)
-        async for item in _answered(context, inputs, verdicts, said, in_effect):
+        async for item in _answered(context, inputs, verdicts, said, active):
             if isinstance(item, _Answered):
                 answered = item
             else:
@@ -211,8 +213,11 @@ class Tutor:
         cards = answered.outputs.cards[-1:]
         exchanges = [
             *missed,
-            remembered(
-                message, answer, calls, cards, answered.outputs.skills, context.topic
+            stamped(
+                remembered(message, answer, calls, cards),
+                history,
+                context.topic,
+                answered.outputs.skills,
             ),
         ]
         for n, exchange in enumerate(exchanges):
@@ -238,7 +243,7 @@ async def _answered(
     inputs: dict,
     verdicts: tuple[bool, ...],
     said: Said,
-    in_effect: tuple[str, ...],
+    active: tuple[str, ...],
 ) -> AsyncIterator[
     AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | _Answered
 ]:
@@ -246,9 +251,7 @@ async def _answered(
     some sampling."""
     for again in (False, True):
         try:
-            async for item in _attempt(
-                context, inputs, verdicts, said, in_effect, again
-            ):
+            async for item in _attempt(context, inputs, verdicts, said, active, again):
                 yield item
             return
         except (Runaway, AdapterParseError) as error:
@@ -263,12 +266,12 @@ async def _attempt(
     inputs: dict,
     verdicts: tuple[bool, ...],
     said: Said,
-    in_effect: tuple[str, ...],
+    active: tuple[str, ...],
     again: bool,
 ) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | _Answered]:
     """Closing it stops the model."""
     outputs = TurnOutputs()
-    agent = _streamed_agent(Turn(context, inputs["message"], in_effect), outputs, again)
+    agent = _streamed_agent(Turn(context, inputs["message"], active), outputs, again)
     watch = RunawayWatch()
     gate = AnswerGate(outputs, verdicts)
     screen = SafetyScreen(said)
@@ -406,15 +409,10 @@ def remembered(
     answer: str,
     calls: list[AppCall] | None,
     cards: list[Card],
-    skills: list[str] | None = None,
-    topic: str | None = None,
 ) -> Exchange:
     exchange = Exchange(message=message, answer=answer)
     if calls:
         exchange["app"] = describe_calls(calls)
     if cards:
         exchange["card"] = cards[-1].describe()
-    if skills:
-        exchange["skills"] = list(skills)
-        exchange["topic"] = topic or ""
     return exchange

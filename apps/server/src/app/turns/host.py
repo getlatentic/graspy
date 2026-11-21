@@ -7,7 +7,9 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
+from ..agent.context import LearnerContext
 from ..agent.memory import Exchange
+from ..agent.skills.active import stamped
 from ..agent.tutor import Tutor
 from ..caller import Keeping
 from ..chatlog import kinds
@@ -42,9 +44,12 @@ class TutorTurnSource:
 
     async def keep_stopped(self, job: dict, turn: str, answer: str) -> None:
         kept = TurnJob.model_validate(job)
-        await self._keeping.conversations.append(
-            kept.chat, Exchange(message=kept.message, answer=answer), turn=turn
-        )
+        topic = LearnerContext.from_metadata(kept.metadata).topic
+        history = (await self._keeping.conversations.load(kept.chat)).exchanges
+        # The skills loaded in a turn that was stopped are not known here; those
+        # already in effect carry on, so the stop does not end them.
+        stopped = stamped(Exchange(message=kept.message, answer=answer), history, topic)
+        await self._keeping.conversations.append(kept.chat, stopped, turn=turn)
 
 
 async def begin_turn(log: ChatLog, job: TurnJob, at: int) -> int:

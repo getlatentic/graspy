@@ -2,6 +2,7 @@
 put into the tutor's input by the server, with no model call of its own."""
 
 import logging
+from types import SimpleNamespace
 
 from stand_in import inputs, stand_in
 from test_tutor import MATHS, finish
@@ -12,15 +13,17 @@ from app.agent.skills.active import (
     MAX_ACTIVE,
     MAX_AGE_TURNS,
     NONE_IN_EFFECT,
-    active_names,
+    in_effect,
     rendered,
-    still_shipped,
+    stamped,
 )
 from app.agent.skills.load import load_skill_for_turn
 from app.agent.skills.registry import skills
 from app.agent.skills.skill import MAX_BODY_WORDS
 from app.agent.summary import recalled
 from app.agent.tutor import Tutor, TutorReply
+from app.turns.host import TutorTurnSource
+from app.turns.job import TurnJob
 
 MISTAKE = "explaining-a-mistake"
 EXAMPLE = "worked-example"
@@ -28,58 +31,102 @@ CHECK = "checking-understanding"
 TOPIC = "Number Systems"
 
 
-def turn(*names: str, topic: str = TOPIC) -> Exchange:
+def turn(**ages: int) -> Exchange:
+    """An exchange that ended with these skills in effect, at these ages."""
     kept = Exchange(message="m", answer="a")
-    if names:
-        kept["skills"] = list(names)
-        kept["topic"] = topic
+    if ages:
+        kept["skills"] = {name.replace("_", "-"): age for name, age in ages.items()}
+        kept["topic"] = TOPIC
     return kept
 
 
-def test_a_skill_loaded_last_turn_is_in_effect():
-    assert active_names([turn(MISTAKE)], TOPIC) == (MISTAKE,)
+def names(exchanges, topic=TOPIC) -> list[str]:
+    return list(in_effect(exchanges, topic))
+
+
+def test_a_skill_loaded_last_turn_is_in_effect_one_turn_old():
+    assert in_effect([turn(explaining_a_mistake=0)], TOPIC) == {MISTAKE: 1}
 
 
 def test_nothing_is_in_effect_when_nothing_was_loaded():
-    assert active_names([turn(), turn()], TOPIC) == ()
+    assert in_effect([turn(), turn()], TOPIC) == {}
+    assert in_effect([], TOPIC) == {}
 
 
-def test_at_most_two_are_in_effect_and_the_most_recent_win():
-    exchanges = [turn(CHECK), turn(EXAMPLE), turn(MISTAKE)]
+def test_at_most_two_are_in_effect_and_the_most_recently_loaded_win():
+    last = turn(checking_understanding=0, worked_example=1, explaining_a_mistake=2)
 
     assert MAX_ACTIVE == 2
-    assert active_names(exchanges, TOPIC) == (MISTAKE, EXAMPLE)
+    assert names([last]) == [CHECK, EXAMPLE]
 
 
-def test_two_skills_of_one_turn_are_both_in_effect_the_later_first():
-    assert active_names([turn(EXAMPLE, MISTAKE)], TOPIC) == (MISTAKE, EXAMPLE)
+def test_a_skill_removed_in_a_deploy_takes_no_slot(caplog):
+    last = turn(explaining_a_mistake=0, removed=1, worked_example=2)
 
+    with caplog.at_level(logging.INFO):
+        found = names([last])
 
-def test_a_skill_expires_after_a_few_turns_without_a_reload():
-    young = [turn(MISTAKE)] + [turn() for _ in range(MAX_AGE_TURNS - 1)]
-    old = [turn(MISTAKE)] + [turn() for _ in range(MAX_AGE_TURNS)]
-
-    assert active_names(young, TOPIC) == (MISTAKE,)
-    assert active_names(old, TOPIC) == ()
-
-
-def test_a_reload_keeps_a_skill_in_effect():
-    exchanges = [turn(MISTAKE), turn(), turn(), turn(MISTAKE), turn()]
-
-    assert active_names(exchanges, TOPIC) == (MISTAKE,)
+    assert found == [MISTAKE, EXAMPLE]
+    assert "removed" in caplog.text
 
 
 def test_a_skill_loaded_on_another_topic_is_not_in_effect():
-    assert active_names([turn(MISTAKE, topic="Fractions")], TOPIC) == ()
-    assert active_names([turn(MISTAKE, topic="")], None) == (MISTAKE,)
+    last = turn(explaining_a_mistake=0)
+
+    assert names([last], "Fractions") == []
+    assert names([last], "  number SYSTEMS ") == [MISTAKE]
 
 
-def test_a_skill_removed_in_a_deploy_is_dropped_with_a_log_line(caplog):
-    with caplog.at_level(logging.INFO):
-        kept = still_shipped(["removed-skill", MISTAKE])
+def test_a_conversation_without_a_topic_carries_its_skills_on_a_missing_topic():
+    last = Exchange(message="m", answer="a", skills={MISTAKE: 0}, topic="")
 
-    assert kept == (MISTAKE,)
-    assert "removed-skill" in caplog.text
+    assert names([last], None) == [MISTAKE]
+
+
+def lived(turns: int) -> list[Exchange]:
+    """A conversation that loaded the skill once, then went `turns` more turns
+    without loading it, each turn recording the skills carried."""
+    history = [stamped(Exchange(message="m", answer="a"), [], TOPIC, [MISTAKE])]
+    for _ in range(turns):
+        history.append(stamped(Exchange(message="m", answer="a"), history, TOPIC))
+    return history
+
+
+def test_a_skill_carries_on_without_being_loaded_again_to_the_fourth_turn():
+    assert names(lived(2)) == [MISTAKE]
+
+
+def test_a_skill_loaded_once_is_gone_by_the_seventh_turn():
+    assert MAX_AGE_TURNS == 6
+    assert names(lived(4)) == [MISTAKE]  # the sixth turn
+    assert names(lived(5)) == []  # the seventh
+
+
+def test_a_reload_starts_the_age_again():
+    history = lived(4)
+    history.append(
+        stamped(Exchange(message="m", answer="a"), history, TOPIC, [MISTAKE])
+    )
+    for _ in range(4):
+        history.append(stamped(Exchange(message="m", answer="a"), history, TOPIC))
+
+    assert names(history) == [MISTAKE]
+
+
+def test_a_change_of_topic_ends_the_carrying():
+    history = lived(1)
+    history.append(stamped(Exchange(message="m", answer="a"), history, "Fractions"))
+
+    assert "skills" not in history[-1]
+    assert names(history, TOPIC) == []
+
+
+def test_loading_on_a_new_topic_starts_there():
+    history = lived(1)
+    moved = stamped(Exchange(message="m", answer="a"), history, "Fractions", [EXAMPLE])
+
+    assert moved["skills"] == {EXAMPLE: 0}
+    assert moved["topic"] == "Fractions"
 
 
 def test_the_text_in_effect_is_each_skills_current_body_within_the_bounds():
@@ -105,7 +152,9 @@ def test_loading_another_skill_gives_its_text():
 
 
 def kept_in_effect(*names: str) -> Exchange:
-    return Exchange(message="q", answer="a", skills=list(names), topic=TOPIC)
+    return Exchange(
+        message="q", answer="a", skills=dict.fromkeys(names, 0), topic=TOPIC
+    )
 
 
 async def test_turn_two_has_the_text_in_its_input_and_asks_no_model_for_it():
@@ -152,7 +201,7 @@ async def test_a_skill_loaded_in_a_turn_is_kept_by_name_with_the_topic():
             pass
 
     kept = (await memory.load("c")).exchanges[-1]
-    assert kept["skills"] == [MISTAKE]
+    assert kept["skills"] == {MISTAKE: 0}
     assert kept["topic"] == TOPIC
     assert skills()[MISTAKE].body not in kept["answer"]
 
@@ -166,7 +215,51 @@ async def test_a_skill_in_effect_that_the_tutor_loads_again_stays_in_effect():
         async for _ in Tutor(memory).stream("c", "3/5?", MATHS):
             pass
 
-    assert (await memory.load("c")).exchanges[-1]["skills"] == [MISTAKE]
+    assert (await memory.load("c")).exchanges[-1]["skills"] == {MISTAKE: 0}
+
+
+async def test_a_skill_in_effect_the_tutor_does_not_load_again_is_carried_on():
+    memory = InMemoryConversationStore()
+    await memory.append("c", kept_in_effect(MISTAKE))
+    _, context = stand_in(finish("Try the next step."))
+
+    with context:
+        async for _ in Tutor(memory).stream("c", "3/5?", MATHS):
+            pass
+
+    assert (await memory.load("c")).exchanges[-1]["skills"] == {MISTAKE: 1}
+
+
+async def test_a_message_that_got_no_answer_keeps_the_skills_in_effect_aged():
+    memory = InMemoryConversationStore()
+    await memory.append("c", kept_in_effect(MISTAKE))
+    _, context = stand_in(finish("Try the next step."))
+
+    with context:
+        async for _ in Tutor(memory).stream("c", "3/5?", MATHS, unanswered=["lost"]):
+            pass
+
+    skills_kept = [e["skills"] for e in (await memory.load("c")).exchanges]
+    assert skills_kept == [{MISTAKE: 0}, {MISTAKE: 1}, {MISTAKE: 2}]
+
+
+async def test_a_stopped_turn_keeps_the_skills_in_effect_and_the_topic():
+    memory = InMemoryConversationStore()
+    await memory.append("c", kept_in_effect(MISTAKE))
+    source = TutorTurnSource(None, SimpleNamespace(conversations=memory))
+    job = TurnJob(
+        chat="c",
+        turn="t",
+        message="3/5?",
+        metadata={"learner": {"topic": TOPIC}},
+    ).model_dump(mode="json")
+
+    await source.keep_stopped(job, "t", "Half an ans")
+
+    stopped = (await memory.load("c")).exchanges[-1]
+    assert stopped["answer"] == "Half an ans"
+    assert stopped["skills"] == {MISTAKE: 1}
+    assert stopped["topic"] == TOPIC
 
 
 async def test_the_summary_step_neither_sees_nor_drops_the_skills():
@@ -180,4 +273,4 @@ async def test_the_summary_step_neither_sees_nor_drops_the_skills():
 
     summarised = " ".join(str(m["content"]) for m in lm.history[0]["messages"])
     assert skills()[MISTAKE].body not in summarised
-    assert conversation.exchanges[-1]["skills"] == [MISTAKE]
+    assert conversation.exchanges[-1]["skills"] == {MISTAKE: 0}
