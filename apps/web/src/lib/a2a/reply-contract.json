@@ -28,6 +28,9 @@
     {
       "name": "give_passage",
       "ui": "ui://graspy/passage"
+    },
+    {
+      "name": "load_skill"
     }
   ],
   "reply": {

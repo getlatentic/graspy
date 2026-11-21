@@ -15,6 +15,7 @@ export const TUTOR_TOOLS = [
   "rebuild_plan",
   "give_practice",
   "give_passage",
+  "load_skill",
 ] as const;
 
 interface Part {

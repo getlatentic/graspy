@@ -62,7 +62,8 @@
       "change_subjects": "نحدّث موادك...",
       "rebuild_plan": "نستعد لإعادة بناء خطتك...",
       "give_practice": "أكتب لك سؤالًا...",
-      "give_passage": "أكتب لك نصًا للقراءة..."
+      "give_passage": "أكتب لك نصًا للقراءة...",
+      "load_skill": "أختار طريقة الشرح..."
     },
     "openLesson": "افتح الدرس",
     "openSubject": "افتح المادة",

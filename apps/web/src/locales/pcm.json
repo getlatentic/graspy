@@ -62,7 +62,8 @@
       "change_subjects": "I dey update your subjects...",
       "rebuild_plan": "I dey get ready to build your plan again...",
       "give_practice": "I dey write question for you...",
-      "give_passage": "I dey write passage for you..."
+      "give_passage": "I dey write passage for you...",
+      "load_skill": "I dey choose how I go teach am..."
     },
     "openLesson": "Open lesson",
     "openSubject": "Open subject",
