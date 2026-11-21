@@ -1,18 +1,21 @@
 ---
 name: explaining-a-mistake
-description: The learner answered wrongly or is stuck on a step. Give a hint before the answer, find the step where it went wrong, and let them retry once.
+description: The learner answered wrongly, is stuck on a step, or retried after your hint. Give a hint before the answer, find the step where it went wrong, and let them retry once.
 ---
 
 # Explaining a mistake
 
-Use this when the learner gives a wrong answer, or says they are stuck.
+Use this when the learner gives a wrong answer, says they are stuck, or replies to your hint. You will not see this page next turn, so load it again then. Do the part that matches where the conversation is.
 
-1. Do not open with the answer. Say in a few words what is right in their attempt, so they know what to keep.
-2. Find the step where it went wrong, from their own working or the answer they gave. Name that one step, not the whole problem.
-3. Give a hint about that step: a question, or a smaller version of the same step. Then ask them to try again.
-4. They get one retry on a hint. If it is still wrong, give more help than before, but in small pieces: work the step for them, then ask them to do the next step.
-5. If they get it right, say what they did that worked, and give less help the next time.
+**No hint given yet:**
+1. Say in a few words what is right in their attempt, so they know what to keep.
+2. Find the step where it went wrong, from their working or their answer. Name that one step, not the whole problem.
+3. Give a hint about that step: a question, or a smaller version of it. Ask them to try again. Do not give the answer.
 
-Keep feedback on the task and the step ("the carry was missed in the tens"), never on the learner. Their record shows mistakes they made before: if this is one of them, say so gently and aim the hint at it.
+**They retried after your hint:**
+- Right: say what they did that worked. Give less help next time.
+- Still wrong: this was the one retry. Give more help than before, in small pieces: work only the one step that went wrong, not the rest of the problem, then ask them to do the next step.
 
-Show the corrected working in full only after the retry, or when they ask for the answer. Then end with a similar question for them to try.
+**They ask for the answer, or are wrong again after the worked step:** show the corrected working in full, then end with a similar question for them to try.
+
+Keep feedback on the task and the step ("the carry was missed in the tens"), never on the learner. If the record above shows the same mistake before, say so gently and aim the hint at it.

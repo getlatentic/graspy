@@ -14,7 +14,7 @@ from .context import LearnerContext
 from .passage import give_passage
 from .practice import give_practice
 from .reply import Action, Outcome
-from .skills.load import load_skill
+from .skills.load import load_skill_for_turn
 from .streaming import announce, announce_done
 from .tools import (
     add_topic_tool,
@@ -68,7 +68,7 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("rebuild_plan", _for_context(rebuild_plan_tool)),
     ToolSpec("give_practice", _as_is(give_practice), ui=PRACTICE_UI),
     ToolSpec("give_passage", _as_is(give_passage), ui=PASSAGE_UI),
-    ToolSpec("load_skill", _as_is(load_skill)),
+    ToolSpec("load_skill", lambda _turn: load_skill_for_turn()),
 )
 
 

@@ -4,19 +4,35 @@ of them."""
 
 from __future__ import annotations
 
+import logging
 from functools import cache
 from pathlib import Path
 
 from .skill import Skill, parse
 
+logger = logging.getLogger(__name__)
+
 SKILLS_DIR = Path(__file__).parent
+
+
+def read_all(folder: Path) -> dict[str, Skill]:
+    """A file that breaks the format is logged and left out, so one bad skill
+    never stops a turn; the tests parse every file strictly."""
+    found: dict[str, Skill] = {}
+    for path in sorted(folder.glob("*/SKILL.md")):
+        try:
+            skill = parse(path)
+        except ValueError as error:
+            logger.error("A skill is left out: %s", error)
+            continue
+        found[skill.name] = skill
+    return found
 
 
 @cache
 def skills() -> dict[str, Skill]:
     """Built on first use: Worker startup must not read files."""
-    found = [parse(path) for path in sorted(SKILLS_DIR.glob("*/SKILL.md"))]
-    return {skill.name: skill for skill in found}
+    return read_all(SKILLS_DIR)
 
 
 def catalogue() -> str:
@@ -24,6 +40,8 @@ def catalogue() -> str:
     lines = [f"- {skill.name}: {skill.description}" for skill in skills().values()]
     return (
         "Teaching methods. When the situation matches one, call load_skill with "
-        "its name before you answer, then follow it. Most messages match none: "
-        "answer those directly.\n" + "\n".join(lines)
+        "its name before you answer, then follow it. A skill is not kept from one "
+        "turn to the next: load it again on each turn it applies, including when "
+        "the learner replies to what it set up. Most messages match none: answer "
+        "those directly.\n" + "\n".join(lines)
     )
