@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 MAX_ACTIVE = 2
 # A skill loaded this many turns ago, or fewer, is still in effect.
 MAX_AGE_TURNS = 3
-NONE_IN_EFFECT = "None: no teaching method from an earlier turn is in effect."
+NONE_IN_EFFECT = "None."
 
 
 def active_names(exchanges: Sequence[Exchange], topic: str | None) -> tuple[str, ...]:

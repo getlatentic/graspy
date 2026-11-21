@@ -42,7 +42,6 @@ def catalogue() -> str:
         "Teaching methods. When the situation matches one, call load_skill with "
         "its name before you answer, then follow it. A skill you loaded in the last "
         "few turns is shown to you under skills in effect: follow it there and "
-        "do not load it again. Load another when the conversation turns to "
-        "something it fits. Most messages match none: answer those directly.\n"
+        "do not load it again. Most messages match none: answer those directly.\n"
         + "\n".join(lines)
     )
