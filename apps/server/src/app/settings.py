@@ -137,9 +137,10 @@ class Settings(BaseSettings):
     @classmethod
     def region_is_a_dns_label(cls, value):
         """It becomes part of a hostname the bearer key is sent to."""
-        if not re.fullmatch(r"[A-Za-z0-9-]+", value):
+        region = value.strip().lower()
+        if not re.fullmatch(r"[a-z0-9-]+", region):
             raise ValueError("AWS_REGION must be letters, digits and hyphens.")
-        return value
+        return region
 
     @model_validator(mode="after")
     def fill_from_profile(self) -> Settings:
@@ -161,7 +162,7 @@ class Settings(BaseSettings):
             ("llm_model_id", profile.model_id),
             ("llm_base_url", profile.url_in(self.aws_region)),
         ):
-            if field not in given or getattr(self, field) in (None, ""):
+            if field not in given or not (getattr(self, field) or "").strip():
                 setattr(self, field, value)
         return self
 

@@ -27,6 +27,19 @@ BASE = {
 GEMMA_URL = "https://bedrock-mantle.us-east-1.api.aws/openai/v1"
 
 
+@pytest.fixture(autouse=True)
+def no_llm_settings_from_the_environment(monkeypatch):
+    for name in (
+        "LLM_PROFILE",
+        "LLM_HOST",
+        "LLM_MODEL_ID",
+        "LLM_BASE_URL",
+        "LLM_BASE_URL_ALLOW",
+        "AWS_REGION",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
 def settings(**overrides) -> Settings:
     return Settings(**{**BASE, **overrides})
 

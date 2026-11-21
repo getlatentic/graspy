@@ -15,7 +15,7 @@ from dspy._vendor.lm15.cloud.hosts import render_base_url
 from dspy.lm15 import RouterConfig
 
 from ..settings import Settings
-from .base_url import checked_base_url
+from .base_url import OwnBase, checked_base_url
 from .transport import RebasedTransport
 
 HostName = Literal["bedrock", "workers-ai"]
@@ -28,11 +28,12 @@ class Host:
     default_model: str
     required: tuple[str, ...]
     config: Callable[[Settings, object], RouterConfig]
-    # The hostnames its API key may be sent to; the first is the default.
-    own_hosts: Callable[[Settings], tuple[str, ...]]
+    # The hostnames (and paths) its API key may be sent to.
+    own: Callable[[Settings], tuple[OwnBase, ...]]
+    default_endpoint: Callable[[Settings], str]
 
     def model(self, settings: Settings) -> str:
-        model_id = settings.llm_model_id or self.default_model
+        model_id = (settings.llm_model_id or "").strip() or self.default_model
         routed = f"{self.provider}:"
         return model_id if model_id.startswith(routed) else routed + model_id
 
@@ -40,24 +41,40 @@ class Host:
         return [key for key in self.required if not getattr(settings, key.lower())]
 
     def base_url(self, settings: Settings) -> str | None:
-        return checked_base_url(settings, self.own_hosts(settings))
+        return checked_base_url(settings, self.own(settings))
 
     def endpoint(self, settings: Settings) -> str:
         """The hostname the requests go to."""
         url = self.base_url(settings)
-        return urlsplit(url).hostname if url else self.own_hosts(settings)[0]
+        return urlsplit(url).hostname if url else self.default_endpoint(settings)
 
 
-def _bedrock_hosts(settings: Settings) -> tuple[str, ...]:
-    return (f"bedrock-mantle.{settings.aws_region}.api.aws",)
+def _bedrock_endpoint(settings: Settings) -> str:
+    return f"bedrock-mantle.{settings.aws_region}.api.aws"
 
 
-def _workers_ai_hosts(settings: Settings) -> tuple[str, ...]:
-    return ("api.cloudflare.com", "gateway.ai.cloudflare.com")
+def _bedrock_own(settings: Settings) -> tuple[OwnBase, ...]:
+    return ((_bedrock_endpoint(settings), ""),)
+
+
+def _workers_ai_endpoint(settings: Settings) -> str:
+    return "api.cloudflare.com"
+
+
+def _workers_ai_own(settings: Settings) -> tuple[OwnBase, ...]:
+    """api.cloudflare.com and gateway.ai.cloudflare.com serve every account, so
+    the path has to name this deployment's."""
+    account = settings.cloudflare_account_id
+    if not account:
+        return ()
+    return (
+        ("api.cloudflare.com", f"/client/v4/accounts/{account}/"),
+        ("gateway.ai.cloudflare.com", f"/v1/{account}/"),
+    )
 
 
 def _bedrock(settings: Settings, transport: object) -> RouterConfig:
-    base_url = checked_base_url(settings, _bedrock_hosts(settings))
+    base_url = checked_base_url(settings, _bedrock_own(settings))
     if base_url:
         default = render_base_url(
             BEDROCK_MANTLE_CHAT.host, {"region": settings.aws_region}
@@ -73,7 +90,7 @@ def _bedrock(settings: Settings, transport: object) -> RouterConfig:
 def _workers_ai(settings: Settings, transport: object) -> RouterConfig:
     account = settings.cloudflare_account_id
     default_url = f"https://api.cloudflare.com/client/v4/accounts/{account}/ai/v1"
-    base_url = checked_base_url(settings, _workers_ai_hosts(settings))
+    base_url = checked_base_url(settings, _workers_ai_own(settings))
     return RouterConfig(
         api_keys={OPENAI_CHAT: settings.cloudflare_api_token},
         base_urls={OPENAI_CHAT: base_url or default_url},
@@ -90,14 +107,16 @@ HOSTS: dict[HostName, Host] = {
         default_model="openai.gpt-oss-120b",
         required=("AWS_BEARER_TOKEN_BEDROCK",),
         config=_bedrock,
-        own_hosts=_bedrock_hosts,
+        own=_bedrock_own,
+        default_endpoint=_bedrock_endpoint,
     ),
     "workers-ai": Host(
         provider=OPENAI_CHAT,
         default_model="@cf/openai/gpt-oss-120b",
         required=("CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"),
         config=_workers_ai,
-        own_hosts=_workers_ai_hosts,
+        own=_workers_ai_own,
+        default_endpoint=_workers_ai_endpoint,
     ),
 }
 

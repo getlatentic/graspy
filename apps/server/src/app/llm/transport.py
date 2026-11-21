@@ -44,6 +44,9 @@ class HttpxTransport:
                 timeout=_timeout_for(request),
             ),
             stream=True,
+            # The key is in this request's headers; a redirect answer goes to
+            # the caller as it is and is never followed.
+            follow_redirects=False,
         )
 
         async def release(_body_consumed: bool) -> None:
