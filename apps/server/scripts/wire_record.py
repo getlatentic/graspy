@@ -26,6 +26,9 @@ TEXT_ARGS = re.compile(
 MARKUP = re.compile(r"<\|[a-z_]+\||\[\[ ## ")
 
 
+_NO_MESSAGE = {"content": "", "tool_calls": [], "finish_reason": None, "usage": {}}
+
+
 class RecordingTransport(HttpxTransport):
     """Keeps each request body, and the reply with how long it took."""
 
@@ -47,10 +50,13 @@ class RecordingTransport(HttpxTransport):
             chunks = response._chunks
 
             async def tapped():
-                async for chunk in chunks:
-                    record["reply"] += chunk
-                    yield chunk
-                record["seconds"] = time.perf_counter() - record["started"]
+                try:
+                    async for chunk in chunks:
+                        record["reply"] += chunk
+                        yield chunk
+                    record["completed"] = True
+                finally:
+                    record["seconds"] = time.perf_counter() - record["started"]
 
             yield AsyncTransportResponse(
                 status=response.status,
@@ -67,13 +73,18 @@ def message_of(reply: bytes) -> dict:
     text = reply.decode("utf-8", "replace")
     if not text.strip():
         # The tutor closes a streamed answer it has no more use for.
-        return {"content": "", "tool_calls": [], "finish_reason": None, "usage": {}}
+        return dict(_NO_MESSAGE)
     if not text.lstrip().startswith("data:"):
-        body = json.loads(text)
+        try:
+            body = json.loads(text)
+            choice = body["choices"][0]
+        except ValueError, KeyError, IndexError, TypeError:
+            # A provider that refuses a request answers with its own error body.
+            return {**_NO_MESSAGE, "provider_error": text[:500]}
         return {
-            "content": body["choices"][0]["message"].get("content") or "",
-            "tool_calls": body["choices"][0]["message"].get("tool_calls") or [],
-            "finish_reason": body["choices"][0]["finish_reason"],
+            "content": choice["message"].get("content") or "",
+            "tool_calls": choice["message"].get("tool_calls") or [],
+            "finish_reason": choice["finish_reason"],
             "usage": body.get("usage") or {},
         }
     content, calls, finish, usage = [], {}, None, {}
@@ -159,6 +170,8 @@ def read_call(record: dict, known: set[str]) -> dict:
         "problems": problems,
         "bad_arguments": bad,
         "seconds": round(record.get("seconds", 0.0), 2),
+        "closed_early": not record.get("completed", False),
+        "provider_error": message.get("provider_error"),
         "prompt_tokens": usage.get("prompt_tokens"),
         "completion_tokens": usage.get("completion_tokens"),
     }

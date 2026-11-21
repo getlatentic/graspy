@@ -5,6 +5,7 @@ step, so it streams as before."""
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -14,6 +15,7 @@ from dspy.adapters.types.tool import ToolCallResults, ToolCalls
 from dspy.utils.exceptions import (
     AdapterParseError,
     ContextWindowExceededError,
+    LMProviderError,
     format_error_for_lm,
 )
 
@@ -23,6 +25,10 @@ logger = logging.getLogger(__name__)
 # called none in six turns.
 TOOL_CHOICE = {"tool_choice": "auto"}
 NO_MORE_TOOLS = "done"
+# A step may call a few tools; a model that calls dozens is looping.
+MAX_CALLS_PER_STEP = 3
+# The same unreadable step twice ends the tool steps.
+MAX_UNREADABLE_STEPS = 2
 TOOL_STEP_RULES = (
     "You are an Agent working in two steps. This step only decides which tools "
     "to call: never write the learner's reply here. Before you call a tool, write "
@@ -56,6 +62,45 @@ class ToolStepAdapter(ChatAdapter):
 
     def parse(self, signature, completion: str) -> dict[str, Any]:
         return {}
+
+
+def _with_unique_ids(calls: ToolCalls, step: int) -> ToolCalls:
+    """DSPy drops the results of a step whose call ids are missing, so every
+    call has one, and no two share it."""
+    seen: set[str] = set()
+    made = []
+    for n, call in enumerate(calls.tool_calls):
+        if not call.id or call.id in seen:
+            if call.id:
+                logger.warning("A tool step repeated the call id %s", call.id)
+            call = call.model_copy(update={"id": f"call_{step}_{n}"})
+        seen.add(call.id)
+        made.append(call)
+    return ToolCalls(tool_calls=made)
+
+
+def _limited(calls: ToolCalls) -> tuple[ToolCalls, str | None]:
+    """The calls to run: the first few, without a call repeated exactly. What
+    was left out is said in words for the model."""
+    kept: list[ToolCalls.ToolCall] = []
+    seen: set[str] = set()
+    repeated = 0
+    for call in calls.tool_calls:
+        key = f"{call.name} {json.dumps(call.args, sort_keys=True, default=str)}"
+        if key in seen:
+            repeated += 1
+        elif len(kept) < MAX_CALLS_PER_STEP:
+            seen.add(key)
+            kept.append(call)
+    over = len(calls.tool_calls) - len(kept) - repeated
+    notes = []
+    if repeated:
+        notes.append(f"{repeated} repeated call(s) were not run")
+    if over:
+        notes.append(
+            f"{over} call(s) beyond the first {MAX_CALLS_PER_STEP} in a step were not run"
+        )
+    return ToolCalls(tool_calls=kept), "; ".join(notes) or None
 
 
 def _optional(annotation: Any) -> Any:
@@ -97,20 +142,41 @@ class NativeReAct(dspy.ReAct):
         }
         history = dspy.History(messages=[])
         trajectory: dict[str, Any] = {}
+        unreadable = 0
         for step in range(max_iters):
             try:
                 calls = await self._tool_calls(history, pending)
-            except (AdapterParseError, ContextWindowExceededError) as error:
+            except ContextWindowExceededError as error:
                 logger.warning(
                     "Ending the tool steps: %s",
                     format_error_for_lm(error, traceback_frames=5),
                 )
                 break
+            except (AdapterParseError, LMProviderError, ValueError) as error:
+                # A call the model wrote that cannot be read, such as one with no
+                # name: the step is asked again, and twice ends the tool steps.
+                if (
+                    isinstance(error, LMProviderError)
+                    and type(error) is not LMProviderError
+                ):
+                    raise  # auth, billing, rate limits, timeouts and the like
+                unreadable += 1
+                logger.warning(
+                    "A tool step could not be read (%d): %s",
+                    unreadable,
+                    format_error_for_lm(error, traceback_frames=5),
+                )
+                if unreadable >= MAX_UNREADABLE_STEPS:
+                    break
+                continue
+            unreadable = 0
             if not calls.tool_calls:
                 break
-            results = ToolCallResults.from_tool_calls_and_values(
-                calls, *await self._run(calls)
-            )
+            calls, not_run = _limited(calls)
+            values, failed = await self._run(calls)
+            if not_run:
+                values[-1] = {"result": values[-1], "not_run": not_run}
+            results = ToolCallResults.from_tool_calls_and_values(calls, values, failed)
             history.messages.append(
                 {
                     **pending,
@@ -143,14 +209,7 @@ class NativeReAct(dspy.ReAct):
         calls = step.tool_calls
         if calls is None:
             return ToolCalls(tool_calls=[])
-        return ToolCalls(
-            tool_calls=[
-                call
-                if call.id
-                else call.model_copy(update={"id": f"call_{len(history.messages)}_{n}"})
-                for n, call in enumerate(calls.tool_calls)
-            ]
-        )
+        return _with_unique_ids(calls, len(history.messages))
 
     async def _run(self, calls: ToolCalls) -> tuple[list[Any], list[bool]]:
         values: list[Any] = []

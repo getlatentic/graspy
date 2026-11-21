@@ -9,6 +9,7 @@ import pytest
 from test_event_loop import chat_reply, streamed
 
 from app.agent.memory import InMemoryConversationStore
+from app.agent.native_react import NativeReAct
 from app.agent.streaming import AnswerDelta, ToolActivity
 from app.agent.tutor import Tutor, TutorReply
 from app.llm.client import build_lm
@@ -174,15 +175,15 @@ async def test_a_tool_the_tutor_does_not_have_is_reported_to_the_model():
 
 
 async def test_an_empty_reply_ends_the_tool_steps_and_the_answer_is_still_written():
-    lm, asked = model(
-        {"finish_reason": "length", "message": {"role": "assistant", "content": ""}},
-        final_answer(),
-        llm_native_tools=True,
-    )
+    empty = {
+        "finish_reason": "length",
+        "message": {"role": "assistant", "content": ""},
+    }
+    lm, asked = model(empty, empty, final_answer(), llm_native_tools=True)
 
     items = await turn(lm)
 
-    assert len(asked) == 2
+    assert len(asked) == 3
     assert items[-1].answer == ANSWER
 
 
@@ -213,11 +214,14 @@ def test_the_model_states_whether_it_takes_native_tools(native, declared):
     assert lm.supports_function_calling is declared
 
 
-async def test_workers_ai_is_sent_the_tools_too():
+async def test_workers_ai_is_sent_the_tools_through_the_native_agent():
     sent: list[dict] = []
+    replies = [tool_call_reply(CALCULATE), text_reply("done")]
 
     async def answer(request: httpx.Request) -> httpx.Response:
         sent.append(json.loads(request.content))
+        if len(sent) > 2:
+            replies.append(text_reply(chat_reply(reasoning="r", answer="84")))
         return httpx.Response(
             200,
             json={
@@ -225,7 +229,7 @@ async def test_workers_ai_is_sent_the_tools_too():
                 "object": "chat.completion",
                 "created": 0,
                 "model": "@cf/openai/gpt-oss-120b",
-                "choices": [{"index": 0, **tool_call_reply(CALCULATE)}],
+                "choices": [{"index": 0, **replies[len(sent) - 1]}],
                 "usage": {
                     "prompt_tokens": 1,
                     "completion_tokens": 1,
@@ -246,14 +250,20 @@ async def test_workers_ai_is_sent_the_tools_too():
             httpx.AsyncClient(transport=httpx.MockTransport(answer))
         ),
     )
-    tool = dspy.Tool(lambda expression: expression, name="calculate", desc="d")
 
-    with dspy.context(
-        lm=lm, adapter=dspy.ChatAdapter(use_native_function_calling=True)
-    ):
-        await dspy.Predict(
-            "question, tools: list[dspy.Tool] -> tool_calls: dspy.ToolCalls"
-        ).acall(question="12 * 7", tools=[tool], config={"tool_choice": "auto"})
+    def calculate(expression: str) -> dict:
+        return {"result": "84"}
 
+    agent = NativeReAct("question -> answer", tools=[calculate], max_iters=3)
+
+    with dspy.context(lm=lm):
+        reply = await agent.acall(question="12 * 7")
+
+    assert reply.answer == "84"
     assert [t["function"]["name"] for t in sent[0]["tools"]] == ["calculate"]
     assert sent[0]["tool_choice"] == "auto"
+    assert sent[1]["messages"][-1]["role"] == "tool"
+
+
+def test_an_empty_setting_is_off():
+    assert Settings(llm_native_tools="", _env_file=None).llm_native_tools is False

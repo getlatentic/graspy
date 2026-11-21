@@ -80,6 +80,12 @@ class Settings(BaseSettings):
         default=None, alias="FIREBASE_AUTH_EMULATOR_HOST"
     )
 
+    @field_validator("llm_native_tools", mode="before")
+    @classmethod
+    def empty_native_tools_is_off(cls, value):
+        """A binding left empty is off, not an error."""
+        return False if isinstance(value, str) and not value.strip() else value
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value):

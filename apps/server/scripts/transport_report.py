@@ -102,10 +102,14 @@ def _tokens(call: dict) -> int:
 
 
 def _cost(calls: list[dict]) -> str:
+    if not calls:
+        return "none"
+    closed = sum(c.get("closed_early", False) for c in calls)
     return (
         f"{mean(c['seconds'] for c in calls):.2f}s, "
         f"{mean(c['prompt_tokens'] or 0 for c in calls):.0f} prompt and "
         f"{mean(c['completion_tokens'] or 0 for c in calls):.0f} completion tokens"
+        f"{f' ({closed} closed before the end, timed to the close)' if closed else ''}"
     )
 
 
