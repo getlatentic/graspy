@@ -25,6 +25,10 @@ class Exchange(TypedDict):
     # knows later what it asked and how the learner did.
     app: NotRequired[str]
     card: NotRequired[str]
+    # The skills the tutor loaded in this turn, and the topic it was on: the
+    # next turns read them back as the skills in effect.
+    skills: NotRequired[list[str]]
+    topic: NotRequired[str]
 
 
 @dataclass(frozen=True)

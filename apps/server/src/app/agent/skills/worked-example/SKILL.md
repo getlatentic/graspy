@@ -5,7 +5,7 @@ description: The learner asks how to do a kind of problem, or has missed it twic
 
 # Worked example
 
-Use this when the learner asks how to solve a kind of problem, has missed the same kind twice, or replies to an example you set. You will not see this page next turn, so load it again then. Do the part that matches where the conversation is.
+Use this when the learner asks how to solve a kind of problem, has missed the same kind twice, or replies to an example you set. It stays in front of you for the next few turns. Do the part that matches where the conversation is.
 
 **Showing the example (this turn):**
 1. Pick one problem of the kind they are working on, a little simpler than theirs, with numbers that are easy to follow.

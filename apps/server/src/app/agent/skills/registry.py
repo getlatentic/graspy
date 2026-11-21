@@ -40,8 +40,9 @@ def catalogue() -> str:
     lines = [f"- {skill.name}: {skill.description}" for skill in skills().values()]
     return (
         "Teaching methods. When the situation matches one, call load_skill with "
-        "its name before you answer, then follow it. A skill is not kept from one "
-        "turn to the next: load it again on each turn it applies, including when "
-        "the learner replies to what it set up. Most messages match none: answer "
-        "those directly.\n" + "\n".join(lines)
+        "its name before you answer, then follow it. A skill you loaded in the last "
+        "few turns is shown to you under skills in effect: follow it there and "
+        "do not load it again. Load another when the conversation turns to "
+        "something it fits. Most messages match none: answer those directly.\n"
+        + "\n".join(lines)
     )

@@ -71,13 +71,14 @@ def test_the_catalogue_lists_each_registered_skill_and_nothing_else():
     assert dict(listed) == {s.name: s.description for s in skills().values()}
 
 
-def test_the_catalogue_says_a_skill_is_loaded_again_on_each_turn_it_applies():
-    assert "load it again on each turn it applies" in catalogue()
+def test_the_catalogue_says_skills_in_effect_are_shown_and_need_no_reload():
+    assert "shown to you under skills in effect" in catalogue()
+    assert "do not load it again" in catalogue()
 
 
 @pytest.mark.parametrize("name", sorted(FIRST_SKILLS))
-def test_a_skill_that_spans_turns_says_to_load_it_again(name):
-    assert "load it again" in skills()[name].body
+def test_a_skill_that_spans_turns_does_not_tell_the_tutor_to_reload_it(name):
+    assert "load it again" not in skills()[name].body
 
 
 def test_the_tutor_is_told_the_catalogue_for_every_kind_of_learner():
@@ -104,7 +105,7 @@ def test_a_skill_loaded_twice_in_a_turn_is_told_to_use_what_it_has():
 
     assert again == {
         "skill": "worked-example",
-        "note": "Already loaded in this turn: use it.",
+        "note": "Already in effect: use it.",
     }
     assert "guidance" in load("checking-understanding")
 

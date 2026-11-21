@@ -33,6 +33,8 @@ Tool = Callable[..., "dict | Outcome"]
 class Turn:
     context: LearnerContext
     message: str
+    # Skills already in effect: loading one again is told to use what it has.
+    active_skills: tuple[str, ...] = ()
 
     def where(self) -> Where:
         return Where(
@@ -68,7 +70,7 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("rebuild_plan", _for_context(rebuild_plan_tool)),
     ToolSpec("give_practice", _as_is(give_practice), ui=PRACTICE_UI),
     ToolSpec("give_passage", _as_is(give_passage), ui=PASSAGE_UI),
-    ToolSpec("load_skill", lambda _turn: load_skill_for_turn()),
+    ToolSpec("load_skill", lambda turn: load_skill_for_turn(turn.active_skills)),
 )
 
 
@@ -76,6 +78,7 @@ TOOLS: tuple[ToolSpec, ...] = (
 class TurnOutputs:
     actions: list[Action] = field(default_factory=list)
     cards: list[Card] = field(default_factory=list)
+    skills: list[str] = field(default_factory=list)
 
 
 def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., dict]:
@@ -89,6 +92,8 @@ def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., 
             outputs.actions.append(result.action)
         if result.card is not None:
             outputs.cards.append(placed(result.card, where))
+        if result.skill is not None and result.skill not in outputs.skills:
+            outputs.skills.append(result.skill)
         return result.told
 
     if inspect.iscoroutinefunction(tool):

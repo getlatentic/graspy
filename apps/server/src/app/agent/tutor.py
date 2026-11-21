@@ -24,6 +24,7 @@ from .reply import Action
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
 from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
+from .skills.active import active_names, rendered, still_shipped
 from .skills.registry import catalogue
 from .streaming import AnswerDelta, AnswerRestart, Silent, ToolActivity, ToolFinished
 from .summary import recalled
@@ -130,6 +131,10 @@ class TutorTurn(dspy.Signature):
         "answering a practice question: each call their tap made, and its result. "
         + DATA_ONLY
     )
+    skills_in_effect: str = dspy.InputField(
+        desc="Teaching methods you loaded in the last few turns, which still apply: "
+        "follow them, and do not load them again."
+    )
     message: str = dspy.InputField(desc="The learner's new message")
     answer: str = dspy.OutputField(desc="The reply the learner reads")
     follow_ups: list[str] = dspy.OutputField(
@@ -175,12 +180,16 @@ class Tutor:
         context = context or LearnerContext()
         earlier = await recalled(self._memory, conversation_id)
         missed = [Exchange(message=text, answer=NO_ANSWER) for text in unanswered or []]
+        in_effect = still_shipped(
+            active_names([*earlier.exchanges, *missed], context.topic)
+        )
         inputs = {
             "learner": context.describe_learner(),
             "studying": context.describe_studying(),
             "record": record,
             "conversation": render([*earlier.exchanges, *missed], earlier.summary),
             "app": describe_calls(calls) if calls else NO_APP_CALLS,
+            "skills_in_effect": rendered(in_effect),
             "message": message,
         }
         # A tap marked in this turn; or the last one, when the learner asks about it next.
@@ -192,7 +201,7 @@ class Tutor:
             earlier.exchanges[-1].get("app", "") if earlier.exchanges else ""
         )
         said = said_by_learner(context, inputs, earlier.exchanges, missed)
-        async for item in _answered(context, inputs, verdicts, said):
+        async for item in _answered(context, inputs, verdicts, said, in_effect):
             if isinstance(item, _Answered):
                 answered = item
             else:
@@ -200,7 +209,12 @@ class Tutor:
         answer = answered.answer
         # Of two opens, or two cards, in one turn, the last counts.
         cards = answered.outputs.cards[-1:]
-        exchanges = [*missed, remembered(message, answer, calls, cards)]
+        exchanges = [
+            *missed,
+            remembered(
+                message, answer, calls, cards, answered.outputs.skills, context.topic
+            ),
+        ]
         for n, exchange in enumerate(exchanges):
             # The learner's own message is the turn; the ones that failed before are its first.
             named = (
@@ -220,7 +234,11 @@ class Tutor:
 
 
 async def _answered(
-    context: LearnerContext, inputs: dict, verdicts: tuple[bool, ...], said: Said
+    context: LearnerContext,
+    inputs: dict,
+    verdicts: tuple[bool, ...],
+    said: Said,
+    in_effect: tuple[str, ...],
 ) -> AsyncIterator[
     AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | _Answered
 ]:
@@ -228,7 +246,9 @@ async def _answered(
     some sampling."""
     for again in (False, True):
         try:
-            async for item in _attempt(context, inputs, verdicts, said, again):
+            async for item in _attempt(
+                context, inputs, verdicts, said, in_effect, again
+            ):
                 yield item
             return
         except (Runaway, AdapterParseError) as error:
@@ -243,11 +263,12 @@ async def _attempt(
     inputs: dict,
     verdicts: tuple[bool, ...],
     said: Said,
+    in_effect: tuple[str, ...],
     again: bool,
 ) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | _Answered]:
     """Closing it stops the model."""
     outputs = TurnOutputs()
-    agent = _streamed_agent(Turn(context, inputs["message"]), outputs, again)
+    agent = _streamed_agent(Turn(context, inputs["message"], in_effect), outputs, again)
     watch = RunawayWatch()
     gate = AnswerGate(outputs, verdicts)
     screen = SafetyScreen(said)
@@ -381,11 +402,19 @@ def clean_follow_ups(follow_ups: list[str] | None) -> list[str]:
 
 
 def remembered(
-    message: str, answer: str, calls: list[AppCall] | None, cards: list[Card]
+    message: str,
+    answer: str,
+    calls: list[AppCall] | None,
+    cards: list[Card],
+    skills: list[str] | None = None,
+    topic: str | None = None,
 ) -> Exchange:
     exchange = Exchange(message=message, answer=answer)
     if calls:
         exchange["app"] = describe_calls(calls)
     if cards:
         exchange["card"] = cards[-1].describe()
+    if skills:
+        exchange["skills"] = list(skills)
+        exchange["topic"] = topic or ""
     return exchange

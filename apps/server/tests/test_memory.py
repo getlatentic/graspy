@@ -165,3 +165,26 @@ async def test_a_forgotten_conversation_is_empty_and_others_are_not(store):
 
     assert await store.load("a") == Conversation()
     assert (await store.load("b")).exchanges == (exchange(2),)
+
+
+async def test_the_skills_a_turn_loaded_come_back_with_its_exchange(store):
+    kept = Exchange(
+        message="q",
+        answer="a",
+        skills=["explaining-a-mistake", "worked-example"],
+        topic="Fractions",
+    )
+    await store.append("c", kept)
+    await store.append("c", exchange(2))
+
+    assert (await store.load("c")).exchanges == (kept, exchange(2))
+
+
+async def test_a_fold_keeps_the_skills_of_the_exchanges_it_leaves(store):
+    for n in range(3):
+        await store.append("c", exchange(n))
+    await store.append("c", Exchange(message="q", answer="a", skills=["x"], topic=""))
+
+    await store.fold("c", "summary", 2)
+
+    assert (await store.load("c")).exchanges[-1]["skills"] == ["x"]
