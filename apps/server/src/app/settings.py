@@ -17,6 +17,7 @@ DEPLOYMENT_KEYS = (
     "SESSION_SECRET",
     "LLM_HOST",
     "LLM_MODEL_ID",
+    "LLM_NATIVE_TOOLS",
     "AWS_REGION",
     "AWS_BEARER_TOKEN_BEDROCK",
     "CLOUDFLARE_ACCOUNT_ID",
@@ -56,6 +57,8 @@ class Settings(BaseSettings):
     )
     # Unset means the host's own gpt-oss-120b id.
     llm_model_id: str | None = Field(default=None, alias="LLM_MODEL_ID")
+    # The tutor's tools travel as native tool calls, not as text in fields.
+    llm_native_tools: bool = Field(default=False, alias="LLM_NATIVE_TOOLS")
     aws_region: str = Field(default="us-east-1", alias="AWS_REGION")
     aws_bearer_token_bedrock: str | None = Field(
         default=None, alias="AWS_BEARER_TOKEN_BEDROCK"
@@ -76,6 +79,12 @@ class Settings(BaseSettings):
     firebase_auth_emulator_host: str | None = Field(
         default=None, alias="FIREBASE_AUTH_EMULATOR_HOST"
     )
+
+    @field_validator("llm_native_tools", mode="before")
+    @classmethod
+    def empty_native_tools_is_off(cls, value):
+        """A binding left empty is off, not an error."""
+        return False if isinstance(value, str) and not value.strip() else value
 
     @field_validator("cors_origins", mode="before")
     @classmethod

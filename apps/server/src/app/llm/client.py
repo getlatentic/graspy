@@ -20,7 +20,14 @@ MEMORY_CACHE_ENTRIES = 256
 class AsyncOnlyEngine:
     """The synchronous engine DSPy requires beside an async one. A Worker
     cannot make a synchronous request, so it is refused everywhere, or it
-    would pass locally and fail only in production."""
+    would pass locally and fail only in production.
+
+    It also states whether the host takes native tool calls. DSPy would
+    otherwise look the model id up in litellm's registry, which has no entry
+    for a custom id, and quietly drop the tools."""
+
+    def __init__(self, native_tools: bool) -> None:
+        self.supports_function_calling = native_tools
 
     def complete(self, request):
         raise RuntimeError(
@@ -37,7 +44,7 @@ def build_lm(settings: Settings, transport: HttpxTransport | None = None) -> dsp
     host = host_of(settings)
     return dspy.LM(
         host.model(settings),
-        engine=AsyncOnlyEngine(),
+        engine=AsyncOnlyEngine(settings.llm_native_tools),
         async_engine=AsyncLM15Engine(
             host.config(settings, transport or HttpxTransport())
         ),
