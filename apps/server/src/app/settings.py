@@ -7,6 +7,8 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .llm.profiles import profile_named
+
 # A Worker receives these as bindings on `env`, not in the process
 # environment; worker.py copies exactly these across.
 DEPLOYMENT_KEYS = (
@@ -15,6 +17,7 @@ DEPLOYMENT_KEYS = (
     "PUBLIC_BASE_URL",
     "A2A_PATH_PREFIX",
     "SESSION_SECRET",
+    "LLM_PROFILE",
     "LLM_HOST",
     "LLM_MODEL_ID",
     "LLM_BASE_URL",
@@ -53,6 +56,9 @@ class Settings(BaseSettings):
 
     session_secret: str | None = Field(default=None, alias="SESSION_SECRET")
 
+    # A named model (llm/profiles.py). LLM_HOST, LLM_MODEL_ID and LLM_BASE_URL,
+    # when set, win over what it gives.
+    llm_profile: str | None = Field(default=None, alias="LLM_PROFILE")
     llm_host: Literal["bedrock", "workers-ai"] = Field(
         default="bedrock", alias="LLM_HOST"
     )
@@ -111,6 +117,23 @@ class Settings(BaseSettings):
         """Production, or staging, which runs as production does so that what
         it shows holds there."""
         return self.app_env.lower() in {"production", "prod", "staging"}
+
+    @model_validator(mode="after")
+    def fill_from_profile(self) -> Settings:
+        """What the profile names, for each LLM setting not given."""
+        if not self.llm_profile or not self.llm_profile.strip():
+            return self
+        profile = profile_named(self.llm_profile.strip())
+        given = self.model_fields_set
+        for field, value in (
+            ("llm_host", profile.host),
+            ("llm_model_id", profile.model_id),
+            ("llm_base_url", profile.base_url),
+        ):
+            blank = getattr(self, field) in (None, "")
+            if field not in given or blank:
+                setattr(self, field, value)
+        return self
 
     @model_validator(mode="after")
     def no_emulator_when_deployed(self) -> Settings:

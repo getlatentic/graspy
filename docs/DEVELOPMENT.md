@@ -30,6 +30,7 @@ The server's environment holds only what changes between deployments or is secre
 
 | Variable | Purpose |
 |---|---|
+| `LLM_PROFILE` | A named model from `apps/server/src/app/llm/profiles.py`, which keeps a host, model id and base URL together: `gpt-oss-120b`, `gemma-4-31b`, `gpt-oss-120b-workers-ai`. `LLM_HOST`, `LLM_MODEL_ID` and `LLM_BASE_URL`, when set, win over the profile. Unset uses the defaults below. An unknown name stops startup and lists the valid ones. The measurement scripts (`measure_skill_loading.py` and the other `measure_*` scripts that call the model) take `--profile NAME` and print `model: profile=... <model>` |
 | `LLM_HOST` | Where gpt-oss-120b runs: `bedrock` (default) or `workers-ai` |
 | `ENGLISH_ASR` | Who hears English in voice lessons: `whisper` (default, Workers AI, with Intron asked when it cannot answer) or `intron`. Yoruba and Pidgin are always heard by Intron |
 | `AWS_BEARER_TOKEN_BEDROCK` / `AWS_REGION` | Bedrock's API key and region (default `us-east-1`). Required for `bedrock` |

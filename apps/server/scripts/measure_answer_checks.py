@@ -23,7 +23,7 @@ from pathlib import Path
 
 import dspy
 from answer_check_report import report
-from measure_stage_writing import model
+from measure_stage_writing import add_profile_option, model, settings_from
 
 from app.domains.lesson.service import LessonService
 from app.education.catalogue import systems
@@ -134,6 +134,7 @@ async def measure(settings: Settings, draws: int, translated: int) -> list[dict]
 def arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--env-file", type=Path, default=None)
+    add_profile_option(parser)
     parser.add_argument("--draws", type=int, default=2, help="English draws per topic")
     parser.add_argument(
         "--translated", type=int, default=2, help="Yoruba lessons per class"
@@ -151,7 +152,7 @@ async def main() -> None:
     checked = logging.getLogger("app.domains.lesson.checked")
     checked.setLevel(logging.DEBUG)
     checked.addHandler(_Kept())
-    settings = Settings(_env_file=options.env_file) if options.env_file else Settings()
+    settings = settings_from(options)
     records = await measure(settings, options.draws, options.translated)
     options.out.write_text(json.dumps(records, indent=1, ensure_ascii=False))
     report([records])

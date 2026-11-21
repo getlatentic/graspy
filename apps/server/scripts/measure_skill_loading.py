@@ -32,7 +32,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import dspy
-from measure_stage_writing import model
+from measure_stage_writing import add_profile_option, model, settings_from
 from transport_report import report
 from wire_record import CALLS, RecordingTransport, read_calls
 
@@ -365,9 +365,10 @@ def main() -> None:
     parser.add_argument("--draws", type=int, default=3)
     parser.add_argument("--ladder-draws", type=int, default=12)
     parser.add_argument("--env-file")
+    add_profile_option(parser)
     parser.add_argument("--without-skills", action="store_true")
     options = parser.parse_args()
-    settings = Settings(_env_file=options.env_file) if options.env_file else Settings()
+    settings = settings_from(options)
     if options.without_skills:
         remove_skills()
     else:
