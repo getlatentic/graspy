@@ -27,12 +27,14 @@ import functools
 import json
 import re
 import time
+import traceback
 from collections import defaultdict
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 import dspy
 from measure_stage_writing import model
+from transport_report import report
+from wire_record import CALLS, RecordingTransport, read_calls
 
 import app.agent.toolkit as toolkit_module
 import app.agent.tutor as tutor_module
@@ -40,7 +42,6 @@ from app.agent.context import LearnerContext
 from app.agent.memory import InMemoryConversationStore
 from app.agent.streaming import ToolActivity
 from app.agent.tutor import Tutor, TutorReply
-from app.llm.transport import HttpxTransport
 from app.settings import Settings
 
 try:
@@ -134,21 +135,8 @@ CASES = [
     ),
 ]
 
+KNOWN_TOOLS = {spec.name for spec in toolkit_module.TOOLS} | {"finish"}
 _LOADED: contextvars.ContextVar[list[str]] = contextvars.ContextVar("loaded")
-
-
-class RecordingTransport(HttpxTransport):
-    """Keeps each request body sent to the model."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.bodies: list[dict] = []
-
-    @asynccontextmanager
-    async def stream(self, request):
-        self.bodies.append(json.loads(request.body))
-        async with super().stream(request) as response:
-            yield response
 
 
 def replace(module, name: str, value) -> None:
@@ -225,6 +213,8 @@ async def draw(case: tuple, lm: dspy.LM) -> dict:
         )
         tools: list[str] = []
         answer = ""
+        records: list[dict] = []
+        CALLS.set(records)
         started = time.perf_counter()
         with dspy.context(lm=lm.copy()):
             async for item in Tutor(memory).stream("c", message, CONTEXT):
@@ -239,6 +229,7 @@ async def draw(case: tuple, lm: dspy.LM) -> dict:
                 "in_effect": in_effect,
                 "answer": answer,
                 "seconds": round(time.perf_counter() - started, 1),
+                "calls": read_calls(records, KNOWN_TOOLS),
             }
         )
     return {"case": case_id, "group": group, "expected": expected, "turns": turns}
@@ -259,7 +250,12 @@ async def measure(lm: dspy.LM, draws: int, ladder_draws: int) -> list[dict]:
     drawn = await asyncio.gather(*(one(case) for case in cases), return_exceptions=True)
     # A failed turn is a result to count, not a crash.
     return [
-        {"case": case[0], "group": case[1], "error": repr(result)[:300]}
+        {
+            "case": case[0],
+            "group": case[1],
+            "error": repr(result)[:300],
+            "trace": "".join(traceback.format_exception(result))[-2000:],
+        }
         if isinstance(result, BaseException)
         else result
         for case, result in zip(cases, drawn, strict=True)
@@ -375,6 +371,7 @@ def main() -> None:
             json.dumps(asyncio.run(wire_of_ladder(settings)), indent=2)
         )
     print(summary(results))
+    print(report(results))
 
 
 if __name__ == "__main__":
