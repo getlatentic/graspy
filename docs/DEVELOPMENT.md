@@ -34,6 +34,7 @@ The server's environment holds only what changes between deployments or is secre
 | `ENGLISH_ASR` | Who hears English in voice lessons: `whisper` (default, Workers AI, with Intron asked when it cannot answer) or `intron`. Yoruba and Pidgin are always heard by Intron |
 | `AWS_BEARER_TOKEN_BEDROCK` / `AWS_REGION` | Bedrock's API key and region (default `us-east-1`). Required for `bedrock` |
 | `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` | The account and a token with Workers AI access. Required for `workers-ai` |
+| `LLM_NATIVE_TOOLS` | `true` sends the tutor's tools in the request's `tools` array with `tool_choice: auto` and reads `tool_calls` back, instead of the tools as text in the prompt (default, `false`). Off by default: on the measured set it picked the right teaching method less often (see `apps/server/scripts/measure_skill_loading.py`) |
 | `LLM_MODEL_ID` | Overrides the host's model id. Unset uses the host's gpt-oss-120b |
 | `FIREBASE_API_KEY` | The Firebase project's web API key: the project whose sign-ins are accepted. A Worker secret in production. Unset turns sign-in off |
 | `FIREBASE_SERVICE_ACCOUNT` | The JSON key of a service account that may delete Firebase users, so deleting an account also removes its Firebase user (email and name). A Worker secret; required in production and staging while `FIREBASE_API_KEY` is set. Locally the Auth emulator is asked instead, and with neither nothing is removed |

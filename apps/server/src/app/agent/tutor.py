@@ -19,6 +19,7 @@ from .cards import Card
 from .context import LearnerContext
 from .labels import DATA_ONLY
 from .memory import ConversationStore, Exchange
+from .native_react import NativeReAct
 from .persona import WITHOUT_STAGE, persona
 from .reply import Action
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
@@ -365,7 +366,8 @@ def signature_for(context: LearnerContext) -> type[dspy.Signature]:
 
 
 def _streamed_agent(turn: Turn, outputs: TurnOutputs, again: bool):
-    agent = dspy.ReAct(
+    react = NativeReAct if dspy.settings.lm.supports_function_calling else dspy.ReAct
+    agent = react(
         signature_for(turn.context),
         tools=tools_for(turn, outputs),
         max_iters=MAX_TOOL_STEPS,
