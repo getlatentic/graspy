@@ -32,6 +32,14 @@ class ToolFinished:
     tool: str
 
 
+@dataclass(frozen=True)
+class SkillLoaded:
+    """The turn loaded a skill. It travels with the turn's own items, which a
+    full status buffer cannot drop, so a stopped turn still knows the skill."""
+
+    skill: str
+
+
 class Silent(StatusMessageProvider):
     """DSPy announces tool calls through a thread pool, which a Worker cannot
     start; announce() does it instead."""

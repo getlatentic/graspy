@@ -303,7 +303,11 @@ def summary(results: list[dict]) -> str:
                         f"{turn['tools']} {turn['loaded']}" for turn in row["turns"]
                     )
                 )
-    ladder = [row for row in results if row["group"] == "ladder" and "turns" in row]
+    ladder = [
+        row
+        for row in results
+        if row["group"] == "ladder" and len(row.get("turns", ())) == 2
+    ]
     if ladder:
         first_loaded = sum(
             "explaining-a-mistake" in r["turns"][0]["loaded"] for r in ladder
@@ -332,6 +336,7 @@ def summary(results: list[dict]) -> str:
 def ladder4_summary(rows: list[dict]) -> list[str]:
     """The four-turn ladder ends with the right answer: what the tutor does on
     turn 4 with the skill's text still in effect, or not."""
+    rows = [row for row in rows if len(row["turns"]) == 4]
     if not rows:
         return []
     turn4 = [row["turns"][3] for row in rows]
@@ -347,7 +352,13 @@ def ladder4_summary(rows: list[dict]) -> list[str]:
             f"a skill loaded on turn 4: {sum(bool(t['loaded']) for t in turn4)}); "
             f"turn 4 tools called: {sum(bool(t['tools']) for t in turn4)}; "
             f"turn 4 ends by asking the learner something: {asks}"
-        )
+        ),
+        "ladder4 turns that give the full answer "
+        f"({RIGHT_ANSWER}), of {len(rows)} draws: "
+        + ", ".join(
+            f"turn {n + 1}: {sum(bool(GIVES_ANSWER.search(r['turns'][n]['answer'])) for r in rows)}"
+            for n in range(3)
+        ),
     ]
 
 

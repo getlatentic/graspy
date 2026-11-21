@@ -20,6 +20,7 @@ from app.agent.skills.active import (
 from app.agent.skills.load import load_skill_for_turn
 from app.agent.skills.registry import skills
 from app.agent.skills.skill import MAX_BODY_WORDS
+from app.agent.streaming import SkillLoaded, ToolFinished
 from app.agent.summary import recalled
 from app.agent.tutor import Tutor, TutorReply
 from app.turns.host import TutorTurnSource
@@ -254,7 +255,7 @@ async def test_a_stopped_turn_keeps_the_skills_in_effect_and_the_topic():
         metadata={"learner": {"topic": TOPIC}},
     ).model_dump(mode="json")
 
-    await source.keep_stopped(job, "t", "Half an ans")
+    await source.keep_stopped(job, "t", "Half an ans", ())
 
     stopped = (await memory.load("c")).exchanges[-1]
     assert stopped["answer"] == "Half an ans"
@@ -274,3 +275,27 @@ async def test_the_summary_step_neither_sees_nor_drops_the_skills():
     summarised = " ".join(str(m["content"]) for m in lm.history[0]["messages"])
     assert skills()[MISTAKE].body not in summarised
     assert conversation.exchanges[-1]["skills"] == {MISTAKE: 0}
+
+
+async def test_a_skill_the_tutor_loads_is_told_once_with_the_turns_own_items():
+    _, context = stand_in(loads(MISTAKE))
+
+    with context:
+        items = [
+            i async for i in Tutor(InMemoryConversationStore()).stream("c", "x", MATHS)
+        ]
+
+    assert [i for i in items if isinstance(i, SkillLoaded)] == [SkillLoaded(MISTAKE)]
+
+
+async def test_a_skill_is_told_though_the_status_buffer_drops_every_event(monkeypatch):
+    monkeypatch.setattr("app.agent.streaming._send", lambda item: None)
+    _, context = stand_in(loads(MISTAKE))
+
+    with context:
+        items = [
+            i async for i in Tutor(InMemoryConversationStore()).stream("c", "x", MATHS)
+        ]
+
+    assert [i for i in items if isinstance(i, SkillLoaded)] == [SkillLoaded(MISTAKE)]
+    assert not [i for i in items if isinstance(i, ToolFinished)]

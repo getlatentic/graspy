@@ -42,13 +42,15 @@ class TutorTurnSource:
     def stream(self, job: dict, turn: str):
         return tutor_stream(self._tutor, self._keeping, TurnJob.model_validate(job))
 
-    async def keep_stopped(self, job: dict, turn: str, answer: str) -> None:
+    async def keep_stopped(
+        self, job: dict, turn: str, answer: str, skills: tuple[str, ...]
+    ) -> None:
         kept = TurnJob.model_validate(job)
         topic = LearnerContext.from_metadata(kept.metadata).topic
         history = (await self._keeping.conversations.load(kept.chat)).exchanges
-        # The skills loaded in a turn that was stopped are not known here; those
-        # already in effect carry on, so the stop does not end them.
-        stopped = stamped(Exchange(message=kept.message, answer=answer), history, topic)
+        stopped = stamped(
+            Exchange(message=kept.message, answer=answer), history, topic, skills
+        )
         await self._keeping.conversations.append(kept.chat, stopped, turn=turn)
 
 

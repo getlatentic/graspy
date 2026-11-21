@@ -217,3 +217,17 @@ def test_the_worker_uploads_every_skill_file():
     assert len(shipped) >= len(FIRST_SKILLS)
     for path in shipped:
         assert any(path.full_match(glob) for glob in uploaded), path
+
+
+def test_explaining_a_mistake_describes_the_ladder_its_body_gives():
+    skill = skills()["explaining-a-mistake"]
+
+    assert "retry once" not in skill.description
+    assert "one worked line" in skill.description
+    assert "would be the answer itself" in skill.body
+
+
+def test_checking_understanding_ends_a_run_of_questions_with_a_worked_example():
+    body = skills()["checking-understanding"].body
+
+    assert "a second time" in body and "worked example" in body

@@ -15,7 +15,8 @@ Use this when you have explained a new idea, or when the learner replies to a qu
 
 **They replied to your question:**
 - Right: say what was right, and move to the next small step.
-- Partly right: keep the right part, and ask a smaller question about the missing part.
-- Wrong, or "I don't know": do not repeat the same explanation louder. Try a different example, then ask again.
+- Partly right: keep the right part, and ask one smaller question about the missing part. Stop and wait.
+- Wrong, or "I don't know" the first time: do not repeat the same explanation louder. Give one different example in a sentence or two, then ask one smaller question. Stop and wait.
+- "I don't know" a second time: stop asking. Show the idea in a short worked example, then ask one small question about it. Stop and wait.
 
 A check is one short question inside the conversation. If they want a set of questions to practise, use give_practice instead.

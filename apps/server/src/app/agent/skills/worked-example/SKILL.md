@@ -14,7 +14,7 @@ Use this when the learner asks how to solve a kind of problem, has missed the sa
 
 **They replied with their attempt at the second problem:** check their steps, not only the final answer.
 - Right: say which steps were right. The next problem can leave more for them to do.
-- Wrong: go back to the step where theirs differs, and work only that step.
+- Wrong: find the first step where theirs differs. Show that one step done correctly, and nothing after it. Ask them to do the next step. Stop and wait; do not finish the problem for them.
 
 Solve a neighbour of their own question, not the question itself, so they still do their own. If they ask for their exact problem, work it, then give a neighbour to try.
 

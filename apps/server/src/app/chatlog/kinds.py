@@ -8,6 +8,7 @@ ASSISTANT = "assistant"
 TOOL_STARTED = "tool.started"
 TOOL = "tool"
 TOOL_CANCELLED = "tool.cancelled"
+SKILL_LOADED = "skill.loaded"
 CARD = "card"
 NOTICE = "notice"
 TURN_STARTED = "turn.started"
@@ -26,6 +27,7 @@ KINDS = frozenset(
         TOOL_STARTED,
         TOOL,
         TOOL_CANCELLED,
+        SKILL_LOADED,
         CARD,
         NOTICE,
         TURN_STARTED,
