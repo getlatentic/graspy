@@ -5,7 +5,7 @@ description: After explaining something new, ask one small question in the learn
 
 # Checking understanding
 
-Use this when you have explained a new idea, or when the learner replies to a question you asked to check it. You will not see this page next turn, so load it again then. Do the part that matches where the conversation is.
+Use this when you have explained a new idea, or when the learner replies to a question you asked to check it. It stays in front of you for the next few turns. Do the part that matches where the conversation is.
 
 **Asking the question (this turn):**
 1. Teach in small steps. After one step, or two at most, stop and check; do not wait until the end of a long explanation.

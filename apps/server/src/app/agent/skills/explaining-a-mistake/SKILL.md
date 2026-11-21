@@ -5,7 +5,7 @@ description: The learner answered wrongly, is stuck on a step, or retried after 
 
 # Explaining a mistake
 
-Use this when the learner gives a wrong answer, says they are stuck, or replies to your hint. You will not see this page next turn, so load it again then. Do the part that matches where the conversation is.
+Use this when the learner gives a wrong answer, says they are stuck, or replies to your hint. It stays in front of you for the next few turns. Do the part that matches where the conversation is.
 
 **No hint given yet:**
 1. Say in a few words what is right in their attempt, so they know what to keep.

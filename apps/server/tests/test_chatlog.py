@@ -226,6 +226,28 @@ async def test_a_conversation_from_before_the_log_is_imported_when_it_is_first_r
     assert kept[0].kind == kinds.IMPORTED and kept[0].data["exchanges"] == 2
 
 
+async def test_the_skills_in_effect_survive_the_import_and_a_turn_that_got_no_answer(
+    database,
+):
+    skilled = Exchange(
+        message="q", answer="a", skills={"explaining-a-mistake": 1}, topic="Fractions"
+    )
+    store = LogConversationStore(database, Held(Conversation("", (skilled,))))
+
+    assert (await store.load("old")).exchanges == (skilled,)
+    missed = Exchange(
+        message="lost",
+        answer="x",
+        skills={"explaining-a-mistake": 2},
+        topic="Fractions",
+    )
+    await store.append("old", missed, turn="t:missed:0")
+    await store.append("old", exchange(9), turn="t")
+
+    kept = (await store.load("old")).exchanges
+    assert kept == (skilled, missed, exchange(9))
+
+
 async def test_a_conversation_appended_to_before_it_was_read_is_still_imported(
     database,
 ):

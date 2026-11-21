@@ -68,3 +68,5 @@ class Outcome:
     told: dict
     action: Action | None = None
     card: Card | None = None
+    # The skill this call loaded, kept with the turn so the conversation knows it.
+    skill: str | None = None
