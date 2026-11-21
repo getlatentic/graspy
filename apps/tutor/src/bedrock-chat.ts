@@ -1,5 +1,5 @@
 import { HEDGE_AFTER_MS, hedged } from "./hedge";
-import { chatCompletionsUrl } from "./bedrock-url";
+import { bedrockUrlOrNull } from "./llm-config";
 
 export interface ToolCall {
   name: string;
@@ -23,7 +23,8 @@ type Message = { content?: string | null; tool_calls?: { function?: { name?: str
 
 async function complete(env: Env, request: Request, extra: object): Promise<Message | null> {
   if (!env.AWS_BEARER_TOKEN_BEDROCK) return null;
-  const url = chatCompletionsUrl(env, request.model);
+  const url = bedrockUrlOrNull(env, request.model, request.part);
+  if (!url) return null;
   const body = JSON.stringify({
     model: request.model,
     messages: [{ role: "system", content: request.system }, { role: "user", content: request.user }],

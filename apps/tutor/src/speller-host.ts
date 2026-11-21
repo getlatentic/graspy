@@ -3,7 +3,7 @@
  * Amazon Bedrock, whose bill takes the AWS credits. `SPELLER_HOST` picks one ("workers-ai" when unset,
  * or "bedrock") and `SPELLER_MODEL` the model on it; each host has a default.
  */
-import { chatCompletionsUrl } from "./bedrock-url";
+import { bedrockUrlOrNull } from "./llm-config";
 
 export const DEFAULT_MODEL = { "workers-ai": "@cf/openai/gpt-oss-20b", bedrock: "google.gemma-4-e2b" } as const;
 
@@ -40,7 +40,9 @@ function bedrockBody(model: string, prompt: string): Record<string, unknown> {
 const bedrock: Complete = async (env, prompt) => {
   if (!env.AWS_BEARER_TOKEN_BEDROCK) throw new Error("SPELLER_HOST is bedrock but AWS_BEARER_TOKEN_BEDROCK is not set");
   const model = env.SPELLER_MODEL || DEFAULT_MODEL.bedrock;
-  const response = await fetch(chatCompletionsUrl(env, model), {
+  const url = bedrockUrlOrNull(env, model, "speller");
+  if (!url) throw new Error("LLM_BASE_URL is not usable");
+  const response = await fetch(url, {
     method: "POST",
     headers: { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" },
     body: JSON.stringify(bedrockBody(model, prompt)),
