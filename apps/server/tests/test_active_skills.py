@@ -141,12 +141,12 @@ def test_the_text_in_effect_is_each_skills_current_body_within_the_bounds():
     assert rendered({}) == NONE_IN_EFFECT
 
 
-def test_loading_a_skill_in_effect_is_told_to_use_it_and_still_counts_as_loaded():
+def test_loading_a_carried_skill_is_told_to_use_it_and_keeps_its_age():
     result = load_skill_for_turn([MISTAKE])(MISTAKE)
 
     assert isinstance(result, Outcome)
     assert result.told == {"skill": MISTAKE, "note": "Already in effect: use it."}
-    assert result.skill == MISTAKE
+    assert result.skill is None
 
 
 def test_loading_another_skill_gives_its_text():
@@ -210,7 +210,7 @@ async def test_a_skill_loaded_in_a_turn_is_kept_by_name_with_the_topic():
     assert skills()[MISTAKE].body not in kept["answer"]
 
 
-async def test_a_skill_in_effect_that_the_tutor_loads_again_stays_in_effect():
+async def test_a_skill_in_effect_that_the_tutor_loads_again_keeps_its_age():
     memory = InMemoryConversationStore()
     await memory.append("c", kept_in_effect(MISTAKE))
     _, context = stand_in(loads(MISTAKE))
@@ -219,7 +219,7 @@ async def test_a_skill_in_effect_that_the_tutor_loads_again_stays_in_effect():
         async for _ in Tutor(memory).stream("c", "3/5?", MATHS):
             pass
 
-    assert (await memory.load("c")).exchanges[-1]["skills"] == {MISTAKE: 0}
+    assert (await memory.load("c")).exchanges[-1]["skills"] == {MISTAKE: 1}
 
 
 async def test_a_skill_in_effect_the_tutor_does_not_load_again_is_carried_on():

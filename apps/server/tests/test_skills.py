@@ -163,6 +163,8 @@ def test_the_tutor_has_the_load_skill_tool():
         ("---\nname: a\ndescription: d\ndescription: e\n---\nbody", "given twice"),
         ("---\nname: a\ndescription: d\n  more\n---\nbody", "not key: value"),
         ("---\nname: a\ndescription: d\n---\n## Turn 2\nx", "count up from Turn 1"),
+        ("---\nname: a\ndescription: d\n---\n## Turn 1\nx\n## turn 2\ny", "must read"),
+        ("---\nname: a\ndescription: d\n---\n## Turn 1\n## Turn 2\ny", "is empty"),
         (
             "---\nname: a\ndescription: d\n---\n## Turn 1\nx\n## Turn 1\ny",
             "count up from Turn 1",
@@ -265,3 +267,9 @@ def test_a_skill_without_steps_is_shown_whole_on_every_turn():
     plain = Skill(name="a", description="d", body="Do this.\n\nThen that.")
 
     assert plain.for_turn(1) == plain.for_turn(5) == plain.body
+
+
+def test_a_stepped_skill_with_no_intro_shows_no_blank_lead():
+    bare = Skill(name="a", description="d", body="## Turn 1\nfirst\n## Turn 2\nsecond")
+
+    assert bare.for_turn(1) == "first"

@@ -21,6 +21,19 @@ QUOTES = "'\""
 TURN_HEADING = re.compile(r"^## Turn (\d+)\b.*$", re.MULTILINE)
 
 
+def _steps(body: str) -> tuple[str, list[tuple[int, str]]]:
+    """The text shown on every turn, and each step with its number."""
+    headings = list(TURN_HEADING.finditer(body))
+    if not headings:
+        return body, []
+    ends = [heading.start() for heading in headings[1:]] + [len(body)]
+    steps = [
+        (int(heading.group(1)), body[heading.end() : end].strip())
+        for heading, end in zip(headings, ends, strict=True)
+    ]
+    return body[: headings[0].start()].strip(), steps
+
+
 @dataclass(frozen=True)
 class Skill:
     name: str
@@ -31,17 +44,13 @@ class Skill:
         """The body with only the step for `turn` (the first turn of using the
         skill is 1): the step with the greatest number not above it. A body
         without steps is whole."""
-        headings = list(TURN_HEADING.finditer(self.body))
-        if not headings:
+        intro, steps = _steps(self.body)
+        if not steps:
             return self.body
-        ends = [heading.start() for heading in headings[1:]] + [len(self.body)]
-        steps = [
-            (int(heading.group(1)), self.body[heading.end() : end].strip())
-            for heading, end in zip(headings, ends, strict=True)
-        ]
-        reached = [step for number, step in steps if number <= turn]
-        step = reached[-1] if reached else steps[0][1]
-        return f"{self.body[: headings[0].start()].strip()}\n\n{step}"
+        reached = [text for number, text in steps if number <= turn]
+        return "\n\n".join(
+            filter(None, (intro, reached[-1] if reached else steps[0][1]))
+        )
 
 
 def _unquoted(value: str) -> str:
@@ -99,7 +108,18 @@ def parse(path: Path) -> Skill:
         raise ValueError(f"{where}: no body.")
     if len(body.split()) > MAX_BODY_WORDS:
         raise ValueError(f"{where}: body is over {MAX_BODY_WORDS} words.")
-    numbers = [int(n) for n in TURN_HEADING.findall(body)]
+    stray = [
+        line
+        for line in body.splitlines()
+        if re.match(r"##\s*turn\b", line, re.IGNORECASE)
+        and not TURN_HEADING.match(line)
+    ]
+    if stray:
+        raise ValueError(f'{where}: "{stray[0]}" must read "## Turn N".')
+    _, steps = _steps(body)
+    numbers = [number for number, _ in steps]
     if numbers and (numbers[0] != 1 or numbers != sorted(set(numbers))):
         raise ValueError(f"{where}: the turn steps must count up from Turn 1.")
+    if not all(text for _, text in steps):
+        raise ValueError(f"{where}: a turn step is empty.")
     return Skill(name=name, description=description, body=body)
