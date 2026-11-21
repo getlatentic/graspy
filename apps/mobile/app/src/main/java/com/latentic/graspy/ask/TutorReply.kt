@@ -31,6 +31,8 @@ data class TutorReply(
     val followUps: List<String> = emptyList(),
     val actions: List<TutorAction> = emptyList(),
     val cards: List<ViewCard> = emptyList(),
+    /** The learner stopped the tutor: the words are those it had written. */
+    val stopped: Boolean = false,
 )
 
 /** The tutor's turn as it streams: what it says, what it is doing, and where the thread is. */
@@ -41,6 +43,9 @@ interface TurnListener {
     fun onRestart() = Unit
 
     fun onActivity(tool: String) = Unit
+
+    /** The connection to the turn is down and being opened again, or is back. */
+    fun onReconnecting(on: Boolean) = Unit
 }
 
 /**
@@ -53,9 +58,8 @@ class TurnReader(contextId: String?, private val listener: TurnListener) {
     private var answer = ""
     private var data = JsonObject(emptyMap())
     private var streamed = false
+    private var stopped = false
     var finished = false
-        private set
-    var heard = false
         private set
 
     fun read(result: JsonObject) {
@@ -71,16 +75,46 @@ class TurnReader(contextId: String?, private val listener: TurnListener) {
         followUps = (data["followUps"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.takeIf(JsonPrimitive::isString)?.content },
         actions = (data["actions"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(::actionOf) },
         cards = (data["cards"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(::cardOf) },
+        stopped = stopped,
     )
+
+    /** Words of the turn read from its frames. */
+    fun delta(piece: String) {
+        streamed = true
+        listener.onDelta(piece)
+    }
+
+    /** A round the tutor did not finish: what showed of it is withdrawn. */
+    fun withdraw() {
+        if (streamed) listener.onRestart()
+        streamed = false
+    }
+
+    fun working(tool: String) = listener.onActivity(tool)
+
+    /** The turn's end, with the reply the server kept for it. */
+    fun finish(text: String, extras: JsonObject?, byStop: Boolean) {
+        answer = text
+        data = extras ?: JsonObject(emptyMap())
+        stopped = byStop
+        finished = true
+    }
+
+    /** The turn is read again from its first frame: what showed and what was kept are dropped. */
+    fun startOver() {
+        withdraw()
+        answer = ""
+        data = JsonObject(emptyMap())
+        stopped = false
+        finished = false
+    }
 
     private fun artifact(update: JsonObject) {
         val piece = textOf(update["artifact"] as? JsonObject)
         // A2A replaces an artifact sent without append, withdrawing what showed.
         if ((update["append"] as? JsonPrimitive)?.contentOrNull != "true" && streamed) listener.onRestart()
         if (piece.isEmpty()) return
-        streamed = true
-        heard = true
-        listener.onDelta(piece)
+        delta(piece)
     }
 
     private fun status(update: JsonObject) {
