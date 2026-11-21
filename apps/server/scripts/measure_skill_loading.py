@@ -71,7 +71,7 @@ MISTAKE = (
 )
 # 1/2 + 1/3 is 5/6, so a retry of 3/5 is wrong.
 WRONG_RETRY = "I tried again and I think it is 3/5."
-SECOND_WRONG_RETRY = "Hmm, then I think it is 2/6."
+SECOND_WRONG_RETRY = "Hmm, then I think it is 4/6."
 RIGHT_RETRY = "Oh I see, it is 5/6!"
 RIGHT_ANSWER = "5/6"
 # The answer as plain text or as LaTeX, which the tutor writes fractions in.

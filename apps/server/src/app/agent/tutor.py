@@ -197,14 +197,15 @@ class Tutor:
             missed_one = Exchange(message=text, answer=NO_ANSWER)
             history.append(stamped(missed_one, history, context.topic))
         missed = history[len(earlier.exchanges) :]
-        active = tuple(in_effect(history, context.topic))
+        ages = in_effect(history, context.topic)
+        active = tuple(ages)
         inputs = {
             "learner": context.describe_learner(),
             "studying": context.describe_studying(),
             "record": record,
             "conversation": render([*earlier.exchanges, *missed], earlier.summary),
             "app": describe_calls(calls) if calls else NO_APP_CALLS,
-            "skills_in_effect": rendered(active),
+            "skills_in_effect": rendered(ages),
             "message": message,
         }
         # A tap marked in this turn; or the last one, when the learner asks about it next.

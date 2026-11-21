@@ -16,6 +16,9 @@ MAX_DESCRIPTION_WORDS = 40
 FENCE = "---"
 BLOCK_SCALAR = re.compile(r"^[>|][+-]?\d?$")
 QUOTES = "'\""
+# A body may be split into steps by turn: "## Turn 1", "## Turn 2",
+# "## Turn 3 or later". Text before the first one is shown on every turn.
+TURN_HEADING = re.compile(r"^## Turn (\d+)\b.*$", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -23,6 +26,22 @@ class Skill:
     name: str
     description: str
     body: str
+
+    def for_turn(self, turn: int) -> str:
+        """The body with only the step for `turn` (the first turn of using the
+        skill is 1): the step with the greatest number not above it. A body
+        without steps is whole."""
+        headings = list(TURN_HEADING.finditer(self.body))
+        if not headings:
+            return self.body
+        ends = [heading.start() for heading in headings[1:]] + [len(self.body)]
+        steps = [
+            (int(heading.group(1)), self.body[heading.end() : end].strip())
+            for heading, end in zip(headings, ends, strict=True)
+        ]
+        reached = [step for number, step in steps if number <= turn]
+        step = reached[-1] if reached else steps[0][1]
+        return f"{self.body[: headings[0].start()].strip()}\n\n{step}"
 
 
 def _unquoted(value: str) -> str:
@@ -80,4 +99,7 @@ def parse(path: Path) -> Skill:
         raise ValueError(f"{where}: no body.")
     if len(body.split()) > MAX_BODY_WORDS:
         raise ValueError(f"{where}: body is over {MAX_BODY_WORDS} words.")
+    numbers = [int(n) for n in TURN_HEADING.findall(body)]
+    if numbers and (numbers[0] != 1 or numbers != sorted(set(numbers))):
+        raise ValueError(f"{where}: the turn steps must count up from Turn 1.")
     return Skill(name=name, description=description, body=body)

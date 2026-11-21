@@ -38,6 +38,8 @@ def load_skill_for_turn(
             told = {"skill": skill.name, "note": "Already in effect: use it."}
             return Outcome(told, skill=skill.name)
         loaded.add(skill.name)
-        return Outcome({"skill": skill.name, "guidance": skill.body}, skill=skill.name)
+        return Outcome(
+            {"skill": skill.name, "guidance": skill.for_turn(1)}, skill=skill.name
+        )
 
     return load_skill

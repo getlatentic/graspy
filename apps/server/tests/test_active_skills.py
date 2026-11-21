@@ -131,11 +131,14 @@ def test_loading_on_a_new_topic_starts_there():
 
 
 def test_the_text_in_effect_is_each_skills_current_body_within_the_bounds():
-    text = rendered((MISTAKE, EXAMPLE))
+    text = rendered({MISTAKE: 0, EXAMPLE: 1})
 
-    assert skills()[MISTAKE].body in text and skills()[EXAMPLE].body in text
-    assert len(text.split()) <= MAX_ACTIVE * (MAX_BODY_WORDS + 6)
-    assert rendered(()) == NONE_IN_EFFECT
+    assert skills()[MISTAKE].for_turn(1) in text
+    assert skills()[EXAMPLE].for_turn(2) in text
+    assert len(text.split()) <= MAX_ACTIVE * (MAX_BODY_WORDS + 12)
+    assert f"Skill in effect: {MISTAKE} (turn 1 of using it)" in text
+    assert f"Skill in effect: {EXAMPLE} (turn 2 of using it)" in text
+    assert rendered({}) == NONE_IN_EFFECT
 
 
 def test_loading_a_skill_in_effect_is_told_to_use_it_and_still_counts_as_loaded():
@@ -167,7 +170,7 @@ async def test_turn_two_has_the_text_in_its_input_and_asks_no_model_for_it():
         items = [i async for i in Tutor(memory).stream("c", "3/5?", MATHS)]
 
     assert isinstance(items[-1], TutorReply)
-    assert skills()[MISTAKE].body in inputs(lm, 0)["skills_in_effect"]
+    assert skills()[MISTAKE].for_turn(2) in inputs(lm, 0)["skills_in_effect"]
     # The tool step and the answer: no call is made to read the skill.
     assert len(lm.history) == 2
 
