@@ -39,6 +39,7 @@ from app.education.catalogue import systems
 from app.education.route import descriptor
 from app.education.stage import stage_of
 from app.llm.client import build_lm, resolve_model
+from app.llm.hosts import host_of
 from app.llm.profiles import PROFILES
 from app.llm.transport import HttpxTransport
 from app.settings import Settings
@@ -185,14 +186,33 @@ def add_profile_option(parser: argparse.ArgumentParser) -> None:
 
 
 def settings_from(options: argparse.Namespace) -> Settings:
-    """The settings for a run; says which model will produce the results."""
+    """The settings for a run. Prints the host, endpoint and model that will
+    produce the results, and any environment value that overrode the profile."""
     given = {"llm_profile": options.profile} if options.profile else {}
     if options.env_file:
         given["_env_file"] = options.env_file
     settings = Settings(**given)
+    host = host_of(settings)
     print(
-        f"model: profile={settings.llm_profile or 'default'} {resolve_model(settings)}"
+        f"model: profile={settings.llm_profile or 'default'} host={settings.llm_host} "
+        f"endpoint={host.endpoint(settings)} {resolve_model(settings)}"
     )
+    if options.profile:
+        profile = PROFILES[options.profile]
+        overridden = [
+            name
+            for name, chosen, wanted in (
+                ("LLM_MODEL_ID", settings.llm_model_id, profile.model_id),
+                (
+                    "LLM_BASE_URL",
+                    settings.llm_base_url,
+                    profile.url_in(settings.aws_region),
+                ),
+            )
+            if (chosen or None) != wanted
+        ]
+        if overridden:
+            print(f"overridden by the environment: {', '.join(overridden)}")
     return settings
 
 

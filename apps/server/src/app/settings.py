@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -21,6 +22,7 @@ DEPLOYMENT_KEYS = (
     "LLM_HOST",
     "LLM_MODEL_ID",
     "LLM_BASE_URL",
+    "LLM_BASE_URL_ALLOW",
     "LLM_NATIVE_TOOLS",
     "AWS_REGION",
     "AWS_BEARER_TOKEN_BEDROCK",
@@ -38,6 +40,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        # A validation error would otherwise print the whole input, keys included.
+        hide_input_in_errors=True,
     )
 
     app_env: str = Field(default="development", alias="APP_ENV")
@@ -66,6 +70,8 @@ class Settings(BaseSettings):
     llm_model_id: str | None = Field(default=None, alias="LLM_MODEL_ID")
     # Unset means the host's own URL. Checked by llm/base_url.py.
     llm_base_url: str | None = Field(default=None, alias="LLM_BASE_URL")
+    # The one host, beyond the model host's own, that LLM_BASE_URL may name.
+    llm_base_url_allow: str | None = Field(default=None, alias="LLM_BASE_URL_ALLOW")
     # The tutor's tools travel as native tool calls, not as text in fields.
     llm_native_tools: bool = Field(default=False, alias="LLM_NATIVE_TOOLS")
     aws_region: str = Field(default="us-east-1", alias="AWS_REGION")
@@ -118,20 +124,44 @@ class Settings(BaseSettings):
         it shows holds there."""
         return self.app_env.lower() in {"production", "prod", "staging"}
 
+    @field_validator("llm_profile")
+    @classmethod
+    def known_profile(cls, value):
+        """Checked here, not after the model is built, so an error echoes only
+        this value and never the keys beside it."""
+        if value is not None and value.strip():
+            profile_named(value.strip())
+        return value
+
+    @field_validator("aws_region")
+    @classmethod
+    def region_is_a_dns_label(cls, value):
+        """It becomes part of a hostname the bearer key is sent to."""
+        if not re.fullmatch(r"[A-Za-z0-9-]+", value):
+            raise ValueError("AWS_REGION must be letters, digits and hyphens.")
+        return value
+
     @model_validator(mode="after")
     def fill_from_profile(self) -> Settings:
-        """What the profile names, for each LLM setting not given."""
+        """What the profile names, for each LLM setting not given. A given
+        LLM_HOST that is not the profile's host is refused: the profile's model
+        and URL would reach another host's credentials."""
         if not self.llm_profile or not self.llm_profile.strip():
             return self
-        profile = profile_named(self.llm_profile.strip())
+        name = self.llm_profile.strip()
+        profile = profile_named(name)
         given = self.model_fields_set
+        if "llm_host" in given and self.llm_host != profile.host:
+            raise ValueError(
+                f"LLM_PROFILE={name} runs on {profile.host} but LLM_HOST={self.llm_host}; "
+                "unset one of them."
+            )
+        self.llm_host = profile.host
         for field, value in (
-            ("llm_host", profile.host),
             ("llm_model_id", profile.model_id),
-            ("llm_base_url", profile.base_url),
+            ("llm_base_url", profile.url_in(self.aws_region)),
         ):
-            blank = getattr(self, field) in (None, "")
-            if field not in given or blank:
+            if field not in given or getattr(self, field) in (None, ""):
                 setattr(self, field, value)
         return self
 
