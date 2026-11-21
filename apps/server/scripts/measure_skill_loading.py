@@ -9,8 +9,12 @@ be read.
     uv run python scripts/measure_skill_loading.py --without-skills --out before.json
 
 --without-skills removes load_skill and the catalogue, which is the tutor before skills.
-The two-turn case sends a mistake, then a wrong retry, to see whether the tutor
-loads the skill again on the second turn and keeps to the ladder.
+The two-turn case sends a mistake, then a wrong retry, to see whether the right
+skill's text is in effect on the second turn and whether the tutor keeps to the
+ladder. A skill is in effect when the server put its text into the turn's input
+(tutors that do so) or the tutor loaded it in that turn. --ladder-draws sets the
+draws of that case, --draws the draws of the others; --wire keeps the requests of
+one two-turn conversation run alone.
 """
 
 from __future__ import annotations
@@ -38,6 +42,11 @@ from app.agent.streaming import ToolActivity
 from app.agent.tutor import Tutor, TutorReply
 from app.llm.transport import HttpxTransport
 from app.settings import Settings
+
+try:
+    from app.agent.skills.active import active_names
+except ImportError:  # the tutor before skills carried across turns
+    active_names = None
 
 CONCURRENT_DRAWS = 6
 CONTEXT = LearnerContext.model_validate(
@@ -201,6 +210,11 @@ async def draw(case: tuple, lm: dspy.LM) -> dict:
     for message in messages:
         loaded: list[str] = []
         _LOADED.set(loaded)
+        in_effect = (
+            list(active_names((await memory.load("c")).exchanges, CONTEXT.topic))
+            if active_names
+            else []
+        )
         tools: list[str] = []
         answer = ""
         started = time.perf_counter()
@@ -214,6 +228,7 @@ async def draw(case: tuple, lm: dspy.LM) -> dict:
             {
                 "tools": tools,
                 "loaded": loaded,
+                "in_effect": in_effect,
                 "answer": answer,
                 "seconds": round(time.perf_counter() - started, 1),
             }
@@ -221,14 +236,18 @@ async def draw(case: tuple, lm: dspy.LM) -> dict:
     return {"case": case_id, "group": group, "expected": expected, "turns": turns}
 
 
-async def measure(lm: dspy.LM, draws: int) -> list[dict]:
+async def measure(lm: dspy.LM, draws: int, ladder_draws: int) -> list[dict]:
     gate = asyncio.Semaphore(CONCURRENT_DRAWS)
 
     async def one(case: tuple) -> dict:
         async with gate:
             return await draw(case, lm)
 
-    cases = [case for case in CASES for _ in range(draws)]
+    cases = [
+        case
+        for case in CASES
+        for _ in range(ladder_draws if case[1] == "ladder" else draws)
+    ]
     drawn = await asyncio.gather(*(one(case) for case in cases), return_exceptions=True)
     # A failed turn is a result to count, not a crash.
     return [
@@ -237,6 +256,26 @@ async def measure(lm: dspy.LM, draws: int) -> list[dict]:
         else result
         for case, result in zip(cases, drawn, strict=True)
     ]
+
+
+async def wire_of_ladder(settings: Settings) -> dict:
+    """One two-turn conversation run alone, so each request body can be told to
+    its turn: the first request of each turn, which names the tools it may call."""
+    transport = RecordingTransport()
+    lm = model(settings, transport)
+    memory = InMemoryConversationStore()
+    firsts = []
+    for message in CASES[-1][2]:
+        _LOADED.set([])
+        before = len(transport.bodies)
+        with dspy.context(lm=lm.copy()):
+            async for _ in Tutor(memory).stream("c", message, CONTEXT):
+                pass
+        firsts.append(transport.bodies[before])
+    return {
+        "chars_of_each_turns_first_request": [len(json.dumps(b)) for b in firsts],
+        "turn_2_first_request": firsts[-1],
+    }
 
 
 def summary(results: list[dict]) -> str:
@@ -262,12 +301,18 @@ def summary(results: list[dict]) -> str:
             "explaining-a-mistake" in r["turns"][0]["loaded"] for r in ladder
         )
         reloaded = sum(bool(r["turns"][1]["loaded"]) for r in ladder)
+        in_effect = sum(
+            "explaining-a-mistake"
+            in {*r["turns"][1]["loaded"], *r["turns"][1]["in_effect"]}
+            for r in ladder
+        )
         gave_it = sum(
             bool(GIVES_ANSWER.search(r["turns"][1]["answer"])) for r in ladder
         )
         lines.append(
             f"ladder: {len(ladder)} draws; explaining-a-mistake on turn 1: {first_loaded}; "
             f"a skill loaded again on turn 2: {reloaded}; "
+            f"explaining-a-mistake in effect on turn 2: {in_effect}; "
             f"turn 2 gives the full answer ({RIGHT_ANSWER}): {gave_it}"
         )
     return "\n".join(lines)
@@ -278,6 +323,7 @@ def main() -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--wire", type=Path)
     parser.add_argument("--draws", type=int, default=3)
+    parser.add_argument("--ladder-draws", type=int, default=12)
     parser.add_argument("--env-file")
     parser.add_argument("--without-skills", action="store_true")
     options = parser.parse_args()
@@ -289,12 +335,12 @@ def main() -> None:
     check_the_tutor(options.without_skills)
     transport = RecordingTransport()
     lm = model(settings, transport)
-    results = asyncio.run(measure(lm, options.draws))
+    results = asyncio.run(measure(lm, options.draws, options.ladder_draws))
     options.out.write_text(json.dumps(results, indent=2))
     if options.wire:
-        # The first request of a turn that names the tools it may call.
-        sent = [b for b in transport.bodies if "next_tool_name" in json.dumps(b)]
-        options.wire.write_text(json.dumps(sent[:1], indent=2))
+        options.wire.write_text(
+            json.dumps(asyncio.run(wire_of_ladder(settings)), indent=2)
+        )
     print(summary(results))
 
 
