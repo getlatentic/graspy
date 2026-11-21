@@ -347,7 +347,13 @@ def ladder4_summary(rows: list[dict]) -> list[str]:
             f"a skill loaded on turn 4: {sum(bool(t['loaded']) for t in turn4)}); "
             f"turn 4 tools called: {sum(bool(t['tools']) for t in turn4)}; "
             f"turn 4 ends by asking the learner something: {asks}"
-        )
+        ),
+        "ladder4 turns that give the full answer "
+        f"({RIGHT_ANSWER}), of {len(rows)} draws: "
+        + ", ".join(
+            f"turn {n + 1}: {sum(bool(GIVES_ANSWER.search(r['turns'][n]['answer'])) for r in rows)}"
+            for n in range(3)
+        ),
     ]
 
 
