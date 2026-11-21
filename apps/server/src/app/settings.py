@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Literal
 
@@ -28,6 +27,7 @@ DEPLOYMENT_KEYS = (
     "LLM_BASE_URL",
     "LLM_BASE_URL_ALLOW",
     "LLM_NATIVE_TOOLS",
+    "AWS_REGION",
     "AWS_BEARER_TOKEN_BEDROCK",
     "CLOUDFLARE_ACCOUNT_ID",
     "CLOUDFLARE_API_TOKEN",
@@ -77,6 +77,9 @@ class Settings(BaseSettings):
     llm_base_url_allow: str | None = Field(default=None, alias="LLM_BASE_URL_ALLOW")
     # The tutor's tools travel as native tool calls, not as text in fields.
     llm_native_tools: bool = Field(default=False, alias="LLM_NATIVE_TOOLS")
+    # Unused. Declared so that a leftover value, from the environment, the .env
+    # file or a Worker var, is seen and warned of.
+    aws_region: str | None = Field(default=None, alias="AWS_REGION")
     aws_bearer_token_bedrock: str | None = Field(
         default=None, alias="AWS_BEARER_TOKEN_BEDROCK"
     )
@@ -137,12 +140,13 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def warn_of_unused_region(self) -> Settings:
-        """A deployment that still sets AWS_REGION keeps starting."""
+        """A deployment that still sets AWS_REGION keeps starting, once told."""
         global _warned_of_region
-        if not _warned_of_region and "AWS_REGION" in os.environ:
+        if (self.aws_region or "").strip() and not _warned_of_region:
             _warned_of_region = True
             logger.warning(
-                "AWS_REGION is unused: the Bedrock host is set by LLM_BASE_URL alone."
+                "AWS_REGION is set but unused: the Bedrock host and region come from "
+                "LLM_BASE_URL (bedrock-mantle.<region>.api.aws) or LLM_PROFILE."
             )
         return self
 

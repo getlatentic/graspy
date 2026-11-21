@@ -206,7 +206,6 @@ def test_workers_ai_accepts_only_cloudflare_hosts(raw):
     "raw",
     [
         OPENAI_PATH,
-        OPENAI_PATH + "///",
         f" {OPENAI_PATH} ",
         "https://BEDROCK-MANTLE.us-east-1.api.aws/openai/v1",
         "https://bedrock-mantle.us-east-1.api.aws./openai/v1",
@@ -294,19 +293,72 @@ def test_the_key_is_not_sent_to_an_unlisted_host_even_with_a_region_look():
         )
 
 
-def test_a_stale_aws_region_is_ignored_with_one_warning(monkeypatch, caplog):
-    monkeypatch.setenv("AWS_REGION", "eu-west-1")
+def warnings_of_region(caplog) -> list[str]:
+    return [r.getMessage() for r in caplog.records if "AWS_REGION" in r.getMessage()]
+
+
+def assert_warned_once_and_ignored(chosen, caplog):
+    [line] = warnings_of_region(caplog)
+    assert "set but unused" in line
+    assert "LLM_BASE_URL" in line and "LLM_PROFILE" in line
+    assert "eu-west-1" not in line
+    assert HOSTS["bedrock"].base_url(chosen) == OWN + "/v1"
+    assert HOSTS["bedrock"].config(chosen, None).settings == {
+        "bedrock-mantle-chat": {"region": "us-east-1"}
+    }
+
+
+@pytest.fixture
+def region_not_yet_warned(monkeypatch, caplog):
     monkeypatch.setattr("app.settings._warned_of_region", False)
+    caplog.set_level(logging.WARNING, logger="app.settings")
 
-    with caplog.at_level(logging.WARNING, logger="app.settings"):
-        first = settings()
-        settings()
 
-    warnings = [r for r in caplog.records if "AWS_REGION" in r.getMessage()]
-    assert len(warnings) == 1
-    assert "eu-west-1" not in warnings[0].getMessage()
-    assert not hasattr(first, "aws_region")
-    assert HOSTS["bedrock"].base_url(first) == OWN + "/v1"
+def test_a_stale_aws_region_in_the_environment_is_ignored_with_one_warning(
+    monkeypatch, caplog, region_not_yet_warned
+):
+    monkeypatch.setenv("AWS_REGION", "eu-west-1")
+
+    chosen = settings()
+    settings()
+
+    assert_warned_once_and_ignored(chosen, caplog)
+
+
+def test_a_stale_aws_region_in_the_env_file_is_ignored_with_one_warning(
+    tmp_path, caplog, region_not_yet_warned
+):
+    env_file = tmp_path / ".env"
+    env_file.write_text("AWS_REGION=eu-west-1\n", encoding="utf-8")
+
+    chosen = settings(_env_file=env_file)
+    settings(_env_file=env_file)
+
+    assert_warned_once_and_ignored(chosen, caplog)
+
+
+def test_a_stale_aws_region_var_on_a_worker_is_ignored_with_one_warning(
+    monkeypatch, caplog, region_not_yet_warned
+):
+    from app.cloudflare import deployment_environment
+
+    handed = deployment_environment(SimpleNamespace(AWS_REGION="eu-west-1"))
+    assert handed == {"AWS_REGION": "eu-west-1"}
+    for name, value in handed.items():
+        monkeypatch.setenv(name, value)
+
+    chosen = settings()
+    settings()
+
+    assert_warned_once_and_ignored(chosen, caplog)
+
+
+def test_no_aws_region_means_no_warning(monkeypatch, caplog, region_not_yet_warned):
+    monkeypatch.delenv("AWS_REGION", raising=False)
+
+    settings()
+
+    assert warnings_of_region(caplog) == []
 
 
 GATEWAY_OTHER = "https://gateway.ai.cloudflare.com/v1/other-acct/gw/workers-ai/v1"
@@ -393,22 +445,49 @@ def test_a_whitespace_model_id_without_a_profile_is_the_default_model():
     )
 
 
-async def test_the_default_is_the_request_it_always_was():
-    unset, unset_body = await _body_and_url(settings())
-    named, named_body = await _body_and_url(settings(llm_base_url=OWN + "/v1"))
+# Captured from origin/main before AWS_REGION was removed, with nothing set.
+OLD_DEFAULT_REQUEST = {
+    "method": "POST",
+    "url": "https://bedrock-mantle.us-east-1.api.aws/v1/chat/completions",
+    "headers": {
+        "accept": "*/*",
+        "authorization": "Bearer bedrock-test",
+        "content-type": "application/json",
+        "host": "bedrock-mantle.us-east-1.api.aws",
+    },
+    "body": {
+        "max_completion_tokens": 8192,
+        "messages": [{"content": "Hello", "role": "user"}],
+        "model": "openai.gpt-oss-120b",
+        "reasoning_effort": "low",
+        "temperature": 0.0,
+    },
+}
 
-    assert str(unset.url) == OWN + "/v1/chat/completions"
+
+def _seen(request: httpx.Request) -> dict:
+    return {
+        "method": request.method,
+        "url": str(request.url),
+        "headers": {
+            name: value
+            for name, value in request.headers.items()
+            if name in OLD_DEFAULT_REQUEST["headers"]
+        },
+        "body": json.loads(request.content),
+    }
+
+
+async def test_the_default_is_the_request_it_always_was():
+    unset, _ = await _body_and_url(settings())
+    named, _ = await _body_and_url(settings(llm_base_url=OWN + "/v1"))
+
+    assert _seen(unset) == OLD_DEFAULT_REQUEST
+    assert _seen(named) == OLD_DEFAULT_REQUEST
     assert HOSTS["bedrock"].endpoint(settings()) == "bedrock-mantle.us-east-1.api.aws"
     assert not isinstance(
         HOSTS["bedrock"].config(settings(), None).transport, RebasedTransport
     )
-    assert (named.method, str(named.url), named.headers, named.content) == (
-        unset.method,
-        str(unset.url),
-        unset.headers,
-        unset.content,
-    )
-    assert named_body == unset_body
 
 
 def test_a_bad_url_stops_the_app_and_the_model_at_startup():

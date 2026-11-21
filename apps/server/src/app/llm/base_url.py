@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 HTTPS_PORT = 443
 PLAIN_HOST = re.compile(r"[a-z0-9]([a-z0-9.-]*[a-z0-9])?")
+UNSAFE_CHARACTER = re.compile(r"[\x00-\x20\x7f]")
+# What a host that takes any path of its own gets: slash-separated words, as
+# in /v1 or /openai/v1, and one trailing slash.
+PLAIN_PATH = re.compile(r"(/[A-Za-z0-9-]+)*")
 
 
 @dataclass(frozen=True)
@@ -48,6 +52,10 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
     if raw is None or not raw.strip():
         return None
     url = raw.strip()
+    if UNSAFE_CHARACTER.search(url):
+        raise RuntimeError(
+            "LLM_BASE_URL must not contain whitespace or control characters."
+        )
     try:
         parts = urlsplit(url)
         port = parts.port
@@ -74,7 +82,7 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
         raise RuntimeError("LLM_BASE_URL must use the https port.")
     host = raw_host.lower().rstrip(".")
     if any(base.accepts(host, parts.path) for base in own):
-        return url.rstrip("/")
+        return f"https://{host}{parts.path.rstrip('/')}"
     if allowed and host == allowed:
         logger.warning(
             "LLM_BASE_URL sends the API key to %s, allowed by LLM_BASE_URL_ALLOW.", host
@@ -89,7 +97,7 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
 
 def _under(path: str, prefix: str) -> bool:
     if not prefix:
-        return True
+        return bool(PLAIN_PATH.fullmatch(path.removesuffix("/")))
     segments = path.split("/")
     if "%" in path or "." in segments or ".." in segments:
         return False

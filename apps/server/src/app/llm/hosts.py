@@ -52,7 +52,9 @@ class Host:
         return urlsplit(self.base_url(settings)).hostname
 
 
-BEDROCK_HOSTNAME = re.compile(r"bedrock-mantle\.(?P<region>[a-z0-9-]+)\.api\.aws")
+BEDROCK_HOSTNAME = re.compile(
+    r"bedrock-mantle\.(?P<region>(?!xn--)[a-z0-9-]+)\.api\.aws"
+)
 # lm15 needs a region to render its URL from; a localhost override has none.
 NO_REGION = "local"
 
@@ -66,7 +68,8 @@ def _bedrock_default_url(settings: Settings) -> str:
 
 
 def _region_of(url: str) -> str:
-    found = BEDROCK_HOSTNAME.fullmatch(urlsplit(url).hostname or "")
+    host = (urlsplit(url).hostname or "").lower().rstrip(".")
+    found = BEDROCK_HOSTNAME.fullmatch(host)
     return found["region"] if found else NO_REGION
 
 
