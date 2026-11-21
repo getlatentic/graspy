@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 from urllib.parse import urlsplit
 
 from ..settings import Settings
@@ -17,10 +18,28 @@ logger = logging.getLogger(__name__)
 LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 HTTPS_PORT = 443
 PLAIN_HOST = re.compile(r"[a-z0-9]([a-z0-9.-]*[a-z0-9])?")
+UNSAFE_CHARACTER = re.compile(r"[\x00-\x20\x7f]")
+# What a host that takes any path of its own gets: slash-separated words, as
+# in /v1 or /openai/v1, and one trailing slash.
+PLAIN_PATH = re.compile(r"(/[A-Za-z0-9-]+)*")
 
-# A hostname the key may go to, and the path prefix ("" for any) that names
-# this deployment on a host shared with others.
-OwnBase = tuple[str, str]
+
+@dataclass(frozen=True)
+class OwnBase:
+    """Hostnames the key may go to: those matching `hostname`, described by
+    `label` in errors, and the path prefix ("" for any) that names this
+    deployment on a host shared with others."""
+
+    label: str
+    hostname: re.Pattern[str]
+    path: str = ""
+
+    def accepts(self, host: str, path: str) -> bool:
+        return bool(self.hostname.fullmatch(host)) and _under(path, self.path)
+
+
+def exact_host(name: str, path: str = "") -> OwnBase:
+    return OwnBase(name, re.compile(re.escape(name)), path)
 
 
 def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None:
@@ -33,6 +52,10 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
     if raw is None or not raw.strip():
         return None
     url = raw.strip()
+    if UNSAFE_CHARACTER.search(url):
+        raise RuntimeError(
+            "LLM_BASE_URL must not contain whitespace or control characters."
+        )
     try:
         parts = urlsplit(url)
         port = parts.port
@@ -58,8 +81,8 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
     if port not in (None, HTTPS_PORT):
         raise RuntimeError("LLM_BASE_URL must use the https port.")
     host = raw_host.lower().rstrip(".")
-    if any(host == name and _under(parts.path, prefix) for name, prefix in own):
-        return url.rstrip("/")
+    if any(base.accepts(host, parts.path) for base in own):
+        return f"https://{host}{parts.path.rstrip('/')}"
     if allowed and host == allowed:
         logger.warning(
             "LLM_BASE_URL sends the API key to %s, allowed by LLM_BASE_URL_ALLOW.", host
@@ -67,14 +90,14 @@ def checked_base_url(settings: Settings, own: tuple[OwnBase, ...]) -> str | None
         return url.rstrip("/")
     raise RuntimeError(
         f"LLM_BASE_URL host {host} and path are not this deployment's own "
-        f"({', '.join(name for name, _ in own) or 'the host needs more settings'}); "
+        f"({', '.join(base.label for base in own) or 'the host needs more settings'}); "
         "to send the key elsewhere, set LLM_BASE_URL_ALLOW to that exact host."
     )
 
 
 def _under(path: str, prefix: str) -> bool:
     if not prefix:
-        return True
+        return bool(PLAIN_PATH.fullmatch(path.removesuffix("/")))
     segments = path.split("/")
     if "%" in path or "." in segments or ".." in segments:
         return False

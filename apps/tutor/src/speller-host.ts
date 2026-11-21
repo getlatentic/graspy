@@ -3,6 +3,8 @@
  * Amazon Bedrock, whose bill takes the AWS credits. `SPELLER_HOST` picks one ("workers-ai" when unset,
  * or "bedrock") and `SPELLER_MODEL` the model on it; each host has a default.
  */
+import { bedrockUrlOrNull } from "./llm-config";
+
 export const DEFAULT_MODEL = { "workers-ai": "@cf/openai/gpt-oss-20b", bedrock: "google.gemma-4-e2b" } as const;
 
 /**
@@ -23,11 +25,6 @@ const workersAi: Complete = async (env, prompt) => {
   return reply.choices?.[0]?.message?.content ?? reply.response;
 };
 
-/** Bedrock serves Gemma 4 on its /openai/v1 path and the other open models on /v1. */
-export function bedrockPath(model: string): string {
-  return model.startsWith("google.gemma-4") ? "/openai/v1" : "/v1";
-}
-
 /** Only the gpt-oss models take a reasoning setting; the others answer an unknown parameter with a 400. */
 function bedrockBody(model: string, prompt: string): Record<string, unknown> {
   const body: Record<string, unknown> = {
@@ -42,9 +39,10 @@ function bedrockBody(model: string, prompt: string): Record<string, unknown> {
 
 const bedrock: Complete = async (env, prompt) => {
   if (!env.AWS_BEARER_TOKEN_BEDROCK) throw new Error("SPELLER_HOST is bedrock but AWS_BEARER_TOKEN_BEDROCK is not set");
-  const region = env.AWS_REGION || "us-east-1";
   const model = env.SPELLER_MODEL || DEFAULT_MODEL.bedrock;
-  const response = await fetch(`https://bedrock-mantle.${region}.api.aws${bedrockPath(model)}/chat/completions`, {
+  const url = bedrockUrlOrNull(env, model, "speller");
+  if (!url) throw new Error("LLM_BASE_URL is not usable");
+  const response = await fetch(url, {
     method: "POST",
     headers: { authorization: `Bearer ${env.AWS_BEARER_TOKEN_BEDROCK}`, "content-type": "application/json" },
     body: JSON.stringify(bedrockBody(model, prompt)),

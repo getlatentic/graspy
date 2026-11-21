@@ -12,7 +12,7 @@ from dspy.lm15 import RouterConfig
 from test_llm_client import KEY, answering
 
 from app.factory import create_app
-from app.llm.base_url import checked_base_url
+from app.llm.base_url import checked_base_url, exact_host
 from app.llm.client import build_lm, resolve_model
 from app.llm.hosts import HOSTS, host_of
 from app.llm.transport import HttpxTransport, RebasedTransport
@@ -37,7 +37,6 @@ def no_llm_settings_from_the_environment(monkeypatch):
         "LLM_MODEL_ID",
         "LLM_BASE_URL",
         "LLM_BASE_URL_ALLOW",
-        "AWS_REGION",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -73,7 +72,7 @@ def test_a_blank_value_is_unset():
 
 
 def test_bedrock_with_a_url_keeps_its_provider_credentials_and_region():
-    chosen = settings(llm_base_url=OPENAI_PATH + "/", aws_region="us-east-1")
+    chosen = settings(llm_base_url=OPENAI_PATH + "/")
     config = HOSTS["bedrock"].config(chosen, None)
 
     assert config.api_keys == {"bedrock-mantle-chat": KEY}
@@ -159,7 +158,14 @@ BAD = [
         "this deployment's own",
     ),
     ("https://xbedrock-mantle.us-east-1.api.aws/v1", "this deployment's own"),
-    ("https://bedrock-mantle.us-west-2.api.aws/v1", "this deployment's own"),
+    ("https://bedrock-mantle..api.aws/v1", "this deployment's own"),
+    ("https://bedrock-mantle.us-east-1.amazonaws.com/v1", "this deployment's own"),
+    ("https://bedrock-runtime.us-east-1.api.aws/v1", "this deployment's own"),
+    ("https://bedrock-mantle.us_east_1.api.aws/v1", "this deployment's own"),
+    ("https://bedrock-mantle.us.east.api.aws/v1", "this deployment's own"),
+    ("https://bedrock-mantle.us-east-1.api.aws@evil.com/v1", "credentials"),
+    ("https://bedrock-mantle.us-east-1.api.aws.evil.com/v1", "this deployment's own"),
+    ("https://bedrock-mantle.us-ëast-1.api.aws/v1", "ASCII"),
     ("https://bedrock-mantle.us-east-1.api.аws/v1", "ASCII"),
     ("https://bedrock-mantle.us-east-1.api.aws.\u200b/v1", "ASCII"),
     (OWN + ":8443/v1", "https port"),
@@ -200,7 +206,6 @@ def test_workers_ai_accepts_only_cloudflare_hosts(raw):
     "raw",
     [
         OPENAI_PATH,
-        OPENAI_PATH + "///",
         f" {OPENAI_PATH} ",
         "https://BEDROCK-MANTLE.us-east-1.api.aws/openai/v1",
         "https://bedrock-mantle.us-east-1.api.aws./openai/v1",
@@ -209,7 +214,7 @@ def test_workers_ai_accepts_only_cloudflare_hosts(raw):
 )
 def test_the_hosts_own_name_is_accepted_in_any_spelling(raw):
     url = checked_base_url(
-        settings(llm_base_url=raw), (("bedrock-mantle.us-east-1.api.aws", ""),)
+        settings(llm_base_url=raw), (exact_host("bedrock-mantle.us-east-1.api.aws"),)
     )
 
     assert url.endswith("/openai/v1")
@@ -240,7 +245,7 @@ def test_another_host_needs_its_exact_name_in_the_allow_setting(caplog):
     for allow in ("example.com", "gateway.example.co", "evil.gateway.example.com", ""):
         with pytest.raises(RuntimeError, match="this deployment's own"):
             checked_base_url(
-                settings(llm_base_url=url, llm_base_url_allow=allow), (("x", ""),)
+                settings(llm_base_url=url, llm_base_url_allow=allow), (exact_host("x"),)
             )
 
 
@@ -254,9 +259,106 @@ def test_the_allow_setting_does_not_excuse_credentials():
         checked_base_url(chosen, ())
 
 
-def test_a_region_that_is_not_a_dns_label_is_refused():
-    with pytest.raises(ValueError, match="AWS_REGION"):
-        settings(aws_region="us-east-1.evil.example")
+@pytest.mark.parametrize("region", ["us-west-2", "eu-west-1", "ap-southeast-2"])
+async def test_any_region_of_the_mantle_host_is_accepted(region):
+    url = f"https://bedrock-mantle.{region}.api.aws/v1"
+    chosen = settings(llm_base_url=url + "/")
+    request, _ = await _body_and_url(chosen)
+
+    assert str(request.url) == url + "/chat/completions"
+    assert request.headers["authorization"] == f"Bearer {KEY}"
+    assert HOSTS["bedrock"].endpoint(chosen) == f"bedrock-mantle.{region}.api.aws"
+    assert HOSTS["bedrock"].config(chosen, None).settings == {
+        "bedrock-mantle-chat": {"region": region}
+    }
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "https://BEDROCK-MANTLE.US-WEST-2.API.AWS./v1",
+        "https://bedrock-mantle.us-west-2.api.aws:443/v1",
+    ],
+)
+def test_the_host_is_read_lower_cased_without_a_trailing_dot_or_port_443(raw):
+    assert host_of(settings(llm_base_url=raw)) is HOSTS["bedrock"]
+
+
+def test_the_key_is_not_sent_to_an_unlisted_host_even_with_a_region_look():
+    with pytest.raises(RuntimeError, match="this deployment's own"):
+        build_lm(
+            settings(
+                llm_base_url="https://bedrock-mantle.us-east-1.api.aws.evil.com/v1"
+            )
+        )
+
+
+def warnings_of_region(caplog) -> list[str]:
+    return [r.getMessage() for r in caplog.records if "AWS_REGION" in r.getMessage()]
+
+
+def assert_warned_once_and_ignored(chosen, caplog):
+    [line] = warnings_of_region(caplog)
+    assert "set but unused" in line
+    assert "LLM_BASE_URL" in line and "LLM_PROFILE" in line
+    assert "eu-west-1" not in line
+    assert HOSTS["bedrock"].base_url(chosen) == OWN + "/v1"
+    assert HOSTS["bedrock"].config(chosen, None).settings == {
+        "bedrock-mantle-chat": {"region": "us-east-1"}
+    }
+
+
+@pytest.fixture
+def region_not_yet_warned(monkeypatch, caplog):
+    monkeypatch.setattr("app.settings._warned_of_region", False)
+    caplog.set_level(logging.WARNING, logger="app.settings")
+
+
+def test_a_stale_aws_region_in_the_environment_is_ignored_with_one_warning(
+    monkeypatch, caplog, region_not_yet_warned
+):
+    monkeypatch.setenv("AWS_REGION", "eu-west-1")
+
+    chosen = settings()
+    settings()
+
+    assert_warned_once_and_ignored(chosen, caplog)
+
+
+def test_a_stale_aws_region_in_the_env_file_is_ignored_with_one_warning(
+    tmp_path, caplog, region_not_yet_warned
+):
+    env_file = tmp_path / ".env"
+    env_file.write_text("AWS_REGION=eu-west-1\n", encoding="utf-8")
+
+    chosen = settings(_env_file=env_file)
+    settings(_env_file=env_file)
+
+    assert_warned_once_and_ignored(chosen, caplog)
+
+
+def test_a_stale_aws_region_var_on_a_worker_is_ignored_with_one_warning(
+    monkeypatch, caplog, region_not_yet_warned
+):
+    from app.cloudflare import deployment_environment
+
+    handed = deployment_environment(SimpleNamespace(AWS_REGION="eu-west-1"))
+    assert handed == {"AWS_REGION": "eu-west-1"}
+    for name, value in handed.items():
+        monkeypatch.setenv(name, value)
+
+    chosen = settings()
+    settings()
+
+    assert_warned_once_and_ignored(chosen, caplog)
+
+
+def test_no_aws_region_means_no_warning(monkeypatch, caplog, region_not_yet_warned):
+    monkeypatch.delenv("AWS_REGION", raising=False)
+
+    settings()
+
+    assert warnings_of_region(caplog) == []
 
 
 GATEWAY_OTHER = "https://gateway.ai.cloudflare.com/v1/other-acct/gw/workers-ai/v1"
@@ -343,14 +445,49 @@ def test_a_whitespace_model_id_without_a_profile_is_the_default_model():
     )
 
 
-async def test_a_padded_or_upper_case_region_leaves_the_default_path_as_it_was():
-    for region in (" US-EAST-1 ", "us-east-1\n", "Us-East-1"):
-        request, _ = await _body_and_url(settings(aws_region=region))
+# Captured from origin/main before AWS_REGION was removed, with nothing set.
+OLD_DEFAULT_REQUEST = {
+    "method": "POST",
+    "url": "https://bedrock-mantle.us-east-1.api.aws/v1/chat/completions",
+    "headers": {
+        "accept": "*/*",
+        "authorization": "Bearer bedrock-test",
+        "content-type": "application/json",
+        "host": "bedrock-mantle.us-east-1.api.aws",
+    },
+    "body": {
+        "max_completion_tokens": 8192,
+        "messages": [{"content": "Hello", "role": "user"}],
+        "model": "openai.gpt-oss-120b",
+        "reasoning_effort": "low",
+        "temperature": 0.0,
+    },
+}
 
-        assert str(request.url) == OWN + "/v1/chat/completions"
-        assert HOSTS["bedrock"].endpoint(settings(aws_region=region)) == (
-            "bedrock-mantle.us-east-1.api.aws"
-        )
+
+def _seen(request: httpx.Request) -> dict:
+    return {
+        "method": request.method,
+        "url": str(request.url),
+        "headers": {
+            name: value
+            for name, value in request.headers.items()
+            if name in OLD_DEFAULT_REQUEST["headers"]
+        },
+        "body": json.loads(request.content),
+    }
+
+
+async def test_the_default_is_the_request_it_always_was():
+    unset, _ = await _body_and_url(settings())
+    named, _ = await _body_and_url(settings(llm_base_url=OWN + "/v1"))
+
+    assert _seen(unset) == OLD_DEFAULT_REQUEST
+    assert _seen(named) == OLD_DEFAULT_REQUEST
+    assert HOSTS["bedrock"].endpoint(settings()) == "bedrock-mantle.us-east-1.api.aws"
+    assert not isinstance(
+        HOSTS["bedrock"].config(settings(), None).transport, RebasedTransport
+    )
 
 
 def test_a_bad_url_stops_the_app_and_the_model_at_startup():

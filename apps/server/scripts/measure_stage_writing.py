@@ -206,7 +206,7 @@ def settings_from(options: argparse.Namespace) -> Settings:
                 (
                     "LLM_BASE_URL",
                     settings.llm_base_url,
-                    profile.url_in(settings.aws_region),
+                    profile.base_url,
                 ),
             )
             if (chosen or None) != wanted

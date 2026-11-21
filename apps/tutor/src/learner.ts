@@ -3,6 +3,7 @@ import type { Card } from "ts-fsrs";
 import { keepRepliesTable, repliesIn, TurnReplies } from "./replies";
 import { isSteadyLine } from "./lines";
 import { keepToldTable, toldIn } from "./told";
+import { checkLlmConfig } from "./llm-config";
 import { timed, traced } from "./timing";
 import { takeTurn, type Ask, type Reply } from "./turn";
 import {
@@ -39,6 +40,7 @@ export class Learner extends Agent<Env> {
 
   private ensure(): void {
     if (this.ready) return;
+    checkLlmConfig(this.env);
     this.sql`
       CREATE TABLE IF NOT EXISTS memory (
         lesson TEXT NOT NULL,

@@ -49,7 +49,10 @@ def answering(sent: list[httpx.Request]) -> HttpxTransport:
 async def test_a_call_reaches_bedrock_mantle_with_the_key_the_model_and_the_limits():
     sent: list[httpx.Request] = []
     lm = build_lm(
-        settings(llm_model_id="openai.gpt-oss-120b", aws_region="us-west-2"),
+        settings(
+            llm_model_id="openai.gpt-oss-120b",
+            llm_base_url="https://bedrock-mantle.us-west-2.api.aws/v1",
+        ),
         transport=answering(sent),
     )
 

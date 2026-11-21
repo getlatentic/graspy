@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { spellNumbers } from "../src/spell";
-import { SPELL_TIMEOUT_MS, bedrockPath } from "../src/speller-host";
+import { bedrockPath } from "../src/bedrock-url";
+import { SPELL_TIMEOUT_MS } from "../src/speller-host";
 
 function speller(reply: unknown, calls: { n: number } = { n: 0 }) {
   return {
