@@ -126,6 +126,15 @@ npm run tauri dev     # the app, with the Vite server on port 1420
 - **Build.** `npm run tauri build` writes `src-tauri/target/release/bundle/macos/graspy.app` and a `.dmg`. `scripts/launch-smoke.sh` then opens the app twice, as a teacher would, and checks that one instance runs and nothing crashed.
 - **Content packages** in `src-tauri/resources/content` are built by `scripts/export_curriculum_packages.py`, `export_pacing_packages.py` and `export_textbook_corpus.py` from the plan-to-tutor dataset. Pass its paths as arguments, or set `PLAN_TO_TUTOR_ROOT` to its checkout. `scripts/extract_nerdc_revision.py` reads the NERDC PDF: `uv run scripts/extract_nerdc_revision.py --pdf … --dataset-root … --output …`.
 
+## Names compared alike on the server and the web
+
+`normalise` (apps/server/src/app/agent/subject_match.py) and `nameKey`
+(apps/web/src/features/learn/lib/name-key.ts) must give the same key. Both fold Latin letters by the
+table in `latin-ranges.json`, which the server holds as `latin_ranges.py`, and
+`name-key-corpus.json` pins their results; no test reads the engine's own Unicode tables for
+the script. To move to a newer Unicode, run `node scripts/generate-latin-ranges.mjs`, then
+regenerate the keys of the corpus with the server's `normalise` and run both test suites.
+
 ## Add a tutor tool
 
 1. Write the function. The model reads its name and docstring. It returns a `dict`, or an `Outcome` when the app must act on it or show a card.

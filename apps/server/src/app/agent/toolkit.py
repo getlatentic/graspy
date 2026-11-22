@@ -11,20 +11,22 @@ from dataclasses import dataclass, field
 from ..learner.record import Where
 from .cards import PASSAGE_UI, PRACTICE_UI, Card, placed
 from .context import LearnerContext
+from .courses import propose_path_tool
 from .passage import give_passage
 from .practice import give_practice
-from .reply import Action, Outcome
+from .reply import MAX_PATH_GOALS, Action, Outcome
 from .skills.load import load_skill_for_turn
 from .streaming import announce, announce_done
 from .tools import (
+    MAX_CHOSEN_SUBJECTS,
     add_topic_tool,
     calculate,
     change_subjects_tool,
     open_subject_tool,
     open_topic_tool,
-    propose_path,
     rebuild_plan_tool,
 )
+from .turn_policy import admit
 
 Tool = Callable[..., "dict | Outcome"]
 
@@ -65,7 +67,7 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("open_subject", _for_context(open_subject_tool)),
     ToolSpec("open_topic", lambda turn: open_topic_tool(turn.context, turn.message)),
     ToolSpec("add_topic", _for_context(add_topic_tool)),
-    ToolSpec("propose_path", _as_is(propose_path)),
+    ToolSpec("propose_path", _for_context(propose_path_tool)),
     ToolSpec("change_subjects", _for_context(change_subjects_tool)),
     ToolSpec("rebuild_plan", _for_context(rebuild_plan_tool)),
     ToolSpec("give_practice", _as_is(give_practice), ui=PRACTICE_UI),
@@ -81,20 +83,21 @@ class TurnOutputs:
     skills: list[str] = field(default_factory=list)
 
 
-def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., dict]:
+def _for_model(
+    tool: Tool, outputs: TurnOutputs, where: Where, room: int
+) -> Callable[..., dict]:
     """The tool as the model sees it: announced as it starts, and returning
     only its words, with what it did for the app kept in ``outputs``."""
 
     def kept(result: dict | Outcome) -> dict:
         if not isinstance(result, Outcome):
             return result
-        if result.action is not None:
-            outputs.actions.append(result.action)
+        told = admit(outputs.actions, result, room)
         if result.card is not None:
             outputs.cards.append(placed(result.card, where))
         if result.skill is not None and result.skill not in outputs.skills:
             outputs.skills.append(result.skill)
-        return result.told
+        return told
 
     if inspect.iscoroutinefunction(tool):
 
@@ -121,4 +124,10 @@ def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., 
 
 def tools_for(turn: Turn, outputs: TurnOutputs) -> list[Callable[..., dict]]:
     where = turn.where()
-    return [_for_model(spec.build(turn), outputs, where) for spec in TOOLS]
+    # With the list not sent the room is not known: the app keeps to the most itself.
+    room = (
+        MAX_CHOSEN_SUBJECTS - len(turn.context.held_subjects())
+        if turn.context.subjects
+        else MAX_PATH_GOALS
+    )
+    return [_for_model(spec.build(turn), outputs, where, room) for spec in TOOLS]

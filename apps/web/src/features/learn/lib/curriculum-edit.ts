@@ -6,6 +6,7 @@ import {
   type CurriculumSubject,
 } from "@/lib/curriculum-record";
 import { normalizeSubjectList } from "@/lib/slug";
+import { nameKey } from "./name-key";
 
 /** A path topic's own level, otherwise the plan's. */
 export function topicLevel(
@@ -42,16 +43,35 @@ export function pathsOf(curriculum: CurriculumData): CurriculumSubject[] {
   );
 }
 
+/** The most subjects a plan holds, as the tutor's change_subjects allows. */
+export const MAX_SUBJECTS = 15;
+
+export type PathOutcome =
+  | { status: "added" | "existing"; subject: CurriculumSubject }
+  | { status: "full" | "unnamed" };
+
+/** The path as a subject of its own. A subject of the same name, whatever its case, accents or spacing, is not added twice. */
 export function withPath(
   curriculum: CurriculumData,
   path: LearningPath,
-): { curriculum: CurriculumData; subject: CurriculumSubject } {
+): { curriculum: CurriculumData; outcome: PathOutcome } {
   const name = path.subject.trim() || path.goal.trim();
-  const existing = curriculum.subjects.find((subject) => subject.name === name);
-  if (existing) return { curriculum, subject: existing };
+  if (!name) return { curriculum, outcome: { status: "unnamed" } };
+  const key = nameKey(name);
+  const existing = curriculum.subjects.find(
+    (subject) => nameKey(subject.name) === key,
+  );
+  if (existing) {
+    return { curriculum, outcome: { status: "existing", subject: existing } };
+  }
+  if (curriculum.subjects.length >= MAX_SUBJECTS) {
+    return { curriculum, outcome: { status: "full" } };
+  }
 
   const { subjects } = normalizeSubjectList([...curriculum.subjects, name]);
-  const subject = subjects[subjects.length - 1];
+  const taken = new Set(curriculum.subjects.map((subject) => subject.slug));
+  const subject = subjects.find(({ slug }) => !taken.has(slug));
+  if (!subject) return { curriculum, outcome: { status: "unnamed" } };
   const steps = path.steps.filter(
     (step, index, all) =>
       step.title.trim() &&
@@ -79,8 +99,22 @@ export function withPath(
       },
       updatedAt: Date.now(),
     },
-    subject,
+    outcome: { status: "added", subject },
   };
+}
+
+/** Each path in turn, so a duplicate among them is "existing" the second time and the cap holds across them. */
+export function withPaths(
+  curriculum: CurriculumData,
+  paths: readonly LearningPath[],
+): { curriculum: CurriculumData; outcomes: PathOutcome[] } {
+  let next = curriculum;
+  const outcomes = paths.map((path) => {
+    const made = withPath(next, path);
+    next = made.curriculum;
+    return made.outcome;
+  });
+  return { curriculum: next, outcomes };
 }
 
 export function withPathsFrom(

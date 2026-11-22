@@ -1,0 +1,195 @@
+"""Which of the learner's subjects a name means. A wrong duplicate is
+recoverable and a wrong removal is not, so everything doubtful is a new subject
+for adding and "no such subject" for dropping."""
+
+import json
+import time
+from pathlib import Path
+
+import pytest
+
+from app.agent.latin_ranges import LATIN_RANGES, LATIN_UNICODE
+from app.agent.subject_match import candidates, normalise
+
+LATIN = Path(__file__).parents[2] / "web/src/features/learn/lib/latin-ranges.json"
+CORPUS = Path(__file__).parents[2] / "web/src/features/learn/lib/name-key-corpus.json"
+
+
+def named(wanted: str, *held: str) -> list[str]:
+    return [held[i] for i in candidates(wanted, list(held))]
+
+
+@pytest.mark.parametrize(
+    "case", json.loads(CORPUS.read_text()), ids=lambda c: c["key"][:20]
+)
+def test_the_key_of_a_name_is_the_one_the_web_app_makes(case):
+    """The web app's nameKey is tested against the same file."""
+    assert normalise(case["name"]) == case["key"]
+
+
+@pytest.mark.parametrize(
+    ("wanted", "held", "means"),
+    [
+        ("Mathematics", ["Mathematics"], "Mathematics"),
+        ("  MATHEMATICS ", ["Mathematics"], "Mathematics"),
+        ("mathematics!", ["Mathematics"], "Mathematics"),
+        ("Géographie", ["Geographie"], "Geographie"),
+        ("Español", ["espanol"], "espanol"),
+        ("Pre-calculus", ["Precalculus"], "Precalculus"),
+        ("Precalculus", ["Pre-calculus"], "Pre-calculus"),
+        ("Łódź History", ["Lodz History"], "Lodz History"),
+        ("हिन्दी", ["हिन्दी"], "हिन्दी"),
+        ("Maths", ["Mathematics"], "Mathematics"),
+        ("math", ["Mathematics"], "Mathematics"),
+        ("Maths", ["Further Mathematics", "Mathematics"], "Mathematics"),
+        (
+            "Further Maths",
+            ["Mathematics", "Further Mathematics"],
+            "Further Mathematics",
+        ),
+        ("eng", ["English Language"], "English Language"),
+        ("English", ["English Language"], "English Language"),
+        (
+            "english",
+            ["English as a Second Language", "Mathematics"],
+            "English as a Second Language",
+        ),
+        ("PE", ["Physical Education"], "Physical Education"),
+        ("P.E.", ["Physical Education"], "Physical Education"),
+        ("RE", ["Religious Education"], "Religious Education"),
+        ("bio", ["Biology"], "Biology"),
+        ("chem", ["Chemistry"], "Chemistry"),
+        ("phy", ["Physical Education", "Physics"], "Physics"),
+        ("phys", ["Physics"], "Physics"),
+        ("geo", ["Geography"], "Geography"),
+        ("hist", ["History"], "History"),
+    ],
+)
+def test_a_name_that_is_one_subject_they_hold(wanted, held, means):
+    assert named(wanted, *held) == [means]
+
+
+@pytest.mark.parametrize(
+    ("wanted", "held"),
+    [
+        # A full name matches only itself, in both directions.
+        ("English Language", ["English Literature"]),
+        ("English Literature", ["English Language"]),
+        ("English Language", ["English as a Second Language"]),
+        ("English as a Second Language", ["English Language"]),
+        ("English Language", ["English Language Arts"]),
+        ("English Language Arts", ["English Language"]),
+        ("English Language", ["English Literature", "English Language Arts"]),
+        # The full name does not stand for a held abbreviation.
+        ("Mathematics", ["Maths"]),
+        # A bare word is not a longer name that holds it.
+        ("Mathematics", ["Further Mathematics"]),
+        ("Economics", ["Home Economics"]),
+        ("Science", ["Basic Science"]),
+        ("Literature", ["English Literature"]),
+        ("Computer Science", ["Science"]),
+        # A prefix qualifier or a longer name is another subject.
+        ("Quantum Physics", ["Physics"]),
+        ("Physics", ["Quantum Physics"]),
+        ("Organic Chemistry", ["Chemistry"]),
+        ("World History", ["History"]),
+        ("Linear Algebra", ["Algebra"]),
+        ("Mathematics of machine learning", ["Mathematics"]),
+        ("Mathematics for machine learning", ["Mathematics"]),
+        # A level is another course.
+        ("Physics 2", ["Physics"]),
+        ("Physics", ["Physics 2"]),
+        ("Mathematics II", ["Mathematics"]),
+        ("Maths 3", ["Mathematics 2"]),
+        ("Year 7 Maths", ["Year 8 Maths"]),
+        ("Grade 7", ["Grade 8"]),
+        ("Maths A", ["Maths B"]),
+        ("Mathematics 1", ["Mathematics 2"]),
+        # A misspelling is a new subject, never a held one.
+        ("Macroeconomics", ["Microeconomics"]),
+        ("Ethnology", ["Ethology"]),
+        ("Electromagnetics", ["Electromagnetism"]),
+        ("Chemistry", ["Biochemistry"]),
+        ("Biochemistry", ["Chemistry"]),
+        ("Java", ["JavaScript"]),
+        ("Art", ["Arts"]),
+        ("Physics", ["Physical Education"]),
+        ("Mathmatics", ["Mathematics"]),
+        ("Mathematic", ["Mathematics"]),
+        # ICT, computing and computer science are not told apart by a table.
+        ("ICT", ["Computer Science"]),
+        ("Computer Science", ["ICT"]),
+        ("computing", ["Computer Science"]),
+        # Other scripts keep their vowel signs.
+        ("हिन्दी", ["हन्द"]),
+        # Unknown.
+        ("Astronomy", ["Mathematics", "Physics"]),
+        ("", ["Physics"]),
+        ("!!!", ["Physics"]),
+    ],
+)
+def test_a_name_that_is_none_of_the_subjects_they_hold(wanted, held):
+    assert named(wanted, *held) == []
+
+
+@pytest.mark.parametrize(
+    ("wanted", "held"),
+    [
+        ("english", ["English Language", "English Literature"]),
+        ("eng", ["English Language", "English Literature"]),
+        ("Maths", ["Maths", "maths"]),
+        ("Physics", ["Physics", "physics"]),
+    ],
+)
+def test_a_name_that_could_be_more_than_one_is_all_of_them(wanted, held):
+    assert named(wanted, *held) == held
+
+
+def test_an_abbreviation_means_only_a_subject_they_hold():
+    assert named("maths", "Physics") == []
+    assert named("english", "Mathematics") == []
+
+
+def test_the_exactly_spelled_subject_wins_over_an_abbreviation():
+    assert named("English", "English Language", "English") == ["English"]
+
+
+@pytest.mark.parametrize("length", [50_000, 100_000])
+def test_four_times_the_name_costs_about_the_same_not_four_times(length):
+    """The name is cut before it is compared, so time does not grow with its length."""
+    held = ["Mathematics", "Physics"]
+
+    def took(size: int) -> int:
+        name = "mathematics " * (size // 12)
+        best = None
+        for _ in range(7):
+            start = time.perf_counter_ns()
+            for _ in range(20):
+                candidates(name, held)
+            best = min(best or 10**18, time.perf_counter_ns() - start)
+        return best
+
+    assert took(4 * length) / took(length) < 2
+
+
+def test_the_latin_letters_are_the_ones_the_web_app_folds():
+    table = json.loads(LATIN.read_text())
+    assert LATIN_UNICODE == table["unicode"]
+    assert [list(r) for r in LATIN_RANGES] == table["ranges"]
+
+
+def test_fullwidth_and_mathematical_letters_are_the_letters_they_are():
+    assert (
+        normalise("ＭＡＴＨＳ") == normalise("𝐌𝐚𝐭𝐡𝐬") == normalise("Maths") == "maths"
+    )
+    assert named("𝐌𝐚𝐭𝐡𝐬", "Mathematics") == ["Mathematics"]
+
+
+def test_a_name_is_cut_after_it_is_decomposed():
+    """Two ways of writing the same letters meet in the same key."""
+    assert normalise("ﬁ" * 100) == normalise("fi" * 40 + "x") == "fi" * 40
+
+
+def test_a_name_is_cut_by_code_points_not_utf16_units():
+    assert normalise("a" * 79 + "\U00020000b") == "a" * 79 + "\U00020000"
+    assert len(normalise("\U00020000" * 100)) == 80

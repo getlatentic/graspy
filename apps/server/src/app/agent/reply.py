@@ -66,7 +66,11 @@ class Outcome:
     app. A tool that only answers the model returns a plain dict."""
 
     told: dict
-    action: Action | None = None
+    actions: tuple[Action, ...] = ()
     card: Card | None = None
     # The skill this call loaded, kept with the turn so the conversation knows it.
     skill: str | None = None
+
+
+# Courses one turn can offer, so a long list does not plan a dozen at once.
+MAX_PATH_GOALS = 5

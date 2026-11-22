@@ -3,8 +3,14 @@ import { useNavigate, type NavigateFunction } from "react-router";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { LearningPath } from "@/lib/curriculum-api";
 import type { ChatLink } from "@/lib/chat-db";
+import type { CurriculumData } from "@/lib/curriculum-record";
 import { useI18n, type Translate } from "@/lib/i18n-context";
-import { goalIndex, withPath, withTopic } from "../lib/curriculum-edit";
+import {
+  goalIndex,
+  MAX_SUBJECTS,
+  withPaths,
+  withTopic,
+} from "../lib/curriculum-edit";
 import { rebuildRequest } from "../lib/curriculum-request";
 import { lessonPath, subjectPath } from "@/lib/learn-paths";
 import type { LearnerPlan } from "./use-learner-plan";
@@ -14,11 +20,11 @@ export type ActionOf<K extends TutorAction["type"]> = Extract<
   { type: K }
 >;
 
-type PlanEditDeps = Pick<
-  LearnerPlan,
-  "curriculum" | "applyCurriculum" | "regenerate"
-> & {
+type PlanEditDeps = Pick<LearnerPlan, "applyCurriculum" | "regenerate"> & {
+  /** The plan as it is now, after the edits made before this one. */
+  read: () => CurriculumData | null;
   onDone: (message: string, link?: ChatLink) => void;
+  onFailure: (message: string) => void;
 };
 
 const lessonLink = (
@@ -31,7 +37,7 @@ const lessonLink = (
 });
 
 function planEdits(
-  { curriculum, applyCurriculum, regenerate, onDone }: PlanEditDeps,
+  { read, applyCurriculum, regenerate, onDone, onFailure }: PlanEditDeps,
   t: Translate,
   navigate: NavigateFunction,
 ) {
@@ -51,7 +57,8 @@ function planEdits(
       subject,
       topic,
     }: ActionOf<"add_topic">) => {
-      const added = curriculum && withTopic(curriculum, subjectSlug, topic);
+      const current = read();
+      const added = current && withTopic(current, subjectSlug, topic);
       if (!added) return;
       await applyCurriculum(added.curriculum);
       onDone(
@@ -59,18 +66,41 @@ function planEdits(
         lessonLink(t, subjectSlug, added.index),
       );
     },
-    acceptPath: async (path: LearningPath) => {
-      if (!curriculum) return;
-      const { curriculum: next, subject } = withPath(curriculum, path);
-      await applyCurriculum(next);
-      const goal = Math.max(0, goalIndex(next, subject.slug));
-      onDone(
-        t("chat.pathAdded", { subject: subject.name }),
-        lessonLink(t, subject.slug, goal),
-      );
+    /** Adds the paths, and returns those that were not added for want of room or of a plan. */
+    acceptPaths: async (paths: LearningPath[]): Promise<LearningPath[]> => {
+      const current = read();
+      if (!current) return paths;
+      if (paths.length === 0) return [];
+      const { curriculum: next, outcomes } = withPaths(current, paths);
+      if (outcomes.some(({ status }) => status === "added")) {
+        await applyCurriculum(next);
+      }
+      const told = new Set<string>();
+      for (const outcome of outcomes) {
+        if (outcome.status !== "added" && outcome.status !== "existing")
+          continue;
+        const { subject } = outcome;
+        if (told.has(subject.slug)) continue;
+        told.add(subject.slug);
+        const goal = Math.max(0, goalIndex(next, subject.slug));
+        onDone(
+          t(outcome.status === "added" ? "chat.pathAdded" : "chat.pathExists", {
+            subject: subject.name,
+          }),
+          lessonLink(t, subject.slug, goal),
+        );
+      }
+      if (outcomes.some(({ status }) => status === "unnamed")) {
+        onFailure(t("chat.pathUnnamed"));
+      }
+      if (outcomes.some(({ status }) => status === "full")) {
+        onFailure(t("chat.pathsFull", { count: MAX_SUBJECTS }));
+      }
+      return paths.filter((_, at) => outcomes[at].status === "full");
     },
     rebuild: async () => {
-      const request = curriculum && rebuildRequest(curriculum);
+      const current = read();
+      const request = current && rebuildRequest(current);
       if (!request) return;
       navigate("/app/learn");
       await regenerate(request, t);
@@ -80,20 +110,21 @@ function planEdits(
 
 /** Each edit is reported with a link, so the chat never navigates away itself. */
 export function useChatPlanEdits({
-  curriculum,
+  read,
   applyCurriculum,
   regenerate,
   onDone,
+  onFailure,
 }: PlanEditDeps) {
   const { t } = useI18n();
   const navigate = useNavigate();
   return useMemo(
     () =>
       planEdits(
-        { curriculum, applyCurriculum, regenerate, onDone },
+        { read, applyCurriculum, regenerate, onDone, onFailure },
         t,
         navigate,
       ),
-    [applyCurriculum, curriculum, navigate, onDone, regenerate, t],
+    [applyCurriculum, navigate, onDone, onFailure, read, regenerate, t],
   );
 }

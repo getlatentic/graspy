@@ -40,7 +40,10 @@ export interface TurnDeps {
   ) => Promise<void>;
   /** The conversation's context, not the page's. */
   learnerFor: (scope: ThreadScope) => Promise<LearnerContext>;
-  carryOut: (action: TutorAction, thread: ChatThread) => Promise<void>;
+  carryOut: (
+    actions: readonly TutorAction[],
+    thread: ChatThread,
+  ) => Promise<void>;
   ask?: typeof askAgent;
   save?: typeof saveChatMessage;
 }
@@ -81,7 +84,7 @@ export async function runTurn(
       ...(card ? { card } : {}),
       ...(reply.stopped ? { stopped: true } : {}),
     });
-    for (const action of reply.actions) await deps.carryOut(action, thread);
+    if (reply.actions.length > 0) await deps.carryOut(reply.actions, thread);
   } catch (error) {
     await failed(error, shown, deps.store, request.t);
   } finally {

@@ -7,7 +7,10 @@ import {
   pathsOf,
   subjectChange,
   topicLevel,
+  MAX_SUBJECTS,
   withPath,
+  withPaths,
+  type PathOutcome,
   withPathsFrom,
   withSubjects,
   sameTopic,
@@ -19,6 +22,19 @@ const MATHS = { name: "Mathematics", slug: "mathematics" };
 const SCIENCE = { name: "Basic Science", slug: "basic-science" };
 const ENGLISH = { name: "English", slug: "english" };
 const NOTHING_ADDED = { subjects: [], topics: {} };
+
+function addedSubject(outcome: PathOutcome) {
+  if (outcome.status !== "added") {
+    throw new Error(`not added: ${outcome.status}`);
+  }
+  return outcome.subject;
+}
+
+const subjectsNamed = (count: number) =>
+  Array.from({ length: count }, (_, n) => ({
+    name: `Subject ${n}`,
+    slug: `subject-${n}`,
+  }));
 
 function plan(extra: Partial<CurriculumData> = {}): CurriculumData {
   return {
@@ -195,7 +211,8 @@ const REAL_ANALYSIS = {
 
 describe("withPath", () => {
   it("adds the path as a subject whose topics keep their order and levels", () => {
-    const { curriculum, subject } = withPath(plan(), REAL_ANALYSIS);
+    const { curriculum, outcome } = withPath(plan(), REAL_ANALYSIS);
+    const subject = addedSubject(outcome);
 
     expect(subject).toEqual({ name: "Real analysis", slug: "real-analysis" });
     expect(curriculum.subjects.at(-1)).toEqual(subject);
@@ -211,7 +228,8 @@ describe("withPath", () => {
   });
 
   it("records its last step as the goal the learner asked for", () => {
-    const { curriculum, subject } = withPath(plan(), REAL_ANALYSIS);
+    const { curriculum, outcome } = withPath(plan(), REAL_ANALYSIS);
+    const subject = addedSubject(outcome);
 
     expect(curriculum.goals).toEqual({
       "real-analysis": "Sequences and series",
@@ -222,7 +240,102 @@ describe("withPath", () => {
 
   it("returns a subject already in the plan instead of adding it twice", () => {
     const once = withPath(plan(), REAL_ANALYSIS).curriculum;
-    expect(withPath(once, REAL_ANALYSIS).curriculum).toBe(once);
+    const again = withPath(once, REAL_ANALYSIS);
+
+    expect(again.curriculum).toBe(once);
+    expect(again.outcome.status).toBe("existing");
+  });
+
+  it("finds the subject already in the plan whatever its case", () => {
+    const once = withPath(plan(), REAL_ANALYSIS).curriculum;
+    const shouted = { ...REAL_ANALYSIS, subject: "  REAL   Analysis " };
+
+    expect(withPath(once, shouted).curriculum).toBe(once);
+  });
+
+  it("finds it whatever its accents, and does not take a nearby name for it", () => {
+    const cafe = withPath(plan(), { ...REAL_ANALYSIS, subject: "Café" });
+
+    expect(
+      withPath(cafe.curriculum, { ...REAL_ANALYSIS, subject: "CAFE" }).outcome
+        .status,
+    ).toBe("existing");
+    expect(
+      withPath(plan(), { ...REAL_ANALYSIS, subject: "Maths" }).outcome.status,
+    ).toBe("added");
+  });
+
+  it("names the subject for a path with no subject by its goal, and refuses one with neither", () => {
+    const byGoal = withPath(plan(), { ...REAL_ANALYSIS, subject: " " });
+    expect(addedSubject(byGoal.outcome).name).toBe(REAL_ANALYSIS.goal);
+
+    const nameless = withPath(plan(), { subject: " ", goal: " ", steps: [] });
+    expect(nameless.outcome.status).toBe("unnamed");
+    expect(nameless.curriculum.subjects).toHaveLength(2);
+  });
+
+  it("adds no subject beyond the most a plan holds", () => {
+    const full = plan({ subjects: subjectsNamed(MAX_SUBJECTS) });
+
+    const refused = withPath(full, REAL_ANALYSIS);
+
+    expect(refused.outcome.status).toBe("full");
+    expect(refused.curriculum).toBe(full);
+  });
+});
+
+describe("withPaths", () => {
+  const quantum = { ...REAL_ANALYSIS, subject: "Quantum computing" };
+
+  it("adds each as its own subject and skips a duplicate among them", () => {
+    const { curriculum, outcomes } = withPaths(plan(), [
+      REAL_ANALYSIS,
+      quantum,
+      { ...REAL_ANALYSIS, subject: "real analysis" },
+    ]);
+
+    expect(outcomes.map((o) => o.status)).toEqual([
+      "added",
+      "added",
+      "existing",
+    ]);
+    expect(curriculum.subjects.map((s) => s.name)).toEqual([
+      "Mathematics",
+      "Basic Science",
+      "Real analysis",
+      "Quantum computing",
+    ]);
+  });
+
+  it("gives one outcome for each path, in order, blank and duplicate ones included", () => {
+    const blank = { subject: " ", goal: " ", steps: REAL_ANALYSIS.steps };
+
+    const { curriculum, outcomes } = withPaths(plan(), [
+      blank,
+      REAL_ANALYSIS,
+      { ...REAL_ANALYSIS, subject: "REAL analysis" },
+      quantum,
+    ]);
+
+    expect(outcomes.map((o) => o.status)).toEqual([
+      "unnamed",
+      "added",
+      "existing",
+      "added",
+    ]);
+    expect(curriculum.subjects).toHaveLength(4);
+  });
+
+  it("stops at the cap and says which did not fit", () => {
+    const nearlyFull = plan({ subjects: subjectsNamed(MAX_SUBJECTS - 1) });
+
+    const { curriculum, outcomes } = withPaths(nearlyFull, [
+      REAL_ANALYSIS,
+      quantum,
+    ]);
+
+    expect(outcomes.map((o) => o.status)).toEqual(["added", "full"]);
+    expect(curriculum.subjects).toHaveLength(MAX_SUBJECTS);
   });
 });
 

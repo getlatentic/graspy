@@ -122,3 +122,21 @@ describe("a request made for one learner", () => {
     });
   });
 });
+
+describe("getJson with a signal", () => {
+  it("does not try again once the signal is aborted", async () => {
+    const controller = new AbortController();
+    fetchWithSession.mockImplementation(() => {
+      controller.abort();
+      return Promise.reject(new NetworkError("aborted"));
+    });
+
+    const outcome = await settled(
+      getJson("/thing", undefined, controller.signal),
+    );
+
+    expect(outcome).toHaveProperty("error");
+    expect(fetchWithSession).toHaveBeenCalledTimes(1);
+    expect(fetchWithSession.mock.calls[0][1]?.signal).toBe(controller.signal);
+  });
+});

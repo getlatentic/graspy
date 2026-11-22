@@ -257,6 +257,34 @@ async def test_asking_to_go_to_a_topic_returns_an_action_for_the_app():
     ]
 
 
+async def test_three_courses_asked_for_reach_the_app_as_three_proposals():
+    """Not only the last of them: each course is a subject the learner may add."""
+    goals = ["machine learning", "maths of machine learning", "quantum computing"]
+    _, context = stand_in(
+        [
+            {
+                "next_thought": "three new courses",
+                "next_tool_name": "propose_path",
+                "next_tool_args": {"goals": goals},
+            },
+            {"next_thought": "done", "next_tool_name": "finish", "next_tool_args": {}},
+            {"reasoning": "shown", "answer": "They are below.", "follow_ups": []},
+        ]
+    )
+
+    with context:
+        reply = await finished(
+            Tutor(InMemoryConversationStore()),
+            "c1",
+            "Courses on ML, the maths of ML and quantum computing, please.",
+            MATHS,
+        )
+
+    assert [action.model_dump(by_alias=True) for action in reply.actions] == [
+        {"type": "propose_path", "goal": goal} for goal in goals
+    ]
+
+
 async def test_asking_to_be_taught_a_topic_is_answered_without_its_lesson():
     lm, context = stand_in(
         [
