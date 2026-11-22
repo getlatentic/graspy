@@ -1,4 +1,4 @@
-/* graspy-tokens source=7208e190555abfe606f187ed3f087e7df06b0e8568b68c83b39532116d677127 content=255089faf2333e236240dad665c6ace5f0ba2024f8e0be5c494e1e60d6ef49f7 */
+/* graspy-tokens source=91e96bc945cffda91ee7c3babd9a1636b8198fb4305580bd2557e72b60d1572b content=19261b37f47349ab5872d193d30ebd080155c107a0f4d11da61ca9b5465ff215 */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 :root {
   --color-canvas: #f5f8fa;
@@ -30,9 +30,9 @@
   --color-tint-purple: #7057d1;
   --color-tint-purple-soft: #f0ecfc;
   --color-on-danger: #ffffff;
-  --color-art-ground: #96d5f6;
-  --color-art-sky: #d4edfb;
-  --color-art-wave: #a9dcf7;
+  --color-art-ground-start: #fef4ec;
+  --color-art-ground-mid: #e3eefa;
+  --color-art-ground-end: #c4e2fe;
   --color-on-art: #12232e;
   --font-display: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;

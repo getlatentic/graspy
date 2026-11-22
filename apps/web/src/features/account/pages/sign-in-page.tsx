@@ -2,7 +2,7 @@ import { Link, Navigate } from "react-router";
 import { useAccount } from "@/lib/account/use-account";
 import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
-import { Art } from "@/components/brand/art";
+import { Scene } from "@/components/brand/scene";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/cn";
 import { buttonStyles } from "@/components/ui/button-styles";
@@ -14,49 +14,19 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="relative isolate flex min-h-dvh flex-col items-center justify-center gap-6 overflow-x-hidden bg-art-sky px-5 py-8 text-on-art sm:px-10 lg:grid lg:grid-cols-2 lg:grid-rows-[1fr_auto_1fr] lg:gap-x-12 lg:gap-y-0 lg:px-20">
-      <Shapes />
+    <main className="relative isolate flex min-h-dvh flex-col items-center justify-center gap-6 overflow-x-hidden art-ground px-5 py-8 text-on-art sm:px-10 lg:grid lg:grid-cols-2 lg:grid-rows-[1fr_auto_1fr] lg:gap-x-12 lg:gap-y-0 lg:px-20">
       <div className="lg:absolute lg:start-20 lg:top-16">
         <Logo />
       </div>
-      <Art
-        name="tablet"
+      <Scene
+        band={null}
         eager
-        className="max-h-[32dvh] max-w-80 object-contain object-bottom lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:max-h-[64dvh] lg:max-w-xl lg:self-center lg:justify-self-center"
+        className="max-h-[32dvh] lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:max-h-[72dvh] lg:self-center lg:justify-self-center"
       />
       <div className="w-full max-w-sm lg:col-start-1 lg:row-start-2 lg:max-w-md">
         <SignIn />
       </div>
     </main>
-  );
-}
-
-/** Behind everything: a wave along the foot on a phone, and from lg a wide sky with a blob in each top corner and a wave. */
-function Shapes() {
-  return (
-    <>
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 1440 200"
-        preserveAspectRatio="none"
-        className="absolute inset-x-0 bottom-0 -z-10 h-24 w-full text-art-wave lg:hidden"
-      >
-        <path
-          fill="currentColor"
-          fillOpacity="0.6"
-          d="M0 120C240 40 480 40 720 100s480 80 720-20v120H0z"
-        />
-      </svg>
-      <img
-        src="/brand/sign-in-landscape.webp"
-        alt=""
-        width={1600}
-        height={1000}
-        loading="lazy"
-        decoding="async"
-        className="absolute inset-0 -z-10 hidden size-full object-cover lg:block"
-      />
-    </>
   );
 }
 
@@ -74,6 +44,7 @@ export function SignIn() {
         <GoogleSignInButton
           variant="primary"
           size="lg"
+          problemClassName="text-on-art"
           className="w-full whitespace-nowrap px-3 text-base sm:px-6 lg:text-lg"
         />
         <Link

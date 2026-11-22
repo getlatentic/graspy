@@ -119,7 +119,6 @@
     }
   },
   "onboarding": {
-    "contact": "Contact",
     "home": "graspy home",
     "stepOf": "Step {current} of {total}",
     "back": "Back",

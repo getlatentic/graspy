@@ -53,12 +53,7 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
   return (
     <OnboardingLayout band={chosenBand(form.watch())}>
       <StepHeading step={steps.step} index={steps.index} count={steps.count} />
-      <div
-        key={steps.step}
-        className={`mt-8 flex-1 min-h-0 motion-safe:animate-enter lg:pe-1 ${
-          steps.step === "subjects" ? "" : "lg:overflow-y-auto"
-        }`}
-      >
+      <div key={steps.step} className="mt-8 motion-safe:animate-enter">
         <FormProvider {...form}>
           {steps.step === "profile" ? (
             <ProfileStep suggestedCountry={detected.country ?? undefined} />

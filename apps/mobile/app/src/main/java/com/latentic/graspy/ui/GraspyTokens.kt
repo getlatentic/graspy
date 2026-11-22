@@ -1,4 +1,4 @@
-// graspy-tokens source=7208e190555abfe606f187ed3f087e7df06b0e8568b68c83b39532116d677127 content=35ce9d3a66eb422fbb1a7c0ad4595b2b6c71a2569e12e47d72c1bc3e86742cb5
+// graspy-tokens source=91e96bc945cffda91ee7c3babd9a1636b8198fb4305580bd2557e72b60d1572b content=310dcf4552d4f39ac641865fe1d8e4e671447659026a5789878e01c9ccf62823
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -79,13 +79,13 @@ object GraspyColor {
     val TintPurpleSoft = Color(0xFFF0ECFC)
     /** Text on a danger fill. */
     val OnDanger = Color(0xFFFFFFFF)
-    /** The sky of the art screens (sign-in): bright in dark mode too, because the picture behind it is. */
-    val ArtGround = Color(0xFF96D5F6)
-    /** The pale sky of the sign-in screen; light in dark mode too. */
-    val ArtSky = Color(0xFFD4EDFB)
-    /** The wave at the foot of the sign-in screen. */
-    val ArtWave = Color(0xFFA9DCF7)
-    /** Text on art-ground; 7.6:1. */
+    /** Where the art screens' ground starts, warm ivory at the left and top; light in dark mode too, because the picture on it is. */
+    val ArtGroundStart = Color(0xFFFEF4EC)
+    /** The middle of the art screens' ground; also the flat colour behind it where an image is not drawn. */
+    val ArtGroundMid = Color(0xFFE3EEFA)
+    /** Where the art screens' ground ends, pale blue at the right and foot. */
+    val ArtGroundEnd = Color(0xFFC4E2FE)
+    /** Text on the art screens' ground, from art-ground-start to art-ground-end. */
     val OnArt = Color(0xFF12232E)
 }
 

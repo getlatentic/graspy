@@ -33,6 +33,56 @@
   }
 }
 
+/* The ground of the sign-in and onboarding screens, on a fixed layer the size
+   of the largest viewport, so a page that grows or a phone's toolbar that moves
+   never rescales or shifts it. The picture sits on the same warm-to-blue stops
+   as a gradient, so the page is never a flat colour of another family while the
+   picture loads. A tall screen, a tablet held upright included, gets the tall
+   picture. */
+.art-ground {
+  position: relative;
+  isolation: isolate;
+}
+
+.art-ground::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--color-art-ground-mid);
+  background-image:
+    url("/brand/art/ground-tall.webp"),
+    linear-gradient(
+      to bottom,
+      var(--color-art-ground-start),
+      var(--color-art-ground-mid),
+      var(--color-art-ground-end)
+    );
+  background-position: center;
+  background-size: cover;
+}
+
+@media (min-width: 48rem) and (orientation: landscape) {
+  .art-ground::before {
+    background-image:
+      url("/brand/art/ground-wide.webp"),
+      linear-gradient(
+        to bottom right,
+        var(--color-art-ground-start),
+        var(--color-art-ground-mid),
+        var(--color-art-ground-end)
+      );
+  }
+}
+
+@media (forced-colors: active) {
+  .art-ground::before {
+    background-image: none;
+  }
+}
+
 .nums {
   font-variant-numeric: tabular-nums;
 }
