@@ -24,6 +24,7 @@ export function gamepadOutput(
   };
   return {
     available: () => actuator() !== null,
+    channel: "touch",
     needsActivation: false,
     play: (cue) => {
       const { duration, weak, strong } = RUMBLES[cue];

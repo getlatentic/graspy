@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { Channel } from "../lib/haptic-patterns";
 import { haptics } from "../lib/haptics";
 
 function subscribe(onChange: () => void): () => void {
@@ -10,7 +11,11 @@ function subscribe(onChange: () => void): () => void {
   };
 }
 
-/** Whether a phone's motor or a controller could make a cue felt; follows controllers coming and going. */
-export function useHapticsSupported(): boolean {
-  return useSyncExternalStore(subscribe, haptics.supported, () => false);
+/** Whether a channel could be felt or heard here; follows controllers coming and going. */
+export function useHapticsSupported(channel: Channel): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => haptics.supported(channel),
+    () => false,
+  );
 }

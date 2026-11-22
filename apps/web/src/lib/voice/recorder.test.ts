@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMicrophone, showPage } from "./microphone.fake";
+import { isQuiet } from "./quiet";
 import { startTake } from "./recorder";
 import { fakeWakeLock, noWakeLock } from "./wake-lock.fake";
 
@@ -12,6 +13,24 @@ beforeEach(() => {
   noWakeLock();
 });
 afterEach(() => vi.unstubAllGlobals());
+
+describe("the app's own sounds during a take", () => {
+  it("keep quiet from when the microphone opens until the take ends", async () => {
+    expect(isQuiet()).toBe(false);
+    const take = await startTake(() => undefined);
+    expect(isQuiet()).toBe(true);
+    take.cancel();
+    await take.done;
+    expect(isQuiet()).toBe(false);
+  });
+
+  it("come back when the take is ended by the page hiding", async () => {
+    const take = await startTake(() => undefined);
+    showPage("hidden");
+    await take.done;
+    expect(isQuiet()).toBe(false);
+  });
+});
 
 describe("a take out of sight", () => {
   it("ends unsent and releases the microphone when the tab is hidden", async () => {

@@ -1,17 +1,28 @@
 /** What the learner chose, kept on this device like the panes' layout. */
 export interface HapticSettings {
-  enabled: boolean;
+  vibration: boolean;
+  sound: boolean;
 }
 
 const STORAGE_KEY = "graspy.haptics";
 
-export const DEFAULT_SETTINGS: HapticSettings = { enabled: true };
+export const DEFAULT_SETTINGS: HapticSettings = {
+  vibration: true,
+  sound: true,
+};
 
 export function parseSettings(raw: string | null): HapticSettings {
   try {
-    const stored: unknown = JSON.parse(raw ?? "null");
-    const enabled = (stored as { enabled?: unknown } | null)?.enabled;
-    return typeof enabled === "boolean" ? { enabled } : DEFAULT_SETTINGS;
+    const stored = JSON.parse(raw ?? "null") as Partial<
+      Record<keyof HapticSettings, unknown>
+    > | null;
+    const choice = (value: unknown, fallback: boolean) =>
+      typeof value === "boolean" ? value : fallback;
+    if (typeof stored !== "object" || stored === null) return DEFAULT_SETTINGS;
+    return {
+      vibration: choice(stored.vibration, DEFAULT_SETTINGS.vibration),
+      sound: choice(stored.sound, DEFAULT_SETTINGS.sound),
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }

@@ -33,8 +33,15 @@ describe("the answer controls", () => {
     const trigger = vi.spyOn(haptics, "trigger").mockImplementation(() => {});
     const { onRecord } = controls("your-turn");
     await userEvent.click(screen.getAllByRole("button")[0]);
-    expect(trigger).toHaveBeenCalledWith("press");
+    expect(trigger).toHaveBeenCalledWith("press", { sound: false });
     expect(onRecord).toHaveBeenCalledOnce();
+  });
+
+  it("keep the microphone's button out of the select tick", () => {
+    controls("your-turn");
+    expect(screen.getAllByRole("button")[0].hasAttribute("data-no-sound")).toBe(
+      true,
+    );
   });
 
   it("do not buzz for hearing it again or for finishing speaking", async () => {

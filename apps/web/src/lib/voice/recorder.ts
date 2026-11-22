@@ -1,3 +1,4 @@
+import { holdQuiet } from "./quiet";
 import { keepScreenOn } from "./screen-awake";
 import type { EndpointState } from "./speech-endpoint";
 import { TakeCollector } from "./take-collector";
@@ -45,6 +46,8 @@ export async function startTake(
   onLevel: (level: number) => void,
 ): Promise<Take> {
   const { stream, context, node } = await openMicrophone();
+  // The app's own clicks and tones would be recorded as part of the answer.
+  const letSoundsPlay = holdQuiet();
   let settle: (result: TakeResult) => void = () => {};
   const done = new Promise<TakeResult>((resolve) => (settle = resolve));
   let open = true;
@@ -56,6 +59,7 @@ export async function startTake(
     document.removeEventListener("visibilitychange", cancelWhenHidden);
     window.removeEventListener("pagehide", cancel);
     letScreenSleep();
+    letSoundsPlay();
     node.port.onmessage = null;
     stream.getTracks().forEach((track) => track.stop());
     void context.close();

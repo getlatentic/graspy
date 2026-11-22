@@ -99,15 +99,15 @@ describe("the browser's haptics", () => {
     setBrowser({ activation: true });
     const haptics = await load();
     const { setSettings } = await import("./haptic-settings");
-    setSettings({ enabled: false });
+    setSettings({ vibration: false, sound: true });
     haptics.trigger("correct");
     expect(vibrate).not.toHaveBeenCalled();
   });
 
   it("is supported on a touch screen and not on a desktop with the method alone", async () => {
     setBrowser({ touch: 5 });
-    expect((await load()).supported()).toBe(true);
+    expect((await load()).supported("touch")).toBe(true);
     setBrowser({ touch: 0 });
-    expect((await load()).supported()).toBe(false);
+    expect((await load()).supported("touch")).toBe(false);
   });
 });

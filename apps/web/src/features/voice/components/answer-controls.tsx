@@ -48,10 +48,11 @@ export function AnswerControls({
         <Button
           size="lg"
           onClick={() => {
-            haptics.trigger("press");
+            haptics.trigger("press", { sound: false });
             onRecord();
           }}
           className="rounded-full"
+          data-no-sound
         >
           <Mic className="size-5" aria-hidden="true" />
           {t("voice.lesson.record")}

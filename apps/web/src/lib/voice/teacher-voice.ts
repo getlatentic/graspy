@@ -1,3 +1,5 @@
+import { holdQuiet } from "./quiet";
+
 /** How long a line is waited for before the lesson goes on with her words alone. */
 const LONGEST_WAIT_MS = 45_000;
 // A twentieth of a second of silence, played on the tap that starts a lesson: Safari lets a page
@@ -58,7 +60,11 @@ export class TeacherVoice {
       return "failed";
     }
     return new Promise<Spoken>((resolve) => {
-      this.finish = resolve;
+      const letSoundsPlay = holdQuiet();
+      this.finish = (spoken) => {
+        letSoundsPlay();
+        resolve(spoken);
+      };
       const playable = this.element.canPlayType(audio.type || "audio/ogg");
       if (playable) this.playElement(audio);
       else void this.playDecoded(audio);

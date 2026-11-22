@@ -1,36 +1,48 @@
 import type { Output } from "./haptic-device";
-import { MIN_GAP_MS, PRIORITY, type Cue } from "./haptic-patterns";
+import {
+  MIN_GAP_MS,
+  PRIORITY,
+  type Channel,
+  type Cue,
+} from "./haptic-patterns";
 
 /** Everything a cue depends on, passed in so none of it is read from the page here. */
 export interface HapticsDeps {
   outputs: readonly Output[];
-  enabled: () => boolean;
+  /** Whether a channel may be used now: the learner's switch, and what else keeps it quiet. */
+  allows: (channel: Channel) => boolean;
   hidden: () => boolean;
-  reducedMotion: () => boolean;
   /** The learner has touched or pressed something on this page. */
   activated: () => boolean;
   /** A monotonic clock in milliseconds. */
   now: () => number;
 }
 
+export interface TriggerOptions {
+  /** False for a cue whose tone would get in the way (the microphone's button). */
+  sound?: boolean;
+}
+
 export interface Haptics {
   /** Plays the cue if it is allowed; otherwise does nothing. */
-  trigger: (cue: Cue) => void;
+  trigger: (cue: Cue, options?: TriggerOptions) => void;
   stop: () => void;
-  /** Whether this device can make a cue felt at all. */
-  supported: () => boolean;
+  /** Whether this device can make a cue felt, or heard, at all. */
+  supported: (channel: Channel) => boolean;
 }
 
 export function createHaptics(deps: HapticsDeps): Haptics {
   let lastAt = -Infinity;
   let lastCue: Cue | null = null;
 
-  const open = () => deps.enabled() && !deps.reducedMotion() && !deps.hidden();
-
-  // A phone ignores a vibration before the first tap; a controller does not mind.
-  const felt = () =>
+  // A phone ignores a vibration before the first tap, and a sound cannot start
+  // before one; a controller does not mind.
+  const reaching = (options: TriggerOptions) =>
     deps.outputs.filter(
-      (output) => !output.needsActivation || deps.activated(),
+      (output) =>
+        deps.allows(output.channel) &&
+        (output.channel !== "sound" || options.sound !== false) &&
+        (!output.needsActivation || deps.activated()),
     );
 
   // Inside the gap only a more important cue gets through, and replaces the last.
@@ -40,9 +52,9 @@ export function createHaptics(deps: HapticsDeps): Haptics {
     PRIORITY[cue] <= PRIORITY[lastCue];
 
   return {
-    trigger: (cue) => {
-      if (!open()) return;
-      const outputs = felt();
+    trigger: (cue, options = {}) => {
+      if (deps.hidden()) return;
+      const outputs = reaching(options);
       const now = deps.now();
       if (outputs.length === 0 || crowded(cue, now)) return;
       lastAt = now;
@@ -52,6 +64,9 @@ export function createHaptics(deps: HapticsDeps): Haptics {
     stop: () => {
       for (const output of deps.outputs) output.stop();
     },
-    supported: () => deps.outputs.some((output) => output.available()),
+    supported: (channel) =>
+      deps.outputs.some(
+        (output) => output.channel === channel && output.available(),
+      ),
   };
 }

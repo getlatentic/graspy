@@ -9,9 +9,8 @@ function setup(over: Partial<HapticsDeps> = {}) {
   const clock = { at: 1000 };
   const haptics = createHaptics({
     outputs: [vibrationOutput({ vibrate })!],
-    enabled: () => true,
+    allows: () => true,
     hidden: () => false,
-    reducedMotion: () => false,
     activated: () => true,
     now: () => clock.at,
     ...over,
@@ -27,7 +26,8 @@ describe("haptics", () => {
     const { haptics, vibrate } = setup();
     haptics.trigger("wrong");
     expect(vibrate).toHaveBeenCalledWith([18, 70, 18]);
-    expect(haptics.supported()).toBe(true);
+    expect(haptics.supported("touch")).toBe(true);
+    expect(haptics.supported("sound")).toBe(false);
   });
 
   it("does nothing where there is no output", () => {
@@ -38,20 +38,19 @@ describe("haptics", () => {
     });
     expect(() => haptics.trigger("correct")).not.toThrow();
     expect(() => haptics.stop()).not.toThrow();
-    expect(haptics.supported()).toBe(false);
+    expect(haptics.supported("touch")).toBe(false);
   });
 
   it("is not supported on a desktop that has the method and no touch screen", () => {
     const { haptics } = setup({
       outputs: [vibrationOutput({ vibrate: () => true }, () => false)!],
     });
-    expect(haptics.supported()).toBe(false);
+    expect(haptics.supported("touch")).toBe(false);
   });
 
   it.each([
     ["the page is hidden", { hidden: () => true }],
-    ["the learner prefers reduced motion", { reducedMotion: () => true }],
-    ["the learner turned it off", { enabled: () => false }],
+    ["the learner turned it off", { allows: () => false }],
     ["nothing has been touched yet", { activated: () => false }],
   ])("is silent when %s", (_, over) => {
     const { haptics, vibrate } = setup(over);

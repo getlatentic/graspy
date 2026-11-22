@@ -1,5 +1,8 @@
 export type Cue = "press" | "correct" | "wrong" | "lessonComplete";
 
+/** What a cue reaches: the body (vibration, rumble) or the ears (a tone). */
+export type Channel = "touch" | "sound";
+
 /** One effect on a controller: a single dual-rumble burst. Magnitudes stay at or under 0.2. */
 export interface Rumble {
   duration: number;

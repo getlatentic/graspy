@@ -8,8 +8,9 @@ afterEach(() => {
   vi.resetModules();
 });
 
-async function card(pads: () => unknown[], touch = 0) {
+async function card(pads: () => unknown[], touch = 0, audio = false) {
   vi.resetModules();
+  if (audio) vi.stubGlobal("AudioContext", class {});
   Object.defineProperty(navigator, "maxTouchPoints", {
     configurable: true,
     value: touch,
@@ -36,6 +37,26 @@ const rumblePad = {
   connected: true,
   vibrationActuator: { playEffect: () => Promise.resolve("complete") },
 };
+
+describe("the sounds switch", () => {
+  it("shows on a desktop with audio, beside no vibration switch, and turns sound off", async () => {
+    await card(() => [], 0, true);
+    const switches = screen.getAllByRole("switch");
+    expect(switches.map((one) => one.textContent)).toEqual(["you.sounds"]);
+    expect(switches[0].getAttribute("aria-checked")).toBe("true");
+    act(() => switches[0].click());
+    expect(switches[0].getAttribute("aria-checked")).toBe("false");
+    const { getSettings } = await import("../lib/haptic-settings");
+    expect(getSettings()).toEqual({ vibration: true, sound: false });
+  });
+
+  it("shows beside Vibration on a touch screen", async () => {
+    await card(() => [], 5, true);
+    expect(screen.getAllByRole("switch").map((one) => one.textContent)).toEqual(
+      ["you.vibration", "you.sounds"],
+    );
+  });
+});
 
 describe("the vibration card", () => {
   it("is hidden on a desktop with no touch screen and no controller", async () => {

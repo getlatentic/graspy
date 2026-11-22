@@ -1,9 +1,11 @@
-import { PATTERNS, type Cue } from "./haptic-patterns";
+import { PATTERNS, type Channel, type Cue } from "./haptic-patterns";
 
 /** Something that can make a cue felt: a phone's motor or a controller's rumble. */
 export interface Output {
   /** Whether a cue would be felt right now. */
   available(): boolean;
+  /** Felt (a phone, a controller) or heard. Each has its own switch. */
+  channel: Channel;
   /** Whether the browser ignores it before the learner has touched the page. */
   needsActivation: boolean;
   play(cue: Cue): void;
@@ -30,6 +32,7 @@ export function vibrationOutput(
   };
   return {
     available: hasMotor,
+    channel: "touch",
     needsActivation: true,
     play: (cue) => vibrate([...PATTERNS[cue]]),
     stop: () => vibrate(0),

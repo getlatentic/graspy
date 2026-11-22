@@ -12,26 +12,36 @@ afterEach(() => window.localStorage.clear());
 
 describe("the haptic settings", () => {
   it("are on until the learner turns them off", () => {
-    expect(parseSettings(null)).toEqual({ enabled: true });
-    expect(parseSettings('{"enabled":false}')).toEqual({ enabled: false });
+    expect(parseSettings(null)).toEqual({ vibration: true, sound: true });
+    expect(parseSettings('{"vibration":false}')).toEqual({
+      vibration: false,
+      sound: true,
+    });
+    expect(parseSettings('{"sound":false,"vibration":true}')).toEqual({
+      vibration: true,
+      sound: false,
+    });
   });
 
   it("fall back to the default for anything that is not a setting", () => {
-    for (const raw of ["", "nope", "[]", "{}", '{"enabled":"no"}', "3"]) {
+    for (const raw of ["", "nope", "3", "null"]) {
       expect(parseSettings(raw)).toBe(DEFAULT_SETTINGS);
     }
   });
 
   it("follow another tab's choice and tell whoever is listening", () => {
-    setSettings({ enabled: true });
+    setSettings({ vibration: true, sound: true });
     const heard = vi.fn();
     const stop = subscribeSettings(heard);
 
-    window.localStorage.setItem("graspy.haptics", '{"enabled":false}');
+    window.localStorage.setItem(
+      "graspy.haptics",
+      '{"vibration":false,"sound":true}',
+    );
     window.dispatchEvent(
       new StorageEvent("storage", { key: "graspy.haptics" }),
     );
-    expect(getSettings()).toEqual({ enabled: false });
+    expect(getSettings()).toEqual({ vibration: false, sound: true });
     expect(heard).toHaveBeenCalledOnce();
 
     window.dispatchEvent(new StorageEvent("storage", { key: "other" }));
@@ -39,7 +49,7 @@ describe("the haptic settings", () => {
 
     window.localStorage.clear();
     window.dispatchEvent(new StorageEvent("storage", { key: null }));
-    expect(getSettings()).toEqual({ enabled: true });
+    expect(getSettings()).toEqual({ vibration: true, sound: true });
     stop();
   });
 });
