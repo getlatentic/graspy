@@ -109,7 +109,8 @@ function escapeStrayDollars(text: string): string {
     let opening = next === null ? "" : text.slice(next.start, next.end);
     const touching =
       segment.endsWith("\\$") && isEscaped(segment, segment.length - 1);
-    if (touching && opening.startsWith(OPENING_INLINE)) {
+    const amount = opening.charAt(OPENING_INLINE.length);
+    if (touching && opening.startsWith(OPENING_INLINE) && amount >= "0" && amount <= "9") {
       const amounts = (TRAILING_DOLLARS.exec(segment)?.[0].length ?? 0) / 2;
       segment = segment.slice(0, segment.length - 2 * amounts);
       const rest = opening.slice(OPENING_INLINE.length);

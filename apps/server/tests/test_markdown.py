@@ -22,7 +22,7 @@ def test_at_proxy_becomes_a_backslash():
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        ("\tfrac", "\\tfrac"),
+        ("\tfrac{1}{2}", "\\tfrac{1}{2}"),
         ("\rho", "\\rho"),
         ("\x0corall", "\\forall"),
         ("\x08eta", "\\beta"),

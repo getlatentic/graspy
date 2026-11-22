@@ -14,6 +14,7 @@ from .maths_vocabulary import (
     DISPLAY_ONLY_ENVIRONMENTS,
     INFIX,
     NEEDS_ARGUMENT,
+    NEEDS_TWO_ARGUMENTS,
 )
 
 # A name, not a word of prose, that may stand in a formula: `df = n - 1`.
@@ -52,6 +53,7 @@ BLOCK_ONLY = tuple(
 
 GROUP, PLAIN, ENVIRONMENT, END = "", "", "", ""
 MARKS = f"[{GROUP}{PLAIN}{ENVIRONMENT}]"
+MARK_CHARS = f"{GROUP}{PLAIN}{ENVIRONMENT}"
 _SENTINEL = re.compile(rf"{MARKS}[0-9]+{END}")
 
 _COMMAND_SET = frozenset(COMMANDS)
@@ -59,9 +61,10 @@ NAME_SET = frozenset(NAMES)
 INFIX_SET = frozenset(INFIX)
 _FUNCTION_SET = frozenset(FUNCTIONS)
 _NEEDS_SET = frozenset(NEEDS_ARGUMENT)
+_NEEDS_TWO_SET = frozenset(NEEDS_TWO_ARGUMENTS)
 _SPACING = frozenset(("quad", "qquad"))
-_OPENING = frozenset(("left", "bigl", "Bigl", "biggl", "Biggl"))
-_CLOSING = frozenset(("right", "bigr", "Bigr", "biggr", "Biggr"))
+OPENING = frozenset(("left", "bigl", "Bigl", "biggl", "Biggl"))
+CLOSING = frozenset(("right", "bigr", "Bigr", "biggr", "Biggr"))
 _SIZED = frozenset(("middle", "big", "Big", "bigg", "Bigg"))
 # Delimiters that open and close a group of their own accord.
 _OPENS = frozenset(
@@ -108,7 +111,7 @@ TOKEN = re.compile(
             r"([ \t]+)",
             r"(\\[A-Za-z]+)",
             rf"({MARKS}[0-9]+{END})",
-            r"(\\[^A-Za-z\n$])",
+            r"(\\[^A-Za-z\n$()\[\]])",
             rf"((?:{_HYPHENATED})(?![A-Za-z]))",
             r"([A-Za-z]+)",
             r"([0-9]+(?:\.[0-9]+)?)",
@@ -168,6 +171,7 @@ def _plain_edge(kind: int, word: str) -> str:
 
 def _word_edge(name: str, role: str) -> str:
     for edge, words in (
+        ("needs2", _NEEDS_TWO_SET),
         ("needs", _NEEDS_SET),
         ("func", _FUNCTION_SET),
         ("infix", INFIX_SET),
@@ -194,12 +198,12 @@ def read(
     kind, word, end = token.lastindex, token.group(0), token.end()
     if kind == WORD:
         name = word[1:]
-        if name in _OPENING | _CLOSING | _SIZED:
+        if name in OPENING | CLOSING | _SIZED:
             delimiter = _DELIMITER.match(text, end)
             if delimiter:
-                if name in _OPENING:
+                if name in OPENING:
                     return delimiter.end(), 1, "command", "("
-                if name in _CLOSING:
+                if name in CLOSING:
                     return delimiter.end(), -1, "command", ")"
                 return delimiter.end(), 0, "command", "infix"
         if name in _OPENS:
@@ -212,9 +216,50 @@ def read(
         return end, 0, role, _word_edge(name, role)
     if kind == MARK:
         if word[0] == GROUP:
-            return end, 0, _group_role(restore_group(word)), ""
+            return end, 0, _group_role(restore_group(word)), "group"
         return end, 0, "poison" if word[0] == PLAIN else "command", ""
     if kind == OPERATOR:
         change = 1 if word in "([" else -1 if word in ")]" else 0
         return end, change, "math", _plain_edge(kind, word)
     return end, 0, "math", _plain_edge(kind, word)
+
+
+# Beyond ASCII, a character is part of a word unless it is a space, punctuation or
+# a symbol: these ranges name those, so no engine's idea of a letter decides.
+_NOT_WORD = (
+    (0x80, 0xBF),
+    (0xD7, 0xD7),
+    (0xF7, 0xF7),
+    (0x2000, 0x2BFF),
+    (0x3000, 0x303F),
+)
+_APOSTROPHES = ("'", "\u2019")
+
+
+def is_word_char(char: str) -> bool:
+    """Whether the character is a letter or digit of any script, or a mark that
+    belongs to one."""
+    if not char:
+        return False
+    code = ord(char[0])
+    if code < 0x80:
+        return char.isalnum()
+    return not any(low <= code <= high for low, high in _NOT_WORD)
+
+
+def inside_word(text: str, position: int) -> bool:
+    """Whether the position is in the middle of a word: a letter, digit or
+    apostrophe after a letter comes right before it."""
+    before = text[position - 1 : position] if position else ""
+    if is_word_char(before):
+        return True
+    return before in _APOSTROPHES and is_word_char(
+        text[position - 2 : position - 1] if position > 1 else ""
+    )
+
+
+def skip_spaces(text: str, position: int) -> int:
+    """The first position from ``position`` that is no space or tab."""
+    while text[position : position + 1] in (" ", "\t"):
+        position += 1
+    return position

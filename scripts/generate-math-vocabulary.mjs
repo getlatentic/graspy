@@ -72,6 +72,18 @@ const needsArgument = commands.filter((name) =>
   ),
 );
 
+// One that still fails with a single group after it takes two: \\frac{a} is not
+// finished.
+const needsTwoArguments = needsArgument.filter(
+  (name) =>
+    messageOf(() =>
+      katex.renderToString(`\\${name}{a}`, { throwOnError: true, strict: false }),
+    ) &&
+    !messageOf(() =>
+      katex.renderToString(`\\${name}{a}{b}`, { throwOnError: true, strict: false }),
+    ),
+);
+
 // A command KaTeX sets as a relation or a binary operator stands between two
 // terms: a letter before it is a variable, not a word.
 const infix = commands.filter((name) => {
@@ -113,12 +125,14 @@ _COMMANDS = ${JSON.stringify(list(commands))}
 _ENVIRONMENTS = ${JSON.stringify(list(environments))}
 _DISPLAY_ONLY_ENVIRONMENTS = ${JSON.stringify(list(displayOnly))}
 _NEEDS_ARGUMENT = ${JSON.stringify(list(needsArgument))}
+_NEEDS_TWO_ARGUMENTS = ${JSON.stringify(list(needsTwoArguments))}
 _INFIX = ${JSON.stringify(list(infix))}
 
 COMMANDS = _COMMANDS.split()
 ENVIRONMENTS = _ENVIRONMENTS.split()
 DISPLAY_ONLY_ENVIRONMENTS = _DISPLAY_ONLY_ENVIRONMENTS.split()
 NEEDS_ARGUMENT = _NEEDS_ARGUMENT.split()
+NEEDS_TWO_ARGUMENTS = _NEEDS_TWO_ARGUMENTS.split()
 INFIX = _INFIX.split()
 `,
 );
@@ -151,6 +165,9 @@ export const DISPLAY_ONLY_ENVIRONMENTS = words(
 export const NEEDS_ARGUMENT = words(
   ${JSON.stringify(list(needsArgument))},
 );
+export const NEEDS_TWO_ARGUMENTS = words(
+  ${JSON.stringify(list(needsTwoArguments))},
+);
 export const INFIX = words(
   ${JSON.stringify(list(infix))},
 );
@@ -169,6 +186,7 @@ corpus.vocabulary = {
   environments,
   displayOnlyEnvironments: displayOnly,
   needsArgument,
+  needsTwoArguments,
   infix,
 };
 writeFileSync(corpusPath, `${JSON.stringify(corpus, null, 2)}\n`);

@@ -11,6 +11,7 @@ import {
   DISPLAY_ONLY_ENVIRONMENTS,
   INFIX,
   NEEDS_ARGUMENT,
+  NEEDS_TWO_ARGUMENTS,
 } from "./latex-vocabulary";
 
 export { INFIX };
@@ -54,6 +55,7 @@ export const PLAIN = "";
 export const ENVIRONMENT = "";
 export const END = "";
 export const MARKS = `[${GROUP}${PLAIN}${ENVIRONMENT}]`;
+export const MARK_CHARS = `${GROUP}${PLAIN}${ENVIRONMENT}`;
 export const SENTINEL = new RegExp(`${MARKS}[0-9]+${END}`, "g");
 export const ONLY_ENVIRONMENT = new RegExp(`^${ENVIRONMENT}[0-9]+${END}$`);
 
@@ -64,6 +66,7 @@ export const NAME_SET = new Set(NAMES);
 export const INFIX_SET = new Set(INFIX);
 export const FUNCTION_SET = new Set(FUNCTIONS);
 export const NEEDS_SET = new Set(NEEDS_ARGUMENT);
+export const NEEDS_TWO_SET = new Set(NEEDS_TWO_ARGUMENTS);
 export const SPACING = new Set(["quad", "qquad"]);
 export const OPENING = new Set(["left", "bigl", "Bigl", "biggl", "Biggl"]);
 export const CLOSING = new Set(["right", "bigr", "Bigr", "biggr", "Biggr"]);
@@ -107,7 +110,7 @@ export const TOKEN_SOURCE = [
   String.raw`([ \t]+)`,
   String.raw`(\\[A-Za-z]+)`,
   `(${MARKS}[0-9]+${END})`,
-  String.raw`(\\[^A-Za-z\n$])`,
+  String.raw`(\\[^A-Za-z\n$()\[\]])`,
   `((?:${HYPHENATED})(?![A-Za-z]))`,
   "([A-Za-z]+)",
   String.raw`([0-9]+(?:\.[0-9]+)?)`,
@@ -160,6 +163,7 @@ export function plainEdge(kind: number, word: string): string {
 }
 
 export function wordEdge(name: string): string {
+  if (NEEDS_TWO_SET.has(name)) return "needs2";
   if (NEEDS_SET.has(name)) return "needs";
   if (FUNCTION_SET.has(name)) return "func";
   return INFIX_SET.has(name) ? "infix" : "";
@@ -200,7 +204,7 @@ export function read(
     return [end, 0, role, wordEdge(name)];
   }
   if (kind === MARK) {
-    if (word[0] === GROUP) return [end, 0, groupRole(restoreGroup(word)), ""];
+    if (word[0] === GROUP) return [end, 0, groupRole(restoreGroup(word)), "group"];
     return [end, 0, word[0] === PLAIN ? "poison" : "command", ""];
   }
   if (kind === OPERATOR) {
@@ -210,3 +214,38 @@ export function read(
   return [end, 0, "math", plainEdge(kind, word)];
 }
 
+
+// Beyond ASCII, a character is part of a word unless it is a space, punctuation or
+// a symbol: these ranges name those, so no engine's idea of a letter decides.
+const NOT_WORD: [number, number][] = [
+  [0x80, 0xbf],
+  [0xd7, 0xd7],
+  [0xf7, 0xf7],
+  [0x2000, 0x2bff],
+  [0x3000, 0x303f],
+];
+
+/** Whether the character is a letter or digit of any script, or a mark that belongs to one. */
+export function isWordChar(char: string): boolean {
+  if (!char) return false;
+  const code = char.charCodeAt(0);
+  if (code < 0x80) return /[A-Za-z0-9]/.test(char);
+  return !NOT_WORD.some(([low, high]) => low <= code && code <= high);
+}
+
+/** Whether the position is in the middle of a word: a letter, digit or apostrophe after a letter comes right before it. */
+export function insideWord(text: string, position: number): boolean {
+  const before = position ? text.charAt(position - 1) : "";
+  if (isWordChar(before)) return true;
+  return (
+    (before === "'" || before === "\u2019") &&
+    position > 1 &&
+    isWordChar(text.charAt(position - 2))
+  );
+}
+
+/** The first position from `position` that is no space or tab. */
+export function skipSpaces(text: string, position: number): number {
+  while (text.charAt(position) === " " || text.charAt(position) === "\t") position++;
+  return position;
+}

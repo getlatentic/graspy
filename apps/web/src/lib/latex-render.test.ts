@@ -129,6 +129,28 @@ describe("the chat's maths and its dollar signs", () => {
     expect(html("cost = $5 \\times 3")).not.toContain("katex-error");
   });
 
+  // A reply arrives a few characters at a time: no prefix of a reply shows a KaTeX
+  // error, or the \char that stands for a dollar sign, where plain text was.
+  const replies = [
+    "Then \\(x = \\frac{a}{b}\\) holds",
+    "Then \\[\\frac{a}{b} = \\sqrt{x}\\] holds",
+    "Then x = \\frac{a}{b} + \\sqrt{2} holds",
+    "It costs $5 \\times 3 = 15$ dollars, so $x \\le 5$",
+    "Then $x = \\frac{a}{b}$ holds",
+    "A = \\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix} here",
+    "Then f(x) = \\left( \\frac{a}{b} \\right)^2 holds",
+    "Then E = mc^2 \\text{ joules} and \\sqrt[3]{8} = 2",
+  ];
+
+  it.each(replies)("shows no error in any prefix of: %s", (reply) => {
+    for (let length = 1; length <= reply.length; length++) {
+      const page = html(reply.slice(0, length));
+      const shown = page.replace(/<annotation[\s\S]*?<\/annotation>/g, "");
+      expect(shown, reply.slice(0, length)).not.toContain("katex-error");
+      expect(shown, reply.slice(0, length)).not.toContain("\\char");
+    }
+  });
+
   it("leaves code alone", () => {
     for (const code of [
       "```sh\ncd $HOME/$USER\n```",

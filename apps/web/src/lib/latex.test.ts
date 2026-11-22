@@ -8,6 +8,7 @@ import {
   ENVIRONMENTS,
   INFIX,
   NEEDS_ARGUMENT,
+  NEEDS_TWO_ARGUMENTS,
 } from "./latex-vocabulary";
 
 describe("processLatex", () => {
@@ -40,7 +41,7 @@ describe("the repair corpus the server's repair_reply is tested with", () => {
     const same = corpus.cases.filter((c) => c.input === c.web).length;
     expect(same).toBeGreaterThan(40);
     expect(corpus.cases.length - same).toBeGreaterThan(120);
-    expect(corpus.cases.length).toBeGreaterThan(220);
+    expect(corpus.cases.length).toBeGreaterThan(260);
   });
 
   it.each(corpus.cases)("$name", ({ input, web }) => {
@@ -58,6 +59,7 @@ describe("the repair corpus the server's repair_reply is tested with", () => {
       environments: ENVIRONMENTS,
       displayOnlyEnvironments: DISPLAY_ONLY_ENVIRONMENTS,
       needsArgument: NEEDS_ARGUMENT,
+      needsTwoArguments: NEEDS_TWO_ARGUMENTS,
       infix: INFIX,
       names: NAMES,
       functions: FUNCTIONS,

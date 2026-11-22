@@ -468,8 +468,8 @@
     {
       "name": "Arabic-Indic digits are not numbers",
       "input": "٣ + \\alpha and \\frac١٢",
-      "tagged": "٣ + <latex-inline>\\alpha</latex-inline> and <latex-inline>\\frac</latex-inline>١٢",
-      "web": "٣ + $\\alpha$ and $\\frac$١٢"
+      "tagged": "٣ + <latex-inline>\\alpha</latex-inline> and \\frac١٢",
+      "web": "٣ + $\\alpha$ and \\frac١٢"
     },
     {
       "name": "CRLF is a blank line",
@@ -1038,15 +1038,15 @@
     {
       "name": "an unclosed dollar before a relation",
       "input": "Let $x\\le 5 be fine",
-      "tagged": "Let <latex-inline>\\char\"24{}x\\le 5</latex-inline> be fine",
-      "web": "Let $\\char\"24{}x\\le 5$ be fine",
+      "tagged": "Let \\$x\\le 5 be fine",
+      "web": "Let \\$x\\le 5 be fine",
       "replyOnly": true
     },
     {
       "name": "a dollar opened and not closed while streaming",
       "input": "Let $x = \\frac",
-      "tagged": "Let <latex-inline>\\char\"24{}x = \\frac</latex-inline>",
-      "web": "Let $\\char\"24{}x = \\frac$",
+      "tagged": "Let \\$x = \\frac",
+      "web": "Let \\$x = \\frac",
       "replyOnly": true
     },
     {
@@ -1399,14 +1399,223 @@
     {
       "name": "a command that needs an argument at the end of the text",
       "input": "Let x = \\frac",
-      "tagged": "Let <latex-inline>x = \\frac</latex-inline>",
-      "web": "Let $x = \\frac$"
+      "tagged": "Let x = \\frac",
+      "web": "Let x = \\frac"
     },
     {
       "name": "a debug command is not maths",
       "input": "Then \\show x = \\frac12 holds",
       "tagged": "Then \\show x = \\frac12 holds",
       "web": "Then \\show x = \\frac12 holds"
+    },
+    {
+      "name": "a word with an apostrophe before a variable",
+      "input": "That's x = \\sqrt{2}, right?",
+      "tagged": "That's <latex-inline>x = \\sqrt{2}</latex-inline>, right?",
+      "web": "That's $x = \\sqrt{2}$, right?"
+    },
+    {
+      "name": "another contraction",
+      "input": "Here's x = \\frac{1}{2}",
+      "tagged": "Here's <latex-inline>x = \\frac{1}{2}</latex-inline>",
+      "web": "Here's $x = \\frac{1}{2}$"
+    },
+    {
+      "name": "a contraction with a right single quote",
+      "input": "Here’s x = \\frac{1}{2}",
+      "tagged": "Here’s <latex-inline>x = \\frac{1}{2}</latex-inline>",
+      "web": "Here’s $x = \\frac{1}{2}$"
+    },
+    {
+      "name": "a name with a possessive",
+      "input": "Tosin's x = \\frac{1}{2}",
+      "tagged": "Tosin's <latex-inline>x = \\frac{1}{2}</latex-inline>",
+      "web": "Tosin's $x = \\frac{1}{2}$"
+    },
+    {
+      "name": "a contraction before a question",
+      "input": "What's n = \\frac{1}{2}?",
+      "tagged": "What's <latex-inline>n = \\frac{1}{2}</latex-inline>?",
+      "web": "What's $n = \\frac{1}{2}$?"
+    },
+    {
+      "name": "a Slovak word with a caron",
+      "input": "Vieme, že x = \\frac{1}{2}.",
+      "tagged": "Vieme, že <latex-inline>x = \\frac{1}{2}</latex-inline>.",
+      "web": "Vieme, že $x = \\frac{1}{2}$."
+    },
+    {
+      "name": "a Polish word with an ogonek",
+      "input": "Więc c = \\sqrt{2}",
+      "tagged": "Więc <latex-inline>c = \\sqrt{2}</latex-inline>",
+      "web": "Więc $c = \\sqrt{2}$"
+    },
+    {
+      "name": "a Yoruba word with a dot below",
+      "input": "Ṣe x = \\frac12",
+      "tagged": "Ṣe <latex-inline>x = \\frac12</latex-inline>",
+      "web": "Ṣe $x = \\frac12$"
+    },
+    {
+      "name": "a curly apostrophe before a verb",
+      "input": "Let’s say y = \\sqrt{x}",
+      "tagged": "Let’s say <latex-inline>y = \\sqrt{x}</latex-inline>",
+      "web": "Let’s say $y = \\sqrt{x}$"
+    },
+    {
+      "name": "a Slovak sentence with an equation and no command",
+      "input": "Ľudia, že e = mc^2",
+      "tagged": "Ľudia, že e = mc^2",
+      "web": "Ľudia, že e = mc^2"
+    },
+    {
+      "name": "a product of three variables",
+      "input": "The discriminant is \\Delta = b^2 - 4ac.",
+      "tagged": "The discriminant is <latex-inline>\\Delta = b^2 - 4ac</latex-inline>.",
+      "web": "The discriminant is $\\Delta = b^2 - 4ac$."
+    },
+    {
+      "name": "a product after a square root",
+      "input": "y = 2\\sqrt{x} + 3xy",
+      "tagged": "<latex-inline>y = 2\\sqrt{x} + 3xy</latex-inline>",
+      "web": "$y = 2\\sqrt{x} + 3xy$"
+    },
+    {
+      "name": "two variables after a number",
+      "input": "\\alpha = 2ab",
+      "tagged": "<latex-inline>\\alpha = 2ab</latex-inline>",
+      "web": "$\\alpha = 2ab$"
+    },
+    {
+      "name": "kinetic energy",
+      "input": "KE = \\frac{1}{2}mv^2.",
+      "tagged": "<latex-inline>KE = \\frac{1}{2}mv^2</latex-inline>.",
+      "web": "$KE = \\frac{1}{2}mv^2$."
+    },
+    {
+      "name": "energy in joules",
+      "input": "E = mc^2 \\text{ joules}",
+      "tagged": "<latex-inline>E = mc^2 \\text{ joules}</latex-inline>",
+      "web": "$E = mc^2 \\text{ joules}$"
+    },
+    {
+      "name": "prose after a fraction is still prose",
+      "input": "Then \\frac12 of it is left.",
+      "tagged": "Then <latex-inline>\\frac12</latex-inline> of it is left.",
+      "web": "Then $\\frac12$ of it is left."
+    },
+    {
+      "name": "a letter after an exponent term belongs",
+      "input": "Then \\alpha x^2 y holds",
+      "tagged": "Then <latex-inline>\\alpha x^2 y</latex-inline> holds",
+      "web": "Then $\\alpha x^2 y$ holds"
+    },
+    {
+      "name": "a dollar pair with its formula unfinished",
+      "input": "Let $x = \\frac{a",
+      "tagged": "Let \\$x = \\frac{a",
+      "web": "Let \\$x = \\frac{a",
+      "lesson": "Let $x = \\frac{a"
+    },
+    {
+      "name": "a dollar pair with a formula that has no closer",
+      "input": "Let $x = \\frac{a}{b}",
+      "tagged": "Let \\$x = \\frac{a}{b}",
+      "web": "Let \\$x = \\frac{a}{b}",
+      "lesson": "Let $x = \\frac{a}{b}"
+    },
+    {
+      "name": "a dollar pair cut after a fraction's first group",
+      "input": "Let $x = \\frac{a}{",
+      "tagged": "Let \\$x = \\frac{a}{",
+      "web": "Let \\$x = \\frac{a}{",
+      "lesson": "Let $x = \\frac{a}{"
+    },
+    {
+      "name": "an opening bracket of maths with no closer",
+      "input": "\\(x = \\frac{a}{b}",
+      "tagged": "\\(x = \\frac{a}{b}",
+      "web": "\\(x = \\frac{a}{b}"
+    },
+    {
+      "name": "display brackets with a formula cut short",
+      "input": "\\[\\frac{a}{",
+      "tagged": "\\[\\frac{a}{",
+      "web": "\\[\\frac{a}{"
+    },
+    {
+      "name": "double dollar signs with no closer",
+      "input": "$$x=\\frac12",
+      "tagged": "\\$\\$x=\\frac12",
+      "web": "\\$\\$x=\\frac12",
+      "lesson": "$$x=\\frac12"
+    },
+    {
+      "name": "a bare fraction cut after its first group",
+      "input": "Then x = \\frac{a}",
+      "tagged": "Then x = \\frac{a}",
+      "web": "Then x = \\frac{a}"
+    },
+    {
+      "name": "a bare fraction cut inside its second group",
+      "input": "Then x = \\frac{a}{b",
+      "tagged": "Then x = \\frac{a}{b",
+      "web": "Then x = \\frac{a}{b"
+    },
+    {
+      "name": "a left bracket nothing closes",
+      "input": "Then x = \\left( \\frac{a}{b}",
+      "tagged": "Then x = \\left( \\frac{a}{b}",
+      "web": "Then x = \\left( \\frac{a}{b}"
+    },
+    {
+      "name": "a matrix cut short",
+      "input": "A = \\begin{pmatrix} 1 & 2",
+      "tagged": "A = \\begin{pmatrix} 1 & 2",
+      "web": "A = \\begin{pmatrix} 1 & 2"
+    },
+    {
+      "name": "a text command cut short",
+      "input": "E = mc^2 \\text{ joul",
+      "tagged": "E = mc^2 \\text{ joul",
+      "web": "E = mc^2 \\text{ joul"
+    },
+    {
+      "name": "an optional argument cut short",
+      "input": "Then \\sqrt[3 holds",
+      "tagged": "Then \\sqrt[3 holds",
+      "web": "Then \\sqrt[3 holds"
+    },
+    {
+      "name": "a root with an index and no radicand",
+      "input": "Then \\sqrt[3] holds",
+      "tagged": "Then \\sqrt[3] holds",
+      "web": "Then \\sqrt[3] holds"
+    },
+    {
+      "name": "a complete formula after an amount that is not a sign",
+      "input": "Pay $5 for \\frac{a}{b} = 2",
+      "tagged": "Pay \\$5 for <latex-inline>\\frac{a}{b} = 2</latex-inline>",
+      "web": "Pay \\$5 for $\\frac{a}{b} = 2$",
+      "replyOnly": true
+    },
+    {
+      "name": "list labels in brackets stay outside",
+      "input": "(i) \\frac12 (ii) \\frac13",
+      "tagged": "(i) <latex-inline>\\frac12</latex-inline> (ii) <latex-inline>\\frac13</latex-inline>",
+      "web": "(i) $\\frac12$ (ii) $\\frac13$"
+    },
+    {
+      "name": "a bracket before a relation is not a label",
+      "input": "f (x) = \\frac12",
+      "tagged": "f <latex-inline>(x) = \\frac12</latex-inline>",
+      "web": "f $(x) = \\frac12$"
+    },
+    {
+      "name": "a decimal point before a command",
+      "input": "0.\\overline{3} = 1/3",
+      "tagged": "<latex-inline>0.\\overline{3} = 1/3</latex-inline>",
+      "web": "$0.\\overline{3} = 1/3$"
     }
   ],
   "vocabulary": {
@@ -2930,6 +3139,21 @@
       "oint",
       "partial",
       "nabla"
+    ],
+    "needsTwoArguments": [
+      "TextOrMath",
+      "binom",
+      "cfrac",
+      "colorbox",
+      "dbinom",
+      "dfrac",
+      "frac",
+      "overset",
+      "stackrel",
+      "tbinom",
+      "textcolor",
+      "tfrac",
+      "underset"
     ]
   }
 }

@@ -34,24 +34,29 @@ from .maths_tokens import (
     BINDING,
     BINDS_TO,
     BLOCK_ONLY,
+    CLOSING,
     COMES_AFTER,
     COMMAND_IN,
     INFIX_SET,
     LETTERS,
+    MARK,
+    MARK_CHARS,
     NAME_SET,
     NUMBER,
     ONLY_ENVIRONMENT,
+    OPENING,
     OPERATOR,
     PADDED,
     PARTNER,
-    PROSE_AFTER,
     PUNCT,
     RELATIONS,
     TOKEN,
     WORD,
     WS,
+    inside_word,
     is_digit,
     read,
+    skip_spaces,
 )
 
 
@@ -64,6 +69,10 @@ class _Run:
         self.tokens: list[tuple[int, int, str]] = []
         self.has_command = False
         self.poisoned = False
+        # Begun right after an opener nothing closed: the maths is still being written.
+        self.suppressed = False
+        # \\left and \\right opened and not closed, or the other way about.
+        self.sized = 0
 
     @property
     def start(self) -> int:
@@ -99,6 +108,47 @@ def _binds(text: str, position: int, token: re.Match, run: _Run | None) -> bool:
     return token.group(0) == "'" or bool(BINDS_TO.match(text, token.end()))
 
 
+_ATTACHES = "^_()[]\\"
+
+
+def _short_word_joins(text: str, token: re.Match, run: _Run | None) -> bool:
+    """Whether a word of two to four letters is a product of variables (`mv`,
+    `ac`, `KE`): one that touches a digit, bracket, command, ^ or _, or an
+    operator, belongs to the formula. A lone word after a space with no operator
+    is prose. A formula begins with one only before a relation or an exponent."""
+    word, end = token.group(0), token.end()
+    if len(word) > 4:
+        return False
+    after = text[end : end + 1]
+    follower = TOKEN.match(text, skip_spaces(text, end))
+    name = follower.group(0) if follower else ""
+    kind = follower.lastindex if follower else 0
+    relation = (
+        kind == OPERATOR and name in RELATIONS or kind == WORD and name[1:] in INFIX_SET
+    )
+    if run is None:
+        strict = (
+            kind == OPERATOR
+            and name in "=<>≤≥≠≈"
+            or kind == WORD
+            and name[1:] in INFIX_SET
+        )
+        return strict or after in ("^", "_") or is_digit(after)
+    touches = after != "" and (
+        after in _ATTACHES or is_digit(after) or after in MARK_CHARS
+    )
+    previous = run.tokens[-1]
+    # An operator with a space on each side, as in `x = mc^2` or `b^2 - ac`.
+    spaced = (
+        len(run.tokens) > 1
+        and previous[2] in ("binary", "sign", "infix")
+        and previous[0] > run.tokens[-2][1]
+        and token.start() > previous[1]
+    )
+    attached = run.end == token.start() and previous[2] not in ("(", "[")
+    return attached or touches or spaced or relation
+
+
 def _ends_run(
     text: str, token: re.Match, depth: int, run: _Run | None, lines: _Lines
 ) -> bool:
@@ -109,14 +159,23 @@ def _ends_run(
         token.end(),
     )
     if kind == LETTERS:
-        return len(word) > 1 and word not in NAME_SET
+        return (
+            len(word) > 1
+            and word not in NAME_SET
+            and not _short_word_joins(text, token, run)
+        )
     if kind == PUNCT and word in ".:":
+        after = text[end : end + 1]
         return not (
-            is_digit(text[position - 1 : position]) and is_digit(text[end : end + 1])
+            is_digit(text[position - 1 : position])
+            and (is_digit(after) or after == "\\")
         )
     if kind == PUNCT:
         # A sentence's punctuation, outside brackets, is followed by a space.
         return depth <= 0 and text[end : end + 1] in ("", " ", "\t", "\r", "\n")
+    if kind == OPERATOR and word in "()[]" and text[position - 1 : position] == "\\":
+        # \\( \\) \\[ \\] are delimiters of maths, not brackets of a formula.
+        return True
     if kind == OPERATOR and word == "|":
         return depth <= 0 or lines.is_table_row(position)
     if kind == OPERATOR and word in BINDING:
@@ -222,11 +281,41 @@ def _balanced_unwrapped(run: str) -> str | None:
     return run[1:-1]
 
 
-def _starts_attached(text: str, run: _Run) -> bool:
-    """A command written straight after a letter or digit is a path or an
-    escape, not maths: `Hello\\alpha`."""
-    before = text[run.start - 1 : run.start] if run.start else ""
-    return text[run.start] == "\\" and before.isascii() and before.isalnum()
+def _optional_argument_waits(
+    tokens: list[tuple[int, int, str]], low: int, high: int
+) -> bool:
+    """Whether a command that takes an argument has `[` after it that nothing
+    closes, or `]` closing it as the last token: `\\sqrt[3` and `\\sqrt[3]`."""
+    loose = _unmatched(tokens)
+    if any(
+        index in loose
+        and tokens[index][2] == "["
+        and tokens[index - 1][2] in ("needs", "needs2")
+        for index in range(max(low, 1), high)
+    ):
+        return True
+    if tokens[high - 1][2] != "]":
+        return False
+    depth = 0
+    for index in range(high - 1, low - 1, -1):
+        depth += (tokens[index][2] == "]") - (tokens[index][2] == "[")
+        if depth == 0:
+            return index > low and tokens[index - 1][2] in ("needs", "needs2")
+    return False
+
+
+def _unfinished(text: str, run: _Run, low: int, high: int, end: int) -> bool:
+    """Whether the formula stops where an argument is still to come: it ends in
+    a command that takes one, or in a command that takes two and has one, or an
+    unclosed group follows. This is a formula still being written, or prose."""
+    last = run.tokens[high - 1][2]
+    if last in ("needs", "needs2"):
+        return True
+    if last == "group" and high > 1 and run.tokens[high - 2][2] == "needs2":
+        return True
+    if _optional_argument_waits(run.tokens, low, high):
+        return True
+    return text[skip_spaces(text, end) : skip_spaces(text, end) + 1] == "{"
 
 
 def _tagged(text: str, run: _Run, restore_group: Callable[[str], str]) -> str:
@@ -240,7 +329,7 @@ def _tagged(text: str, run: _Run, restore_group: Callable[[str], str]) -> str:
     plain = restore_group(chunk)
     if not COMMAND_IN.search(plain) or exceeds(plain, 0, len(plain), MAX_INLINE):
         return whole
-    if run.tokens[high - 1][2] == "needs" and PROSE_AFTER.match(text, end):
+    if _unfinished(text, run, low, high, end):
         return whole
     before, after = text[run.start : start], text[end : run.end]
     if any(f"\\begin{{{name}}}" in plain for name in BLOCK_ONLY):
@@ -254,12 +343,39 @@ def _tagged(text: str, run: _Run, restore_group: Callable[[str], str]) -> str:
     return f"{before}<latex-inline>{chunk}</latex-inline>{after}"
 
 
+_LABEL = re.compile(r"\([A-Za-z0-9]{1,4}\)[ \t]+")
+
+
+def _label_ahead(text: str, position: int, run: _Run | None) -> int:
+    """Where a list's label, `(i) ` or `(2) `, ends if one is here: it sits
+    between two terms with no operator, and a command or a number follows."""
+    label = _LABEL.match(text, position)
+    if not label or (run and run.tokens[-1][2] in COMES_AFTER):
+        return -1
+    follower = TOKEN.match(text, label.end())
+    if follower is None or follower.lastindex not in (WORD, NUMBER, MARK):
+        return -1
+    if follower.lastindex == WORD and follower.group(0)[1:] in INFIX_SET:
+        return -1
+    return label.end()
+
+
 def _begins_label(text: str, token: re.Match, run: _Run | None) -> bool:
     return (
         run is None
         and token.lastindex in (LETTERS, NUMBER)
         and _is_label(text, token.start(), token.end())
     )
+
+
+def _after_opener(text: str, position: int) -> bool:
+    """Whether a formula begins right after `$`, `$$`, `\\(` or `\\[` that nothing
+    closed (a closed pair is a span, and never in this text): the maths is
+    still being written. An amount, `$5`, is the one `$` that is not an opener."""
+    before = text[position - 1 : position]
+    if before == "$":
+        return not is_digit(text[position : position + 1])
+    return text[position - 2 : position] in ("\\(", "\\[")
 
 
 def tag_runs(text: str, restore_group: Callable[[str], str]) -> str:
@@ -275,7 +391,8 @@ def tag_runs(text: str, restore_group: Callable[[str], str]) -> str:
         formula = run and run.has_command and not run.poisoned
         tagged = (
             formula
-            and not _starts_attached(text, run)
+            and not run.suppressed
+            and run.sized == 0
             and not exceeds(text, run.start, run.end, MAX_INLINE)
         )
         if tagged:
@@ -297,8 +414,15 @@ def tag_runs(text: str, restore_group: Callable[[str], str]) -> str:
             finish()
             depth, position = 0, token.end()
             continue
+        if run is None and inside_word(text, position):
+            position = token.end()
+            continue
         if _begins_label(text, token, run):
             position = token.end() + 1
+            continue
+        if token.group(0) == "(" and (label := _label_ahead(text, position, run)) > 0:
+            finish()
+            depth, position = 0, label
             continue
         joined = run and (run.end == position or run.tokens[-1][2] in COMES_AFTER)
         single = token.lastindex == LETTERS and len(token.group(0)) == 1
@@ -310,7 +434,14 @@ def tag_runs(text: str, restore_group: Callable[[str], str]) -> str:
                 continue
             cluster_until = cluster_end
         end, change, role, edge = read(text, token, restore_group)
-        run = run or _Run()
+        if run is None:
+            run = _Run()
+            run.suppressed = _after_opener(text, position)
+        if token.lastindex == WORD:
+            name = token.group(0)[1:]
+            run.sized += (name in OPENING and edge == "(") - (
+                name in CLOSING and edge == ")"
+            )
         run.tokens.append((position, end, edge))
         run.has_command = run.has_command or role == "command"
         run.poisoned = run.poisoned or role == "poison"

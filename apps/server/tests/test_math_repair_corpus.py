@@ -47,7 +47,7 @@ def test_repairing_twice_changes_nothing(case):
 def test_the_corpus_has_cases_that_are_left_alone_and_cases_that_change():
     assert sum(case["input"] == case["web"] for case in CASES) > 40
     assert sum(case["input"] != case["web"] for case in CASES) > 120
-    assert len(CASES) > 220
+    assert len(CASES) > 260
 
 
 def test_the_vocabulary_is_the_corpus_vocabulary():
@@ -56,6 +56,7 @@ def test_the_vocabulary_is_the_corpus_vocabulary():
         "environments": maths_vocabulary.ENVIRONMENTS,
         "displayOnlyEnvironments": maths_vocabulary.DISPLAY_ONLY_ENVIRONMENTS,
         "needsArgument": maths_vocabulary.NEEDS_ARGUMENT,
+        "needsTwoArguments": maths_vocabulary.NEEDS_TWO_ARGUMENTS,
         "infix": maths_vocabulary.INFIX,
         "names": maths_runs.NAMES,
         "functions": maths_runs.FUNCTIONS,

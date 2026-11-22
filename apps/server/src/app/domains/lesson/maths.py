@@ -115,15 +115,17 @@ def _escaped_dollars(text: str) -> str:
 
 def escape_stray_dollars(text: str) -> str:
     """A dollar sign outside every span is a dollar sign, not an opener, and is
-    written \\$. One right before a span of maths is the sign of its amount
-    (`$5 \\times 3`), and goes into the maths: `\\$$` is no good to a reader."""
+    written \\$. One right before a span of maths that begins with a digit is
+    the sign of its amount (`$5 \\times 3`), and goes into the maths: `\\$$` is
+    no good to a reader."""
     pieces, done = [], 0
     for span in [*scan(text), None]:
         end = len(text) if span is None else span.start
         segment = _escaped_dollars(text[done:end])
         opening = "" if span is None else text[span.start : span.end]
         touching = segment.endswith("\\$") and is_escaped(segment, len(segment) - 1)
-        if touching and opening.startswith("<latex-inline>"):
+        amount = opening[len("<latex-inline>") :][:1]
+        if touching and opening.startswith("<latex-inline>") and amount.isdigit():
             amounts = len(_TRAILING_DOLLARS.search(segment)[0]) // 2
             segment = segment[: len(segment) - 2 * amounts]
             rest = opening[len("<latex-inline>") :]

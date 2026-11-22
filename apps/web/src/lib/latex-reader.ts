@@ -36,6 +36,12 @@ import {
   WORD,
   WS,
   BINDS_TO,
+  CLOSING,
+  MARK,
+  MARK_CHARS,
+  OPENING,
+  insideWord,
+  skipSpaces,
   BLOCK_ONLY,
   COMES_AFTER,
   COMMAND_IN,
@@ -43,7 +49,6 @@ import {
   NAME_SET,
   ONLY_ENVIRONMENT,
   PARTNER,
-  PROSE_AFTER,
   RELATIONS,
   TOKEN_SOURCE,
   isDigit,
@@ -59,6 +64,10 @@ interface Run {
   tokens: Edged[];
   hasCommand: boolean;
   poisoned: boolean;
+  // Begun right after an opener nothing closed: the maths is still being written.
+  suppressed: boolean;
+  // \left and \right opened and not closed, or the other way about.
+  sized: number;
 }
 
 const runStart = (run: Run) => run.tokens[0][0];
@@ -94,8 +103,45 @@ function binds(text: string, position: number, word: string, end: number, run: R
   return word === "'" || BINDS_TO.test(text);
 }
 
+const ATTACHES = "^_()[]\\";
+const STRICT_RELATIONS = "=<>≤≥≠≈";
+
+/** Whether a word of two to four letters is a product of variables (`mv`, `ac`, `KE`): one that touches a digit, bracket, command, ^ or _, or an operator, belongs to the formula. A lone word after a space with no operator is prose. A formula begins with one only before a relation or an exponent. */
+function shortWordJoins(
+  text: string,
+  tokenPattern: RegExp,
+  word: string,
+  position: number,
+  run: Run | null,
+): boolean {
+  if (word.length > 4) return false;
+  const end = position + word.length;
+  const after = text.charAt(end);
+  tokenPattern.lastIndex = skipSpaces(text, end);
+  const follower = tokenPattern.exec(text);
+  const name = follower ? follower[0] : "";
+  const kind = follower ? follower.findIndex((g, i) => i > 0 && g !== undefined) : 0;
+  const infix = kind === WORD && INFIX_SET.has(name.slice(1));
+  if (run === null) {
+    const strict = (kind === OPERATOR && STRICT_RELATIONS.includes(name)) || infix;
+    return strict || after === "^" || after === "_" || isDigit(after);
+  }
+  const touches = after !== "" && (ATTACHES.includes(after) || isDigit(after) || MARK_CHARS.includes(after));
+  const relation = (kind === OPERATOR && RELATIONS.includes(name)) || infix;
+  const previous = run.tokens[run.tokens.length - 1];
+  // An operator with a space on each side, as in `x = mc^2` or `b^2 - ac`.
+  const spaced =
+    run.tokens.length > 1 &&
+    ["binary", "sign", "infix"].includes(previous[2]) &&
+    previous[0] > run.tokens[run.tokens.length - 2][1] &&
+    position > previous[1];
+  const attached = runEnd(run) === position && previous[2] !== "(" && previous[2] !== "[";
+  return attached || touches || spaced || relation;
+}
+
 function endsRun(
   text: string,
+  tokenPattern: RegExp,
   token: RegExpExecArray,
   kind: number,
   depth: number,
@@ -105,9 +151,16 @@ function endsRun(
   const word = token[0];
   const position = token.index;
   const end = position + word.length;
-  if (kind === LETTERS) return word.length > 1 && !NAME_SET.has(word);
+  if (kind === LETTERS) {
+    return word.length > 1 && !NAME_SET.has(word) && !shortWordJoins(text, tokenPattern, word, position, run);
+  }
   if (kind === PUNCT && ".:".includes(word)) {
-    return !(isDigit(text.charAt(position - 1)) && isDigit(text.charAt(end)));
+    const after = text.charAt(end);
+    return !(isDigit(text.charAt(position - 1)) && (isDigit(after) || after === "\\"));
+  }
+  if (kind === OPERATOR && "()[]".includes(word) && text.charAt(position - 1) === "\\") {
+    // \( \) \[ \] are delimiters of maths, not brackets of a formula.
+    return true;
   }
   if (kind === PUNCT) {
     // A sentence's punctuation, outside brackets, is followed by a space.
@@ -229,10 +282,30 @@ function balancedUnwrapped(run: string): string | null {
   return run.slice(1, -1);
 }
 
-/** A command written straight after a letter or digit is a path or an escape, not maths: `Hello\alpha`. */
-function startsAttached(text: string, run: Run): boolean {
-  const start = runStart(run);
-  return text[start] === "\\" && start > 0 && /[A-Za-z0-9]/.test(text[start - 1]);
+
+/** Whether a command that takes an argument has `[` after it that nothing closes, or `]` closing it as the last token: `\\sqrt[3` and `\\sqrt[3]`. */
+function optionalArgumentWaits(tokens: Edged[], low: number, high: number): boolean {
+  const loose = unmatchedBrackets(tokens);
+  const takes = (index: number) => ["needs", "needs2"].includes(tokens[index][2]);
+  for (let index = Math.max(low, 1); index < high; index++) {
+    if (loose.has(index) && tokens[index][2] === "[" && takes(index - 1)) return true;
+  }
+  if (tokens[high - 1][2] !== "]") return false;
+  let depth = 0;
+  for (let index = high - 1; index >= low; index--) {
+    depth += (tokens[index][2] === "]" ? 1 : 0) - (tokens[index][2] === "[" ? 1 : 0);
+    if (depth === 0) return index > low && takes(index - 1);
+  }
+  return false;
+}
+
+/** Whether the formula stops where an argument is still to come: it ends in a command that takes one, or in a command that takes two and has one, or an unclosed group follows. This is a formula still being written, or prose. */
+function unfinished(text: string, run: Run, low: number, high: number, end: number): boolean {
+  const last = run.tokens[high - 1][2];
+  if (last === "needs" || last === "needs2") return true;
+  if (last === "group" && high > 1 && run.tokens[high - 2][2] === "needs2") return true;
+  if (optionalArgumentWaits(run.tokens, low, high)) return true;
+  return text.charAt(skipSpaces(text, end)) === "{";
 }
 
 function tagged(text: string, run: Run, restoreGroup: (piece: string) => string): string {
@@ -246,8 +319,7 @@ function tagged(text: string, run: Run, restoreGroup: (piece: string) => string)
   const chunk = text.slice(start, end);
   const plain = restoreGroup(chunk);
   if (!COMMAND_IN.test(plain) || plain.length > MAX_INLINE) return whole;
-  PROSE_AFTER.lastIndex = end;
-  if (run.tokens[high - 1][2] === "needs" && PROSE_AFTER.test(text)) return whole;
+  if (unfinished(text, run, low, high, end)) return whole;
   const before = text.slice(first, start);
   const after = text.slice(end, runEnd(run));
   if (BLOCK_ONLY.some((name) => plain.includes(`\\begin{${name}}`))) {
@@ -260,6 +332,30 @@ function tagged(text: string, run: Run, restoreGroup: (piece: string) => string)
     return `${before}(${lead}<latex-inline>${maths}</latex-inline>${tail})${after}`;
   }
   return `${before}<latex-inline>${chunk}</latex-inline>${after}`;
+}
+
+const LABEL = /\([A-Za-z0-9]{1,4}\)[ \t]+/y;
+
+/** Where a list's label, `(i) ` or `(2) `, ends if one is here: it sits between two terms with no operator, and a command or a number follows. */
+function labelAhead(text: string, tokenPattern: RegExp, position: number, run: Run | null): number {
+  LABEL.lastIndex = position;
+  const label = LABEL.exec(text);
+  if (!label || (run && COMES_AFTER.has(run.tokens[run.tokens.length - 1][2]))) return -1;
+  const stop = position + label[0].length;
+  tokenPattern.lastIndex = stop;
+  const follower = tokenPattern.exec(text);
+  if (!follower) return -1;
+  const kind = follower.findIndex((g, i) => i > 0 && g !== undefined);
+  if (kind !== WORD && kind !== NUMBER && kind !== MARK) return -1;
+  return kind === WORD && INFIX_SET.has(follower[0].slice(1)) ? -1 : stop;
+}
+
+/** Whether a formula begins right after `$`, `$$`, `\\(` or `\\[` that nothing closed (a closed pair is a span, and never in this text): the maths is still being written. An amount, `$5`, is the one `$` that is not an opener. */
+function afterOpener(text: string, position: number): boolean {
+  const before = text.charAt(position - 1);
+  if (before === "$") return !isDigit(text.charAt(position));
+  const pair = text.slice(Math.max(0, position - 2), position);
+  return pair === "\\(" || pair === "\\[";
 }
 
 /** The text with each formula in it tagged. `restoreGroup` puts the groups and environments back into a piece of it. */
@@ -278,7 +374,8 @@ export function tagRuns(text: string, restoreGroup: (piece: string) => string): 
     if (
       run !== null &&
       formula &&
-      !startsAttached(text, run) &&
+      !run.suppressed &&
+      run.sized === 0 &&
       runEnd(run) - runStart(run) <= MAX_INLINE
     ) {
       pieces.push(text.slice(done, runStart(run)), tagged(text, run, restoreGroup));
@@ -302,11 +399,24 @@ export function tagRuns(text: string, restoreGroup: (piece: string) => string): 
       position += word.length;
       continue;
     }
-    if (endsRun(text, found, kind, depth, run, lines)) {
+    if (endsRun(text, tokenPattern, found, kind, depth, run, lines)) {
       finish();
       depth = 0;
       position += word.length;
       continue;
+    }
+    if (run === null && insideWord(text, position)) {
+      position += word.length;
+      continue;
+    }
+    if (word === "(") {
+      const label = labelAhead(text, tokenPattern, position, run);
+      if (label > 0) {
+        finish();
+        depth = 0;
+        position = label;
+        continue;
+      }
     }
     if (run === null && (kind === LETTERS || kind === NUMBER) && isLabel(text, position, position + word.length)) {
       position += word.length + 1;
@@ -324,7 +434,13 @@ export function tagRuns(text: string, restoreGroup: (piece: string) => string): 
       clusterUntil = clusterEnd;
     }
     const [end, change, role, edge] = read(text, found, kind, restoreGroup);
-    run ??= { tokens: [], hasCommand: false, poisoned: false };
+    if (run === null) {
+      run = { tokens: [], hasCommand: false, poisoned: false, suppressed: afterOpener(text, position), sized: 0 };
+    }
+    if (kind === WORD) {
+      const name = word.slice(1);
+      run.sized += (OPENING.has(name) && edge === "(" ? 1 : 0) - (CLOSING.has(name) && edge === ")" ? 1 : 0);
+    }
     run.tokens.push([position, end, edge]);
     run.hasCommand ||= role === "command";
     run.poisoned ||= role === "poison";
