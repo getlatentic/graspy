@@ -120,6 +120,8 @@
   },
   "onboarding": {
     "home": "graspy home",
+    "headline": "Let's make learning awesome together.",
+    "subline": "A little about you to get started.",
     "stepOf": "Step {current} of {total}",
     "back": "Go back",
     "next": "Continue",

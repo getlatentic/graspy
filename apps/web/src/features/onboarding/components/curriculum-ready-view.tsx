@@ -7,11 +7,9 @@ import SubjectChips from "./subject-chips";
 export default function CurriculumReadyView({
   stats,
   subjects,
-  onContinue,
 }: {
   stats: GenerationStats;
   subjects: string[];
-  onContinue: () => void;
 }) {
   const { t } = useI18n();
   return (
@@ -29,17 +27,22 @@ export default function CurriculumReadyView({
       <div className="mt-6">
         <SubjectChips subjects={subjects} />
       </div>
-
-      <ActionBar>
-        <button
-          type="button"
-          onClick={onContinue}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
-        >
-          {t("onboarding.ready.continue")}
-          <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
-        </button>
-      </ActionBar>
     </>
+  );
+}
+
+export function ContinueBar({ onContinue }: { onContinue: () => void }) {
+  const { t } = useI18n();
+  return (
+    <ActionBar>
+      <button
+        type="button"
+        onClick={onContinue}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition"
+      >
+        {t("onboarding.ready.continue")}
+        <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
+      </button>
+    </ActionBar>
   );
 }

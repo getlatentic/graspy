@@ -4,6 +4,11 @@
 @import "tw-animate-css";
 
 @theme {
+  /* Wide screens and TVs: the layouts and the logo grow at these widths. */
+  --breakpoint-3xl: 120rem;
+  --breakpoint-4xl: 160rem;
+  --breakpoint-5xl: 240rem;
+
   --animate-enter: enter 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   @keyframes enter {
     from {
@@ -81,6 +86,59 @@
   .art-ground::before {
     background-image: none;
   }
+}
+
+/* Scales the type, the spacing and the widths under it with the screen, so a
+   form made for a laptop still reads from across a room. Anything inside it
+   that is sized in the theme scale grows by --zoom; borders stay as they are. */
+.zoom {
+  --zoom: 1;
+  --spacing: calc(0.25rem * var(--zoom));
+  --text-xs: calc(0.75rem * var(--zoom));
+  --text-sm: calc(0.875rem * var(--zoom));
+  --text-base: calc(1rem * var(--zoom));
+  --text-lg: calc(1.125rem * var(--zoom));
+  --text-xl: calc(1.25rem * var(--zoom));
+  --text-2xl: calc(1.5rem * var(--zoom));
+  --text-3xl: calc(1.875rem * var(--zoom));
+  --text-4xl: calc(2.25rem * var(--zoom));
+  --text-5xl: calc(3rem * var(--zoom));
+  --text-6xl: calc(3.75rem * var(--zoom));
+  --container-md: calc(28rem * var(--zoom));
+  --container-lg: calc(32rem * var(--zoom));
+  --container-xl: calc(36rem * var(--zoom));
+}
+
+@media (min-width: 96rem) {
+  .zoom {
+    --zoom: 1.1;
+  }
+}
+
+@media (min-width: 120rem) {
+  .zoom {
+    --zoom: 1.25;
+  }
+}
+
+@media (min-width: 160rem) {
+  .zoom {
+    --zoom: 1.75;
+  }
+}
+
+@media (min-width: 240rem) {
+  .zoom {
+    --zoom: 2.5;
+  }
+}
+
+/* A thick ring in two colours, dark inside and white outside, so it shows on
+   any part of the gradient from a keyboard or a remote's arrows. */
+.art-ground :focus-visible {
+  outline: calc(0.1875rem * var(--zoom, 1)) solid var(--color-on-art);
+  outline-offset: calc(0.125rem * var(--zoom, 1));
+  box-shadow: 0 0 0 calc(0.3125rem * var(--zoom, 1)) rgb(255 255 255 / 0.9);
 }
 
 .nums {

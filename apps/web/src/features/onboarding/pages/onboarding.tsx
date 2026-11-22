@@ -50,9 +50,26 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
   const notKept = notKeptAtOnce(setup.error !== null, form.watch());
 
   return (
-    <OnboardingLayout>
-      <StepHeading step={steps.step} index={steps.index} count={steps.count} />
-      <div key={steps.step} className="mt-8 motion-safe:animate-enter">
+    <OnboardingLayout
+      header={
+        <StepHeading
+          step={steps.step}
+          index={steps.index}
+          count={steps.count}
+        />
+      }
+      footer={
+        <StepFooter
+          onBack={steps.index > 0 ? steps.back : undefined}
+          onNext={() => void steps.next()}
+          nextLabel={t(nextLabelKey(setup.busy, steps.isLast, notKept))}
+          canNext={steps.canNext}
+          busy={setup.busy}
+          problem={notKept ? t("onboarding.generating.failed") : undefined}
+        />
+      }
+    >
+      <div key={steps.step} className="motion-safe:animate-enter">
         <FormProvider {...form}>
           {steps.step === "profile" ? (
             <ProfileStep suggestedCountry={detected.country ?? undefined} />
@@ -61,14 +78,6 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
           )}
         </FormProvider>
       </div>
-      <StepFooter
-        onBack={steps.index > 0 ? steps.back : undefined}
-        onNext={() => void steps.next()}
-        nextLabel={t(nextLabelKey(setup.busy, steps.isLast, notKept))}
-        canNext={steps.canNext}
-        busy={setup.busy}
-        problem={notKept ? t("onboarding.generating.failed") : undefined}
-      />
     </OnboardingLayout>
   );
 }

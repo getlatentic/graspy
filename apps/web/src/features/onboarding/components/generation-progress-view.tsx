@@ -53,7 +53,7 @@ function TimelineStage({
   );
 }
 
-function GenerationFailed({
+export function GenerationFailed({
   onRetry,
   onBack,
   isRetrying,
@@ -64,7 +64,7 @@ function GenerationFailed({
 }) {
   const { t } = useI18n();
   return (
-    <div className="mt-10 space-y-4 rounded-card border border-danger/30 bg-danger-soft p-5 text-danger">
+    <div className="space-y-4 rounded-card border border-danger/30 bg-danger-soft p-5 text-danger">
       <p className="font-semibold">{t("onboarding.generating.failed")}</p>
       <p className="text-sm text-danger">
         {t("onboarding.generating.failedBody")}
@@ -93,17 +93,9 @@ function GenerationFailed({
 export default function GenerationProgressView({
   subjects,
   step,
-  error,
-  onRetry,
-  onBack,
-  isRetrying,
 }: {
   subjects: string[];
   step: GenerationTimelineStep;
-  error: string | null;
-  onRetry: () => void;
-  onBack: () => void;
-  isRetrying: boolean;
 }) {
   const { t } = useI18n();
   return (
@@ -124,14 +116,6 @@ export default function GenerationProgressView({
         <Clock className="size-4 shrink-0" aria-hidden="true" />
         {t("onboarding.generating.wait")}
       </p>
-
-      {error && (
-        <GenerationFailed
-          onRetry={onRetry}
-          onBack={onBack}
-          isRetrying={isRetrying}
-        />
-      )}
     </>
   );
 }

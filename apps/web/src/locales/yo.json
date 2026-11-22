@@ -120,6 +120,8 @@
   },
   "onboarding": {
     "home": "Ojú-ìwé àkọ́kọ́ graspy",
+    "headline": "Let's make learning awesome together.",
+    "subline": "A little about you to get started.",
     "stepOf": "Ìgbésẹ̀ {current} nínú {total}",
     "back": "Padà",
     "next": "Tẹ̀síwájú",

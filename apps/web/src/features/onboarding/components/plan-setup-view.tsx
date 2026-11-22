@@ -1,7 +1,10 @@
 import { cn } from "@/lib/cn";
 import type { usePlanSetup } from "../hooks/use-plan-setup";
-import CurriculumReadyView from "./curriculum-ready-view";
-import GenerationProgressView from "./generation-progress-view";
+import CurriculumReadyView, { ContinueBar } from "./curriculum-ready-view";
+import GenerationProgressView, {
+  GenerationFailed,
+} from "./generation-progress-view";
+import { ActionBar } from "./action-bar";
 import OnboardingLayout from "./onboarding-layout";
 
 export default function PlanSetupView({
@@ -13,7 +16,7 @@ export default function PlanSetupView({
 }) {
   const readyStats = setup.phase === "ready" ? setup.stats : null;
   return (
-    <OnboardingLayout>
+    <OnboardingLayout footer={footer(setup, readyStats !== null, onContinue)}>
       <div
         key={readyStats ? "ready" : "progress"}
         className={cn("motion-safe:animate-enter", readyStats && "text-center")}
@@ -22,19 +25,33 @@ export default function PlanSetupView({
           <CurriculumReadyView
             stats={readyStats}
             subjects={setup.subjectNames}
-            onContinue={onContinue}
           />
         ) : (
           <GenerationProgressView
             subjects={setup.subjectNames}
             step={setup.step}
-            error={setup.error}
-            onRetry={setup.retry}
-            onBack={setup.reset}
-            isRetrying={setup.pending}
           />
         )}
       </div>
     </OnboardingLayout>
+  );
+}
+
+/** The action that moves on stays in view, below the part that scrolls. */
+function footer(
+  setup: ReturnType<typeof usePlanSetup>,
+  ready: boolean,
+  onContinue: () => void,
+) {
+  if (ready) return <ContinueBar onContinue={onContinue} />;
+  if (setup.error === null) return undefined;
+  return (
+    <ActionBar>
+      <GenerationFailed
+        onRetry={setup.retry}
+        onBack={setup.reset}
+        isRetrying={setup.pending}
+      />
+    </ActionBar>
   );
 }

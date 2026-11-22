@@ -25,7 +25,7 @@ export function StepHeading({
         {t(`onboarding.steps.${step}.title`)}
       </h1>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-6 space-y-3">
         <span className="text-sm font-semibold text-accent-strong">
           {t("onboarding.stepOf", { current: index + 1, total: count })}
         </span>

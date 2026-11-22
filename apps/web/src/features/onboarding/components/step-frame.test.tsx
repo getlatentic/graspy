@@ -19,15 +19,15 @@ const footer = (canNext: boolean) =>
   );
 
 describe("the action row of a step", () => {
-  it("stays at the foot of a phone's screen over a fade, and is part of the page from sm", () => {
+  it("stays at the foot of the screen below lg (over a fade on a phone), and is part of the page from lg", () => {
     const { container } = footer(true);
     const bar = container.firstElementChild;
     for (const name of [
       "sticky",
       "bottom-0",
       "bg-linear-to-t",
-      "sm:static",
       "sm:bg-none",
+      "lg:static",
     ]) {
       expect(bar?.classList.contains(name), name).toBe(true);
     }
