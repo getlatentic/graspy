@@ -1,11 +1,23 @@
-r"""Model output as the frontend renders it: mangled LaTeX restored, and
-every maths delimiter made a <latex-block> or <latex-inline> tag."""
+r"""A lesson's fields as the frontend renders them: what a lesson's JSON fields
+need on top of maths.py's repair of free text.
 
-import functools
+Only these fields are written as JSON strings, so only here are @@, control
+characters and doubled backslashes meant as LaTeX. A chat answer is plain text,
+where a tab is a tab and ``@@ -1,3 +1,3 @@`` is a diff, so it goes through
+repair_reply alone. The web's repair is repair_reply's twin and leaves the rest
+to the server. So does the alphabet rule below, which would strip the maths
+from a chat answer's "let $a, b, c, d$ be the coefficients"."""
+
 import re
-from collections.abc import Callable
 
-from .bare_math import LENGTH, map_unprotected, tag_bare_maths
+from .maths import (
+    LENGTH,
+    MAX_SPAN,
+    map_unprotected,
+    repair_reply,
+    tag_delimiters,
+    tag_undelimited,
+)
 
 # A maths span holding only single letters separated by spaces or commas is a
 # list of letters (the alphabet), which KaTeX would set in italic maths type.
@@ -13,26 +25,15 @@ _LETTER_LIST = re.compile(
     r"<latex-(block|inline)>\s*([A-Za-z](?:[\s,]+[A-Za-z]){3,})\s*</latex-\1>"
 )
 
-# Text-mode LaTeX for letters used in phonetics. Outside a maths span nothing
-# renders them, and the learner would read "/\ae/" where the model means /æ/.
-_TEXT_COMMANDS = {
-    "ae": "æ",
-    "AE": "Æ",
-    "oe": "œ",
-    "OE": "Œ",
-    "ss": "ß",
-    "o": "ø",
-    "O": "Ø",
-}
-_TEXT_COMMAND = re.compile(r"\\(ae|AE|oe|OE|ss|o|O)(?![A-Za-z])")
-
 # A model that learned JSON escaping sometimes doubles every backslash even
 # in a plain-text field: \\(\\frac ...\\). Doubled before a letter or a
 # bracket it is never meant; a LaTeX line break is \\ before a space or a line
 # end, and stays. \\[4pt] is a line break with extra space, so a [ opening a
-# length is not a doubled backslash.
+# length is not a doubled backslash, and a [ opens one only where a doubled
+# backslash closes it.
+_DOUBLED_CLOSE = rf"(?:[^\n]|\n(?![ \t]*\n)){{0,{MAX_SPAN}}}?\\\\\]"
 _DOUBLED_BACKSLASH = re.compile(
-    r"\\\\(?=[A-Za-z()\]]|\[(?!\s*-?[\d.]+\s*(?:pt|em|ex|mm|cm|in)\s*\]))"
+    rf"\\\\(?=[A-Za-z()\]]|\[(?!{LENGTH})(?={_DOUBLED_CLOSE}))"
 )
 
 # JSON parsing turns a lone \t, \r, \f or \b into a control character; one
@@ -41,19 +42,6 @@ _DOUBLED_BACKSLASH = re.compile(
 _CONTROL_BEFORE_LETTER = re.compile(r"[\x08\x0c\r\t](?=[a-zA-Z])")
 _CONTROL_LETTERS = {"\x08": "b", "\x0c": "f", "\r": "r", "\t": "t"}
 
-_BLOCK = r"<latex-block>\1</latex-block>"
-_INLINE = r"<latex-inline>\1</latex-inline>"
-# $$ before $, so a display span is not read as two inline ones.
-_DELIMITERS = (
-    (re.compile(r"\$\$(.*?)\$\$", re.DOTALL), _BLOCK),
-    (re.compile(rf"\\\[(?!{LENGTH})(.*?)\\\]", re.DOTALL), _BLOCK),
-    (re.compile(r"\\\((.*?)\\\)", re.DOTALL), _INLINE),
-    # Money in a word problem is two dollar signs in one sentence, so a bare
-    # pair is not enough to mean maths: the span must not open or close on
-    # whitespace, and a digit after the closing $ means it was a price.
-    (re.compile(r"(?<![\\$])\$(?!\s)([^$]*?)(?<!\s)\$(?!\d)"), _INLINE),
-)
-
 # A bold run ending in a newline, **Title:\n**, closes before it. The run must
 # open on text and close on its own, within one line break, or one phrase's
 # closing ** pairs with the next phrase's opening ** across a paragraph break.
@@ -61,56 +49,37 @@ _BOLD_NEWLINE = re.compile(
     r"(?<!\*)\*\*(?P<content>[^\s*][^*\n]*?)[ \t]*\n[ \t]*\*\*(?=\s|$)"
 )
 
-_MATHS_SPAN = re.compile(
-    r"(<latex-(?:block|inline)>)(.*?)(</latex-(?:block|inline)>)", re.DOTALL
+_TIKZ = re.compile(
+    r"(\\begin\{tikzpicture\}.{0,20000}?\\end\{tikzpicture\})", re.DOTALL
 )
-# A worksheet blank typed as ___ is a double subscript to KaTeX, which shows
-# the whole formula as source. \_ is the underscore itself.
-_BLANK = re.compile(r"(?<!\\)_{2,}")
-
-_TIKZ = re.compile(r"(\\begin\{tikzpicture\}.*?\\end\{tikzpicture\})", re.DOTALL)
 
 
-def _phonetic_letters(text: str) -> str:
-    return _TEXT_COMMAND.sub(lambda m: _TEXT_COMMANDS[m.group(1)], text)
-
-
-def _blanks_as_underscores(span: re.Match) -> str:
-    opening, maths, closing = span.groups()
-    return opening + _BLANK.sub(lambda run: "\\_" * len(run[0]), maths) + closing
-
-
-def _repair_bare_commands(text: str) -> str:
-    """Phonetic letters become text; any other command, or run of maths with
-    one in it, becomes inline maths."""
-    return tag_bare_maths(map_unprotected(text, _phonetic_letters))
-
-
-def _substitution(pattern: re.Pattern, replacement) -> Callable[[str], str]:
-    return functools.partial(pattern.sub, replacement)
-
-
-_REPAIRS: tuple[Callable[[str], str], ...] = (
+def _restored(text: str) -> str:
     # The model writes @@ for a LaTeX backslash ("@@frac12"), sparing it the
     # escaping a backslash needs inside JSON.
-    lambda text: text.replace("@@", "\\"),
-    _substitution(_DOUBLED_BACKSLASH, r"\\"),
-    _substitution(
-        _CONTROL_BEFORE_LETTER, lambda m: "\\" + _CONTROL_LETTERS[m.group(0)]
-    ),
-    *(_substitution(pattern, tag) for pattern, tag in _DELIMITERS),
-    _substitution(_LETTER_LIST, lambda m: m.group(2).strip()),
-    _repair_bare_commands,
-    _substitution(_MATHS_SPAN, _blanks_as_underscores),
-    _substitution(_BOLD_NEWLINE, r"**\g<content>**\n"),
+    text = text.replace("@@", "\\")
+    text = _DOUBLED_BACKSLASH.sub(r"\\", text)
+    return _CONTROL_BEFORE_LETTER.sub(
+        lambda m: "\\" + _CONTROL_LETTERS[m.group(0)], text
+    )
+
+
+def _bold_closed_before_newline(text: str) -> str:
+    return _BOLD_NEWLINE.sub(r"**\g<content>**\n", text)
+
+
+def _tikz_fenced(text: str) -> str:
     # The frontend renders a tikz code block as a diagram.
-    _substitution(_TIKZ, r"\n```tikz\n\1\n```\n"),
-)
+    return _TIKZ.sub(r"\n```tikz\n\1\n```\n", text)
 
 
 def repair_markdown(text: str) -> str:
     if not text:
         return text
-    for repair in _REPAIRS:
-        text = repair(text)
-    return text
+    text = map_unprotected(text, _restored, protect_indented=False)
+    text = _LETTER_LIST.sub(lambda m: m.group(2).strip(), tag_delimiters(text))
+    text = map_unprotected(tag_undelimited(text), _bold_closed_before_newline)
+    return map_unprotected(text, _tikz_fenced, protect_tikz=False)
+
+
+__all__ = ["repair_markdown", "repair_reply"]

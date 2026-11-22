@@ -14,6 +14,7 @@ from ..agent.reply import ReplyData
 from ..agent.tutor import Tutor, TutorReply
 from ..agent.unanswered import unanswered
 from ..caller import Caller, Keeping
+from ..domains.lesson.maths import repair_reply
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
 
@@ -44,7 +45,7 @@ def reply_payload(reply: TutorReply) -> dict[str, Any]:
 def words_payload(answer: str) -> dict[str, Any]:
     """The reply of a turn that ended with words and nothing else: the learner stopped it."""
     return {
-        "answer": answer,
+        "answer": repair_reply(answer),
         "data": ReplyData().model_dump(by_alias=True, mode="json"),
     }
 

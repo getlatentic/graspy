@@ -1,5 +1,5 @@
 {
-  "about": "Undelimited and mangled maths as the model writes it, and the text it must become. Read by apps/server/tests/test_math_repair_corpus.py (repair_markdown: 'tagged' exactly), apps/web/src/lib/latex.test.ts and apps/server/ui/src/shared/latex.test.ts (processLatex of 'input' equals processLatex of 'tagged'), so the three cannot drift. 'tagged' uses graspy's <latex-inline> and <latex-block> tags; text that is not maths has tagged equal to input.",
+  "about": "Maths as the model writes it, delimited or not, mangled or not, and code that must stay as it is, with the text each must become. 'tagged' is what repair_reply makes of 'input', with graspy's <latex-inline> and <latex-block> tags; the web's processLatex must make the same text with $ and $$ for the tags. 'lesson' is what repair_markdown makes of it when that differs (a lesson's JSON fields also restore doubled backslashes and keep a list of letters as text). Read by apps/server/tests/test_math_repair_corpus.py, apps/web/src/lib/latex.test.ts and apps/server/ui/src/shared/latex.test.ts, so the three cannot drift.",
   "cases": [
     {
       "name": "a matrix environment with no delimiters, after a left-hand side, with a lengthened line break",
@@ -75,6 +75,137 @@
       "name": "inline code is left as it is",
       "input": "Type `\\frac{1}{2}` to get a fraction.",
       "tagged": "Type `\\frac{1}{2}` to get a fraction."
+    },
+    {
+      "name": "inline code with dollar signs",
+      "input": "Run `export PATH=$HOME/bin:$PATH` now",
+      "tagged": "Run `export PATH=$HOME/bin:$PATH` now"
+    },
+    {
+      "name": "a fenced block with dollar signs",
+      "input": "Run:\n\n```sh\ncd $HOME/$USER\n```\n\nDone.",
+      "tagged": "Run:\n\n```sh\ncd $HOME/$USER\n```\n\nDone."
+    },
+    {
+      "name": "a tilde fence",
+      "input": "~~~\ncd $HOME/$USER\n~~~",
+      "tagged": "~~~\ncd $HOME/$USER\n~~~"
+    },
+    {
+      "name": "a fenced Go block with a tab and braces",
+      "input": "```go\nfunc main() {\n\tfmt.Println(1)\n}\n```",
+      "tagged": "```go\nfunc main() {\n\tfmt.Println(1)\n}\n```"
+    },
+    {
+      "name": "a fenced diff header",
+      "input": "```diff\n@@ -1,3 +1,3 @@\n-old\n+new\n```",
+      "tagged": "```diff\n@@ -1,3 +1,3 @@\n-old\n+new\n```"
+    },
+    {
+      "name": "an unclosed fence is code to the end",
+      "input": "```py\nx = \\frac{1}{2}\ny = $a$ and $b$",
+      "tagged": "```py\nx = \\frac{1}{2}\ny = $a$ and $b$"
+    },
+    {
+      "name": "a fenced Windows path",
+      "input": "```\nC:\\new\\table\\frac.txt\n```",
+      "tagged": "```\nC:\\new\\table\\frac.txt\n```"
+    },
+    {
+      "name": "a fenced regex",
+      "input": "```\n\\d+\\.\\d+\\s*$ and ^\\(x\\)$ and \\[a-z\\]\n```",
+      "tagged": "```\n\\d+\\.\\d+\\s*$ and ^\\(x\\)$ and \\[a-z\\]\n```"
+    },
+    {
+      "name": "indented code after a blank line",
+      "input": "Steps:\n\n    echo $HOME/$USER\n    echo \\frac12\n\nDone with $x$.",
+      "tagged": "Steps:\n\n    echo $HOME/$USER\n    echo \\frac12\n\nDone with <latex-inline>x</latex-inline>."
+    },
+    {
+      "name": "maths after a fence is still tagged",
+      "input": "```\n$a$\n```\nThen $b$.",
+      "tagged": "```\n$a$\n```\nThen <latex-inline>b</latex-inline>."
+    },
+    {
+      "name": "a list of letters in a chat answer is maths",
+      "input": "Let $a, b, c, d$ be the coefficients.",
+      "tagged": "Let <latex-inline>a, b, c, d</latex-inline> be the coefficients.",
+      "lesson": "Let a, b, c, d be the coefficients."
+    },
+    {
+      "name": "a command and the word after a hyphen",
+      "input": "the \\theta-value and the \\alpha - level",
+      "tagged": "the <latex-inline>\\theta</latex-inline>-value and the <latex-inline>\\alpha</latex-inline> - level"
+    },
+    {
+      "name": "prose before a minus sign",
+      "input": "Since the sum - \\sqrt{2} is irrational",
+      "tagged": "Since the sum - <latex-inline>\\sqrt{2}</latex-inline> is irrational"
+    },
+    {
+      "name": "phonetic slashes",
+      "input": "The sound /\\theta/ in think and /\\eth/",
+      "tagged": "The sound /<latex-inline>\\theta</latex-inline>/ in think and /<latex-inline>\\eth</latex-inline>/"
+    },
+    {
+      "name": "a hyphenated name before a relation",
+      "input": "The p-value = \\frac{1}{20} here",
+      "tagged": "The <latex-inline>p-value = \\frac{1}{20}</latex-inline> here"
+    },
+    {
+      "name": "text commands for phonetic letters",
+      "input": "The sound /\\ae/ in cat, and \\ss.",
+      "tagged": "The sound /æ/ in cat, and ß."
+    },
+    {
+      "name": "functions with parenthesised arguments",
+      "input": "f(x) = \\sin(x) + \\cos(x)",
+      "tagged": "<latex-inline>f(x) = \\sin(x) + \\cos(x)</latex-inline>"
+    },
+    {
+      "name": "a parenthesised sum raised to a power",
+      "input": "(a+b)^2 = \\frac{a}{b}",
+      "tagged": "<latex-inline>(a+b)^2 = \\frac{a}{b}</latex-inline>"
+    },
+    {
+      "name": "a parenthetical of prose is not maths",
+      "input": "(Use the value \\frac12 from above.)",
+      "tagged": "(Use the value <latex-inline>\\frac12</latex-inline> from above.)"
+    },
+    {
+      "name": "a row break lengthened in picas",
+      "input": "\\begin{pmatrix}1&2\\\\[1pc]3&4\\end{pmatrix}",
+      "tagged": "<latex-inline>\\begin{pmatrix}1&2\\\\[1pc]3&4\\end{pmatrix}</latex-inline>"
+    },
+    {
+      "name": "a line-break length beside display delimiters",
+      "input": "\\[x\\] and \\\\[note] and \\[y\\]",
+      "tagged": "<latex-block>x</latex-block> and \\\\[note] and <latex-block>y</latex-block>"
+    },
+    {
+      "name": "an unclosed environment does not swallow the next paragraph",
+      "input": "Start \\begin{pmatrix} 1 & 2\n\nNext is \\frac12 and \\end{pmatrix}.",
+      "tagged": "Start \\begin{pmatrix} 1 & 2\n\nNext is <latex-inline>\\frac12</latex-inline> and \\end{pmatrix}."
+    },
+    {
+      "name": "align inside dollar signs is written as aligned",
+      "input": "$\\begin{align} a &= 1 \\end{align}$",
+      "tagged": "<latex-inline>\\begin{aligned} a &= 1 \\end{aligned}</latex-inline>"
+    },
+    {
+      "name": "gather inside parentheses delimiters is written as gathered",
+      "input": "\\(\\begin{gather*} x \\end{gather*}\\)",
+      "tagged": "<latex-inline>\\begin{gathered} x \\end{gathered}</latex-inline>"
+    },
+    {
+      "name": "display maths does not run over a blank line",
+      "input": "$$a\n\nb$$",
+      "tagged": "$$a\n\nb$$"
+    },
+    {
+      "name": "an escaped dollar sign is not a delimiter",
+      "input": "It costs \\$5 and \\$6, and $x$ is a number.",
+      "tagged": "It costs \\$5 and \\$6, and <latex-inline>x</latex-inline> is a number."
     }
   ]
 }
