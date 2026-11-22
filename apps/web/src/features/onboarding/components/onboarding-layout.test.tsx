@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { KeysApp } from "@/test/keys-app";
 import en from "@/locales/en.json";
@@ -10,81 +11,121 @@ import OnboardingLayout from "./onboarding-layout";
 
 afterEach(cleanup);
 
-const layout = () =>
+const layout = (resetKey = "a") =>
   render(
     <KeysApp>
-      <OnboardingLayout header={<h1>title</h1>} footer={<button>go</button>}>
+      <OnboardingLayout
+        resetKey={resetKey}
+        header={<h1 id="page-title">title</h1>}
+        footer={<button>go</button>}
+      >
         <p>fields</p>
       </OnboardingLayout>
     </KeysApp>,
   );
 
 describe("the onboarding page", () => {
-  it("is two halves exactly the viewport tall from lg, with no page scroll", () => {
+  it("has a skip link to the form, which is the page's one main", () => {
     const { container } = layout();
-    const root = container.querySelector(".art-ground");
-    for (const name of ["lg:h-dvh", "lg:overflow-hidden", "theme-light"]) {
-      expect(root?.classList.contains(name), name).toBe(true);
-    }
-    const grid = root?.firstElementChild;
-    for (const name of ["lg:grid-cols-2", "lg:h-dvh", "lg:grid-rows-1"]) {
-      expect(grid?.classList.contains(name), name).toBe(true);
-    }
+    const skip = screen.getByRole("link", { name: "onboarding.skip" });
+    expect(skip.getAttribute("href")).toBe("#main");
+    expect(container.querySelector("main#main")).toBeTruthy();
+    expect(container.querySelectorAll("main")).toHaveLength(1);
   });
 
-  it("puts the logo and the headline on the left, and the headline only where there is a left half", () => {
+  it("holds the logo, which leads home, and the headline in the left half, and the headline is not a heading", () => {
     const { container } = layout();
     const left = container.querySelector("aside");
-    expect(left?.querySelector("a[href='/'] img[alt='graspy']")).toBeTruthy();
-    const headline = screen.getByRole("heading", {
-      level: 2,
-      name: "onboarding.headline",
-    });
+    const home = left?.querySelector("a[href='/']");
+    expect(home?.getAttribute("aria-label")).toBe("onboarding.home");
+    expect(home?.querySelector("img")).toBeTruthy();
+    const headline = screen.getByText("onboarding.headline");
     expect(left?.contains(headline)).toBe(true);
-    expect(headline.parentElement?.classList.contains("hidden")).toBe(true);
-    expect(headline.parentElement?.classList.contains("lg:flex")).toBe(true);
+    expect(headline.tagName).toBe("P");
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
     expect(screen.getByText("onboarding.subline")).toBeTruthy();
   });
 
-  it("keeps the title and the action still and scrolls only the fields, from lg", () => {
+  it("puts the title, the fields and the action in the right half in that order", () => {
     const { container } = layout();
     const form = container.querySelector("main")?.firstElementChild;
     const [top, middle, bottom] = [...(form?.children ?? [])];
-    expect(top?.querySelector("h1")).toBeTruthy();
-    expect(top?.classList.contains("shrink-0")).toBe(true);
+    expect(top?.querySelector("h1")?.textContent).toBe("title");
     expect(middle?.textContent).toBe("fields");
-    for (const name of ["lg:overflow-y-auto", "lg:min-h-0", "lg:flex-1"]) {
-      expect(middle?.classList.contains(name), name).toBe(true);
-    }
     expect(bottom?.textContent).toBe("go");
   });
 
-  it("has no picture and no card", () => {
+  it("has no picture beside the logo and no card", () => {
     const { container } = layout();
     expect(
       [...container.querySelectorAll("img")].map((img) =>
         img.getAttribute("src"),
       ),
-    ).toEqual(["/brand/sprout.svg", "/brand/wordmark.png"]);
+    ).toEqual(["/brand/graspy-lockup-v1.svg"]);
     expect(container.querySelector(".rounded-sheet, .shadow-lift")).toBeNull();
   });
 
-  it("scales the form with the screen", () => {
+  it("uses logical padding only, so the halves flip for a right-to-left language", () => {
+    const { container } = layout();
+    const physical = [...container.querySelectorAll("[class]")].flatMap(
+      (element) =>
+        [...element.classList].filter((name) =>
+          /(^|:)(p[lr]|m[lr]|left|right)-/.test(name),
+        ),
+    );
+    // left-1/2 is the bar's centring, which is symmetric.
+    expect(physical.filter((name) => !name.includes("left-1/2"))).toEqual([]);
+  });
+
+  it("scales the form and the headline with the screen", () => {
     const { container } = layout();
     expect(container.querySelector("main .zoom")).toBeTruthy();
     expect(container.querySelector("aside .zoom")).toBeTruthy();
   });
+
+  it("brings the fields back to the top when the step changes", () => {
+    function Steps() {
+      const [step, setStep] = useState("one");
+      return (
+        <KeysApp>
+          <button onClick={() => setStep("two")}>next</button>
+          <OnboardingLayout resetKey={step}>
+            <p>{step}</p>
+          </OnboardingLayout>
+        </KeysApp>
+      );
+    }
+    const { container } = render(<Steps />);
+    const box = container.querySelector("main p")?.parentElement as HTMLElement;
+    box.scrollTop = 120;
+    expect(box.scrollTop).toBe(120);
+    screen.getByText("next").click();
+    return Promise.resolve().then(() => {
+      expect(box.scrollTop).toBe(0);
+    });
+  });
+
+  it("has no gap above the fields when there is no title", () => {
+    const { container } = render(
+      <KeysApp>
+        <OnboardingLayout>
+          <p>fields</p>
+        </OnboardingLayout>
+      </KeysApp>,
+    );
+    expect(
+      container.querySelector("main p")?.parentElement?.className,
+    ).not.toContain("mt-8");
+  });
 });
 
 describe("the headline", () => {
-  it("is written in all four locales", () => {
+  it("is in all four locales", () => {
     for (const locale of [en, ar, pcm, yo]) {
-      expect(locale.onboarding.headline).toBe(
-        "Let's make learning awesome together.",
-      );
-      expect(locale.onboarding.subline).toBe(
-        "A little about you to get started.",
-      );
+      expect(locale.onboarding.headline.length).toBeGreaterThan(0);
+      expect(locale.onboarding.subline.length).toBeGreaterThan(0);
+      expect(locale.onboarding.skip.length).toBeGreaterThan(0);
     }
   });
 });

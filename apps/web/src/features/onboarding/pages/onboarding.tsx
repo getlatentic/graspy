@@ -51,6 +51,7 @@ function Onboarding({ replan }: { replan?: DetailsSchema }) {
 
   return (
     <OnboardingLayout
+      resetKey={steps.step}
       header={
         <StepHeading
           step={steps.step}

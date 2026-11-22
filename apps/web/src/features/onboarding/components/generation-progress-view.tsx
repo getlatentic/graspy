@@ -53,7 +53,24 @@ function TimelineStage({
   );
 }
 
-export function GenerationFailed({
+/** What went wrong: in the scrolling part, said at once to a screen reader. */
+export function GenerationFailedNote() {
+  const { t } = useI18n();
+  return (
+    <div
+      role="alert"
+      className="mt-6 space-y-2 rounded-card border border-danger/30 bg-danger-soft p-5 text-danger"
+    >
+      <p className="font-semibold">{t("onboarding.generating.failed")}</p>
+      <p className="text-sm text-danger">
+        {t("onboarding.generating.failedBody")}
+      </p>
+    </div>
+  );
+}
+
+/** The two ways on, which stay in view. */
+export function GenerationRetryButtons({
   onRetry,
   onBack,
   isRetrying,
@@ -64,28 +81,22 @@ export function GenerationFailed({
 }) {
   const { t } = useI18n();
   return (
-    <div className="space-y-4 rounded-card border border-danger/30 bg-danger-soft p-5 text-danger">
-      <p className="font-semibold">{t("onboarding.generating.failed")}</p>
-      <p className="text-sm text-danger">
-        {t("onboarding.generating.failedBody")}
-      </p>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={onRetry}
-          disabled={isRetrying}
-          className="inline-flex flex-1 items-center justify-center rounded-control bg-danger px-6 py-3 text-sm font-semibold text-on-danger transition disabled:cursor-not-allowed"
-        >
-          {t("onboarding.generating.tryAgain")}
-        </button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex flex-1 items-center justify-center rounded-control border border-danger/30 bg-surface px-6 py-3 text-sm font-semibold text-danger transition hover:border-danger"
-        >
-          {t("onboarding.generating.adjust")}
-        </button>
-      </div>
+    <div className="flex flex-col gap-3 sm:flex-row">
+      <button
+        type="button"
+        onClick={onRetry}
+        disabled={isRetrying}
+        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-control bg-danger px-6 py-3 text-sm font-semibold text-on-danger transition disabled:cursor-not-allowed"
+      >
+        {t("onboarding.generating.tryAgain")}
+      </button>
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-control border border-danger/30 bg-surface px-6 py-3 text-sm font-semibold text-danger transition hover:border-danger"
+      >
+        {t("onboarding.generating.adjust")}
+      </button>
     </div>
   );
 }
@@ -93,17 +104,23 @@ export function GenerationFailed({
 export default function GenerationProgressView({
   subjects,
   step,
+  failed,
 }: {
   subjects: string[];
   step: GenerationTimelineStep;
+  failed: boolean;
 }) {
   const { t } = useI18n();
   return (
-    <>
+    <div aria-busy={!failed} aria-live="polite">
       <div className="mb-6 text-center sm:mb-10">
-        <h2 className="text-balance text-2xl font-semibold text-ink sm:text-3xl">
+        <h1
+          id="page-title"
+          tabIndex={-1}
+          className="text-balance text-2xl font-semibold text-ink outline-none sm:text-3xl"
+        >
           {t("onboarding.generating.title")}
-        </h2>
+        </h1>
       </div>
 
       <div className="mb-8">
@@ -116,7 +133,8 @@ export default function GenerationProgressView({
         <Clock className="size-4 shrink-0" aria-hidden="true" />
         {t("onboarding.generating.wait")}
       </p>
-    </>
+      {failed ? <GenerationFailedNote /> : null}
+    </div>
   );
 }
 

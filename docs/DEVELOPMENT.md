@@ -142,6 +142,23 @@ The word is Poppins SemiBold (SIL Open Font License, so it may be embedded and m
 
 The shipped file also has `role="img"` and `aria-label="graspy"`.
 
+## Screen sizes and TVs
+
+Onboarding has a split layout (two halves the height of the screen, the form scrolling inside its half) and a single column that scrolls as a page. The split needs a screen at least 64rem wide and 40rem tall (`split:` in `apps/web/src/index.css`); a shorter window, such as a laptop at 150% zoom or a tablet with its keyboard open, keeps the single column.
+
+The form and the headline sit in a `.zoom` scope that scales the theme's spacing, type and widths by `--zoom`. A width cannot tell a TV from a monitor, so `src/lib/device.ts` sets `<html data-device="tv">` from the user agent (Tizen, Web0S, SmartTV, GoogleTV, AFT*, BRAVIA and others). Add `?tv=1` to the URL to force it on while testing on a desktop (kept until `?tv=0`).
+
+| CSS width and height | Monitor or laptop | TV |
+|---|---|---|
+| under 80rem | 1 | 1 |
+| 80rem (1280px) and 40rem tall | 1 | 1.5 |
+| 96rem (1536px) and 46rem tall | 1.1 | 1.5 |
+| 120rem (1920px) and 56rem tall | 1.25 | 1.75 |
+| 160rem (2560px) and 76rem tall | 1.5 | 1.75 |
+| 200rem (3200px) and 76rem tall | 1.5 | 2.5 |
+
+Every step also needs its height, so a wide but short window does not get a zoom its form cannot hold.
+
 ## Names compared alike on the server and the web
 
 `normalise` (apps/server/src/app/agent/subject_match.py) and `nameKey`

@@ -1,10 +1,10 @@
 import { cn } from "@/lib/cn";
 import type { usePlanSetup } from "../hooks/use-plan-setup";
+import { ActionBar } from "./action-bar";
 import CurriculumReadyView, { ContinueBar } from "./curriculum-ready-view";
 import GenerationProgressView, {
-  GenerationFailed,
+  GenerationRetryButtons,
 } from "./generation-progress-view";
-import { ActionBar } from "./action-bar";
 import OnboardingLayout from "./onboarding-layout";
 
 export default function PlanSetupView({
@@ -16,7 +16,10 @@ export default function PlanSetupView({
 }) {
   const readyStats = setup.phase === "ready" ? setup.stats : null;
   return (
-    <OnboardingLayout footer={footer(setup, readyStats !== null, onContinue)}>
+    <OnboardingLayout
+      resetKey={readyStats ? "ready" : "progress"}
+      footer={footer(setup, readyStats !== null, onContinue)}
+    >
       <div
         key={readyStats ? "ready" : "progress"}
         className={cn("motion-safe:animate-enter", readyStats && "text-center")}
@@ -30,6 +33,7 @@ export default function PlanSetupView({
           <GenerationProgressView
             subjects={setup.subjectNames}
             step={setup.step}
+            failed={setup.error !== null}
           />
         )}
       </div>
@@ -47,7 +51,7 @@ function footer(
   if (setup.error === null) return undefined;
   return (
     <ActionBar>
-      <GenerationFailed
+      <GenerationRetryButtons
         onRetry={setup.retry}
         onBack={setup.reset}
         isRetrying={setup.pending}

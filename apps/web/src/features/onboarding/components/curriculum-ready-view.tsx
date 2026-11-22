@@ -17,9 +17,13 @@ export default function CurriculumReadyView({
       <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-accent-soft">
         <CheckCircle className="h-14 w-14 text-accent-ink" />
       </div>
-      <h2 className="text-balance text-4xl font-semibold text-ink">
+      <h1
+        id="page-title"
+        tabIndex={-1}
+        className="text-balance text-4xl font-semibold text-ink outline-none"
+      >
         {t("onboarding.ready.title")}
-      </h2>
+      </h1>
       <p className="mt-4 text-base text-ink">
         {t("onboarding.ready.body", { topics: stats.topicCount })}
       </p>

@@ -88,9 +88,17 @@
   }
 }
 
+/* The split layout: two halves the height of the screen. It needs a screen that
+   is wide and tall enough; a shorter window (a laptop at 150% zoom, a tablet
+   with its keyboard open) keeps the single column that scrolls as a page. */
+@custom-variant split (@media (min-width: 64rem) and (min-height: 40rem));
+
 /* Scales the type, the spacing and the widths under it with the screen, so a
    form made for a laptop still reads from across a room. Anything inside it
-   that is sized in the theme scale grows by --zoom; borders stay as they are. */
+   that is sized in the theme scale grows by --zoom; borders stay as they are.
+   A monitor grows to 1.5 by 2560px; a TV (the device flag set in main.tsx)
+   starts at 1.5 and grows to 2.5, because a TV is read from three metres.
+   Every step also needs the height to hold it. */
 .zoom {
   --zoom: 1;
   --spacing: calc(0.25rem * var(--zoom));
@@ -109,36 +117,67 @@
   --container-xl: calc(36rem * var(--zoom));
 }
 
-@media (min-width: 96rem) {
+@media (min-width: 96rem) and (min-height: 46rem) {
   .zoom {
     --zoom: 1.1;
   }
 }
 
-@media (min-width: 120rem) {
+@media (min-width: 120rem) and (min-height: 56rem) {
   .zoom {
     --zoom: 1.25;
   }
 }
 
-@media (min-width: 160rem) {
+@media (min-width: 160rem) and (min-height: 76rem) {
   .zoom {
+    --zoom: 1.5;
+  }
+}
+
+@media (min-width: 80rem) and (min-height: 40rem) {
+  [data-device="tv"] .zoom {
+    --zoom: 1.5;
+  }
+}
+
+@media (min-width: 120rem) and (min-height: 56rem) {
+  [data-device="tv"] .zoom {
     --zoom: 1.75;
   }
 }
 
-@media (min-width: 240rem) {
-  .zoom {
+@media (min-width: 200rem) and (min-height: 76rem) {
+  [data-device="tv"] .zoom {
     --zoom: 2.5;
   }
 }
 
-/* A thick ring in two colours, dark inside and white outside, so it shows on
-   any part of the gradient from a keyboard or a remote's arrows. */
-.art-ground :focus-visible {
+/* A heading or a page that only a program focuses shows no ring. */
+.art-ground [tabindex="-1"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Bars that stick keep the focused control out from under them. */
+html:has(.art-ground) {
+  scroll-padding-block-end: 8rem;
+}
+
+.art-ground :is(a, button, input, select, textarea, [tabindex]),
+.art-popup :is(a, button, input, select, textarea, [tabindex]) {
+  scroll-margin-block: 1rem;
+}
+
+/* Every control on the art screens and their popups shows the same ring from a
+   keyboard or a remote: a 3px dark outline with a white gap between it and the
+   control, so it reads on the gradient, on white and on the blue. It is not in
+   a layer on purpose: it must win over a control's own focus utility. */
+.art-ground :focus-visible,
+.art-popup :focus-visible {
   outline: calc(0.1875rem * var(--zoom, 1)) solid var(--color-on-art);
   outline-offset: calc(0.125rem * var(--zoom, 1));
-  box-shadow: 0 0 0 calc(0.3125rem * var(--zoom, 1)) rgb(255 255 255 / 0.9);
+  box-shadow: 0 0 0 calc(0.125rem * var(--zoom, 1)) rgb(255 255 255 / 0.9);
 }
 
 .nums {

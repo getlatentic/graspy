@@ -1,12 +1,14 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 /**
- * The row of actions at the foot of a step. Below lg it stays at the foot of
- * the screen, so it never drops out of sight with a long list above it: over a
- * soft fade from the page's own ground on a phone, and bare from sm up, where
- * the form is centred and a fade would show as a block. From lg up, where the
- * form scrolls inside its own half, it is part of the page.
+ * The row of actions at the foot of a step. Below the split layout it sticks
+ * to the foot of the screen, so it never drops out of sight with a long list
+ * above it; once it is stuck, a soft fade from the page's own ground, as wide
+ * as the screen, keeps what scrolls under it from showing through. In the
+ * split layout, where the form scrolls inside its own half, it is part of the
+ * page. `html` keeps scroll-padding for the bar, so a focused control is never
+ * left under it.
  */
 export function ActionBar({
   children,
@@ -15,16 +17,34 @@ export function ActionBar({
   children: ReactNode;
   className?: string;
 }) {
+  const place = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+
+  // The marker sits where the bar would rest in the flow: below the screen means the bar is held up.
+  useEffect(() => {
+    const marker = place.current;
+    if (!marker || typeof IntersectionObserver === "undefined") return;
+    const watch = new IntersectionObserver(([entry]) =>
+      setStuck(!entry.isIntersecting),
+    );
+    watch.observe(marker);
+    return () => watch.disconnect();
+  }, []);
+
   return (
-    <div
-      className={cn(
-        "sticky bottom-0 z-10 -mx-4 mt-auto bg-linear-to-t from-surface/80 via-surface/60 to-transparent px-4 pt-8 pb-[max(1rem,env(safe-area-inset-bottom))]",
-        "sm:mx-0 sm:mt-8 sm:bg-none sm:px-0 sm:pt-0",
-        "lg:static lg:pb-0",
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <>
+      <div
+        data-stuck={stuck}
+        className={cn(
+          "sticky bottom-0 z-10 mt-auto pt-8 pb-[max(1rem,env(safe-area-inset-bottom))]",
+          "before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-linear-to-t before:from-surface/80 before:via-surface/60 before:to-transparent before:opacity-0 before:transition-opacity data-[stuck=true]:before:opacity-100",
+          "split:static split:mt-0 split:pb-0 split:before:hidden",
+          className,
+        )}
+      >
+        {children}
+      </div>
+      <div ref={place} aria-hidden="true" className="h-px" />
+    </>
   );
 }
