@@ -41,7 +41,7 @@ export default function OnboardingLayout({
 function Welcome({ band }: { band: AgeBand | null }) {
   return (
     <div className="hidden lg:sticky lg:top-8 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col lg:justify-center">
-      <div className="aspect-4/5 max-h-full mask-x-from-85% mask-x-to-100% mask-y-from-92% mask-y-to-100%">
+      <div className="aspect-4/5 max-h-full mask-x-from-85% mask-x-to-100% mask-y-from-88% mask-y-to-100%">
         {band === "child" || band === "tween" ? (
           <Art name="math" band={band} />
         ) : (

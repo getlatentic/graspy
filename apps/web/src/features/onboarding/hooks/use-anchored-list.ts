@@ -38,14 +38,49 @@ export function useAnchoredStyle(
   return style;
 }
 
+/** A finger that moves further than this between down and up is a scroll, not a tap. */
+const TAP_SLOP = 10;
+
+interface Press {
+  id: number;
+  x: number;
+  y: number;
+}
+
+/** Calls `onOutside` for a tap or click that starts and ends outside the boxes; a swipe or a cancelled press (the browser took it to scroll) leaves the list open. */
 export function usePressOutside(onOutside: () => void, ...boxes: Box[]) {
   useEffect(() => {
-    const pressed = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!boxes.some((box) => box.current?.contains(target))) onOutside();
+    let press: Press | null = null;
+    const outside = (event: PointerEvent) =>
+      !boxes.some((box) => box.current?.contains(event.target as Node));
+
+    const down = (event: PointerEvent) => {
+      press = outside(event)
+        ? { id: event.pointerId, x: event.clientX, y: event.clientY }
+        : null;
     };
-    document.addEventListener("pointerdown", pressed);
-    return () => document.removeEventListener("pointerdown", pressed);
+    const up = (event: PointerEvent) => {
+      const began = press;
+      press = null;
+      if (!began || began.id !== event.pointerId || !outside(event)) return;
+      const moved = Math.hypot(
+        event.clientX - began.x,
+        event.clientY - began.y,
+      );
+      if (moved <= TAP_SLOP) onOutside();
+    };
+    const cancel = () => {
+      press = null;
+    };
+
+    document.addEventListener("pointerdown", down);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", cancel);
+    return () => {
+      document.removeEventListener("pointerdown", down);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", cancel);
+    };
     // The caller fixes how many boxes there are, so the spread is a fixed list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onOutside, ...boxes]);

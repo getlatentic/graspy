@@ -53,6 +53,7 @@ export function useCombobox(
     setSearchTerm("");
   }, []);
   const open = () => {
+    if (isOpen) return;
     setIsOpen(true);
     setHighlighted(
       Math.max(
