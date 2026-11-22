@@ -59,6 +59,12 @@
       content="Personalized, culturally-aware education for children in crisis zones"
     />
     <title>graspy — AI Tutor</title>
+    <style>
+      /* Built by the boot script below, only for a browser that cannot run the app. Nothing of it exists on a supported browser. */
+      #too-old { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 2rem; text-align: center; color: #12232e; background: #e3eefa; background: linear-gradient(135deg, #fef4ec, #e3eefa 50%, #c4e2fe); font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+      #too-old h1 { margin: 0 0 1.5rem; max-width: 40rem; font-size: 2.75rem; line-height: 1.2; font-weight: 700; }
+      #too-old p { margin: 0; max-width: 40rem; font-size: 1.75rem; line-height: 1.5; }
+    </style>
     <script>
       // Sets lang and dir before first paint, so a right-to-left page does not
       // flash left-to-right while the app loads.
@@ -68,6 +74,39 @@
         var rtl = ['ar', 'he', 'fa', 'ur', 'ps', 'ku'];
         document.documentElement.lang = locale;
         document.documentElement.dir = rtl.indexOf(locale) !== -1 ? 'rtl' : 'ltr';
+      })();
+
+      // The app needs Chromium 108 (cascade layers, dvh). An older browser
+      // gets a notice over the page, and so does one that cannot parse the
+      // app's script, which it reports as a SyntaxError on the window. Plain
+      // ES5, because this is the one script that runs in every browser.
+      (function () {
+        var shown = false;
+        function show() {
+          if (shown) return;
+          if (!document.body) {
+            document.addEventListener('DOMContentLoaded', show);
+            return;
+          }
+          shown = true;
+          var box = document.createElement('div');
+          box.id = 'too-old';
+          box.setAttribute('role', 'alert');
+          var title = document.createElement('h1');
+          title.appendChild(document.createTextNode('This browser is too old for graspy.'));
+          var hint = document.createElement('p');
+          hint.appendChild(document.createTextNode('Open graspy.getlatentic.com on a phone, tablet or computer, or update your TV’s browser.'));
+          box.appendChild(title);
+          box.appendChild(hint);
+          document.body.appendChild(box);
+        }
+        var modern = typeof window.CSSLayerBlockRule !== 'undefined' &&
+          !!(window.CSS && CSS.supports && CSS.supports('height', '1dvh'));
+        if (!modern) show();
+        window.addEventListener('error', function (event) {
+          var error = event && event.error;
+          if (error && error.name === 'SyntaxError') show();
+        });
       })();
     </script>
   </head>
