@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Outlet, useLocation } from "react-router";
+import { Outlet, useLocation, useNavigationType } from "react-router";
 
 const TITLE = "main h1, [role='main'] h1, h1";
 const TRIES = 20;
@@ -9,32 +9,45 @@ const WAIT_MS = 50;
  * A screen reached by navigating starts with focus on its title, so a keyboard
  * or a remote begins at the top of what it is looking at, and a reader says
  * where it is. The first screen of a visit is left alone, so the first Tab
- * still lands on the skip link and the logo. It waits for a screen that is
+ * still lands on the skip link and the logo; so is a redirect from it (/app to
+ * /app/learn), which is the same first screen. It waits for a screen that is
  * still loading, gives up after a second, and leaves focus alone where the
  * screen has already put it on a control.
  */
 export function RouteFocus() {
   const { pathname } = useLocation();
-  const shown = useRef(pathname);
+  const type = useNavigationType();
+  const handled = useRef(pathname);
+  const visited = useRef(false);
+
   useEffect(() => {
-    if (shown.current === pathname) return;
-    shown.current = pathname;
+    if (handled.current === pathname) return;
+    if (type === "REPLACE" && !visited.current) {
+      handled.current = pathname;
+      return;
+    }
     let tries = 0;
+    // Recorded when the look is over, so a development double run of this effect still looks.
+    const done = () => {
+      handled.current = pathname;
+      visited.current = true;
+      clearInterval(timer);
+    };
     const timer = setInterval(() => {
       tries += 1;
       const settled = document.activeElement;
-      if (settled && settled !== document.body) return clearInterval(timer);
+      if (settled && settled !== document.body) return done();
       const title = document.querySelector<HTMLElement>(TITLE);
       if (title) {
         if (!title.hasAttribute("tabindex")) title.tabIndex = -1;
         title.focus({ preventScroll: true });
-        clearInterval(timer);
+        done();
       } else if (tries >= TRIES) {
-        clearInterval(timer);
+        done();
       }
     }, WAIT_MS);
     return () => clearInterval(timer);
-  }, [pathname]);
+  }, [pathname, type]);
   return null;
 }
 

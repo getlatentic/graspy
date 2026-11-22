@@ -216,4 +216,37 @@ describe("installRemoteInput", () => {
     remove();
     stop();
   });
+
+  it("swallows a held Back key and Back with a modifier, so the platform does not leave the app, and does nothing else", () => {
+    const stop = installRemoteInput();
+    const closed = vi.fn();
+    const remove = pushBack(closed);
+    for (const init of [
+      { repeat: true },
+      { ctrlKey: true },
+      { altKey: true },
+      { metaKey: true },
+    ]) {
+      const event = press(document, { key: "", keyCode: 10009, ...init });
+      expect(event.defaultPrevented, JSON.stringify(init)).toBe(true);
+    }
+    expect(closed).not.toHaveBeenCalled();
+    remove();
+    stop();
+  });
+
+  it("takes Escape as Back on a TV, where a Google or Fire TV remote sends it, and not on a keyboard", () => {
+    const stop = installRemoteInput();
+    const closed = vi.fn();
+    const remove = pushBack(closed);
+    const keyboard = press(document, { key: "Escape" });
+    expect(closed).not.toHaveBeenCalled();
+    expect(keyboard.defaultPrevented).toBe(false);
+    document.documentElement.dataset.device = "tv";
+    const remote = press(document, { key: "Escape" });
+    expect(closed).toHaveBeenCalledOnce();
+    expect(remote.defaultPrevented).toBe(true);
+    remove();
+    stop();
+  });
 });

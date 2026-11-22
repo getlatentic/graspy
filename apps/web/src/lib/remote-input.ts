@@ -9,9 +9,11 @@ const SCROLL_ECHO_MS = 150;
  * `data-input="remote"` on <html>, so the focus ring shows even where a TV's
  * browser does not apply :focus-visible; a pointer takes it off again. Back
  * (a remote's key, or Backspace on a TV, never on a control or in a field)
- * closes the topmost popup, leaves a text field, or steps back in the app.
- * Escape is left to the popups that handle it themselves; a held key or a
- * chord is not Back.
+ * closes the topmost popup, leaves a text field, or steps back in the app. A
+ * Back key is always swallowed, so the platform's own default (leaving the app)
+ * never runs; a held key or a chord only skips the action. Escape is Back on a
+ * TV, where a Google or Fire TV remote sends it, and is left to the popups
+ * that handle it themselves elsewhere, where it is a keyboard's key.
  */
 export function installRemoteInput(root: Document = document): () => void {
   let lastKey = 0;
@@ -24,9 +26,11 @@ export function installRemoteInput(root: Document = document): () => void {
   const onKeyDown = (event: KeyboardEvent) => {
     lastKey = Date.now();
     if (movesFocus(event)) mark(true);
-    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
-    if (event.key === "Escape" || !isBack(event, onTelevision())) return;
+    const tv = onTelevision();
+    if (event.key === "Escape" && !tv) return;
+    if (!isBack(event, tv)) return;
     event.preventDefault();
+    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
     const target = event.target instanceof HTMLElement ? event.target : null;
     goBack(window.history, target && isEditable(target) ? target : null);
   };
