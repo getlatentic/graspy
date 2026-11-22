@@ -78,11 +78,16 @@ TOPIC = [
     "Add a topic on completing the square to this subject.",
     "I want to learn about the quadratic formula as well. Add it to my plan.",
 ]
+ADD_THEN_OPEN = [
+    "Add a topic on completing the square to this subject, then take me to its lesson.",
+    "Please add the quadratic formula to my topics and open it for me.",
+]
 # (group, subjects it should make, topics it should add, contexts, phrasings)
 GROUPS = [
     ("three courses", 3, 0, list(CONTEXTS), THREE),
     ("one course", 1, 0, list(CONTEXTS), ONE),
     ("one more topic", 0, 1, ["subject open", "topic open"], TOPIC),
+    ("add then open", 0, 1, ["subject open", "topic open"], ADD_THEN_OPEN),
 ]
 
 

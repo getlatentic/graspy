@@ -13,7 +13,6 @@ from .labels import DATA_ONLY
 from .lesson_request import asks_for_lesson
 from .refusal import refusal
 from .reply import (
-    Action,
     AddTopic,
     ChangeSubjects,
     OpenSubject,
@@ -202,9 +201,7 @@ def _button_told(what: str) -> str:
     return f"The app shows the learner a button below to open the {what}; tell them it is there."
 
 
-def change_subjects_tool(
-    context: LearnerContext, earlier: Callable[[], list[Action]] = list
-) -> Callable[..., dict | Outcome]:
+def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
     def change_subjects(
         add: list[str] | None = None, remove: list[str] | None = None
     ) -> dict | Outcome:
@@ -222,18 +219,19 @@ def change_subjects_tool(
             return refusal(
                 "The learner's subjects were not sent, so none can be changed."
             )
-        names = _subjects_after(context, earlier())
+        names = [s.name for s in context.subjects]
         dropped = _subjects_named((remove or [])[:MAX_ASKED], names)
         if isinstance(dropped, dict):
             return dropped
-        added = _new_subjects((add or [])[:MAX_ASKED], names)
-        if isinstance(added, dict):
-            return added
+        asked = _new_subjects((add or [])[:MAX_ASKED], names)
+        if isinstance(asked, dict):
+            return asked
+        added, held = asked
         problem = _change_problem(names, added, dropped)
         if problem:
             return problem
         return Outcome(
-            told={"done": _change_told(added, dropped)},
+            told={"done": _change_told(added, dropped), **_held_told(held)},
             actions=(ChangeSubjects(add=added, remove=dropped),),
         )
 
@@ -257,11 +255,15 @@ def _subjects_named(wanted: list[str], names: list[str]) -> list[str] | dict:
     return list(dict.fromkeys(found))
 
 
-def _new_subjects(wanted: list[str], names: list[str]) -> list[str] | dict:
-    """The names that are no subject of theirs and none of the others asked for;
-    a name that could be more than one of theirs is put to the learner."""
+def _new_subjects(
+    wanted: list[str], names: list[str]
+) -> tuple[list[str], list[str]] | dict:
+    """The names that are no subject of theirs and none of the others asked for,
+    and the ones skipped as held; a name that could be more than one of theirs is
+    put to the learner."""
     held = list(names)
     new: list[str] = []
+    skipped: list[str] = []
     for item in wanted:
         title = " ".join(item.split())[:MAX_TOPIC_TITLE]
         if not title:
@@ -269,10 +271,20 @@ def _new_subjects(wanted: list[str], names: list[str]) -> list[str] | dict:
         same = candidates(title, held)
         if len(same) > 1:
             return _ambiguous(title, [held[i] for i in same])
-        if not same:
+        if same:
+            skipped.append(held[same[0]])
+        else:
             new.append(title)
             held.append(title)
-    return new
+    return new, list(dict.fromkeys(skipped))
+
+
+def _held_told(skipped: list[str]) -> dict:
+    if not skipped:
+        return {}
+    return {
+        "already_held": f"Not added, the learner already has them: {', '.join(skipped)}."
+    }
 
 
 def _change_problem(
@@ -345,13 +357,3 @@ def open_subject_tool(context: LearnerContext) -> Callable[[str], dict | Outcome
         )
 
     return open_subject
-
-
-def _subjects_after(context: LearnerContext, earlier: list[Action]) -> list[str]:
-    """Their subjects as the changes this turn already made leave them, so a
-    second change builds on the first."""
-    names = [s.name for s in context.subjects]
-    for action in earlier:
-        if isinstance(action, ChangeSubjects):
-            names = [n for n in names if n not in action.remove] + action.add
-    return names

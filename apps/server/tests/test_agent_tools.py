@@ -563,31 +563,51 @@ def test_very_long_names_are_cut_before_they_are_compared():
     assert len(result["error"]) < 400
 
 
-def test_a_second_change_in_a_turn_builds_on_the_first():
-    """Remove X then add X leaves X, and says so to the second call."""
+def test_a_second_change_in_a_turn_is_refused_whichever_tools_make_them():
     outputs = TurnOutputs()
-    built = tools_for(Turn(SEVERAL_ENGLISH, "x"), outputs)
-    change = next(t for t in built if t.__name__ == "change_subjects")
+    built = {t.__name__: t for t in tools_for(Turn(SEVERAL_ENGLISH, "x"), outputs)}
 
-    change(remove=["Mathematics"])
-    told = change(add=["mathematics"])
+    done = built["change_subjects"](add=["Astronomy"])
+    refused = [
+        built["change_subjects"](add=["Chess"]),
+        built["add_topic"]("Surds", subject="Mathematics"),
+        built["open_subject"]("Mathematics"),
+        built["rebuild_plan"](),
+        built["propose_path"](["Chess"]),
+    ]
 
-    assert "it stays" in told["note"]
-    assert wire(outputs) == []
-
-
-def test_a_second_change_in_a_turn_keeps_to_the_most_subjects_a_plan_holds():
-    many = LearnerContext(
-        subjects=[{"name": f"Subject {n}", "slug": f"s{n}"} for n in range(14)]
-    )
-    outputs = TurnOutputs()
-    built = tools_for(Turn(many, "x"), outputs)
-    change = next(t for t in built if t.__name__ == "change_subjects")
-
-    change(add=["Astronomy"])
-    refused = change(add=["Chess"])
-
-    assert "at most 15" in refused["error"]
+    assert "error" not in done
+    assert all("one change" in told["error"] for told in refused)
     assert wire(outputs) == [
         {"type": "change_subjects", "add": ["Astronomy"], "remove": []}
     ]
+
+
+def test_the_courses_of_several_calls_are_one_change():
+    outputs = TurnOutputs()
+    built = {t.__name__: t for t in tools_for(Turn(SEVERAL_ENGLISH, "x"), outputs)}
+
+    built["propose_path"](["Astronomy"])
+    built["propose_path"](["Chess"])
+
+    assert [a["goal"] for a in wire(outputs)] == ["Astronomy", "Chess"]
+
+
+def test_the_courses_a_plan_has_no_room_for_are_not_offered():
+    many = LearnerContext(
+        subjects=[{"name": f"Subject {n}", "slug": f"s{n}"} for n in range(14)]
+    )
+
+    result, outputs = use("propose_path", many, ["Astronomy", "Chess"])
+
+    assert [a["goal"] for a in wire(outputs)] == ["Astronomy"]
+    assert "room for 1 more course" in result["not_offered"]
+
+
+def test_the_names_skipped_as_already_held_are_told():
+    result, outputs = use(
+        "change_subjects", SEVERAL_ENGLISH, add=["Maths", "Astronomy"]
+    )
+
+    assert wire(outputs)[0]["add"] == ["Astronomy"]
+    assert "Mathematics" in result["already_held"]

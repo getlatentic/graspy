@@ -84,12 +84,29 @@ describe("the card of proposed courses", () => {
     expect(screen.getByRole("button", { name: "Not now" })).toBeTruthy();
   });
 
+  it("names what it adds when one failed", () => {
+    shown([ready("A"), ready("B"), failed("C")]);
+
+    expect(
+      screen.getByRole("button", { name: "Add ready (2 of 3)" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Add all" })).toBeNull();
+  });
+
+  it("adds a single course that is ready as this path", () => {
+    shown([ready("A")]);
+
+    expect(screen.getByRole("button", { name: "Add this path" })).toBeTruthy();
+  });
+
   it("lets a failed course be tried again", async () => {
     const { onRetry } = shown([ready("A"), failed("B")]);
 
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 
     expect(onRetry).toHaveBeenCalledWith("B");
-    expect(screen.getByRole("button", { name: "Add this path" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Add ready (1 of 2)" }),
+    ).toBeTruthy();
   });
 });

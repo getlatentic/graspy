@@ -3,6 +3,7 @@ import { useNavigate, type NavigateFunction } from "react-router";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { LearningPath } from "@/lib/curriculum-api";
 import type { ChatLink } from "@/lib/chat-db";
+import type { CurriculumData } from "@/lib/curriculum-record";
 import { useI18n, type Translate } from "@/lib/i18n-context";
 import {
   goalIndex,
@@ -19,10 +20,9 @@ export type ActionOf<K extends TutorAction["type"]> = Extract<
   { type: K }
 >;
 
-type PlanEditDeps = Pick<
-  LearnerPlan,
-  "curriculum" | "applyCurriculum" | "regenerate"
-> & {
+type PlanEditDeps = Pick<LearnerPlan, "applyCurriculum" | "regenerate"> & {
+  /** The plan as it is now, after the edits made before this one. */
+  read: () => CurriculumData | null;
   onDone: (message: string, link?: ChatLink) => void;
   onFailure: (message: string) => void;
 };
@@ -37,7 +37,7 @@ const lessonLink = (
 });
 
 function planEdits(
-  { curriculum, applyCurriculum, regenerate, onDone, onFailure }: PlanEditDeps,
+  { read, applyCurriculum, regenerate, onDone, onFailure }: PlanEditDeps,
   t: Translate,
   navigate: NavigateFunction,
 ) {
@@ -57,7 +57,8 @@ function planEdits(
       subject,
       topic,
     }: ActionOf<"add_topic">) => {
-      const added = curriculum && withTopic(curriculum, subjectSlug, topic);
+      const current = read();
+      const added = current && withTopic(current, subjectSlug, topic);
       if (!added) return;
       await applyCurriculum(added.curriculum);
       onDone(
@@ -66,8 +67,9 @@ function planEdits(
       );
     },
     acceptPaths: async (paths: LearningPath[]) => {
-      if (!curriculum || paths.length === 0) return;
-      const { curriculum: next, outcomes } = withPaths(curriculum, paths);
+      const current = read();
+      if (!current || paths.length === 0) return;
+      const { curriculum: next, outcomes } = withPaths(current, paths);
       if (outcomes.some(({ status }) => status === "added")) {
         await applyCurriculum(next);
       }
@@ -94,7 +96,8 @@ function planEdits(
       }
     },
     rebuild: async () => {
-      const request = curriculum && rebuildRequest(curriculum);
+      const current = read();
+      const request = current && rebuildRequest(current);
       if (!request) return;
       navigate("/app/learn");
       await regenerate(request, t);
@@ -104,7 +107,7 @@ function planEdits(
 
 /** Each edit is reported with a link, so the chat never navigates away itself. */
 export function useChatPlanEdits({
-  curriculum,
+  read,
   applyCurriculum,
   regenerate,
   onDone,
@@ -115,10 +118,10 @@ export function useChatPlanEdits({
   return useMemo(
     () =>
       planEdits(
-        { curriculum, applyCurriculum, regenerate, onDone, onFailure },
+        { read, applyCurriculum, regenerate, onDone, onFailure },
         t,
         navigate,
       ),
-    [applyCurriculum, curriculum, navigate, onDone, onFailure, regenerate, t],
+    [applyCurriculum, navigate, onDone, onFailure, read, regenerate, t],
   );
 }

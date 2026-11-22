@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { ChatLink } from "@/lib/chat-db";
+import type { CurriculumData } from "@/lib/curriculum-record";
 import { useChatPlanEdits, type ActionOf } from "./use-chat-plan-edits";
 import type { LearnerPlan } from "./use-learner-plan";
 import { usePathProposal, type PathProposals } from "./use-path-proposal";
@@ -38,8 +39,23 @@ function asksForConfirmation(action: TutorAction): boolean {
 /** Destructive changes wait for the learner: the model saying they agreed is not agreement. */
 export function useTutorActions(deps: TutorActionDeps) {
   const [pending, setPending] = useState<PendingPlanChange | null>(null);
-  const edits = useChatPlanEdits(deps);
-  const { propose, retry, forget } = usePathProposal(
+  // Each action builds on the plan the one before it left, not on the plan of the render that
+  // started the reply: a second write would otherwise undo the first.
+  const latest = useRef(deps.curriculum);
+  useEffect(() => {
+    latest.current = deps.curriculum;
+  }, [deps.curriculum]);
+  const read = useCallback(() => latest.current, []);
+  const { applyCurriculum: applyToPlan } = deps;
+  const applyCurriculum = useCallback(
+    async (next: CurriculumData) => {
+      latest.current = next;
+      await applyToPlan(next);
+    },
+    [applyToPlan],
+  );
+  const edits = useChatPlanEdits({ ...deps, read, applyCurriculum });
+  const { propose, retry, takeReady, forget } = usePathProposal(
     deps.curriculum,
     setPending,
   );
@@ -51,7 +67,12 @@ export function useTutorActions(deps: TutorActionDeps) {
     },
     [forget],
   );
-  const subjects = useSubjectChange({ ...deps, confirmDrop: replaceCard });
+  const subjects = useSubjectChange({
+    ...deps,
+    read,
+    applyCurriculum,
+    confirmDrop: replaceCard,
+  });
   const { askToChange, setSubjects } = subjects;
 
   const carryOut = useCallback(
@@ -84,17 +105,22 @@ export function useTutorActions(deps: TutorActionDeps) {
   const confirmPlanChange = useCallback(async () => {
     const change = pending;
     if (!change) return;
-    const paths =
-      change.type === "propose_path"
-        ? change.proposals.flatMap(({ path }) => (path ? [path] : []))
-        : [];
-    if (change.type === "propose_path" && paths.length === 0) return;
+    if (change.type === "propose_path") {
+      // The courses not ready stay on the card, still planning or to be tried again.
+      const { paths, remaining } = takeReady();
+      if (paths.length === 0) return;
+      if (remaining === 0) {
+        forget();
+        setPending(null);
+      }
+      await edits.acceptPaths(paths);
+      return;
+    }
     forget();
     setPending(null);
     if (change.type === "change_subjects") await setSubjects(change.names);
-    else if (change.type === "rebuild_plan") await edits.rebuild();
-    else await edits.acceptPaths(paths);
-  }, [edits, forget, pending, setSubjects]);
+    else await edits.rebuild();
+  }, [edits, forget, pending, setSubjects, takeReady]);
 
   const dismissPlanChange = useCallback(() => {
     forget();

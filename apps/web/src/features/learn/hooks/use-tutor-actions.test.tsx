@@ -324,12 +324,12 @@ describe("a course that is slow to plan", () => {
     expect(applyCurriculum.mock.calls[0][0].subjects).toHaveLength(4);
   });
 
-  it("lets the learner add the ready courses before the slow one answers", async () => {
+  it("adds the ready courses before the slow one answers, and keeps the slow one on the card", async () => {
     const never = new Promise<LearningPath>(() => {});
     mocks.planLearningPath.mockImplementation(({ goal }) =>
       goal === "quantum computing" ? never : Promise.resolve(pathTo(goal)),
     );
-    const { hook, applyCurriculum } = mount();
+    const { hook, applyCurriculum, shown } = mount();
     await act(async () => {
       void hook.result.current.carryOut(proposals(GOALS));
     });
@@ -340,7 +340,64 @@ describe("a course that is slow to plan", () => {
       (s: { name: string }) => s.name,
     );
     expect(names).toEqual(["Mathematics", ...GOALS.slice(0, 2)]);
+    expect(shown()?.map((p) => p.goal)).toEqual(["quantum computing"]);
+  });
+
+  it("adds the two ready courses of three, and keeps the failed one to try again", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.planLearningPath.mockImplementation(({ goal }) =>
+      goal === "quantum computing"
+        ? Promise.reject(new Error("no plan"))
+        : Promise.resolve(pathTo(goal)),
+    );
+    const { hook, applyCurriculum, shown } = mount();
+    await act(() => hook.result.current.carryOut(proposals(GOALS)));
+    expect(shown()?.map((p) => p.failed)).toEqual([false, false, true]);
+
+    await act(() => hook.result.current.confirmPlanChange());
+
+    const names = applyCurriculum.mock.calls[0][0].subjects.map(
+      (s: { name: string }) => s.name,
+    );
+    expect(names).toEqual(["Mathematics", ...GOALS.slice(0, 2)]);
+    expect(shown()).toEqual([
+      { goal: "quantum computing", path: null, failed: true },
+    ]);
+
+    planAll();
+    await act(() => hook.result.current.retryPath("quantum computing"));
+    await act(() => hook.result.current.confirmPlanChange());
     expect(hook.result.current.pendingPlanChange).toBeNull();
+  });
+});
+
+describe("two writing actions in one reply", () => {
+  it("builds the second on the plan the first left", async () => {
+    const { hook, applyCurriculum } = mount();
+
+    await act(() =>
+      hook.result.current.carryOut([
+        {
+          type: "add_topic",
+          subjectSlug: "mathematics",
+          subject: "Mathematics",
+          topic: "Surds",
+        },
+        {
+          type: "add_topic",
+          subjectSlug: "mathematics",
+          subject: "Mathematics",
+          topic: "Indices",
+        },
+      ]),
+    );
+
+    expect(applyCurriculum).toHaveBeenCalledTimes(2);
+    expect(applyCurriculum.mock.calls[1][0].topics.mathematics).toEqual([
+      "Quadratic Equations",
+      "Surds",
+      "Indices",
+    ]);
   });
 });
 

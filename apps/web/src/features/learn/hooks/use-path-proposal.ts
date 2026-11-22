@@ -113,5 +113,15 @@ export function usePathProposal(
     [plan, publish],
   );
 
-  return { propose, retry, forget: endRound };
+  /** The paths that are ready, taken off the card; the courses still planning or failed stay on it. */
+  const takeReady = useCallback(() => {
+    const paths = proposals.current.flatMap(({ path }) => (path ? [path] : []));
+    if (paths.length === 0)
+      return { paths, remaining: proposals.current.length };
+    proposals.current = proposals.current.filter(({ path }) => !path);
+    if (proposals.current.length > 0) publish();
+    return { paths, remaining: proposals.current.length };
+  }, [publish]);
+
+  return { propose, retry, takeReady, forget: endRound };
 }

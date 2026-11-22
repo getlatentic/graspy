@@ -75,7 +75,6 @@ function PathProposals({
 }: PathProposalsProps) {
   const { t } = useI18n();
   const ready = proposals.filter(({ path }) => path).length;
-  const planning = proposals.some(({ path, failed }) => !path && !failed);
   return (
     <div role="group" aria-label={t("chat.pathTitle")} className={PATH_FRAME}>
       <div className="space-y-3">
@@ -90,7 +89,7 @@ function PathProposals({
       <div className="mt-3 flex flex-wrap gap-2">
         {ready > 0 && (
           <Button size="sm" onClick={onAccept}>
-            {planning && proposals.length > 1
+            {ready < proposals.length
               ? t("chat.pathAcceptReady", { ready, total: proposals.length })
               : ready > 1
                 ? t("chat.pathAcceptAll")

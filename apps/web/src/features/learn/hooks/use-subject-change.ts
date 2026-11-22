@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import type { ChatLink } from "@/lib/chat-db";
+import type { CurriculumData } from "@/lib/curriculum-record";
 import { useI18n } from "@/lib/i18n-context";
 import { SUBJECTS_PATH } from "@/lib/learn-paths";
 import { changeSubjects } from "../lib/change-subjects";
@@ -7,10 +8,9 @@ import { namesAfter } from "../lib/curriculum-edit";
 import type { ActionOf } from "./use-chat-plan-edits";
 import type { LearnerPlan } from "./use-learner-plan";
 
-interface SubjectChangeDeps extends Pick<
-  LearnerPlan,
-  "curriculum" | "applyCurriculum"
-> {
+interface SubjectChangeDeps extends Pick<LearnerPlan, "applyCurriculum"> {
+  /** The plan as it is now, after the edits made before this one. */
+  read: () => CurriculumData | null;
   onDone: (message: string, link?: ChatLink) => void;
   onFailure: (message: string) => void;
   confirmDrop: (change: {
@@ -22,7 +22,7 @@ interface SubjectChangeDeps extends Pick<
 
 /** Dropping a subject clears its progress, so it waits for the learner. */
 export function useSubjectChange({
-  curriculum,
+  read,
   applyCurriculum,
   onDone,
   onFailure,
@@ -33,10 +33,11 @@ export function useSubjectChange({
 
   const setSubjects = useCallback(
     async (names: string[]) => {
-      if (!curriculum) return;
+      const current = read();
+      if (!current) return;
       setChanging(true);
       try {
-        await applyCurriculum(await changeSubjects(curriculum, names));
+        await applyCurriculum(await changeSubjects(current, names));
         onDone(t("chat.subjectsChanged"), {
           label: t("chat.seeSubjects"),
           to: SUBJECTS_PATH,
@@ -48,14 +49,15 @@ export function useSubjectChange({
         setChanging(false);
       }
     },
-    [applyCurriculum, curriculum, onDone, onFailure, t],
+    [applyCurriculum, onDone, onFailure, read, t],
   );
 
   const askToChange = useCallback(
     async ({ add, remove }: ActionOf<"change_subjects">) => {
-      if (!curriculum) return;
-      const names = namesAfter(curriculum.subjects, add, remove);
-      const removed = curriculum.subjects
+      const current = read();
+      if (!current) return;
+      const names = namesAfter(current.subjects, add, remove);
+      const removed = current.subjects
         .map((subject) => subject.name)
         .filter((name) => !names.includes(name));
       if (removed.length > 0) {
@@ -64,7 +66,7 @@ export function useSubjectChange({
         await setSubjects(names);
       }
     },
-    [confirmDrop, curriculum, setSubjects],
+    [confirmDrop, read, setSubjects],
   );
 
   return { setSubjects, askToChange, changing };
