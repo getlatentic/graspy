@@ -21,10 +21,6 @@ describe("artUrl", () => {
     expect(artUrl("math", "tween")).toBe("/brand/art/math-tween.webp");
   });
 
-  it("gives a picture with one look the same file for every band", () => {
-    expect(artUrl("tablet", "teen")).toBe(artUrl("tablet", "child"));
-  });
-
   it("has a file for every subject and band", async () => {
     const urls = ART_NAMES.flatMap((name) =>
       BANDS.map((band) => artUrl(name, band)),

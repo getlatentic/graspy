@@ -56,7 +56,7 @@ private const val LEARNER_SHARE = 0.38f
 @Composable
 fun SignInScreen(copy: AccountCopy, state: SignInState, onSignIn: () -> Unit) {
     val wide = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-    Box(Modifier.fillMaxSize().background(GraspyColor.ArtSky)) {
+    Box(Modifier.fillMaxSize().background(GraspyColor.ArtGroundMid)) {
         Wave(Modifier.align(Alignment.BottomCenter))
         BoxWithConstraints(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(horizontal = space(5), vertical = space(6))) {
             if (wide) Beside(copy, state, onSignIn, maxHeight) else Stacked(copy, state, onSignIn, maxHeight)
@@ -132,6 +132,6 @@ private fun Wave(modifier: Modifier) {
             lineTo(0f, size.height)
             close()
         }
-        drawPath(wave, GraspyColor.ArtWave, alpha = 0.6f)
+        drawPath(wave, GraspyColor.ArtGroundEnd, alpha = 0.6f)
     }
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Art } from "@/components/brand/art";
+import { Scene } from "@/components/brand/scene";
 import type { AgeBand } from "@/lib/age-band";
 import { SignInLink } from "@/features/account/components/sign-in-link";
 import OnboardingFrame from "./onboarding-frame";
@@ -13,7 +14,9 @@ export default function OnboardingLayout({
   children: ReactNode;
 }) {
   return (
-    <OnboardingFrame action={<SignInLink />}>
+    <OnboardingFrame
+      action={<SignInLink className="text-on-art hover:underline" />}
+    >
       <div className="mt-12 flex flex-1 items-center">
         <div className="grid w-full grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)] lg:items-stretch lg:gap-10">
           <Welcome band={band} />
@@ -33,31 +36,21 @@ export default function OnboardingLayout({
 
 /**
  * The picture beside the form: a still life for anyone until the class is
- * known, then a drawn learner for a child and a tween, and a desk for a teen or
+ * known, a drawn learner for a child, and a scene for a tween, a teen or a
  * university learner, so no one sees a child's picture who is not one. The
- * edges fade into the page's sky, since the pictures have a ground of their
- * own that no flat colour matches.
+ * scenes rest on the page's ground; the child's drawing has a ground of its
+ * own, so its edges fade into the page.
  */
 function Welcome({ band }: { band: AgeBand | null }) {
   return (
-    <div className="hidden lg:sticky lg:top-8 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col lg:justify-center">
-      <div className="aspect-4/5 max-h-full mask-x-from-85% mask-x-to-100% mask-y-from-88% mask-y-to-100%">
-        {band === "child" || band === "tween" ? (
+    <div className="hidden lg:sticky lg:top-24 lg:flex lg:h-[calc(100vh-8rem)] lg:flex-col lg:items-center lg:justify-center">
+      {band === "child" ? (
+        <div className="aspect-4/5 max-h-full w-full mask-x-from-85% mask-x-to-100% mask-y-from-88% mask-y-to-100%">
           <Art name="math" band={band} />
-        ) : (
-          <img
-            src={
-              band === "teen" ? "/brand/desk.webp" : "/brand/still-life.webp"
-            }
-            alt=""
-            width={1024}
-            height={1280}
-            loading="lazy"
-            decoding="async"
-            className="block size-full object-cover"
-          />
-        )}
-      </div>
+        </div>
+      ) : (
+        <Scene band={band} className="max-h-[72vh]" />
+      )}
     </div>
   );
 }

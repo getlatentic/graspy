@@ -14,7 +14,7 @@ export default function OnboardingFrame({
   const { t } = useI18n();
   return (
     // clip, not hidden: an overflow-hidden box can still scroll sideways.
-    <div className="relative min-h-screen overflow-clip bg-art-sky text-on-art">
+    <div className="relative min-h-screen overflow-clip art-ground text-on-art">
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between py-2">
           <Link to="/" aria-label={t("onboarding.home")}>
@@ -23,7 +23,7 @@ export default function OnboardingFrame({
           <nav className="flex items-center gap-5">
             <a
               href={contactHref()}
-              className="text-sm font-medium text-muted transition hover:text-ink"
+              className="text-sm font-medium transition hover:underline"
             >
               {t("onboarding.contact")}
             </a>

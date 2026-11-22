@@ -34,7 +34,7 @@ private val LIFT = 8.dp
 fun OnboardingFrame(content: @Composable ColumnScope.() -> Unit) {
     val card = RoundedCornerShape(GraspyRadius.Sheet)
     val keyboardUp = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    Column(Modifier.fillMaxSize().background(GraspyColor.ArtSky).windowInsetsPadding(WindowInsets.safeDrawing)) {
+    Column(Modifier.fillMaxSize().background(GraspyColor.ArtGroundMid).windowInsetsPadding(WindowInsets.safeDrawing)) {
         // With the keyboard up the card needs the room more than the logo does.
         if (!keyboardUp) {
             Image(

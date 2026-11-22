@@ -33,6 +33,54 @@
   }
 }
 
+/* The ground of the sign-in and onboarding screens: the picture on top, and
+   under it the same warm-to-blue stops as a gradient, so the page is never a
+   flat colour of another family while the picture loads. The shapes sit on a
+   fixed layer behind the content so the page's scroll does not drag them; on a
+   phone it is as wide as the screen and rests on the foot, which leaves the
+   logo's row bare. */
+.art-ground {
+  isolation: isolate;
+  background-color: var(--color-art-ground-mid);
+  background-image:
+    url("/brand/art/ground-tall.webp"),
+    linear-gradient(
+      to bottom,
+      var(--color-art-ground-start),
+      var(--color-art-ground-mid),
+      var(--color-art-ground-end)
+    );
+  background-position: center;
+  background-size: cover;
+}
+
+.art-ground::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/brand/art/shapes-tall.webp") center bottom / 100% auto
+    no-repeat;
+}
+
+@media (min-width: 48rem) {
+  .art-ground {
+    background-image:
+      url("/brand/art/ground-wide.webp"),
+      linear-gradient(
+        to bottom right,
+        var(--color-art-ground-start),
+        var(--color-art-ground-mid),
+        var(--color-art-ground-end)
+      );
+  }
+
+  .art-ground::before {
+    background: url("/brand/art/shapes-wide.webp") center / cover no-repeat;
+  }
+}
+
 .nums {
   font-variant-numeric: tabular-nums;
 }
