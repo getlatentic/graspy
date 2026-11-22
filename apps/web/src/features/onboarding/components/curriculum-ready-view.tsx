@@ -1,6 +1,7 @@
 import { CheckCircle, ChevronRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import type { GenerationStats } from "../lib/generate-plan";
+import { ActionBar } from "./action-bar";
 import SubjectChips from "./subject-chips";
 
 export default function CurriculumReadyView({
@@ -29,7 +30,7 @@ export default function CurriculumReadyView({
         <SubjectChips subjects={subjects} />
       </div>
 
-      <div className="mt-10">
+      <ActionBar>
         <button
           type="button"
           onClick={onContinue}
@@ -38,7 +39,7 @@ export default function CurriculumReadyView({
           {t("onboarding.ready.continue")}
           <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
         </button>
-      </div>
+      </ActionBar>
     </>
   );
 }

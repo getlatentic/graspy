@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
 import type { StepKey } from "../lib/onboarding-steps";
+import { ActionBar } from "./action-bar";
 
 export function StepHeading({
   step,
@@ -28,7 +29,7 @@ export function StepHeading({
         <span className="text-sm font-semibold text-accent-strong">
           {t("onboarding.stepOf", { current: index + 1, total: count })}
         </span>
-        <div className="h-3 rounded-full bg-surface/70">
+        <div className="h-3 rounded-full bg-ink/10 ring-1 ring-ink/20">
           <div
             className="h-full rounded-full bg-accent transition-all duration-300"
             style={{ width: `${percent}%` }}
@@ -57,7 +58,7 @@ export function StepFooter({
 }) {
   const enabled = canNext && !busy;
   return (
-    <div className="mt-8 flex flex-col gap-3">
+    <ActionBar className="flex flex-col gap-3">
       {problem && (
         <p
           role="alert"
@@ -80,7 +81,7 @@ export function StepFooter({
           busy={busy}
         />
       </div>
-    </div>
+    </ActionBar>
   );
 }
 

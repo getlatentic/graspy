@@ -149,7 +149,7 @@ function Timeline({ step }: { step: GenerationTimelineStep }) {
   return (
     <>
       <div className="mb-8">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface/70">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-ink/10 ring-1 ring-ink/20">
           <div
             className="h-full w-full rounded-full bg-accent transition-all duration-500 ease-out"
             style={{ width: `${percent}%` }}

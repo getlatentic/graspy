@@ -13,8 +13,10 @@ export default function OnboardingLayout({
 }) {
   return (
     <OnboardingFrame>
-      <div className="flex flex-1 pb-17 pt-6">
-        <div className="m-auto w-full max-w-lg">{children}</div>
+      <div className="-mb-8 flex flex-1 pb-0 pt-6 sm:mb-0 sm:pb-17">
+        <div className="flex w-full max-w-lg flex-1 flex-col sm:m-auto sm:block sm:flex-none">
+          {children}
+        </div>
       </div>
     </OnboardingFrame>
   );

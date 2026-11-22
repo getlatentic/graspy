@@ -44,7 +44,11 @@ export default function SelectListbox(props: SelectListboxProps) {
   }, [activeId]);
 
   const list = (
-    <div ref={listRef} style={{ ...style, zIndex: 9999 }}>
+    <div
+      ref={listRef}
+      style={{ ...style, zIndex: 9999 }}
+      className="theme-light"
+    >
       <div
         id={`${id}-listbox`}
         role="listbox"

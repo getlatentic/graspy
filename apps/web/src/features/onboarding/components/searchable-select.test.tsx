@@ -152,3 +152,12 @@ describe("SearchableSelect highlight", () => {
     expect(scrolled).not.toHaveBeenCalled();
   });
 });
+
+describe("SearchableSelect list", () => {
+  it("keeps the light palette, since it is drawn outside the page that pins it", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    const list = screen.getByRole("listbox");
+    expect(list.parentElement?.classList.contains("theme-light")).toBe(true);
+  });
+});

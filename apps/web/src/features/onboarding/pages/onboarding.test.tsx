@@ -62,3 +62,24 @@ describe("Onboarding after a plan stopped", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });
+
+describe("Onboarding's ground", () => {
+  it("is the form straight on the gradient: no picture, no card, the light palette pinned", () => {
+    replanning(inClass("primary-2", false));
+    const heading = screen.getByRole("heading", { level: 1 });
+    const root = document.querySelector(".art-ground");
+    expect(root?.classList.contains("theme-light")).toBe(true);
+    expect(
+      [...document.querySelectorAll("img")].map((img) =>
+        img.getAttribute("src"),
+      ),
+    ).toEqual(["/brand/sprout.svg", "/brand/wordmark.png"]);
+    for (
+      let box: Element | null = heading;
+      box && box !== root;
+      box = box.parentElement
+    ) {
+      expect(box.className).not.toMatch(/\b(bg-surface|shadow|rounded-sheet)/);
+    }
+  });
+});

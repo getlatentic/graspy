@@ -58,15 +58,25 @@ describe("tokens.css", () => {
     expect(content, REGENERATE).toBe(await sha256(body));
   });
 
-  it("pins every colour that turns dark in `.theme-light`", async () => {
+  it("pins every colour that turns dark in `.theme-light`, at its light value", async () => {
     const css = await read("./tokens.css");
-    const names = (block: string) =>
-      [...block.matchAll(/--color-([\w-]+):/g)].map((match) => match[1]);
-    const dark = /prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/.exec(
-      css,
+    const colours = (block: string) =>
+      new Map(
+        [...block.matchAll(/--color-([\w-]+): ([^;]+);/g)].map((match) => [
+          match[1],
+          match[2],
+        ]),
+      );
+    const inside = (opening: RegExp) => opening.exec(css)?.[1] ?? "";
+    const dark = colours(
+      inside(/prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/),
     );
-    const light = /\.theme-light \{([^}]*)\}/.exec(css);
-    expect(dark).not.toBeNull();
-    expect(names(light?.[1] ?? "")).toEqual(names(dark?.[1] ?? ""));
+    const light = colours(inside(/\.theme-light \{([^}]*)\}/));
+    const theme = colours(inside(/@theme \{([^}]*)\}/));
+    expect(dark.size).toBeGreaterThan(0);
+    expect([...light.keys()]).toEqual([...dark.keys()]);
+    for (const [name, value] of light) {
+      expect(value, name).toBe(theme.get(name));
+    }
   });
 });

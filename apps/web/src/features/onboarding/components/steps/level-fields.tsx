@@ -138,7 +138,10 @@ function SystemsStatus({
         </p>
       )}
       {failed && (
-        <p role="alert" className="mt-2 text-sm text-danger">
+        <p
+          role="alert"
+          className="mt-2 rounded-control bg-surface px-3 py-2 text-sm font-medium text-danger"
+        >
           {t("onboarding.profile.gradesFailed")}{" "}
           <button
             type="button"
