@@ -6,6 +6,7 @@ import {
   type CurriculumSubject,
 } from "@/lib/curriculum-record";
 import { normalizeSubjectList } from "@/lib/slug";
+import { nameKey } from "./name-key";
 
 /** A path topic's own level, otherwise the plan's. */
 export function topicLevel(
@@ -49,16 +50,16 @@ export type PathOutcome =
   | { status: "added" | "existing"; subject: CurriculumSubject }
   | { status: "full" | "unnamed" };
 
-/** The path as a subject of its own. A subject of the same name, in any case, is not added twice. */
+/** The path as a subject of its own. A subject of the same name, whatever its case, accents or spacing, is not added twice. */
 export function withPath(
   curriculum: CurriculumData,
   path: LearningPath,
 ): { curriculum: CurriculumData; outcome: PathOutcome } {
   const name = path.subject.trim() || path.goal.trim();
   if (!name) return { curriculum, outcome: { status: "unnamed" } };
-  const key = name.toLocaleLowerCase();
+  const key = nameKey(name);
   const existing = curriculum.subjects.find(
-    (subject) => subject.name.trim().toLocaleLowerCase() === key,
+    (subject) => nameKey(subject.name) === key,
   );
   if (existing) {
     return { curriculum, outcome: { status: "existing", subject: existing } };

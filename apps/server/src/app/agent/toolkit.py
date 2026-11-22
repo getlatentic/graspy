@@ -6,11 +6,12 @@ from __future__ import annotations
 import functools
 import inspect
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from ..learner.record import Where
 from .cards import PASSAGE_UI, PRACTICE_UI, Card, placed
 from .context import LearnerContext
+from .courses import propose_path_tool
 from .passage import give_passage
 from .practice import give_practice
 from .reply import Action, Outcome
@@ -22,9 +23,9 @@ from .tools import (
     change_subjects_tool,
     open_subject_tool,
     open_topic_tool,
-    propose_path,
     rebuild_plan_tool,
 )
+from .turn_policy import admit
 
 Tool = Callable[..., "dict | Outcome"]
 
@@ -35,6 +36,8 @@ class Turn:
     message: str
     # Skills already in effect: loading one again is told to use what it has.
     active_skills: tuple[str, ...] = ()
+    # What the turn has already sent the app, for a tool that builds on it.
+    earlier: Callable[[], list[Action]] = field(default=list, compare=False)
 
     def where(self) -> Where:
         return Where(
@@ -65,8 +68,10 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("open_subject", _for_context(open_subject_tool)),
     ToolSpec("open_topic", lambda turn: open_topic_tool(turn.context, turn.message)),
     ToolSpec("add_topic", _for_context(add_topic_tool)),
-    ToolSpec("propose_path", _as_is(propose_path)),
-    ToolSpec("change_subjects", _for_context(change_subjects_tool)),
+    ToolSpec("propose_path", _for_context(propose_path_tool)),
+    ToolSpec(
+        "change_subjects", lambda turn: change_subjects_tool(turn.context, turn.earlier)
+    ),
     ToolSpec("rebuild_plan", _for_context(rebuild_plan_tool)),
     ToolSpec("give_practice", _as_is(give_practice), ui=PRACTICE_UI),
     ToolSpec("give_passage", _as_is(give_passage), ui=PASSAGE_UI),
@@ -88,12 +93,12 @@ def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., 
     def kept(result: dict | Outcome) -> dict:
         if not isinstance(result, Outcome):
             return result
-        outputs.actions.extend(result.actions)
+        told = admit(outputs.actions, result)
         if result.card is not None:
             outputs.cards.append(placed(result.card, where))
         if result.skill is not None and result.skill not in outputs.skills:
             outputs.skills.append(result.skill)
-        return result.told
+        return told
 
     if inspect.iscoroutinefunction(tool):
 
@@ -120,4 +125,5 @@ def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., 
 
 def tools_for(turn: Turn, outputs: TurnOutputs) -> list[Callable[..., dict]]:
     where = turn.where()
+    turn = replace(turn, earlier=lambda: outputs.actions)
     return [_for_model(spec.build(turn), outputs, where) for spec in TOOLS]

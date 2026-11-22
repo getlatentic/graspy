@@ -32,15 +32,18 @@ async function answered<T>(
 }
 
 /** Retries transient failures, which is only safe for reads. `still`, asked as each try is
- * sent, stops the tries once the session is no longer the one the read was made for. */
+ * sent, stops the tries once the session is no longer the one the read was made for; an
+ * aborted `signal` stops them too. */
 export async function getJson<T>(
   url: string,
   still?: () => boolean,
+  signal?: AbortSignal,
 ): Promise<T> {
   for (let attempt = 0; ; attempt += 1) {
     try {
-      return await answered<T>(url, {}, still);
+      return await answered<T>(url, { signal }, still);
     } catch (error) {
+      if (signal?.aborted) throw error;
       const retryable = error instanceof ApiError && error.retryable;
       if (!retryable || attempt === RETRY_DELAYS_MS.length) throw error;
     }

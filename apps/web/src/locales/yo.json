@@ -51,6 +51,8 @@
     "pathMore": "àti {count} míràn",
     "pathAccept": "Fi ọ̀nà yìí kún un",
     "pathAcceptAll": "Fi gbogbo wọn kún un",
+    "pathAcceptReady": "Add ready ({ready} of {total})",
+    "pathUnnamed": "A course had no name, so it was not added.",
     "pathExists": "“{subject}” is already in your plan.",
     "pathsFull": "A plan holds at most {count} subjects.",
     "pathRetry": "Try again",

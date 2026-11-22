@@ -51,6 +51,8 @@
     "pathMore": "and {count} more",
     "pathAccept": "Add this path",
     "pathAcceptAll": "Add all",
+    "pathAcceptReady": "Add ready ({ready} of {total})",
+    "pathUnnamed": "A course had no name, so it was not added.",
     "pathExists": "“{subject}” is already in your plan.",
     "pathsFull": "A plan holds at most {count} subjects.",
     "pathRetry": "Try again",

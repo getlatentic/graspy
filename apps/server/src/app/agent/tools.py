@@ -5,7 +5,6 @@ Each tool's docstring is what the model reads of it."""
 from __future__ import annotations
 
 import difflib
-import json
 import logging
 from collections.abc import Awaitable, Callable
 
@@ -14,17 +13,16 @@ from .labels import DATA_ONLY
 from .lesson_request import asks_for_lesson
 from .refusal import refusal
 from .reply import (
-    MAX_PATH_GOALS,
+    Action,
     AddTopic,
     ChangeSubjects,
     OpenSubject,
     OpenTopic,
     Outcome,
-    ProposePath,
     RebuildPlan,
 )
 from .sandbox import CalculationError, evaluate
-from .subject_match import find_subject
+from .subject_match import candidates
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +32,8 @@ TOPIC_MATCH_CUTOFF = 0.8
 MAX_TOPIC_TITLE = 80
 # The most subjects a learner can study at once, as in the app's own picker.
 MAX_CHOSEN_SUBJECTS = 15
+# Names one call may ask for, so a long list is not compared one by one.
+MAX_ASKED = 20
 
 
 def calculate(expression: str) -> dict:
@@ -109,8 +109,8 @@ def open_topic_tool(
     return open_topic
 
 
-def _subject_named(name: str, context: LearnerContext) -> SubjectRef | None:
-    """The learner's subject called ``name``, or the open one for no name."""
+def _held_subjects(context: LearnerContext) -> list[SubjectRef]:
+    """Their subjects, with the open one even when the app did not list it."""
     subjects = list(context.subjects)
     if (
         context.subject
@@ -118,10 +118,38 @@ def _subject_named(name: str, context: LearnerContext) -> SubjectRef | None:
         and context.subject_slug not in {s.slug for s in subjects}
     ):
         subjects.append(SubjectRef(name=context.subject, slug=context.subject_slug))
-    if not name.strip():
-        return next((s for s in subjects if s.slug == context.subject_slug), None)
-    index = find_subject(name, [s.name for s in subjects])
-    return None if index is None else subjects[index]
+    return subjects
+
+
+def _no_subject(name: str, context: LearnerContext) -> dict:
+    return refusal(
+        f"The learner has no subject like {name!r}. To take up a school subject at their "
+        "grade, use change_subjects to add it; for any other course, use propose_path.",
+        subjects=[s.name for s in context.subjects],
+    )
+
+
+def _ambiguous(name: str, held: list[str]) -> dict:
+    return refusal(
+        f"{name!r} could mean more than one of the learner's subjects: ask which.",
+        subjects=held,
+    )
+
+
+def _subject_named(name: str, context: LearnerContext) -> SubjectRef | dict:
+    """The learner's subject called ``name`` (the open one for no name), or the
+    refusal that says why it is none or which of several it could be."""
+    subjects = _held_subjects(context)
+    wanted = name.strip()[:MAX_TOPIC_TITLE]
+    if not wanted:
+        open_one = next((s for s in subjects if s.slug == context.subject_slug), None)
+        return open_one or _no_subject(name, context)
+    found = candidates(wanted, [s.name for s in subjects])
+    if not found:
+        return _no_subject(wanted, context)
+    if len(found) > 1:
+        return _ambiguous(wanted, [subjects[i].name for i in found])
+    return subjects[found[0]]
 
 
 def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
@@ -139,12 +167,8 @@ def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
         if not title:
             return refusal("The new topic needs a title.")
         target = _subject_named(subject, context)
-        if target is None:
-            return refusal(
-                "The learner has no such subject. To take up a school subject at their grade, use "
-                "change_subjects to add it; for any other course, use propose_path.",
-                subjects=[s.name for s in context.subjects],
-            )
+        if isinstance(target, dict):
+            return target
         if target.slug == context.subject_slug and context.topics:
             existing = find_topic(title, context.topics)
             if existing is not None:
@@ -178,7 +202,9 @@ def _button_told(what: str) -> str:
     return f"The app shows the learner a button below to open the {what}; tell them it is there."
 
 
-def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
+def change_subjects_tool(
+    context: LearnerContext, earlier: Callable[[], list[Action]] = list
+) -> Callable[..., dict | Outcome]:
     def change_subjects(
         add: list[str] | None = None, remove: list[str] | None = None
     ) -> dict | Outcome:
@@ -192,15 +218,17 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
             add: New subjects to study, named in the learner's language, e.g. ["Physics"].
             remove: Subjects of theirs to drop, as the learner named them.
         """
-        names = [s.name for s in context.subjects]
-        if not names:
+        if not context.subjects:
             return refusal(
                 "The learner's subjects were not sent, so none can be changed."
             )
-        dropped = _subjects_named(remove or [], names)
+        names = _subjects_after(context, earlier())
+        dropped = _subjects_named((remove or [])[:MAX_ASKED], names)
         if isinstance(dropped, dict):
             return dropped
-        added = _new_subjects(add or [], names)
+        added = _new_subjects((add or [])[:MAX_ASKED], names)
+        if isinstance(added, dict):
+            return added
         problem = _change_problem(names, added, dropped)
         if problem:
             return problem
@@ -213,23 +241,35 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
 
 
 def _subjects_named(wanted: list[str], names: list[str]) -> list[str] | dict:
-    """Each once, or an error naming the first that is none of theirs."""
+    """Each once, or the refusal for the first that is none of theirs or could be
+    more than one: a wrong removal cannot be undone."""
     found: list[str] = []
     for name in wanted:
-        index = find_subject(name, names)
-        if index is None:
-            return refusal(f"The learner has no subject like {name!r}.", subjects=names)
-        found.append(names[index])
+        title = name.strip()[:MAX_TOPIC_TITLE]
+        held = candidates(title, names)
+        if not held:
+            return refusal(
+                f"The learner has no subject like {title!r}.", subjects=names
+            )
+        if len(held) > 1:
+            return _ambiguous(title, [names[i] for i in held])
+        found.append(names[held[0]])
     return list(dict.fromkeys(found))
 
 
-def _new_subjects(wanted: list[str], names: list[str]) -> list[str]:
-    """The names that are no subject of theirs and none of the others asked for."""
+def _new_subjects(wanted: list[str], names: list[str]) -> list[str] | dict:
+    """The names that are no subject of theirs and none of the others asked for;
+    a name that could be more than one of theirs is put to the learner."""
     held = list(names)
     new: list[str] = []
     for item in wanted:
         title = " ".join(item.split())[:MAX_TOPIC_TITLE]
-        if title and find_subject(title, held) is None:
+        if not title:
+            continue
+        same = candidates(title, held)
+        if len(same) > 1:
+            return _ambiguous(title, [held[i] for i in same])
+        if not same:
             new.append(title)
             held.append(title)
     return new
@@ -294,13 +334,11 @@ def open_subject_tool(context: LearnerContext) -> Callable[[str], dict | Outcome
         Args:
             subject: The subject as the learner named it, e.g. "maths".
         """
-        target = _subject_named(subject, context) if subject.strip() else None
-        if target is None:
-            return refusal(
-                f"The learner has no subject like {subject!r}. To take up a school subject at "
-                "their grade, use change_subjects to add it; for any other course, use propose_path.",
-                subjects=[s.name for s in context.subjects],
-            )
+        if not subject.strip():
+            return _no_subject(subject, context)
+        target = _subject_named(subject, context)
+        if isinstance(target, dict):
+            return target
         return Outcome(
             told={"subject": target.name, "done": _button_told("subject")},
             actions=(OpenSubject(subject_slug=target.slug, subject=target.name),),
@@ -309,65 +347,11 @@ def open_subject_tool(context: LearnerContext) -> Callable[[str], dict | Outcome
     return open_subject
 
 
-def propose_path(goals: list[str] | str = "", goal: str = "") -> dict | Outcome:
-    """Offer the learner a new course: a subject of its own, planned from their grade up
-    to the goal. Use it for any course they ask for that is not one of their subjects,
-    whether it is far beyond their grade ("real analysis") or a field of its own
-    ("quantum computing"), and also while a subject is open: a new course is never a
-    topic of the open subject. Several courses are several goals in one call, one goal
-    per course. The learner decides whether to add each.
-
-    Args:
-        goals: One entry per course, in the learner's words, e.g. ["machine learning", "quantum computing"].
-    """
-    wanted = _distinct_goals(_goal_list(goals or goal))
-    if not wanted:
-        return refusal("Say what the learner wants to learn.")
-    if len(wanted) > MAX_PATH_GOALS:
-        return refusal(
-            f"At most {MAX_PATH_GOALS} courses at a time: call it again for the rest later."
-        )
-    return Outcome(
-        told={"shown": _shown_told(wanted)},
-        actions=tuple(ProposePath(goal=item) for item in wanted),
-    )
-
-
-def _goal_list(goals: list[str] | str) -> list[str]:
-    """A model may send one course as a string, or the list as JSON text."""
-    if not isinstance(goals, str):
-        return [item for item in goals if isinstance(item, str)]
-    text = goals.strip()
-    if text.startswith("["):
-        try:
-            parsed = json.loads(text)
-        except ValueError:
-            return [text]
-        if isinstance(parsed, list):
-            return [item for item in parsed if isinstance(item, str)]
-    return [text]
-
-
-def _shown_told(goals: list[str]) -> str:
-    if len(goals) == 1:
-        return (
-            f"The app now shows the learner a path to {goals[0]} with a button to add it. "
-            "Tell them it is below; do not offer to show it."
-        )
-    return (
-        f"The app is offering the learner these courses to add, each its own subject: "
-        f"{_listed(goals)}. Tell them they are below; do not offer to show them."
-    )
-
-
-def _distinct_goals(goals: list[str]) -> list[str]:
-    first_of: dict[str, str] = {}
-    for goal in goals:
-        title = " ".join(goal.split())[:MAX_TOPIC_TITLE]
-        if title:
-            first_of.setdefault(title.casefold(), title)
-    return list(first_of.values())
-
-
-def _listed(goals: list[str]) -> str:
-    return ", ".join(goals[:-1]) + f" and {goals[-1]}"
+def _subjects_after(context: LearnerContext, earlier: list[Action]) -> list[str]:
+    """Their subjects as the changes this turn already made leave them, so a
+    second change builds on the first."""
+    names = [s.name for s in context.subjects]
+    for action in earlier:
+        if isinstance(action, ChangeSubjects):
+            names = [n for n in names if n not in action.remove] + action.add
+    return names

@@ -50,12 +50,15 @@ export interface LearningPath {
   steps: LearningPathStep[];
 }
 
-export async function planLearningPath(request: {
-  country: string;
-  language: string;
-  gradeLevel?: string;
-  goal: string;
-}): Promise<LearningPath> {
+export async function planLearningPath(
+  request: {
+    country: string;
+    language: string;
+    gradeLevel?: string;
+    goal: string;
+  },
+  signal?: AbortSignal,
+): Promise<LearningPath> {
   const params = new URLSearchParams({
     country: request.country,
     language: request.language,
@@ -64,6 +67,8 @@ export async function planLearningPath(request: {
   if (request.gradeLevel) params.set("gradeLevel", request.gradeLevel);
   return getJson<LearningPath>(
     `${API_BASE_URL}/curriculum/path?${params.toString()}`,
+    undefined,
+    signal,
   );
 }
 

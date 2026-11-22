@@ -21,7 +21,7 @@ from .labels import DATA_ONLY
 from .memory import ConversationStore, Exchange
 from .native_react import NativeReAct
 from .persona import WITHOUT_STAGE, persona
-from .reply import Action, actions_for_app
+from .reply import Action
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
 from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
@@ -250,7 +250,7 @@ class Tutor:
             follow_ups=await safe_ones(
                 clean_follow_ups(answered.prediction.follow_ups), said
             ),
-            actions=actions_for_app(answered.outputs.actions),
+            actions=answered.outputs.actions,
             cards=cards,
         )
 

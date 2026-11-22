@@ -286,10 +286,15 @@ describe("a course that is slow to plan", () => {
   it("does not hold the others, and can be tried again", async () => {
     vi.useFakeTimers();
     vi.spyOn(console, "error").mockImplementation(() => {});
-    mocks.planLearningPath.mockImplementation(({ goal }) =>
-      goal === "quantum computing"
-        ? new Promise<LearningPath>(() => {})
-        : Promise.resolve(pathTo(goal)),
+    const signals: AbortSignal[] = [];
+    mocks.planLearningPath.mockImplementation(
+      ({ goal }, signal: AbortSignal) => {
+        if (goal !== "quantum computing") return Promise.resolve(pathTo(goal));
+        signals.push(signal);
+        return new Promise<LearningPath>((_, reject) =>
+          signal.addEventListener("abort", () => reject(new Error("aborted"))),
+        );
+      },
     );
     const { hook, applyCurriculum, shown } = mount();
     let asked!: Promise<void>;
@@ -307,6 +312,7 @@ describe("a course that is slow to plan", () => {
       await asked;
     });
     expect(shown()?.map((p) => p.failed)).toEqual([false, false, true]);
+    expect(signals[0].aborted).toBe(true);
 
     mocks.planLearningPath.mockImplementation(({ goal }) =>
       Promise.resolve(pathTo(goal)),
@@ -338,6 +344,42 @@ describe("a course that is slow to plan", () => {
   });
 });
 
+describe("a course tried again", () => {
+  it("ends the request it replaces, so two are not running", async () => {
+    const signals: AbortSignal[] = [];
+    mocks.planLearningPath.mockImplementation((_, signal: AbortSignal) => {
+      signals.push(signal);
+      return new Promise<LearningPath>(() => {});
+    });
+    const { hook } = mount();
+    await act(async () => {
+      void hook.result.current.carryOut(proposals(["astronomy"]));
+    });
+
+    await act(async () => {
+      void hook.result.current.retryPath("Astronomy");
+    });
+
+    expect(signals.map((signal) => signal.aborted)).toEqual([true, false]);
+  });
+
+  it("ends every request when the learner dismisses the card", async () => {
+    const signals: AbortSignal[] = [];
+    mocks.planLearningPath.mockImplementation((_, signal: AbortSignal) => {
+      signals.push(signal);
+      return new Promise<LearningPath>(() => {});
+    });
+    const { hook } = mount();
+    await act(async () => {
+      void hook.result.current.carryOut(proposals(GOALS));
+    });
+
+    act(() => hook.result.current.dismissPlanChange());
+
+    expect(signals.every((signal) => signal.aborted)).toBe(true);
+  });
+});
+
 describe("adding the courses", () => {
   it("says a course is already there instead of saying it was added", async () => {
     planAll();
@@ -350,6 +392,21 @@ describe("adding the courses", () => {
     expect(onDone.mock.calls.map(([message]) => message)).toEqual([
       "chat.pathExists Mathematics",
     ]);
+  });
+
+  it("says a course with no name was not added", async () => {
+    mocks.planLearningPath.mockResolvedValue({
+      subject: " ",
+      goal: " ",
+      steps: [],
+    });
+    const { hook, applyCurriculum, onFailure } = mount();
+    await act(() => hook.result.current.carryOut(proposals(["astronomy"])));
+
+    await act(() => hook.result.current.confirmPlanChange());
+
+    expect(applyCurriculum).not.toHaveBeenCalled();
+    expect(onFailure).toHaveBeenCalledWith("chat.pathUnnamed");
   });
 
   it("adds none beyond the most a plan holds, and says so", async () => {

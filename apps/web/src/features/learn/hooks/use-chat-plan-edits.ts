@@ -86,6 +86,9 @@ function planEdits(
           lessonLink(t, subject.slug, goal),
         );
       }
+      if (outcomes.some(({ status }) => status === "unnamed")) {
+        onFailure(t("chat.pathUnnamed"));
+      }
       if (outcomes.some(({ status }) => status === "full")) {
         onFailure(t("chat.pathsFull", { count: MAX_SUBJECTS }));
       }

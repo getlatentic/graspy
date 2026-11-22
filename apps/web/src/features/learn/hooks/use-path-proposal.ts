@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { planLearningPath, type LearningPath } from "@/lib/curriculum-api";
 import type { CurriculumData } from "@/lib/curriculum-record";
+import { nameKey } from "../lib/name-key";
 
 /** The server plans a path with a model; as long as the plan stream's own quiet limit. */
 export const PATH_PLAN_TIMEOUT_MS = 60_000;
@@ -17,15 +18,7 @@ export interface PathProposals {
   proposals: PathProposal[];
 }
 
-function within<T>(work: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Planning timed out")), ms);
-    work.then(resolve, reject).finally(() => clearTimeout(timer));
-  });
-}
-
-const sameGoal = (a: string, b: string) =>
-  a.toLocaleLowerCase() === b.toLocaleLowerCase();
+const sameGoal = (a: string, b: string) => nameKey(a) === nameKey(b);
 
 /**
  * Rounds are numbered: whatever replaces, dismisses or accepts the proposals, or the screen
@@ -38,12 +31,14 @@ export function usePathProposal(
 ) {
   const round = useRef(0);
   const proposals = useRef<PathProposal[]>([]);
-  useEffect(
-    () => () => {
-      round.current += 1;
-    },
-    [],
-  );
+  // The request of each course being planned, to end it when it times out, is tried again or is no longer wanted.
+  const requests = useRef(new Map<string, AbortController>());
+  const endRound = useCallback(() => {
+    round.current += 1;
+    requests.current.forEach((request) => request.abort());
+    requests.current.clear();
+  }, []);
+  useEffect(() => endRound, [endRound]);
 
   const publish = useCallback(() => {
     show({ type: "propose_path", proposals: [...proposals.current] });
@@ -52,19 +47,27 @@ export function usePathProposal(
   const plan = useCallback(
     async (goal: string, mine: number) => {
       if (!curriculum) return;
+      const key = nameKey(goal);
+      requests.current.get(key)?.abort();
+      const request = new AbortController();
+      requests.current.set(key, request);
+      const timer = setTimeout(() => request.abort(), PATH_PLAN_TIMEOUT_MS);
       let path: LearningPath | null = null;
       try {
-        path = await within(
-          planLearningPath({
+        path = await planLearningPath(
+          {
             country: curriculum.country,
             language: curriculum.language,
             gradeLevel: curriculum.gradeLevel,
             goal,
-          }),
-          PATH_PLAN_TIMEOUT_MS,
+          },
+          request.signal,
         );
       } catch (error) {
         console.error("Planning a path failed:", error);
+      } finally {
+        clearTimeout(timer);
+        if (requests.current.get(key) === request) requests.current.delete(key);
       }
       if (round.current !== mine) return;
       proposals.current = proposals.current.map((proposal) =>
@@ -83,7 +86,8 @@ export function usePathProposal(
       const goals = asked.filter(
         (goal, at) => asked.findIndex((other) => sameGoal(other, goal)) === at,
       );
-      const mine = ++round.current;
+      endRound();
+      const mine = round.current;
       proposals.current = goals.map((goal) => ({
         goal,
         path: null,
@@ -92,7 +96,7 @@ export function usePathProposal(
       publish();
       await Promise.all(goals.map((goal) => plan(goal, mine)));
     },
-    [curriculum, plan, publish],
+    [curriculum, endRound, plan, publish],
   );
 
   const retry = useCallback(
@@ -109,9 +113,5 @@ export function usePathProposal(
     [plan, publish],
   );
 
-  const forget = useCallback(() => {
-    round.current += 1;
-  }, []);
-
-  return { propose, retry, forget };
+  return { propose, retry, forget: endRound };
 }

@@ -1,78 +1,96 @@
-"""Whether a name the learner gives is one of their subjects. Adding and removing
-use it alike, so a subject that cannot be added again as a new one can be found
-to be dropped."""
+"""Which of the learner's subjects a name means. Conservative by design: a wrong
+duplicate is recoverable and a wrong removal is not, so a name is a subject of
+theirs only when it is the same name once normalised, an everyday abbreviation
+of one they hold, or a long single word with a slip in it. Anything else is
+another subject, and a name that could mean two held subjects means neither."""
 
 from __future__ import annotations
 
 import difflib
 import re
+import unicodedata
+from dataclasses import dataclass
 
-# How alike two names of the same shape must be to count as one spelled badly.
-TYPO_CUTOFF = 0.85
-# Longer names are their own subjects: a name of more words that merely holds
-# a subject's name, "Mathematics of machine learning", is not that subject.
-SHORT_NAME_WORDS = 2
-MIN_STEM = 3
-MIN_TAIL = 3
-ROMAN_LEVELS = frozenset({"i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"})
-
-
-def _words(name: str) -> list[str]:
-    return re.findall(r"[^\W_]+", name.casefold())
+# Compared at this length, so a huge name costs the same as a long one.
+MAX_NAME = 80
+# A typo is forgiven only in one long word, and only when nearly all of it is kept.
+MIN_TYPO_LETTERS = 8
+TYPO_CUTOFF = 0.92
 
 
-def _without_level(words: list[str]) -> tuple[list[str], str | None]:
-    """A closing number or Roman numeral names another course: "Physics 2"."""
-    if len(words) > 1 and (words[-1].isdigit() or words[-1] in ROMAN_LEVELS):
-        return words[:-1], words[-1]
-    return words, None
+@dataclass(frozen=True)
+class Abbreviations:
+    """Forms of one subject's name. `family`, for a subject with many kinds such
+    as English, also lets the word alone mean any held name that starts with it."""
 
+    forms: frozenset[str]
+    family: str | None = None
 
-def _abbreviates(short: str, word: str) -> bool:
-    """ "maths" and "math" for "mathematics", never "physics" for "physical"."""
-    if short == word:
-        return True
-    stem = short.removesuffix("s")
-    return (
-        len(stem) >= MIN_STEM
-        and word.startswith(stem)
-        and len(word) - len(stem) >= MIN_TAIL
-    )
-
-
-def _same_words(wanted: list[str], held: list[str]) -> bool:
-    if wanted == held:
-        return True
-    if len(wanted) == len(held):
-        alike = difflib.SequenceMatcher(None, " ".join(wanted), " ".join(held))
-        return alike.ratio() >= TYPO_CUTOFF or (
-            len(wanted) == 1
-            and (_abbreviates(wanted[0], held[0]) or _abbreviates(held[0], wanted[0]))
+    def covers(self, name: str) -> bool:
+        return name in self.forms or (
+            self.family is not None and name.startswith(f"{self.family} ")
         )
-    short, long = sorted((wanted, held), key=len)
-    return (
-        len(short) == 1
-        and len(long) <= SHORT_NAME_WORDS
-        and any(_abbreviates(short[0], word) for word in long)
-    )
 
 
-def same_subject(wanted: str, held: str) -> bool:
-    words, level = _without_level(_words(wanted))
-    held_words, held_level = _without_level(_words(held))
-    if not words or not held_words or level != held_level:
+ABBREVIATIONS = (
+    Abbreviations(frozenset({"maths", "math", "mathematics"})),
+    Abbreviations(frozenset({"eng", "english", "english language"}), family="english"),
+    Abbreviations(
+        frozenset(
+            {
+                "ict",
+                "computing",
+                "computer science",
+                "computer studies",
+                "information and communication technology",
+            }
+        )
+    ),
+    Abbreviations(frozenset({"pe", "p e", "physical education"})),
+    Abbreviations(frozenset({"re", "r e", "religious education", "religious studies"})),
+    Abbreviations(frozenset({"bio", "biology"})),
+    Abbreviations(frozenset({"chem", "chemistry"})),
+    Abbreviations(frozenset({"phy", "phys", "physics"})),
+    Abbreviations(frozenset({"geo", "geography"})),
+    Abbreviations(frozenset({"hist", "history"})),
+)
+
+
+def normalise(name: str) -> str:
+    """Lower case, accents folded, one space between words, no punctuation."""
+    folded = unicodedata.normalize("NFKD", name[:MAX_NAME]).casefold()
+    unmarked = "".join(c for c in folded if not unicodedata.combining(c))
+    return " ".join(re.findall(r"[^\W_]+", unmarked))
+
+
+def _is_typo(wanted: str, held: str) -> bool:
+    if " " in wanted or " " in held:
         return False
-    return _same_words(words, held_words)
+    if min(len(wanted), len(held)) < MIN_TYPO_LETTERS:
+        return False
+    if any(c.isdigit() for c in wanted + held):
+        return False
+    if wanted.startswith(held) or held.startswith(wanted):
+        return False
+    if wanted.endswith(held) or held.endswith(wanted):
+        return False
+    return difflib.SequenceMatcher(None, wanted, held).ratio() >= TYPO_CUTOFF
 
 
-def find_subject(wanted: str, names: list[str]) -> int | None:
-    """The index of the name that is the subject `wanted` names, the exactly
-    spelled one first."""
-    folded = " ".join(_words(wanted))
-    for index, name in enumerate(names):
-        if folded and folded == " ".join(_words(name)):
-            return index
-    return next(
-        (index for index, name in enumerate(names) if same_subject(wanted, name)),
-        None,
-    )
+def candidates(wanted: str, names: list[str]) -> list[int]:
+    """Every held name `wanted` could mean: the ones it equals once normalised, or
+    else the ones an abbreviation covers, or else the ones it is a slip of. More
+    than one is an ambiguity for the caller to put to the learner."""
+    target = normalise(wanted)
+    if not target:
+        return []
+    held = [normalise(name) for name in names]
+    equal = [i for i, name in enumerate(held) if name == target]
+    if equal:
+        return equal
+    for group in ABBREVIATIONS:
+        if target in group.forms:
+            covered = [i for i, name in enumerate(held) if group.covers(name)]
+            if covered:
+                return covered
+    return [i for i, name in enumerate(held) if _is_typo(target, name)]

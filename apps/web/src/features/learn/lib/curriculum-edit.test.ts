@@ -248,9 +248,21 @@ describe("withPath", () => {
 
   it("finds the subject already in the plan whatever its case", () => {
     const once = withPath(plan(), REAL_ANALYSIS).curriculum;
-    const shouted = { ...REAL_ANALYSIS, subject: "  REAL ANALYSIS " };
+    const shouted = { ...REAL_ANALYSIS, subject: "  REAL   Analysis " };
 
     expect(withPath(once, shouted).curriculum).toBe(once);
+  });
+
+  it("finds it whatever its accents, and does not take a nearby name for it", () => {
+    const cafe = withPath(plan(), { ...REAL_ANALYSIS, subject: "Café" });
+
+    expect(
+      withPath(cafe.curriculum, { ...REAL_ANALYSIS, subject: "CAFE" }).outcome
+        .status,
+    ).toBe("existing");
+    expect(
+      withPath(plan(), { ...REAL_ANALYSIS, subject: "Maths" }).outcome.status,
+    ).toBe("added");
   });
 
   it("names the subject for a path with no subject by its goal, and refuses one with neither", () => {
