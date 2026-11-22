@@ -13,6 +13,14 @@ export const MAX_CUE_MS = 250;
 /** Cues closer together than this are dropped, so rapid taps cannot buzz on and on. */
 export const MIN_GAP_MS = 100;
 
+/** Inside the gap a cue gets through only over a less important one. */
+export const PRIORITY: Record<Cue, number> = {
+  press: 0,
+  correct: 1,
+  wrong: 1,
+  lessonComplete: 2,
+};
+
 /**
  * Milliseconds of motor on, off, on, ... as navigator.vibrate reads them. A
  * wrong answer is two short ticks, each gentler than the single pulse of a

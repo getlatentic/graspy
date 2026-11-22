@@ -1,4 +1,4 @@
-import { cueForAnswerCall } from "@/features/haptics/lib/answer-cue";
+import { onceForAnswers } from "@/features/haptics/lib/answer-cue";
 import { haptics } from "@/features/haptics/lib/haptics";
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { callOrKeep } from "@/lib/mcp/outbox";
@@ -23,6 +23,8 @@ interface LessonHostDeps {
   onObjectives: (objectives: string[]) => void;
 }
 
+const feltOnce = onceForAnswers();
+
 /** Lesson tools answer from the device's copy when offline. */
 export function lessonHost({
   target,
@@ -36,9 +38,13 @@ export function lessonHost({
       isLessonTool(name)
         ? lessonToolOrCopy(target, name, args)
         : callOrKeep(name, args),
-    toolCalled: (name, args, result) => {
-      const graded = cueForAnswerCall(name, args);
-      if (graded) haptics.trigger(graded);
+    // The check is graded in the view, so the tap is felt as the call arrives
+    // and not after the round trip; a choice sent again is not felt again.
+    toolCalling: (name, args) => {
+      const cue = feltOnce(name, args);
+      if (cue) haptics.trigger(cue);
+    },
+    toolCalled: (name, _args, result) => {
       if (name === FINISH_LESSON) {
         haptics.trigger("lessonComplete");
         marks.learnt(target);

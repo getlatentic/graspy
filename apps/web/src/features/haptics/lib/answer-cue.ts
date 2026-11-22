@@ -16,6 +16,27 @@ export function cueForAnswerCall(
   return chosenIndex === answerIndex ? "correct" : "wrong";
 }
 
+const REMEMBERED = 200;
+
+/**
+ * Like cueForAnswerCall, but each answer is felt once: a view that sends the
+ * same choice again (a card sending its answers with the message, a view
+ * resuming) gets no second cue. The same wrong choice twice is therefore
+ * silent the second time.
+ */
+export function onceForAnswers() {
+  const felt = new Set<string>();
+  return (name: string, args: Record<string, unknown>) => {
+    const cue = cueForAnswerCall(name, args);
+    if (!cue) return null;
+    const id = JSON.stringify([name, args.key, args.chosenIndex, args.tried]);
+    if (felt.has(id)) return null;
+    felt.add(id);
+    if (felt.size > REMEMBERED) felt.delete(felt.values().next().value!);
+    return cue;
+  };
+}
+
 /** A spoken answer: a line she could not make out is not a wrong answer, so it gets no cue. */
 export function cueForDecision(
   decision: "correct" | "try_again" | "not_understood",

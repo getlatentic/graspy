@@ -51,3 +51,12 @@ export function subscribeSettings(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+// Another tab's choice applies here too; a cleared storage (key null) reads as the default.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", ({ key }) => {
+    if (key !== STORAGE_KEY && key !== null) return;
+    current = load();
+    for (const listener of listeners) listener();
+  });
+}

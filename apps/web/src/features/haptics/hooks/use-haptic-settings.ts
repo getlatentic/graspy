@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import {
+  DEFAULT_SETTINGS,
   getSettings,
   setSettings,
   subscribeSettings,
@@ -8,7 +9,11 @@ import {
 
 /** The learner's vibration choice, shared by every screen that shows it. */
 export function useHapticSettings() {
-  const settings = useSyncExternalStore(subscribeSettings, getSettings);
+  const settings = useSyncExternalStore(
+    subscribeSettings,
+    getSettings,
+    () => DEFAULT_SETTINGS,
+  );
   return {
     settings,
     change: (patch: Partial<HapticSettings>) =>

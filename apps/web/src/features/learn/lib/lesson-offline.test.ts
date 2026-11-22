@@ -225,7 +225,9 @@ describe("a lesson without a connection", () => {
     await keepIfWhole(target, owed);
     goOffline();
 
-    const served = await lessonToolOrCopy(target, "lesson_progress", { target });
+    const served = await lessonToolOrCopy(target, "lesson_progress", {
+      target,
+    });
 
     expect(served.structuredContent).toMatchObject({ review: [] });
   });

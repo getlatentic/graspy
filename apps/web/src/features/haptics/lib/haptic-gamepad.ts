@@ -24,6 +24,7 @@ export function gamepadOutput(
   };
   return {
     available: () => actuator() !== null,
+    needsActivation: false,
     play: (cue) => {
       const { duration, weak, strong } = RUMBLES[cue];
       void actuator()

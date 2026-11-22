@@ -8,6 +8,11 @@ const GESTURES = ["pointerdown", "keydown", "touchend"] as const;
 
 const present = typeof document !== "undefined";
 
+/** A desktop browser has navigator.vibrate and no motor; a touch screen is the sign of a phone. */
+const hasMotor = () =>
+  navigator.maxTouchPoints > 0 ||
+  window.matchMedia?.("(pointer: coarse)").matches === true;
+
 /** Before the learner has acted the browser ignores a vibration, so none is tried. */
 function activation(): () => boolean {
   if (!present) return () => false;
@@ -32,7 +37,7 @@ function activation(): () => boolean {
  */
 export const haptics = createHaptics({
   outputs: present
-    ? [vibrationOutput(navigator), gamepadOutput(navigator)].filter(
+    ? [vibrationOutput(navigator, hasMotor), gamepadOutput(navigator)].filter(
         (output) => output !== null,
       )
     : [],
@@ -42,7 +47,7 @@ export const haptics = createHaptics({
     typeof window !== "undefined" &&
     window.matchMedia?.(REDUCED_MOTION).matches === true,
   activated: activation(),
-  now: () => Date.now(),
+  now: () => performance.now(),
 });
 
 if (present) {

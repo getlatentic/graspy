@@ -113,11 +113,11 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
         </li>
         <li>
           <strong>Amazon Web Services</strong> (Bedrock, in the United States)
-          runs the tutor, writes lessons, and checks the tutor&rsquo;s reply,
-          a paragraph at a time, before it is shown. It receives what the learner types
-          and the conversation so far with its summary, their country, language
-          and class, the subject and topic, the topics they have finished, and
-          how they have done on practice. It does not receive the
+          runs the tutor, writes lessons, and checks the tutor&rsquo;s reply, a
+          paragraph at a time, before it is shown. It receives what the learner
+          types and the conversation so far with its summary, their country,
+          language and class, the subject and topic, the topics they have
+          finished, and how they have done on practice. It does not receive the
           learner&rsquo;s saved name.
         </li>
         <li>
@@ -197,14 +197,14 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
       <p>
         Everything travels over HTTPS. The voice teacher&rsquo;s replies are
         checked for safety, and a second model checks that no line asks for
-        personal details. The typed tutor&rsquo;s reply is
-        checked before it is shown, a paragraph at a time, by rules and by a
-        model. What they find unsafe, or asking for personal details, or stating
-        one the learner did not give, is not shown. The checks can miss things
-        and can stop an ordinary answer, and are tested in English only. The
-        lessons graspy writes are not checked this way, and what a learner types
-        is not checked, so please tell children not to type any
-        personal details into questions.
+        personal details. The typed tutor&rsquo;s reply is checked before it is
+        shown, a paragraph at a time, by rules and by a model. What they find
+        unsafe, or asking for personal details, or stating one the learner did
+        not give, is not shown. The checks can miss things and can stop an
+        ordinary answer, and are tested in English only. The lessons graspy
+        writes are not checked this way, and what a learner types is not
+        checked, so please tell children not to type any personal details into
+        questions.
       </p>
     ),
   },

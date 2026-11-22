@@ -6,8 +6,13 @@ import { appCall } from "@/lib/a2a/request-data";
 import type { ChatMessage } from "@/lib/chat-db";
 import { useAppHost } from "./use-app-host";
 
-const answer = { chosenIndex: 1, answerIndex: 1, question: "2 + 2?" };
-const result = { content: [] };
+const answer = (key: string, over = {}) => ({
+  key,
+  chosenIndex: 1,
+  answerIndex: 1,
+  question: "2 + 2?",
+  ...over,
+});
 
 function host(message: Partial<ChatMessage>) {
   const { result: hook } = renderHook(() =>
@@ -16,27 +21,35 @@ function host(message: Partial<ChatMessage>) {
   return hook.current(message as ChatMessage);
 }
 
+const felt = () => vi.spyOn(haptics, "trigger").mockImplementation(() => {});
+
 describe("a chat card's answers", () => {
-  it("are felt when tapped, and not again when sent with the message", () => {
-    const trigger = vi.spyOn(haptics, "trigger").mockImplementation(() => {});
-    host({}).toolCalled("answer_practice", answer, result);
+  it("are felt as the tap arrives, and not again when sent with the message", () => {
+    const trigger = felt();
+    const view = host({});
+    view.toolCalling?.("answer_practice", answer("v1:0"));
     expect(trigger).toHaveBeenCalledWith("correct");
 
-    trigger.mockClear();
-    const sent = appCall("answer_practice", answer);
+    view.toolCalling?.("answer_practice", answer("v1:0"));
+    expect(trigger).toHaveBeenCalledOnce();
+  });
+
+  it("are not felt again when the message already holds them from an earlier visit", () => {
+    const trigger = felt();
+    const kept = appCall("answer_practice", answer("v2:0"));
     host({
-      metadata: { viewCalls: [sent] },
-    } as Partial<ChatMessage>).toolCalled("answer_practice", answer, result);
+      metadata: { viewCalls: [kept] },
+    } as Partial<ChatMessage>).toolCalling?.("answer_practice", answer("v2:0"));
     expect(trigger).not.toHaveBeenCalled();
   });
 
   it("feel wrong for a wrong option, and nothing for another tool", () => {
-    const trigger = vi.spyOn(haptics, "trigger").mockImplementation(() => {});
+    const trigger = felt();
     const view = host({});
-    view.toolCalled("answer_practice", { ...answer, chosenIndex: 0 }, result);
+    view.toolCalling?.("answer_practice", answer("v3:0", { chosenIndex: 0 }));
     expect(trigger).toHaveBeenCalledWith("wrong");
     trigger.mockClear();
-    view.toolCalled("save_note", answer, result);
+    view.toolCalling?.("save_note", answer("v3:1"));
     expect(trigger).not.toHaveBeenCalled();
   });
 });

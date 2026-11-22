@@ -51,8 +51,9 @@ export async function keepIfWhole(
 ): Promise<void> {
   if (!isWhole(card.toolResult)) return;
   const lessonId = lessonStateOf(card.toolResult)?.lessonId ?? onRecord;
-  await keepLessonCopy(target, withoutReview(card), lessonId).catch((error: unknown) =>
-    console.warn("Keeping a copy of the lesson failed:", error),
+  await keepLessonCopy(target, withoutReview(card), lessonId).catch(
+    (error: unknown) =>
+      console.warn("Keeping a copy of the lesson failed:", error),
   );
 }
 
