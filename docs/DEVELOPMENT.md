@@ -112,6 +112,46 @@ Deploy with `scripts/deploy.sh staging|production`. [Deploying](DEPLOYING.md) ha
 
 iOS ignores the manifest for the launch screen of an installed app, so `apps/web/public/brand/splash/` holds one JPEG per screen size, linked in `index.html`. `node apps/web/scripts/make-splash.mjs` makes them and writes the links (it needs ImageMagick with WebP and librsvg). `public/sw.js` keeps `/brand` cache-first by path, so a changed image, like a changed icon, needs a new file name: raise `VERSION` in the script when the art or the mark changes, and it renames the set. An installed app keeps the launch image it had until the icon is removed and added again. Not covered: iPhone landscape, and a dark-mode launch image.
 
+## Browser support
+
+The web app runs on **Chromium 108 and newer**, and on the Safari and Firefox versions Tailwind v4 names (Safari 16.4, Firefox 128). Vite's default build target is `chrome111, edge111, firefox114, safari16.4`, and Tailwind v4 emits `@layer`, `@property`, range media queries (`@media (width >= …)`), `dvh` and individual transforms (`translate:`). Chromium 108 has all of these. `color-mix()`, `text-wrap: balance` and oklab gradients come with Chromium 111 and 114; the built CSS guards them with `@supports`, so on 108 only small details are missing (the ring on a selected lesson, one button border, balanced headings).
+
+| Chromium | Samsung Tizen TV | LG webOS TV | Result |
+| --- | --- | --- | --- |
+| 85 | 2022 | | "Browser too old" notice. No `@layer` (99), and the MCP client's `static {}` blocks do not parse (94). |
+| 87 | | webOS 22 | Same as 85. |
+| 94 | 2023 | webOS 23 | "Browser too old" notice. No `@layer`, so every style is ignored. |
+| 108 | 2024 | webOS 24 | Supported. This is the floor. |
+| 120 | 2025 | webOS 25 | Supported (see below). |
+| 130 | 2026 | | Supported. |
+
+Google TV, Android TV and Fire TV follow their WebView or browser, so the floor is the same number. The engine versions come from Samsung's and LG's developer pages. The 120 row was not run: Chromium 120 crashes at startup on the Mac the measurement was made on, so it is read from 108 and 130, which both pass.
+
+**The notice.** `index.html` has an inline script that builds a full-screen "This browser is too old for graspy" message, light like the art screens whatever the colour scheme. It shows in two cases. (1) `CSSLayerBlockRule` or `dvh` is missing (Chromium before 108): the notice stays, and `#root` gets `inert` and `aria-hidden` so the page behind it cannot be reached. (2) The window reports a `SyntaxError` from a script under `/assets/` before the app has started and with nothing rendered in `#root`, which is how a browser that passes the checks but cannot parse the entry bundle fails. `src/main.tsx` calls `window.__graspyBooted()` as soon as its imports have all parsed; that takes this notice down and restores `#root`, so a stray error cannot leave it up. Nothing of it exists on a supported browser, so it cannot flash. It is plain ES5 and one script, because the Content-Security-Policy allows the inline script by hash: after editing it, put the hash that `src/lib/csp.test.ts` prints into `public/_headers` and rebuild (the test also checks `dist/index.html` when a build exists).
+
+**Lazy chunks.** A `SyntaxError` inside a lazily imported chunk is a promise rejection, not a window error, and the notice does not react to it: the app's error screen ("Something went wrong") shows instead. Treating it as "too old" would block a supported browser after a transient chunk failure, and the checks above already catch every engine the table lists. On Chromium 85 this is what happened before the notice existed.
+
+**Known gap.** Safari 15.4 to 16.3 and Firefox 101 to 127 pass the two checks but are below the floors Tailwind v4 names (Safari 16.4, Firefox 128), so they get no notice and may render with missing detail. `color-mix()` cannot be the check: it is Chromium 111 and the built CSS guards it with `@supports`, so it would turn away supported Chromium 108.
+
+**Runtime APIs.** Keep calls above Chromium 108 behind a check. `AbortSignal.any` (116) goes through `abortAny` in `src/lib/abort-any.ts`. The built JS also calls `URL.canParse` (120), inside the MCP SDK's OAuth metadata schema; the app does not use that path. Scan the built JS for newer calls before raising a dependency: `Array.fromAsync`, `Promise.withResolvers`, `Object.groupBy`, `toSorted`, the `Set` methods, `URL.canParse`, `AbortSignal.any`.
+
+**Measuring again.** Nothing in the repo launches old browsers; the steps are:
+
+1. `npm run build --workspace @graspy/web`, then `npx vite preview` in `apps/web`.
+2. Fetch engines into a scratch folder. Chrome for Testing starts at 113, so older ones are Chromium snapshots: find the revision for a version at `https://chromiumdash.appspot.com/fetch_version?version=<full version>` (`chromium_main_branch_position`), pick the nearest revision below it that exists in the `Mac_Arm` (or `Mac`) bucket of `chromium-browser-snapshots`, and `npx @puppeteer/browsers install chromium@<revision> --platform mac_arm`. Chromium 85 has no arm64 build and runs under Rosetta. Chromium 120 and 114 did not run on macOS 27 (crash at startup, or hang).
+3. Drive each with `puppeteer-core` (version 19 for Chromium 108, which 21 cannot open a page in): load `/`, `/app/sign-in`, `/app/onboarding`, `/privacy` at 1920x1080 and 2560x1440, take screenshots, and read console errors, failed requests, `CSS.supports` and the `CSSLayerBlockRule` check. Data calls to the API fail without a Worker; they are not rendering problems.
+4. To find what breaks, import every file in `dist/assets` in the engine (`await import('/assets/<file>')`) and list the ones that throw.
+
+**Lowering the floor to Chromium 94** (Samsung 2023, webOS 23) would take, measured on a Chromium 94 build:
+
+- `vite build --target chrome94` (JS +0.4%) lowers the syntax. Chromium 85 needs `chrome85` (JS +1.7%, CSS +14.6%).
+- Flatten `@layer` with `@csstools/postcss-cascade-layers` (CSS grows about 25%). Lightning CSS cannot lower layers. With this, 94 renders the landing page like current Chrome.
+- A `vh` fallback before every `dvh` (12 uses) and `lvh`, which 94 lacks and which loses the vertical centring of the onboarding and sign-in screens.
+- Fallbacks for `translate:`, `:has()` and range media queries Lightning CSS does not lower, or a `@supports` guard on each.
+- Polyfills for `structuredClone`, `findLastIndex`, `AbortSignal.timeout`; and a test run on a real Chromium 94 TV, since none of this was run on a TV.
+
+Chromium 85 and 87 additionally lose the padding of every Tailwind `px-` and `py-` class after flattening, which was not diagnosed, so they are not worth lowering to.
+
 ## graspy-teacher (apps/teacher)
 
 Needs macOS on Apple Silicon, [Rust](https://rustup.rs), the Xcode Command Line Tools, CMake and Python 3, as well as the root `npm install`.

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { useI18n } from "@/lib/i18n-context";
+import { abortAny } from "@/lib/abort-any";
 import { uiView } from "@/lib/mcp/server";
 import {
   bridgeTo,
@@ -85,7 +86,7 @@ function useShownView(
       availableDisplayModes: ["inline"],
       containerDimensions: { maxHeight: VIEW_MAX_HEIGHT },
     });
-    const signal = AbortSignal.any([
+    const signal = abortAny([
       leaving.signal,
       AbortSignal.timeout(SHOW_WITHIN_MS),
     ]);

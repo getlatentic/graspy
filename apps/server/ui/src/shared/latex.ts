@@ -14,6 +14,7 @@
 // backslash, control characters and doubled backslashes, $...$ made a tag, a
 // list of letters kept as text, and the tikz fence. A chat answer is plain text.
 
+import { textInMaths } from "./latex-units";
 import {
   RENAMED_ENVIRONMENTS,
   UNWRAPPED_ENVIRONMENTS,
@@ -75,7 +76,7 @@ const DOLLAR_SIGN = '\\char"24{}';
 function inlineMaths(maths: string): string {
   // Environments KaTeX refuses within a line of text are written as the ones
   // it accepts.
-  return maths
+  return textInMaths(maths)
     .replace(DISPLAY_ONLY, (_whole, edge: string, name: string) =>
       UNWRAPPED_ENVIRONMENTS.includes(name)
         ? ""
