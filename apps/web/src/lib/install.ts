@@ -19,8 +19,12 @@ export interface Device {
   maxTouchPoints: number;
 }
 
-/** Safari, and browsers built on it, on an iPhone or iPad; not a web view inside another app,
- * which has no Share sheet with Add to Home Screen. */
+// Browsers on iOS that have no Add to Home Screen, and web views inside other apps, some of which
+// keep "Safari/" in their user agent.
+const NOT_SAFARI =
+  /FxiOS|GSA\/|FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|Twitter|; wv\)/;
+
+/** Safari, and Chrome, on an iPhone or iPad: where the Share sheet has Add to Home Screen. */
 export function isIosBrowser({
   userAgent,
   platform,
@@ -30,7 +34,7 @@ export function isIosBrowser({
   const ios =
     /iPhone|iPad|iPod/.test(userAgent) ||
     (platform === "MacIntel" && maxTouchPoints > 1);
-  return ios && /Safari\//.test(userAgent);
+  return ios && /Safari\//.test(userAgent) && !NOT_SAFARI.test(userAgent);
 }
 
 export function offerFor(state: {
@@ -112,16 +116,18 @@ export function dismissInstall(): void {
   recompute();
 }
 
-/** Opens the browser's own install dialog; whatever the learner chooses, it is not offered again. */
+/** Opens the browser's own install dialog. Accepting it ends the offer; cancelling leaves the
+ * button, and Chrome sends a fresh event if this one cannot be used again. */
 export async function install(): Promise<void> {
   const event = prompt;
   if (!event) return;
-  // The event can be used once.
-  prompt = null;
   try {
     await event.prompt();
-    await event.userChoice;
-  } finally {
-    dismissInstall();
+    const { outcome } = await event.userChoice;
+    if (outcome === "accepted") dismissInstall();
+  } catch {
+    // The event was used already, or the browser refused: this one cannot open the dialog.
+    if (prompt === event) prompt = null;
+    recompute();
   }
 }

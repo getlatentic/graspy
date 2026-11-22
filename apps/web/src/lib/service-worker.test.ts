@@ -74,7 +74,15 @@ function startWorker(network: (url?: string) => Promise<Response>) {
     });
     return answer;
   }
-  return { open, openFile, caches, told, check };
+  /** The worker taking over from an older one. */
+  async function activate() {
+    const waits: Promise<unknown>[] = [];
+    listeners.activate({
+      waitUntil: (work: Promise<unknown>) => waits.push(work),
+    });
+    await Promise.all(waits);
+  }
+  return { open, openFile, caches, told, check, activate };
 }
 
 const page = (body: string) => async () => new Response(body);
@@ -246,6 +254,20 @@ describe("the service worker's refusal to keep what is not the app", () => {
     await worker.openFile("/assets/a.js");
     const files = await worker.caches.open("graspy-files-v2");
     expect(await files.match(ORIGIN + "/assets/a.js")).toBeDefined();
+  });
+
+  it("deletes the caches of older versions when it takes over, and keeps its own", async () => {
+    const worker = startWorker(async () => new Response("{}"));
+    await worker.caches.open("graspy-files-v1");
+    await worker.caches.open("graspy-files-v2");
+    await worker.caches.open("graspy-shell-v1");
+
+    await worker.activate();
+
+    expect(await worker.caches.keys()).toEqual([
+      "graspy-files-v2",
+      "graspy-shell-v1",
+    ]);
   });
 
   it("leaves the manifest to the network, so a changed one reaches an installed app", async () => {

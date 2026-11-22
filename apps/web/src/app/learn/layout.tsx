@@ -24,6 +24,7 @@ import { useKeptAnswers } from "@/features/voice/hooks/use-kept-answers";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 import {
   isChatPath,
+  isRestPage,
   lessonChatTarget,
   pageRedirect,
   sectionsFor,
@@ -84,8 +85,8 @@ function DashboardLayoutContent() {
       )}
     >
       <TopMenu />
-      {!chat && <InstallNotice />}
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
+        {isRestPage(pathname) && <InstallNotice />}
         <SideNav
           sections={sections}
           open={layout.menuOpen}

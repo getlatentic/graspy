@@ -37,6 +37,27 @@ describe("isIosBrowser", () => {
       5,
       false,
     ],
+    [
+      "Firefox on an iPhone",
+      IPHONE_SAFARI.replace("Version/18.0", "FxiOS/130.0"),
+      "iPhone",
+      5,
+      false,
+    ],
+    [
+      "the Google app on an iPhone",
+      IPHONE_SAFARI + " GSA/300.0",
+      "iPhone",
+      5,
+      false,
+    ],
+    [
+      "Facebook's web view that keeps Safari in its agent",
+      IPHONE_SAFARI + " [FBAN/FBIOS;FBAV/450.0]",
+      "iPhone",
+      5,
+      false,
+    ],
     ["Chrome on Android", ANDROID_CHROME, "Linux armv8l", 5, false],
     ["Safari on a Mac", MAC_SAFARI, "MacIntel", 0, false],
   ])("%s", (_name, userAgent, platform, maxTouchPoints, expected) => {
@@ -126,27 +147,56 @@ describe("the page's install state", () => {
 
   it("tells a listener when the offer appears", () => {
     listenForInstall();
-    const heard = vi.fn();
-    const stop = subscribeToInstall(heard);
+    const stopped = vi.fn();
+    const kept = vi.fn();
+    const stop = subscribeToInstall(stopped);
+    subscribeToInstall(kept);
 
     handlers.beforeinstallprompt(installEvent("accepted"));
     stop();
     handlers.appinstalled(new Event("appinstalled"));
 
-    expect(heard).toHaveBeenCalledTimes(1);
+    expect(stopped).toHaveBeenCalledTimes(1);
+    expect(kept).toHaveBeenCalledTimes(2);
   });
 
-  it("opens the browser's dialog once, and is not offered again whatever was chosen", async () => {
+  it("ends the offer, for good, once the install is accepted", async () => {
     listenForInstall();
-    const event = installEvent("dismissed");
+    const event = installEvent("accepted");
     handlers.beforeinstallprompt(event);
 
-    await install();
     await install();
 
     expect(event.prompt).toHaveBeenCalledTimes(1);
     expect(installOffer()).toBeNull();
     expect(stored[INSTALL_DISMISSED_KEY]).toBe("1");
+  });
+
+  it("leaves the button, and remembers nothing, when the dialog is cancelled", async () => {
+    listenForInstall();
+    const event = installEvent("dismissed");
+    handlers.beforeinstallprompt(event);
+
+    await install();
+
+    expect(installOffer()).toBe("prompt");
+    expect(stored[INSTALL_DISMISSED_KEY]).toBeUndefined();
+    await install();
+    expect(event.prompt).toHaveBeenCalledTimes(2);
+  });
+
+  it("drops an event the browser will not open, without remembering a dismissal", async () => {
+    listenForInstall();
+    const event = installEvent("accepted");
+    event.prompt.mockRejectedValue(new Error("already used"));
+    handlers.beforeinstallprompt(event);
+
+    await install();
+
+    expect(installOffer()).toBeNull();
+    expect(stored[INSTALL_DISMISSED_KEY]).toBeUndefined();
+    handlers.beforeinstallprompt(installEvent("accepted"));
+    expect(installOffer()).toBe("prompt");
   });
 
   it("is not offered after the app is installed", () => {

@@ -91,6 +91,16 @@ export function lessonChatTarget(pathname: string): ChatTarget | null {
     : null;
 }
 
+/** Home and Subjects, where nothing is being read, answered or heard. */
+export function isRestPage(pathname: string): boolean {
+  const path = trimmed(pathname);
+  return SECTIONS.some(
+    (section) =>
+      (section.id === "home" || section.id === "subjects") &&
+      section.path === path,
+  );
+}
+
 export function isChatPath(pathname: string): boolean {
   return trimmed(pathname).startsWith(`${ASK_HUB}/`);
 }

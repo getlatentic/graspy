@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import manifestSource from "../../public/manifest.webmanifest?raw";
+import { SECTIONS } from "@/features/learn/lib/app-sections";
 import indexHtml from "../../index.html?raw";
 
 interface Icon {
@@ -43,7 +44,7 @@ describe("the web app manifest", () => {
 
   it("points its shortcuts at pages and icons that exist", () => {
     for (const shortcut of manifest.shortcuts) {
-      expect(shortcut.url.startsWith("/app/")).toBe(true);
+      expect(SECTIONS.map((section) => section.path)).toContain(shortcut.url);
       for (const icon of shortcut.icons)
         expect(onDisk(icon.src), icon.src).toBe(true);
     }
