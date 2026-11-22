@@ -68,14 +68,20 @@ function cssText(tokens) {
 
 /** The dark palette: only colours that give a `dark` value change. */
 function cssDark(tokens) {
-  const lines = Object.entries(tokens.color)
-    .filter(([, { dark }]) => dark !== undefined)
-    .map(([name, { dark }]) => `    --color-${name}: ${dark};`);
+  const themed = Object.entries(tokens.color).filter(
+    ([, { dark }]) => dark !== undefined,
+  );
   return [
     "@media (prefers-color-scheme: dark) {",
     "  :root {",
-    ...lines,
+    ...themed.map(([name, { dark }]) => `    --color-${name}: ${dark};`),
     "  }",
+    "}",
+    "",
+    "/* A page that stays light in dark mode, like the art screens: put this class on its root. */",
+    ".theme-light {",
+    "  color-scheme: light;",
+    ...themed.map(([name, { value }]) => `  --color-${name}: ${value};`),
     "}",
   ];
 }

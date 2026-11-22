@@ -16,22 +16,9 @@ vi.mock("../hooks/use-google-sign-in", () => ({
   useGoogleSignIn: () => ({
     signIn: () => undefined,
     busy: false,
-    problem: "popupBlocked",
+    problem: null,
   }),
 }));
-
-// These tokens change with the theme; the art screens' ground does not.
-const THEMED_TEXT =
-  /^(?:[a-z-]+:)*text-(?:ink|muted|subtle|faint|accent|accent-ink|danger|success|warning)$/;
-
-/** Every class on an element that colours its text with a token that flips in dark mode. */
-function themedText(root: Element): string[] {
-  return [...root.querySelectorAll("*")].flatMap((element) =>
-    [...element.classList]
-      .filter((name) => THEMED_TEXT.test(name))
-      .map((name) => `${element.tagName.toLowerCase()}.${name}`),
-  );
-}
 
 const app = (page: ReactNode) => (
   <I18nContext.Provider
@@ -43,23 +30,32 @@ const app = (page: ReactNode) => (
 
 afterEach(cleanup);
 
-describe("text on the art screens' ground", () => {
-  it("never uses a colour that changes with the theme on the sign-in screen", () => {
+// The form sits straight on the ground, so every colour token under the root must keep its light
+// value in dark mode: `theme-light` pins them all, so no text can turn pale on the pale ground.
+describe("the art screens' ground", () => {
+  it("pins the light palette over the whole sign-in screen", () => {
     const { container } = render(app(<SignInPage />));
-    expect(container.querySelector("main")?.className).toContain("art-ground");
-    expect(themedText(container)).toEqual([]);
+    const root = container.querySelector("main");
+    expect(root?.classList.contains("art-ground")).toBe(true);
+    expect(root?.classList.contains("theme-light")).toBe(true);
   });
 
-  it("never uses one on the onboarding screen outside the card", () => {
+  it("pins it over the whole onboarding form, with no card or picture", () => {
     const { container } = render(
       app(
-        <OnboardingLayout band={null}>
-          <p />
+        <OnboardingLayout>
+          <p>form</p>
         </OnboardingLayout>,
       ),
     );
-    container.querySelector(".rounded-sheet")?.remove();
-    expect(container.querySelector(".art-ground")).toBeTruthy();
-    expect(themedText(container)).toEqual([]);
+    const root = container.querySelector(".art-ground");
+    expect(root?.classList.contains("theme-light")).toBe(true);
+    expect(root?.textContent).toContain("form");
+    expect(
+      root?.querySelector("img[src*='scene'], img[src*='hero']"),
+    ).toBeNull();
+    expect(
+      root?.querySelector(".bg-surface.shadow-lift, .rounded-sheet"),
+    ).toBeNull();
   });
 });

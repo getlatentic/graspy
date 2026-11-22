@@ -132,7 +132,7 @@ function SystemsStatus({
   return (
     <>
       {loading && (
-        <p className="mt-2 flex items-center gap-2 text-sm text-muted">
+        <p className="mt-2 flex items-center gap-2 text-sm text-ink">
           <Spinner />
           {t("onboarding.profile.gradesLoading")}
         </p>

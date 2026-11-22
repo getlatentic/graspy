@@ -149,13 +149,13 @@ function Timeline({ step }: { step: GenerationTimelineStep }) {
   return (
     <>
       <div className="mb-8">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-line">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-surface/70">
           <div
             className="h-full w-full rounded-full bg-accent transition-all duration-500 ease-out"
             style={{ width: `${percent}%` }}
           />
         </div>
-        <p className="mt-2 text-center text-sm font-semibold text-muted">
+        <p className="mt-2 text-center text-sm font-semibold text-ink">
           {t("onboarding.generating.percent", { percent })}
         </p>
       </div>

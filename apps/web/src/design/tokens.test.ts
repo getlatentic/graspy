@@ -57,4 +57,16 @@ describe("tokens.css", () => {
     const { content, body } = readStamp(await read("./tokens.css"));
     expect(content, REGENERATE).toBe(await sha256(body));
   });
+
+  it("pins every colour that turns dark in `.theme-light`", async () => {
+    const css = await read("./tokens.css");
+    const names = (block: string) =>
+      [...block.matchAll(/--color-([\w-]+):/g)].map((match) => match[1]);
+    const dark = /prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/.exec(
+      css,
+    );
+    const light = /\.theme-light \{([^}]*)\}/.exec(css);
+    expect(dark).not.toBeNull();
+    expect(names(light?.[1] ?? "")).toEqual(names(dark?.[1] ?? ""));
+  });
 });

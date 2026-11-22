@@ -21,7 +21,7 @@ export default function CurriculumReadyView({
       <h2 className="text-balance text-4xl font-semibold text-ink">
         {t("onboarding.ready.title")}
       </h2>
-      <p className="mt-4 text-base text-muted">
+      <p className="mt-4 text-base text-ink">
         {t("onboarding.ready.body", { topics: stats.topicCount })}
       </p>
 
@@ -29,12 +29,11 @@ export default function CurriculumReadyView({
         <SubjectChips subjects={subjects} />
       </div>
 
-      {/* Sticky on a short screen, where iOS Safari's toolbar would cover it. */}
-      <div className="sticky bottom-0 -mx-6 mt-6 bg-surface px-6 py-4 sm:static sm:mx-0 sm:mt-10 sm:p-0">
+      <div className="mt-10">
         <button
           type="button"
           onClick={onContinue}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
         >
           {t("onboarding.ready.continue")}
           <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />

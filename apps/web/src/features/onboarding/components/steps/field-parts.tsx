@@ -7,6 +7,8 @@ export const LABEL = "mb-2 block text-sm font-semibold text-ink";
 export function FieldError({ message }: { message?: string }) {
   const { t } = useI18n();
   return message ? (
-    <p className="mt-2 text-sm text-danger">{t(message)}</p>
+    <p className="mt-2 rounded-control bg-surface px-3 py-2 text-sm font-medium text-danger">
+      {t(message)}
+    </p>
   ) : null;
 }

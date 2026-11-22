@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 import type { usePlanSetup } from "../hooks/use-plan-setup";
 import CurriculumReadyView from "./curriculum-ready-view";
 import GenerationProgressView from "./generation-progress-view";
-import OnboardingFrame from "./onboarding-frame";
+import OnboardingLayout from "./onboarding-layout";
 
 export default function PlanSetupView({
   setup,
@@ -13,33 +13,28 @@ export default function PlanSetupView({
 }) {
   const readyStats = setup.phase === "ready" ? setup.stats : null;
   return (
-    <OnboardingFrame>
-      <div className="flex flex-1 items-center justify-center py-8 sm:py-16">
-        <div
-          key={readyStats ? "ready" : "progress"}
-          className={cn(
-            "w-full max-w-2xl rounded-sheet bg-surface p-6 shadow-2xl motion-safe:animate-enter sm:p-10",
-            readyStats && "text-center",
-          )}
-        >
-          {readyStats ? (
-            <CurriculumReadyView
-              stats={readyStats}
-              subjects={setup.subjectNames}
-              onContinue={onContinue}
-            />
-          ) : (
-            <GenerationProgressView
-              subjects={setup.subjectNames}
-              step={setup.step}
-              error={setup.error}
-              onRetry={setup.retry}
-              onBack={setup.reset}
-              isRetrying={setup.pending}
-            />
-          )}
-        </div>
+    <OnboardingLayout>
+      <div
+        key={readyStats ? "ready" : "progress"}
+        className={cn("motion-safe:animate-enter", readyStats && "text-center")}
+      >
+        {readyStats ? (
+          <CurriculumReadyView
+            stats={readyStats}
+            subjects={setup.subjectNames}
+            onContinue={onContinue}
+          />
+        ) : (
+          <GenerationProgressView
+            subjects={setup.subjectNames}
+            step={setup.step}
+            error={setup.error}
+            onRetry={setup.retry}
+            onBack={setup.reset}
+            isRetrying={setup.pending}
+          />
+        )}
       </div>
-    </OnboardingFrame>
+    </OnboardingLayout>
   );
 }
