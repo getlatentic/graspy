@@ -108,6 +108,10 @@ Deploy with `scripts/deploy.sh staging|production`. [Deploying](DEPLOYING.md) ha
 - **Imports that load at startup** grow the Worker's startup snapshot. It has a size cap, and past it a deploy fails with code 10013. Near the cap, the same build can pass or fail, so deploy a change that adds imports three times.
 - `pylock.toml` pins what the Worker vendors. `pywrangler` rewrites it when `pyproject.toml` changes. Commit it.
 
+### The web app's launch images
+
+iOS ignores the manifest for the launch screen of an installed app, so `apps/web/public/brand/splash/` holds one JPEG per screen size, linked in `index.html`. `node apps/web/scripts/make-splash.mjs` makes them and writes the links (it needs ImageMagick with WebP and librsvg). `public/sw.js` keeps `/brand` cache-first by path, so a changed image, like a changed icon, needs a new file name: raise `VERSION` in the script when the art or the mark changes, and it renames the set. An installed app keeps the launch image it had until the icon is removed and added again. Not covered: iPhone landscape, and a dark-mode launch image.
+
 ## graspy-teacher (apps/teacher)
 
 Needs macOS on Apple Silicon, [Rust](https://rustup.rs), the Xcode Command Line Tools, CMake and Python 3, as well as the root `npm install`.
