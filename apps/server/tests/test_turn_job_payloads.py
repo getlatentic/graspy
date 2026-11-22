@@ -1,16 +1,16 @@
-"""What a turn's last event carries for the app: the answer with its maths
-repaired, whether the turn finished or the learner stopped it."""
+"""What a stopped turn's last event carries for the app: the words the learner
+saw, with their maths repaired and written as $ and $$, as a finished reply is
+(a client reads $ and $$, not graspy's tags)."""
 
-from app.agent.tutor import TutorReply
-from app.turns.job import reply_payload, words_payload
-
-WRITTEN = r"Half is \frac12 and `$HOME/$USER` stays."
-REPAIRED = r"Half is <latex-inline>\frac12</latex-inline> and `$HOME/$USER` stays."
+from app.turns.job import words_payload
 
 
-def test_the_words_of_a_stopped_turn_are_repaired():
-    assert words_payload(WRITTEN)["answer"] == REPAIRED
+def test_the_words_of_a_stopped_turn_have_their_maths_repaired_as_dollars():
+    written = r"Half is \frac12 and \(x^2\) with `$HOME/$USER` kept."
+    assert words_payload(written)["answer"] == (
+        r"Half is $\frac12$ and $x^2$ with `$HOME/$USER` kept."
+    )
 
 
-def test_a_finished_reply_is_carried_as_the_tutor_repaired_it():
-    assert reply_payload(TutorReply(answer=REPAIRED))["answer"] == REPAIRED
+def test_a_stopped_turn_with_no_maths_is_unchanged():
+    assert words_payload("Half an answ")["answer"] == "Half an answ"

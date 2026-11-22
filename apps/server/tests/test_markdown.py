@@ -24,7 +24,7 @@ def test_at_proxy_becomes_a_backslash():
     [
         ("\tfrac", "\\tfrac"),
         ("\rho", "\\rho"),
-        ("\x0cor", "\\for"),
+        ("\x0corall", "\\forall"),
         ("\x08eta", "\\beta"),
         ("\rVert", "\\rVert"),
     ],

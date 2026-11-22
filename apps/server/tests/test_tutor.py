@@ -70,7 +70,7 @@ async def test_the_reply_has_its_maths_repaired_and_the_history_keeps_the_words(
     with context:
         reply = await finished(Tutor(memory), "c1", "What rotates a vector?")
 
-    assert reply.answer == f"<latex-inline>{written[:-1]}</latex-inline>."
+    assert reply.answer == f"${written[:-1]}$."
     assert (await memory.load("c1")).exchanges[0]["answer"] == written
 
 

@@ -10,14 +10,8 @@ from a chat answer's "let $a, b, c, d$ be the coefficients"."""
 
 import re
 
-from .maths import (
-    LENGTH,
-    MAX_SPAN,
-    map_unprotected,
-    repair_reply,
-    tag_delimiters,
-    tag_undelimited,
-)
+from .maths import LENGTH, repair_reply, tag_delimiters, tag_undelimited
+from .maths_scan import MAX_INLINE, map_tikz, map_unprotected
 
 # A maths span holding only single letters separated by spaces or commas is a
 # list of letters (the alphabet), which KaTeX would set in italic maths type.
@@ -31,7 +25,7 @@ _LETTER_LIST = re.compile(
 # end, and stays. \\[4pt] is a line break with extra space, so a [ opening a
 # length is not a doubled backslash, and a [ opens one only where a doubled
 # backslash closes it.
-_DOUBLED_CLOSE = rf"(?:[^\n]|\n(?![ \t]*\n)){{0,{MAX_SPAN}}}?\\\\\]"
+_DOUBLED_CLOSE = rf"(?:[^\n]|\n(?![ \t]*\n)){{0,{MAX_INLINE}}}?\\\\\]"
 _DOUBLED_BACKSLASH = re.compile(
     rf"\\\\(?=[A-Za-z()\]]|\[(?!{LENGTH})(?={_DOUBLED_CLOSE}))"
 )
@@ -49,10 +43,6 @@ _BOLD_NEWLINE = re.compile(
     r"(?<!\*)\*\*(?P<content>[^\s*][^*\n]*?)[ \t]*\n[ \t]*\*\*(?=\s|$)"
 )
 
-_TIKZ = re.compile(
-    r"(\\begin\{tikzpicture\}.{0,20000}?\\end\{tikzpicture\})", re.DOTALL
-)
-
 
 def _restored(text: str) -> str:
     # The model writes @@ for a LaTeX backslash ("@@frac12"), sparing it the
@@ -68,18 +58,20 @@ def _bold_closed_before_newline(text: str) -> str:
     return _BOLD_NEWLINE.sub(r"**\g<content>**\n", text)
 
 
-def _tikz_fenced(text: str) -> str:
+def _tikz_fenced(picture: str) -> str:
     # The frontend renders a tikz code block as a diagram.
-    return _TIKZ.sub(r"\n```tikz\n\1\n```\n", text)
+    return f"\n```tikz\n{picture}\n```\n"
 
 
 def repair_markdown(text: str) -> str:
     if not text:
         return text
-    text = map_unprotected(text, _restored, protect_indented=False)
-    text = _LETTER_LIST.sub(lambda m: m.group(2).strip(), tag_delimiters(text))
+    text = map_unprotected(text, _restored, indented=False, in_maths=True)
+    text = _LETTER_LIST.sub(
+        lambda m: m.group(2).strip(), tag_delimiters(text, dollars=True)
+    )
     text = map_unprotected(tag_undelimited(text), _bold_closed_before_newline)
-    return map_unprotected(text, _tikz_fenced, protect_tikz=False)
+    return map_tikz(text, _tikz_fenced)
 
 
 __all__ = ["repair_markdown", "repair_reply"]

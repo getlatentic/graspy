@@ -1,5 +1,5 @@
 {
-  "about": "Maths as the model writes it, delimited or not, mangled or not, and code that must stay as it is, with the text each must become. 'tagged' is what repair_reply makes of 'input', with graspy's <latex-inline> and <latex-block> tags; the web's processLatex must make the same text with $ and $$ for the tags. 'lesson' is what repair_markdown makes of it when that differs (a lesson's JSON fields also restore doubled backslashes and keep a list of letters as text). Read by apps/server/tests/test_math_repair_corpus.py, apps/web/src/lib/latex.test.ts and apps/server/ui/src/shared/latex.test.ts, so the three cannot drift.",
+  "about": "Maths as the model writes it, delimited or not, mangled or not, and text and code that must stay as it is, with the text each must become. 'tagged' is what repair_reply makes of 'input', with graspy's <latex-inline> and <latex-block> tags and $...$ pairs left alone; the web's processLatex must make the same text with $ and $$ for the tags. 'lesson' is what repair_markdown makes of it when that differs (a lesson's JSON fields also restore doubled backslashes, tag $...$ pairs and keep a list of letters as text); 'replyOnly' cases are not lesson text. 'vocabulary' is the commands, functions, names and environments that bare maths may use; the three implementations must hold the same lists. Read by apps/server/tests/test_math_repair_corpus.py, apps/web/src/lib/latex.test.ts and apps/server/ui/src/shared/latex.test.ts, so the three cannot drift.",
   "cases": [
     {
       "name": "a matrix environment with no delimiters, after a left-hand side, with a lengthened line break",
@@ -59,7 +59,8 @@
     {
       "name": "a dollar span with blanks keeps its place",
       "input": "Fill in $\\bar{x} = \\underline{\\phantom{___}}$ now.",
-      "tagged": "Fill in <latex-inline>\\bar{x} = \\underline{\\phantom{\\_\\_\\_}}</latex-inline> now."
+      "tagged": "Fill in $\\bar{x} = \\underline{\\phantom{\\_\\_\\_}}$ now.",
+      "lesson": "Fill in <latex-inline>\\bar{x} = \\underline{\\phantom{\\_\\_\\_}}</latex-inline> now."
     },
     {
       "name": "money is not maths",
@@ -119,17 +120,13 @@
     {
       "name": "indented code after a blank line",
       "input": "Steps:\n\n    echo $HOME/$USER\n    echo \\frac12\n\nDone with $x$.",
-      "tagged": "Steps:\n\n    echo $HOME/$USER\n    echo \\frac12\n\nDone with <latex-inline>x</latex-inline>."
-    },
-    {
-      "name": "maths after a fence is still tagged",
-      "input": "```\n$a$\n```\nThen $b$.",
-      "tagged": "```\n$a$\n```\nThen <latex-inline>b</latex-inline>."
+      "tagged": "Steps:\n\n    echo $HOME/$USER\n    echo \\frac12\n\nDone with $x$.",
+      "lesson": "Steps:\n\n    echo $HOME/$USER\n    echo \\frac12\n\nDone with <latex-inline>x</latex-inline>."
     },
     {
       "name": "a list of letters in a chat answer is maths",
       "input": "Let $a, b, c, d$ be the coefficients.",
-      "tagged": "Let <latex-inline>a, b, c, d</latex-inline> be the coefficients.",
+      "tagged": "Let $a, b, c, d$ be the coefficients.",
       "lesson": "Let a, b, c, d be the coefficients."
     },
     {
@@ -190,7 +187,8 @@
     {
       "name": "align inside dollar signs is written as aligned",
       "input": "$\\begin{align} a &= 1 \\end{align}$",
-      "tagged": "<latex-inline>\\begin{aligned} a &= 1 \\end{aligned}</latex-inline>"
+      "tagged": "$\\begin{aligned} a &= 1 \\end{aligned}$",
+      "lesson": "<latex-inline>\\begin{aligned} a &= 1 \\end{aligned}</latex-inline>"
     },
     {
       "name": "gather inside parentheses delimiters is written as gathered",
@@ -205,7 +203,547 @@
     {
       "name": "an escaped dollar sign is not a delimiter",
       "input": "It costs \\$5 and \\$6, and $x$ is a number.",
-      "tagged": "It costs \\$5 and \\$6, and <latex-inline>x</latex-inline> is a number."
+      "tagged": "It costs \\$5 and \\$6, and $x$ is a number.",
+      "lesson": "It costs \\$5 and \\$6, and <latex-inline>x</latex-inline> is a number."
+    },
+    {
+      "name": "dollars after a fence are left to remark-math",
+      "input": "```\n$a$\n```\nThen $b$.",
+      "tagged": "```\n$a$\n```\nThen $b$.",
+      "lesson": "```\n$a$\n```\nThen <latex-inline>b</latex-inline>."
+    },
+    {
+      "name": "a command after a fence is tagged",
+      "input": "```\n\\frac12\n```\nThen \\frac12.",
+      "tagged": "```\n\\frac12\n```\nThen <latex-inline>\\frac12</latex-inline>."
+    },
+    {
+      "name": "an ordered list item's second paragraph is not code",
+      "input": "1. Step one:\n\n    Compute \\(x^2\\) and \\frac12 here.\n\n2. Next \\(y\\)",
+      "tagged": "1. Step one:\n\n    Compute <latex-inline>x^2</latex-inline> and <latex-inline>\\frac12</latex-inline> here.\n\n2. Next <latex-inline>y</latex-inline>"
+    },
+    {
+      "name": "a bullet item's second paragraph is not code",
+      "input": "- Item\n\n    Then \\[y\\]",
+      "tagged": "- Item\n\n    Then <latex-block>y</latex-block>"
+    },
+    {
+      "name": "a nested paragraph of a list item is not code",
+      "input": "- Item\n\n    First \\(a\\)\n\n    Second \\(b\\)",
+      "tagged": "- Item\n\n    First <latex-inline>a</latex-inline>\n\n    Second <latex-inline>b</latex-inline>"
+    },
+    {
+      "name": "indented lines at the start of the text are not code",
+      "input": "    Compute \\frac12 here.",
+      "tagged": "    Compute <latex-inline>\\frac12</latex-inline> here."
+    },
+    {
+      "name": "indented code after a paragraph, not a list, is code",
+      "input": "Run it:\n\n    echo \\frac12 $HOME/$USER\n\nThen \\frac12.",
+      "tagged": "Run it:\n\n    echo \\frac12 $HOME/$USER\n\nThen <latex-inline>\\frac12</latex-inline>."
+    },
+    {
+      "name": "a long derivation of many lines is display maths",
+      "input": "$$\\begin{aligned}\na_{0} &= \\frac{b_{0}}{c_{0}} \\\\\na_{1} &= \\frac{b_{1}}{c_{1}} \\\\\na_{2} &= \\frac{b_{2}}{c_{2}} \\\\\na_{3} &= \\frac{b_{3}}{c_{3}} \\\\\na_{4} &= \\frac{b_{4}}{c_{4}} \\\\\na_{5} &= \\frac{b_{5}}{c_{5}} \\\\\na_{6} &= \\frac{b_{6}}{c_{6}} \\\\\na_{7} &= \\frac{b_{7}}{c_{7}} \\\\\na_{8} &= \\frac{b_{8}}{c_{8}} \\\\\na_{9} &= \\frac{b_{9}}{c_{9}} \\\\\na_{10} &= \\frac{b_{10}}{c_{10}} \\\\\na_{11} &= \\frac{b_{11}}{c_{11}} \\\\\na_{12} &= \\frac{b_{12}}{c_{12}} \\\\\na_{13} &= \\frac{b_{13}}{c_{13}} \\\\\na_{14} &= \\frac{b_{14}}{c_{14}} \\\\\na_{15} &= \\frac{b_{15}}{c_{15}} \\\\\na_{16} &= \\frac{b_{16}}{c_{16}} \\\\\na_{17} &= \\frac{b_{17}}{c_{17}} \\\\\na_{18} &= \\frac{b_{18}}{c_{18}} \\\\\na_{19} &= \\frac{b_{19}}{c_{19}} \\\\\na_{20} &= \\frac{b_{20}}{c_{20}} \\\\\na_{21} &= \\frac{b_{21}}{c_{21}} \\\\\na_{22} &= \\frac{b_{22}}{c_{22}} \\\\\na_{23} &= \\frac{b_{23}}{c_{23}} \\\\\na_{24} &= \\frac{b_{24}}{c_{24}} \\\\\na_{25} &= \\frac{b_{25}}{c_{25}} \\\\\na_{26} &= \\frac{b_{26}}{c_{26}} \\\\\na_{27} &= \\frac{b_{27}}{c_{27}} \\\\\na_{28} &= \\frac{b_{28}}{c_{28}} \\\\\na_{29} &= \\frac{b_{29}}{c_{29}} \\\\\na_{30} &= \\frac{b_{30}}{c_{30}} \\\\\na_{31} &= \\frac{b_{31}}{c_{31}} \\\\\na_{32} &= \\frac{b_{32}}{c_{32}} \\\\\na_{33} &= \\frac{b_{33}}{c_{33}} \\\\\na_{34} &= \\frac{b_{34}}{c_{34}} \\\\\na_{35} &= \\frac{b_{35}}{c_{35}} \\\\\na_{36} &= \\frac{b_{36}}{c_{36}} \\\\\na_{37} &= \\frac{b_{37}}{c_{37}} \\\\\na_{38} &= \\frac{b_{38}}{c_{38}} \\\\\na_{39} &= \\frac{b_{39}}{c_{39}} \\\\\na_{40} &= \\frac{b_{40}}{c_{40}} \\\\\na_{41} &= \\frac{b_{41}}{c_{41}} \\\\\na_{42} &= \\frac{b_{42}}{c_{42}} \\\\\na_{43} &= \\frac{b_{43}}{c_{43}} \\\\\na_{44} &= \\frac{b_{44}}{c_{44}} \\\\\na_{45} &= \\frac{b_{45}}{c_{45}} \\\\\na_{46} &= \\frac{b_{46}}{c_{46}} \\\\\na_{47} &= \\frac{b_{47}}{c_{47}} \\\\\na_{48} &= \\frac{b_{48}}{c_{48}} \\\\\na_{49} &= \\frac{b_{49}}{c_{49}} \\\\\na_{50} &= \\frac{b_{50}}{c_{50}} \\\\\na_{51} &= \\frac{b_{51}}{c_{51}} \\\\\na_{52} &= \\frac{b_{52}}{c_{52}} \\\\\na_{53} &= \\frac{b_{53}}{c_{53}} \\\\\na_{54} &= \\frac{b_{54}}{c_{54}} \\\\\na_{55} &= \\frac{b_{55}}{c_{55}} \\\\\na_{56} &= \\frac{b_{56}}{c_{56}} \\\\\na_{57} &= \\frac{b_{57}}{c_{57}} \\\\\na_{58} &= \\frac{b_{58}}{c_{58}} \\\\\na_{59} &= \\frac{b_{59}}{c_{59}} \\\\\na_{60} &= \\frac{b_{60}}{c_{60}} \\\\\na_{61} &= \\frac{b_{61}}{c_{61}} \\\\\na_{62} &= \\frac{b_{62}}{c_{62}} \\\\\na_{63} &= \\frac{b_{63}}{c_{63}} \\\\\na_{64} &= \\frac{b_{64}}{c_{64}} \\\\\na_{65} &= \\frac{b_{65}}{c_{65}} \\\\\na_{66} &= \\frac{b_{66}}{c_{66}} \\\\\na_{67} &= \\frac{b_{67}}{c_{67}} \\\\\na_{68} &= \\frac{b_{68}}{c_{68}} \\\\\na_{69} &= \\frac{b_{69}}{c_{69}} \\\\\na_{70} &= \\frac{b_{70}}{c_{70}} \\\\\na_{71} &= \\frac{b_{71}}{c_{71}} \\\\\na_{72} &= \\frac{b_{72}}{c_{72}} \\\\\na_{73} &= \\frac{b_{73}}{c_{73}} \\\\\na_{74} &= \\frac{b_{74}}{c_{74}} \\\\\na_{75} &= \\frac{b_{75}}{c_{75}} \\\\\na_{76} &= \\frac{b_{76}}{c_{76}} \\\\\na_{77} &= \\frac{b_{77}}{c_{77}} \\\\\na_{78} &= \\frac{b_{78}}{c_{78}} \\\\\na_{79} &= \\frac{b_{79}}{c_{79}} \\\\\na_{80} &= \\frac{b_{80}}{c_{80}} \\\\\na_{81} &= \\frac{b_{81}}{c_{81}} \\\\\na_{82} &= \\frac{b_{82}}{c_{82}} \\\\\na_{83} &= \\frac{b_{83}}{c_{83}} \\\\\na_{84} &= \\frac{b_{84}}{c_{84}} \\\\\na_{85} &= \\frac{b_{85}}{c_{85}} \\\\\na_{86} &= \\frac{b_{86}}{c_{86}} \\\\\na_{87} &= \\frac{b_{87}}{c_{87}} \\\\\na_{88} &= \\frac{b_{88}}{c_{88}} \\\\\na_{89} &= \\frac{b_{89}}{c_{89}} \\\\\na_{90} &= \\frac{b_{90}}{c_{90}} \\\\\na_{91} &= \\frac{b_{91}}{c_{91}} \\\\\na_{92} &= \\frac{b_{92}}{c_{92}} \\\\\na_{93} &= \\frac{b_{93}}{c_{93}} \\\\\na_{94} &= \\frac{b_{94}}{c_{94}} \\\\\na_{95} &= \\frac{b_{95}}{c_{95}} \\\\\na_{96} &= \\frac{b_{96}}{c_{96}} \\\\\na_{97} &= \\frac{b_{97}}{c_{97}} \\\\\na_{98} &= \\frac{b_{98}}{c_{98}} \\\\\na_{99} &= \\frac{b_{99}}{c_{99}} \\\\\na_{100} &= \\frac{b_{100}}{c_{100}} \\\\\na_{101} &= \\frac{b_{101}}{c_{101}} \\\\\na_{102} &= \\frac{b_{102}}{c_{102}} \\\\\na_{103} &= \\frac{b_{103}}{c_{103}} \\\\\na_{104} &= \\frac{b_{104}}{c_{104}} \\\\\na_{105} &= \\frac{b_{105}}{c_{105}} \\\\\na_{106} &= \\frac{b_{106}}{c_{106}} \\\\\na_{107} &= \\frac{b_{107}}{c_{107}} \\\\\na_{108} &= \\frac{b_{108}}{c_{108}} \\\\\na_{109} &= \\frac{b_{109}}{c_{109}} \\\\\na_{110} &= \\frac{b_{110}}{c_{110}} \\\\\na_{111} &= \\frac{b_{111}}{c_{111}} \\\\\na_{112} &= \\frac{b_{112}}{c_{112}} \\\\\na_{113} &= \\frac{b_{113}}{c_{113}} \\\\\na_{114} &= \\frac{b_{114}}{c_{114}} \\\\\na_{115} &= \\frac{b_{115}}{c_{115}} \\\\\na_{116} &= \\frac{b_{116}}{c_{116}} \\\\\na_{117} &= \\frac{b_{117}}{c_{117}} \\\\\na_{118} &= \\frac{b_{118}}{c_{118}} \\\\\na_{119} &= \\frac{b_{119}}{c_{119}} \\\\\n\\end{aligned}$$",
+      "tagged": "<latex-block>\\begin{aligned}\na_{0} &= \\frac{b_{0}}{c_{0}} \\\\\na_{1} &= \\frac{b_{1}}{c_{1}} \\\\\na_{2} &= \\frac{b_{2}}{c_{2}} \\\\\na_{3} &= \\frac{b_{3}}{c_{3}} \\\\\na_{4} &= \\frac{b_{4}}{c_{4}} \\\\\na_{5} &= \\frac{b_{5}}{c_{5}} \\\\\na_{6} &= \\frac{b_{6}}{c_{6}} \\\\\na_{7} &= \\frac{b_{7}}{c_{7}} \\\\\na_{8} &= \\frac{b_{8}}{c_{8}} \\\\\na_{9} &= \\frac{b_{9}}{c_{9}} \\\\\na_{10} &= \\frac{b_{10}}{c_{10}} \\\\\na_{11} &= \\frac{b_{11}}{c_{11}} \\\\\na_{12} &= \\frac{b_{12}}{c_{12}} \\\\\na_{13} &= \\frac{b_{13}}{c_{13}} \\\\\na_{14} &= \\frac{b_{14}}{c_{14}} \\\\\na_{15} &= \\frac{b_{15}}{c_{15}} \\\\\na_{16} &= \\frac{b_{16}}{c_{16}} \\\\\na_{17} &= \\frac{b_{17}}{c_{17}} \\\\\na_{18} &= \\frac{b_{18}}{c_{18}} \\\\\na_{19} &= \\frac{b_{19}}{c_{19}} \\\\\na_{20} &= \\frac{b_{20}}{c_{20}} \\\\\na_{21} &= \\frac{b_{21}}{c_{21}} \\\\\na_{22} &= \\frac{b_{22}}{c_{22}} \\\\\na_{23} &= \\frac{b_{23}}{c_{23}} \\\\\na_{24} &= \\frac{b_{24}}{c_{24}} \\\\\na_{25} &= \\frac{b_{25}}{c_{25}} \\\\\na_{26} &= \\frac{b_{26}}{c_{26}} \\\\\na_{27} &= \\frac{b_{27}}{c_{27}} \\\\\na_{28} &= \\frac{b_{28}}{c_{28}} \\\\\na_{29} &= \\frac{b_{29}}{c_{29}} \\\\\na_{30} &= \\frac{b_{30}}{c_{30}} \\\\\na_{31} &= \\frac{b_{31}}{c_{31}} \\\\\na_{32} &= \\frac{b_{32}}{c_{32}} \\\\\na_{33} &= \\frac{b_{33}}{c_{33}} \\\\\na_{34} &= \\frac{b_{34}}{c_{34}} \\\\\na_{35} &= \\frac{b_{35}}{c_{35}} \\\\\na_{36} &= \\frac{b_{36}}{c_{36}} \\\\\na_{37} &= \\frac{b_{37}}{c_{37}} \\\\\na_{38} &= \\frac{b_{38}}{c_{38}} \\\\\na_{39} &= \\frac{b_{39}}{c_{39}} \\\\\na_{40} &= \\frac{b_{40}}{c_{40}} \\\\\na_{41} &= \\frac{b_{41}}{c_{41}} \\\\\na_{42} &= \\frac{b_{42}}{c_{42}} \\\\\na_{43} &= \\frac{b_{43}}{c_{43}} \\\\\na_{44} &= \\frac{b_{44}}{c_{44}} \\\\\na_{45} &= \\frac{b_{45}}{c_{45}} \\\\\na_{46} &= \\frac{b_{46}}{c_{46}} \\\\\na_{47} &= \\frac{b_{47}}{c_{47}} \\\\\na_{48} &= \\frac{b_{48}}{c_{48}} \\\\\na_{49} &= \\frac{b_{49}}{c_{49}} \\\\\na_{50} &= \\frac{b_{50}}{c_{50}} \\\\\na_{51} &= \\frac{b_{51}}{c_{51}} \\\\\na_{52} &= \\frac{b_{52}}{c_{52}} \\\\\na_{53} &= \\frac{b_{53}}{c_{53}} \\\\\na_{54} &= \\frac{b_{54}}{c_{54}} \\\\\na_{55} &= \\frac{b_{55}}{c_{55}} \\\\\na_{56} &= \\frac{b_{56}}{c_{56}} \\\\\na_{57} &= \\frac{b_{57}}{c_{57}} \\\\\na_{58} &= \\frac{b_{58}}{c_{58}} \\\\\na_{59} &= \\frac{b_{59}}{c_{59}} \\\\\na_{60} &= \\frac{b_{60}}{c_{60}} \\\\\na_{61} &= \\frac{b_{61}}{c_{61}} \\\\\na_{62} &= \\frac{b_{62}}{c_{62}} \\\\\na_{63} &= \\frac{b_{63}}{c_{63}} \\\\\na_{64} &= \\frac{b_{64}}{c_{64}} \\\\\na_{65} &= \\frac{b_{65}}{c_{65}} \\\\\na_{66} &= \\frac{b_{66}}{c_{66}} \\\\\na_{67} &= \\frac{b_{67}}{c_{67}} \\\\\na_{68} &= \\frac{b_{68}}{c_{68}} \\\\\na_{69} &= \\frac{b_{69}}{c_{69}} \\\\\na_{70} &= \\frac{b_{70}}{c_{70}} \\\\\na_{71} &= \\frac{b_{71}}{c_{71}} \\\\\na_{72} &= \\frac{b_{72}}{c_{72}} \\\\\na_{73} &= \\frac{b_{73}}{c_{73}} \\\\\na_{74} &= \\frac{b_{74}}{c_{74}} \\\\\na_{75} &= \\frac{b_{75}}{c_{75}} \\\\\na_{76} &= \\frac{b_{76}}{c_{76}} \\\\\na_{77} &= \\frac{b_{77}}{c_{77}} \\\\\na_{78} &= \\frac{b_{78}}{c_{78}} \\\\\na_{79} &= \\frac{b_{79}}{c_{79}} \\\\\na_{80} &= \\frac{b_{80}}{c_{80}} \\\\\na_{81} &= \\frac{b_{81}}{c_{81}} \\\\\na_{82} &= \\frac{b_{82}}{c_{82}} \\\\\na_{83} &= \\frac{b_{83}}{c_{83}} \\\\\na_{84} &= \\frac{b_{84}}{c_{84}} \\\\\na_{85} &= \\frac{b_{85}}{c_{85}} \\\\\na_{86} &= \\frac{b_{86}}{c_{86}} \\\\\na_{87} &= \\frac{b_{87}}{c_{87}} \\\\\na_{88} &= \\frac{b_{88}}{c_{88}} \\\\\na_{89} &= \\frac{b_{89}}{c_{89}} \\\\\na_{90} &= \\frac{b_{90}}{c_{90}} \\\\\na_{91} &= \\frac{b_{91}}{c_{91}} \\\\\na_{92} &= \\frac{b_{92}}{c_{92}} \\\\\na_{93} &= \\frac{b_{93}}{c_{93}} \\\\\na_{94} &= \\frac{b_{94}}{c_{94}} \\\\\na_{95} &= \\frac{b_{95}}{c_{95}} \\\\\na_{96} &= \\frac{b_{96}}{c_{96}} \\\\\na_{97} &= \\frac{b_{97}}{c_{97}} \\\\\na_{98} &= \\frac{b_{98}}{c_{98}} \\\\\na_{99} &= \\frac{b_{99}}{c_{99}} \\\\\na_{100} &= \\frac{b_{100}}{c_{100}} \\\\\na_{101} &= \\frac{b_{101}}{c_{101}} \\\\\na_{102} &= \\frac{b_{102}}{c_{102}} \\\\\na_{103} &= \\frac{b_{103}}{c_{103}} \\\\\na_{104} &= \\frac{b_{104}}{c_{104}} \\\\\na_{105} &= \\frac{b_{105}}{c_{105}} \\\\\na_{106} &= \\frac{b_{106}}{c_{106}} \\\\\na_{107} &= \\frac{b_{107}}{c_{107}} \\\\\na_{108} &= \\frac{b_{108}}{c_{108}} \\\\\na_{109} &= \\frac{b_{109}}{c_{109}} \\\\\na_{110} &= \\frac{b_{110}}{c_{110}} \\\\\na_{111} &= \\frac{b_{111}}{c_{111}} \\\\\na_{112} &= \\frac{b_{112}}{c_{112}} \\\\\na_{113} &= \\frac{b_{113}}{c_{113}} \\\\\na_{114} &= \\frac{b_{114}}{c_{114}} \\\\\na_{115} &= \\frac{b_{115}}{c_{115}} \\\\\na_{116} &= \\frac{b_{116}}{c_{116}} \\\\\na_{117} &= \\frac{b_{117}}{c_{117}} \\\\\na_{118} &= \\frac{b_{118}}{c_{118}} \\\\\na_{119} &= \\frac{b_{119}}{c_{119}} \\\\\n\\end{aligned}</latex-block>"
+    },
+    {
+      "name": "an inline span over its cap is left exactly as it was",
+      "input": "\\(\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x\\)",
+      "tagged": "\\(\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x\\)"
+    },
+    {
+      "name": "a display span over its cap is left exactly as it was",
+      "input": "$$\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x$$",
+      "tagged": "$$\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x$$"
+    },
+    {
+      "name": "a long tagged block is left as it is",
+      "input": "<latex-block>\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x</latex-block>",
+      "tagged": "<latex-block>\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x</latex-block>"
+    },
+    {
+      "name": "a tagged inline over its cap is left as it is",
+      "input": "<latex-inline>\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x</latex-inline>",
+      "tagged": "<latex-inline>\\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + \\frac{a_i}{b_i} + x</latex-inline>"
+    },
+    {
+      "name": "an unclosed block tag is left as it is",
+      "input": "Here: <latex-block>\\frac{a}{b}",
+      "tagged": "Here: <latex-block>\\frac{a}{b}"
+    },
+    {
+      "name": "an unclosed inline tag is left as it is",
+      "input": "<latex-inline>x = \\frac12",
+      "tagged": "<latex-inline>x = \\frac12"
+    },
+    {
+      "name": "a closing tag cut short is left as it is",
+      "input": "So <latex-inline>x</latex-",
+      "tagged": "So <latex-inline>x</latex-"
+    },
+    {
+      "name": "a lone closing tag is left as it is",
+      "input": "x</latex-block> then \\frac12",
+      "tagged": "x</latex-block> then <latex-inline>\\frac12</latex-inline>"
+    },
+    {
+      "name": "an opening tag cut short is left as it is",
+      "input": "See <latex-bl",
+      "tagged": "See <latex-bl"
+    },
+    {
+      "name": "dollar signs in shell text: a PATH assignment",
+      "input": "Set export PATH=$HOME/bin:$PATH and go.",
+      "tagged": "Set export PATH=$HOME/bin:$PATH and go.",
+      "replyOnly": true
+    },
+    {
+      "name": "dollar signs in shell text: a URL with variables",
+      "input": "Open https://x.com/?q=$term&lang=$lang today.",
+      "tagged": "Open https://x.com/?q=$term&lang=$lang today.",
+      "replyOnly": true
+    },
+    {
+      "name": "dollar signs in shell text: two variables with a comma",
+      "input": "Use $a,$b here.",
+      "tagged": "Use $a,$b here.",
+      "replyOnly": true
+    },
+    {
+      "name": "dollar signs in shell text: amounts in brackets",
+      "input": "You paid ($5) and ($x).",
+      "tagged": "You paid ($5) and ($x).",
+      "replyOnly": true
+    },
+    {
+      "name": "dollar signs in shell text: a sed command",
+      "input": "Run sed 's/a/$b/;s/c/$d/' on it.",
+      "tagged": "Run sed 's/a/$b/;s/c/$d/' on it.",
+      "replyOnly": true
+    },
+    {
+      "name": "dollar signs in shell text: shell arithmetic",
+      "input": "Try a=$((1+2)) and b=$(( a*2 )).",
+      "tagged": "Try a=$((1+2)) and b=$(( a*2 )).",
+      "replyOnly": true
+    },
+    {
+      "name": "a Windows path with command names",
+      "input": "Open C:\\Users\\bob\\begin\\alpha\\frac2 now.",
+      "tagged": "Open C:\\Users\\bob\\begin\\alpha\\frac2 now."
+    },
+    {
+      "name": "a regex with escapes",
+      "input": "Match ^\\d+\\s*\\$ at the end.",
+      "tagged": "Match ^\\d+\\s*\\$ at the end."
+    },
+    {
+      "name": "a C escape",
+      "input": "Call printf(\"\\n\") first.",
+      "tagged": "Call printf(\"\\n\") first."
+    },
+    {
+      "name": "a grep word boundary",
+      "input": "Use grep -E '\\bfoo\\b|\\bbar\\b' here.",
+      "tagged": "Use grep -E '\\bfoo\\b|\\bbar\\b' here."
+    },
+    {
+      "name": "a word with a command attached",
+      "input": "Hello\\alpha and foo\\frac12",
+      "tagged": "Hello\\alpha and foo\\frac12"
+    },
+    {
+      "name": "an unknown command keeps its arguments as text",
+      "input": "See \\foo{\\alpha} and \\alpha.",
+      "tagged": "See \\foo{\\alpha} and <latex-inline>\\alpha</latex-inline>."
+    },
+    {
+      "name": "a four-backtick fence holds a three-backtick line",
+      "input": "````md\n```text\ncd $HOME/$USER and \\frac12\n```\n````\nThen \\frac12.",
+      "tagged": "````md\n```text\ncd $HOME/$USER and \\frac12\n```\n````\nThen <latex-inline>\\frac12</latex-inline>."
+    },
+    {
+      "name": "a fence is not closed by a line with an info string",
+      "input": "```sh\necho \\frac12\n```text\nstill code\n```\nOutside \\frac12.",
+      "tagged": "```sh\necho \\frac12\n```text\nstill code\n```\nOutside <latex-inline>\\frac12</latex-inline>."
+    },
+    {
+      "name": "a stray triple backtick does not protect the text after it",
+      "input": "Use ``` to start a block, then \\frac12 here.",
+      "tagged": "Use ``` to start a block, then <latex-inline>\\frac12</latex-inline> here."
+    },
+    {
+      "name": "a command followed by a letter outside ASCII",
+      "input": "\\frac12 \\qquadé",
+      "tagged": "<latex-inline>\\frac12</latex-inline> \\qquadé"
+    },
+    {
+      "name": "a spacing command before Cyrillic",
+      "input": "\\frac12 \\quadж",
+      "tagged": "<latex-inline>\\frac12</latex-inline> \\quadж"
+    },
+    {
+      "name": "an environment word with an accent",
+      "input": "\\beginé and \\frac12",
+      "tagged": "\\beginé and <latex-inline>\\frac12</latex-inline>"
+    },
+    {
+      "name": "Arabic-Indic digits are not numbers",
+      "input": "٣ + \\alpha and \\frac١٢",
+      "tagged": "٣ + <latex-inline>\\alpha</latex-inline> and <latex-inline>\\frac</latex-inline>١٢"
+    },
+    {
+      "name": "CRLF is a blank line",
+      "input": "$a\r\n\r\nb$ and \\frac12",
+      "tagged": "$a\r\n\r\nb$ and <latex-inline>\\frac12</latex-inline>"
+    },
+    {
+      "name": "a long group is part of its command",
+      "input": "\\frac{\\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + x}{b}",
+      "tagged": "<latex-inline>\\frac{\\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + x}{b}</latex-inline>"
+    },
+    {
+      "name": "a group over its cap leaves its run untagged",
+      "input": "\\frac{\\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + x}{b} and \\beta",
+      "tagged": "\\frac{\\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + \\alpha + x}{b} and <latex-inline>\\beta</latex-inline>"
+    },
+    {
+      "name": "a prose word before a relation is not a name",
+      "input": "The answer = \\sqrt{2} thus",
+      "tagged": "The answer = <latex-inline>\\sqrt{2}</latex-inline> thus"
+    },
+    {
+      "name": "a function of x with a function name and a letter",
+      "input": "g(x) = \\sin x",
+      "tagged": "<latex-inline>g(x) = \\sin x</latex-inline>"
+    },
+    {
+      "name": "a capital Greek letter and a letter",
+      "input": "The energy \\Delta E here",
+      "tagged": "The energy <latex-inline>\\Delta E</latex-inline> here"
+    },
+    {
+      "name": "an unclosed tikz picture is left as it is",
+      "input": "\\begin{tikzpicture} \\draw (0,0) -- (1,1); \\frac12",
+      "tagged": "\\begin{tikzpicture} \\draw (0,0) -- (1,1); <latex-inline>\\frac12</latex-inline>"
     }
-  ]
+  ],
+  "vocabulary": {
+    "commands": [
+      "alpha",
+      "beta",
+      "gamma",
+      "delta",
+      "epsilon",
+      "varepsilon",
+      "zeta",
+      "eta",
+      "theta",
+      "vartheta",
+      "iota",
+      "kappa",
+      "lambda",
+      "mu",
+      "nu",
+      "xi",
+      "pi",
+      "varpi",
+      "rho",
+      "varrho",
+      "sigma",
+      "varsigma",
+      "tau",
+      "upsilon",
+      "phi",
+      "varphi",
+      "chi",
+      "psi",
+      "omega",
+      "Gamma",
+      "Delta",
+      "Theta",
+      "Lambda",
+      "Xi",
+      "Pi",
+      "Sigma",
+      "Upsilon",
+      "Phi",
+      "Psi",
+      "Omega",
+      "eth",
+      "hbar",
+      "ell",
+      "aleph",
+      "Re",
+      "Im",
+      "wp",
+      "frac",
+      "dfrac",
+      "tfrac",
+      "sqrt",
+      "sum",
+      "prod",
+      "int",
+      "iint",
+      "oint",
+      "lim",
+      "limsup",
+      "liminf",
+      "sup",
+      "inf",
+      "max",
+      "min",
+      "log",
+      "ln",
+      "lg",
+      "exp",
+      "sin",
+      "cos",
+      "tan",
+      "cot",
+      "sec",
+      "csc",
+      "arcsin",
+      "arccos",
+      "arctan",
+      "sinh",
+      "cosh",
+      "tanh",
+      "coth",
+      "det",
+      "gcd",
+      "lcm",
+      "arg",
+      "deg",
+      "dim",
+      "ker",
+      "mod",
+      "bmod",
+      "pmod",
+      "Pr",
+      "binom",
+      "choose",
+      "over",
+      "cdot",
+      "cdots",
+      "ldots",
+      "dots",
+      "vdots",
+      "ddots",
+      "times",
+      "div",
+      "pm",
+      "mp",
+      "ast",
+      "star",
+      "circ",
+      "bullet",
+      "oplus",
+      "otimes",
+      "leq",
+      "geq",
+      "neq",
+      "le",
+      "ge",
+      "ne",
+      "ll",
+      "gg",
+      "approx",
+      "equiv",
+      "sim",
+      "simeq",
+      "cong",
+      "propto",
+      "infty",
+      "partial",
+      "nabla",
+      "forall",
+      "exists",
+      "nexists",
+      "in",
+      "notin",
+      "ni",
+      "subset",
+      "subseteq",
+      "supset",
+      "supseteq",
+      "cup",
+      "cap",
+      "setminus",
+      "emptyset",
+      "varnothing",
+      "to",
+      "gets",
+      "rightarrow",
+      "leftarrow",
+      "leftrightarrow",
+      "Rightarrow",
+      "Leftarrow",
+      "Leftrightarrow",
+      "longrightarrow",
+      "longleftarrow",
+      "mapsto",
+      "implies",
+      "impliedby",
+      "iff",
+      "therefore",
+      "because",
+      "angle",
+      "perp",
+      "parallel",
+      "mid",
+      "nmid",
+      "triangle",
+      "square",
+      "degree",
+      "prime",
+      "neg",
+      "land",
+      "lor",
+      "wedge",
+      "vee",
+      "not",
+      "colon",
+      "text",
+      "textbf",
+      "textit",
+      "textrm",
+      "mathbf",
+      "mathbb",
+      "mathcal",
+      "mathrm",
+      "mathit",
+      "mathsf",
+      "mathtt",
+      "boldsymbol",
+      "operatorname",
+      "bar",
+      "overline",
+      "underline",
+      "hat",
+      "widehat",
+      "tilde",
+      "widetilde",
+      "vec",
+      "dot",
+      "ddot",
+      "overrightarrow",
+      "overbrace",
+      "underbrace",
+      "phantom",
+      "hphantom",
+      "vphantom",
+      "cancel",
+      "boxed",
+      "left",
+      "right",
+      "big",
+      "Big",
+      "bigg",
+      "Bigg",
+      "langle",
+      "rangle",
+      "lfloor",
+      "rfloor",
+      "lceil",
+      "rceil",
+      "vert",
+      "Vert",
+      "lvert",
+      "rvert",
+      "lVert",
+      "rVert",
+      "displaystyle",
+      "textstyle",
+      "scriptstyle",
+      "limits",
+      "nolimits",
+      "stackrel",
+      "overset",
+      "underset",
+      "xrightarrow",
+      "xleftarrow",
+      "substack"
+    ],
+    "functions": [
+      "sin",
+      "cos",
+      "tan",
+      "cot",
+      "sec",
+      "csc",
+      "arcsin",
+      "arccos",
+      "arctan",
+      "sinh",
+      "cosh",
+      "tanh",
+      "log",
+      "ln",
+      "lg",
+      "exp",
+      "lim",
+      "max",
+      "min",
+      "sup",
+      "inf",
+      "det",
+      "arg",
+      "Delta",
+      "nabla",
+      "partial",
+      "Gamma",
+      "Theta",
+      "Lambda",
+      "Xi",
+      "Pi",
+      "Sigma",
+      "Upsilon",
+      "Phi",
+      "Psi",
+      "Omega"
+    ],
+    "names": [
+      "p-value",
+      "df",
+      "dx",
+      "dy",
+      "dz",
+      "dt",
+      "ds",
+      "SE",
+      "SD",
+      "CI",
+      "Var",
+      "Cov",
+      "Corr",
+      "Pr",
+      "det",
+      "rank",
+      "dim",
+      "gcd",
+      "lcm",
+      "erf",
+      "sgn"
+    ],
+    "environments": [
+      "matrix",
+      "pmatrix",
+      "bmatrix",
+      "Bmatrix",
+      "vmatrix",
+      "Vmatrix",
+      "smallmatrix",
+      "array",
+      "aligned",
+      "alignedat",
+      "gathered",
+      "cases",
+      "align",
+      "align*",
+      "gather",
+      "gather*"
+    ]
+  }
 }

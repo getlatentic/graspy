@@ -8,10 +8,19 @@ import {
   MARKDOWN_REMARK_PLUGINS,
 } from "@/features/learn/lib/markdown-plugins";
 import { processLatex } from "@/lib/latex";
+import { COMMANDS, ENVIRONMENTS, FUNCTIONS, NAMES } from "@/lib/latex-runs";
 
 // The corpus writes maths as the server's tags; remark-math reads $ and $$.
+// Only a pair of tags within its cap is maths: an unclosed tag, and a span over
+// 3000 characters (20000 for a block), stay as they are.
 const asDollars = (tagged: string) =>
-  tagged.replace(/<\/?latex-block>/g, "$$$$").replace(/<\/?latex-inline>/g, "$");
+  tagged.replace(
+    /<latex-(block|inline)>([\s\S]*?)<\/latex-\1>/g,
+    (pair, kind: string, maths: string) => {
+      if (maths.length > (kind === "block" ? 20000 : 3000)) return pair;
+      return kind === "block" ? `$$${maths}$$` : `$${maths}$`;
+    },
+  );
 
 describe("processLatex", () => {
   it("puts the tutor's formulas in remark-math's delimiters", () => {
@@ -25,39 +34,72 @@ describe("processLatex", () => {
 
 describe("the repair corpus the server's repair_reply is tested with", () => {
   it("has cases left alone and cases changed", () => {
-    expect(corpus.cases.filter((c) => c.input === c.tagged).length).toBeGreaterThan(9);
-    expect(corpus.cases.filter((c) => c.input !== c.tagged).length).toBeGreaterThan(9);
+    const same = corpus.cases.filter((c) => c.input === c.tagged).length;
+    expect(same).toBeGreaterThan(24);
+    expect(corpus.cases.length - same).toBeGreaterThan(24);
   });
 
   it.each(corpus.cases)("$name", ({ input, tagged }) => {
     expect(processLatex(input)).toBe(asDollars(tagged));
   });
 
-  it.each(corpus.cases)("is stable when repeated: $name", ({ input, tagged }) => {
-    expect(processLatex(asDollars(tagged))).toBe(asDollars(tagged));
-    expect(processLatex(processLatex(input))).toBe(processLatex(input));
+  it.each(corpus.cases)(
+    "is stable when repeated: $name",
+    ({ input, tagged }) => {
+      expect(processLatex(asDollars(tagged))).toBe(asDollars(tagged));
+      expect(processLatex(processLatex(input))).toBe(processLatex(input));
+    },
+  );
+
+  it("holds the vocabulary the server holds", () => {
+    expect(corpus.vocabulary).toEqual({
+      commands: COMMANDS,
+      functions: FUNCTIONS,
+      names: NAMES,
+      environments: ENVIRONMENTS,
+    });
   });
 });
 
-// The work on a long reply is bounded: each of these took seconds or more
-// when a scan could run to the end of the text from every opener.
+// Each of these grows with the number of openers when a scan runs to the end of
+// the text from every one. The cost of a repair is linear: quadrupling the
+// input must not cost much more than four times as much.
 const PATHOLOGICAL: Record<string, string> = {
-  "unclosed environments": "\\begin{pmatrix} 1 ".repeat(8000),
-  "unclosed tags": "<latex-inline>a ".repeat(8000),
-  "unclosed dollar pairs": "$$ a ".repeat(20000),
-  "unclosed brackets": "\\[ a ".repeat(20000),
-  "unclosed braces": "\\frac{a ".repeat(12000),
-  "unclosed parentheses": "(a + \\frac12 ".repeat(8000),
-  backticks: "` a ".repeat(30000),
-  fences: "``` a ".repeat(20000),
-  "long command runs": "\\alpha + ".repeat(30000),
+  "unclosed environments": "\\begin{pmatrix} 1 ",
+  "unclosed tags": "<latex-inline>a ",
+  "unclosed dollar pairs": "$$ a ",
+  "unclosed brackets": "\\[ a ",
+  "unclosed parentheses delimiters": "\\( a ",
+  "single dollar signs": "$ a ",
+  "unclosed braces": "\\frac{a ",
+  "unclosed parentheses": "(a + \\frac12 ",
+  backticks: "` a ",
+  fences: "``` a ",
+  "tilde fences": "~~~ a ",
+  "unclosed tikz": "\\begin{tikzpicture} a ",
+  "long command runs": "\\alpha + ",
+  "indented code": "\n\n    a ",
+  "list items and indents": "- a\n\n    b\n\n",
 };
+const SMALL = 4000;
 
-describe("a long reply", () => {
-  it.each(Object.keys(PATHOLOGICAL))("%s is repaired in bounded time", (name) => {
+function seconds(text: string): number {
+  let best = Infinity;
+  for (let round = 0; round < 3; round++) {
     const started = performance.now();
-    processLatex(PATHOLOGICAL[name]);
-    expect(performance.now() - started).toBeLessThan(3000);
+    processLatex(text);
+    best = Math.min(best, (performance.now() - started) / 1000);
+  }
+  return best;
+}
+
+describe("the cost of a repair", () => {
+  it.each(Object.keys(PATHOLOGICAL))("is linear: %s", (name) => {
+    const unit = PATHOLOGICAL[name];
+    const small = seconds(unit.repeat(SMALL));
+    const large = seconds(unit.repeat(SMALL * 4));
+    expect(large).toBeLessThan(Math.max(small * 8, 0.05));
+    expect(large).toBeLessThan(4);
   });
 });
 
@@ -83,6 +125,7 @@ describe("as the chat renders it", () => {
     "f(x) = \\sin(x) + \\cos(x)",
     "$\\begin{align} a &= 1 \\\\ b &= 2 \\end{align}$",
     "\\begin{pmatrix}1&2\\\\[1pc]3&4\\end{pmatrix}",
+    "1. Step one:\n\n    Compute \\(x^2\\) and \\frac12 here.",
   ];
 
   it.each(screens)("%s is typeset, not shown as source", (text) => {
@@ -92,6 +135,7 @@ describe("as the chat renders it", () => {
     expect(page).not.toContain("\\begin");
     expect(page).not.toContain("\\underline");
     expect(page).not.toContain("\\sin");
+    expect(page).not.toContain("\\frac");
   });
 
   it("leaves a fenced block alone", () => {
