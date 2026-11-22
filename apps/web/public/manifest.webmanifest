@@ -9,7 +9,7 @@
   "scope": "/",
   "display": "standalone",
   "background_color": "#e3eefa",
-  "theme_color": "#fef4ec",
+  "theme_color": "#FFFFFF",
   "categories": ["education"],
   "icons": [
     {
