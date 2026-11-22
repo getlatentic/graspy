@@ -1,0 +1,80 @@
+{
+  "about": "Undelimited and mangled maths as the model writes it, and the text it must become. Read by apps/server/tests/test_math_repair_corpus.py (repair_markdown: 'tagged' exactly), apps/web/src/lib/latex.test.ts and apps/server/ui/src/shared/latex.test.ts (processLatex of 'input' equals processLatex of 'tagged'), so the three cannot drift. 'tagged' uses graspy's <latex-inline> and <latex-block> tags; text that is not maths has tagged equal to input.",
+  "cases": [
+    {
+      "name": "a matrix environment with no delimiters, after a left-hand side, with a lengthened line break",
+      "input": "R(\\theta)=\\begin{pmatrix} \\cos\\theta & -\\sin\\theta\\\\[4pt] \\sin\\theta & \\ \\cos\\theta \\end{pmatrix}.",
+      "tagged": "<latex-inline>R(\\theta)=\\begin{pmatrix} \\cos\\theta & -\\sin\\theta\\\\[4pt] \\sin\\theta & \\ \\cos\\theta \\end{pmatrix}</latex-inline>."
+    },
+    {
+      "name": "a bare environment alone",
+      "input": "\\begin{bmatrix} 1 & 0 \\\\ 0 & 1 \\end{bmatrix}",
+      "tagged": "<latex-inline>\\begin{bmatrix} 1 & 0 \\\\ 0 & 1 \\end{bmatrix}</latex-inline>"
+    },
+    {
+      "name": "align has no inline form, so it is written as aligned",
+      "input": "\\begin{align} a &= 1 \\\\ b &= 2 \\end{align}",
+      "tagged": "<latex-inline>\\begin{aligned} a &= 1 \\\\ b &= 2 \\end{aligned}</latex-inline>"
+    },
+    {
+      "name": "cases with a lengthened line break",
+      "input": "f(x)=\\begin{cases} 1, & x>0 \\\\[2ex] 0, & x\\le 0 \\end{cases}",
+      "tagged": "<latex-inline>f(x)=\\begin{cases} 1, & x>0 \\\\[2ex] 0, & x\\le 0 \\end{cases}</latex-inline>"
+    },
+    {
+      "name": "a worksheet line of commands joined by \\qquad is one span, blanks as escaped underscores",
+      "input": "\\bar{x} = \\underline{\\phantom{___}} \\qquad s = \\underline{\\phantom{___}}",
+      "tagged": "<latex-inline>\\bar{x} = \\underline{\\phantom{\\_\\_\\_}} \\qquad s = \\underline{\\phantom{\\_\\_\\_}}</latex-inline>"
+    },
+    {
+      "name": "a fraction with nested commands and a blank",
+      "input": "t = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}} = \\underline{\\phantom{___}}",
+      "tagged": "<latex-inline>t = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}} = \\underline{\\phantom{\\_\\_\\_}}</latex-inline>"
+    },
+    {
+      "name": "a run inside a sentence takes its short words and numbers, not the prose",
+      "input": "With df = n-1 = \\underline{\\phantom{___}}, the critical t value is found.",
+      "tagged": "With <latex-inline>df = n-1 = \\underline{\\phantom{\\_\\_\\_}}</latex-inline>, the critical t value is found."
+    },
+    {
+      "name": "a lone command in a sentence",
+      "input": "Half is \\frac12 of it.",
+      "tagged": "Half is <latex-inline>\\frac12</latex-inline> of it."
+    },
+    {
+      "name": "two commands side by side are one span",
+      "input": "Use \\sin\\theta here.",
+      "tagged": "Use <latex-inline>\\sin\\theta</latex-inline> here."
+    },
+    {
+      "name": "plain text with numbers and operators is not maths",
+      "input": "For n = 10 and 5 + 3 = 8, the mean is 4.5 - 1.",
+      "tagged": "For n = 10 and 5 + 3 = 8, the mean is 4.5 - 1."
+    },
+    {
+      "name": "a display span keeps the lengthened line break inside it",
+      "input": "\\[\\begin{cases} x = 3,\\\\[4pt] x = 2 \\end{cases}\\]",
+      "tagged": "<latex-block>\\begin{cases} x = 3,\\\\[4pt] x = 2 \\end{cases}</latex-block>"
+    },
+    {
+      "name": "a dollar span with blanks keeps its place",
+      "input": "Fill in $\\bar{x} = \\underline{\\phantom{___}}$ now.",
+      "tagged": "Fill in <latex-inline>\\bar{x} = \\underline{\\phantom{\\_\\_\\_}}</latex-inline> now."
+    },
+    {
+      "name": "money is not maths",
+      "input": "It costs $5 and then $6 more.",
+      "tagged": "It costs $5 and then $6 more."
+    },
+    {
+      "name": "maths already tagged is left as it is",
+      "input": "So <latex-inline>\\frac{a}{b} = c</latex-inline> holds.",
+      "tagged": "So <latex-inline>\\frac{a}{b} = c</latex-inline> holds."
+    },
+    {
+      "name": "inline code is left as it is",
+      "input": "Type `\\frac{1}{2}` to get a fraction.",
+      "tagged": "Type `\\frac{1}{2}` to get a fraction."
+    }
+  ]
+}

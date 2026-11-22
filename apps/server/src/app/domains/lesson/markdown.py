@@ -5,6 +5,8 @@ import functools
 import re
 from collections.abc import Callable
 
+from .bare_math import LENGTH, map_unprotected, tag_bare_maths
+
 # A maths span holding only single letters separated by spaces or commas is a
 # list of letters (the alphabet), which KaTeX would set in italic maths type.
 _LETTER_LIST = re.compile(
@@ -23,20 +25,6 @@ _TEXT_COMMANDS = {
     "O": "Ø",
 }
 _TEXT_COMMAND = re.compile(r"\\(ae|AE|oe|OE|ss|o|O)(?![A-Za-z])")
-# Text the command repairs below must leave alone: maths already delimited,
-# TikZ, which is shown as source, and inline code.
-_PROTECTED = re.compile(
-    r"(<latex-(?:block|inline)>.*?</latex-(?:block|inline)>"
-    r"|\\begin\{tikzpicture\}.*?\\end\{tikzpicture\}"
-    r"|`[^`\n]*`)",
-    re.DOTALL,
-)
-
-# A command the model wrote without maths delimiters, as in "( \frac12)",
-# with its arguments: braced groups nested one deep, or a digit run.
-_BRACED = r"\{(?:[^{}]|\{[^{}]*\})*\}"
-_BARE_COMMAND = re.compile(rf"\\(?!begin\b|end\b)[A-Za-z]+(?:{_BRACED}|\d+)*")
-
 
 # A model that learned JSON escaping sometimes doubles every backslash even
 # in a plain-text field: \\(\\frac ...\\). Doubled before a letter or a
@@ -58,7 +46,7 @@ _INLINE = r"<latex-inline>\1</latex-inline>"
 # $$ before $, so a display span is not read as two inline ones.
 _DELIMITERS = (
     (re.compile(r"\$\$(.*?)\$\$", re.DOTALL), _BLOCK),
-    (re.compile(r"\\\[(.*?)\\\]", re.DOTALL), _BLOCK),
+    (re.compile(rf"\\\[(?!{LENGTH})(.*?)\\\]", re.DOTALL), _BLOCK),
     (re.compile(r"\\\((.*?)\\\)", re.DOTALL), _INLINE),
     # Money in a word problem is two dollar signs in one sentence, so a bare
     # pair is not enough to mean maths: the span must not open or close on
@@ -73,16 +61,29 @@ _BOLD_NEWLINE = re.compile(
     r"(?<!\*)\*\*(?P<content>[^\s*][^*\n]*?)[ \t]*\n[ \t]*\*\*(?=\s|$)"
 )
 
+_MATHS_SPAN = re.compile(
+    r"(<latex-(?:block|inline)>)(.*?)(</latex-(?:block|inline)>)", re.DOTALL
+)
+# A worksheet blank typed as ___ is a double subscript to KaTeX, which shows
+# the whole formula as source. \_ is the underscore itself.
+_BLANK = re.compile(r"(?<!\\)_{2,}")
+
 _TIKZ = re.compile(r"(\\begin\{tikzpicture\}.*?\\end\{tikzpicture\})", re.DOTALL)
 
 
+def _phonetic_letters(text: str) -> str:
+    return _TEXT_COMMAND.sub(lambda m: _TEXT_COMMANDS[m.group(1)], text)
+
+
+def _blanks_as_underscores(span: re.Match) -> str:
+    opening, maths, closing = span.groups()
+    return opening + _BLANK.sub(lambda run: "\\_" * len(run[0]), maths) + closing
+
+
 def _repair_bare_commands(text: str) -> str:
-    """Phonetic letters become text; any other command becomes inline maths."""
-    parts = _PROTECTED.split(text)
-    for index in range(0, len(parts), 2):
-        part = _TEXT_COMMAND.sub(lambda m: _TEXT_COMMANDS[m.group(1)], parts[index])
-        parts[index] = _BARE_COMMAND.sub(r"<latex-inline>\g<0></latex-inline>", part)
-    return "".join(parts)
+    """Phonetic letters become text; any other command, or run of maths with
+    one in it, becomes inline maths."""
+    return tag_bare_maths(map_unprotected(text, _phonetic_letters))
 
 
 def _substitution(pattern: re.Pattern, replacement) -> Callable[[str], str]:
@@ -100,6 +101,7 @@ _REPAIRS: tuple[Callable[[str], str], ...] = (
     *(_substitution(pattern, tag) for pattern, tag in _DELIMITERS),
     _substitution(_LETTER_LIST, lambda m: m.group(2).strip()),
     _repair_bare_commands,
+    _substitution(_MATHS_SPAN, _blanks_as_underscores),
     _substitution(_BOLD_NEWLINE, r"**\g<content>**\n"),
     # The frontend renders a tikz code block as a diagram.
     _substitution(_TIKZ, r"\n```tikz\n\1\n```\n"),

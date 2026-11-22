@@ -10,6 +10,7 @@ import dspy
 from dspy.streaming import StreamListener, StreamResponse
 from dspy.utils.exceptions import AdapterParseError
 
+from ..domains.lesson.markdown import repair_markdown
 from ..education.stage import stage_of
 from ..learner.answers import PracticeAnswer
 from ..learner.notes import NOTHING_YET
@@ -243,7 +244,8 @@ class Tutor:
             )
             await self._memory.append(conversation_id, exchange, turn=named)
         yield TutorReply(
-            answer=answer,
+            # Remembered as written, so the model's own history stays its words.
+            answer=repair_markdown(answer),
             follow_ups=await safe_ones(
                 clean_follow_ups(answered.prediction.follow_ups), said
             ),
