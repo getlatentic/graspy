@@ -96,9 +96,8 @@
 /* Scales the type, the spacing and the widths under it with the screen, so a
    form made for a laptop still reads from across a room. Anything inside it
    that is sized in the theme scale grows by --zoom; borders stay as they are.
-   A monitor grows to 1.5 by 2560px; a TV (the device flag set in main.tsx)
-   starts at 1.5 and grows to 2.5, because a TV is read from three metres.
-   Every step also needs the height to hold it. */
+   A monitor grows to 1.5 by 2560px, each step needing the height to hold it.
+   A TV is scaled below by the root size instead. */
 .zoom {
   --zoom: 1;
   --spacing: calc(0.25rem * var(--zoom));
@@ -135,29 +134,29 @@
   }
 }
 
-/* 42rem tall: at 1.5 the three parts of the form and the floor under its fields need 650px. */
-@media (min-width: 80rem) and (min-height: 42rem) {
-  [data-device="tv"] .zoom {
-    --zoom: 1.5;
+/* A TV scales the whole app, not only the forms: the root size grows with the
+   screen, so every rem in the theme (type, spacing, widths, targets) grows with
+   it and nothing is under 16px. The zoom scope above is for monitors only. */
+@media (min-width: 80rem) {
+  html[data-device="tv"] {
+    font-size: 150%;
   }
 }
 
-@media (min-width: 120rem) and (min-height: 56rem) {
-  [data-device="tv"] .zoom {
-    --zoom: 1.75;
+@media (min-width: 120rem) {
+  html[data-device="tv"] {
+    font-size: 175%;
   }
 }
 
-@media (min-width: 200rem) and (min-height: 76rem) {
-  [data-device="tv"] .zoom {
-    --zoom: 2.5;
+@media (min-width: 200rem) {
+  html[data-device="tv"] {
+    font-size: 250%;
   }
 }
 
-/* A heading or a page that only a program focuses shows no ring. */
-.art-ground [tabindex="-1"]:focus-visible {
-  outline: none;
-  box-shadow: none;
+[data-device="tv"] .zoom {
+  --zoom: 1;
 }
 
 /* Bars that stick keep the focused control out from under them. */
@@ -165,20 +164,60 @@ html:has(.art-ground) {
   scroll-padding-block-end: 8rem;
 }
 
-.art-ground :is(a, button, input, select, textarea, [tabindex]),
-.art-popup :is(a, button, input, select, textarea, [tabindex]) {
+:where(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [role="option"],
+  [tabindex]
+) {
   scroll-margin-block: 1rem;
 }
 
-/* Every control on the art screens and their popups shows the same ring from a
-   keyboard or a remote: a 3px dark outline with a white gap between it and the
-   control, so it reads on the gradient, on white and on the blue. It is not in
-   a layer on purpose: it must win over a control's own focus utility. */
-.art-ground :focus-visible,
-.art-popup :focus-visible {
-  outline: calc(0.1875rem * var(--zoom, 1)) solid var(--color-on-art);
+/* Every control in the app shows the same ring from a keyboard or a remote: a
+   3px outline in the page's ink with a gap of the page's own colour between it
+   and the control, so it reads on the gradient, on white, on the blue and on
+   the dark theme. On a TV the browser may not apply :focus-visible, so a key
+   that moves focus (see remote-input.ts) shows it on :focus as well. It is not
+   in a layer on purpose: it must win over a control's own focus utility. The
+   list is in :where() so the two rules below, for a field that draws its own
+   focus (`data-own-focus`, the chat box) and for a heading or page that only a
+   program focuses (tabindex -1), are not outweighed by it. */
+:where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"],
+    [role="option"],
+    [tabindex]
+  ):not([data-own-focus]):focus-visible,
+[data-input="remote"]
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="button"],
+    [role="option"],
+    [tabindex]
+  ):not([data-own-focus]):focus {
+  outline: calc(0.1875rem * var(--zoom, 1)) solid var(--color-ink);
   outline-offset: calc(0.125rem * var(--zoom, 1));
-  box-shadow: 0 0 0 calc(0.125rem * var(--zoom, 1)) rgb(255 255 255 / 0.9);
+  box-shadow: 0 0 0 calc(0.125rem * var(--zoom, 1)) var(--color-canvas);
+}
+
+[tabindex="-1"]:focus-visible,
+[data-input="remote"] [tabindex="-1"]:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 .nums {

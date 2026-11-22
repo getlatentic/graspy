@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useBackHandler } from "./use-back-handler";
 
 const FOCUSABLE = [
   "a[href]",
@@ -22,6 +23,7 @@ export function useDialog<T extends HTMLElement>(
   useEffect(() => {
     close.current = onClose;
   });
+  useBackHandler(open, onClose);
 
   useEffect(() => {
     const node = ref.current;

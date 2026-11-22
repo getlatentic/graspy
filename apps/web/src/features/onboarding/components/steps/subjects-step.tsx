@@ -109,13 +109,20 @@ function SubjectsBody({
   );
 }
 
-/** Up and down arrows (a remote's pad too) move between the rows; Enter and Space toggle one. */
+/** Up and down arrows (a remote's pad too), Home and End move between the rows; Enter and Space toggle one. */
 function moveBetweenRows(event: React.KeyboardEvent<HTMLDivElement>) {
-  const step = event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0;
-  if (step === 0) return;
   const rows = [...event.currentTarget.querySelectorAll("button")];
+  const at = rows.indexOf(document.activeElement as HTMLButtonElement);
   const next =
-    rows[rows.indexOf(document.activeElement as HTMLButtonElement) + step];
+    event.key === "Home"
+      ? rows[0]
+      : event.key === "End"
+        ? rows.at(-1)
+        : event.key === "ArrowDown"
+          ? rows[at + 1]
+          : event.key === "ArrowUp"
+            ? rows[at - 1]
+            : undefined;
   if (!next) return;
   event.preventDefault();
   next.focus();

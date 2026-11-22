@@ -38,7 +38,7 @@ export default function OnboardingLayout({
         {t("onboarding.skip")}
       </a>
       <div className="grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
-        <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 sm:px-6 split:px-12 split:pt-11 split:xl:px-24 split:3xl:px-32 split:3xl:pt-14 split:4xl:px-44 split:4xl:pt-20 split:5xl:px-64 split:5xl:pt-28">
+        <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 sm:px-6 split:px-12 split:pt-11 split:xl:px-24">
           <Link
             to="/"
             aria-label={t("onboarding.home")}
@@ -52,7 +52,7 @@ export default function OnboardingLayout({
         <main
           id="main"
           tabIndex={-1}
-          className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-6 outline-none sm:px-6 split:px-12 split:pt-[12dvh] split:pb-10 split:xl:ps-8 split:xl:pe-24 split:3xl:pe-32 split:4xl:pe-44 split:5xl:pe-64"
+          className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-6 outline-none sm:px-6 split:px-12 split:pt-[12dvh] split:pb-10 split:xl:ps-8 split:xl:pe-24"
         >
           <div className="zoom mx-auto flex w-full max-w-lg flex-1 flex-col sm:my-auto sm:flex-none md:max-w-xl split:my-0 split:min-h-0 split:max-w-lg split:flex-initial">
             {header ? <div className="shrink-0">{header}</div> : null}

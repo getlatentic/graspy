@@ -4,11 +4,13 @@ import AppEntry from "@/app/entry";
 import { requireAccount } from "@/app/chat-gate";
 import { chatLinks } from "@/app/chat-link";
 import { lazyPage } from "@/app/page-chunks";
+import { RootLayout } from "@/app/route-focus";
 import { AppShell, PageLoading, RouteError } from "@/app/shell";
 
 export const routes: RouteObject[] = [
   {
     ErrorBoundary: RouteError,
+    Component: RootLayout,
     children: [
       { path: "/", Component: LandingPage },
       {

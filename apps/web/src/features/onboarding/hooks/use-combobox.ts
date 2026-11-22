@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type SetStateAction,
 } from "react";
+import { useBackHandler } from "@/hooks/use-back-handler";
 import { matchingOptions, type SelectOption } from "../lib/select-options";
 
 const MOVES_IN_LIST = new Set(["ArrowDown", "ArrowUp", "Enter"]);
@@ -72,6 +73,7 @@ export function useCombobox(
     setIsOpen(true);
     setHighlighted(0);
   };
+  useBackHandler(isOpen, close);
   const list = { isOpen, matches, highlighted, setHighlighted };
   const keys = keyActions({ ...list, setIsOpen, open, close, select });
 

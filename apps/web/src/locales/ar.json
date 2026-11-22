@@ -416,6 +416,7 @@
       "learnerRequired": "اختر من يتعلّم أولًا.",
       "voiceFailed": "لم يُحمَّل صوت المعلّمة.",
       "micDenied": "اسمح للميكروفون بتسجيل إجابتك.",
+      "micMissing": "This screen has no microphone, so it cannot record your answer.",
       "micFailed": "لم يعمل الميكروفون. حاول مرة أخرى.",
       "notSaved": "لم تُحفظ إجابتك. حاول مرة أخرى."
     }

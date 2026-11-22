@@ -13,6 +13,7 @@ export type Note =
   | "learnerRequired"
   | "voiceFailed"
   | "micDenied"
+  | "micMissing"
   | "micFailed"
   | "notSaved";
 
@@ -49,7 +50,10 @@ export type LessonEvent =
   | { type: "taught"; spoken: "heard" | "failed" }
   | { type: "recordStarted" }
   | { type: "saving" }
-  | { type: "recordFailed"; note: "micDenied" | "micFailed" | "notSaved" }
+  | {
+      type: "recordFailed";
+      note: "micDenied" | "micMissing" | "micFailed" | "notSaved";
+    }
   | { type: "nothingHeard" }
   /** The take ended unsent, as the page was hidden or left: the turn is the child's again. */
   | { type: "recordCancelled" }
