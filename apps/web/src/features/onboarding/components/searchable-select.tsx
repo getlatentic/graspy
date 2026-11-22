@@ -42,6 +42,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           value={isOpen ? combobox.searchTerm : selectedLabel}
           onChange={(event) => combobox.search(event.target.value)}
           onFocus={combobox.open}
+          onClick={combobox.open}
           onKeyDown={combobox.onKeyDown}
           placeholder={props.placeholder}
           disabled={disabled}

@@ -34,12 +34,14 @@ export default function OnboardingLayout({
 /**
  * The picture beside the form: a still life for anyone until the class is
  * known, then a drawn learner for a child and a tween, and a desk for a teen or
- * university learner, so no one sees a child's picture who is not one.
+ * university learner, so no one sees a child's picture who is not one. The
+ * edges fade into the page's sky, since the pictures have a ground of their
+ * own that no flat colour matches.
  */
 function Welcome({ band }: { band: AgeBand | null }) {
   return (
     <div className="hidden lg:sticky lg:top-8 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col lg:justify-center">
-      <div className="aspect-4/5 max-h-full overflow-hidden rounded-sheet">
+      <div className="aspect-4/5 max-h-full mask-x-from-85% mask-x-to-100% mask-y-from-92% mask-y-to-100%">
         {band === "child" || band === "tween" ? (
           <Art name="math" band={band} />
         ) : (

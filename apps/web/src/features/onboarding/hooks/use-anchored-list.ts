@@ -40,12 +40,12 @@ export function useAnchoredStyle(
 
 export function usePressOutside(onOutside: () => void, ...boxes: Box[]) {
   useEffect(() => {
-    const pressed = (event: MouseEvent) => {
+    const pressed = (event: PointerEvent) => {
       const target = event.target as Node;
       if (!boxes.some((box) => box.current?.contains(target))) onOutside();
     };
-    document.addEventListener("mousedown", pressed);
-    return () => document.removeEventListener("mousedown", pressed);
+    document.addEventListener("pointerdown", pressed);
+    return () => document.removeEventListener("pointerdown", pressed);
     // The caller fixes how many boxes there are, so the spread is a fixed list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onOutside, ...boxes]);

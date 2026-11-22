@@ -27,7 +27,8 @@ function keyActions(list: ListControls): Record<string, () => void> {
       isOpen
         ? setHighlighted((i) => (i < matches.length - 1 ? i + 1 : i))
         : list.open(),
-    ArrowUp: () => setHighlighted((i) => (i > 0 ? i - 1 : i)),
+    ArrowUp: () =>
+      isOpen ? setHighlighted((i) => (i > 0 ? i - 1 : i)) : list.open(),
     Enter: () =>
       isOpen && matches[highlighted]
         ? list.select(matches[highlighted].value)
