@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Art } from "@/components/brand/art";
 import { Scene } from "@/components/brand/scene";
 import type { AgeBand } from "@/lib/age-band";
 import { SignInLink } from "@/features/account/components/sign-in-link";
@@ -35,22 +34,14 @@ export default function OnboardingLayout({
 }
 
 /**
- * The picture beside the form: a still life for anyone until the class is
- * known, a drawn learner for a child, and a scene for a tween, a teen or a
- * university learner, so no one sees a child's picture who is not one. The
- * scenes rest on the page's ground; the child's drawing has a ground of its
- * own, so its edges fade into the page.
+ * The picture beside the form, resting directly on the page's ground: a still
+ * life for anyone until the class is known, then the scene of the age band, so
+ * no one sees a child's picture who is not one.
  */
 function Welcome({ band }: { band: AgeBand | null }) {
   return (
     <div className="hidden lg:sticky lg:top-24 lg:flex lg:h-[calc(100vh-8rem)] lg:flex-col lg:items-center lg:justify-center">
-      {band === "child" ? (
-        <div className="aspect-4/5 max-h-full w-full mask-x-from-85% mask-x-to-100% mask-y-from-88% mask-y-to-100%">
-          <Art name="math" band={band} />
-        </div>
-      ) : (
-        <Scene band={band} className="max-h-[72vh]" />
-      )}
+      <Scene band={band} className="max-h-[72vh]" />
     </div>
   );
 }

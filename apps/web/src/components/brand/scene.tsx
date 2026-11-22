@@ -1,6 +1,6 @@
 import type { AgeBand } from "@/lib/age-band";
 import { cn } from "@/lib/cn";
-import { sceneUrl } from "./scene-urls";
+import { sceneImage } from "./scene-urls";
 
 /** A picture with a transparent ground: it rests directly on the page. */
 export function Scene({
@@ -12,12 +12,13 @@ export function Scene({
   eager?: boolean;
   className?: string;
 }) {
+  const { src, width, height } = sceneImage(band);
   return (
     <img
-      src={sceneUrl(band)}
+      src={src}
       alt=""
-      width={900}
-      height={1125}
+      width={width}
+      height={height}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       className={cn("block h-auto max-h-full w-auto object-contain", className)}
