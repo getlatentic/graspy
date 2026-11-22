@@ -1,31 +1,38 @@
 import { goBack } from "./back-stack";
-import { isBack, movesFocus, remoteKey } from "./remote-keys";
+import { isBack, isEditable, movesFocus } from "./remote-keys";
+
+/** A pointer that moves right after a key is the page scrolling under a still pointer, not a person. */
+const SCROLL_ECHO_MS = 150;
 
 /**
  * Watches how the page is being driven. A key that moves focus puts
  * `data-input="remote"` on <html>, so the focus ring shows even where a TV's
  * browser does not apply :focus-visible; a pointer takes it off again. Back
- * (a remote's key, or Backspace outside a field) closes the topmost popup or
- * steps back in the app, and Escape is left to the popups that handle it
- * themselves.
+ * (a remote's key, or Backspace on a TV, never on a control or in a field)
+ * closes the topmost popup, leaves a text field, or steps back in the app.
+ * Escape is left to the popups that handle it themselves; a held key or a
+ * chord is not Back.
  */
 export function installRemoteInput(root: Document = document): () => void {
+  let lastKey = 0;
   const mark = (remote: boolean) => {
     if (remote) root.documentElement.dataset.input = "remote";
     else delete root.documentElement.dataset.input;
   };
+  const onTelevision = () => root.documentElement.dataset.device === "tv";
 
   const onKeyDown = (event: KeyboardEvent) => {
+    lastKey = Date.now();
     if (movesFocus(event)) mark(true);
-    if (!isBack(event) || event.key === "Escape") return;
-    if (remoteKey(event) === null && event.key !== "Backspace") return;
+    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
+    if (event.key === "Escape" || !isBack(event, onTelevision())) return;
     event.preventDefault();
-    goBack();
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    goBack(window.history, target && isEditable(target) ? target : null);
   };
   const onPointer = (event: Event) => {
-    // A page that scrolls under a still pointer sends mousemove with no movement.
-    if (event instanceof MouseEvent && event.type === "mousemove") {
-      if (!event.movementX && !event.movementY) return;
+    if (event.type === "mousemove" && Date.now() - lastKey < SCROLL_ECHO_MS) {
+      return;
     }
     mark(false);
   };

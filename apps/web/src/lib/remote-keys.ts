@@ -48,12 +48,23 @@ export function remoteKey(event: KeyLike): RemoteKey | null {
   return BY_KEY[event.key] ?? null;
 }
 
-/** Backspace is Back only outside a field of text, where it deletes. */
+/** A control that Backspace does nothing to, and that a person may be pressing keys on. */
+const CONTROL =
+  "button, select, summary, a[href], [role='button'], [role='option'], [role='combobox']";
+
+/**
+ * Whether a key is Back. A remote's Back key always is. Backspace is Back only
+ * on a TV, which has no other key for it, and never in a field of text, where
+ * it deletes, nor on a control.
+ */
 export function isBack(
   event: KeyLike & { target: EventTarget | null },
+  television = false,
 ): boolean {
   if (remoteKey(event) === "back") return true;
-  return event.key === "Backspace" && !isEditable(event.target);
+  if (event.key !== "Backspace" || !television) return false;
+  if (isEditable(event.target)) return false;
+  return !(event.target instanceof Element && event.target.closest(CONTROL));
 }
 
 /** Keys that mean the person is using a remote or a keyboard, not a pointer. */

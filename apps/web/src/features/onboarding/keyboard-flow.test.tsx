@@ -69,15 +69,21 @@ describe("the class picker with a keyboard or a remote", () => {
     expect(field.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("goes to the first and last option with Home and End while it is open", async () => {
+  it("leaves Home and End to the search field's own cursor, open or not", async () => {
     const user = userEvent.setup();
     render(<Picker />);
     const field = screen.getByRole("combobox") as HTMLInputElement;
     field.focus();
-    await user.keyboard("{ArrowDown}{End}{Enter}");
-    expect(field.value).toBe("Grade 3");
-    await user.keyboard("{ArrowDown}{Home}{Enter}");
-    expect(field.value).toBe("Grade 1");
+    await user.keyboard("{ArrowDown}");
+    for (const key of ["Home", "End"]) {
+      const event = new KeyboardEvent("keydown", {
+        key,
+        bubbles: true,
+        cancelable: true,
+      });
+      field.dispatchEvent(event);
+      expect(event.defaultPrevented, key).toBe(false);
+    }
   });
 
   it("closes on Back (webOS 461 and Tizen 10009) before anything else, and keeps focus on the field", async () => {

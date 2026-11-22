@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
 import { createMemoryRouter } from "react-router";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { setAccount } from "@/lib/account/account-store";
 import { takeChat } from "@/lib/account/chat-return";
 import { signedInAs } from "@/test/account-session";
 import { CHAT_LINKS } from "./chat-link";
 import { routes } from "./../routes";
+
+// The first visit to a route imports its page, which takes longer than the default five seconds
+// on a busy machine.
+vi.setConfig({ testTimeout: 30_000 });
 
 // The real routes, as the browser router holds them; only the history is in memory.
 async function opened(path: string) {

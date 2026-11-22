@@ -193,16 +193,16 @@ A width cannot tell a TV from a monitor, so `src/lib/device.ts` sets `<html data
 
 ## Remote control and keyboard
 
-`src/lib/remote-keys.ts` maps keys: the five-way pad and OK, Back (Escape, GoBack, LG webOS 461, Samsung Tizen 10009, and Backspace outside a text field), and ignores media keys (412, 413, 415, 19, 417) and colour keys (403 to 406). `src/lib/remote-input.ts` puts `data-input="remote"` on `<html>` when a key that moves focus is pressed (a TV browser may not apply `:focus-visible`) and takes it off for a pointer; the focus ring (a 3px outline in the page's ink with a gap in its own colour) shows on `:focus-visible` and on `:focus` in that mode. Back closes the topmost open popup first (a dialog or an open list registers with `useBackHandler`), then steps back in the app's history; on the first screen it does nothing, so a stray key never leaves the app. Each new screen starts with focus on its title (`RouteFocus`).
+`src/lib/remote-keys.ts` maps keys: the five-way pad and OK, Back (Escape, GoBack, LG webOS 461, Samsung Tizen 10009, and Backspace on a TV outside a text field and a control; a held key or a chord is not Back), and ignores media keys (412, 413, 415, 19, 417) and colour keys (403 to 406). `src/lib/remote-input.ts` puts `data-input="remote"` on `<html>` when a key that moves focus is pressed (a TV browser may not apply `:focus-visible`) and takes it off for a pointer; the focus ring (a 3px outline in the page's ink with a gap in its own colour) shows on `:focus-visible` and on `:focus` in that mode. Back closes the topmost open popup first (a dialog, an open list or the voice note registers with `useBackHandler`), then steps back in the app's own history (the router's `history.state.idx`, so a page from before the app does not count); in a text field it only leaves the field; on the first screen it does nothing, so a stray key never leaves the app. Each new screen starts with focus on its title (`RouteFocus`).
 
 ### Testing on a TV
 
 Open the staging URL of the web app in the TV's browser (Samsung Internet or the Tizen browser, the LG webOS browser, Silk on Fire TV, Chrome or the Google TV browser) or cast a tab with `?tv=1` from a desktop. Try, on each:
 
 1. The first screen shows a focus ring on one control. The arrows move it to every control, in reading order, and nothing is out of reach (the logo, the skip link, each field, Back, Next).
-2. OK on a field opens its list; Up, Down, Home and End move in it; OK picks; Back closes the list and leaves the focus on the field.
+2. OK on a field opens its list; Up and Down move in it; OK picks; Back closes the list and leaves the focus on the field. In a text field, Back only leaves the field (the on-screen keyboard goes away); it does not change screen.
 3. On "Your subjects", Up and Down move between rows, OK toggles one, and the list scrolls so the focused row is never under the action bar.
-4. Back on a screen with history goes to the previous screen; Back on the first screen does nothing; Back never skips a popup.
+4. Back on a screen the app opened from another screen of its own goes to that screen; Back on the first screen does nothing; Back never skips a popup.
 5. The text is readable from the sofa (nothing small), buttons are easy to hit with a pointer remote (LG Magic Remote, Samsung pointer mode), and nothing needs hover or dragging.
 6. In the chat box, the on-screen keyboard has a Send key and the page does not jump when it opens.
 7. A lesson that needs the microphone says plainly that this screen has none, where the browser has no `getUserMedia`.

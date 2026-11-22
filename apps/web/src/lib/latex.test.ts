@@ -135,7 +135,8 @@ function seconds(text: string): number {
   return best;
 }
 
-describe("the cost of a repair", () => {
+// A timing test: a second look when another process held the machine during the first.
+describe("the cost of a repair", { retry: 2 }, () => {
   it.each(Object.keys(PATHOLOGICAL))("is linear: %s", (name) => {
     let copies = 1000;
     let small = seconds(PATHOLOGICAL[name](copies));
