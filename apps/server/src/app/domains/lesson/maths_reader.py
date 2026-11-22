@@ -108,45 +108,35 @@ def _binds(text: str, position: int, token: re.Match, run: _Run | None) -> bool:
     return token.group(0) == "'" or bool(BINDS_TO.match(text, token.end()))
 
 
-_ATTACHES = "^_()[]\\"
+_ATTACHES = "^()[]\\"
+# What a term, as opposed to an operator, ends in.
+_TERMS = frozenset(("letter", "number", "group", ")", "]", "func"))
 
 
 def _short_word_joins(text: str, token: re.Match, run: _Run | None) -> bool:
     """Whether a word of two to four letters is a product of variables (`mv`,
-    `ac`, `KE`): one that touches a digit, bracket, command, ^ or _, or an
-    operator, belongs to the formula. A lone word after a space with no operator
-    is prose. A formula begins with one only before a relation or an exponent."""
+    `4ac`, `\\pi r`): only one that touches a digit, bracket, ^ or command
+    with no space does. Every other word is prose, whatever stands beside it.
+    A formula begins with one only before `^` or a digit, or when it is
+    two or three capitals before a relation (`KE = ...`)."""
     word, end = token.group(0), token.end()
     if len(word) > 4:
         return False
     after = text[end : end + 1]
-    follower = TOKEN.match(text, skip_spaces(text, end))
-    name = follower.group(0) if follower else ""
-    kind = follower.lastindex if follower else 0
-    relation = (
-        kind == OPERATOR and name in RELATIONS or kind == WORD and name[1:] in INFIX_SET
-    )
     if run is None:
-        strict = (
-            kind == OPERATOR
-            and name in "=<>≤≥≠≈"
-            or kind == WORD
-            and name[1:] in INFIX_SET
+        follower = TOKEN.match(text, skip_spaces(text, end))
+        relation = (
+            follower is not None
+            and follower.lastindex == OPERATOR
+            and follower.group(0) in "=<>≤≥≠≈"
         )
-        return strict or after in ("^", "_") or is_digit(after)
+        capitals = word.isupper() and len(word) <= 3
+        return (capitals and relation) or after == "^" or is_digit(after)
     touches = after != "" and (
         after in _ATTACHES or is_digit(after) or after in MARK_CHARS
     )
-    previous = run.tokens[-1]
-    # An operator with a space on each side, as in `x = mc^2` or `b^2 - ac`.
-    spaced = (
-        len(run.tokens) > 1
-        and previous[2] in ("binary", "sign", "infix")
-        and previous[0] > run.tokens[-2][1]
-        and token.start() > previous[1]
-    )
-    attached = run.end == token.start() and previous[2] not in ("(", "[")
-    return attached or touches or spaced or relation
+    attached = run.end == token.start() and run.tokens[-1][2] not in ("(", "[")
+    return attached or touches
 
 
 def _ends_run(
@@ -195,6 +185,17 @@ def _is_label(text: str, position: int, end: int) -> bool:
     return not prefix.strip(" \t")
 
 
+def _math_after(text: str, position: int) -> bool:
+    """Whether a variable, a number, a group or a command comes next: what an
+    operator command stands before in a formula, and a word does not."""
+    follower = TOKEN.match(text, skip_spaces(text, position))
+    if follower is None:
+        return False
+    if follower.lastindex == LETTERS:
+        return len(follower.group(0)) == 1
+    return follower.lastindex in (NUMBER, MARK, WORD)
+
+
 def _letter_joins(text: str, position: int, run: _Run | None) -> tuple[bool, int]:
     """Whether the letters from ``position`` belong to the run, and where they
     end. A letter after an operator belongs. After a finished term it belongs
@@ -216,7 +217,11 @@ def _letter_joins(text: str, position: int, run: _Run | None) -> tuple[bool, int
     word = follower.group(0) if follower else ""
     relation = bool(follower) and (
         (follower.lastindex == OPERATOR and word in RELATIONS)
-        or (follower.lastindex == WORD and word[1:] in INFIX_SET)
+        or (
+            follower.lastindex == WORD
+            and word[1:] in INFIX_SET
+            and _math_after(text, follower.end())
+        )
     )
     binding = (
         adjacent
@@ -226,6 +231,13 @@ def _letter_joins(text: str, position: int, run: _Run | None) -> tuple[bool, int
     )
     if run is None:
         return relation or binding, last_end
+    if run.tokens[-1][2] == "infix" and run.end != position:
+        # A letter a space after an operator command is a variable when a term
+        # stands before the command, and otherwise only if no word of prose
+        # follows it.
+        term = len(run.tokens) > 1 and run.tokens[-2][2] in _TERMS
+        prose = follower is not None and follower.lastindex == LETTERS
+        return count == 1 and (term or cursor >= len(text) or not prose), last_end
     exponent = len(run.tokens) > 1 and run.tokens[-2][2] == "bind"
     return (count == 1 and relation) or binding or exponent, last_end
 
@@ -375,7 +387,9 @@ def _after_opener(text: str, position: int) -> bool:
     before = text[position - 1 : position]
     if before == "$":
         return not is_digit(text[position : position + 1])
-    return text[position - 2 : position] in ("\\(", "\\[")
+    pair = text[position - 2 : position] in ("\\(", "\\[")
+    # \\\\[ is a line break, whose second backslash opens nothing.
+    return pair and text[position - 3 : position - 2] != "\\"
 
 
 def tag_runs(text: str, restore_group: Callable[[str], str]) -> str:
@@ -424,7 +438,11 @@ def tag_runs(text: str, restore_group: Callable[[str], str]) -> str:
             finish()
             depth, position = 0, label
             continue
-        joined = run and (run.end == position or run.tokens[-1][2] in COMES_AFTER)
+        spaced_command = run and run.tokens[-1][2] == "infix" and run.end != position
+        joined = run and (
+            run.end == position
+            or (run.tokens[-1][2] in COMES_AFTER and not spaced_command)
+        )
         single = token.lastindex == LETTERS and len(token.group(0)) == 1
         if single and position >= cluster_until and not joined:
             joins, cluster_end = _letter_joins(text, position, run)

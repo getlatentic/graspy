@@ -1616,6 +1616,174 @@
       "input": "0.\\overline{3} = 1/3",
       "tagged": "<latex-inline>0.\\overline{3} = 1/3</latex-inline>",
       "web": "$0.\\overline{3} = 1/3$"
+    },
+    {
+      "name": "an operator command in a sentence about LaTeX",
+      "input": "Use \\mid in LaTeX.",
+      "tagged": "Use <latex-inline>\\mid</latex-inline> in LaTeX.",
+      "web": "Use $\\mid$ in LaTeX."
+    },
+    {
+      "name": "a multiplication command in a sentence",
+      "input": "Use \\times for multiplication.",
+      "tagged": "Use <latex-inline>\\times</latex-inline> for multiplication.",
+      "web": "Use $\\times$ for multiplication."
+    },
+    {
+      "name": "two operator commands joined by a word",
+      "input": "Use \\cdot or \\times in math",
+      "tagged": "Use <latex-inline>\\cdot</latex-inline> or <latex-inline>\\times</latex-inline> in math",
+      "web": "Use $\\cdot$ or $\\times$ in math"
+    },
+    {
+      "name": "a plus or minus after a verb",
+      "input": "The roots are \\pm 2 and we are done.",
+      "tagged": "The roots are <latex-inline>\\pm 2</latex-inline> and we are done.",
+      "web": "The roots are $\\pm 2$ and we are done."
+    },
+    {
+      "name": "a command and a word that follows it",
+      "input": "Note that \\times is a cross",
+      "tagged": "Note that <latex-inline>\\times</latex-inline> is a cross",
+      "web": "Note that $\\times$ is a cross"
+    },
+    {
+      "name": "a relation command named in a sentence",
+      "input": "Then we say \\le is less-or-equal.",
+      "tagged": "Then we say <latex-inline>\\le</latex-inline> is less-or-equal.",
+      "web": "Then we say $\\le$ is less-or-equal."
+    },
+    {
+      "name": "a Slovak word before a plus or minus",
+      "input": "Je \\pm 2 riešenie",
+      "tagged": "Je <latex-inline>\\pm 2</latex-inline> riešenie",
+      "web": "Je $\\pm 2$ riešenie"
+    },
+    {
+      "name": "a Slovak word before a relation",
+      "input": "To \\le 5 je podmienka",
+      "tagged": "To <latex-inline>\\le 5</latex-inline> je podmienka",
+      "web": "To $\\le 5$ je podmienka"
+    },
+    {
+      "name": "a German word before a plus or minus",
+      "input": "Es \\pm 2 und so",
+      "tagged": "Es <latex-inline>\\pm 2</latex-inline> und so",
+      "web": "Es $\\pm 2$ und so"
+    },
+    {
+      "name": "a Spanish word before a plus or minus",
+      "input": "Ni \\pm 2 ni más",
+      "tagged": "Ni <latex-inline>\\pm 2</latex-inline> ni más",
+      "web": "Ni $\\pm 2$ ni más"
+    },
+    {
+      "name": "a question and an answer with a relation command",
+      "input": "Is it \\ge 5? Yes it is \\ge 5",
+      "tagged": "Is it <latex-inline>\\ge 5</latex-inline>? Yes it is <latex-inline>\\ge 5</latex-inline>",
+      "web": "Is it $\\ge 5$? Yes it is $\\ge 5$"
+    },
+    {
+      "name": "a variable and a number round an operator command",
+      "input": "x \\times 3",
+      "tagged": "<latex-inline>x \\times 3</latex-inline>",
+      "web": "$x \\times 3$"
+    },
+    {
+      "name": "two variables round a relation command",
+      "input": "a \\le b",
+      "tagged": "<latex-inline>a \\le b</latex-inline>",
+      "web": "$a \\le b$"
+    },
+    {
+      "name": "an article before an operator command is prose",
+      "input": "Note that \\times a cross",
+      "tagged": "Note that <latex-inline>\\times</latex-inline> a cross",
+      "web": "Note that $\\times$ a cross"
+    },
+    {
+      "name": "an article before a relation command and a word",
+      "input": "Then a \\le thing",
+      "tagged": "Then a <latex-inline>\\le</latex-inline> thing",
+      "web": "Then a $\\le$ thing"
+    },
+    {
+      "name": "two variables with a minus sign have no command",
+      "input": "a - b",
+      "tagged": "a - b",
+      "web": "a - b"
+    },
+    {
+      "name": "a name before a relation",
+      "input": "Tom = \\frac12 of the pie",
+      "tagged": "Tom = <latex-inline>\\frac12</latex-inline> of the pie",
+      "web": "Tom = $\\frac12$ of the pie"
+    },
+    {
+      "name": "a title and a name before a relation",
+      "input": "Mr. Ade = \\frac12",
+      "tagged": "Mr. Ade = <latex-inline>\\frac12</latex-inline>",
+      "web": "Mr. Ade = $\\frac12$"
+    },
+    {
+      "name": "a noun before a relation",
+      "input": "half = \\frac12",
+      "tagged": "half = <latex-inline>\\frac12</latex-inline>",
+      "web": "half = $\\frac12$"
+    },
+    {
+      "name": "a phrase before a relation",
+      "input": "the rest = \\frac12",
+      "tagged": "the rest = <latex-inline>\\frac12</latex-inline>",
+      "web": "the rest = $\\frac12$"
+    },
+    {
+      "name": "a pronoun before a relation",
+      "input": "Let me = \\frac12",
+      "tagged": "Let me = <latex-inline>\\frac12</latex-inline>",
+      "web": "Let me = $\\frac12$"
+    },
+    {
+      "name": "a short capitalised word before a relation",
+      "input": "Ans = \\frac56",
+      "tagged": "Ans = <latex-inline>\\frac56</latex-inline>",
+      "web": "Ans = $\\frac56$"
+    },
+    {
+      "name": "a determiner before a relation",
+      "input": "all = \\frac12",
+      "tagged": "all = <latex-inline>\\frac12</latex-inline>",
+      "web": "all = $\\frac12$"
+    },
+    {
+      "name": "a word with an underscore is not a name",
+      "input": "foo_bar = \\frac12 baz",
+      "tagged": "foo_bar = <latex-inline>\\frac12</latex-inline> baz",
+      "web": "foo_bar = $\\frac12$ baz"
+    },
+    {
+      "name": "a line break with a length between a number and a fraction",
+      "input": "1 \\\\[2pt] \\frac12",
+      "tagged": "<latex-inline>1 \\\\[2pt] \\frac12</latex-inline>",
+      "web": "$1 \\\\[2pt] \\frac12$"
+    },
+    {
+      "name": "two equations with a line break between them",
+      "input": "x = \\alpha \\\\[4pt] y = \\beta",
+      "tagged": "<latex-inline>x = \\alpha \\\\[4pt] y = \\beta</latex-inline>",
+      "web": "$x = \\alpha \\\\[4pt] y = \\beta$"
+    },
+    {
+      "name": "a line break and a bracket that is no length",
+      "input": "\\alpha\\\\[\\alpha",
+      "tagged": "<latex-inline>\\alpha\\\\</latex-inline>[<latex-inline>\\alpha</latex-inline>",
+      "web": "$\\alpha\\\\$[$\\alpha$"
+    },
+    {
+      "name": "a relation command, a line break and a bracket",
+      "input": "\\in\\\\[\\th",
+      "tagged": "<latex-inline>\\in\\\\</latex-inline>[<latex-inline>\\th</latex-inline>",
+      "web": "$\\in\\\\$[$\\th$"
     }
   ],
   "vocabulary": {

@@ -6,6 +6,7 @@
 // vocabulary, both must agree on.
 // Twin: apps/server/ui/src/shared/latex-tokens.ts.
 
+import { LENGTH } from "./latex-scan";
 import {
   COMMANDS,
   DISPLAY_ONLY_ENVIRONMENTS,
@@ -110,7 +111,8 @@ export const TOKEN_SOURCE = [
   String.raw`([ \t]+)`,
   String.raw`(\\[A-Za-z]+)`,
   `(${MARKS}[0-9]+${END})`,
-  String.raw`(\\[^A-Za-z\n$()\[\]])`,
+  // \\[4pt] is a line break with a length: one token.
+  String.raw`(\\\\\[${LENGTH}|\\[^A-Za-z\n$()\[\]])`,
   `((?:${HYPHENATED})(?![A-Za-z]))`,
   "([A-Za-z]+)",
   String.raw`([0-9]+(?:\.[0-9]+)?)`,

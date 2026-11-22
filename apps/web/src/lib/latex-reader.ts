@@ -103,10 +103,11 @@ function binds(text: string, position: number, word: string, end: number, run: R
   return word === "'" || BINDS_TO.test(text);
 }
 
-const ATTACHES = "^_()[]\\";
-const STRICT_RELATIONS = "=<>≤≥≠≈";
+const ATTACHES = "^()[]\\";
+// What a term, as opposed to an operator, ends in.
+const TERMS = new Set(["letter", "number", "group", ")", "]", "func"]);
 
-/** Whether a word of two to four letters is a product of variables (`mv`, `ac`, `KE`): one that touches a digit, bracket, command, ^ or _, or an operator, belongs to the formula. A lone word after a space with no operator is prose. A formula begins with one only before a relation or an exponent. */
+/** Whether a word of two to four letters is a product of variables (`mv`, `4ac`, `\\pi r`): only one that touches a digit, bracket, ^ or command with no space does. Every other word is prose, whatever stands beside it. A formula begins with one only before `^` or a digit, or when it is two or three capitals before a relation (`KE = ...`). */
 function shortWordJoins(
   text: string,
   tokenPattern: RegExp,
@@ -117,26 +118,20 @@ function shortWordJoins(
   if (word.length > 4) return false;
   const end = position + word.length;
   const after = text.charAt(end);
-  tokenPattern.lastIndex = skipSpaces(text, end);
-  const follower = tokenPattern.exec(text);
-  const name = follower ? follower[0] : "";
-  const kind = follower ? follower.findIndex((g, i) => i > 0 && g !== undefined) : 0;
-  const infix = kind === WORD && INFIX_SET.has(name.slice(1));
   if (run === null) {
-    const strict = (kind === OPERATOR && STRICT_RELATIONS.includes(name)) || infix;
-    return strict || after === "^" || after === "_" || isDigit(after);
+    tokenPattern.lastIndex = skipSpaces(text, end);
+    const follower = tokenPattern.exec(text);
+    const relation =
+      follower !== null &&
+      follower.findIndex((g, i) => i > 0 && g !== undefined) === OPERATOR &&
+      "=<>≤≥≠≈".includes(follower[0]);
+    const capitals = word === word.toUpperCase() && word.length <= 3;
+    return (capitals && relation) || after === "^" || isDigit(after);
   }
   const touches = after !== "" && (ATTACHES.includes(after) || isDigit(after) || MARK_CHARS.includes(after));
-  const relation = (kind === OPERATOR && RELATIONS.includes(name)) || infix;
   const previous = run.tokens[run.tokens.length - 1];
-  // An operator with a space on each side, as in `x = mc^2` or `b^2 - ac`.
-  const spaced =
-    run.tokens.length > 1 &&
-    ["binary", "sign", "infix"].includes(previous[2]) &&
-    previous[0] > run.tokens[run.tokens.length - 2][1] &&
-    position > previous[1];
   const attached = runEnd(run) === position && previous[2] !== "(" && previous[2] !== "[";
-  return attached || touches || spaced || relation;
+  return attached || touches;
 }
 
 function endsRun(
@@ -187,6 +182,16 @@ function isLabel(text: string, position: number, end: number): boolean {
 }
 
 /** Whether the letters from `position` belong to the run, and where they end. A letter after an operator belongs. After a finished term it belongs when it touches an operator, and a formula begins with a letter only when an operator follows it. */
+/** Whether a variable, a number, a group or a command comes next: what an operator command stands before in a formula, and a word does not. */
+function mathAfter(text: string, tokenPattern: RegExp, position: number): boolean {
+  tokenPattern.lastIndex = skipSpaces(text, position);
+  const follower = tokenPattern.exec(text);
+  if (follower === null) return false;
+  const kind = follower.findIndex((g, i) => i > 0 && g !== undefined);
+  if (kind === LETTERS) return follower[0].length === 1;
+  return kind === NUMBER || kind === MARK || kind === WORD;
+}
+
 function letterJoins(
   text: string,
   tokenPattern: RegExp,
@@ -214,9 +219,17 @@ function letterJoins(
   const relation =
     follower !== null &&
     ((kind === OPERATOR && RELATIONS.includes(word)) ||
-      (kind === WORD && INFIX_SET.has(word.slice(1))));
+      (kind === WORD && INFIX_SET.has(word.slice(1)) && mathAfter(text, tokenPattern, follower.index + word.length)));
   const binding = adjacent && follower !== null && kind === OPERATOR && "^_*'([".includes(word);
   if (run === null) return [relation || binding, lastEnd];
+  const previousEdge = run.tokens[run.tokens.length - 1][2];
+  if (previousEdge === "infix" && runEnd(run) !== position) {
+    // A letter a space after an operator command is a variable only if what
+    // follows is no word of prose.
+    const prose = follower !== null && kind === LETTERS;
+    const term = run.tokens.length > 1 && TERMS.has(run.tokens[run.tokens.length - 2][2]);
+    return [count === 1 && (term || cursor >= text.length || !prose), lastEnd];
+  }
   const exponent = run.tokens.length > 1 && run.tokens[run.tokens.length - 2][2] === "bind";
   return [(count === 1 && relation) || binding || exponent, lastEnd];
 }
@@ -355,7 +368,8 @@ function afterOpener(text: string, position: number): boolean {
   const before = text.charAt(position - 1);
   if (before === "$") return !isDigit(text.charAt(position));
   const pair = text.slice(Math.max(0, position - 2), position);
-  return pair === "\\(" || pair === "\\[";
+  // \\[ is a line break, whose second backslash opens nothing.
+  return (pair === "\\(" || pair === "\\[") && text.charAt(position - 3) !== "\\";
 }
 
 /** The text with each formula in it tagged. `restoreGroup` puts the groups and environments back into a piece of it. */
@@ -422,7 +436,9 @@ export function tagRuns(text: string, restoreGroup: (piece: string) => string): 
       position += word.length + 1;
       continue;
     }
-    const joined = run !== null && (runEnd(run) === position || COMES_AFTER.has(run.tokens[run.tokens.length - 1][2]));
+    const lastEdge = run === null ? "" : run.tokens[run.tokens.length - 1][2];
+    const spacedCommand = run !== null && lastEdge === "infix" && runEnd(run) !== position;
+    const joined = run !== null && (runEnd(run) === position || (COMES_AFTER.has(lastEdge) && !spacedCommand));
     if (kind === LETTERS && word.length === 1 && position >= clusterUntil && !joined) {
       const [joins, clusterEnd] = letterJoins(text, tokenPattern, position, run);
       if (!joins) {

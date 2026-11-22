@@ -9,6 +9,7 @@ agree on.
 import re
 from collections.abc import Callable
 
+from .maths_scan import LENGTH
 from .maths_vocabulary import (
     COMMANDS,
     DISPLAY_ONLY_ENVIRONMENTS,
@@ -111,7 +112,8 @@ TOKEN = re.compile(
             r"([ \t]+)",
             r"(\\[A-Za-z]+)",
             rf"({MARKS}[0-9]+{END})",
-            r"(\\[^A-Za-z\n$()\[\]])",
+            # \\\\[4pt] is a line break with a length: one token.
+            rf"(\\\\\[{LENGTH}|\\[^A-Za-z\n$()\[\]])",
             rf"((?:{_HYPHENATED})(?![A-Za-z]))",
             r"([A-Za-z]+)",
             r"([0-9]+(?:\.[0-9]+)?)",
