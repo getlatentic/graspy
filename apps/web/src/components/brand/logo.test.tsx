@@ -16,16 +16,10 @@ describe("Logo", () => {
     expect(logo.classList.contains("w-auto")).toBe(true);
   });
 
-  it("is 20px tall at the header size and grows with the screen in the same proportions", () => {
+  it("is 20px tall at the header size and a little taller on a large monitor; a TV grows it with the root size", () => {
     render(<Logo />);
     const logo = screen.getByAltText("graspy");
-    for (const name of [
-      "h-5",
-      "2xl:h-6.25",
-      "3xl:h-7.5",
-      "4xl:h-10",
-      "5xl:h-15",
-    ]) {
+    for (const name of ["h-5", "2xl:h-6.25"]) {
       expect(logo.classList.contains(name), name).toBe(true);
     }
   });

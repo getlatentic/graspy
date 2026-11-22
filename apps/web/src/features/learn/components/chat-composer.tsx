@@ -68,6 +68,10 @@ export function ChatComposer({
         dir="auto"
         // Otherwise iOS Safari offers AutoFill buttons above the keyboard.
         autoComplete="off"
+        // The on-screen keyboard of a phone or a TV shows a Send key, and the box draws its own focus.
+        enterKeyHint="send"
+        inputMode="text"
+        data-own-focus=""
         // Never disabled: that drops focus and closes a phone's keyboard. 16px
         // text on phones, below which iOS zooms in on focus.
         className="max-h-40 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-base text-ink outline-none placeholder:truncate placeholder:text-muted sm:text-sm"

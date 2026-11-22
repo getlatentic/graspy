@@ -5,9 +5,13 @@ import {
   type KeyboardEvent,
   type SetStateAction,
 } from "react";
+import { useBackHandler } from "@/hooks/use-back-handler";
 import { matchingOptions, type SelectOption } from "../lib/select-options";
 
 const MOVES_IN_LIST = new Set(["ArrowDown", "ArrowUp", "Enter"]);
+
+/** Home and End are the field's own cursor keys, so they move in the list only while it is open. */
+const EDGES_OF_LIST = new Set(["Home", "End"]);
 
 interface ListControls {
   isOpen: boolean;
@@ -33,6 +37,8 @@ function keyActions(list: ListControls): Record<string, () => void> {
       isOpen && matches[highlighted]
         ? list.select(matches[highlighted].value)
         : list.open(),
+    Home: () => isOpen && setHighlighted(0),
+    End: () => isOpen && setHighlighted(Math.max(0, matches.length - 1)),
     Escape: list.close,
     Tab: () => list.setIsOpen(false),
   };
@@ -72,12 +78,14 @@ export function useCombobox(
     setIsOpen(true);
     setHighlighted(0);
   };
+  useBackHandler(isOpen, close);
   const list = { isOpen, matches, highlighted, setHighlighted };
   const keys = keyActions({ ...list, setIsOpen, open, close, select });
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (!Object.hasOwn(keys, event.key)) return;
     if (MOVES_IN_LIST.has(event.key)) event.preventDefault();
+    if (EDGES_OF_LIST.has(event.key) && isOpen) event.preventDefault();
     keys[event.key]();
   };
 

@@ -416,6 +416,7 @@
       "learnerRequired": "Choose who is learning first.",
       "voiceFailed": "The teacher's voice didn't load.",
       "micDenied": "Allow the microphone to record your answer.",
+      "micMissing": "This screen has no microphone, so it cannot record your answer.",
       "micFailed": "The microphone didn't start. Try again.",
       "notSaved": "Your answer wasn't saved. Try again."
     }

@@ -416,6 +416,7 @@
       "learnerRequired": "Kọ́kọ́ yan ẹni tó ń kẹ́kọ̀ọ́.",
       "voiceFailed": "Ohùn olùkọ́ kò ṣí.",
       "micDenied": "Gba gbohùngbohùn láàyè láti gba ìdáhùn rẹ sílẹ̀.",
+      "micMissing": "This screen has no microphone, so it cannot record your answer.",
       "micFailed": "Gbohùngbohùn kò bẹ̀rẹ̀. Tún gbìyànjú.",
       "notSaved": "A kò tọ́jú ìdáhùn rẹ. Tún gbìyànjú."
     }

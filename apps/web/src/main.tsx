@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { installAppWorker } from "@/lib/app-worker";
 import { markDevice } from "@/lib/device";
+import { installRemoteInput } from "@/lib/remote-input";
 import { listenForInstall } from "@/lib/install";
 import { listenForStaleChunks } from "@/app/page-chunks";
 import { finishPendingWipe } from "@/lib/wipe-pending";
@@ -24,6 +25,7 @@ const queryClient = new QueryClient({
 });
 
 markDevice();
+installRemoteInput();
 listenForStaleChunks();
 listenForInstall();
 installAppWorker();

@@ -18,10 +18,10 @@ export function SproutMark({ className }: { className?: string }) {
  * the word's ink, from the x-height top to the bottom of the descenders, and
  * the viewBox is cropped to the ink, so the sprout's left edge is the logo's
  * left edge. Its ink is 20px tall at the header size, and the lockup grows at
- * 2xl, 3xl, 4xl and 5xl so it still reads across a room. The file name carries
+ * 2xl; a TV scales the whole app by the root font size (see index.css), so the logo grows with it. The file name carries
  * a version because the service worker caches /brand by path.
  */
-const LOCKUP = "h-5 2xl:h-6.25 3xl:h-7.5 4xl:h-10 5xl:h-15";
+const LOCKUP = "h-5 2xl:h-6.25";
 
 /** `alt` is the lockup's own name, so screen readers hear "graspy" once. */
 export function Logo() {

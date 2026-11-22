@@ -146,18 +146,26 @@ The shipped file also has `role="img"` and `aria-label="graspy"`.
 
 Onboarding has a split layout (two halves the height of the screen, the form scrolling inside its half) and a single column that scrolls as a page. The split needs a screen at least 64rem wide and 40rem tall (`split:` in `apps/web/src/index.css`); a shorter window, such as a laptop at 150% zoom or a tablet with its keyboard open, keeps the single column.
 
-The form and the headline sit in a `.zoom` scope that scales the theme's spacing, type and widths by `--zoom`. A width cannot tell a TV from a monitor, so `src/lib/device.ts` sets `<html data-device="tv">` from the user agent (Tizen, Web0S, SmartTV, GoogleTV, AFT*, BRAVIA and others). Add `?tv=1` to the URL to force it on while testing on a desktop (kept until `?tv=0`).
+A width cannot tell a TV from a monitor, so `src/lib/device.ts` sets `<html data-device="tv">` from the user agent (Tizen, Web0S, SmartTV, GoogleTV, AFT*, BRAVIA and others). Add `?tv=1` to the URL to force it on while testing on a desktop (kept until `?tv=0`).
 
-| CSS width and height | Monitor or laptop | TV |
-|---|---|---|
-| under 80rem | 1 | 1 |
-| 80rem (1280px) and 40rem tall | 1 | 1.5 |
-| 96rem (1536px) and 46rem tall | 1.1 | 1.5 |
-| 120rem (1920px) and 56rem tall | 1.25 | 1.75 |
-| 160rem (2560px) and 76rem tall | 1.5 | 1.75 |
-| 200rem (3200px) and 76rem tall | 1.5 | 2.5 |
+- A monitor or laptop scales the onboarding form and headline with the `.zoom` scope: 1 below 96rem, 1.1 from 96rem (and 46rem tall), 1.25 from 120rem (56rem tall), 1.5 from 160rem (76rem tall), and no more.
+- A TV scales the whole app by the root font size, so every rem in the theme grows (type, spacing, widths, hit targets, and nothing is under 16px): 150% from 1280px wide, 175% from 1920px, 250% from 3200px. The `.zoom` scope is 1 on a TV so the two do not stack.
 
-Every step also needs its height, so a wide but short window does not get a zoom its form cannot hold.
+## Remote control and keyboard
+
+`src/lib/remote-keys.ts` maps keys: the five-way pad and OK, Back (Escape, GoBack, LG webOS 461, Samsung Tizen 10009, and Backspace outside a text field), and ignores media keys (412, 413, 415, 19, 417) and colour keys (403 to 406). `src/lib/remote-input.ts` puts `data-input="remote"` on `<html>` when a key that moves focus is pressed (a TV browser may not apply `:focus-visible`) and takes it off for a pointer; the focus ring (a 3px outline in the page's ink with a gap in its own colour) shows on `:focus-visible` and on `:focus` in that mode. Back closes the topmost open popup first (a dialog or an open list registers with `useBackHandler`), then steps back in the app's history; on the first screen it does nothing, so a stray key never leaves the app. Each new screen starts with focus on its title (`RouteFocus`).
+
+### Testing on a TV
+
+Open the staging URL of the web app in the TV's browser (Samsung Internet or the Tizen browser, the LG webOS browser, Silk on Fire TV, Chrome or the Google TV browser) or cast a tab with `?tv=1` from a desktop. Try, on each:
+
+1. The first screen shows a focus ring on one control. The arrows move it to every control, in reading order, and nothing is out of reach (the logo, the skip link, each field, Back, Next).
+2. OK on a field opens its list; Up, Down, Home and End move in it; OK picks; Back closes the list and leaves the focus on the field.
+3. On "Your subjects", Up and Down move between rows, OK toggles one, and the list scrolls so the focused row is never under the action bar.
+4. Back on a screen with history goes to the previous screen; Back on the first screen does nothing; Back never skips a popup.
+5. The text is readable from the sofa (nothing small), buttons are easy to hit with a pointer remote (LG Magic Remote, Samsung pointer mode), and nothing needs hover or dragging.
+6. In the chat box, the on-screen keyboard has a Send key and the page does not jump when it opens.
+7. A lesson that needs the microphone says plainly that this screen has none, where the browser has no `getUserMedia`.
 
 ## Names compared alike on the server and the web
 

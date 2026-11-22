@@ -10,6 +10,10 @@ import type { VoiceLearner } from "./use-voice-learner";
 /** How many tenths of a second of loudness the voice wave shows. */
 const WAVE_BARS = 28;
 
+/** A television's browser often has no microphone to ask for: there is no getUserMedia at all. */
+const microphoneMissing = () =>
+  typeof navigator.mediaDevices?.getUserMedia !== "function";
+
 const microphoneRefused = (error: unknown) =>
   error instanceof DOMException &&
   (error.name === "NotAllowedError" || error.name === "SecurityError");
@@ -52,7 +56,11 @@ export function useAnswerTake(
           setLevels((shown) => [...shown, level].slice(-WAVE_BARS)),
         );
       } catch (error) {
-        const note = microphoneRefused(error) ? "micDenied" : "micFailed";
+        const note = microphoneRefused(error)
+          ? "micDenied"
+          : microphoneMissing()
+            ? "micMissing"
+            : "micFailed";
         dispatch({ type: "recordFailed", note });
         return;
       }
