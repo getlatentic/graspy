@@ -21,7 +21,11 @@ export function Scene({
       height={height}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
-      className={cn("block h-auto max-h-full w-auto object-contain", className)}
+      fetchPriority={eager ? "high" : "auto"}
+      className={cn(
+        "block h-auto max-h-full w-auto max-w-full object-contain",
+        className,
+      )}
     />
   );
 }

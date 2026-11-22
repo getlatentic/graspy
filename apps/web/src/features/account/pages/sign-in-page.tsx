@@ -44,6 +44,7 @@ export function SignIn() {
         <GoogleSignInButton
           variant="primary"
           size="lg"
+          problemClassName="text-on-art"
           className="w-full whitespace-nowrap px-3 text-base sm:px-6 lg:text-lg"
         />
         <Link
