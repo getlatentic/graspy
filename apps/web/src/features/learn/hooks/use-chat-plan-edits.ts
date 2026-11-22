@@ -66,10 +66,11 @@ function planEdits(
         lessonLink(t, subjectSlug, added.index),
       );
     },
-    /** Adds the paths, and returns those the plan had no room for. */
+    /** Adds the paths, and returns those that were not added for want of room or of a plan. */
     acceptPaths: async (paths: LearningPath[]): Promise<LearningPath[]> => {
       const current = read();
-      if (!current || paths.length === 0) return [];
+      if (!current) return paths;
+      if (paths.length === 0) return [];
       const { curriculum: next, outcomes } = withPaths(current, paths);
       if (outcomes.some(({ status }) => status === "added")) {
         await applyCurriculum(next);

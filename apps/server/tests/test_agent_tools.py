@@ -658,10 +658,38 @@ def test_a_course_is_not_proposed_when_it_is_the_open_subject_the_app_did_not_li
     assert wire(outputs) == []
 
 
-def test_subjects_can_be_changed_when_only_the_open_one_is_known():
-    _, outputs = use("change_subjects", OPEN_ONLY, add=["Maths", "Astronomy"])
+def test_subjects_are_not_changed_when_the_list_was_not_sent():
+    """The app derives the new list from its own plan, and the room is not known here."""
+    result, outputs = use("change_subjects", OPEN_ONLY, add=["Astronomy"])
 
-    assert wire(outputs)[0]["add"] == ["Astronomy"]
+    assert "not sent" in result["error"]
+    assert wire(outputs) == []
+
+
+def test_the_room_for_courses_is_not_overstated_when_the_list_was_not_sent():
+    """Only the open subject is known, so the plan is not taken to have 14 free places."""
+    outputs = TurnOutputs()
+    built = {t.__name__: t for t in tools_for(Turn(OPEN_ONLY, "x"), outputs)}
+
+    built["propose_path"]([f"Course {n}" for n in range(5)])
+
+    assert len(wire(outputs)) == 5
+
+
+def test_the_open_subject_is_not_held_twice_under_another_slug_or_case():
+    context = LearnerContext(
+        subject="mathematics",
+        subjectSlug="maths",
+        subjects=[{"name": "Mathematics", "slug": "mathematics"}],
+    )
+
+    assert [s.name for s in context.held_subjects()] == ["Mathematics"]
+
+
+def test_a_subject_not_found_is_told_to_appear_in_the_next_turn_if_added_this_one():
+    result, _ = use("open_subject", maths(), "Astronomy")
+
+    assert "next turn" in result["error"]
 
 
 @pytest.mark.parametrize("goals", [7, {"a": 1}, 2.5, None])

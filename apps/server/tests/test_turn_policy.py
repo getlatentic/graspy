@@ -187,3 +187,14 @@ def test_courses_already_offered_say_so_and_add_nothing():
 
     assert told == ALREADY
     assert len(actions) == 1
+
+
+def test_a_call_is_all_or_nothing():
+    """Nothing of a call is kept when any of its actions is refused."""
+    actions = []
+    admit(actions, call(WRITES[3]), ROOM)
+
+    told = admit(actions, call(OPENS[0], WRITES[0]), ROOM)
+
+    assert told == refusal(ONE_CHANGE)
+    assert actions == [WRITES[3]]

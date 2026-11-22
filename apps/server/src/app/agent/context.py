@@ -21,6 +21,7 @@ from ..domains.lesson.lesson import Lesson
 from ..education.stage import stage_of
 from ..learner.record import LearnerRecord
 from ..lessons.store import LessonStore
+from .subject_match import normalise
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +144,7 @@ class LearnerContext(BaseModel):
             self.subject
             and self.subject_slug
             and self.subject_slug not in {s.slug for s in subjects}
+            and normalise(self.subject) not in {normalise(s.name) for s in subjects}
         ):
             subjects.append(SubjectRef(name=self.subject, slug=self.subject_slug))
         return subjects

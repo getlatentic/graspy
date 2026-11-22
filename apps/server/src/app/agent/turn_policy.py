@@ -40,14 +40,16 @@ def admit(actions: list[Action], result: Outcome, room: int) -> dict:
         return result.told
     if any(isinstance(action, ProposePath) for action in result.actions):
         return _admit_courses(actions, result, room)
+    staged = list(actions)
     for action in result.actions:
         if _is_open(action):
-            actions[:] = [a for a in actions if not _is_open(a)]
-        elif action in actions:
+            staged = [a for a in staged if not _is_open(a)]
+        elif action in staged:
             return ALREADY
-        elif any(not _is_open(a) for a in actions):
+        elif any(not _is_open(a) for a in staged):
             return refusal(ONE_CHANGE)
-        actions.append(action)
+        staged.append(action)
+    actions[:] = staged
     return result.told
 
 

@@ -371,6 +371,38 @@ describe("a course that is slow to plan", () => {
   });
 });
 
+describe("a tap on Add twice", () => {
+  it("adds each course once", async () => {
+    planAll();
+    const { hook, applyCurriculum, onDone } = mount();
+    await act(() => hook.result.current.carryOut(proposals(GOALS)));
+
+    await act(async () => {
+      await Promise.all([
+        hook.result.current.confirmPlanChange(),
+        hook.result.current.confirmPlanChange(),
+      ]);
+    });
+
+    expect(applyCurriculum).toHaveBeenCalledOnce();
+    expect(onDone).toHaveBeenCalledTimes(3);
+    expect(hook.result.current.pendingPlanChange).toBeNull();
+  });
+
+  it("puts the courses back when the plan could not be kept", async () => {
+    planAll();
+    const { hook, applyCurriculum, shown } = mount();
+    await act(() => hook.result.current.carryOut(proposals(GOALS)));
+    applyCurriculum.mockRejectedValueOnce(new Error("no room on this device"));
+
+    await expect(
+      act(() => hook.result.current.confirmPlanChange()),
+    ).rejects.toThrow("no room");
+
+    expect(shown()?.map((p) => p.goal)).toEqual(GOALS);
+  });
+});
+
 describe("a path with no step", () => {
   it("is a course that failed, not one that is ready", async () => {
     mocks.planLearningPath.mockResolvedValue({
@@ -405,6 +437,70 @@ describe("a plan that could not be kept", () => {
     expect(applyCurriculum.mock.calls[1][0].topics.mathematics).toEqual([
       "Quadratic Equations",
       "Indices",
+    ]);
+  });
+});
+
+describe("two writes that overlap", () => {
+  function overlapping(
+    first: "rejects" | "resolves",
+    second: "rejects" | "resolves",
+  ) {
+    const { hook, applyCurriculum } = mount();
+    const writes = [deferred<void>(), deferred<void>()];
+    applyCurriculum
+      .mockReturnValueOnce(writes[0].promise)
+      .mockReturnValueOnce(writes[1].promise);
+    const adding = (topic: string): TutorAction => ({
+      type: "add_topic",
+      subjectSlug: "mathematics",
+      subject: "Mathematics",
+      topic,
+    });
+    const settle = async () => {
+      await act(async () => {
+        const a = hook.result.current
+          .carryOut([adding("Surds")])
+          .catch(() => {});
+        const b = hook.result.current
+          .carryOut([adding("Indices")])
+          .catch(() => {});
+        for (const [at, how] of [first, second].entries()) {
+          if (how === "rejects") writes[at].reject(new Error("no room"));
+          else writes[at].resolve();
+        }
+        await Promise.all([a, b]);
+      });
+    };
+    return { hook, applyCurriculum, settle, adding };
+  }
+
+  it("builds on the later write when the earlier one failed", async () => {
+    const { hook, applyCurriculum, settle, adding } = overlapping(
+      "rejects",
+      "resolves",
+    );
+    await settle();
+
+    await act(() => hook.result.current.carryOut([adding("Cubes")]));
+
+    expect(applyCurriculum.mock.calls[2][0].topics.mathematics).toContain(
+      "Indices",
+    );
+  });
+
+  it("builds on the plan that was kept when both failed", async () => {
+    const { hook, applyCurriculum, settle, adding } = overlapping(
+      "rejects",
+      "rejects",
+    );
+    await settle();
+
+    await act(() => hook.result.current.carryOut([adding("Cubes")]));
+
+    expect(applyCurriculum.mock.calls[2][0].topics.mathematics).toEqual([
+      "Quadratic Equations",
+      "Cubes",
     ]);
   });
 });

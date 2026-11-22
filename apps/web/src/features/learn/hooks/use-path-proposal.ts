@@ -115,23 +115,25 @@ export function usePathProposal(
     [plan, publish],
   );
 
-  const readyPaths = useCallback(
-    () => proposals.current.flatMap(({ path }) => (path ? [path] : [])),
-    [],
-  );
+  /** The courses that are ready, taken off the card at once so a second tap finds none; the ones
+   * still planning or failed stay on it. */
+  const takeReady = useCallback(() => {
+    const taken = proposals.current.filter(({ path }) => path);
+    proposals.current = proposals.current.filter(({ path }) => !path);
+    if (taken.length > 0 && proposals.current.length > 0) publish();
+    return { taken, remaining: proposals.current.length, round: round.current };
+  }, [publish]);
 
-  /** Takes the paths that were dealt with off the card, and says how many courses stay on it:
-   * those still planning, those that failed, and those the plan had no room for. */
-  const settle = useCallback(
-    (done: LearningPath[]) => {
-      proposals.current = proposals.current.filter(
-        ({ path }) => !path || !done.includes(path),
-      );
-      if (proposals.current.length > 0) publish();
-      return proposals.current.length;
+  /** Courses taken but not added, such as those the plan had no room for, go back on the card
+   * unless the card has been dismissed or replaced since. */
+  const putBack = useCallback(
+    (back: PathProposal[], from: number) => {
+      if (back.length === 0 || round.current !== from) return;
+      proposals.current = [...back, ...proposals.current];
+      publish();
     },
     [publish],
   );
 
-  return { propose, retry, readyPaths, settle, forget: endRound };
+  return { propose, retry, takeReady, putBack, forget: endRound };
 }

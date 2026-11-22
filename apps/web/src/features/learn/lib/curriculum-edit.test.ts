@@ -307,6 +307,25 @@ describe("withPaths", () => {
     ]);
   });
 
+  it("gives one outcome for each path, in order, blank and duplicate ones included", () => {
+    const blank = { subject: " ", goal: " ", steps: REAL_ANALYSIS.steps };
+
+    const { curriculum, outcomes } = withPaths(plan(), [
+      blank,
+      REAL_ANALYSIS,
+      { ...REAL_ANALYSIS, subject: "REAL analysis" },
+      quantum,
+    ]);
+
+    expect(outcomes.map((o) => o.status)).toEqual([
+      "unnamed",
+      "added",
+      "existing",
+      "added",
+    ]);
+    expect(curriculum.subjects).toHaveLength(4);
+  });
+
   it("stops at the cap and says which did not fit", () => {
     const nearlyFull = plan({ subjects: subjectsNamed(MAX_SUBJECTS - 1) });
 

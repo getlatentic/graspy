@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from app.agent.latin_ranges import LATIN_RANGES
+from app.agent.latin_ranges import LATIN_RANGES, LATIN_UNICODE
 from app.agent.subject_match import candidates, normalise
 
 LATIN = Path(__file__).parents[2] / "web/src/features/learn/lib/latin-ranges.json"
@@ -173,7 +173,21 @@ def test_four_times_the_name_costs_about_the_same_not_four_times(length):
 
 
 def test_the_latin_letters_are_the_ones_the_web_app_folds():
-    assert [list(r) for r in LATIN_RANGES] == json.loads(LATIN.read_text())
+    table = json.loads(LATIN.read_text())
+    assert LATIN_UNICODE == table["unicode"]
+    assert [list(r) for r in LATIN_RANGES] == table["ranges"]
+
+
+def test_fullwidth_and_mathematical_letters_are_the_letters_they_are():
+    assert (
+        normalise("ＭＡＴＨＳ") == normalise("𝐌𝐚𝐭𝐡𝐬") == normalise("Maths") == "maths"
+    )
+    assert named("𝐌𝐚𝐭𝐡𝐬", "Mathematics") == ["Mathematics"]
+
+
+def test_a_name_is_cut_after_it_is_decomposed():
+    """Two ways of writing the same letters meet in the same key."""
+    assert normalise("ﬁ" * 100) == normalise("fi" * 40 + "x") == "fi" * 40
 
 
 def test_a_name_is_cut_by_code_points_not_utf16_units():

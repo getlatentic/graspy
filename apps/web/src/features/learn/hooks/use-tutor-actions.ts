@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { ChatLink } from "@/lib/chat-db";
+import type { LearningPath } from "@/lib/curriculum-api";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { useChatPlanEdits, type ActionOf } from "./use-chat-plan-edits";
 import type { LearnerPlan } from "./use-learner-plan";
@@ -42,27 +43,31 @@ export function useTutorActions(deps: TutorActionDeps) {
   // Each action builds on the plan the one before it left, not on the plan of the render that
   // started the reply: a second write would otherwise undo the first.
   const latest = useRef(deps.curriculum);
+  // The last plan the device kept, which a write that fails falls back to.
+  const kept = useRef(deps.curriculum);
   useEffect(() => {
     latest.current = deps.curriculum;
+    kept.current = deps.curriculum;
   }, [deps.curriculum]);
   const read = useCallback(() => latest.current, []);
   const { applyCurriculum: applyToPlan } = deps;
   const applyCurriculum = useCallback(
     async (next: CurriculumData) => {
-      const before = latest.current;
       latest.current = next;
       try {
         await applyToPlan(next);
+        kept.current = next;
       } catch (error) {
-        // The plan was not kept, so the next action builds on the one that was.
-        latest.current = before;
+        // The plan was not kept, so the next action builds on the one that was, unless a
+        // later write has been started since: that one has built on this.
+        if (latest.current === next) latest.current = kept.current;
         throw error;
       }
     },
     [applyToPlan],
   );
   const edits = useChatPlanEdits({ ...deps, read, applyCurriculum });
-  const { propose, retry, readyPaths, settle, forget } = usePathProposal(
+  const { propose, retry, takeReady, putBack, forget } = usePathProposal(
     deps.curriculum,
     setPending,
   );
@@ -113,21 +118,30 @@ export function useTutorActions(deps: TutorActionDeps) {
     const change = pending;
     if (!change) return;
     if (change.type === "propose_path") {
-      // The courses not ready, and those the plan had no room for, stay on the card.
-      const paths = readyPaths();
-      if (paths.length === 0) return;
-      const unfit = await edits.acceptPaths(paths);
-      if (settle(paths.filter((path) => !unfit.includes(path))) === 0) {
-        forget();
-        setPending(null);
+      // The courses not ready stay on the card, and so do those the plan had no room for.
+      const { taken, remaining, round } = takeReady();
+      if (taken.length === 0) return;
+      if (remaining === 0) setPending(null);
+      let unfit: LearningPath[];
+      try {
+        unfit = await edits.acceptPaths(
+          taken.flatMap(({ path }) => path ?? []),
+        );
+      } catch (error) {
+        putBack(taken, round);
+        throw error;
       }
+      putBack(
+        taken.filter(({ path }) => path && unfit.includes(path)),
+        round,
+      );
       return;
     }
     forget();
     setPending(null);
     if (change.type === "change_subjects") await setSubjects(change.names);
     else await edits.rebuild();
-  }, [edits, forget, pending, readyPaths, setSubjects, settle]);
+  }, [edits, forget, pending, putBack, setSubjects, takeReady]);
 
   const dismissPlanChange = useCallback(() => {
     forget();

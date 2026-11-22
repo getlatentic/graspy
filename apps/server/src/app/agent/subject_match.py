@@ -14,6 +14,9 @@ from .latin_ranges import LATIN_RANGES
 
 # Compared at this length, so a huge name costs the same as a long one.
 MAX_NAME = 80
+# What is decomposed of a name: enough that no character past it could reach the first
+# MAX_NAME (a character decomposes into at most 18), so the cost does not grow with the name.
+DECOMPOSED = MAX_NAME * 18
 # Letters with no decomposition into a base letter and marks.
 LETTERS = {
     "ø": "o",
@@ -57,7 +60,9 @@ def normalise(name: str) -> str:
     same function, and web/src/features/learn/lib/name-key-corpus.json shares their cases."""
     key: list[str] = []
     latin = False
-    for char in unicodedata.normalize("NFKD", name[:MAX_NAME].lower()):
+    # Decomposed first, so "ＭＡＴＨＳ" and "𝐌𝐚𝐭𝐡𝐬" are lower-cased as the letters they are, and cut after.
+    decomposed = unicodedata.normalize("NFKD", name[:DECOMPOSED]).lower()
+    for char in decomposed[:MAX_NAME]:
         category = unicodedata.category(char)[0]
         if category == "M":
             if not latin:

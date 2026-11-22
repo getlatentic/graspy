@@ -14,7 +14,7 @@ from .context import LearnerContext
 from .courses import propose_path_tool
 from .passage import give_passage
 from .practice import give_practice
-from .reply import Action, Outcome
+from .reply import MAX_PATH_GOALS, Action, Outcome
 from .skills.load import load_skill_for_turn
 from .streaming import announce, announce_done
 from .tools import (
@@ -124,5 +124,10 @@ def _for_model(
 
 def tools_for(turn: Turn, outputs: TurnOutputs) -> list[Callable[..., dict]]:
     where = turn.where()
-    room = MAX_CHOSEN_SUBJECTS - len(turn.context.held_subjects())
+    # With the list not sent the room is not known: the app keeps to the most itself.
+    room = (
+        MAX_CHOSEN_SUBJECTS - len(turn.context.held_subjects())
+        if turn.context.subjects
+        else MAX_PATH_GOALS
+    )
     return [_for_model(spec.build(turn), outputs, where, room) for spec in TOOLS]

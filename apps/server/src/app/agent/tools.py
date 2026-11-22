@@ -110,8 +110,9 @@ def open_topic_tool(
 
 def _no_subject(name: str, context: LearnerContext) -> dict:
     return refusal(
-        f"The learner has no subject like {name!r}. To take up a school subject at their "
-        "grade, use change_subjects to add it; for any other course, use propose_path.",
+        f"The learner has no subject like {name!r}. One added or offered in this turn "
+        "appears in the next turn. To take up a school subject at their grade, use "
+        "change_subjects to add it; for any other course, use propose_path.",
         subjects=[s.name for s in context.held_subjects()],
     )
 
@@ -203,11 +204,11 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
             add: New subjects to study, named in the learner's language, e.g. ["Physics"].
             remove: Subjects of theirs to drop, as the learner named them.
         """
-        names = [s.name for s in context.held_subjects()]
-        if not names:
+        if not context.subjects:
             return refusal(
                 "The learner's subjects were not sent, so none can be changed."
             )
+        names = [s.name for s in context.held_subjects()]
         dropped = _subjects_named((remove or [])[:MAX_ASKED], names)
         if isinstance(dropped, dict):
             return dropped
