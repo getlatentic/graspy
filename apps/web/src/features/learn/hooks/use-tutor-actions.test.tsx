@@ -371,6 +371,44 @@ describe("a course that is slow to plan", () => {
   });
 });
 
+describe("a path with no step", () => {
+  it("is a course that failed, not one that is ready", async () => {
+    mocks.planLearningPath.mockResolvedValue({
+      subject: "Astronomy",
+      goal: "astronomy",
+      steps: [],
+    });
+    const { hook, shown } = mount();
+
+    await act(() => hook.result.current.carryOut(proposals(["astronomy"])));
+
+    expect(shown()).toEqual([{ goal: "astronomy", path: null, failed: true }]);
+  });
+});
+
+describe("a plan that could not be kept", () => {
+  it("is not what the next action builds on", async () => {
+    const { hook, applyCurriculum } = mount();
+    applyCurriculum.mockRejectedValueOnce(new Error("no room on this device"));
+    const adding = (topic: string): TutorAction => ({
+      type: "add_topic",
+      subjectSlug: "mathematics",
+      subject: "Mathematics",
+      topic,
+    });
+
+    await expect(
+      act(() => hook.result.current.carryOut([adding("Surds")])),
+    ).rejects.toThrow("no room");
+    await act(() => hook.result.current.carryOut([adding("Indices")]));
+
+    expect(applyCurriculum.mock.calls[1][0].topics.mathematics).toEqual([
+      "Quadratic Equations",
+      "Indices",
+    ]);
+  });
+});
+
 describe("two writing actions in one reply", () => {
   it("builds the second on the plan the first left", async () => {
     const { hook, applyCurriculum } = mount();
@@ -455,7 +493,7 @@ describe("adding the courses", () => {
     mocks.planLearningPath.mockResolvedValue({
       subject: " ",
       goal: " ",
-      steps: [],
+      steps: [{ title: "First", level: "SS 2" }],
     });
     const { hook, applyCurriculum, onFailure } = mount();
     await act(() => hook.result.current.carryOut(proposals(["astronomy"])));
@@ -475,7 +513,7 @@ describe("adding the courses", () => {
         slug: `subject-${n}`,
       })),
     };
-    const { hook, applyCurriculum, onDone, onFailure } = mount(full);
+    const { hook, applyCurriculum, onDone, onFailure, shown } = mount(full);
     await act(() => hook.result.current.carryOut(proposals(GOALS)));
 
     await act(() => hook.result.current.confirmPlanChange());
@@ -483,6 +521,8 @@ describe("adding the courses", () => {
     expect(applyCurriculum).not.toHaveBeenCalled();
     expect(onDone).not.toHaveBeenCalled();
     expect(onFailure).toHaveBeenCalledWith(`chat.pathsFull ${MAX_SUBJECTS}`);
+    // They stay on the card, to be added once the learner has dropped a subject.
+    expect(shown()?.map((p) => p.goal)).toEqual(GOALS);
   });
 });
 

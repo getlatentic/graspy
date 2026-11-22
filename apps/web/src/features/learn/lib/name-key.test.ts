@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import corpus from "./name-key-corpus.json";
+import latinRanges from "./latin-ranges.json";
 import { nameKey } from "./name-key";
 
 describe("nameKey", () => {
@@ -26,5 +27,24 @@ describe("nameKey", () => {
 
   it("cuts a very long name before comparing it", () => {
     expect(nameKey("a".repeat(100_000)).length).toBe(80);
+  });
+
+  it("folds the letters of Unicode's Latin script that the server's table lists, and no others", () => {
+    const latin = /\p{Script=Latin}/u;
+    const listed = (cp: number) =>
+      latinRanges.some(([first, last]) => cp >= first && cp <= last);
+    for (let cp = 0; cp <= 0x10ffff; cp += 1) {
+      if (cp >= 0xd800 && cp <= 0xdfff) continue;
+      if (latin.test(String.fromCodePoint(cp)) !== listed(cp)) {
+        throw new Error(`U+${cp.toString(16)} differs from latin-ranges.json`);
+      }
+    }
+  });
+
+  it("cuts by code points, not by UTF-16 units", () => {
+    expect(nameKey("a".repeat(79) + "\u{20000}b")).toBe(
+      "a".repeat(79) + "\u{20000}",
+    );
+    expect(Array.from(nameKey("\u{20000}".repeat(100))).length).toBe(80);
   });
 });

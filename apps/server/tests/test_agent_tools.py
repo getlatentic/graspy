@@ -571,7 +571,6 @@ def test_a_second_change_in_a_turn_is_refused_whichever_tools_make_them():
     refused = [
         built["change_subjects"](add=["Chess"]),
         built["add_topic"]("Surds", subject="Mathematics"),
-        built["open_subject"]("Mathematics"),
         built["rebuild_plan"](),
         built["propose_path"](["Chess"]),
     ]
@@ -581,6 +580,28 @@ def test_a_second_change_in_a_turn_is_refused_whichever_tools_make_them():
     assert wire(outputs) == [
         {"type": "change_subjects", "add": ["Astronomy"], "remove": []}
     ]
+
+
+def test_going_to_a_subject_and_adding_a_topic_are_both_done():
+    outputs = TurnOutputs()
+    built = {t.__name__: t for t in tools_for(Turn(SEVERAL_ENGLISH, "x"), outputs)}
+
+    opened = built["open_subject"]("Mathematics")
+    added = built["add_topic"]("Surds", subject="Mathematics")
+
+    assert "error" not in opened and "error" not in added
+    assert [a["type"] for a in wire(outputs)] == ["open_subject", "add_topic"]
+
+
+def test_the_same_call_twice_is_answered_as_already_done():
+    outputs = TurnOutputs()
+    built = {t.__name__: t for t in tools_for(Turn(SEVERAL_ENGLISH, "x"), outputs)}
+
+    built["add_topic"]("Surds", subject="Mathematics")
+    again = built["add_topic"]("Surds", subject="Mathematics")
+
+    assert "Already done" in again["note"]
+    assert len(wire(outputs)) == 1
 
 
 def test_the_courses_of_several_calls_are_one_change():
@@ -601,7 +622,7 @@ def test_the_courses_a_plan_has_no_room_for_are_not_offered():
     result, outputs = use("propose_path", many, ["Astronomy", "Chess"])
 
     assert [a["goal"] for a in wire(outputs)] == ["Astronomy"]
-    assert "room for 1 more course" in result["not_offered"]
+    assert "at most 1 course" in result["not_offered"]
 
 
 def test_the_names_skipped_as_already_held_are_told():
@@ -611,3 +632,54 @@ def test_the_names_skipped_as_already_held_are_told():
 
     assert wire(outputs)[0]["add"] == ["Astronomy"]
     assert "Mathematics" in result["already_held"]
+
+
+OPEN_ONLY = LearnerContext(
+    subject="Mathematics", subjectSlug="mathematics", topics=TOPICS
+)
+
+
+def test_the_open_subject_counts_toward_the_room_even_when_the_app_did_not_list_it():
+    listed = [{"name": f"Subject {n}", "slug": f"s{n}"} for n in range(14)]
+    context = LearnerContext(
+        subject="Mathematics", subjectSlug="mathematics", subjects=listed
+    )
+
+    result, outputs = use("propose_path", context, ["Astronomy", "Chess"])
+
+    assert wire(outputs) == []
+    assert "drop a subject first" in result["error"]
+
+
+def test_a_course_is_not_proposed_when_it_is_the_open_subject_the_app_did_not_list():
+    result, outputs = use("propose_path", OPEN_ONLY, ["Mathematics"])
+
+    assert "open_subject" in result["error"]
+    assert wire(outputs) == []
+
+
+def test_subjects_can_be_changed_when_only_the_open_one_is_known():
+    _, outputs = use("change_subjects", OPEN_ONLY, add=["Maths", "Astronomy"])
+
+    assert wire(outputs)[0]["add"] == ["Astronomy"]
+
+
+@pytest.mark.parametrize("goals", [7, {"a": 1}, 2.5, None])
+def test_odd_courses_are_refused_in_words_not_with_an_error(goals):
+    result, outputs = use("propose_path", maths(), goals)
+
+    assert "error" in result
+    assert wire(outputs) == []
+
+
+def test_a_comma_separated_string_is_one_course():
+    _, outputs = use("propose_path", maths(), "machine learning, quantum computing")
+
+    assert [a["goal"] for a in wire(outputs)] == ["machine learning, quantum computing"]
+
+
+@pytest.mark.parametrize("text", ["[machine learning]", " [ machine learning ] "])
+def test_brackets_around_a_course_are_dropped(text):
+    _, outputs = use("propose_path", maths(), text)
+
+    assert [a["goal"] for a in wire(outputs)] == ["machine learning"]

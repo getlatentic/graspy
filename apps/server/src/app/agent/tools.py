@@ -108,23 +108,11 @@ def open_topic_tool(
     return open_topic
 
 
-def _held_subjects(context: LearnerContext) -> list[SubjectRef]:
-    """Their subjects, with the open one even when the app did not list it."""
-    subjects = list(context.subjects)
-    if (
-        context.subject
-        and context.subject_slug
-        and context.subject_slug not in {s.slug for s in subjects}
-    ):
-        subjects.append(SubjectRef(name=context.subject, slug=context.subject_slug))
-    return subjects
-
-
 def _no_subject(name: str, context: LearnerContext) -> dict:
     return refusal(
         f"The learner has no subject like {name!r}. To take up a school subject at their "
         "grade, use change_subjects to add it; for any other course, use propose_path.",
-        subjects=[s.name for s in context.subjects],
+        subjects=[s.name for s in context.held_subjects()],
     )
 
 
@@ -138,7 +126,7 @@ def _ambiguous(name: str, held: list[str]) -> dict:
 def _subject_named(name: str, context: LearnerContext) -> SubjectRef | dict:
     """The learner's subject called ``name`` (the open one for no name), or the
     refusal that says why it is none or which of several it could be."""
-    subjects = _held_subjects(context)
+    subjects = context.held_subjects()
     wanted = name.strip()[:MAX_TOPIC_TITLE]
     if not wanted:
         open_one = next((s for s in subjects if s.slug == context.subject_slug), None)
@@ -215,11 +203,11 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
             add: New subjects to study, named in the learner's language, e.g. ["Physics"].
             remove: Subjects of theirs to drop, as the learner named them.
         """
-        if not context.subjects:
+        names = [s.name for s in context.held_subjects()]
+        if not names:
             return refusal(
                 "The learner's subjects were not sent, so none can be changed."
             )
-        names = [s.name for s in context.subjects]
         dropped = _subjects_named((remove or [])[:MAX_ASKED], names)
         if isinstance(dropped, dict):
             return dropped

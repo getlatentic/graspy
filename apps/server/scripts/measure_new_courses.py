@@ -82,12 +82,18 @@ ADD_THEN_OPEN = [
     "Add a topic on completing the square to this subject, then take me to its lesson.",
     "Please add the quadratic formula to my topics and open it for me.",
 ]
+GO_THEN_ADD = [
+    "Go to Maths and add surds.",
+    "Open the Mathematics subject and add a topic on surds to it.",
+    "Take me to Physics and add a topic on waves.",
+]
 # (group, subjects it should make, topics it should add, contexts, phrasings)
 GROUPS = [
     ("three courses", 3, 0, list(CONTEXTS), THREE),
     ("one course", 1, 0, list(CONTEXTS), ONE),
     ("one more topic", 0, 1, ["subject open", "topic open"], TOPIC),
     ("add then open", 0, 1, ["subject open", "topic open"], ADD_THEN_OPEN),
+    ("go then add", 0, 1, ["nothing open", "subject open"], GO_THEN_ADD),
 ]
 
 
@@ -192,9 +198,12 @@ def summary(results: list[dict]) -> str:
             for r in good
         )
         sizes = sorted(len(r["subjects_made"]) for r in good)
+        opened = sum(
+            any(a["type"].startswith("open_") for a in r["actions"]) for r in good
+        )
         lines.append(
             f"{group} | {context} | right {right}/{len(draws)} "
-            f"(distinct {distinct}, errors {len(draws) - len(good)}) "
+            f"(distinct {distinct}, errors {len(draws) - len(good)}, with an open {opened}) "
             f"subjects made per draw {sizes} | {message[:60]}"
         )
     return "\n".join(lines)

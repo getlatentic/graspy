@@ -124,5 +124,5 @@ def _for_model(
 
 def tools_for(turn: Turn, outputs: TurnOutputs) -> list[Callable[..., dict]]:
     where = turn.where()
-    room = MAX_CHOSEN_SUBJECTS - len(turn.context.subjects)
+    room = MAX_CHOSEN_SUBJECTS - len(turn.context.held_subjects())
     return [_for_model(spec.build(turn), outputs, where, room) for spec in TOOLS]

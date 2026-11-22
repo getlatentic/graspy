@@ -8,8 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from app.agent.latin_ranges import LATIN_RANGES
 from app.agent.subject_match import candidates, normalise
 
+LATIN = Path(__file__).parents[2] / "web/src/features/learn/lib/latin-ranges.json"
 CORPUS = Path(__file__).parents[2] / "web/src/features/learn/lib/name-key-corpus.json"
 
 
@@ -152,23 +154,28 @@ def test_the_exactly_spelled_subject_wins_over_an_abbreviation():
     assert named("English", "English Language", "English") == ["English"]
 
 
-def test_a_huge_name_costs_no_more_than_a_long_one():
-    """The name is cut before it is compared, so 4 times the length takes about
-    as long, not 4 times."""
+@pytest.mark.parametrize("length", [50_000, 100_000])
+def test_four_times_the_name_costs_about_the_same_not_four_times(length):
+    """The name is cut before it is compared, so time does not grow with its length."""
     held = ["Mathematics", "Physics"]
 
-    def took(length: int) -> float:
-        name = "mathematics " * (length // 12)
-        start = time.perf_counter()
-        for _ in range(3):
-            candidates(name, held)
-        return time.perf_counter() - start
+    def took(size: int) -> int:
+        name = "mathematics " * (size // 12)
+        best = None
+        for _ in range(7):
+            start = time.perf_counter_ns()
+            for _ in range(20):
+                candidates(name, held)
+            best = min(best or 10**18, time.perf_counter_ns() - start)
+        return best
 
-    took(10_000)
-    small, large = (
-        min(took(100_000) for _ in range(5)),
-        min(took(400_000) for _ in range(5)),
-    )
+    assert took(4 * length) / took(length) < 2
 
-    assert large < small * 2 + 0.005
-    assert len(normalise("x" * 400_000)) == 80
+
+def test_the_latin_letters_are_the_ones_the_web_app_folds():
+    assert [list(r) for r in LATIN_RANGES] == json.loads(LATIN.read_text())
+
+
+def test_a_name_is_cut_by_code_points_not_utf16_units():
+    assert normalise("a" * 79 + "\U00020000b") == "a" * 79 + "\U00020000"
+    assert len(normalise("\U00020000" * 100)) == 80

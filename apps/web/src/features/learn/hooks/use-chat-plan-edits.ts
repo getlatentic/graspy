@@ -66,9 +66,10 @@ function planEdits(
         lessonLink(t, subjectSlug, added.index),
       );
     },
-    acceptPaths: async (paths: LearningPath[]) => {
+    /** Adds the paths, and returns those the plan had no room for. */
+    acceptPaths: async (paths: LearningPath[]): Promise<LearningPath[]> => {
       const current = read();
-      if (!current || paths.length === 0) return;
+      if (!current || paths.length === 0) return [];
       const { curriculum: next, outcomes } = withPaths(current, paths);
       if (outcomes.some(({ status }) => status === "added")) {
         await applyCurriculum(next);
@@ -94,6 +95,7 @@ function planEdits(
       if (outcomes.some(({ status }) => status === "full")) {
         onFailure(t("chat.pathsFull", { count: MAX_SUBJECTS }));
       }
+      return paths.filter((_, at) => outcomes[at].status === "full");
     },
     rebuild: async () => {
       const current = read();

@@ -21,19 +21,23 @@ def propose_path_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
         whether it is far beyond their grade ("real analysis") or a field of its own
         ("quantum computing"), and also while a subject is open: a new course is never a
         topic of the open subject. Several courses are several goals in one call, one goal
-        per course. The learner decides whether to add each.
+        per course. A string with commas in it is one course, so send a list for several.
+        The learner decides whether to add each.
 
         Args:
             goals: One entry per course, in the learner's words, e.g. ["machine learning", "quantum computing"].
         """
-        wanted = distinct_goals(_goal_list(goals or goal))
+        asked = goals or goal
+        if not isinstance(asked, str | list):
+            return refusal("The courses are a list of names, one string for each.")
+        wanted = distinct_goals(_goal_list(asked))
         if not wanted:
             return refusal("Say what the learner wants to learn.")
         if len(wanted) > MAX_PATH_GOALS:
             return refusal(
                 f"At most {MAX_PATH_GOALS} courses at a time: call it again for the rest later."
             )
-        names = [s.name for s in context.subjects]
+        names = [s.name for s in context.held_subjects()]
         held = [item for item in wanted if candidates(item, names)]
         new = [item for item in wanted if item not in held]
         if not new:
@@ -66,9 +70,10 @@ def _goal_list(goals: list[str] | str) -> list[str]:
         try:
             parsed = json.loads(text)
         except ValueError:
-            return [text]
+            parsed = None
         if isinstance(parsed, list):
             return [item for item in parsed if isinstance(item, str)]
+        text = text.strip("[]").strip()
     return [text]
 
 

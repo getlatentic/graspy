@@ -13,18 +13,21 @@ from app.agent.reply import (
     ProposePath,
     RebuildPlan,
 )
-from app.agent.turn_policy import ONE_CHANGE, admit
+from app.agent.turn_policy import ALREADY, FULL, ONE_CHANGE, admit
 
 ROOM = 10
-CHANGES = [
+WRITES = [
     ChangeSubjects(add=["Chess"], remove=[]),
     ChangeSubjects(add=[], remove=["History"]),
     RebuildPlan(),
     AddTopic(subject_slug="a", subject="A", topic="Surds"),
+]
+OPENS = [
     OpenSubject(subject_slug="a", subject="A"),
     OpenTopic(subject_slug="a", topic_index=0, topic="T"),
 ]
-IDS = ["add", "drop", "rebuild", "topic", "open-subject", "open-topic"]
+WRITE_IDS = ["add", "drop", "rebuild", "topic"]
+OPEN_IDS = ["open-subject", "open-topic"]
 
 
 def call(*actions) -> Outcome:
@@ -37,9 +40,13 @@ def courses(*goals: str) -> Outcome:
     )
 
 
-@pytest.mark.parametrize("first", CHANGES, ids=IDS)
-@pytest.mark.parametrize("second", CHANGES, ids=IDS)
-def test_a_second_change_in_a_turn_is_refused_and_the_call_says_so(first, second):
+@pytest.mark.parametrize("first", WRITES, ids=WRITE_IDS)
+@pytest.mark.parametrize("second", WRITES, ids=WRITE_IDS)
+def test_a_second_different_write_in_a_turn_is_refused_and_the_call_says_so(
+    first, second
+):
+    if first == second:
+        pytest.skip("the same call twice is answered as already done")
     actions = []
     admit(actions, call(first), ROOM)
 
@@ -49,16 +56,65 @@ def test_a_second_change_in_a_turn_is_refused_and_the_call_says_so(first, second
     assert actions == [first]
 
 
-@pytest.mark.parametrize("change", CHANGES, ids=IDS)
-def test_courses_are_refused_after_a_change_and_a_change_after_courses(change):
+@pytest.mark.parametrize("write", WRITES, ids=WRITE_IDS)
+def test_the_same_call_twice_is_answered_as_already_done(write):
     actions = []
-    admit(actions, call(change), ROOM)
+    admit(actions, call(write), ROOM)
+
+    told = admit(actions, call(write), ROOM)
+
+    assert told == ALREADY
+    assert actions == [write]
+
+
+@pytest.mark.parametrize("opened", OPENS, ids=OPEN_IDS)
+@pytest.mark.parametrize("write", WRITES, ids=WRITE_IDS)
+def test_going_somewhere_comes_with_a_write_in_either_order(write, opened):
+    """ "Go to Maths and add surds": the open changes nothing, so it takes no slot."""
+    actions = []
+    admit(actions, call(opened), ROOM)
+    assert admit(actions, call(write), ROOM) == {"done": "ok"}
+    assert actions == [opened, write]
+
+    actions = []
+    admit(actions, call(write), ROOM)
+    assert admit(actions, call(opened), ROOM) == {"done": "ok"}
+    assert actions == [write, opened]
+
+
+def test_of_two_opens_the_last_counts_and_a_write_is_kept():
+    first, last = OPENS
+    write = WRITES[3]
+    actions = []
+
+    admit(actions, call(first), ROOM)
+    admit(actions, call(write), ROOM)
+    admit(actions, call(last), ROOM)
+
+    assert actions == [write, last]
+
+
+@pytest.mark.parametrize("write", WRITES, ids=WRITE_IDS)
+def test_courses_are_refused_after_a_write_and_a_write_after_courses(write):
+    actions = []
+    admit(actions, call(write), ROOM)
     assert admit(actions, courses("Astronomy"), ROOM) == refusal(ONE_CHANGE)
 
     actions = []
     admit(actions, courses("Astronomy"), ROOM)
-    assert admit(actions, call(change), ROOM) == refusal(ONE_CHANGE)
+    assert admit(actions, call(write), ROOM) == refusal(ONE_CHANGE)
     assert [type(a) for a in actions] == [ProposePath]
+
+
+def test_courses_come_with_a_trip_to_a_subject():
+    opened = OPENS[0]
+    actions = []
+
+    admit(actions, courses("Astronomy"), ROOM)
+    admit(actions, call(opened), ROOM)
+
+    assert [type(a) for a in actions] == [ProposePath, OpenSubject]
+    assert admit(actions, courses("Chess"), ROOM) == {"shown": "all"}
 
 
 def test_a_call_that_changes_nothing_is_told_as_it_was():
@@ -98,16 +154,18 @@ def test_courses_stop_at_the_room_the_plan_has_and_the_call_says_so():
     told = admit(actions, courses("A", "B", "C"), 2)
 
     assert [a.goal for a in actions] == ["A", "B"]
-    assert "room for 2 more courses" in told["not_offered"]
+    assert "at most 2 courses" in told["not_offered"]
     assert "C" in told["not_offered"]
 
 
-def test_a_full_plan_is_offered_no_course():
+@pytest.mark.parametrize("room", [0, -1])
+def test_a_full_plan_is_told_to_drop_a_subject_first(room):
     actions = []
 
-    told = admit(actions, courses("A"), 0)
+    told = admit(actions, courses("A"), room)
 
-    assert "room for 0 more" in told["error"]
+    assert told == refusal(FULL)
+    assert "drop a subject first" in told["error"]
     assert actions == []
 
 
@@ -127,5 +185,5 @@ def test_courses_already_offered_say_so_and_add_nothing():
 
     told = admit(actions, courses("astronomy"), ROOM)
 
-    assert "already offered" in told["note"]
+    assert told == ALREADY
     assert len(actions) == 1

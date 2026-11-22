@@ -23,7 +23,9 @@ const LETTERS: Record<string, string> = {
 export function nameKey(name: string): string {
   let key = "";
   let latin = false;
-  for (const char of name.slice(0, MAX_NAME).toLowerCase().normalize("NFKD")) {
+  // Cut by code points, as the server does, not by UTF-16 units.
+  const cut = Array.from(name).slice(0, MAX_NAME).join("");
+  for (const char of cut.toLowerCase().normalize("NFKD")) {
     if (/\p{M}/u.test(char)) {
       if (!latin) key += char;
     } else if (/[\p{L}\p{N}]/u.test(char)) {

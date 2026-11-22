@@ -54,7 +54,7 @@ export function usePathProposal(
       const timer = setTimeout(() => request.abort(), PATH_PLAN_TIMEOUT_MS);
       let path: LearningPath | null = null;
       try {
-        path = await planLearningPath(
+        const planned = await planLearningPath(
           {
             country: curriculum.country,
             language: curriculum.language,
@@ -63,6 +63,8 @@ export function usePathProposal(
           },
           request.signal,
         );
+        // A path with no step is nothing to add.
+        path = planned.steps.length > 0 ? planned : null;
       } catch (error) {
         console.error("Planning a path failed:", error);
       } finally {
@@ -113,15 +115,23 @@ export function usePathProposal(
     [plan, publish],
   );
 
-  /** The paths that are ready, taken off the card; the courses still planning or failed stay on it. */
-  const takeReady = useCallback(() => {
-    const paths = proposals.current.flatMap(({ path }) => (path ? [path] : []));
-    if (paths.length === 0)
-      return { paths, remaining: proposals.current.length };
-    proposals.current = proposals.current.filter(({ path }) => !path);
-    if (proposals.current.length > 0) publish();
-    return { paths, remaining: proposals.current.length };
-  }, [publish]);
+  const readyPaths = useCallback(
+    () => proposals.current.flatMap(({ path }) => (path ? [path] : [])),
+    [],
+  );
 
-  return { propose, retry, takeReady, forget: endRound };
+  /** Takes the paths that were dealt with off the card, and says how many courses stay on it:
+   * those still planning, those that failed, and those the plan had no room for. */
+  const settle = useCallback(
+    (done: LearningPath[]) => {
+      proposals.current = proposals.current.filter(
+        ({ path }) => !path || !done.includes(path),
+      );
+      if (proposals.current.length > 0) publish();
+      return proposals.current.length;
+    },
+    [publish],
+  );
+
+  return { propose, retry, readyPaths, settle, forget: endRound };
 }

@@ -49,13 +49,20 @@ export function useTutorActions(deps: TutorActionDeps) {
   const { applyCurriculum: applyToPlan } = deps;
   const applyCurriculum = useCallback(
     async (next: CurriculumData) => {
+      const before = latest.current;
       latest.current = next;
-      await applyToPlan(next);
+      try {
+        await applyToPlan(next);
+      } catch (error) {
+        // The plan was not kept, so the next action builds on the one that was.
+        latest.current = before;
+        throw error;
+      }
     },
     [applyToPlan],
   );
   const edits = useChatPlanEdits({ ...deps, read, applyCurriculum });
-  const { propose, retry, takeReady, forget } = usePathProposal(
+  const { propose, retry, readyPaths, settle, forget } = usePathProposal(
     deps.curriculum,
     setPending,
   );
@@ -106,21 +113,21 @@ export function useTutorActions(deps: TutorActionDeps) {
     const change = pending;
     if (!change) return;
     if (change.type === "propose_path") {
-      // The courses not ready stay on the card, still planning or to be tried again.
-      const { paths, remaining } = takeReady();
+      // The courses not ready, and those the plan had no room for, stay on the card.
+      const paths = readyPaths();
       if (paths.length === 0) return;
-      if (remaining === 0) {
+      const unfit = await edits.acceptPaths(paths);
+      if (settle(paths.filter((path) => !unfit.includes(path))) === 0) {
         forget();
         setPending(null);
       }
-      await edits.acceptPaths(paths);
       return;
     }
     forget();
     setPending(null);
     if (change.type === "change_subjects") await setSubjects(change.names);
     else await edits.rebuild();
-  }, [edits, forget, pending, setSubjects, takeReady]);
+  }, [edits, forget, pending, readyPaths, setSubjects, settle]);
 
   const dismissPlanChange = useCallback(() => {
     forget();

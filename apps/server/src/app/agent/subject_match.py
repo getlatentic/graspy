@@ -7,8 +7,10 @@ would make "Macroeconomics" and "Microeconomics" one."""
 
 from __future__ import annotations
 
-import re
 import unicodedata
+from bisect import bisect_right
+
+from .latin_ranges import LATIN_RANGES
 
 # Compared at this length, so a huge name costs the same as a long one.
 MAX_NAME = 80
@@ -40,7 +42,12 @@ ABBREVIATIONS = {
 }
 # "English" alone stands for whichever English subject they hold, if one.
 ENGLISH = frozenset({"eng", "english"})
-LATIN = re.compile(r"[A-Za-z\u00c0-\u024f\u1e00-\u1eff]")
+LATIN_STARTS = [start for start, _ in LATIN_RANGES]
+
+
+def _is_latin(char: str) -> bool:
+    at = bisect_right(LATIN_STARTS, ord(char)) - 1
+    return at >= 0 and ord(char) <= LATIN_RANGES[at][1]
 
 
 def normalise(name: str) -> str:
@@ -56,7 +63,7 @@ def normalise(name: str) -> str:
             if not latin:
                 key.append(char)
         elif category in "LN":
-            latin = LATIN.match(char) is not None
+            latin = _is_latin(char)
             key.append(LETTERS.get(char, char))
         else:
             latin = False

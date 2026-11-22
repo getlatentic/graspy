@@ -136,6 +136,17 @@ class LearnerContext(BaseModel):
             logger.warning("Dropped malformed learner context", exc_info=True)
             return cls()
 
+    def held_subjects(self) -> list[SubjectRef]:
+        """Their subjects, with the open one even when the app did not list it."""
+        subjects = list(self.subjects)
+        if (
+            self.subject
+            and self.subject_slug
+            and self.subject_slug not in {s.slug for s in subjects}
+        ):
+            subjects.append(SubjectRef(name=self.subject, slug=self.subject_slug))
+        return subjects
+
     def describe_learner(self) -> str:
         parts = [
             self.grade_level and f"a {self.grade_level} learner",
