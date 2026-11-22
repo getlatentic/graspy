@@ -3,6 +3,7 @@ import { useNavigate, type NavigateFunction } from "react-router";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { LearningPath } from "@/lib/curriculum-api";
 import type { ChatLink } from "@/lib/chat-db";
+import type { CurriculumSubject } from "@/lib/curriculum-record";
 import { useI18n, type Translate } from "@/lib/i18n-context";
 import { goalIndex, withPath, withTopic } from "../lib/curriculum-edit";
 import { rebuildRequest } from "../lib/curriculum-request";
@@ -59,15 +60,23 @@ function planEdits(
         lessonLink(t, subjectSlug, added.index),
       );
     },
-    acceptPath: async (path: LearningPath) => {
-      if (!curriculum) return;
-      const { curriculum: next, subject } = withPath(curriculum, path);
+    acceptPaths: async (paths: LearningPath[]) => {
+      if (!curriculum || paths.length === 0) return;
+      let next = curriculum;
+      const added: CurriculumSubject[] = [];
+      for (const path of paths) {
+        const made = withPath(next, path);
+        next = made.curriculum;
+        added.push(made.subject);
+      }
       await applyCurriculum(next);
-      const goal = Math.max(0, goalIndex(next, subject.slug));
-      onDone(
-        t("chat.pathAdded", { subject: subject.name }),
-        lessonLink(t, subject.slug, goal),
-      );
+      for (const subject of added) {
+        const goal = Math.max(0, goalIndex(next, subject.slug));
+        onDone(
+          t("chat.pathAdded", { subject: subject.name }),
+          lessonLink(t, subject.slug, goal),
+        );
+      }
     },
     rebuild: async () => {
       const request = curriculum && rebuildRequest(curriculum);

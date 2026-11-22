@@ -1,3 +1,4 @@
+import type { PathProposal } from "@/features/learn/hooks/use-path-proposal";
 import type { PendingPlanChange } from "@/features/learn/hooks/use-tutor-actions";
 import type { LearningPath } from "@/lib/curriculum-api";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,8 @@ export function PlanChangeCard({
 
   if (change.type === "propose_path") {
     return (
-      <PathProposal
-        goal={change.goal}
-        path={change.path}
-        failed={change.failed}
+      <PathProposals
+        proposals={change.proposals}
         onAccept={onConfirm}
         onDismiss={onDismiss}
       />
@@ -55,10 +54,8 @@ export function PlanChangeCard({
   );
 }
 
-interface PathProposalProps {
-  goal: string;
-  path: LearningPath | null;
-  failed: boolean;
+interface PathProposalsProps {
+  proposals: PathProposal[];
   onAccept: () => void;
   onDismiss: () => void;
 }
@@ -66,51 +63,56 @@ interface PathProposalProps {
 const PATH_FRAME =
   "mb-3 rounded-control border border-accent-line bg-accent-soft p-3 text-sm text-ink";
 
-function PathProposal({
-  goal,
-  path,
-  failed,
-  onAccept,
-  onDismiss,
-}: PathProposalProps) {
+function PathProposals({ proposals, onAccept, onDismiss }: PathProposalsProps) {
   const { t } = useI18n();
-  if (failed) {
-    return (
-      <div role="group" aria-label={t("chat.pathTitle")} className={PATH_FRAME}>
-        <p>{t("chat.pathFailed", { goal })}</p>
-        <Button size="sm" variant="ghost" onClick={onDismiss} className="mt-2">
-          {t("chat.pathNotNow")}
-        </Button>
+  const planning = proposals.some(({ path, failed }) => !path && !failed);
+  const ready = proposals.filter(({ path }) => path).length;
+  return (
+    <div role="group" aria-label={t("chat.pathTitle")} className={PATH_FRAME}>
+      <div className="space-y-3">
+        {proposals.map((proposal) => (
+          <PathProposalItem key={proposal.goal} proposal={proposal} />
+        ))}
       </div>
-    );
+      {planning ? null : (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {ready > 0 && (
+            <Button size="sm" onClick={onAccept}>
+              {ready > 1 ? t("chat.pathAcceptAll") : t("chat.pathAccept")}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" onClick={onDismiss}>
+            {t("chat.pathNotNow")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PathProposalItem({ proposal }: { proposal: PathProposal }) {
+  const { t } = useI18n();
+  if (proposal.failed) {
+    return <p>{t("chat.pathFailed", { goal: proposal.goal })}</p>;
   }
-  if (!path) {
+  if (!proposal.path) {
     return (
-      <div
-        role="status"
-        className={`${PATH_FRAME} flex items-center gap-2 text-accent-ink`}
-      >
+      <p role="status" className="flex items-center gap-2 text-accent-ink">
         <Spinner />
-        {t("chat.pathPlanning", { goal })}
-      </div>
+        {t("chat.pathPlanning", { goal: proposal.goal })}
+      </p>
     );
   }
-  return <PathPreview path={path} onAccept={onAccept} onDismiss={onDismiss} />;
+  return <PathPreview path={proposal.path} />;
 }
 
-interface PathPreviewProps {
-  path: LearningPath;
-  onAccept: () => void;
-  onDismiss: () => void;
-}
-
-function PathPreview({ path, onAccept, onDismiss }: PathPreviewProps) {
+function PathPreview({ path }: { path: LearningPath }) {
   const { t } = useI18n();
   const shown = path.steps.slice(0, PREVIEWED_STEPS);
   const more = path.steps.length - shown.length;
 
   return (
-    <div role="group" aria-label={t("chat.pathTitle")} className={PATH_FRAME}>
+    <div>
       <p dir="auto" className="font-semibold">
         {path.subject}
       </p>
@@ -128,14 +130,6 @@ function PathPreview({ path, onAccept, onDismiss }: PathPreviewProps) {
           {t("chat.pathMore", { count: more })}
         </p>
       )}
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Button size="sm" onClick={onAccept}>
-          {t("chat.pathAccept")}
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onDismiss}>
-          {t("chat.pathNotNow")}
-        </Button>
-      </div>
     </div>
   );
 }

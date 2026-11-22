@@ -31,6 +31,8 @@ TOPIC_MATCH_CUTOFF = 0.8
 MAX_TOPIC_TITLE = 80
 # The most subjects a learner can study at once, as in the app's own picker.
 MAX_CHOSEN_SUBJECTS = 15
+# Courses one call can offer, so a long list does not plan a dozen at once.
+MAX_PATH_GOALS = 5
 
 
 def calculate(expression: str) -> dict:
@@ -66,8 +68,10 @@ def _opened(context: LearnerContext, index: int, told: dict) -> Outcome:
     topic = context.topics[index]
     return Outcome(
         told={"topic": topic, **told, "done": _button_told("lesson")},
-        action=OpenTopic(
-            subject_slug=context.subject_slug or "", topic_index=index, topic=topic
+        actions=(
+            OpenTopic(
+                subject_slug=context.subject_slug or "", topic_index=index, topic=topic
+            ),
         ),
     )
 
@@ -121,8 +125,10 @@ def _subject_named(name: str, context: LearnerContext) -> SubjectRef | None:
 
 def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
     def add_topic(topic: str, subject: str = "") -> dict | Outcome:
-        """Add a new topic to one of the learner's subjects and open its lesson. Use it
-        when the learner wants to learn something that is not in their topic list.
+        """Add one lesson-sized topic to a subject the learner has and open its lesson. Use it
+        when they want to learn something small that is not in that subject's topic list.
+        A whole course is not a topic: it is a subject of its own, made with propose_path
+        even while another subject is open.
 
         Args:
             topic: A short title for the new topic in the learner's language, e.g. "Photosynthesis".
@@ -135,7 +141,7 @@ def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
         if target is None:
             return refusal(
                 "The learner has no such subject. To take up a school subject at their grade, use "
-                "change_subjects to add it; for something beyond their grade, use propose_path.",
+                "change_subjects to add it; for any other course, use propose_path.",
                 subjects=[s.name for s in context.subjects],
             )
         if target.slug == context.subject_slug and context.topics:
@@ -151,7 +157,9 @@ def add_topic_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
                 }
         return Outcome(
             told={"added": title, "subject": target.name, "done": _added_told(title)},
-            action=AddTopic(subject_slug=target.slug, subject=target.name, topic=title),
+            actions=(
+                AddTopic(subject_slug=target.slug, subject=target.name, topic=title),
+            ),
         )
 
     return add_topic
@@ -197,7 +205,7 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
             return problem
         return Outcome(
             told={"done": _change_told(added, dropped)},
-            action=ChangeSubjects(add=added, remove=dropped),
+            actions=(ChangeSubjects(add=added, remove=dropped),),
         )
 
     return change_subjects
@@ -216,7 +224,18 @@ def _subjects_named(wanted: list[str], names: list[str]) -> list[str] | dict:
 
 def _new_subjects(wanted: list[str], names: list[str]) -> list[str]:
     titles = dict.fromkeys(" ".join(item.split())[:MAX_TOPIC_TITLE] for item in wanted)
-    return [title for title in titles if title and find_topic(title, names) is None]
+    return [title for title in titles if title and not _has_subject(title, names)]
+
+
+def _has_subject(title: str, names: list[str]) -> bool:
+    """A typo of a subject they have is that subject; a longer name that merely
+    contains one ("Mathematics of machine learning") is a new subject."""
+    folded = [name.casefold() for name in names]
+    target = title.casefold()
+    return bool(
+        target in folded
+        or difflib.get_close_matches(target, folded, n=1, cutoff=TOPIC_MATCH_CUTOFF)
+    )
 
 
 def _change_problem(
@@ -264,7 +283,7 @@ def rebuild_plan_tool(context: LearnerContext) -> Callable[[], dict | Outcome]:
             return refusal(
                 "The learner's subjects were not sent, so the plan cannot be rebuilt."
             )
-        return Outcome(told={"needs_confirmation": True}, action=RebuildPlan())
+        return Outcome(told={"needs_confirmation": True}, actions=(RebuildPlan(),))
 
     return rebuild_plan
 
@@ -282,33 +301,52 @@ def open_subject_tool(context: LearnerContext) -> Callable[[str], dict | Outcome
         if target is None:
             return refusal(
                 f"The learner has no subject like {subject!r}. To take up a school subject at "
-                "their grade, use change_subjects to add it; for something beyond their grade, use propose_path.",
+                "their grade, use change_subjects to add it; for any other course, use propose_path.",
                 subjects=[s.name for s in context.subjects],
             )
         return Outcome(
             told={"subject": target.name, "done": _button_told("subject")},
-            action=OpenSubject(subject_slug=target.slug, subject=target.name),
+            actions=(OpenSubject(subject_slug=target.slug, subject=target.name),),
         )
 
     return open_subject
 
 
-def propose_path(goal: str) -> dict | Outcome:
-    """Offer the learner a path to something bigger than one topic or beyond their
-    grade, such as a whole subject they do not have ("teach me real analysis").
-    The app plans the steps from their grade to the goal and shows them, and the
-    learner decides whether to add the path.
+def propose_path(goals: list[str]) -> dict | Outcome:
+    """Offer the learner a new course: a subject of its own, planned from their grade up
+    to the goal. Use it for any course they ask for that is not one of their subjects,
+    whether it is far beyond their grade ("real analysis") or a field of its own
+    ("quantum computing"), and also while a subject is open: a new course is never a
+    topic of the open subject. Several courses are several goals in one call, one goal
+    per course. The learner sees each course and decides whether to add it.
 
     Args:
-        goal: What the learner wants to learn, in their words, e.g. "real analysis".
+        goals: One entry per course, in the learner's words, e.g. ["machine learning", "quantum computing"].
     """
-    wanted = " ".join(goal.split())[:MAX_TOPIC_TITLE]
+    wanted = _distinct_goals(goals)
     if not wanted:
         return refusal("Say what the learner wants to learn.")
+    if len(wanted) > MAX_PATH_GOALS:
+        return refusal(
+            f"At most {MAX_PATH_GOALS} courses at a time: call it again for the rest later."
+        )
     return Outcome(
         told={
-            "shown": f"The app now shows the learner a path to {wanted} with a button to add it. "
-            "Tell them it is below; do not offer to show it."
+            "shown": f"The app now shows the learner a path to {_listed(wanted)}, each its own "
+            "subject, with a button to add them. Tell them it is below; do not offer to show it."
         },
-        action=ProposePath(goal=wanted),
+        actions=tuple(ProposePath(goal=goal) for goal in wanted),
     )
+
+
+def _distinct_goals(goals: list[str]) -> list[str]:
+    first_of: dict[str, str] = {}
+    for goal in goals:
+        title = " ".join(goal.split())[:MAX_TOPIC_TITLE]
+        if title:
+            first_of.setdefault(title.casefold(), title)
+    return list(first_of.values())
+
+
+def _listed(goals: list[str]) -> str:
+    return goals[0] if len(goals) == 1 else ", ".join(goals[:-1]) + f" and {goals[-1]}"

@@ -21,7 +21,7 @@ from .labels import DATA_ONLY
 from .memory import ConversationStore, Exchange
 from .native_react import NativeReAct
 from .persona import WITHOUT_STAGE, persona
-from .reply import Action
+from .reply import Action, actions_for_app
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
 from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
@@ -78,13 +78,16 @@ The learner's plan changes only through tools, and only when they ask:
   "how does ... work" and "what is" are questions for you, about this
   topic or another of theirs alike. Answer them here, and do not offer
   the lesson.
-- to learn a lesson-sized topic that suits their grade and one of their
-  subjects: answer, then add_topic.
+- to learn one lesson-sized topic that suits their grade and sits in one
+  of their subjects: answer, then add_topic.
 - to study a school subject taught at their grade that they do not have,
   or to drop one: change_subjects. Switching to a subject they do not
   have means adding it, never dropping another.
-- to learn something beyond their grade, such as a university subject:
-  propose_path, then answer with a short taste of it that they can follow
+- to take up any other new course, such as a university subject or a field
+  like quantum computing: propose_path, whether or not a subject is open.
+  A course is its own subject and never a topic of the open one, so a
+  request for several courses is one propose_path call with one goal for
+  each. Then answer with a short taste of the first that they can follow
   now, such as one question it answers, and tell them the path to it is
   below.
 - to start their whole plan again: rebuild_plan.
@@ -247,7 +250,7 @@ class Tutor:
             follow_ups=await safe_ones(
                 clean_follow_ups(answered.prediction.follow_ups), said
             ),
-            actions=answered.outputs.actions[-1:],
+            actions=actions_for_app(answered.outputs.actions),
             cards=cards,
         )
 

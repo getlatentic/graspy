@@ -40,10 +40,10 @@ export function usePlanChanges({ addMessage, ...deps }: PlanChangeDeps) {
 
   const { carryOut: carryOutAction } = actions;
   const carryOut = useCallback(
-    async (action: TutorAction, thread: ChatThread) => {
+    async (actions: readonly TutorAction[], thread: ChatThread) => {
       reportToRef.current = thread.id;
       setThreadId(thread.id);
-      await carryOutAction(action);
+      await carryOutAction(actions);
     },
     [carryOutAction],
   );

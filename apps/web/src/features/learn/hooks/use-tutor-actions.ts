@@ -3,17 +3,19 @@ import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { ChatLink } from "@/lib/chat-db";
 import { useChatPlanEdits, type ActionOf } from "./use-chat-plan-edits";
 import type { LearnerPlan } from "./use-learner-plan";
-import { usePathProposal, type PathProposal } from "./use-path-proposal";
+import { usePathProposal, type PathProposals } from "./use-path-proposal";
 import { useSubjectChange } from "./use-subject-change";
 
 export type PendingPlanChange =
   | { type: "change_subjects"; names: string[]; removed: string[] }
   | { type: "rebuild_plan" }
-  | PathProposal;
+  | PathProposals;
 
-// A new kind of action cannot go unhandled.
+// A new kind of action cannot go unhandled. The courses of one reply are proposed together.
 type ActionHandlers = {
-  [K in TutorAction["type"]]: (action: ActionOf<K>) => void | Promise<void>;
+  [K in Exclude<TutorAction["type"], "propose_path">]: (
+    action: ActionOf<K>,
+  ) => void | Promise<void>;
 };
 
 export type TutorActionDeps = Pick<
@@ -34,30 +36,42 @@ export function useTutorActions(deps: TutorActionDeps) {
   const { askToChange, setSubjects } = subjects;
 
   const carryOut = useCallback(
-    async (action: TutorAction) => {
+    async (actions: readonly TutorAction[]) => {
       const handlers: ActionHandlers = {
         open_topic: edits.openTopic,
         open_subject: edits.openSubject,
         add_topic: edits.addTopic,
         change_subjects: askToChange,
         rebuild_plan: () => setPending({ type: "rebuild_plan" }),
-        propose_path: ({ goal }) => propose(goal),
       };
-      const handle = handlers[action.type] as (
-        action: TutorAction,
-      ) => void | Promise<void>;
-      await handle(action);
+      const goals: string[] = [];
+      for (const action of actions) {
+        if (action.type === "propose_path") {
+          goals.push(action.goal);
+          continue;
+        }
+        const handle = handlers[action.type] as (
+          action: TutorAction,
+        ) => void | Promise<void>;
+        await handle(action);
+      }
+      if (goals.length > 0) await propose(goals);
     },
     [askToChange, edits, propose],
   );
 
   const confirmPlanChange = useCallback(async () => {
     const change = pending;
-    if (!change || (change.type === "propose_path" && !change.path)) return;
+    if (!change) return;
+    const paths =
+      change.type === "propose_path"
+        ? change.proposals.flatMap(({ path }) => (path ? [path] : []))
+        : [];
+    if (change.type === "propose_path" && paths.length === 0) return;
     setPending(null);
     if (change.type === "change_subjects") await setSubjects(change.names);
     else if (change.type === "rebuild_plan") await edits.rebuild();
-    else if (change.path) await edits.acceptPath(change.path);
+    else await edits.acceptPaths(paths);
   }, [edits, pending, setSubjects]);
 
   const dismissPlanChange = useCallback(() => {

@@ -50,6 +50,7 @@
     "pathSummaryOneLevel": "{count} موضوعًا في {level}",
     "pathMore": "و{count} أخرى",
     "pathAccept": "أضف هذا المسار",
+    "pathAcceptAll": "أضف الكل",
     "pathNotNow": "ليس الآن",
     "stop": "إيقاف",
     "jumpToLatest": "انتقل إلى أحدث رسالة",

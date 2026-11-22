@@ -3,41 +3,54 @@ import { planLearningPath, type LearningPath } from "@/lib/curriculum-api";
 import type { CurriculumData } from "@/lib/curriculum-record";
 
 export interface PathProposal {
-  type: "propose_path";
   goal: string;
   path: LearningPath | null;
   failed: boolean;
 }
 
-// Proposals are numbered so a dismissed or replaced one cannot reappear when its plan arrives.
+/** One proposal for each course the learner asked for, each its own subject if added. */
+export interface PathProposals {
+  type: "propose_path";
+  proposals: PathProposal[];
+}
+
+// Rounds are numbered so a dismissed or replaced one cannot reappear when its plans arrive.
 export function usePathProposal(
   curriculum: CurriculumData | null,
-  show: (proposal: PathProposal) => void,
+  show: (proposals: PathProposals) => void,
 ) {
   const latest = useRef(0);
 
   const propose = useCallback(
-    async (goal: string) => {
+    async (goals: string[]) => {
       if (!curriculum) return;
-      const proposal = ++latest.current;
-      show({ type: "propose_path", goal, path: null, failed: false });
-      const settle = (path: LearningPath | null) => {
-        if (latest.current !== proposal) return;
-        show({ type: "propose_path", goal, path, failed: !path });
-      };
-      try {
-        settle(
-          await planLearningPath({
-            country: curriculum.country,
-            language: curriculum.language,
-            gradeLevel: curriculum.gradeLevel,
-            goal,
-          }),
-        );
-      } catch (error) {
-        console.error("Planning a path failed:", error);
-        settle(null);
-      }
+      const round = ++latest.current;
+      const proposals: PathProposal[] = goals.map((goal) => ({
+        goal,
+        path: null,
+        failed: false,
+      }));
+      const publish = () =>
+        show({ type: "propose_path", proposals: [...proposals] });
+      publish();
+      await Promise.all(
+        goals.map(async (goal, index) => {
+          let path: LearningPath | null = null;
+          try {
+            path = await planLearningPath({
+              country: curriculum.country,
+              language: curriculum.language,
+              gradeLevel: curriculum.gradeLevel,
+              goal,
+            });
+          } catch (error) {
+            console.error("Planning a path failed:", error);
+          }
+          if (latest.current !== round) return;
+          proposals[index] = { goal, path, failed: !path };
+          publish();
+        }),
+      );
     },
     [curriculum, show],
   );

@@ -245,6 +245,21 @@ def test_adding_only_needs_no_confirmation_and_skips_subjects_already_there():
     assert wire(outputs)[0]["add"] == ["Physics"]
 
 
+def test_a_new_subject_whose_name_holds_one_they_have_is_still_new():
+    """ "Mathematics of machine learning" is not the Mathematics already in the plan."""
+    result, outputs = use(
+        "change_subjects",
+        learner_with_subjects(),
+        add=["Mathematics of machine learning", "Applied Basic Science", "Mathematic"],
+    )
+
+    assert wire(outputs)[0]["add"] == [
+        "Mathematics of machine learning",
+        "Applied Basic Science",
+    ]
+    assert "cannot be opened in this turn" in result["done"]
+
+
 @pytest.mark.parametrize(
     ("add", "remove"),
     [
@@ -319,17 +334,62 @@ def test_a_topic_for_a_subject_the_learner_lacks_points_to_a_path():
 
 
 def test_a_path_is_proposed_for_the_app_to_plan_and_show():
-    result, outputs = use("propose_path", maths(), "  real   analysis ")
+    result, outputs = use("propose_path", maths(), ["  real   analysis "])
 
     assert "real analysis" in result["shown"]
     assert "do not offer to show it" in result["shown"]
     assert wire(outputs) == [{"type": "propose_path", "goal": "real analysis"}]
 
 
+def test_each_course_asked_for_is_its_own_path_even_with_a_subject_open():
+    """Three courses are three subjects, not three topics of Mathematics."""
+    goals = ["machine learning", "maths of machine learning", "quantum computing"]
+
+    result, outputs = use("propose_path", maths(), goals)
+
+    assert wire(outputs) == [{"type": "propose_path", "goal": goal} for goal in goals]
+    assert (
+        "machine learning, maths of machine learning and quantum computing"
+        in (result["shown"])
+    )
+
+
+def test_a_course_named_twice_is_proposed_once():
+    _, outputs = use(
+        "propose_path", maths(), ["Quantum computing", " quantum  COMPUTING", "", "ML"]
+    )
+
+    assert [a["goal"] for a in wire(outputs)] == ["Quantum computing", "ML"]
+
+
+def test_a_new_course_is_not_added_as_a_topic_of_the_open_subject():
+    """What the model reads when it reaches for add_topic: a course for a subject
+    the learner lacks points to propose_path, and the open subject stays as it was."""
+    result, outputs = use(
+        "add_topic", maths(), "Quantum computing", subject="Quantum computing"
+    )
+
+    assert "propose_path" in result["error"]
+    assert wire(outputs) == []
+
+
+def test_a_topic_of_the_open_subject_is_still_added_as_a_topic():
+    _, outputs = use("add_topic", learner_with_subjects(), "Completing the square")
+
+    assert [a["type"] for a in wire(outputs)] == ["add_topic"]
+
+
 def test_a_path_needs_a_goal():
-    result, outputs = use("propose_path", maths(), "   ")
+    result, outputs = use("propose_path", maths(), ["   "])
 
     assert "error" in result
+    assert wire(outputs) == []
+
+
+def test_no_more_courses_than_one_call_may_offer():
+    result, outputs = use("propose_path", maths(), [f"Course {n}" for n in range(6)])
+
+    assert "At most 5" in result["error"]
     assert wire(outputs) == []
 
 

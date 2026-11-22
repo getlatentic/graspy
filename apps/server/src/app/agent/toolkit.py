@@ -88,8 +88,7 @@ def _for_model(tool: Tool, outputs: TurnOutputs, where: Where) -> Callable[..., 
     def kept(result: dict | Outcome) -> dict:
         if not isinstance(result, Outcome):
             return result
-        if result.action is not None:
-            outputs.actions.append(result.action)
+        outputs.actions.extend(result.actions)
         if result.card is not None:
             outputs.cards.append(placed(result.card, where))
         if result.skill is not None and result.skill not in outputs.skills:

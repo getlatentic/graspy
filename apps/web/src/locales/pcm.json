@@ -50,6 +50,7 @@
     "pathSummaryOneLevel": "{count} topics for {level}",
     "pathMore": "and {count} more",
     "pathAccept": "Add this path",
+    "pathAcceptAll": "Add all",
     "pathNotNow": "No be now",
     "stop": "Stop",
     "jumpToLatest": "Go to the latest message",

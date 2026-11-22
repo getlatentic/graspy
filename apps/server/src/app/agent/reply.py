@@ -66,7 +66,15 @@ class Outcome:
     app. A tool that only answers the model returns a plain dict."""
 
     told: dict
-    action: Action | None = None
+    actions: tuple[Action, ...] = ()
     card: Card | None = None
     # The skill this call loaded, kept with the turn so the conversation knows it.
     skill: str | None = None
+
+
+def actions_for_app(actions: list[Action]) -> list[Action]:
+    """Of two opens, or two edits, in one turn the last counts. Each course a
+    turn proposes counts: three courses asked for are three proposals."""
+    courses = [action for action in actions if isinstance(action, ProposePath)]
+    others = [action for action in actions if not isinstance(action, ProposePath)]
+    return [*others[-1:], *courses]
