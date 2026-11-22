@@ -43,3 +43,29 @@ describe("Content-Security-Policy", () => {
     expect(scriptSrc).not.toContain("unsafe-inline");
   });
 });
+
+// dist is ignored by git, so this runs where a build has been made and skips
+// on a fresh checkout.
+const built = import.meta.glob("../../dist/index.html", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+
+describe("Content-Security-Policy on the built page", () => {
+  it.skipIf(Object.keys(built).length === 0)(
+    "allows the boot script Vite wrote to dist/index.html",
+    async () => {
+      const body = Object.values(built)[0]!.match(INLINE_SCRIPT)?.[1];
+      expect(body, "dist/index.html has no inline script").toBeDefined();
+
+      const digest = await sha256Base64(body!);
+
+      expect(
+        headers,
+        `dist/index.html is stale or its inline script changed: run ` +
+          `npm run build, and put 'sha256-${digest}' in public/_headers.`,
+      ).toContain(`'sha256-${digest}'`);
+    },
+  );
+});
