@@ -3,9 +3,13 @@ import { useNavigate, type NavigateFunction } from "react-router";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { LearningPath } from "@/lib/curriculum-api";
 import type { ChatLink } from "@/lib/chat-db";
-import type { CurriculumSubject } from "@/lib/curriculum-record";
 import { useI18n, type Translate } from "@/lib/i18n-context";
-import { goalIndex, withPath, withTopic } from "../lib/curriculum-edit";
+import {
+  goalIndex,
+  MAX_SUBJECTS,
+  withPaths,
+  withTopic,
+} from "../lib/curriculum-edit";
 import { rebuildRequest } from "../lib/curriculum-request";
 import { lessonPath, subjectPath } from "@/lib/learn-paths";
 import type { LearnerPlan } from "./use-learner-plan";
@@ -20,6 +24,7 @@ type PlanEditDeps = Pick<
   "curriculum" | "applyCurriculum" | "regenerate"
 > & {
   onDone: (message: string, link?: ChatLink) => void;
+  onFailure: (message: string) => void;
 };
 
 const lessonLink = (
@@ -32,7 +37,7 @@ const lessonLink = (
 });
 
 function planEdits(
-  { curriculum, applyCurriculum, regenerate, onDone }: PlanEditDeps,
+  { curriculum, applyCurriculum, regenerate, onDone, onFailure }: PlanEditDeps,
   t: Translate,
   navigate: NavigateFunction,
 ) {
@@ -62,20 +67,27 @@ function planEdits(
     },
     acceptPaths: async (paths: LearningPath[]) => {
       if (!curriculum || paths.length === 0) return;
-      let next = curriculum;
-      const added: CurriculumSubject[] = [];
-      for (const path of paths) {
-        const made = withPath(next, path);
-        next = made.curriculum;
-        added.push(made.subject);
+      const { curriculum: next, outcomes } = withPaths(curriculum, paths);
+      if (outcomes.some(({ status }) => status === "added")) {
+        await applyCurriculum(next);
       }
-      await applyCurriculum(next);
-      for (const subject of added) {
+      const told = new Set<string>();
+      for (const outcome of outcomes) {
+        if (outcome.status !== "added" && outcome.status !== "existing")
+          continue;
+        const { subject } = outcome;
+        if (told.has(subject.slug)) continue;
+        told.add(subject.slug);
         const goal = Math.max(0, goalIndex(next, subject.slug));
         onDone(
-          t("chat.pathAdded", { subject: subject.name }),
+          t(outcome.status === "added" ? "chat.pathAdded" : "chat.pathExists", {
+            subject: subject.name,
+          }),
           lessonLink(t, subject.slug, goal),
         );
+      }
+      if (outcomes.some(({ status }) => status === "full")) {
+        onFailure(t("chat.pathsFull", { count: MAX_SUBJECTS }));
       }
     },
     rebuild: async () => {
@@ -93,16 +105,17 @@ export function useChatPlanEdits({
   applyCurriculum,
   regenerate,
   onDone,
+  onFailure,
 }: PlanEditDeps) {
   const { t } = useI18n();
   const navigate = useNavigate();
   return useMemo(
     () =>
       planEdits(
-        { curriculum, applyCurriculum, regenerate, onDone },
+        { curriculum, applyCurriculum, regenerate, onDone, onFailure },
         t,
         navigate,
       ),
-    [applyCurriculum, curriculum, navigate, onDone, regenerate, t],
+    [applyCurriculum, curriculum, navigate, onDone, onFailure, regenerate, t],
   );
 }

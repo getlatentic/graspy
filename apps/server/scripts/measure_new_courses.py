@@ -16,8 +16,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
 import time
-import traceback
 from collections import defaultdict
 from pathlib import Path
 
@@ -96,6 +96,17 @@ def subjects_made(actions: list[dict]) -> list[str]:
     return made
 
 
+SECRET = re.compile(
+    r"(?i)(authorization|bearer|api[-_ ]?key|x-api-key|token|secret)\W{0,3}[\w.~+/=-]{8,}"
+)
+
+
+def described(error: BaseException) -> str:
+    """A failed draw as its kind and a short message with anything key-like cut
+    out: no request headers and no traceback, which can carry them."""
+    return f"{type(error).__name__}: {SECRET.sub('[redacted]', str(error))[:200]}"
+
+
 async def draw(case: tuple, lm: dspy.LM) -> dict:
     group, context_name, message = case
     tools: list[str] = []
@@ -125,7 +136,9 @@ async def draw(case: tuple, lm: dspy.LM) -> dict:
     }
 
 
-async def measure(lm: dspy.LM, draws: int) -> list[dict]:
+async def measure(
+    lm: dspy.LM, draws: int, groups: set[str], phrasings: int
+) -> list[dict]:
     gate = asyncio.Semaphore(CONCURRENT_DRAWS)
 
     async def one(case: tuple) -> dict:
@@ -135,8 +148,9 @@ async def measure(lm: dspy.LM, draws: int) -> list[dict]:
     cases = [
         (group, context, message)
         for group, _, _, contexts, messages in GROUPS
+        if group in groups
         for context in contexts
-        for message in messages
+        for message in messages[:phrasings]
         for _ in range(draws)
     ]
     drawn = await asyncio.gather(*(one(c) for c in cases), return_exceptions=True)
@@ -146,8 +160,7 @@ async def measure(lm: dspy.LM, draws: int) -> list[dict]:
             "group": c[0],
             "context": c[1],
             "message": c[2],
-            "error": repr(r)[:300],
-            "trace": "".join(traceback.format_exception(r))[-1500:],
+            "error": described(r),
         }
         if isinstance(r, BaseException)
         else r
@@ -187,11 +200,17 @@ def main() -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--draws", type=int, default=10)
     parser.add_argument("--env-file")
+    parser.add_argument(
+        "--groups", default=",".join(g[0] for g in GROUPS), help="comma-separated"
+    )
+    parser.add_argument("--phrasings", type=int, default=99, help="first N of each")
     add_profile_option(parser)
     options = parser.parse_args()
     settings = settings_from(options)
     lm = model(settings, RecordingTransport())
-    results = asyncio.run(measure(lm, options.draws))
+    results = asyncio.run(
+        measure(lm, options.draws, set(options.groups.split(",")), options.phrasings)
+    )
     options.out.write_text(json.dumps(results, indent=2))
     print(summary(results))
 

@@ -3,6 +3,7 @@
 import asyncio
 import inspect
 
+import dspy
 import pytest
 
 from app.agent import tools
@@ -408,3 +409,84 @@ def test_a_tool_with_ui_declares_the_resource_its_cards_name():
         ].default
         for card in cards
     }
+
+
+@pytest.mark.parametrize("name", ["Maths", "math", "MATHEMATICS", "mathematic"])
+def test_a_subject_they_have_is_not_added_again_under_another_spelling(name):
+    result, outputs = use("change_subjects", learner_with_subjects(), add=[name])
+
+    assert "error" in result
+    assert wire(outputs) == []
+
+
+@pytest.mark.parametrize("name", ["Physics 2", "Mathematics II", "Maths 2"])
+def test_a_second_course_of_a_subject_they_have_is_a_new_subject(name):
+    _, outputs = use("change_subjects", learner_with_subjects(), add=[name])
+
+    assert wire(outputs)[0]["add"] == [name]
+
+
+def test_english_is_the_english_language_they_have():
+    context = LearnerContext(
+        subjects=[{"name": "English Language", "slug": "english-language"}]
+    )
+
+    result, _ = use("change_subjects", context, add=["english"])
+
+    assert "error" in result
+
+
+def test_a_subject_is_dropped_by_the_names_that_add_would_not_add_again():
+    _, outputs = use("change_subjects", learner_with_subjects(), remove=["maths"])
+
+    assert wire(outputs)[0]["remove"] == ["Mathematics"]
+
+
+def test_a_subject_asked_for_twice_in_other_cases_is_added_once():
+    _, outputs = use(
+        "change_subjects",
+        learner_with_subjects(),
+        add=["Astronomy", "ASTRONOMY", " astronomy "],
+    )
+
+    assert wire(outputs)[0]["add"] == ["Astronomy"]
+
+
+def test_one_course_is_told_as_one_path_and_several_as_courses_to_add():
+    one, _ = use("propose_path", maths(), ["quantum computing"])
+    several, _ = use("propose_path", maths(), ["machine learning", "astronomy"])
+
+    assert one["shown"].startswith("The app now shows the learner a path to quantum")
+    assert "each its own" not in one["shown"]
+    assert "offering the learner these courses to add" in several["shown"]
+    assert "machine learning and astronomy" in several["shown"]
+    assert "shows the learner" not in several["shown"]
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        {"goals": "quantum computing"},
+        {"goals": '["quantum computing"]'},
+        {"goal": "quantum computing"},
+        {"goals": ["quantum computing"]},
+    ],
+    ids=["string", "json-text", "old-key", "list"],
+)
+def test_the_courses_are_read_from_each_shape_a_model_sends(arguments):
+    """Through the tool as DSPy hands it to the model and calls it for the model."""
+    outputs = TurnOutputs()
+    built = tools_for(Turn(maths(), "x"), outputs)
+    tool = dspy.Tool(next(t for t in built if t.__name__ == "propose_path"))
+
+    assert "goals" in tool.args
+    result = tool(**arguments)
+
+    assert "quantum computing" in result["shown"]
+    assert wire(outputs) == [{"type": "propose_path", "goal": "quantum computing"}]
+
+
+def test_json_text_with_several_courses_is_several_proposals():
+    _, outputs = use("propose_path", maths(), '["ML", "Astronomy"]')
+
+    assert [a["goal"] for a in wire(outputs)] == ["ML", "Astronomy"]

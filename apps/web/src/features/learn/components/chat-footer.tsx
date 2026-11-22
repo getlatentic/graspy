@@ -37,7 +37,8 @@ export function ChatFooter({
   seed,
 }: ChatFooterProps) {
   const { t } = useI18n();
-  const { stopTutor, confirmPlanChange, dismissPlanChange } = useChat();
+  const { stopTutor, confirmPlanChange, dismissPlanChange, retryPath } =
+    useChat();
   const followUps = followUpsFor(lastMessage, state);
 
   if (scope.kind === "earlier") return <EarlierNote />;
@@ -58,6 +59,7 @@ export function ChatFooter({
             change={state.planChange}
             onConfirm={() => void confirmPlanChange()}
             onDismiss={dismissPlanChange}
+            onRetry={(goal) => void retryPath(goal)}
           />
         )}
         {followUps.length > 0 && (

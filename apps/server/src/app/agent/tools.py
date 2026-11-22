@@ -5,6 +5,7 @@ Each tool's docstring is what the model reads of it."""
 from __future__ import annotations
 
 import difflib
+import json
 import logging
 from collections.abc import Awaitable, Callable
 
@@ -13,6 +14,7 @@ from .labels import DATA_ONLY
 from .lesson_request import asks_for_lesson
 from .refusal import refusal
 from .reply import (
+    MAX_PATH_GOALS,
     AddTopic,
     ChangeSubjects,
     OpenSubject,
@@ -22,6 +24,7 @@ from .reply import (
     RebuildPlan,
 )
 from .sandbox import CalculationError, evaluate
+from .subject_match import find_subject
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +34,6 @@ TOPIC_MATCH_CUTOFF = 0.8
 MAX_TOPIC_TITLE = 80
 # The most subjects a learner can study at once, as in the app's own picker.
 MAX_CHOSEN_SUBJECTS = 15
-# Courses one call can offer, so a long list does not plan a dozen at once.
-MAX_PATH_GOALS = 5
 
 
 def calculate(expression: str) -> dict:
@@ -119,7 +120,7 @@ def _subject_named(name: str, context: LearnerContext) -> SubjectRef | None:
         subjects.append(SubjectRef(name=context.subject, slug=context.subject_slug))
     if not name.strip():
         return next((s for s in subjects if s.slug == context.subject_slug), None)
-    index = find_topic(name, [s.name for s in subjects])
+    index = find_subject(name, [s.name for s in subjects])
     return None if index is None else subjects[index]
 
 
@@ -215,7 +216,7 @@ def _subjects_named(wanted: list[str], names: list[str]) -> list[str] | dict:
     """Each once, or an error naming the first that is none of theirs."""
     found: list[str] = []
     for name in wanted:
-        index = find_topic(name, names)
+        index = find_subject(name, names)
         if index is None:
             return refusal(f"The learner has no subject like {name!r}.", subjects=names)
         found.append(names[index])
@@ -223,19 +224,15 @@ def _subjects_named(wanted: list[str], names: list[str]) -> list[str] | dict:
 
 
 def _new_subjects(wanted: list[str], names: list[str]) -> list[str]:
-    titles = dict.fromkeys(" ".join(item.split())[:MAX_TOPIC_TITLE] for item in wanted)
-    return [title for title in titles if title and not _has_subject(title, names)]
-
-
-def _has_subject(title: str, names: list[str]) -> bool:
-    """A typo of a subject they have is that subject; a longer name that merely
-    contains one ("Mathematics of machine learning") is a new subject."""
-    folded = [name.casefold() for name in names]
-    target = title.casefold()
-    return bool(
-        target in folded
-        or difflib.get_close_matches(target, folded, n=1, cutoff=TOPIC_MATCH_CUTOFF)
-    )
+    """The names that are no subject of theirs and none of the others asked for."""
+    held = list(names)
+    new: list[str] = []
+    for item in wanted:
+        title = " ".join(item.split())[:MAX_TOPIC_TITLE]
+        if title and find_subject(title, held) is None:
+            new.append(title)
+            held.append(title)
+    return new
 
 
 def _change_problem(
@@ -312,18 +309,18 @@ def open_subject_tool(context: LearnerContext) -> Callable[[str], dict | Outcome
     return open_subject
 
 
-def propose_path(goals: list[str]) -> dict | Outcome:
+def propose_path(goals: list[str] | str = "", goal: str = "") -> dict | Outcome:
     """Offer the learner a new course: a subject of its own, planned from their grade up
     to the goal. Use it for any course they ask for that is not one of their subjects,
     whether it is far beyond their grade ("real analysis") or a field of its own
     ("quantum computing"), and also while a subject is open: a new course is never a
     topic of the open subject. Several courses are several goals in one call, one goal
-    per course. The learner sees each course and decides whether to add it.
+    per course. The learner decides whether to add each.
 
     Args:
         goals: One entry per course, in the learner's words, e.g. ["machine learning", "quantum computing"].
     """
-    wanted = _distinct_goals(goals)
+    wanted = _distinct_goals(_goal_list(goals or goal))
     if not wanted:
         return refusal("Say what the learner wants to learn.")
     if len(wanted) > MAX_PATH_GOALS:
@@ -331,11 +328,35 @@ def propose_path(goals: list[str]) -> dict | Outcome:
             f"At most {MAX_PATH_GOALS} courses at a time: call it again for the rest later."
         )
     return Outcome(
-        told={
-            "shown": f"The app now shows the learner a path to {_listed(wanted)}, each its own "
-            "subject, with a button to add them. Tell them it is below; do not offer to show it."
-        },
-        actions=tuple(ProposePath(goal=goal) for goal in wanted),
+        told={"shown": _shown_told(wanted)},
+        actions=tuple(ProposePath(goal=item) for item in wanted),
+    )
+
+
+def _goal_list(goals: list[str] | str) -> list[str]:
+    """A model may send one course as a string, or the list as JSON text."""
+    if not isinstance(goals, str):
+        return [item for item in goals if isinstance(item, str)]
+    text = goals.strip()
+    if text.startswith("["):
+        try:
+            parsed = json.loads(text)
+        except ValueError:
+            return [text]
+        if isinstance(parsed, list):
+            return [item for item in parsed if isinstance(item, str)]
+    return [text]
+
+
+def _shown_told(goals: list[str]) -> str:
+    if len(goals) == 1:
+        return (
+            f"The app now shows the learner a path to {goals[0]} with a button to add it. "
+            "Tell them it is below; do not offer to show it."
+        )
+    return (
+        f"The app is offering the learner these courses to add, each its own subject: "
+        f"{_listed(goals)}. Tell them they are below; do not offer to show them."
     )
 
 
@@ -349,4 +370,4 @@ def _distinct_goals(goals: list[str]) -> list[str]:
 
 
 def _listed(goals: list[str]) -> str:
-    return goals[0] if len(goals) == 1 else ", ".join(goals[:-1]) + f" and {goals[-1]}"
+    return ", ".join(goals[:-1]) + f" and {goals[-1]}"

@@ -48,16 +48,25 @@ export function usePlanChanges({ addMessage, ...deps }: PlanChangeDeps) {
     [carryOutAction],
   );
 
-  const { pendingPlanChange, dismissPlanChange, isChangingPlan } = actions;
+  const { pendingPlanChange, dismissPlanChange, retryPath, isChangingPlan } =
+    actions;
   const planChange = useMemo(
     () => ({
       pendingPlanChange,
       planChangeThreadId: threadId,
       confirmPlanChange: confirm,
       dismissPlanChange,
+      retryPath,
       isChangingPlan,
     }),
-    [pendingPlanChange, threadId, confirm, dismissPlanChange, isChangingPlan],
+    [
+      pendingPlanChange,
+      threadId,
+      confirm,
+      dismissPlanChange,
+      retryPath,
+      isChangingPlan,
+    ],
   );
   return { carryOut, planChange };
 }

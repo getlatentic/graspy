@@ -27,12 +27,31 @@ export type TutorActionDeps = Pick<
   onFailure: (message: string) => void;
 };
 
+/** A change that clears progress waits for the learner, and is shown before any proposed course. */
+function asksForConfirmation(action: TutorAction): boolean {
+  return (
+    action.type === "rebuild_plan" ||
+    (action.type === "change_subjects" && action.remove.length > 0)
+  );
+}
+
 /** Destructive changes wait for the learner: the model saying they agreed is not agreement. */
 export function useTutorActions(deps: TutorActionDeps) {
   const [pending, setPending] = useState<PendingPlanChange | null>(null);
   const edits = useChatPlanEdits(deps);
-  const subjects = useSubjectChange({ ...deps, confirmDrop: setPending });
-  const { propose, forget } = usePathProposal(deps.curriculum, setPending);
+  const { propose, retry, forget } = usePathProposal(
+    deps.curriculum,
+    setPending,
+  );
+  // Whatever takes the card's place ends the round of plans still arriving for it.
+  const replaceCard = useCallback(
+    (change: Exclude<PendingPlanChange, PathProposals>) => {
+      forget();
+      setPending(change);
+    },
+    [forget],
+  );
+  const subjects = useSubjectChange({ ...deps, confirmDrop: replaceCard });
   const { askToChange, setSubjects } = subjects;
 
   const carryOut = useCallback(
@@ -42,7 +61,7 @@ export function useTutorActions(deps: TutorActionDeps) {
         open_subject: edits.openSubject,
         add_topic: edits.addTopic,
         change_subjects: askToChange,
-        rebuild_plan: () => setPending({ type: "rebuild_plan" }),
+        rebuild_plan: () => replaceCard({ type: "rebuild_plan" }),
       };
       const goals: string[] = [];
       for (const action of actions) {
@@ -55,9 +74,11 @@ export function useTutorActions(deps: TutorActionDeps) {
         ) => void | Promise<void>;
         await handle(action);
       }
-      if (goals.length > 0) await propose(goals);
+      if (goals.length > 0 && !actions.some(asksForConfirmation)) {
+        await propose(goals);
+      }
     },
-    [askToChange, edits, propose],
+    [askToChange, edits, propose, replaceCard],
   );
 
   const confirmPlanChange = useCallback(async () => {
@@ -68,11 +89,12 @@ export function useTutorActions(deps: TutorActionDeps) {
         ? change.proposals.flatMap(({ path }) => (path ? [path] : []))
         : [];
     if (change.type === "propose_path" && paths.length === 0) return;
+    forget();
     setPending(null);
     if (change.type === "change_subjects") await setSubjects(change.names);
     else if (change.type === "rebuild_plan") await edits.rebuild();
     else await edits.acceptPaths(paths);
-  }, [edits, pending, setSubjects]);
+  }, [edits, forget, pending, setSubjects]);
 
   const dismissPlanChange = useCallback(() => {
     forget();
@@ -84,6 +106,7 @@ export function useTutorActions(deps: TutorActionDeps) {
     pendingPlanChange: pending,
     confirmPlanChange,
     dismissPlanChange,
+    retryPath: retry,
     isChangingPlan: subjects.changing,
   };
 }

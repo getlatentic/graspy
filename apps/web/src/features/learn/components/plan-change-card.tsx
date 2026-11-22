@@ -12,12 +12,14 @@ interface PlanChangeCardProps {
   change: PendingPlanChange;
   onConfirm: () => void;
   onDismiss: () => void;
+  onRetry: (goal: string) => void;
 }
 
 export function PlanChangeCard({
   change,
   onConfirm,
   onDismiss,
+  onRetry,
 }: PlanChangeCardProps) {
   const { t } = useI18n();
 
@@ -27,6 +29,7 @@ export function PlanChangeCard({
         proposals={change.proposals}
         onAccept={onConfirm}
         onDismiss={onDismiss}
+        onRetry={onRetry}
       />
     );
   }
@@ -58,42 +61,67 @@ interface PathProposalsProps {
   proposals: PathProposal[];
   onAccept: () => void;
   onDismiss: () => void;
+  onRetry: (goal: string) => void;
 }
 
 const PATH_FRAME =
   "mb-3 rounded-control border border-accent-line bg-accent-soft p-3 text-sm text-ink";
 
-function PathProposals({ proposals, onAccept, onDismiss }: PathProposalsProps) {
+function PathProposals({
+  proposals,
+  onAccept,
+  onDismiss,
+  onRetry,
+}: PathProposalsProps) {
   const { t } = useI18n();
-  const planning = proposals.some(({ path, failed }) => !path && !failed);
   const ready = proposals.filter(({ path }) => path).length;
   return (
     <div role="group" aria-label={t("chat.pathTitle")} className={PATH_FRAME}>
       <div className="space-y-3">
         {proposals.map((proposal) => (
-          <PathProposalItem key={proposal.goal} proposal={proposal} />
+          <PathProposalItem
+            key={proposal.goal.toLocaleLowerCase()}
+            proposal={proposal}
+            onRetry={onRetry}
+          />
         ))}
       </div>
-      {planning ? null : (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {ready > 0 && (
-            <Button size="sm" onClick={onAccept}>
-              {ready > 1 ? t("chat.pathAcceptAll") : t("chat.pathAccept")}
-            </Button>
-          )}
-          <Button size="sm" variant="ghost" onClick={onDismiss}>
-            {t("chat.pathNotNow")}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {ready > 0 && (
+          <Button size="sm" onClick={onAccept}>
+            {ready > 1 ? t("chat.pathAcceptAll") : t("chat.pathAccept")}
           </Button>
-        </div>
-      )}
+        )}
+        <Button size="sm" variant="ghost" onClick={onDismiss}>
+          {t("chat.pathNotNow")}
+        </Button>
+      </div>
     </div>
   );
 }
 
-function PathProposalItem({ proposal }: { proposal: PathProposal }) {
+function PathProposalItem({
+  proposal,
+  onRetry,
+}: {
+  proposal: PathProposal;
+  onRetry: (goal: string) => void;
+}) {
   const { t } = useI18n();
   if (proposal.failed) {
-    return <p>{t("chat.pathFailed", { goal: proposal.goal })}</p>;
+    return (
+      <div>
+        <p>{t("chat.pathFailed", { goal: proposal.goal })}</p>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onRetry(proposal.goal)}
+          className="mt-1"
+        >
+          {t("chat.pathRetry")}
+        </Button>
+      </div>
+    );
   }
   if (!proposal.path) {
     return (

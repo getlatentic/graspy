@@ -72,9 +72,48 @@ class Outcome:
     skill: str | None = None
 
 
+# Courses one turn can offer, so a long list does not plan a dozen at once.
+MAX_PATH_GOALS = 5
+
+
 def actions_for_app(actions: list[Action]) -> list[Action]:
-    """Of two opens, or two edits, in one turn the last counts. Each course a
-    turn proposes counts: three courses asked for are three proposals."""
-    courses = [action for action in actions if isinstance(action, ProposePath)]
+    """Of two opens, or two edits, in one turn the last counts, except that
+    changes of subjects are merged: what the tutor told the learner of each is
+    true. Each course a turn proposes counts, once for a name and up to a cap.
+    A change that asks the learner to confirm comes with no courses, which would
+    hide it."""
     others = [action for action in actions if not isinstance(action, ProposePath)]
-    return [*others[-1:], *courses]
+    last = others[-1:]
+    if last and isinstance(last[0], ChangeSubjects):
+        last = [
+            _merged(change for change in others if isinstance(change, ChangeSubjects))
+        ]
+    if any(_asks_to_confirm(action) for action in others):
+        return last
+    return [*last, *_distinct_courses(actions)]
+
+
+def _asks_to_confirm(action: Action) -> bool:
+    return isinstance(action, RebuildPlan) or (
+        isinstance(action, ChangeSubjects) and bool(action.remove)
+    )
+
+
+def _merged(changes) -> ChangeSubjects:
+    adds: list[str] = []
+    drops: list[str] = []
+    for change in changes:
+        adds.extend(change.add)
+        drops.extend(change.remove)
+    return ChangeSubjects(
+        add=list(dict.fromkeys(name for name in adds if name not in drops)),
+        remove=list(dict.fromkeys(drops)),
+    )
+
+
+def _distinct_courses(actions: list[Action]) -> list[Action]:
+    first_of: dict[str, Action] = {}
+    for action in actions:
+        if isinstance(action, ProposePath):
+            first_of.setdefault(action.goal.casefold(), action)
+    return list(first_of.values())[:MAX_PATH_GOALS]
