@@ -12,6 +12,7 @@ from ..learner.record import Where
 from .cards import PASSAGE_UI, PRACTICE_UI, Card, placed
 from .context import LearnerContext
 from .courses import propose_path_tool
+from .maths_check import MathsChecker, check_maths_tool
 from .passage import give_passage
 from .practice import give_practice
 from .reply import MAX_PATH_GOALS, Action, Outcome
@@ -37,6 +38,8 @@ class Turn:
     message: str
     # Skills already in effect: loading one again is told to use what it has.
     active_skills: tuple[str, ...] = ()
+    # Runs KaTeX in the tutor Worker; None where there is no Worker to ask.
+    maths: MathsChecker | None = None
 
     def where(self) -> Where:
         return Where(
@@ -64,6 +67,7 @@ def _for_context(build: Callable[[LearnerContext], Tool]) -> Callable[[Turn], To
 
 TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("calculate", _as_is(calculate)),
+    ToolSpec("check_maths", lambda turn: check_maths_tool(turn.maths)),
     ToolSpec("open_subject", _for_context(open_subject_tool)),
     ToolSpec("open_topic", lambda turn: open_topic_tool(turn.context, turn.message)),
     ToolSpec("add_topic", _for_context(add_topic_tool)),

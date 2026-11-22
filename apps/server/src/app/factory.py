@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from .agent.lazy_a2a import LazyA2ARoutes
+from .agent.maths_check import tutor_worker_checker
 from .agent.memory import ConversationStore, InMemoryConversationStore
 from .agent.tutor import Tutor
 from .api.account_parent_routes import parent_session_router
@@ -111,7 +112,10 @@ def create_app(
     app.include_router(account_voice_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
     app.include_router(voice_router, prefix="/api")
-    tutor = Tutor(keeping.conversations)
+    tutor = Tutor(
+        keeping.conversations,
+        None if voice is None else tutor_worker_checker(voice),
+    )
     app.routes.append(
         LazyA2ARoutes(
             settings.a2a_path_prefix,

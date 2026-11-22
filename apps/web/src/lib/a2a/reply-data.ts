@@ -7,6 +7,7 @@ export const ROLE_AGENT = 2;
 /** Each has its own chat.activity message in every locale. */
 export const TUTOR_TOOLS = [
   "calculate",
+  "check_maths",
   "open_subject",
   "open_topic",
   "add_topic",

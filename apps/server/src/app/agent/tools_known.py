@@ -4,6 +4,7 @@ carry out, and changes nothing the server keeps."""
 READ_ONLY_TOOLS = frozenset(
     {
         "calculate",
+        "check_maths",
         "open_subject",
         "open_topic",
         "add_topic",

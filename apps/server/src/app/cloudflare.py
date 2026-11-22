@@ -10,6 +10,7 @@ from typing import Any
 import dspy
 from fastapi import FastAPI
 
+from .agent.maths_check import tutor_worker_checker
 from .agent.memory import ConversationStore, DurableObjectConversationStore
 from .agent.tools_known import READ_ONLY_TOOLS
 from .agent.tutor import Tutor
@@ -133,7 +134,9 @@ def build_turn_alarm(env: Any, storage: Any, announce: Announce) -> ChatTurnAlar
     lm = build_lm(get_settings())
     log = ChatLog(env.DB)
     keeping = worker_keeping(env, conversation_store(env))
-    source = TutorTurnSource(Tutor(keeping.conversations), keeping)
+    source = TutorTurnSource(
+        Tutor(keeping.conversations, tutor_worker_checker(env)), keeping
+    )
 
     def runner_for(schedule: Schedule) -> TurnRunner:
         return TurnRunner(

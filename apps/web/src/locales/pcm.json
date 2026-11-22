@@ -61,6 +61,7 @@
     "jumpToLatest": "Go to the latest message",
     "activity": {
       "calculate": "I dey work the numbers...",
+      "check_maths": "I dey check the maths...",
       "open_subject": "I dey open the subject...",
       "open_topic": "I dey find the topic...",
       "add_topic": "I dey add the topic to your plan...",

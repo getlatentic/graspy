@@ -61,6 +61,7 @@
     "jumpToLatest": "Go to the latest message",
     "activity": {
       "calculate": "Working out the numbers...",
+      "check_maths": "Checking the maths...",
       "open_subject": "Opening the subject...",
       "open_topic": "Finding the topic...",
       "add_topic": "Adding the topic to your plan...",

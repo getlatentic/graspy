@@ -19,6 +19,7 @@ from .app_tools import AppCall, describe_calls
 from .cards import Card
 from .context import LearnerContext
 from .labels import DATA_ONLY
+from .maths_check import MathsChecker
 from .memory import ConversationStore, Exchange
 from .native_react import NativeReAct
 from .persona import WITHOUT_STAGE, persona
@@ -68,6 +69,9 @@ Use calculate for arithmetic instead of working sums out yourself, and show
 the learner the result. Write mathematics in LaTeX between \( and \), or
 between \[ and \] on a line of its own; never with dollar signs, which
 mean money.
+When your answer holds a formula, first call check_maths with each formula
+as LaTeX without delimiters, correct the ones that fail from their errors,
+then write the answer. An answer with no formula needs no check.
 
 The learner's plan changes only through tools, and only when they ask:
 - to switch to, go to or open a subject they have: open_subject. It never
@@ -172,8 +176,11 @@ class _Answered:
 
 
 class Tutor:
-    def __init__(self, memory: ConversationStore) -> None:
+    def __init__(
+        self, memory: ConversationStore, maths: MathsChecker | None = None
+    ) -> None:
         self._memory = memory
+        self._maths = maths
 
     async def stream(
         self,
@@ -223,7 +230,9 @@ class Tutor:
             earlier.exchanges[-1].get("app", "") if earlier.exchanges else ""
         )
         said = said_by_learner(context, inputs, earlier.exchanges, missed)
-        async for item in _answered(context, inputs, verdicts, said, active):
+        async for item in _answered(
+            context, inputs, verdicts, said, active, self._maths
+        ):
             if isinstance(item, _Answered):
                 answered = item
             else:
@@ -265,6 +274,7 @@ async def _answered(
     verdicts: tuple[bool, ...],
     said: Said,
     active: tuple[str, ...],
+    maths: MathsChecker | None,
 ) -> AsyncIterator[
     AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | SkillLoaded | _Answered
 ]:
@@ -272,7 +282,9 @@ async def _answered(
     some sampling."""
     for again in (False, True):
         try:
-            async for item in _attempt(context, inputs, verdicts, said, active, again):
+            async for item in _attempt(
+                context, inputs, verdicts, said, active, maths, again
+            ):
                 yield item
             return
         except (Runaway, AdapterParseError) as error:
@@ -288,11 +300,14 @@ async def _attempt(
     verdicts: tuple[bool, ...],
     said: Said,
     active: tuple[str, ...],
+    maths: MathsChecker | None,
     again: bool,
 ) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | SkillLoaded | _Answered]:
     """Closing it stops the model."""
     outputs = TurnOutputs()
-    agent = _streamed_agent(Turn(context, inputs["message"], active), outputs, again)
+    agent = _streamed_agent(
+        Turn(context, inputs["message"], active, maths), outputs, again
+    )
     watch = RunawayWatch()
     gate = AnswerGate(outputs, verdicts)
     screen = SafetyScreen(said)

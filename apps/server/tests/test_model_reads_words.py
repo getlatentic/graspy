@@ -209,9 +209,10 @@ async def test_a_refusal_that_returns_the_learners_lists_labels_them_as_data():
     assert result["data_note"] == DATA_ONLY
 
 
-# A read of the tutor's own text changes nothing, so there is no action it could
-# be mistaken for having done; its failure is tested in test_skills.py.
-READS_ONLY = {"load_skill"}
+# A read changes nothing, so there is no action it could be mistaken for having
+# done; load_skill's failure is tested in test_skills.py, check_maths's in
+# test_check_maths.py.
+READS_ONLY = {"load_skill", "check_maths"}
 
 
 def test_every_tool_that_acts_has_a_refusal_case():
