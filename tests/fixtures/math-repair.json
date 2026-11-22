@@ -1784,6 +1784,745 @@
       "input": "\\in\\\\[\\th",
       "tagged": "<latex-inline>\\in\\\\</latex-inline>[<latex-inline>\\th</latex-inline>",
       "web": "$\\in\\\\$[$\\th$"
+    },
+    {
+      "name": "unit N·m inside text",
+      "input": "\\(\\text{N·m}\\)",
+      "tagged": "<latex-inline>\\text{N}\\cdot\\text{m}</latex-inline>",
+      "web": "$\\text{N}\\cdot\\text{m}$"
+    },
+    {
+      "name": "unit J·s inside text",
+      "input": "\\(\\text{J·s}\\)",
+      "tagged": "<latex-inline>\\text{J}\\cdot\\text{s}</latex-inline>",
+      "web": "$\\text{J}\\cdot\\text{s}$"
+    },
+    {
+      "name": "unit g·mol inside text",
+      "input": "\\(\\text{g·mol}\\)",
+      "tagged": "<latex-inline>\\text{g}\\cdot\\text{mol}</latex-inline>",
+      "web": "$\\text{g}\\cdot\\text{mol}$"
+    },
+    {
+      "name": "unit kg·m inside text",
+      "input": "\\(\\text{kg·m}\\)",
+      "tagged": "<latex-inline>\\text{kg}\\cdot\\text{m}</latex-inline>",
+      "web": "$\\text{kg}\\cdot\\text{m}$"
+    },
+    {
+      "name": "unit W·h inside text",
+      "input": "\\(\\text{W·h}\\)",
+      "tagged": "<latex-inline>\\text{W}\\cdot\\text{h}</latex-inline>",
+      "web": "$\\text{W}\\cdot\\text{h}$"
+    },
+    {
+      "name": "unit kW·h inside text",
+      "input": "\\(\\text{kW·h}\\)",
+      "tagged": "<latex-inline>\\text{kW}\\cdot\\text{h}</latex-inline>",
+      "web": "$\\text{kW}\\cdot\\text{h}$"
+    },
+    {
+      "name": "unit Pa·s inside text",
+      "input": "\\(\\text{Pa·s}\\)",
+      "tagged": "<latex-inline>\\text{Pa}\\cdot\\text{s}</latex-inline>",
+      "web": "$\\text{Pa}\\cdot\\text{s}$"
+    },
+    {
+      "name": "unit mol·L inside text",
+      "input": "\\(\\text{mol·L}\\)",
+      "tagged": "<latex-inline>\\text{mol}\\cdot\\text{L}</latex-inline>",
+      "web": "$\\text{mol}\\cdot\\text{L}$"
+    },
+    {
+      "name": "unit V·A inside text",
+      "input": "\\(\\text{V·A}\\)",
+      "tagged": "<latex-inline>\\text{V}\\cdot\\text{A}</latex-inline>",
+      "web": "$\\text{V}\\cdot\\text{A}$"
+    },
+    {
+      "name": "unit N·s inside text",
+      "input": "\\(\\text{N·s}\\)",
+      "tagged": "<latex-inline>\\text{N}\\cdot\\text{s}</latex-inline>",
+      "web": "$\\text{N}\\cdot\\text{s}$"
+    },
+    {
+      "name": "unit J·K inside text",
+      "input": "\\(\\text{J·K}\\)",
+      "tagged": "<latex-inline>\\text{J}\\cdot\\text{K}</latex-inline>",
+      "web": "$\\text{J}\\cdot\\text{K}$"
+    },
+    {
+      "name": "unit A·s inside text",
+      "input": "\\(\\text{A·s}\\)",
+      "tagged": "<latex-inline>\\text{A}\\cdot\\text{s}</latex-inline>",
+      "web": "$\\text{A}\\cdot\\text{s}$"
+    },
+    {
+      "name": "a constant with a dotted unit and exponents",
+      "input": "\\(G = 6.674 \\times 10^{-11}\\ \\text{N·m}^2\\text{kg}^{-2}\\)",
+      "tagged": "<latex-inline>G = 6.674 \\times 10^{-11}\\ \\text{N}\\cdot\\text{m}^2\\text{kg}^{-2}</latex-inline>",
+      "web": "$G = 6.674 \\times 10^{-11}\\ \\text{N}\\cdot\\text{m}^2\\text{kg}^{-2}$"
+    },
+    {
+      "name": "a dot at the start of a text",
+      "input": "\\(\\text{N·m}^2\\text{·kg}^{-2}\\)",
+      "tagged": "<latex-inline>\\text{N}\\cdot\\text{m}^2\\cdot\\text{kg}^{-2}</latex-inline>",
+      "web": "$\\text{N}\\cdot\\text{m}^2\\cdot\\text{kg}^{-2}$"
+    },
+    {
+      "name": "a unit of three parts",
+      "input": "\\(\\text{kg·m·s}^{-2}\\)",
+      "tagged": "<latex-inline>\\text{kg}\\cdot\\text{m}\\cdot\\text{s}^{-2}</latex-inline>",
+      "web": "$\\text{kg}\\cdot\\text{m}\\cdot\\text{s}^{-2}$"
+    },
+    {
+      "name": "molar mass",
+      "input": "\\(\\text{g·mol}^{-1}\\)",
+      "tagged": "<latex-inline>\\text{g}\\cdot\\text{mol}^{-1}</latex-inline>",
+      "web": "$\\text{g}\\cdot\\text{mol}^{-1}$"
+    },
+    {
+      "name": "a dot operator in text",
+      "input": "\\(\\text{J⋅s}\\)",
+      "tagged": "<latex-inline>\\text{J}\\cdot\\text{s}</latex-inline>",
+      "web": "$\\text{J}\\cdot\\text{s}$"
+    },
+    {
+      "name": "a dot operator between units",
+      "input": "\\(\\text{N⋅m}\\)",
+      "tagged": "<latex-inline>\\text{N}\\cdot\\text{m}</latex-inline>",
+      "web": "$\\text{N}\\cdot\\text{m}$"
+    },
+    {
+      "name": "a multiplication sign in text",
+      "input": "\\(\\text{a×b}\\)",
+      "tagged": "<latex-inline>\\text{a}\\times\\text{b}</latex-inline>",
+      "web": "$\\text{a}\\times\\text{b}$"
+    },
+    {
+      "name": "a minus sign in text",
+      "input": "\\(\\text{a−b}\\)",
+      "tagged": "<latex-inline>\\text{a}-\\text{b}</latex-inline>",
+      "web": "$\\text{a}-\\text{b}$"
+    },
+    {
+      "name": "a minus sign between digits in text",
+      "input": "\\(\\text{5−3}\\)",
+      "tagged": "<latex-inline>\\text{5}-\\text{3}</latex-inline>",
+      "web": "$\\text{5}-\\text{3}$"
+    },
+    {
+      "name": "a dot before a letter outside the text",
+      "input": "\\(\\text{N·}m\\)",
+      "tagged": "<latex-inline>\\text{N}\\cdot m</latex-inline>",
+      "web": "$\\text{N}\\cdot m$"
+    },
+    {
+      "name": "a dot between numbers",
+      "input": "\\(3·4\\)",
+      "tagged": "<latex-inline>3\\cdot 4</latex-inline>",
+      "web": "$3\\cdot 4$"
+    },
+    {
+      "name": "a dot operator between variables",
+      "input": "\\(a⋅b\\)",
+      "tagged": "<latex-inline>a\\cdot b</latex-inline>",
+      "web": "$a\\cdot b$"
+    },
+    {
+      "name": "a dot in a sum",
+      "input": "\\(x·y + z\\)",
+      "tagged": "<latex-inline>x\\cdot y + z</latex-inline>",
+      "web": "$x\\cdot y + z$"
+    },
+    {
+      "name": "two dotted units",
+      "input": "\\(\\text{m·s}^{-1} \\text{J·s}\\)",
+      "tagged": "<latex-inline>\\text{m}\\cdot\\text{s}^{-1} \\text{J}\\cdot\\text{s}</latex-inline>",
+      "web": "$\\text{m}\\cdot\\text{s}^{-1} \\text{J}\\cdot\\text{s}$"
+    },
+    {
+      "name": "a dot starting a text after a mathrm",
+      "input": "\\(\\mathrm{kg}\\text{·m}\\)",
+      "tagged": "<latex-inline>\\mathrm{kg}\\cdot\\text{m}</latex-inline>",
+      "web": "$\\mathrm{kg}\\cdot\\text{m}$"
+    },
+    {
+      "name": "three dotted letters",
+      "input": "\\(\\text{m·s·K}\\)",
+      "tagged": "<latex-inline>\\text{m}\\cdot\\text{s}\\cdot\\text{K}</latex-inline>",
+      "web": "$\\text{m}\\cdot\\text{s}\\cdot\\text{K}$"
+    },
+    {
+      "name": "foot pounds",
+      "input": "\\(\\text{lb·ft}\\)",
+      "tagged": "<latex-inline>\\text{lb}\\cdot\\text{ft}</latex-inline>",
+      "web": "$\\text{lb}\\cdot\\text{ft}$"
+    },
+    {
+      "name": "litre atmospheres",
+      "input": "\\(\\text{L·atm·mol}^{-1}\\)",
+      "tagged": "<latex-inline>\\text{L}\\cdot\\text{atm}\\cdot\\text{mol}^{-1}</latex-inline>",
+      "web": "$\\text{L}\\cdot\\text{atm}\\cdot\\text{mol}^{-1}$"
+    },
+    {
+      "name": "newton metres are joules",
+      "input": "\\(\\text{N·m} = \\text{J}\\)",
+      "tagged": "<latex-inline>\\text{N}\\cdot\\text{m} = \\text{J}</latex-inline>",
+      "web": "$\\text{N}\\cdot\\text{m} = \\text{J}$"
+    },
+    {
+      "name": "a dotted unit in display maths on its own lines",
+      "input": "Energy:\n\n\\[\nE = h\\nu,\\quad h = 6.6\\times10^{-34}\\,\\text{J·s}\n\\]",
+      "tagged": "Energy:\n\n<latex-block>\nE = h\\nu,\\quad h = 6.6\\times10^{-34}\\,\\text{J}\\cdot\\text{s}\n</latex-block>",
+      "web": "Energy:\n\n$$\nE = h\\nu,\\quad h = 6.6\\times10^{-34}\\,\\text{J}\\cdot\\text{s}\n$$"
+    },
+    {
+      "name": "a dotted unit in a dollar pair",
+      "input": "Then $\\text{N·m}$ here",
+      "tagged": "Then $\\text{N}\\cdot\\text{m}$ here",
+      "web": "Then $\\text{N}\\cdot\\text{m}$ here",
+      "lesson": "Then <latex-inline>\\text{N}\\cdot\\text{m}</latex-inline> here"
+    },
+    {
+      "name": "a dotted unit outside maths is text",
+      "input": "The unit is N·m and J·s.",
+      "tagged": "The unit is N·m and J·s.",
+      "web": "The unit is N·m and J·s."
+    },
+    {
+      "name": "a dotted unit in code is left",
+      "input": "Use `\\text{N·m}` here",
+      "tagged": "Use `\\text{N·m}` here",
+      "web": "Use `\\text{N·m}` here"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{OCH_2CH_3}",
+      "input": "\\(\\text{OCH_2CH_3}\\)",
+      "tagged": "<latex-inline>\\text{OCH}_2\\text{CH}_3</latex-inline>",
+      "web": "$\\text{OCH}_2\\text{CH}_3$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{NO_3}",
+      "input": "\\(\\text{NO_3}\\)",
+      "tagged": "<latex-inline>\\text{NO}_3</latex-inline>",
+      "web": "$\\text{NO}_3$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{NO_3}^{-}",
+      "input": "\\(\\text{NO_3}^{-}\\)",
+      "tagged": "<latex-inline>\\text{NO}_3^{-}</latex-inline>",
+      "web": "$\\text{NO}_3^{-}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{CH_3}^{+}",
+      "input": "\\(\\text{CH_3}^{+}\\)",
+      "tagged": "<latex-inline>\\text{CH}_3^{+}</latex-inline>",
+      "web": "$\\text{CH}_3^{+}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{H_2O}",
+      "input": "\\(\\text{H_2O}\\)",
+      "tagged": "<latex-inline>\\text{H}_2\\text{O}</latex-inline>",
+      "web": "$\\text{H}_2\\text{O}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{H_2SO_4}",
+      "input": "\\(\\text{H_2SO_4}\\)",
+      "tagged": "<latex-inline>\\text{H}_2\\text{SO}_4</latex-inline>",
+      "web": "$\\text{H}_2\\text{SO}_4$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{Ca(OH)_2}",
+      "input": "\\(\\text{Ca(OH)_2}\\)",
+      "tagged": "<latex-inline>\\text{Ca(OH)}_2</latex-inline>",
+      "web": "$\\text{Ca(OH)}_2$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{CO_2}",
+      "input": "\\(\\text{CO_2}\\)",
+      "tagged": "<latex-inline>\\text{CO}_2</latex-inline>",
+      "web": "$\\text{CO}_2$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{NH_4}^{+}",
+      "input": "\\(\\text{NH_4}^{+}\\)",
+      "tagged": "<latex-inline>\\text{NH}_4^{+}</latex-inline>",
+      "web": "$\\text{NH}_4^{+}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{SO_4}^{2-}",
+      "input": "\\(\\text{SO_4}^{2-}\\)",
+      "tagged": "<latex-inline>\\text{SO}_4^{2-}</latex-inline>",
+      "web": "$\\text{SO}_4^{2-}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{PO_4}^{3-}",
+      "input": "\\(\\text{PO_4}^{3-}\\)",
+      "tagged": "<latex-inline>\\text{PO}_4^{3-}</latex-inline>",
+      "web": "$\\text{PO}_4^{3-}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{Fe_2O_3}",
+      "input": "\\(\\text{Fe_2O_3}\\)",
+      "tagged": "<latex-inline>\\text{Fe}_2\\text{O}_3</latex-inline>",
+      "web": "$\\text{Fe}_2\\text{O}_3$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{C_6H_{12}O_6}",
+      "input": "\\(\\text{C_6H_{12}O_6}\\)",
+      "tagged": "<latex-inline>\\text{C}_6\\text{H}_{12}\\text{O}_6</latex-inline>",
+      "web": "$\\text{C}_6\\text{H}_{12}\\text{O}_6$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{C_12H_22O_11}",
+      "input": "\\(\\text{C_12H_22O_11}\\)",
+      "tagged": "<latex-inline>\\text{C}_{12}\\text{H}_{22}\\text{O}_{11}</latex-inline>",
+      "web": "$\\text{C}_{12}\\text{H}_{22}\\text{O}_{11}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{NO_{3}}",
+      "input": "\\(\\text{NO_{3}}\\)",
+      "tagged": "<latex-inline>\\text{NO}_{3}</latex-inline>",
+      "web": "$\\text{NO}_{3}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{Al_2(SO_4)_3}",
+      "input": "\\(\\text{Al_2(SO_4)_3}\\)",
+      "tagged": "<latex-inline>\\text{Al}_2\\text{(SO}_4\\text{)}_3</latex-inline>",
+      "web": "$\\text{Al}_2\\text{(SO}_4\\text{)}_3$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{CH_3COOH}",
+      "input": "\\(\\text{CH_3COOH}\\)",
+      "tagged": "<latex-inline>\\text{CH}_3\\text{COOH}</latex-inline>",
+      "web": "$\\text{CH}_3\\text{COOH}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{N_2}",
+      "input": "\\(\\text{N_2}\\)",
+      "tagged": "<latex-inline>\\text{N}_2</latex-inline>",
+      "web": "$\\text{N}_2$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{Mg(NO_3)_2}",
+      "input": "\\(\\text{Mg(NO_3)_2}\\)",
+      "tagged": "<latex-inline>\\text{Mg(NO}_3\\text{)}_2</latex-inline>",
+      "web": "$\\text{Mg(NO}_3\\text{)}_2$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{CH_3CH_2OH}",
+      "input": "\\(\\text{CH_3CH_2OH}\\)",
+      "tagged": "<latex-inline>\\text{CH}_3\\text{CH}_2\\text{OH}</latex-inline>",
+      "web": "$\\text{CH}_3\\text{CH}_2\\text{OH}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{NaHCO_3}",
+      "input": "\\(\\text{NaHCO_3}\\)",
+      "tagged": "<latex-inline>\\text{NaHCO}_3</latex-inline>",
+      "web": "$\\text{NaHCO}_3$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{K_2Cr_2O_7}",
+      "input": "\\(\\text{K_2Cr_2O_7}\\)",
+      "tagged": "<latex-inline>\\text{K}_2\\text{Cr}_2\\text{O}_7</latex-inline>",
+      "web": "$\\text{K}_2\\text{Cr}_2\\text{O}_7$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{Ag}^{+} + \\text{NO_3}^{-}",
+      "input": "\\(\\text{Ag}^{+} + \\text{NO_3}^{-}\\)",
+      "tagged": "<latex-inline>\\text{Ag}^{+} + \\text{NO}_3^{-}</latex-inline>",
+      "web": "$\\text{Ag}^{+} + \\text{NO}_3^{-}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{H_2} + \\text{O_2} \\rightarrow \\text{H_2O}",
+      "input": "\\(\\text{H_2} + \\text{O_2} \\rightarrow \\text{H_2O}\\)",
+      "tagged": "<latex-inline>\\text{H}_2 + \\text{O}_2 \\rightarrow \\text{H}_2\\text{O}</latex-inline>",
+      "web": "$\\text{H}_2 + \\text{O}_2 \\rightarrow \\text{H}_2\\text{O}$"
+    },
+    {
+      "name": "a formula with a subscript in text: \\text{CH}_3\\text{C(OH)(OCH_2CH_3)OH}^{+}",
+      "input": "\\(\\text{CH}_3\\text{C(OH)(OCH_2CH_3)OH}^{+}\\)",
+      "tagged": "<latex-inline>\\text{CH}_3\\text{C(OH)(OCH}_2\\text{CH}_3\\text{)OH}^{+}</latex-inline>",
+      "web": "$\\text{CH}_3\\text{C(OH)(OCH}_2\\text{CH}_3\\text{)OH}^{+}$"
+    },
+    {
+      "name": "a formula with a subscript in text: x_{\\text{max}} + \\text{CO_2}",
+      "input": "\\(x_{\\text{max}} + \\text{CO_2}\\)",
+      "tagged": "<latex-inline>x_{\\text{max}} + \\text{CO}_2</latex-inline>",
+      "web": "$x_{\\text{max}} + \\text{CO}_2$"
+    },
+    {
+      "name": "left alone: an underscore between words in text",
+      "input": "\\(\\text{foo_bar}\\)",
+      "tagged": "<latex-inline>\\text{foo_bar}</latex-inline>",
+      "web": "$\\text{foo_bar}$"
+    },
+    {
+      "name": "left alone: words joined by underscores in text",
+      "input": "\\(\\text{snake_case_name}\\)",
+      "tagged": "<latex-inline>\\text{snake_case_name}</latex-inline>",
+      "web": "$\\text{snake_case_name}$"
+    },
+    {
+      "name": "left alone: an underscore before a letter in text",
+      "input": "\\(\\text{x_y}\\)",
+      "tagged": "<latex-inline>\\text{x_y}</latex-inline>",
+      "web": "$\\text{x_y}$"
+    },
+    {
+      "name": "left alone: an underscore at the end of text",
+      "input": "\\(\\text{a_}\\)",
+      "tagged": "<latex-inline>\\text{a_}</latex-inline>",
+      "web": "$\\text{a_}$"
+    },
+    {
+      "name": "left alone: a name with an underscore",
+      "input": "\\(\\text{rate_const}\\)",
+      "tagged": "<latex-inline>\\text{rate_const}</latex-inline>",
+      "web": "$\\text{rate_const}$"
+    },
+    {
+      "name": "blanks in text stay blanks",
+      "input": "\\(\\text{___}\\)",
+      "tagged": "<latex-inline>\\text{\\_\\_\\_}</latex-inline>",
+      "web": "$\\text{\\_\\_\\_}$"
+    },
+    {
+      "name": "a subscript in text in display maths",
+      "input": "Complete ionic equation:\n\n\\[\n\\text{Ag}^{+}(aq) + \\text{NO_3}^{-}(aq) \\rightarrow \\text{AgNO_3}(s)\n\\]",
+      "tagged": "Complete ionic equation:\n\n<latex-block>\n\\text{Ag}^{+}(aq) + \\text{NO}_3^{-}(aq) \\rightarrow \\text{AgNO}_3(s)\n</latex-block>",
+      "web": "Complete ionic equation:\n\n$$\n\\text{Ag}^{+}(aq) + \\text{NO}_3^{-}(aq) \\rightarrow \\text{AgNO}_3(s)\n$$"
+    },
+    {
+      "name": "a subscript in text outside maths is text",
+      "input": "The ion is NO_3 and CH_3.",
+      "tagged": "The ion is NO_3 and CH_3.",
+      "web": "The ion is NO_3 and CH_3."
+    },
+    {
+      "name": "display maths after a sentence, a product",
+      "input": "So, \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "So, <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "So,\n$$\n0.25 \\times 0.4 = 0.1\n$$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths after a sentence, permutations",
+      "input": "So, \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "So, <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "So,\n$$\nP(n,r)=\\frac{n!}{(n-r)!}\n$$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths after a sentence, aligned lines",
+      "input": "So, \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "So, <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "So,\n$$\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n$$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths after a label with an indent, a product",
+      "input": "  Formula: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "  Formula: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "  Formula:\n  $$\n  0.25 \\times 0.4 = 0.1\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths after a label with an indent, permutations",
+      "input": "  Formula: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "  Formula: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "  Formula:\n  $$\n  P(n,r)=\\frac{n!}{(n-r)!}\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths after a label with an indent, aligned lines",
+      "input": "  Formula: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "  Formula: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "  Formula:\n  $$\n  \\begin{aligned}\n  a &= 1 \\\\\n  b &= 2\n  \\end{aligned}\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a numbered item, a product",
+      "input": "4. Dosadíme: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "4. Dosadíme: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "4. Dosadíme:\n   $$\n   0.25 \\times 0.4 = 0.1\n   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a numbered item, permutations",
+      "input": "4. Dosadíme: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "4. Dosadíme: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "4. Dosadíme:\n   $$\n   P(n,r)=\\frac{n!}{(n-r)!}\n   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a numbered item, aligned lines",
+      "input": "4. Dosadíme: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "4. Dosadíme: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "4. Dosadíme:\n   $$\n   \\begin{aligned}\n   a &= 1 \\\\\n   b &= 2\n   \\end{aligned}\n   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bullet item, a product",
+      "input": "- Step: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "- Step: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "- Step:\n  $$\n  0.25 \\times 0.4 = 0.1\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bullet item, permutations",
+      "input": "- Step: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "- Step: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "- Step:\n  $$\n  P(n,r)=\\frac{n!}{(n-r)!}\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bullet item, aligned lines",
+      "input": "- Step: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "- Step: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "- Step:\n  $$\n  \\begin{aligned}\n  a &= 1 \\\\\n  b &= 2\n  \\end{aligned}\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a star item, a product",
+      "input": "* Step: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "* Step: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "* Step:\n  $$\n  0.25 \\times 0.4 = 0.1\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a star item, permutations",
+      "input": "* Step: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "* Step: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "* Step:\n  $$\n  P(n,r)=\\frac{n!}{(n-r)!}\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a star item, aligned lines",
+      "input": "* Step: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "* Step: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "* Step:\n  $$\n  \\begin{aligned}\n  a &= 1 \\\\\n  b &= 2\n  \\end{aligned}\n  $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bracket-numbered item, a product",
+      "input": "1) Step: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "1) Step: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "1) Step:\n   $$\n   0.25 \\times 0.4 = 0.1\n   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bracket-numbered item, permutations",
+      "input": "1) Step: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "1) Step: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "1) Step:\n   $$\n   P(n,r)=\\frac{n!}{(n-r)!}\n   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bracket-numbered item, aligned lines",
+      "input": "1) Step: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "1) Step: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "1) Step:\n   $$\n   \\begin{aligned}\n   a &= 1 \\\\\n   b &= 2\n   \\end{aligned}\n   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a two-digit item, a product",
+      "input": "10. Ten: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "10. Ten: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "10. Ten:\n    $$\n    0.25 \\times 0.4 = 0.1\n    $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a two-digit item, permutations",
+      "input": "10. Ten: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "10. Ten: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "10. Ten:\n    $$\n    P(n,r)=\\frac{n!}{(n-r)!}\n    $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a two-digit item, aligned lines",
+      "input": "10. Ten: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "10. Ten: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "10. Ten:\n    $$\n    \\begin{aligned}\n    a &= 1 \\\\\n    b &= 2\n    \\end{aligned}\n    $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a nested bullet, a product",
+      "input": "  - sub: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "  - sub: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "  - sub:\n    $$\n    0.25 \\times 0.4 = 0.1\n    $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a nested bullet, permutations",
+      "input": "  - sub: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "  - sub: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "  - sub:\n    $$\n    P(n,r)=\\frac{n!}{(n-r)!}\n    $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a nested bullet, aligned lines",
+      "input": "  - sub: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "  - sub: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "  - sub:\n    $$\n    \\begin{aligned}\n    a &= 1 \\\\\n    b &= 2\n    \\end{aligned}\n    $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a deeper nested item, a product",
+      "input": "    - deeper: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "    - deeper: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "    - deeper:\n      $$\n      0.25 \\times 0.4 = 0.1\n      $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a deeper nested item, permutations",
+      "input": "    - deeper: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "    - deeper: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "    - deeper:\n      $$\n      P(n,r)=\\frac{n!}{(n-r)!}\n      $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a deeper nested item, aligned lines",
+      "input": "    - deeper: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "    - deeper: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "    - deeper:\n      $$\n      \\begin{aligned}\n      a &= 1 \\\\\n      b &= 2\n      \\end{aligned}\n      $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a block quote, a product",
+      "input": "> Quote: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "> Quote: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "> Quote:\n> $$\n> 0.25 \\times 0.4 = 0.1\n> $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a block quote, permutations",
+      "input": "> Quote: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "> Quote: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "> Quote:\n> $$\n> P(n,r)=\\frac{n!}{(n-r)!}\n> $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a block quote, aligned lines",
+      "input": "> Quote: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "> Quote: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "> Quote:\n> $$\n> \\begin{aligned}\n> a &= 1 \\\\\n> b &= 2\n> \\end{aligned}\n> $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a nested block quote, a product",
+      "input": "> > Deep: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "> > Deep: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "> > Deep:\n> > $$\n> > 0.25 \\times 0.4 = 0.1\n> > $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a nested block quote, permutations",
+      "input": "> > Deep: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "> > Deep: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "> > Deep:\n> > $$\n> > P(n,r)=\\frac{n!}{(n-r)!}\n> > $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a nested block quote, aligned lines",
+      "input": "> > Deep: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "> > Deep: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "> > Deep:\n> > $$\n> > \\begin{aligned}\n> > a &= 1 \\\\\n> > b &= 2\n> > \\end{aligned}\n> > $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bullet of a block quote, a product",
+      "input": "> - item: \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\nNext paragraph.",
+      "tagged": "> - item: <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\nNext paragraph.",
+      "web": "> - item:\n>   $$\n>   0.25 \\times 0.4 = 0.1\n>   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bullet of a block quote, permutations",
+      "input": "> - item: \\[\nP(n,r)=\\frac{n!}{(n-r)!}\n\\]\n\nNext paragraph.",
+      "tagged": "> - item: <latex-block>\nP(n,r)=\\frac{n!}{(n-r)!}\n</latex-block>\n\nNext paragraph.",
+      "web": "> - item:\n>   $$\n>   P(n,r)=\\frac{n!}{(n-r)!}\n>   $$\n\nNext paragraph."
+    },
+    {
+      "name": "display maths in a bullet of a block quote, aligned lines",
+      "input": "> - item: \\[\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n\\]\n\nNext paragraph.",
+      "tagged": "> - item: <latex-block>\n\\begin{aligned}\na &= 1 \\\\\nb &= 2\n\\end{aligned}\n</latex-block>\n\nNext paragraph.",
+      "web": "> - item:\n>   $$\n>   \\begin{aligned}\n>   a &= 1 \\\\\n>   b &= 2\n>   \\end{aligned}\n>   $$\n\nNext paragraph."
+    },
+    {
+      "name": "double dollar signs after text",
+      "input": "So, $$\nx = 1\n$$\n\nNext.",
+      "tagged": "So, <latex-block>\nx = 1\n</latex-block>\n\nNext.",
+      "web": "So,\n$$\nx = 1\n$$\n\nNext."
+    },
+    {
+      "name": "display maths in a list item indented as the model writes it",
+      "input": "4. Dosadíme: \\[\n   g'(x)=2x\n   \\]  \n5. Next",
+      "tagged": "4. Dosadíme: <latex-block>\n   g'(x)=2x\n   </latex-block>  \n5. Next",
+      "web": "4. Dosadíme:\n   $$\n   g'(x)=2x\n   $$  \n5. Next"
+    },
+    {
+      "name": "a hard break after the closer stays",
+      "input": "  Formula: \\[\n  P(n,r)=\\frac{n!}{(n-r)!}\n  \\]  \n  Example: arranging 3 books.",
+      "tagged": "  Formula: <latex-block>\n  P(n,r)=\\frac{n!}{(n-r)!}\n  </latex-block>  \n  Example: arranging 3 books.",
+      "web": "  Formula:\n  $$\n  P(n,r)=\\frac{n!}{(n-r)!}\n  $$  \n  Example: arranging 3 books."
+    },
+    {
+      "name": "text after the closer of display maths that begins its line",
+      "input": "\\[\nx = 1\n\\] where x is a number.",
+      "tagged": "<latex-block>\nx = 1\n</latex-block> where x is a number.",
+      "web": "$$\nx = 1\n$$\nwhere x is a number."
+    },
+    {
+      "name": "text before and after display maths",
+      "input": "Then \\[\nx = 1\n\\] and so on.",
+      "tagged": "Then <latex-block>\nx = 1\n</latex-block> and so on.",
+      "web": "Then\n$$\nx = 1\n$$\nand so on."
+    },
+    {
+      "name": "text after the closer in a list item",
+      "input": "- Then \\[\nx = 1\n\\] and so on.\n- Next",
+      "tagged": "- Then <latex-block>\nx = 1\n</latex-block> and so on.\n- Next",
+      "web": "- Then\n  $$\n  x = 1\n  $$\n  and so on.\n- Next"
+    },
+    {
+      "name": "text after the closer in a block quote",
+      "input": "> Then \\[\nx = 1\n\\] and so on.",
+      "tagged": "> Then <latex-block>\nx = 1\n</latex-block> and so on.",
+      "web": "> Then\n> $$\n> x = 1\n> $$\n> and so on."
+    },
+    {
+      "name": "display maths on one line in a sentence stays inline",
+      "input": "Then \\[ x = 1 \\] holds.",
+      "tagged": "Then <latex-block> x = 1 </latex-block> holds.",
+      "web": "Then $$ x = 1 $$ holds."
+    },
+    {
+      "name": "double dollar signs on one line in a sentence stay inline",
+      "input": "Then $$x = 1$$ holds.",
+      "tagged": "Then <latex-block>x = 1</latex-block> holds.",
+      "web": "Then $$x = 1$$ holds."
+    },
+    {
+      "name": "display maths that already begins its line is left",
+      "input": "So:\n\\[\nx = 1\n\\]\nNext.",
+      "tagged": "So:\n<latex-block>\nx = 1\n</latex-block>\nNext.",
+      "web": "So:\n$$\nx = 1\n$$\nNext."
+    },
+    {
+      "name": "display maths after text in a table row is left",
+      "input": "| a | \\[\nx\n\\] |",
+      "tagged": "| a | <latex-block>\nx\n</latex-block> |",
+      "web": "| a | $$\nx\n$$ |"
+    },
+    {
+      "name": "display maths after text inside a code fence is left",
+      "input": "```\nSo, \\[\nx\n\\]\n```",
+      "tagged": "```\nSo, \\[\nx\n\\]\n```",
+      "web": "```\nSo, \\[\nx\n\\]\n```"
+    },
+    {
+      "name": "display maths after text inside inline code is left",
+      "input": "Use `So, \\[\nx\n\\]` here",
+      "tagged": "Use `So, \\[\nx\n\\]` here",
+      "web": "Use `So, \\[\nx\n\\]` here"
+    },
+    {
+      "name": "two displays in a row of text",
+      "input": "First \\[\na\n\\] then \\[\nb\n\\] end.",
+      "tagged": "First <latex-block>\na\n</latex-block> then <latex-block>\nb\n</latex-block> end.",
+      "web": "First\n$$\na\n$$\nthen\n$$\nb\n$$\nend."
+    },
+    {
+      "name": "inline maths before display maths on the same line",
+      "input": "Let \\(x\\) be so: \\[\nx = 1\n\\]",
+      "tagged": "Let <latex-inline>x</latex-inline> be so: <latex-block>\nx = 1\n</latex-block>",
+      "web": "Let $x$ be so:\n$$\nx = 1\n$$"
+    },
+    {
+      "name": "a nested list item with display maths and a next paragraph",
+      "input": "1. First\n   - Inner: \\[\n   a = b\n   \\]\n2. Second",
+      "tagged": "1. First\n   - Inner: <latex-block>\n   a = b\n   </latex-block>\n2. Second",
+      "web": "1. First\n   - Inner:\n     $$\n     a = b\n     $$\n2. Second"
+    },
+    {
+      "name": "the measured case: a sentence, display maths, a heading in bold",
+      "input": "So, \\[\n0.25 \\times 0.4 = 0.1\n\\]\n\n**Check your understanding:**  \nIf you have \\(0.6\\) multiplied by \\(0.3\\), what do you think?",
+      "tagged": "So, <latex-block>\n0.25 \\times 0.4 = 0.1\n</latex-block>\n\n**Check your understanding:**  \nIf you have <latex-inline>0.6</latex-inline> multiplied by <latex-inline>0.3</latex-inline>, what do you think?",
+      "web": "So,\n$$\n0.25 \\times 0.4 = 0.1\n$$\n\n**Check your understanding:**  \nIf you have $0.6$ multiplied by $0.3$, what do you think?"
+    },
+    {
+      "name": "the measured case: rendered LaTeX after a label",
+      "input": "Rendered: \\[\n\\frac{a}{b}\n\\]\n\n**Square root**",
+      "tagged": "Rendered: <latex-block>\n\\frac{a}{b}\n</latex-block>\n\n**Square root**",
+      "web": "Rendered:\n$$\n\\frac{a}{b}\n$$\n\n**Square root**"
     }
   ],
   "vocabulary": {

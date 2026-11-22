@@ -12,6 +12,7 @@
 // applies to a reply; tests/fixtures/math-repair.json holds the cases both must
 // agree on. apps/web/src/lib/latex-scan.ts is this file's twin.
 
+import { displayLayout } from "./latex-display";
 import { indentedEnd, precededByListItem } from "./latex-layout";
 
 // Inline maths, and display maths, a derivation of many lines.
@@ -364,8 +365,20 @@ export function tagsAsDollars(text: string): string {
       block,
       text.charAt(end),
     );
-    pieces.push(text.slice(done, start), `${mark}${maths}${mark}`);
+    pieces.push(text.slice(done, start));
+    let written = `${mark}${maths}${mark}`;
     done = end;
+    if (block && maths.includes("\n")) {
+      const layout = displayLayout(text, start, end, maths);
+      if (layout) {
+        const [trailing, replacement, skip] = layout;
+        const last = pieces[pieces.length - 1];
+        pieces[pieces.length - 1] = last.slice(0, last.length - trailing);
+        written = replacement;
+        done += skip;
+      }
+    }
+    pieces.push(written);
   }
   pieces.push(text.slice(done));
   return pieces.join("");

@@ -27,6 +27,7 @@ from .maths_scan import (
     tag_delimiters,
     tags_as_dollars,
 )
+from .maths_units import text_in_maths
 
 __all__ = [
     "LENGTH",
@@ -90,7 +91,7 @@ _DOLLAR_SIGN = '\\char"24{}'
 def _inline_maths(maths: str) -> str:
     # Environments KaTeX refuses within a line of text are written as the ones
     # it accepts.
-    inline = _DISPLAY_ONLY.sub(_inline_environment, maths)
+    inline = _DISPLAY_ONLY.sub(_inline_environment, text_in_maths(maths))
     inline = _BLANK.sub(lambda run: "\\_" * len(run[0]), inline)
     return _DOLLAR_IN_MATHS.sub(
         lambda m: m.group(0) if m.group(0) == "\\\\" else _DOLLAR_SIGN, inline

@@ -17,6 +17,7 @@ from bisect import bisect_left
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from .maths_display import display_layout
 from .maths_layout import indented_end, preceded_by_list_item
 
 # Inline maths, and display maths, a derivation of many lines.
@@ -350,7 +351,13 @@ def tags_as_dollars(text: str) -> str:
             text[span.inner[0] : span.inner[1]], block, text[span.end : span.end + 1]
         )
         pieces.append(text[done : span.start])
-        pieces.append(f"{mark}{maths}{mark}")
-        done = span.end
+        written, done = f"{mark}{maths}{mark}", span.end
+        if block and "\n" in maths:
+            layout = display_layout(text, span.start, span.end, maths)
+            if layout:
+                trailing, written, skip = layout
+                pieces[-1] = pieces[-1][: len(pieces[-1]) - trailing]
+                done += skip
+        pieces.append(written)
     pieces.append(text[done:])
     return "".join(pieces)
