@@ -120,6 +120,9 @@
   },
   "onboarding": {
     "home": "الصفحة الرئيسية لـ graspy",
+    "headline": "Let's make learning awesome together.",
+    "subline": "A little about you to get started.",
+    "skip": "Skip to the form",
     "stepOf": "الخطوة {current} من {total}",
     "back": "رجوع",
     "next": "التالي",

@@ -7,11 +7,9 @@ import SubjectChips from "./subject-chips";
 export default function CurriculumReadyView({
   stats,
   subjects,
-  onContinue,
 }: {
   stats: GenerationStats;
   subjects: string[];
-  onContinue: () => void;
 }) {
   const { t } = useI18n();
   return (
@@ -19,9 +17,13 @@ export default function CurriculumReadyView({
       <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-accent-soft">
         <CheckCircle className="h-14 w-14 text-accent-ink" />
       </div>
-      <h2 className="text-balance text-4xl font-semibold text-ink">
+      <h1
+        id="page-title"
+        tabIndex={-1}
+        className="text-balance text-4xl font-semibold text-ink outline-none"
+      >
         {t("onboarding.ready.title")}
-      </h2>
+      </h1>
       <p className="mt-4 text-base text-ink">
         {t("onboarding.ready.body", { topics: stats.topicCount })}
       </p>
@@ -29,17 +31,22 @@ export default function CurriculumReadyView({
       <div className="mt-6">
         <SubjectChips subjects={subjects} />
       </div>
-
-      <ActionBar>
-        <button
-          type="button"
-          onClick={onContinue}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
-        >
-          {t("onboarding.ready.continue")}
-          <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
-        </button>
-      </ActionBar>
     </>
+  );
+}
+
+export function ContinueBar({ onContinue }: { onContinue: () => void }) {
+  const { t } = useI18n();
+  return (
+    <ActionBar>
+      <button
+        type="button"
+        onClick={onContinue}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-control bg-accent px-6 py-4 text-lg font-semibold text-on-accent transition"
+      >
+        {t("onboarding.ready.continue")}
+        <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
+      </button>
+    </ActionBar>
   );
 }

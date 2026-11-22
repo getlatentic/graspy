@@ -47,7 +47,7 @@ export default function SelectListbox(props: SelectListboxProps) {
     <div
       ref={listRef}
       style={{ ...style, zIndex: 9999 }}
-      className="theme-light"
+      className="art-popup theme-light zoom"
     >
       <div
         id={`${id}-listbox`}

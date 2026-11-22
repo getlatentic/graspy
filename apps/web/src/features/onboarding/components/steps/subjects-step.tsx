@@ -95,7 +95,7 @@ function SubjectsBody({
   if (failed) return <SubjectsFailed onRetry={onRetry} />;
   if (loading) return <SubjectsSkeleton />;
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" onKeyDown={moveBetweenRows}>
       {subjects.map((subject, index) => (
         <SubjectButton
           key={subject.id}
@@ -107,6 +107,18 @@ function SubjectsBody({
       ))}
     </div>
   );
+}
+
+/** Up and down arrows (a remote's pad too) move between the rows; Enter and Space toggle one. */
+function moveBetweenRows(event: React.KeyboardEvent<HTMLDivElement>) {
+  const step = event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0;
+  if (step === 0) return;
+  const rows = [...event.currentTarget.querySelectorAll("button")];
+  const next =
+    rows[rows.indexOf(document.activeElement as HTMLButtonElement) + step];
+  if (!next) return;
+  event.preventDefault();
+  next.focus();
 }
 
 function SubjectsFailed({ onRetry }: { onRetry: () => void }) {
@@ -162,7 +174,7 @@ function SubjectButton({
       style={{
         animationDelay: `${Math.min(place, MAX_STAGGERED) * STAGGER_MS}ms`,
       }}
-      className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-start transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-safe:animate-enter ${
+      className={`flex w-full min-h-12 items-center justify-between gap-3 rounded-lg border px-4 py-3 text-start transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-safe:animate-enter ${
         chosen
           ? "border-accent bg-accent-soft text-ink"
           : "border-line bg-surface hover:border-accent hover:bg-raised"

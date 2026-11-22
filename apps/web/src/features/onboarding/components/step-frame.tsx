@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -16,16 +17,29 @@ export function StepHeading({
 }) {
   const { t } = useI18n();
   const percent = Math.round(((index + 1) / count) * 100);
+  const title = useRef<HTMLHeadingElement>(null);
+  const shown = useRef(step);
+
+  // A new step is announced by moving to its title, which a reader then says; the first one is not.
+  useEffect(() => {
+    if (shown.current === step) return;
+    shown.current = step;
+    title.current?.focus({ preventScroll: true });
+  }, [step]);
+
   return (
     <>
       <h1
         key={step}
-        className="text-3xl font-semibold text-ink motion-safe:animate-enter sm:text-4xl"
+        ref={title}
+        id="page-title"
+        tabIndex={-1}
+        className="text-3xl font-semibold text-ink outline-none motion-safe:animate-enter sm:text-4xl"
       >
         {t(`onboarding.steps.${step}.title`)}
       </h1>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-6 space-y-3">
         <span className="text-sm font-semibold text-accent-strong">
           {t("onboarding.stepOf", { current: index + 1, total: count })}
         </span>

@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeysApp } from "@/test/keys-app";
-import { StepFooter } from "./step-frame";
+import { StepFooter, StepHeading } from "./step-frame";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 const footer = (canNext: boolean) =>
   render(
@@ -19,19 +22,28 @@ const footer = (canNext: boolean) =>
   );
 
 describe("the action row of a step", () => {
-  it("stays at the foot of a phone's screen over a fade, and is part of the page from sm", () => {
+  it("is a sticky bar that knows when it is held up, so its fade shows only then", () => {
+    let report: (entries: { isIntersecting: boolean }[]) => void = () => {};
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: typeof report) {
+          report = callback;
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
     const { container } = footer(true);
-    const bar = container.firstElementChild;
-    for (const name of [
-      "sticky",
-      "bottom-0",
-      "bg-linear-to-t",
-      "sm:static",
-      "sm:bg-none",
-    ]) {
-      expect(bar?.classList.contains(name), name).toBe(true);
-    }
-    expect(bar?.className).toContain("env(safe-area-inset-bottom)");
+    const bar = container.querySelector("[data-stuck]") as HTMLElement;
+    expect(bar.classList.contains("sticky")).toBe(true);
+    expect(bar.className).toContain("env(safe-area-inset-bottom)");
+    expect(bar.className).toContain("split:static");
+    expect(bar.getAttribute("data-stuck")).toBe("false");
+    act(() => report([{ isIntersecting: false }]));
+    expect(bar.getAttribute("data-stuck")).toBe("true");
+    act(() => report([{ isIntersecting: true }]));
+    expect(bar.getAttribute("data-stuck")).toBe("false");
   });
 
   it("keeps a disabled Next legible: translucent white, muted ink and an outline, not a faded blue", () => {
@@ -46,5 +58,29 @@ describe("the action row of a step", () => {
     ]) {
       expect(next.classList.contains(name), name).toBe(true);
     }
+  });
+});
+
+describe("the step heading", () => {
+  const heading = (step: "profile" | "subjects") => (
+    <KeysApp>
+      <StepHeading step={step} index={step === "profile" ? 0 : 1} count={2} />
+    </KeysApp>
+  );
+
+  it("is the page's title, reachable by a program", () => {
+    render(heading("profile"));
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title.id).toBe("page-title");
+    expect(title.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("takes focus on a new step, and not on the first", () => {
+    const { rerender } = render(heading("profile"));
+    expect(document.activeElement).toBe(document.body);
+    rerender(heading("subjects"));
+    expect(document.activeElement).toBe(
+      screen.getByRole("heading", { level: 1 }),
+    );
   });
 });

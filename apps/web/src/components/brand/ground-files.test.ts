@@ -16,20 +16,16 @@ async function fs(): Promise<Fs> {
 const SRC = new URL("../../", import.meta.url);
 const THIS_FILE = "components/brand/ground-files.test.ts";
 
-const DRAWN = [
-  "ground-wide",
-  "ground-tall",
-  "scene-still-life",
-  "scene-tween",
-  "scene-desk",
-  "hero-kids",
-];
+const DRAWN = ["ground-wide", "ground-tall", "scene-still-life"];
 
 const REMOVED = [
   "/brand/desk.webp",
   "/brand/still-life.webp",
   "/brand/sign-in-landscape.webp",
   "/brand/art/tablet.webp",
+  "/brand/art/scene-tween.webp",
+  "/brand/art/scene-desk.webp",
+  "/brand/art/hero-kids.webp",
 ];
 
 describe("the art screens' pictures", () => {
