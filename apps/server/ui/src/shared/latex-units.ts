@@ -13,7 +13,7 @@
 
 // One level of braces may sit inside the text: \text{NO_{3}}.
 const TEXT = /\\text\{((?:[^{}]|\{[^{}]*\})*)\}/g;
-const MOVED = /[·⋅×−]|_(?:\{[^{}]*\}|[0-9]+)/g;
+const MOVED = /[·⋅×−]|[_^](?:\{[^{}]*\}|[0-9]+)/g;
 const SIGNS: Record<string, string> = {
   "·": "\\cdot",
   "⋅": "\\cdot",
@@ -21,30 +21,88 @@ const SIGNS: Record<string, string> = {
   "−": "-",
 };
 const DOTS = /[·⋅]/g;
+const SCRIPTS = "_^";
+// A text with one of these holds a dollar or maths of its own.
+const OWN_MATHS = ["\\(", "$", '\\char"24'];
+// How much of the maths before a text is looked at for a script it ends with.
+const LOOKBACK = 40;
+const ENDS_IN_SCRIPT = /([_^])(?:\{[^{}]{0,30}\}|[A-Za-z0-9])$/;
 
-function subscript(moved: string): string {
+function script(moved: string): string {
   const inside = moved.slice(1);
-  return inside.startsWith("{") || inside.length === 1 ? moved : `_{${inside}}`;
+  return inside.startsWith("{") || inside.length === 1 ? moved : `${moved[0]}{${inside}}`;
 }
 
-function textGroup(whole: string, body: string, following: string): string {
-  const pieces: [string, boolean][] = [];
+/** The script mark, _ or ^, that the maths ends in, or an empty string. */
+const endsInScript = (written: string) => ENDS_IN_SCRIPT.exec(written.slice(-LOOKBACK))?.[1] ?? "";
+
+function balanced(text: string): boolean {
+  let depth = 0;
+  for (const char of text) {
+    depth += Number(char === "{") - Number(char === "}");
+    if (depth < 0) return false;
+  }
+  return depth === 0;
+}
+
+/** What is to move out of the text: a script written after a backslash or another script mark is a different thing, and is left. */
+function moves(body: string): RegExpExecArray[] {
+  return [...body.matchAll(MOVED)].filter(
+    (moved) =>
+      moved[0] in SIGNS || moved.index === 0 || !`\\${SCRIPTS}`.includes(body[moved.index - 1]),
+  ) as RegExpExecArray[];
+}
+
+type Pair = [text: string, moved: string];
+
+/** The text as pairs of text and the character moved out after it, the last pair with an empty moved part; null when moving would leave a doubled script or unbalanced braces, or when the text holds maths of its own, which KaTeX reads in a text. The context is the end of the maths before. */
+function parts(body: string, context: string): Pair[] | null {
+  if (OWN_MATHS.some((mark) => body.includes(mark))) return null;
+  const pairs: Pair[] = [];
   let done = 0;
-  for (const moved of body.matchAll(MOVED)) {
-    pieces.push([body.slice(done, moved.index), false]);
-    pieces.push([SIGNS[moved[0]] ?? subscript(moved[0]), true]);
-    done = moved.index + moved[0].length;
+  let previous = endsInScript(context);
+  for (const moved of moves(body)) {
+    const text = body.slice(done, moved.index);
+    const sign = moved[0];
+    const mark = SCRIPTS.includes(sign[0]) ? sign[0] : "";
+    if (!balanced(text) || (mark && mark === (text ? "" : previous))) return null;
+    pairs.push([text, SIGNS[sign] ?? script(sign)]);
+    previous = mark;
+    done = moved.index + sign.length;
   }
-  if (!pieces.length) return whole;
-  pieces.push([body.slice(done), false]);
-  let written = pieces
-    .map(([piece, isMoved]) => (isMoved ? piece : piece ? `\\text{${piece}}` : ""))
-    .join("");
+  const tail = body.slice(done);
+  if (!pairs.length || !balanced(tail)) return null;
+  pairs.push([tail, ""]);
+  return pairs;
+}
+
+function written(pairs: Pair[]): string {
+  const out: string[] = [];
+  let afterScript = false;
+  for (let [text, moved] of pairs) {
+    if (afterScript && text.startsWith("/")) {
+      out.push("/");
+      text = text.slice(1);
+    }
+    if (text) out.push(`\\text{${text}}`);
+    out.push(moved);
+    afterScript = endsInScript(moved) !== "";
+  }
+  return out.join("");
+}
+
+function textGroup(whole: string, body: string, context: string, following: string): string {
+  const pairs = parts(body, context);
+  if (!pairs) return whole;
+  const lastText = pairs[pairs.length - 1][0];
+  const ended = pairs.length > 1 ? endsInScript(pairs[pairs.length - 2][1]) : "";
+  if (!lastText && ended && following === ended) return whole;
+  let result = written(pairs);
   // A command followed by a letter would run into it.
-  if ((written.endsWith("\\cdot") || written.endsWith("\\times")) && /[A-Za-z]/.test(following)) {
-    written += " ";
+  if ((result.endsWith("\\cdot") || result.endsWith("\\times")) && /^[A-Za-z]$/.test(following)) {
+    result += " ";
   }
-  return written;
+  return result;
 }
 
 const dots = (maths: string) => maths.replace(DOTS, "\\cdot ");
@@ -53,12 +111,18 @@ const dots = (maths: string) => maths.replace(DOTS, "\\cdot ");
 export function textInMaths(maths: string): string {
   const pieces: string[] = [];
   let done = 0;
+  let context = "";
   for (const group of maths.matchAll(TEXT)) {
+    const before = dots(maths.slice(done, group.index));
     const end = group.index + group[0].length;
-    pieces.push(
-      dots(maths.slice(done, group.index)),
-      textGroup(group[0], group[1], maths.charAt(end)),
+    const written = textGroup(
+      group[0],
+      group[1],
+      (context + before).slice(-LOOKBACK),
+      maths.charAt(end),
     );
+    pieces.push(before, written);
+    context = (context + before + written).slice(-LOOKBACK);
     done = end;
   }
   pieces.push(dots(maths.slice(done)));

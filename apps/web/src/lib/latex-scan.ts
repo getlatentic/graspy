@@ -357,6 +357,7 @@ function dollarsFor(maths: string, block: boolean, following: string): [string, 
 export function tagsAsDollars(text: string): string {
   const pieces: string[] = [];
   let done = 0;
+  let carry: string | null = null;
   for (const { start, end, kind, inner } of scan(text)) {
     if (kind !== "tag") continue;
     const block = text.startsWith("<latex-block>", start);
@@ -365,17 +366,20 @@ export function tagsAsDollars(text: string): string {
       block,
       text.charAt(end),
     );
+    const inherited = done === start ? carry : null;
+    carry = null;
     pieces.push(text.slice(done, start));
     let written = `${mark}${maths}${mark}`;
     done = end;
     if (block && maths.includes("\n")) {
-      const layout = displayLayout(text, start, end, maths);
+      const layout = displayLayout(text, start, end, maths, inherited);
       if (layout) {
-        const [trailing, replacement, skip] = layout;
+        const [trailing, replacement, skip, next] = layout;
         const last = pieces[pieces.length - 1];
         pieces[pieces.length - 1] = last.slice(0, last.length - trailing);
         written = replacement;
         done += skip;
+        carry = next;
       }
     }
     pieces.push(written);

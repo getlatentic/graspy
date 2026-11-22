@@ -2523,6 +2523,432 @@
       "input": "Rendered: \\[\n\\frac{a}{b}\n\\]\n\n**Square root**",
       "tagged": "Rendered: <latex-block>\n\\frac{a}{b}\n</latex-block>\n\n**Square root**",
       "web": "Rendered:\n$$\n\\frac{a}{b}\n$$\n\n**Square root**"
+    },
+    {
+      "name": "an escaped underscore in text is left",
+      "input": "\\(\\text{a\\_2}\\)",
+      "tagged": "<latex-inline>\\text{a\\_2}</latex-inline>",
+      "web": "$\\text{a\\_2}$"
+    },
+    {
+      "name": "an escaped underscore before a group in text is left",
+      "input": "\\(\\text{a\\_{12}}\\)",
+      "tagged": "<latex-inline>\\text{a\\_{12}}</latex-inline>",
+      "web": "$\\text{a\\_{12}}$"
+    },
+    {
+      "name": "two escaped underscores in text are left",
+      "input": "\\(\\text{x\\_1 y\\_2}\\)",
+      "tagged": "<latex-inline>\\text{x\\_1 y\\_2}</latex-inline>",
+      "web": "$\\text{x\\_1 y\\_2}$"
+    },
+    {
+      "name": "a doubled underscore in text is left",
+      "input": "\\(\\text{a__2}\\)",
+      "tagged": "<latex-inline>\\text{a\\_\\_2}</latex-inline>",
+      "web": "$\\text{a\\_\\_2}$"
+    },
+    {
+      "name": "a doubled underscore before a group in text is left",
+      "input": "\\(\\text{a__{2}}\\)",
+      "tagged": "<latex-inline>\\text{a\\_\\_{2}}</latex-inline>",
+      "web": "$\\text{a\\_\\_{2}}$"
+    },
+    {
+      "name": "an escaped underscore beside a real subscript",
+      "input": "\\(\\text{a\\_b_2}\\)",
+      "tagged": "<latex-inline>\\text{a\\_b}_2</latex-inline>",
+      "web": "$\\text{a\\_b}_2$"
+    },
+    {
+      "name": "an escaped caret in text is left",
+      "input": "\\(\\text{a\\^2}\\)",
+      "tagged": "<latex-inline>\\text{a\\^2}</latex-inline>",
+      "web": "$\\text{a\\^2}$"
+    },
+    {
+      "name": "a display in a block quote after text",
+      "input": "> quote text \\[\n> x\n> \\] after",
+      "tagged": "> quote text <latex-block>\n> x\n> </latex-block> after",
+      "web": "> quote text\n> $$\n> x\n> $$\n> after"
+    },
+    {
+      "name": "a display in a list item in a block quote",
+      "input": "> - quote item \\[\n>   x\n>   \\] after",
+      "tagged": "> - quote item <latex-block>\n>   x\n>   </latex-block> after",
+      "web": "> - quote item\n>   $$\n>   x\n>   $$\n>   after"
+    },
+    {
+      "name": "a display in a nested block quote",
+      "input": ">> deeper \\[\n>> x\n>> \\] after",
+      "tagged": ">> deeper <latex-block>\n>> x\n>> </latex-block> after",
+      "web": ">> deeper\n>> $$\n>> x\n>> $$\n>> after"
+    },
+    {
+      "name": "a blank quoted line in a display body keeps its mark",
+      "input": "> q \\[\n> x\n>\n> y\n> \\] after",
+      "tagged": "> q <latex-block>\n> x\n>\n> y\n> </latex-block> after",
+      "web": "> q\n> $$\n> x\n>\n> y\n> $$\n> after"
+    },
+    {
+      "name": "a display in a block quote with no text after it",
+      "input": "> q \\[\n> x\n> \\]",
+      "tagged": "> q <latex-block>\n> x\n> </latex-block>",
+      "web": "> q\n> $$\n> x\n> $$"
+    },
+    {
+      "name": "a display in a block quote without a space after the mark",
+      "input": ">q \\[\n>x\n>\\] after",
+      "tagged": ">q <latex-block>\n>x\n></latex-block> after",
+      "web": ">q\n>$$\n>x\n>$$\n>after"
+    },
+    {
+      "name": "a display in a block quote whose lines are lazy",
+      "input": "> q \\[\nx\ny\n\\] after",
+      "tagged": "> q <latex-block>\nx\ny\n</latex-block> after",
+      "web": "> q\n> $$\n> x\n> y\n> $$\n> after"
+    },
+    {
+      "name": "a dot before an accented letter",
+      "input": "\\(\\text{m·}é\\)",
+      "tagged": "<latex-inline>\\text{m}\\cdoté</latex-inline>",
+      "web": "$\\text{m}\\cdoté$"
+    },
+    {
+      "name": "a dot before a Greek letter",
+      "input": "\\(\\text{m·}α\\)",
+      "tagged": "<latex-inline>\\text{m}\\cdotα</latex-inline>",
+      "web": "$\\text{m}\\cdotα$"
+    },
+    {
+      "name": "a times sign before a Cyrillic letter",
+      "input": "\\(\\text{m×}ж\\)",
+      "tagged": "<latex-inline>\\text{m}\\timesж</latex-inline>",
+      "web": "$\\text{m}\\timesж$"
+    },
+    {
+      "name": "a dot before an ASCII letter",
+      "input": "\\(\\text{m·}x\\)",
+      "tagged": "<latex-inline>\\text{m}\\cdot x</latex-inline>",
+      "web": "$\\text{m}\\cdot x$"
+    },
+    {
+      "name": "a dot before a digit",
+      "input": "\\(\\text{m·}2\\)",
+      "tagged": "<latex-inline>\\text{m}\\cdot2</latex-inline>",
+      "web": "$\\text{m}\\cdot2$"
+    },
+    {
+      "name": "a multi-line display closed in the middle of a line",
+      "input": "Intervals like \\[1,\n2\\] are fine.",
+      "tagged": "Intervals like <latex-block>1,\n2</latex-block> are fine.",
+      "web": "Intervals like $$1,\n2$$ are fine."
+    },
+    {
+      "name": "a display environment on one opening line",
+      "input": "text \\[\\begin{aligned}a&=b\\\\\nc&=d\\end{aligned}\\] done",
+      "tagged": "text <latex-block>\\begin{aligned}a&=b\\\\\nc&=d\\end{aligned}</latex-block> done",
+      "web": "text $$\\begin{aligned}a&=b\\\\\nc&=d\\end{aligned}$$ done"
+    },
+    {
+      "name": "a display on its own lines and a one-line display in the same line",
+      "input": "A \\[\nx\n\\] B \\[y\\] C",
+      "tagged": "A <latex-block>\nx\n</latex-block> B <latex-block>y</latex-block> C",
+      "web": "A\n$$\nx\n$$\nB $$y$$ C"
+    },
+    {
+      "name": "a display opened at the end of a line and closed in the middle of one",
+      "input": "text \\[\nx = 1,\ny = 2\\] after",
+      "tagged": "text <latex-block>\nx = 1,\ny = 2</latex-block> after",
+      "web": "text\n$$\nx = 1,\ny = 2\n$$\nafter"
+    },
+    {
+      "name": "a display opened in the middle of a line and closed on its own line",
+      "input": "text \\[ x = 1,\ny = 2\n\\] after",
+      "tagged": "text <latex-block> x = 1,\ny = 2\n</latex-block> after",
+      "web": "text\n$$\nx = 1,\ny = 2\n$$\nafter"
+    },
+    {
+      "name": "a unit with a braced exponent in text",
+      "input": "\\(\\text{m·s^{-1}}\\)",
+      "tagged": "<latex-inline>\\text{m}\\cdot\\text{s}^{-1}</latex-inline>",
+      "web": "$\\text{m}\\cdot\\text{s}^{-1}$"
+    },
+    {
+      "name": "a unit with a digit exponent in text",
+      "input": "\\(\\text{m^2}\\)",
+      "tagged": "<latex-inline>\\text{m}^2</latex-inline>",
+      "web": "$\\text{m}^2$"
+    },
+    {
+      "name": "a unit with exponents and a slash",
+      "input": "\\(\\text{kg·m^2/s^2}\\)",
+      "tagged": "<latex-inline>\\text{kg}\\cdot\\text{m}^2/\\text{s}^2</latex-inline>",
+      "web": "$\\text{kg}\\cdot\\text{m}^2/\\text{s}^2$"
+    },
+    {
+      "name": "a unit with a braced exponent and a slash",
+      "input": "\\(\\text{W/m^{2}}\\)",
+      "tagged": "<latex-inline>\\text{W/m}^{2}</latex-inline>",
+      "web": "$\\text{W/m}^{2}$"
+    },
+    {
+      "name": "a unit with a long digit exponent in text",
+      "input": "\\(\\text{s^12}\\)",
+      "tagged": "<latex-inline>\\text{s}^{12}</latex-inline>",
+      "web": "$\\text{s}^{12}$"
+    },
+    {
+      "name": "a subscript and a superscript in text",
+      "input": "\\(\\text{CH_3^{+}}\\)",
+      "tagged": "<latex-inline>\\text{CH}_3^{+}</latex-inline>",
+      "web": "$\\text{CH}_3^{+}$"
+    },
+    {
+      "name": "an exponent of a dotted unit",
+      "input": "\\(\\text{J·mol^{-1}·K^{-1}}\\)",
+      "tagged": "<latex-inline>\\text{J}\\cdot\\text{mol}^{-1}\\cdot\\text{K}^{-1}</latex-inline>",
+      "web": "$\\text{J}\\cdot\\text{mol}^{-1}\\cdot\\text{K}^{-1}$"
+    },
+    {
+      "name": "a text with an exponent and a following exponent",
+      "input": "\\(\\text{m^2}^3\\)",
+      "tagged": "<latex-inline>\\text{m^2}^3</latex-inline>",
+      "web": "$\\text{m^2}^3$"
+    },
+    {
+      "name": "a text ending in an exponent before another",
+      "input": "\\(\\text{m^{2}}^{3}\\)",
+      "tagged": "<latex-inline>\\text{m^{2}}^{3}</latex-inline>",
+      "web": "$\\text{m^{2}}^{3}$"
+    },
+    {
+      "name": "a text with two exponents in a row",
+      "input": "\\(\\text{m^2^3}\\)",
+      "tagged": "<latex-inline>\\text{m^2^3}</latex-inline>",
+      "web": "$\\text{m^2^3}$"
+    },
+    {
+      "name": "a full stop after a display",
+      "input": "Sum \\[\nx\n\\]. Next sentence",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>. Next sentence",
+      "web": "Sum\n$$\nx.\n$$\nNext sentence"
+    },
+    {
+      "name": "a comma after a display",
+      "input": "Sum \\[\nx\n\\], then",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>, then",
+      "web": "Sum\n$$\nx,\n$$\nthen"
+    },
+    {
+      "name": "a bracket after a display",
+      "input": "Sum \\[\nx\n\\])",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>)",
+      "web": "Sum\n$$\nx)\n$$"
+    },
+    {
+      "name": "a colon after a display",
+      "input": "Sum \\[\nx\n\\]:",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>:",
+      "web": "Sum\n$$\nx:\n$$"
+    },
+    {
+      "name": "an exclamation mark after a display",
+      "input": "Sum \\[\nx\n\\]!",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>!",
+      "web": "Sum\n$$\nx!\n$$"
+    },
+    {
+      "name": "a question mark after a display",
+      "input": "Sum \\[\nx\n\\]?",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>?",
+      "web": "Sum\n$$\nx?\n$$"
+    },
+    {
+      "name": "a semicolon after a display",
+      "input": "Sum \\[\nx\n\\]; then",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>; then",
+      "web": "Sum\n$$\nx;\n$$\nthen"
+    },
+    {
+      "name": "an ellipsis after a display",
+      "input": "Sum \\[\nx\n\\]... and",
+      "tagged": "Sum <latex-block>\nx\n</latex-block>... and",
+      "web": "Sum\n$$\nx...\n$$\nand"
+    },
+    {
+      "name": "a full stop after a display on its own lines",
+      "input": "\\[\nx\n\\]. Next",
+      "tagged": "<latex-block>\nx\n</latex-block>. Next",
+      "web": "$$\nx.\n$$\nNext"
+    },
+    {
+      "name": "a full stop after a display, then a paragraph",
+      "input": "\\[\nx\n\\].\n\nNext",
+      "tagged": "<latex-block>\nx\n</latex-block>.\n\nNext",
+      "web": "$$\nx.\n$$\n\nNext"
+    },
+    {
+      "name": "a full stop in a word after a display is text",
+      "input": "Sum \\[\nx\n\\] e.g. this",
+      "tagged": "Sum <latex-block>\nx\n</latex-block> e.g. this",
+      "web": "Sum\n$$\nx\n$$\ne.g. this"
+    },
+    {
+      "name": "a full stop in a list item after a display",
+      "input": "- Sum \\[\n  x\n  \\].\n- Next",
+      "tagged": "- Sum <latex-block>\n  x\n  </latex-block>.\n- Next",
+      "web": "- Sum\n  $$\n  x.\n  $$\n- Next"
+    },
+    {
+      "name": "two displays on one line",
+      "input": "A \\[\nx\n\\] \\[\ny\n\\]",
+      "tagged": "A <latex-block>\nx\n</latex-block> <latex-block>\ny\n</latex-block>",
+      "web": "A\n$$\nx\n$$\n$$\ny\n$$"
+    },
+    {
+      "name": "two displays on one line, the closer indented as code",
+      "input": "    - a\n    - b \\[\nx\n    \\] \\[\ny\n    \\]",
+      "tagged": "    - a\n    - b <latex-block>\nx\n    </latex-block> <latex-block>\ny\n    </latex-block>",
+      "web": "    - a\n    - b\n      $$\n      x\n      $$\n      $$\n      y\n      $$"
+    },
+    {
+      "name": "two displays on one line in a list item",
+      "input": "- Sum \\[\n  x\n  \\] \\[\n  y\n  \\] done",
+      "tagged": "- Sum <latex-block>\n  x\n  </latex-block> <latex-block>\n  y\n  </latex-block> done",
+      "web": "- Sum\n  $$\n  x\n  $$\n  $$\n  y\n  $$\n  done"
+    },
+    {
+      "name": "a subscript at the start of a text after a subscript",
+      "input": "\\(x_1\\text{_2}\\)",
+      "tagged": "<latex-inline>x_1\\text{_2}</latex-inline>",
+      "web": "$x_1\\text{_2}$"
+    },
+    {
+      "name": "a subscript in text before a subscript",
+      "input": "\\(\\text{H_2}_{(g)}\\)",
+      "tagged": "<latex-inline>\\text{H_2}_{(g)}</latex-inline>",
+      "web": "$\\text{H_2}_{(g)}$"
+    },
+    {
+      "name": "a subscript in text before a braced subscript",
+      "input": "\\(\\text{H_2}_{g}\\)",
+      "tagged": "<latex-inline>\\text{H_2}_{g}</latex-inline>",
+      "web": "$\\text{H_2}_{g}$"
+    },
+    {
+      "name": "a subscript in text before a superscript",
+      "input": "\\(\\text{H_2}^{+}\\)",
+      "tagged": "<latex-inline>\\text{H}_2^{+}</latex-inline>",
+      "web": "$\\text{H}_2^{+}$"
+    },
+    {
+      "name": "two subscripts in a row in text",
+      "input": "\\(\\text{a_2_3}\\)",
+      "tagged": "<latex-inline>\\text{a_2_3}</latex-inline>",
+      "web": "$\\text{a_2_3}$"
+    },
+    {
+      "name": "a nested group with a subscript in text",
+      "input": "\\(\\text{a {b_2} c}\\)",
+      "tagged": "<latex-inline>\\text{a {b_2} c}</latex-inline>",
+      "web": "$\\text{a {b_2} c}$"
+    },
+    {
+      "name": "a nested group with a dot in text",
+      "input": "\\(\\text{a {b·c} d}\\)",
+      "tagged": "<latex-inline>\\text{a {b·c} d}</latex-inline>",
+      "web": "$\\text{a {b·c} d}$"
+    },
+    {
+      "name": "a subscript in text at the start after maths",
+      "input": "\\(x\\text{_2}\\)",
+      "tagged": "<latex-inline>x_2</latex-inline>",
+      "web": "$x_2$"
+    },
+    {
+      "name": "a superscript at the start of a text after a superscript",
+      "input": "\\(x^2\\text{^3}\\)",
+      "tagged": "<latex-inline>x^2\\text{^3}</latex-inline>",
+      "web": "$x^2\\text{^3}$"
+    },
+    {
+      "name": "text with display maths in a line indented four spaces after a paragraph",
+      "input": "para\n    text \\[\nx\n\\]",
+      "tagged": "para\n    text <latex-block>\nx\n</latex-block>",
+      "web": "para\n    text $$\nx\n$$"
+    },
+    {
+      "name": "text with display maths in a line indented three spaces",
+      "input": "   text \\[\nx\n\\] after",
+      "tagged": "   text <latex-block>\nx\n</latex-block> after",
+      "web": "   text\n   $$\n   x\n   $$\n   after"
+    },
+    {
+      "name": "a list item continuation indented three spaces",
+      "input": "1. Step\n   then \\[\n   x\n   \\] after",
+      "tagged": "1. Step\n   then <latex-block>\n   x\n   </latex-block> after",
+      "web": "1. Step\n   then\n   $$\n   x\n   $$\n   after"
+    },
+    {
+      "name": "a long run of spaces before an opener",
+      "input": "a                                                                                                                                                                                                                                                                                                            \\[\nx\n\\] after",
+      "tagged": "a                                                                                                                                                                                                                                                                                                            <latex-block>\nx\n</latex-block> after",
+      "web": "a\n$$\nx\n$$\nafter"
+    },
+    {
+      "name": "a long run of tabs after a closer",
+      "input": "a \\[\nx\n\\]\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t. Next",
+      "tagged": "a <latex-block>\nx\n</latex-block>\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t. Next",
+      "web": "a\n$$\nx.\n$$\nNext"
+    },
+    {
+      "name": "a long run of spaces and a closer with nothing after",
+      "input": "a \\[\nx\n\\]                                                                                                                                                                                                                                                                                                            ",
+      "tagged": "a <latex-block>\nx\n</latex-block>                                                                                                                                                                                                                                                                                                            ",
+      "web": "a\n$$\nx\n$$                                                                                                                                                                                                                                                                                                            "
+    },
+    {
+      "name": "a long run of spaces at the end of a display line",
+      "input": "a \\[\nx                                                                                                                                                                                                                                                                                                            \ny\n\\] b",
+      "tagged": "a <latex-block>\nx                                                                                                                                                                                                                                                                                                            \ny\n</latex-block> b",
+      "web": "a\n$$\nx\ny\n$$\nb"
+    },
+    {
+      "name": "a long run of spaces before a display body line",
+      "input": "a \\[\n                                                                                                                                                                                                                                                                                                            x\n                                                                                                                                                                                                                                                                                                            y\n\\] b",
+      "tagged": "a <latex-block>\n                                                                                                                                                                                                                                                                                                            x\n                                                                                                                                                                                                                                                                                                            y\n</latex-block> b",
+      "web": "a\n$$\nx\ny\n$$\nb"
+    },
+    {
+      "name": "a superscript in maths inside a text in display maths",
+      "input": "\\[\nv'(x)=2x \\quad\\text{(derivácia \\(x^{2}\\))}.\n\\]",
+      "tagged": "<latex-block>\nv'(x)=2x \\quad\\text{(derivácia \\(x^{2}\\))}.\n</latex-block>",
+      "web": "$$\nv'(x)=2x \\quad\\text{(derivácia \\(x^{2}\\))}.\n$$"
+    },
+    {
+      "name": "a superscript in maths inside a text",
+      "input": "\\[ \\text{(see \\(x^{2}\\))} \\]",
+      "tagged": "<latex-block> \\text{(see \\(x^{2}\\))} </latex-block>",
+      "web": "$$ \\text{(see \\(x^{2}\\))} $$"
+    },
+    {
+      "name": "a subscript in maths inside a text",
+      "input": "\\[ \\text{a \\(b_2\\) c} \\]",
+      "tagged": "<latex-block> \\text{a \\(b_2\\) c} </latex-block>",
+      "web": "$$ \\text{a \\(b_2\\) c} $$"
+    },
+    {
+      "name": "a dot in maths inside a text",
+      "input": "\\[ \\text{a \\(b·c\\) d} \\]",
+      "tagged": "<latex-block> \\text{a \\(b·c\\) d} </latex-block>",
+      "web": "$$ \\text{a \\(b·c\\) d} $$"
+    },
+    {
+      "name": "a subscript in dollar maths inside a text",
+      "input": "\\[ \\text{a $b_2$ c} \\]",
+      "tagged": "<latex-block> \\text{a \\char\"24{}b_2\\char\"24{} c} </latex-block>",
+      "web": "$$ \\text{a \\char\"24{}b_2\\char\"24{} c} $$"
     }
   ],
   "vocabulary": {

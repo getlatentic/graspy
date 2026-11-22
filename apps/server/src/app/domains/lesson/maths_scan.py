@@ -342,7 +342,7 @@ def _dollars_for(maths: str, block: bool, following: str) -> tuple[str, str]:
 
 def tags_as_dollars(text: str) -> str:
     """Each tagged span written with $ or $$; an unclosed tag is left alone."""
-    pieces, done = [], 0
+    pieces, done, carry = [], 0, None
     for span in scan(text):
         if span.kind != "tag":
             continue
@@ -350,12 +350,14 @@ def tags_as_dollars(text: str) -> str:
         mark, maths = _dollars_for(
             text[span.inner[0] : span.inner[1]], block, text[span.end : span.end + 1]
         )
+        inherited = carry if done == span.start else None
+        carry = None
         pieces.append(text[done : span.start])
         written, done = f"{mark}{maths}{mark}", span.end
         if block and "\n" in maths:
-            layout = display_layout(text, span.start, span.end, maths)
+            layout = display_layout(text, span.start, span.end, maths, inherited)
             if layout:
-                trailing, written, skip = layout
+                trailing, written, skip, carry = layout
                 pieces[-1] = pieces[-1][: len(pieces[-1]) - trailing]
                 done += skip
         pieces.append(written)
