@@ -1,5 +1,6 @@
 import { Mic, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { haptics } from "@/features/haptics/lib/haptics";
 import { Spinner } from "@/components/ui/spinner";
 import { useOnline } from "@/hooks/use-online";
 import { useI18n } from "@/lib/i18n-context";
@@ -44,7 +45,14 @@ export function AnswerControls({
   if (phase.name === "your-turn") {
     return (
       <div className="flex flex-wrap items-center gap-3">
-        <Button size="lg" onClick={onRecord} className="rounded-full">
+        <Button
+          size="lg"
+          onClick={() => {
+            haptics.trigger("press");
+            onRecord();
+          }}
+          className="rounded-full"
+        >
           <Mic className="size-5" aria-hidden="true" />
           {t("voice.lesson.record")}
         </Button>

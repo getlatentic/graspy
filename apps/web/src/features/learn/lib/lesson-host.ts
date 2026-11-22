@@ -1,3 +1,5 @@
+import { cueForAnswerCall } from "@/features/haptics/lib/answer-cue";
+import { haptics } from "@/features/haptics/lib/haptics";
 import type { TutorCard } from "@/lib/a2a/reply-data";
 import { callOrKeep } from "@/lib/mcp/outbox";
 import type { ViewHost } from "../ui-apps/view-bridge";
@@ -34,8 +36,11 @@ export function lessonHost({
       isLessonTool(name)
         ? lessonToolOrCopy(target, name, args)
         : callOrKeep(name, args),
-    toolCalled: (name, _args, result) => {
+    toolCalled: (name, args, result) => {
+      const graded = cueForAnswerCall(name, args);
+      if (graded) haptics.trigger(graded);
       if (name === FINISH_LESSON) {
+        haptics.trigger("lessonComplete");
         marks.learnt(target);
         onFinish();
         return;

@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { CheckCircle2, RotateCcw } from "lucide-react";
+import { cueForDecision } from "@/features/haptics/lib/answer-cue";
+import { haptics } from "@/features/haptics/lib/haptics";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 import type { Decision, MarkedTurn } from "@/lib/voice/voice-types";
@@ -12,6 +15,10 @@ const LABEL: Record<Decision, string> = {
 /** The marked answer: whether it was right, what graspy heard, and her reply. */
 export function TurnResult({ turn }: { turn: MarkedTurn }) {
   const { t } = useI18n();
+  useEffect(() => {
+    const cue = cueForDecision(turn.decision);
+    if (cue) haptics.trigger(cue);
+  }, [turn]);
   const correct = turn.decision === "correct";
   const Icon = correct ? CheckCircle2 : RotateCcw;
   return (

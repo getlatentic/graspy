@@ -207,6 +207,22 @@ Open the staging URL of the web app in the TV's browser (Samsung Internet or the
 6. In the chat box, the on-screen keyboard has a Send key and the page does not jump when it opens.
 7. A lesson that needs the microphone says plainly that this screen has none, where the browser has no `getUserMedia`.
 
+## Haptics
+
+`haptics.trigger("press" | "correct" | "wrong" | "lessonComplete")` and `haptics.stop()` (`src/features/haptics/`). Patterns, the rate cap and the limits are in `haptic-patterns.ts`; the phone's motor in `haptic-device.ts`; a controller's rumble in `haptic-gamepad.ts`; the rules (setting on, page visible, no reduced motion, the learner has acted, one cue per 100 ms) in `create-haptics.ts`, which reads nothing itself; `haptics.ts` wires it to the browser. The learner's switch is "Vibration" on the You page (on by default, kept in `localStorage` under `graspy.haptics`, shown only where a phone or controller could feel it). Visual feedback is always the real feedback; haptics only add to it, and a missing API is a no-op. Cues come from a graded answer in a lesson's check (`answer_check`) and in a chat card (`answer_practice`, felt once per tap, not again when the card sends its answers with the message), a spoken answer marked right or "try again" (not "not understood"), a finished lesson, and the Record button of a voice lesson (`press`, 12 ms; no other button buzzes). Nothing listens to focus or to the remote's keys.
+
+| Where | Vibration API | Controller rumble |
+| --- | --- | --- |
+| Chrome, Edge, Samsung Internet on Android | yes (needs a prior tap or key) | n/a |
+| Firefox (Android) | no (removed in 129) | no |
+| Safari and every browser on iOS | no | Safari 16.4 and later, with a controller |
+| Desktop and TV browsers | no motor | Chromium and Safari with a controller; Firefox no |
+| TV remote | no | no |
+
+No intensity control exists on the Vibration API, so "wrong" is two 18 ms ticks (never longer than one right-answer pulse) and every cue totals at most 250 ms. Sources checked: MDN `Navigator.vibrate` (sticky user activation, boolean only reports valid parameters, a new call replaces the running pattern, 0 or `[]` cancels) and `GamepadHapticActuator.playEffect` (`dual-rumble`, magnitudes 0 to 1, a new effect pre-empts, rejects in a hidden document), caniuse "Vibration" and MDN browser-compat-data.
+
+Not verified on a real device: the feel and strength of 12, 35 and 18/70/18 ms on any phone (motors differ; very short pulses may not be felt), whether a tap inside the lesson's sandboxed frame counts as activation for the page's `vibrate` call, any controller or TV runtime, Samsung Internet and Silent or Do Not Disturb behaviour. The iOS `<input type="checkbox" switch>` trick is not used: its mechanism is documented (a programmatic click on the switch's label), a WebKit report asks for user activation, but a break in iOS 26 was not confirmed.
+
 ## Names compared alike on the server and the web
 
 `normalise` (apps/server/src/app/agent/subject_match.py) and `nameKey`

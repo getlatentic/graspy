@@ -10,6 +10,7 @@ import { ProgressSummary } from "@/features/learn/components/progress-summary";
 import { PracticeRecordCard } from "@/features/learn/components/practice-record-card";
 import { YouHero } from "@/features/learn/components/you-hero";
 import { AccountCard } from "@/features/learn/components/account-card";
+import { HapticsCard } from "@/features/haptics/components/haptics-card";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 
 export default function YouPage() {
@@ -36,6 +37,8 @@ export default function YouPage() {
         <DetailsCard profile={profile} />
 
         <AccountCard />
+
+        <HapticsCard />
 
         {!voiceOnly && <EditSubjects />}
       </div>

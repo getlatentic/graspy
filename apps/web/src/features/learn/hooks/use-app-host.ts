@@ -1,4 +1,6 @@
 import { useCallback, useRef } from "react";
+import { cueForAnswerCall } from "@/features/haptics/lib/answer-cue";
+import { haptics } from "@/features/haptics/lib/haptics";
 import { appCall, type AppCallRequest } from "@/lib/a2a/request-data";
 import type { ChatMessage } from "@/lib/chat-db";
 import type { ViewHost } from "../ui-apps/view-bridge";
@@ -24,11 +26,14 @@ export function useAppHost({ busy, ask, keepViewCalls }: AppHostDeps) {
     (message: ChatMessage): ViewHost => ({
       toolCalled: (name, args) => {
         const call = appCall(name, args);
+        // A card sends its answers again with the message; only the tap is felt.
+        const kept = message.metadata?.viewCalls ?? [];
+        const graded = cueForAnswerCall(name, args);
+        if (graded && !kept.some((earlier) => sameCall(earlier, call))) {
+          haptics.trigger(graded);
+        }
         pending.current = withCall(pending.current, call);
-        keepViewCalls(
-          message.id,
-          withCall(message.metadata?.viewCalls ?? [], call),
-        );
+        keepViewCalls(message.id, withCall(kept, call));
       },
       message: (text) => {
         if (busy) return false;
