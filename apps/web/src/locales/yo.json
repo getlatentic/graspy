@@ -218,6 +218,12 @@
     "collapse": "Pa àtòjọ pọ̀",
     "expand": "Ṣí àtòjọ"
   },
+  "install": {
+    "title": "Install graspy",
+    "action": "Install",
+    "steps": "Tap Share, then Add to Home Screen",
+    "dismiss": "Hide"
+  },
   "home": {
     "pickUp": "Tẹ̀síwájú níbi tí o dúró sí.",
     "continueTitle": "Máa bá ẹ̀kọ́ lọ",

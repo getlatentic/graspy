@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { installAppWorker } from "@/lib/app-worker";
+import { listenForInstall } from "@/lib/install";
 import { listenForStaleChunks } from "@/app/page-chunks";
 import { finishPendingWipe } from "@/lib/wipe-pending";
 import { warmApi } from "@/lib/warm-api";
@@ -22,6 +23,7 @@ const queryClient = new QueryClient({
 });
 
 listenForStaleChunks();
+listenForInstall();
 installAppWorker();
 warmApi();
 

@@ -28,6 +28,11 @@
 /sw.js
   Cache-Control: no-cache
 
+# The manifest is not named for its content; the browser checks it on every visit so a changed
+# name, icon or colour reaches an installed app.
+/manifest.webmanifest
+  Cache-Control: no-cache
+
 # Every file the build puts in /assets is named for its content, so a changed file has a new
 # name and a file under one name never changes.
 /assets/*

@@ -13,6 +13,7 @@ import {
   HideChatButton,
 } from "@/features/learn/components/chat-pane";
 import { SideNav } from "@/features/learn/components/side-nav";
+import { InstallNotice } from "@/features/learn/components/install-notice";
 import { TutorAskBar } from "@/features/learn/components/tutor-ask-bar";
 import { AppTabBar } from "@/features/learn/components/app-tab-bar";
 import { useOpenChat } from "@/features/learn/hooks/use-open-chat";
@@ -23,6 +24,7 @@ import { useKeptAnswers } from "@/features/voice/hooks/use-kept-answers";
 import { useVoiceOnly } from "@/features/voice/hooks/use-voice-learner";
 import {
   isChatPath,
+  isRestPage,
   lessonChatTarget,
   pageRedirect,
   sectionsFor,
@@ -78,12 +80,13 @@ function DashboardLayoutContent() {
       className={cn(
         "group/shell flex flex-col overflow-hidden bg-canvas",
         chat
-          ? "fixed inset-x-0 top-[var(--visible-top,0px)] h-[var(--visible-height,100dvh)]"
+          ? "fixed inset-x-0 top-[var(--visible-top,0px)] h-[var(--visible-height,100dvh)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
           : "h-dvh",
       )}
     >
       <TopMenu />
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
+        {isRestPage(pathname) && <InstallNotice />}
         <SideNav
           sections={sections}
           open={layout.menuOpen}

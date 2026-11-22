@@ -74,7 +74,15 @@ function startWorker(network: (url?: string) => Promise<Response>) {
     });
     return answer;
   }
-  return { open, openFile, caches, told, check };
+  /** The worker taking over from an older one. */
+  async function activate() {
+    const waits: Promise<unknown>[] = [];
+    listeners.activate({
+      waitUntil: (work: Promise<unknown>) => waits.push(work),
+    });
+    await Promise.all(waits);
+  }
+  return { open, openFile, caches, told, check, activate };
 }
 
 const page = (body: string) => async () => new Response(body);
@@ -190,7 +198,7 @@ describe("the service worker's new build", () => {
     await answer;
     await settled();
     await worker.check();
-    const files = await worker.caches.open("graspy-files-v1");
+    const files = await worker.caches.open("graspy-files-v2");
     for (const name of [entry, "/assets/cn-NEW.js"]) {
       expect(await files.match(ORIGIN + name)).toBeDefined();
     }
@@ -223,7 +231,7 @@ describe("the service worker's new build", () => {
     await settled();
     const cache = await worker.caches.open("graspy-shell-v1");
     expect(await (await cache.match("/"))!.text()).toBe(OLD);
-    const files = await worker.caches.open("graspy-files-v1");
+    const files = await worker.caches.open("graspy-files-v2");
     expect(await files.match(ORIGIN + entry)).toBeUndefined();
   });
 });
@@ -244,8 +252,33 @@ describe("the service worker's refusal to keep what is not the app", () => {
   it("keeps a script it fetched, so the next ask is answered from the copy", async () => {
     const worker = startWorker(async () => new Response("script"));
     await worker.openFile("/assets/a.js");
-    const files = await worker.caches.open("graspy-files-v1");
+    const files = await worker.caches.open("graspy-files-v2");
     expect(await files.match(ORIGIN + "/assets/a.js")).toBeDefined();
+  });
+
+  it("deletes the caches of older versions when it takes over, and keeps its own", async () => {
+    const worker = startWorker(async () => new Response("{}"));
+    await worker.caches.open("graspy-files-v1");
+    await worker.caches.open("graspy-files-v2");
+    await worker.caches.open("graspy-shell-v1");
+
+    await worker.activate();
+
+    expect(await worker.caches.keys()).toEqual([
+      "graspy-files-v2",
+      "graspy-shell-v1",
+    ]);
+  });
+
+  it("leaves the manifest to the network, so a changed one reaches an installed app", async () => {
+    const worker = startWorker(async () => new Response("{}"));
+    const files = await worker.caches.open("graspy-files-v2");
+    const outcome = await Promise.race([
+      worker.openFile("/manifest.webmanifest").then(() => "answered"),
+      new Promise((resolve) => setTimeout(() => resolve("left alone"), 20)),
+    ]);
+    expect(outcome).toBe("left alone");
+    expect(await files.match(ORIGIN + "/manifest.webmanifest")).toBeUndefined();
   });
 
   it("does not keep a page answered for a file that is not there", async () => {
@@ -254,7 +287,7 @@ describe("the service worker's refusal to keep what is not the app", () => {
         new Response(OLD, { headers: { "content-type": "text/html" } }),
     );
     await worker.openFile("/assets/missing.js");
-    const files = await worker.caches.open("graspy-files-v1");
+    const files = await worker.caches.open("graspy-files-v2");
     expect(await files.match(ORIGIN + "/assets/missing.js")).toBeUndefined();
   });
 });

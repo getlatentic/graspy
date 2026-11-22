@@ -64,7 +64,7 @@ export default function LandingPage() {
       </main>
       <SiteFooter />
       <AppTabBar
-        className="fixed inset-x-0 bottom-0 z-20"
+        className="fixed inset-x-0 bottom-0 z-20 pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
         home={{ path: "/", current: "home" }}
       />
     </div>

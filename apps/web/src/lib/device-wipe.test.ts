@@ -33,6 +33,7 @@ function localStorageWith(entries: Record<string, string>) {
 const DEVICE = {
   "graspy.account": "{}",
   graspy_device_id: "device-1",
+  graspy_install_dismissed: "1",
   "firebase:authUser:key:[DEFAULT]": "{}",
   graspy_user_profile: "{}",
   "graspy.plan.joined": "uid/ada",
@@ -49,7 +50,7 @@ beforeEach(() => {
 });
 
 describe("wipeLearnerData", () => {
-  it("clears every store, and keeps only the account and the device id", async () => {
+  it("clears every store, and keeps only the account, the device id and its own choice about installing", async () => {
     const storage = localStorageWith(DEVICE);
 
     await wipeLearnerData();
@@ -60,6 +61,7 @@ describe("wipeLearnerData", () => {
       "graspy.account",
       "graspy.service-consent.uid/ada",
       "graspy_device_id",
+      "graspy_install_dismissed",
     ]);
     expect(newDeviceId).not.toHaveBeenCalled();
   });
@@ -74,13 +76,16 @@ describe("wipeLearnerData", () => {
 });
 
 describe("wipeDevice", () => {
-  it("leaves only Firebase's keys, agreements included, and gives the device a new id", async () => {
+  it("leaves only Firebase's keys and the install choice, agreements included, and gives the device a new id", async () => {
     const storage = localStorageWith(DEVICE);
 
     await wipeDevice();
 
     expect(cleared).toEqual(STORES);
-    expect(Object.keys(storage)).toEqual(["firebase:authUser:key:[DEFAULT]"]);
+    expect(Object.keys(storage).sort()).toEqual([
+      "firebase:authUser:key:[DEFAULT]",
+      "graspy_install_dismissed",
+    ]);
     expect(newDeviceId).toHaveBeenCalled();
   });
 });
