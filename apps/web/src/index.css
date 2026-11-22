@@ -135,7 +135,8 @@
   }
 }
 
-@media (min-width: 80rem) and (min-height: 40rem) {
+/* 42rem tall: at 1.5 the three parts of the form and the floor under its fields need 650px. */
+@media (min-width: 80rem) and (min-height: 42rem) {
   [data-device="tv"] .zoom {
     --zoom: 1.5;
   }
