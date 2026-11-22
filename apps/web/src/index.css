@@ -4,17 +4,30 @@
 @import "tw-animate-css";
 
 @theme {
-  /* Wide screens and TVs: the layouts and the logo grow at these widths. */
-  --breakpoint-3xl: 120rem;
-  --breakpoint-4xl: 160rem;
-  --breakpoint-5xl: 240rem;
-
   --animate-enter: enter 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   @keyframes enter {
     from {
       opacity: 0;
       transform: translateY(0.375rem);
     }
+  }
+}
+
+/* One root size scales the whole interface with the screen. It follows the
+   shorter axis the browser reports, window chrome included (so a TV browser's
+   tab strip and URL bar take their share), and it is where everything in rem
+   (type, spacing, widths, hit targets) gets its size: 1rem is 20px at
+   1920x1080, 16.7px at 1440x900, 40px at 3840x2160, and never under 16px, so
+   a phone, a tablet and a 1280x720 laptop keep the default. Held upright, the
+   axes swap. There is no ceiling: a bigger screen must not show a smaller
+   interface. Media queries in rem still measure the browser's own 16px. */
+html {
+  font-size: max(16px, min(1.0417vw, 1.8519vh));
+}
+
+@media (orientation: portrait) {
+  html {
+    font-size: max(16px, min(1.0417vh, 1.8519vw));
   }
 }
 
@@ -35,6 +48,83 @@
   h2,
   h3 {
     font-family: var(--font-display);
+  }
+
+  /* The pointer says what can be pressed. Tailwind's preflight leaves buttons
+     with the arrow; a TV's pointer remote and a mouse both need the hand. Text
+     is for fields that take text (a select's field is a button until its
+     Search is pressed), and a disabled control says so. Defined once here, so a
+     component never sets its own. */
+  button:not(:disabled),
+  [role="button"],
+  [role="option"],
+  [role="tab"],
+  [role="switch"],
+  [role="menuitem"],
+  [role="menuitemradio"],
+  [role="checkbox"],
+  [role="radio"],
+  a[href],
+  summary,
+  select:not(:disabled),
+  label:has(input[type="checkbox"], input[type="radio"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="range"]:not(:disabled),
+  input[role="combobox"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input:not(
+      [type="checkbox"],
+      [type="radio"],
+      [type="range"],
+      [type="button"],
+      [type="submit"],
+      [type="reset"],
+      [type="file"],
+      [type="color"]
+    ):not([readonly], :disabled),
+  textarea:not([readonly], :disabled) {
+    cursor: text;
+  }
+
+  :disabled,
+  [aria-disabled="true"],
+  label:has(:disabled) {
+    cursor: not-allowed;
+  }
+}
+
+/* The list of a select, scrolled with a pointer remote, a wheel, a finger or the
+   keys. The scrollbar is wide (1.25rem) and always drawn, so it is a target a
+   remote can hit and one that shows how long the list is; the page behind does
+   not scroll when the list ends. */
+.pick-scroll {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.pick-scroll::-webkit-scrollbar {
+  width: 1.25rem;
+}
+
+.pick-scroll::-webkit-scrollbar-track {
+  background: var(--color-track);
+  border-inline-start: 2px solid var(--color-line);
+}
+
+.pick-scroll::-webkit-scrollbar-thumb {
+  min-height: 3rem;
+  border: 4px solid var(--color-track);
+  border-radius: 9999px;
+  background: var(--color-ink);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .pick-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-ink) var(--color-track);
   }
 }
 
@@ -88,75 +178,45 @@
   }
 }
 
-/* The split layout: two halves the height of the screen. It needs a screen that
-   is wide and tall enough; a shorter window (a laptop at 150% zoom, a tablet
-   with its keyboard open) keeps the single column that scrolls as a page. */
-@custom-variant split (@media (min-width: 64rem) and (min-height: 40rem));
-
-/* Scales the type, the spacing and the widths under it with the screen, so a
-   form made for a laptop still reads from across a room. Anything inside it
-   that is sized in the theme scale grows by --zoom; borders stay as they are.
-   A monitor grows to 1.5 by 2560px, each step needing the height to hold it.
-   A TV is scaled below by the root size instead. */
-.zoom {
-  --zoom: 1;
-  --spacing: calc(0.25rem * var(--zoom));
-  --text-xs: calc(0.75rem * var(--zoom));
-  --text-sm: calc(0.875rem * var(--zoom));
-  --text-base: calc(1rem * var(--zoom));
-  --text-lg: calc(1.125rem * var(--zoom));
-  --text-xl: calc(1.25rem * var(--zoom));
-  --text-2xl: calc(1.5rem * var(--zoom));
-  --text-3xl: calc(1.875rem * var(--zoom));
-  --text-4xl: calc(2.25rem * var(--zoom));
-  --text-5xl: calc(3rem * var(--zoom));
-  --text-6xl: calc(3.75rem * var(--zoom));
-  --container-md: calc(28rem * var(--zoom));
-  --container-lg: calc(32rem * var(--zoom));
-  --container-xl: calc(36rem * var(--zoom));
-}
-
-@media (min-width: 96rem) and (min-height: 46rem) {
-  .zoom {
-    --zoom: 1.1;
+/* The split layout: two halves the height of the screen. It needs a landscape
+   screen at least 64rem wide (a container query on the page's root, so the
+   width is the page's own) and 40rem tall; anything less keeps the single
+   column that scrolls as a page, which is also where a form that cannot fit
+   goes. */
+@custom-variant split {
+  @media (orientation: landscape) and (min-height: 40rem) {
+    @container (min-width: 64rem) {
+      @slot;
+    }
   }
 }
 
-@media (min-width: 120rem) and (min-height: 56rem) {
-  .zoom {
-    --zoom: 1.25;
+/* A scrollbar that a TV's browser draws, with arrows, is of no use to a remote
+   or a touch screen and takes room from the form. Where the screen is a TV,
+   touch or wide, the fields that must scroll (a window too short to hold them)
+   and the sign-in and onboarding pages scroll with the wheel, the touch, the
+   arrows and the focus, with no bar. The older -webkit form is for Chromium
+   before 121. */
+@media (pointer: coarse), (min-width: 80rem) {
+  .quiet-scroll,
+  html:has(.art-ground) {
+    scrollbar-width: none;
+  }
+
+  .quiet-scroll::-webkit-scrollbar,
+  html:has(.art-ground)::-webkit-scrollbar {
+    display: none;
   }
 }
 
-@media (min-width: 160rem) and (min-height: 76rem) {
-  .zoom {
-    --zoom: 1.5;
-  }
+html[data-device="tv"] .quiet-scroll,
+html[data-device="tv"]:has(.art-ground) {
+  scrollbar-width: none;
 }
 
-/* A TV scales the whole app, not only the forms: the root size grows with the
-   screen, so every rem in the theme (type, spacing, widths, targets) grows with
-   it and nothing is under 16px. The zoom scope above is for monitors only. */
-@media (min-width: 80rem) {
-  html[data-device="tv"] {
-    font-size: 150%;
-  }
-}
-
-@media (min-width: 120rem) {
-  html[data-device="tv"] {
-    font-size: 175%;
-  }
-}
-
-@media (min-width: 200rem) {
-  html[data-device="tv"] {
-    font-size: 250%;
-  }
-}
-
-[data-device="tv"] .zoom {
-  --zoom: 1;
+html[data-device="tv"] .quiet-scroll::-webkit-scrollbar,
+html[data-device="tv"]:has(.art-ground)::-webkit-scrollbar {
+  display: none;
 }
 
 /* Bars that stick keep the focused control out from under them. */
@@ -209,9 +269,9 @@ html:has(.art-ground) {
     [role="option"],
     [tabindex]
   ):not([data-own-focus]):focus {
-  outline: calc(0.1875rem * var(--zoom, 1)) solid var(--color-ink);
-  outline-offset: calc(0.125rem * var(--zoom, 1));
-  box-shadow: 0 0 0 calc(0.125rem * var(--zoom, 1)) var(--color-canvas);
+  outline: 0.1875rem solid var(--color-ink);
+  outline-offset: 0.125rem;
+  box-shadow: 0 0 0 0.125rem var(--color-canvas);
 }
 
 [tabindex="-1"]:focus-visible,

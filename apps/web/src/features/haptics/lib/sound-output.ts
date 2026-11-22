@@ -4,6 +4,7 @@ import {
   DECODE_TIMEOUT_MS,
   MAX_DECODE_ATTEMPTS,
   PENDING_CUE_MS,
+  PENDING_TAP_MS,
   RETRY_BASE_MS,
   RETRY_MAX_MS,
   SOUND_FILES,
@@ -120,7 +121,10 @@ export function createSound({
     const waited = pending;
     if (!waited || !ready(waited.cue)) return;
     pending = null;
-    if (now() - waited.at <= PENDING_CUE_MS) start(waited.cue);
+    const patience = WAITS_FOR_AUDIO.has(waited.cue)
+      ? PENDING_CUE_MS
+      : PENDING_TAP_MS;
+    if (now() - waited.at <= patience) start(waited.cue);
   };
 
   const backOff = (cue: Cue, failed: number) => {
@@ -182,9 +186,17 @@ export function createSound({
     for (const cue of CUES) if (wanted(cue)) void fetchOne(cue);
   };
 
+  /** Whether the recording is on its way (fetching or decoding) in a context this visit made: the first tap of a visit. */
+  const preparing = (cue: Cue) =>
+    context !== null &&
+    !buffers.has(cue) &&
+    (fetching.has(cue) || decoding.has(cue));
+
   const play = (cue: Cue) => {
     if (ready(cue)) start(cue);
-    else if (WAITS_FOR_AUDIO.has(cue)) pending = { cue, at: now() };
+    else if (WAITS_FOR_AUDIO.has(cue) || preparing(cue)) {
+      pending = { cue, at: now() };
+    }
   };
 
   const wake = () => {

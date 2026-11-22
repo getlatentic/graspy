@@ -14,20 +14,33 @@ interface SearchableSelectProps {
   disabled?: boolean;
 }
 
-function inputClass(disabled: boolean): string {
+function inputClass(disabled: boolean, typing: boolean): string {
   const ground = disabled
-    ? "bg-track cursor-not-allowed text-muted placeholder:text-muted"
+    ? "bg-track text-muted placeholder:text-muted"
     : "bg-surface";
-  return `w-full placeholder:text-muted ${ground} ${FIELD}`;
+  const caret = typing ? "" : "caret-transparent select-none";
+  return `w-full truncate pe-12 placeholder:text-muted ${ground} ${caret} ${FIELD}`;
 }
 
+/**
+ * A closed select looks and acts like a button that opens a list, not a text
+ * field: it is read-only with no text keyboard (`inputMode="none"`), so a TV or
+ * a phone shows the list at once, and no caret blinks in it. Letters typed on a
+ * hardware keyboard jump to the option that starts with them; the list's
+ * Search button turns the field into a text field that filters, and asks for
+ * the on-screen keyboard.
+ */
 export default function SearchableSelect(props: SearchableSelectProps) {
   const { id, label, value, options, disabled = false } = props;
   const combobox = useCombobox(options, value, props.onChange);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
-  const { active, isOpen } = combobox;
+  const { active, isOpen, typing } = combobox;
+  const startTyping = () => {
+    combobox.startTyping();
+    inputRef.current?.focus();
+  };
 
   return (
     <div ref={containerRef} className="relative">
@@ -39,7 +52,9 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           ref={inputRef}
           id={id}
           type="text"
-          value={isOpen ? combobox.searchTerm : selectedLabel}
+          value={typing && isOpen ? combobox.searchTerm : selectedLabel}
+          readOnly={!typing}
+          inputMode={typing ? "search" : "none"}
           onChange={(event) => combobox.search(event.target.value)}
           onFocus={combobox.open}
           onClick={combobox.open}
@@ -51,7 +66,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           aria-controls={`${id}-listbox`}
           aria-autocomplete="list"
           aria-activedescendant={active && `${id}-option-${active.value}`}
-          className={inputClass(disabled)}
+          className={inputClass(disabled, typing)}
           autoComplete="off"
         />
         <OpenArrow open={isOpen} />
@@ -63,6 +78,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           value={value}
           options={options}
           combobox={combobox}
+          onSearch={startTyping}
           anchor={inputRef}
           container={containerRef}
         />
@@ -75,12 +91,13 @@ function OpenArrow({ open }: { open: boolean }) {
   return (
     <div className="absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none">
       <svg
-        className={`w-5 h-5 text-muted transition-transform ${
+        className={`size-6 text-muted transition-transform ${
           open ? "rotate-180" : ""
         }`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"

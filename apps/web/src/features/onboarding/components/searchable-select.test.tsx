@@ -32,6 +32,8 @@ function Picker() {
 const field = () => screen.getByRole("combobox") as HTMLInputElement;
 const isOpen = () => field().getAttribute("aria-expanded") === "true";
 const elsewhere = () => screen.getByText("elsewhere");
+const startSearch = () =>
+  fireEvent.click(screen.getByRole("button", { name: /search/i }));
 
 type Where = { clientX: number; clientY: number };
 const at = (x: number, y: number): Where => ({ clientX: x, clientY: y });
@@ -87,6 +89,7 @@ describe("SearchableSelect opening", () => {
   it("keeps the highlight when a click in the open field only moves the caret", () => {
     render(<Picker />);
     fireEvent.focus(field());
+    startSearch();
     fireEvent.change(field(), { target: { value: "grade" } });
     fireEvent.keyDown(field(), { key: "ArrowDown" });
     fireEvent.keyDown(field(), { key: "ArrowDown" });
@@ -116,6 +119,7 @@ describe("SearchableSelect closing", () => {
   it("stays open for a swipe outside, a scroll that the browser cancels or that moves", () => {
     render(<Picker />);
     fireEvent.focus(field());
+    startSearch();
     fireEvent.change(field(), { target: { value: "gra" } });
 
     press(document.body, "pointerdown");
@@ -158,6 +162,175 @@ describe("SearchableSelect list", () => {
     render(<Picker />);
     fireEvent.focus(field());
     const list = screen.getByRole("listbox");
-    expect(list.parentElement?.classList.contains("theme-light")).toBe(true);
+    expect(list.closest(".theme-light")).toBeTruthy();
+  });
+
+  it("scrolls with a wide scrollbar and keeps the page still behind it", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    expect(screen.getByRole("listbox").classList.contains("pick-scroll")).toBe(
+      true,
+    );
+  });
+
+  it("is placed at a fixed spot from its first render, so opening it cannot scroll or shift the page", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    const popup = screen.getByRole("listbox").closest(".art-popup");
+    expect((popup as HTMLElement).style.position).toBe("fixed");
+  });
+
+  it("gives each option a row tall enough for a pointer remote", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    const row = screen.getByRole("option", { name: "Grade 1" });
+    expect(row.classList.contains("min-h-12")).toBe(true);
+  });
+});
+
+describe("SearchableSelect as a button, not a text field", () => {
+  it("is read-only with no text keyboard, so a TV or a phone shows the list at once", () => {
+    render(<Picker />);
+    expect(field().readOnly).toBe(true);
+    expect(field().getAttribute("inputmode")).toBe("none");
+    fireEvent.focus(field());
+    expect(isOpen()).toBe(true);
+    expect(field().readOnly).toBe(true);
+    expect(field().classList.contains("caret-transparent")).toBe(true);
+  });
+
+  it("keeps the chosen name in the field while its list is open", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    fireEvent.click(screen.getByRole("option", { name: "Grade 2" }));
+    fireEvent.click(field());
+    expect(isOpen()).toBe(true);
+    expect(field().value).toBe("Grade 2");
+  });
+
+  it("turns into a text field that filters, with the keyboard asked for, when Search is pressed", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    startSearch();
+    expect(field().readOnly).toBe(false);
+    expect(field().getAttribute("inputmode")).toBe("search");
+    expect(document.activeElement).toBe(field());
+    fireEvent.change(field(), { target: { value: "year" } });
+    expect(screen.getAllByRole("option")).toHaveLength(1);
+  });
+
+  it("goes back to a button when it closes", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    startSearch();
+    fireEvent.keyDown(field(), { key: "Escape" });
+    expect(field().readOnly).toBe(true);
+  });
+
+  it("keeps the focus on the field when a toolbar button is pressed, so the keys keep working", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    const press = fireEvent.mouseDown(
+      screen.getByRole("button", { name: /search/i }),
+    );
+    expect(press).toBe(false);
+  });
+});
+
+describe("SearchableSelect jumping", () => {
+  const COUNTRIES = ["Albania", "Algeria", "Belgium", "Brazil", "Chad"]
+    .concat(["Denmark", "Egypt", "Fiji", "Ghana", "Haiti", "India", "Japan"])
+    .concat(["Kenya", "Laos"])
+    .map((label) => ({ value: label.toLowerCase(), label }));
+
+  function Countries() {
+    const [value, setValue] = useState("");
+    return (
+      <KeysApp>
+        <SearchableSelect
+          id="country"
+          label="Country"
+          value={value}
+          onChange={setValue}
+          options={COUNTRIES}
+          placeholder="Choose"
+        />
+      </KeysApp>
+    );
+  }
+  const active = () => field().getAttribute("aria-activedescendant");
+
+  it("goes to the option a letter starts, with the whole list still shown", () => {
+    render(<Countries />);
+    fireEvent.keyDown(field(), { key: "j" });
+    expect(isOpen()).toBe(true);
+    expect(active()).toBe("country-option-japan");
+    expect(screen.getAllByRole("option")).toHaveLength(COUNTRIES.length);
+    expect(field().value).toBe("");
+  });
+
+  it("follows more letters typed in a row, and the same letter again goes on through its options", () => {
+    render(<Countries />);
+    fireEvent.keyDown(field(), { key: "b" });
+    fireEvent.keyDown(field(), { key: "r" });
+    expect(active()).toBe("country-option-brazil");
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.now() + 5000);
+    fireEvent.keyDown(field(), { key: "a" });
+    fireEvent.keyDown(field(), { key: "a" });
+    expect(active()).toBe("country-option-algeria");
+    vi.useRealTimers();
+  });
+
+  it("steps by letter with the left and right arrows and the toolbar's buttons", () => {
+    render(<Countries />);
+    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "ArrowRight" });
+    expect(active()).toBe("country-option-belgium");
+    fireEvent.click(screen.getByRole("button", { name: /nextLetter/i }));
+    expect(active()).toBe("country-option-chad");
+    fireEvent.click(screen.getByRole("button", { name: /previousLetter/i }));
+    expect(active()).toBe("country-option-belgium");
+    fireEvent.keyDown(field(), { key: "ArrowLeft" });
+    expect(active()).toBe("country-option-albania");
+  });
+
+  it("moves a page with PageDown and PageUp and to the ends with Home and End", () => {
+    render(<Countries />);
+    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "PageDown" });
+    expect(active()).toBe("country-option-ghana");
+    fireEvent.keyDown(field(), { key: "PageDown" });
+    expect(active()).toBe("country-option-laos");
+    fireEvent.keyDown(field(), { key: "PageUp" });
+    expect(active()).toBe("country-option-denmark");
+    fireEvent.keyDown(field(), { key: "Home" });
+    expect(active()).toBe("country-option-albania");
+    fireEvent.keyDown(field(), { key: "End" });
+    expect(active()).toBe("country-option-laos");
+  });
+
+  it("keeps the active option in view as the keys move it", () => {
+    render(<Countries />);
+    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    scrolled.mockClear();
+    fireEvent.keyDown(field(), { key: "End" });
+    expect(scrolled).toHaveBeenCalledWith({ block: "nearest" });
+  });
+
+  it("opens on a space and picks with a space on an open list", () => {
+    render(<Countries />);
+    fireEvent.keyDown(field(), { key: " " });
+    expect(isOpen()).toBe(true);
+    fireEvent.keyDown(field(), { key: " " });
+    expect(isOpen()).toBe(false);
+    expect(field().value).toBe("Albania");
+  });
+
+  it("offers no letter steps on a short list", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    expect(screen.queryByRole("button", { name: /nextLetter/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /search/i })).toBeTruthy();
   });
 });

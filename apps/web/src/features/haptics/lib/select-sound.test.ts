@@ -59,6 +59,19 @@ describe("the select sound", () => {
     expect(trigger).not.toHaveBeenCalled();
   });
 
+  it("ticks for a click on a select's field, which opens its list, and not for focusing it", () => {
+    const body = page(
+      '<input role="combobox" readonly aria-expanded="false"><input role="combobox" disabled>',
+    );
+    const [field, disabled] = Array.from(body.querySelectorAll("input"));
+    field.focus();
+    expect(trigger).not.toHaveBeenCalled();
+    click(field);
+    expect(trigger).toHaveBeenCalledExactlyOnceWith("select");
+    click(disabled);
+    expect(trigger).toHaveBeenCalledOnce();
+  });
+
   it("is silent for focus, hover, typing and the remote's arrow keys", () => {
     const body = page("<button>One</button><button>Two</button>");
     const [one, two] = Array.from(body.querySelectorAll("button"));

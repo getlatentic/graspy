@@ -36,6 +36,7 @@ export function isEditable(target: EventTarget | null): boolean {
   if (target.isContentEditable) return true;
   if (target instanceof HTMLTextAreaElement) return true;
   if (!(target instanceof HTMLInputElement)) return false;
+  if (target.readOnly) return false;
   return !["button", "checkbox", "radio", "submit", "reset"].includes(
     target.type,
   );

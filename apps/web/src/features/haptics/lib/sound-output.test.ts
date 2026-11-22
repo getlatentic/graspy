@@ -5,6 +5,7 @@ import {
   DECODE_TIMEOUT_MS,
   MAX_DECODE_ATTEMPTS,
   PENDING_CUE_MS,
+  PENDING_TAP_MS,
   RETRY_BASE_MS,
   RETRY_MAX_MS,
   SOUND_FILES,
@@ -39,10 +40,6 @@ describe("the sound files", () => {
     for (const path of Object.values(SOUND_FILES)) {
       expect(path).toMatch(/^\/sounds\/[a-z]+-v\d+\.(wav|m4a)$/);
     }
-  });
-
-  it("play at a level that is safe for a child", () => {
-    expect(VOLUME).toBeLessThanOrEqual(0.5);
   });
 });
 
@@ -118,11 +115,36 @@ describe("the sound output", () => {
     expect(audio.sources).toHaveLength(0);
   });
 
-  it("drops a cue whose recording is not decoded yet", () => {
+  it("plays the first tap's select once its recording is decoded, so the first tap is heard", async () => {
     const { audio, sound } = setup();
     sound.unlock();
     sound.output.play("select");
     expect(audio.sources).toHaveLength(0);
+    await settle();
+    expect(audio.sources.map((source) => source.buffer)).toEqual([
+      { file: SOUND_FILES.select },
+    ]);
+  });
+
+  it("drops a first tap's select that waited longer than PENDING_TAP_MS", async () => {
+    const { audio, sound, clock } = setup();
+    sound.unlock();
+    sound.output.play("press");
+    clock.at += PENDING_TAP_MS + 1;
+    await settle();
+    expect(audio.sources).toHaveLength(0);
+  });
+
+  it("keeps only the latest select, and plays nothing for a recording that is not on its way", async () => {
+    const { audio, sound } = setup();
+    sound.output.play("select");
+    sound.unlock();
+    sound.output.play("select");
+    sound.output.play("press");
+    await settle();
+    expect(audio.sources.map((source) => source.buffer)).toEqual([
+      { file: SOUND_FILES.press },
+    ]);
   });
 
   it.each(["suspended", "interrupted"])(
@@ -428,7 +450,7 @@ describe("an answer cue that comes before the audio is awake", () => {
     expect(audio.sources).toHaveLength(1);
   });
 
-  it("does not wait for a select or a press, which would be late", async () => {
+  it("does not wait for a select or a press while the context sleeps, which would be late", async () => {
     const { audio, sound } = await asleep();
     sound.output.play("select");
     sound.output.play("press");

@@ -80,7 +80,7 @@ function specificity(selector: string): number {
 describe("the focus ring", () => {
   it("is outweighed by neither rule that takes it off, and they come after it", async () => {
     const all = rules(await stylesheet());
-    const ring = all.filter((rule) => rule.body.includes("outline: calc"));
+    const ring = all.filter((rule) => rule.body.includes("outline: 0.1875rem"));
     const off = all.filter((rule) => rule.body.includes("outline: none"));
     // The ring on :focus-visible and on :focus in remote mode, and the removal for a heading or a page
     // that only a program focuses (tabindex -1), for each.

@@ -13,7 +13,7 @@ import { useI18n } from "@/lib/i18n-context";
  * place so the title does not move between steps. Otherwise it is one column:
  * the logo, then the form with its action row stuck to the foot of the screen,
  * and the page scrolls. `resetKey` brings the fields back to the top when the
- * step changes. Padding is logical so the halves flip for a right-to-left
+ * step changes. The page's root is a container, so its parts answer to its own width, and the type, spacing and widths are in rem, which the root size scales with the screen. Padding is logical so the halves flip for a right-to-left
  * language.
  */
 export default function OnboardingLayout({
@@ -30,7 +30,7 @@ export default function OnboardingLayout({
   const { t } = useI18n();
   const fields = useFields(resetKey);
   return (
-    <div className="art-ground theme-light relative min-h-dvh overflow-clip text-on-art split:h-dvh">
+    <div className="art-ground theme-light @container relative min-h-dvh overflow-clip text-on-art">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-20 focus:rounded-control focus:bg-surface focus:px-4 focus:py-2 focus:font-semibold focus:text-ink"
@@ -38,7 +38,7 @@ export default function OnboardingLayout({
         {t("onboarding.skip")}
       </a>
       <div className="grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
-        <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 sm:px-6 split:px-12 split:pt-11 split:xl:px-24">
+        <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 @2xl:px-6 split:px-12 split:pt-11 split:@7xl:px-24">
           <Link
             to="/"
             aria-label={t("onboarding.home")}
@@ -52,9 +52,9 @@ export default function OnboardingLayout({
         <main
           id="main"
           tabIndex={-1}
-          className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-6 outline-none sm:px-6 split:px-12 split:pt-[12dvh] split:pb-10 split:xl:ps-8 split:xl:pe-24"
+          className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-6 outline-none @2xl:px-6 split:px-12 split:pt-[12dvh] split:pb-10 split:@7xl:ps-8 split:@7xl:pe-24"
         >
-          <div className="zoom mx-auto flex w-full max-w-lg flex-1 flex-col sm:my-auto sm:flex-none md:max-w-xl split:my-0 split:min-h-0 split:max-w-lg split:flex-initial">
+          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col @2xl:my-auto @2xl:flex-none @3xl:max-w-xl split:my-0 split:min-h-0 split:max-w-lg split:flex-initial">
             {header ? <div className="shrink-0">{header}</div> : null}
             <div
               ref={fields.ref}
@@ -62,7 +62,7 @@ export default function OnboardingLayout({
               role={fields.scrolls ? "region" : undefined}
               aria-labelledby={fields.scrolls ? "page-title" : undefined}
               className={cn(
-                "split:-mx-2 split:min-h-32 split:flex-1 split:overflow-y-auto split:px-2 split:py-2",
+                "quiet-scroll split:-mx-2 split:min-h-32 split:flex-1 split:overflow-y-auto split:px-2 split:py-2",
                 header && "mt-8",
               )}
             >
@@ -76,8 +76,9 @@ export default function OnboardingLayout({
   );
 }
 
-/** The split layout's own condition, as index.css names it (rem in a media query is the browser's 16px). */
-const SPLIT = "(min-width: 64rem) and (min-height: 40rem)";
+/** The split layout's own condition, as index.css names it (rem in a media query is the browser's 16px; the page's width stands for its container's). */
+const SPLIT =
+  "(orientation: landscape) and (min-width: 64rem) and (min-height: 40rem)";
 
 /** The scroller of the fields: back to the top on a new step, and reachable by keyboard when it scrolls. */
 function useFields(resetKey: string | undefined) {
@@ -113,13 +114,11 @@ function useFields(resetKey: string | undefined) {
 function Headline() {
   const { t } = useI18n();
   return (
-    <div className="zoom hidden split:flex split:flex-1 split:flex-col split:justify-center split:pb-16">
-      <p className="text-balance text-5xl leading-tight font-bold tracking-tight text-ink xl:text-6xl">
+    <div className="hidden split:flex split:flex-1 split:flex-col split:justify-center split:pb-16">
+      <p className="text-balance text-5xl leading-tight font-bold tracking-tight text-ink">
         {t("onboarding.headline")}
       </p>
-      <p className="mt-5 text-lg text-muted xl:text-xl">
-        {t("onboarding.subline")}
-      </p>
+      <p className="mt-5 text-lg text-muted">{t("onboarding.subline")}</p>
     </div>
   );
 }

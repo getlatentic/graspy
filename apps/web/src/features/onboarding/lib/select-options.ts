@@ -9,7 +9,7 @@ export interface SelectOption {
 }
 
 /** A name as it is searched: "JS 2", "js2" and "J.S. 2" are one name. */
-const searchable = (name: string) =>
+export const searchable = (name: string) =>
   name.toLowerCase().replace(/[\s.\-_/]+/g, "");
 
 export function matchingOptions(

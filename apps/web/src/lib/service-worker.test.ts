@@ -257,11 +257,11 @@ describe("the service worker's refusal to keep what is not the app", () => {
   });
 
   it.each([
-    "/sounds/select-v1.wav",
-    "/sounds/press-v1.wav",
-    "/sounds/correct-v1.wav",
-    "/sounds/wrong-v1.wav",
-    "/sounds/complete-v1.m4a",
+    "/sounds/select-v2.wav",
+    "/sounds/press-v2.wav",
+    "/sounds/correct-v2.wav",
+    "/sounds/wrong-v2.wav",
+    "/sounds/complete-v2.m4a",
   ])("keeps the cue sound %s, so it plays offline", async (path) => {
     const calls: string[] = [];
     const worker = startWorker(async (url) => {

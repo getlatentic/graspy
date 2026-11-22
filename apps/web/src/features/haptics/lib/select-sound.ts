@@ -1,6 +1,6 @@
 import type { Haptics } from "./create-haptics";
 
-/** What a click chooses: buttons, links (the rows of lists), tabs, switches, options and checkboxes. */
+/** What a click chooses: buttons, links (the rows of lists), tabs, switches, options, checkboxes and a select's field (which opens its list). */
 const CHOOSABLE = [
   "button",
   "a[href]",
@@ -15,6 +15,7 @@ const CHOOSABLE = [
   '[role="radio"]',
   '[role="menuitem"]',
   '[role="menuitemradio"]',
+  '[role="combobox"]',
 ].join(",");
 
 /** Put on a control, or on what holds it, to keep its select sound silent (the microphone's button has its own). */
