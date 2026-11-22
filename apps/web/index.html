@@ -6,12 +6,18 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <!-- The API's connection (DNS, TCP, TLS) opens while the scripts download; only the origin of the URL is used. -->
     <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
-    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png" />
+    <!-- Opened from the iOS Home Screen the app has no browser bars and the status bar stays above the page, so only the sides and the bottom need the safe-area insets. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="graspy" />
-    <meta name="theme-color" content="#FFFFFF" />
+    <!-- The top bar's colour in each scheme (design/tokens.css: surface). -->
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#15252F" media="(prefers-color-scheme: dark)" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <meta
       name="description"

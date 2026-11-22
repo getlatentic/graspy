@@ -22,6 +22,8 @@
     background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    /* viewport-fit=cover lets the page reach under a phone's notch in landscape. */
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   }
 
   h1,

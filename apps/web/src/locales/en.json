@@ -218,6 +218,12 @@
     "collapse": "Collapse menu",
     "expand": "Expand menu"
   },
+  "install": {
+    "title": "Install graspy",
+    "action": "Install",
+    "steps": "Tap Share, then Add to Home Screen",
+    "dismiss": "Hide"
+  },
   "home": {
     "pickUp": "Pick up where you left off.",
     "continueTitle": "Continue learning",

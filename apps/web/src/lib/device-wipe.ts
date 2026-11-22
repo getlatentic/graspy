@@ -2,8 +2,10 @@ import { ACCOUNT_KEY } from "@/lib/account/account-store";
 import { isServiceConsentKey } from "@/lib/account/service-consent";
 import { DEVICE_ID_KEY, newDeviceId } from "@/lib/device-id";
 import { committed, openDB } from "@/lib/idb";
+import { INSTALL_DISMISSED_KEY } from "@/lib/install";
 
 // A device shared by a family or a school keeps nothing of one learner for the next.
+// What the device itself remembers, that its owner declined to install the app, stays.
 
 // Firebase manages its own keys, and signing out of it removes them.
 const isFirebases = (key: string) => key.startsWith("firebase:");
@@ -38,6 +40,7 @@ export async function wipeLearnerData(): Promise<void> {
     (key) =>
       key === ACCOUNT_KEY ||
       key === DEVICE_ID_KEY ||
+      key === INSTALL_DISMISSED_KEY ||
       isFirebases(key) ||
       isServiceConsentKey(key),
   );
@@ -47,6 +50,6 @@ export async function wipeLearnerData(): Promise<void> {
  * The interface language, kept in a cookie, stays. */
 export async function wipeDevice(): Promise<void> {
   await clearStores();
-  forgetLocal(isFirebases);
+  forgetLocal((key) => isFirebases(key) || key === INSTALL_DISMISSED_KEY);
   newDeviceId();
 }

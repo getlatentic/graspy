@@ -12,7 +12,8 @@
 "use strict";
 
 const SHELL = "graspy-shell-v1";
-const FILES = "graspy-files-v1";
+// v2: v1 also held /manifest.webmanifest, which never changes again once kept.
+const FILES = "graspy-files-v2";
 const KEPT = new Set([SHELL, FILES]);
 // Every page of the app is this one document.
 const APP = "/";
@@ -42,8 +43,7 @@ self.addEventListener("activate", (event) => {
 const isFile = (url) =>
   url.pathname.startsWith("/assets/") ||
   url.pathname.startsWith("/brand/") ||
-  url.pathname === "/favicon.ico" ||
-  url.pathname === "/manifest.webmanifest";
+  url.pathname === "/favicon.ico";
 
 async function trimmed(cache) {
   const keys = await cache.keys();
