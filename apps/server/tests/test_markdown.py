@@ -22,11 +22,11 @@ def test_at_proxy_becomes_a_backslash():
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        ("\tfrac", "\\tfrac"),
+        ("\tfrac{1}{2}", "\\tfrac{1}{2}"),
         ("\rho", "\\rho"),
-        ("\x0cor", "\\for"),
+        ("\x0corall", "\\forall"),
         ("\x08eta", "\\beta"),
-        ("\rVert", "\\rVert"),
+        ("\rightarrow", "\\rightarrow"),
     ],
 )
 def test_control_characters_before_a_letter_are_restored(raw, expected):
@@ -154,7 +154,7 @@ def test_phonetic_commands_inside_maths_are_left_for_katex():
     ("raw", "expected"),
     [
         ("ìdá kan ( @@frac12)", "ìdá kan ( <latex-inline>\\frac12</latex-inline>)"),
-        ("x @@times 3", "x <latex-inline>\\times</latex-inline> 3"),
+        ("x @@times 3", "<latex-inline>x \\times 3</latex-inline>"),
         (
             "@@frac{@@sqrt{2}}{3} m",
             "<latex-inline>\\frac{\\sqrt{2}}{3}</latex-inline> m",

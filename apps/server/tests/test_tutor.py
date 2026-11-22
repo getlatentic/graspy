@@ -57,6 +57,23 @@ MATHS = LearnerContext(
 )
 
 
+async def test_the_reply_has_its_maths_repaired_and_the_history_keeps_the_words():
+    """The learner's screen showed the bare \\begin{pmatrix} as text; the
+    model's own history stays what it wrote."""
+    written = (
+        r"R(\theta)=\begin{pmatrix} \cos\theta & -\sin\theta\\[4pt] "
+        r"\sin\theta & \cos\theta \end{pmatrix}."
+    )
+    memory = InMemoryConversationStore()
+    _, context = stand_in(finish(written))
+
+    with context:
+        reply = await finished(Tutor(memory), "c1", "What rotates a vector?")
+
+    assert reply.answer == f"${written[:-1]}$."
+    assert (await memory.load("c1")).exchanges[0]["answer"] == written
+
+
 async def test_a_turn_returns_the_answer_and_remembers_it():
     memory = InMemoryConversationStore()
     _, context = stand_in(finish("Fractions are parts of a whole."))
