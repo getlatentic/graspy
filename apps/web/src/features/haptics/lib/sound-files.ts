@@ -15,8 +15,9 @@ export const SOUND_FILES: Record<Cue, string> = {
 /** Playback level, 0 to 1; the files are peak-normalised, so this is the loudness a child hears. */
 export const VOLUME = 0.5;
 
-/** A file that has not arrived by now is given up on until the next gesture. */
+/** A file that has not arrived by now is given up on until it is asked for again. */
 export const FETCH_TIMEOUT_MS = 10_000;
 
-/** A file that failed this many times is not asked for again. */
-export const MAX_ATTEMPTS = 3;
+/** After a failed fetch a file waits this long before it is asked for again, doubling with each failure up to the longest. */
+export const RETRY_BASE_MS = 2_000;
+export const RETRY_MAX_MS = 60_000;

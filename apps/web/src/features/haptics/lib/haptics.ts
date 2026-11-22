@@ -1,4 +1,6 @@
-import { isQuiet } from "@/lib/voice/quiet";
+import { whenIdle } from "@/lib/when-idle";
+import { isQuiet, onHold } from "@/lib/voice/quiet";
+import { fetchBytes } from "./fetch-bytes";
 import { createHaptics } from "./create-haptics";
 import { vibrationOutput } from "./haptic-device";
 import { gamepadOutput } from "./haptic-gamepad";
@@ -36,20 +38,14 @@ function activation(): () => boolean {
   return () => touched;
 }
 
-async function fetchBytes(url: string): Promise<ArrayBuffer> {
-  const response = await fetch(url, {
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
-  if (!response.ok) throw new Error(`${url}: ${response.status}`);
-  return response.arrayBuffer();
-}
-
-const sound = createSound(
-  present && typeof AudioContext === "function"
-    ? () => new AudioContext({ latencyHint: "interactive" })
-    : undefined,
-  fetchBytes,
-);
+const sound = createSound({
+  makeContext:
+    present && typeof AudioContext === "function"
+      ? () => new AudioContext({ latencyHint: "interactive" })
+      : undefined,
+  fetchBytes: (url) => fetchBytes(url, FETCH_TIMEOUT_MS),
+  now: () => performance.now(),
+});
 
 /**
  * Feel and recorded sound for answers, finished lessons and chosen items:
@@ -74,9 +70,26 @@ export const haptics = createHaptics({
   hidden: () => !present || document.visibilityState === "hidden",
   activated: activation(),
   now: () => performance.now(),
+  wake: sound.unlock,
 });
 
 if (present) {
+  // A cue already sounding or buzzing must not reach a recording or the teacher's voice.
+  onHold(() => haptics.stop());
+  // The recordings are fetched once the page is idle, so the first tap finds them; they are
+  // decoded by the first gesture, which is also what creates the audio context.
+  void whenIdle().then(() => {
+    if (getSettings().sound) sound.prefetch();
+  });
+  window.addEventListener("online", sound.retry);
+  // A context the system put to sleep wakes when the page comes back to the front. A tap inside a
+  // lesson's frame never reaches these listeners, so this is the only wake it gets besides `wake`.
+  for (const event of ["focus", "pageshow"]) {
+    window.addEventListener(event, sound.resume);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") sound.resume();
+  });
   for (const gesture of GESTURES) {
     document.addEventListener(gesture, sound.unlock, {
       capture: true,

@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { fakeAudio, fakeFetch, settle } from "./audio.fake";
 import type { Cue } from "./haptic-patterns";
-import { MAX_ATTEMPTS, SOUND_FILES, VOLUME } from "./sound-files";
+import {
+  RETRY_BASE_MS,
+  RETRY_MAX_MS,
+  SOUND_FILES,
+  VOLUME,
+} from "./sound-files";
 import { createSound } from "./sound-output";
+
+const FILES = Object.keys(SOUND_FILES).length;
 
 function setup(
   audioOptions: Parameters<typeof fakeAudio>[0] = {},
@@ -10,8 +17,13 @@ function setup(
 ) {
   const audio = fakeAudio(audioOptions);
   const fetchBytes = fakeFetch(fetchOptions);
-  const sound = createSound(() => new audio.Context(), fetchBytes);
-  return { audio, fetchBytes, sound };
+  const clock = { at: 1000 };
+  const sound = createSound({
+    makeContext: () => new audio.Context(),
+    fetchBytes,
+    now: () => clock.at,
+  });
+  return { audio, fetchBytes, sound, clock };
 }
 
 describe("the sound files", () => {
@@ -30,25 +42,48 @@ describe("the sound files", () => {
 });
 
 describe("the sound output", () => {
-  it("makes no context and fetches nothing until a gesture, and one context only", async () => {
+  it("fetches before any gesture but makes no context until one, and one only", async () => {
     const { audio, fetchBytes, sound } = setup();
+    sound.prefetch();
+    await settle();
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES);
     expect(audio.contexts).toHaveLength(0);
-    expect(fetchBytes).not.toHaveBeenCalled();
     sound.unlock();
     sound.unlock();
     await settle();
     expect(audio.contexts).toHaveLength(1);
-    expect(fetchBytes).toHaveBeenCalledTimes(5);
   });
 
-  it("decodes each recording once, however many gestures", async () => {
+  it("decodes each recording once, however many gestures and prefetches", async () => {
+    const { audio, fetchBytes, sound } = setup();
+    sound.prefetch();
+    await settle();
+    sound.unlock();
+    sound.unlock();
+    sound.prefetch();
+    await settle();
+    sound.unlock();
+    await settle();
+    expect(audio.contexts[0].decodeAudioData).toHaveBeenCalledTimes(FILES);
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES);
+  });
+
+  it("has the first tap heard when the bytes came before it", async () => {
+    const { audio, sound } = setup();
+    sound.prefetch();
+    await settle();
+    sound.unlock();
+    await settle();
+    sound.output.play("select");
+    expect(audio.sources).toHaveLength(1);
+  });
+
+  it("fetches on the gesture too, when nothing prefetched", async () => {
     const { audio, sound } = setup();
     sound.unlock();
     await settle();
-    sound.unlock();
-    sound.unlock();
-    await settle();
-    expect(audio.contexts[0].decodeAudioData).toHaveBeenCalledTimes(5);
+    sound.output.play("select");
+    expect(audio.sources).toHaveLength(1);
   });
 
   it.each(Object.entries(SOUND_FILES) as [Cue, string][])(
@@ -86,16 +121,25 @@ describe("the sound output", () => {
   });
 
   it.each(["suspended", "interrupted"])(
-    "wakes a context that went %s on the next gesture",
+    "wakes a context that went %s on the next gesture, and when the page returns",
     async (state) => {
       const { audio, sound } = setup();
       sound.unlock();
       await settle();
       audio.contexts[0].state = state;
       sound.unlock();
-      expect(audio.contexts[0].resume).toHaveBeenCalledTimes(2);
+      await settle();
+      audio.contexts[0].state = state;
+      sound.resume();
+      expect(audio.contexts[0].resume).toHaveBeenCalledTimes(3);
     },
   );
+
+  it("never creates a context when only asked to resume", () => {
+    const { audio, sound } = setup();
+    sound.resume();
+    expect(audio.contexts).toHaveLength(0);
+  });
 
   it("lets go of a source when it ends, and stops those still sounding", async () => {
     const { audio, sound } = setup();
@@ -131,26 +175,114 @@ describe("the sound output", () => {
     expect(audio.sources).toHaveLength(0);
   });
 
-  it("asks again after a failure on a later gesture, a few times and no more", async () => {
-    const { fetchBytes, sound } = setup({ undecodable: true });
-    for (let gesture = 0; gesture < MAX_ATTEMPTS + 3; gesture++) {
+  it("does not ask again for a recording this browser cannot decode", async () => {
+    const { fetchBytes, sound, clock } = setup({ undecodable: true });
+    for (let gesture = 0; gesture < 5; gesture++) {
+      clock.at += RETRY_MAX_MS;
       sound.unlock();
       await settle();
     }
-    expect(fetchBytes).toHaveBeenCalledTimes(5 * MAX_ATTEMPTS);
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES);
+  });
+});
+
+describe("a fetch that fails", () => {
+  const offline = { missing: Object.values(SOUND_FILES) };
+
+  it("is spent once by a burst of gestures, not once per event", async () => {
+    const { fetchBytes, sound } = setup({}, offline);
+    for (let event = 0; event < 12; event++) sound.unlock();
+    await settle();
+    for (let event = 0; event < 12; event++) sound.unlock();
+    await settle();
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES);
   });
 
-  it("stays silent, without throwing, where there is no audio or it fails", () => {
-    const none = createSound(undefined, fakeFetch());
+  it("is asked for again after its wait, with no end to the tries, and the wait grows to a limit", async () => {
+    const { fetchBytes, sound, clock } = setup({}, offline);
+    let tries = 1;
+    sound.unlock();
+    await settle();
+    for (let round = 0; round < 12; round++) {
+      clock.at += RETRY_MAX_MS;
+      sound.unlock();
+      await settle();
+      tries += 1;
+    }
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES * tries);
+    const before = fetchBytes.mock.calls.length;
+    clock.at += RETRY_BASE_MS;
+    sound.unlock();
+    await settle();
+    expect(fetchBytes.mock.calls.length).toBe(before);
+  });
+
+  it("waits out the first failure for RETRY_BASE_MS", async () => {
+    const { fetchBytes, sound, clock } = setup({}, offline);
+    sound.unlock();
+    await settle();
+    clock.at += RETRY_BASE_MS - 1;
+    sound.unlock();
+    await settle();
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES);
+    clock.at += 1;
+    sound.unlock();
+    await settle();
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES * 2);
+  });
+
+  it("is asked for again at once when the network returns, and then plays", async () => {
+    const audio = fakeAudio();
+    let reachable = false;
+    const fetchBytes = fakeFetch();
+    const clock = { at: 1000 };
+    const sound = createSound({
+      makeContext: () => new audio.Context(),
+      fetchBytes: async (url) => {
+        if (!reachable) throw new Error("offline");
+        return fetchBytes(url);
+      },
+      now: () => clock.at,
+    });
+    sound.unlock();
+    await settle();
+    reachable = true;
+    sound.unlock();
+    await settle();
+    sound.output.play("select");
+    expect(audio.sources).toHaveLength(0);
+    sound.retry();
+    await settle();
+    sound.output.play("select");
+    expect(audio.sources).toHaveLength(1);
+  });
+});
+
+describe("where there is no audio", () => {
+  it("stays silent, without throwing, and fetches nothing", () => {
+    const fetchBytes = fakeFetch();
+    const none = createSound({
+      makeContext: undefined,
+      fetchBytes,
+      now: () => 0,
+    });
     expect(none.output.available()).toBe(false);
     expect(() => {
+      none.prefetch();
+      none.retry();
       none.unlock();
+      none.resume();
       none.output.play("correct");
       none.output.stop();
     }).not.toThrow();
-    const broken = createSound(() => {
-      throw new Error("no audio");
-    }, fakeFetch());
+    expect(fetchBytes).not.toHaveBeenCalled();
+    const broken = createSound({
+      makeContext: () => {
+        throw new Error("no audio");
+      },
+      fetchBytes,
+      now: () => 0,
+    });
     expect(() => broken.unlock()).not.toThrow();
   });
 });

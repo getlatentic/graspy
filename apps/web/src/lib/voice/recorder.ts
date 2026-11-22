@@ -45,9 +45,18 @@ async function openMicrophone(): Promise<{
 export async function startTake(
   onLevel: (level: number) => void,
 ): Promise<Take> {
-  const { stream, context, node } = await openMicrophone();
-  // The app's own clicks and tones would be recorded as part of the answer.
+  // The app's own sounds would be recorded as part of the answer. Taking the
+  // hold first cuts a cue already sounding, and keeps new ones out while the
+  // microphone is still being opened.
   const letSoundsPlay = holdQuiet();
+  let opened: Awaited<ReturnType<typeof openMicrophone>>;
+  try {
+    opened = await openMicrophone();
+  } catch (error) {
+    letSoundsPlay();
+    throw error;
+  }
+  const { stream, context, node } = opened;
   let settle: (result: TakeResult) => void = () => {};
   const done = new Promise<TakeResult>((resolve) => (settle = resolve));
   let open = true;

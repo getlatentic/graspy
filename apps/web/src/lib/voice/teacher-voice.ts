@@ -60,6 +60,8 @@ export class TeacherVoice {
       return "failed";
     }
     return new Promise<Spoken>((resolve) => {
+      // A line that arrived while another was fetched must not strand the other's hold.
+      this.settle("heard");
       const letSoundsPlay = holdQuiet();
       this.finish = (spoken) => {
         letSoundsPlay();

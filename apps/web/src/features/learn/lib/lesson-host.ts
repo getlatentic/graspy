@@ -42,7 +42,9 @@ export function lessonHost({
     // and not after the round trip; a choice sent again is not felt again.
     toolCalling: (name, args) => {
       const cue = feltOnce(name, args);
-      if (cue) haptics.trigger(cue);
+      if (!cue) return;
+      haptics.wake();
+      haptics.trigger(cue);
     },
     toolCalled: (name, _args, result) => {
       if (name === FINISH_LESSON) {

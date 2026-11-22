@@ -20,6 +20,7 @@ export function fakeMicrophone() {
   const closed = vi.fn(async () => undefined);
   let allow = () => {};
   let asking = false;
+  let refusing = false;
 
   vi.stubGlobal(
     "AudioContext",
@@ -44,9 +45,11 @@ export function fakeMicrophone() {
     configurable: true,
     value: {
       getUserMedia: () =>
-        asking
-          ? new Promise((resolve) => (allow = () => resolve(stream)))
-          : Promise.resolve(stream),
+        refusing
+          ? Promise.reject(new DOMException("denied", "NotAllowedError"))
+          : asking
+            ? new Promise((resolve) => (allow = () => resolve(stream)))
+            : Promise.resolve(stream),
     },
   });
 
@@ -54,6 +57,10 @@ export function fakeMicrophone() {
     /** Stopped once the microphone is released: the browser's indicator goes off. */
     track,
     closed,
+    /** The microphone is refused, as when the child says no. */
+    refuse: () => {
+      refusing = true;
+    },
     /** The browser's prompt stays up until [allow] is called. */
     ask: () => {
       asking = true;

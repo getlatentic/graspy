@@ -38,6 +38,16 @@ describe("a lesson's haptics", () => {
     expect(trigger).toHaveBeenLastCalledWith("wrong");
   });
 
+  it("wakes the sound before a graded answer from the frame, and not for another tool", () => {
+    vi.spyOn(haptics, "trigger").mockImplementation(() => {});
+    const wake = vi.spyOn(haptics, "wake").mockImplementation(() => {});
+    const { view } = host();
+    view.toolCalling?.("give_lesson", check({ key: "w:0" }));
+    expect(wake).not.toHaveBeenCalled();
+    view.toolCalling?.("answer_check", check({ key: "w:1" }));
+    expect(wake).toHaveBeenCalledOnce();
+  });
+
   it("does not feel a choice the view sends again", () => {
     const trigger = vi.spyOn(haptics, "trigger").mockImplementation(() => {});
     const { view } = host();

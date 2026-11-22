@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { haptics } from "@/features/haptics/lib/haptics";
+import { installSelectSound } from "@/features/haptics/lib/select-sound";
 import { KeysApp } from "@/test/keys-app";
 import { ASKED } from "@/lib/voice/voice-worker.fake";
 import { AnswerControls } from "./answer-controls";
@@ -29,19 +30,24 @@ function controls(phase: "your-turn" | "recording") {
 }
 
 describe("the answer controls", () => {
-  it("press (feel and sound) when Record is tapped, and record", async () => {
+  it("press (feel and sound) when Record is tapped, and only then start recording", async () => {
     const trigger = vi.spyOn(haptics, "trigger").mockImplementation(() => {});
     const { onRecord } = controls("your-turn");
     await userEvent.click(screen.getAllByRole("button")[0]);
     expect(trigger).toHaveBeenCalledExactlyOnceWith("press");
-    expect(onRecord).toHaveBeenCalledOnce();
+    expect(onRecord).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(onRecord).toHaveBeenCalledOnce());
   });
 
-  it("keep the microphone's button out of the select sound", () => {
+  it("keep the microphone's button out of the select sound, with the page's click handler installed", async () => {
+    const trigger = vi.spyOn(haptics, "trigger").mockImplementation(() => {});
+    const uninstall = installSelectSound(haptics);
     controls("your-turn");
-    expect(screen.getAllByRole("button")[0].hasAttribute("data-no-sound")).toBe(
-      true,
-    );
+    await userEvent.click(screen.getAllByRole("button")[0]);
+    expect(trigger.mock.calls).toEqual([["press"]]);
+    await userEvent.click(screen.getAllByRole("button")[1]);
+    expect(trigger.mock.calls).toEqual([["press"], ["select"]]);
+    uninstall();
   });
 
   it("do not buzz for hearing it again or for finishing speaking", async () => {

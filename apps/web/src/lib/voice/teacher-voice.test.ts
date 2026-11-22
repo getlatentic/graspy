@@ -70,4 +70,39 @@ describe("the app's own sounds while she speaks", () => {
     expect(await cut).toBe("heard");
     expect(isQuiet()).toBe(false);
   });
+
+  it("do not stay held when a second line arrives while the first is still being fetched", async () => {
+    const element = {
+      src: "",
+      onended: null as null | (() => void),
+      onerror: null,
+      play: vi.fn(async () => undefined),
+      pause: vi.fn(),
+      canPlayType: () => "probably",
+    };
+    vi.stubGlobal("Audio", function () {
+      return element;
+    });
+    vi.stubGlobal("AudioContext", FakeContext);
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:line");
+    vi.spyOn(URL, "revokeObjectURL").mockReturnValue(undefined);
+    const { TeacherVoice } = await import("./teacher-voice");
+    const { isQuiet } = await import("./quiet");
+    const voice = new TeacherVoice();
+    const blob = new Blob(["x"], { type: "audio/wav" });
+    let arrive: () => void = () => undefined;
+    const slow = () =>
+      new Promise<Blob>((resolve) => (arrive = () => resolve(blob)));
+
+    const first = voice.say(slow);
+    const firstArrives = arrive;
+    const second = voice.say(slow);
+    firstArrives();
+    arrive();
+    await vi.waitFor(() => expect(isQuiet()).toBe(true));
+    element.onended?.();
+    await first;
+    await second;
+    expect(isQuiet()).toBe(false);
+  });
 });

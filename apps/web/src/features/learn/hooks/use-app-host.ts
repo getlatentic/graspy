@@ -34,7 +34,9 @@ export function useAppHost({ busy, ask, keepViewCalls }: AppHostDeps) {
         const known = (message.metadata?.viewCalls ?? []).some((earlier) =>
           sameCall(earlier, appCall(name, args)),
         );
-        if (cue && !known) haptics.trigger(cue);
+        if (!cue || known) return;
+        haptics.wake();
+        haptics.trigger(cue);
       },
       toolCalled: (name, args) => {
         const call = appCall(name, args);

@@ -186,4 +186,53 @@ describe("a controller", () => {
     expect(playEffect).toHaveBeenCalledOnce();
     expect(phone).not.toHaveBeenCalled();
   });
+
+  const failing = (channel: "touch" | "sound" = "touch") => ({
+    available: () => true,
+    channel,
+    needsActivation: false,
+    play: () => {
+      throw new Error("the device refused");
+    },
+    stop: () => {
+      throw new Error("the device refused");
+    },
+  });
+
+  it("never throws for a failing output, and the others still play", () => {
+    const phone = vi.fn(() => true);
+    const { haptics } = setup({
+      outputs: [
+        failing("sound"),
+        failing(),
+        vibrationOutput({ vibrate: phone })!,
+      ],
+    });
+    expect(() => haptics.trigger("correct")).not.toThrow();
+    expect(phone).toHaveBeenCalledOnce();
+    expect(() => haptics.stop()).not.toThrow();
+    expect(phone).toHaveBeenLastCalledWith(0);
+  });
+
+  it("never throws when what it reads fails", () => {
+    const { haptics } = setup({
+      allows: () => {
+        throw new Error("storage refused");
+      },
+    });
+    expect(() => haptics.trigger("correct")).not.toThrow();
+  });
+
+  it("wakes the sound when asked, and never throws if that fails", () => {
+    const wake = vi.fn();
+    expect(() => setup({ wake }).haptics.wake()).not.toThrow();
+    expect(wake).toHaveBeenCalledOnce();
+    const broken = setup({
+      wake: () => {
+        throw new Error("no audio");
+      },
+    });
+    expect(() => broken.haptics.wake()).not.toThrow();
+    expect(() => setup().haptics.wake()).not.toThrow();
+  });
 });

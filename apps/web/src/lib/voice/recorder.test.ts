@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMicrophone, showPage } from "./microphone.fake";
-import { isQuiet } from "./quiet";
+import { isQuiet, onHold } from "./quiet";
 import { startTake } from "./recorder";
 import { fakeWakeLock, noWakeLock } from "./wake-lock.fake";
 
@@ -21,6 +21,27 @@ describe("the app's own sounds during a take", () => {
     expect(isQuiet()).toBe(true);
     take.cancel();
     await take.done;
+    expect(isQuiet()).toBe(false);
+  });
+
+  it("are held before the microphone opens, and a cue already sounding is cut at once", async () => {
+    const cut = vi.fn();
+    const stopListening = onHold(cut);
+    const allow = microphone.ask();
+    const opening = startTake(() => undefined);
+    expect(isQuiet()).toBe(true);
+    expect(cut).toHaveBeenCalledOnce();
+    allow();
+    const take = await opening;
+    expect(isQuiet()).toBe(true);
+    take.cancel();
+    await take.done;
+    stopListening();
+  });
+
+  it("are released when the microphone is refused", async () => {
+    microphone.refuse();
+    await expect(startTake(() => undefined)).rejects.toThrow("denied");
     expect(isQuiet()).toBe(false);
   });
 

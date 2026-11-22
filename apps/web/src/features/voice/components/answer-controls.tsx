@@ -7,6 +7,9 @@ import { useI18n } from "@/lib/i18n-context";
 import type { Phase } from "../lib/lesson-state";
 import { VoiceWave } from "./voice-wave";
 
+/** The Record press is a click of a few milliseconds and a 12 ms buzz; this is long enough for both. */
+const PRESS_LEAD_MS = 60;
+
 interface AnswerControlsProps {
   phase: Phase;
   levels: number[];
@@ -48,8 +51,11 @@ export function AnswerControls({
         <Button
           size="lg"
           onClick={() => {
+            // Opening the microphone holds every cue quiet and cuts one sounding, so the
+            // press is given this long to be felt and heard first. Recording starts
+            // whatever the cue does.
+            setTimeout(onRecord, PRESS_LEAD_MS);
             haptics.trigger("press");
-            onRecord();
           }}
           className="rounded-full"
           data-no-sound
