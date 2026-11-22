@@ -1,6 +1,6 @@
-export type Cue = "press" | "correct" | "wrong" | "lessonComplete";
+export type Cue = "select" | "press" | "correct" | "wrong" | "lessonComplete";
 
-/** What a cue reaches: the body (vibration, rumble) or the ears (a tone). */
+/** What a cue reaches: the body (vibration, rumble) or the ears (a recorded sound). */
 export type Channel = "touch" | "sound";
 
 /** One effect on a controller: a single dual-rumble burst. Magnitudes stay at or under 0.2. */
@@ -18,6 +18,7 @@ export const MIN_GAP_MS = 100;
 
 /** Inside the gap a cue gets through only over a less important one. */
 export const PRIORITY: Record<Cue, number> = {
+  select: 0,
   press: 0,
   correct: 1,
   wrong: 1,
@@ -30,6 +31,7 @@ export const PRIORITY: Record<Cue, number> = {
  * right one: it informs and never punishes.
  */
 export const PATTERNS: Record<Cue, readonly number[]> = {
+  select: [12],
   press: [12],
   correct: [35],
   wrong: [18, 70, 18],
@@ -37,6 +39,7 @@ export const PATTERNS: Record<Cue, readonly number[]> = {
 };
 
 export const RUMBLES: Record<Cue, Rumble> = {
+  select: { duration: 20, weak: 0.1, strong: 0 },
   press: { duration: 20, weak: 0.1, strong: 0 },
   correct: { duration: 45, weak: 0.15, strong: 0.1 },
   wrong: { duration: 40, weak: 0.1, strong: 0 },

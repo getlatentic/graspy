@@ -48,7 +48,7 @@ export function AnswerControls({
         <Button
           size="lg"
           onClick={() => {
-            haptics.trigger("press", { sound: false });
+            haptics.trigger("press");
             onRecord();
           }}
           className="rounded-full"

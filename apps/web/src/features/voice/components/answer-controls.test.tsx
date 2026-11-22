@@ -29,15 +29,15 @@ function controls(phase: "your-turn" | "recording") {
 }
 
 describe("the answer controls", () => {
-  it("press lightly when Record is tapped, and record", async () => {
+  it("press (feel and sound) when Record is tapped, and record", async () => {
     const trigger = vi.spyOn(haptics, "trigger").mockImplementation(() => {});
     const { onRecord } = controls("your-turn");
     await userEvent.click(screen.getAllByRole("button")[0]);
-    expect(trigger).toHaveBeenCalledWith("press", { sound: false });
+    expect(trigger).toHaveBeenCalledExactlyOnceWith("press");
     expect(onRecord).toHaveBeenCalledOnce();
   });
 
-  it("keep the microphone's button out of the select tick", () => {
+  it("keep the microphone's button out of the select sound", () => {
     controls("your-turn");
     expect(screen.getAllByRole("button")[0].hasAttribute("data-no-sound")).toBe(
       true,

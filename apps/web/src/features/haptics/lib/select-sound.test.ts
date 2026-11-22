@@ -22,7 +22,7 @@ function page(html: string) {
 const click = (element: Element | null) =>
   element?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
-describe("the select tick", () => {
+describe("the select sound", () => {
   it.each([
     "<button>Go</button>",
     '<a href="/subjects/maths">Maths</a>',
@@ -30,13 +30,13 @@ describe("the select tick", () => {
     '<div role="tab">Topics</div>',
     '<button role="switch" aria-checked="false">Sounds</button>',
     '<input type="checkbox">',
-  ])("ticks for a click on %s", (html) => {
+  ])("selects for a click on %s", (html) => {
     const body = page(html);
     click(body.firstElementChild);
-    expect(trigger).toHaveBeenCalledExactlyOnceWith("press");
+    expect(trigger).toHaveBeenCalledExactlyOnceWith("select");
   });
 
-  it("ticks for a click on what is inside a button", () => {
+  it("selects for a click on what is inside a button", () => {
     const body = page("<button><svg></svg><span>Next</span></button>");
     click(body.querySelector("span"));
     expect(trigger).toHaveBeenCalledOnce();

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fakeAudio } from "./audio.fake";
+import { fakeAudio, fakeFetch, settle } from "./audio.fake";
+import { SOUND_FILES } from "./sound-files";
 
 // Each load of the module listens on the document and window; these are taken off after each test.
 const added: [EventTarget, string, EventListenerOrEventListenerObject][] = [];
@@ -11,6 +12,14 @@ beforeEach(() => {
   audio = fakeAudio();
   hidden = false;
   vi.stubGlobal("AudioContext", audio.Context);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: () => fakeFetch()(url),
+    })),
+  );
   vi.stubGlobal("matchMedia", () => ({ matches: false }));
   Object.defineProperty(navigator, "userActivation", {
     configurable: true,
@@ -54,14 +63,15 @@ async function load() {
   return { haptics, holdQuiet, setSettings };
 }
 
-/** A tap: the gesture that wakes the audio, then the click. */
+/** A tap: the gesture that wakes the audio and loads the recordings, then the click. */
 async function tap(element: Element) {
   element.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-  await Promise.resolve();
+  await settle();
   element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 }
 
-const heard = () => audio.oscillators.length;
+const heard = () => audio.sources.length;
+const heardFiles = () => audio.sources.map((source) => source.buffer?.file);
 
 function button() {
   document.body.innerHTML = "<button>Go</button>";
@@ -69,22 +79,45 @@ function button() {
 }
 
 describe("the sounds", () => {
-  it("make no audio context until the first gesture, then tick on a tap", async () => {
+  it("make no audio context and fetch nothing until the first gesture, then play the select sound on a tap", async () => {
     await load();
     expect(audio.contexts).toHaveLength(0);
+    expect(fetch).not.toHaveBeenCalled();
     await tap(button());
     expect(audio.contexts).toHaveLength(1);
-    expect(heard()).toBe(1);
-    expect(audio.oscillators[0].frequency.value).toBe(1200);
+    expect(heardFiles()).toEqual([SOUND_FILES.select]);
   });
 
-  it("play a cue's notes", async () => {
+  it("play the recording of each cue", async () => {
     const { haptics } = await load();
     await tap(button());
-    haptics.trigger("lessonComplete");
-    expect(audio.oscillators.map((note) => note.frequency.value)).toEqual([
-      1200, 523, 659, 784,
+    for (const cue of [
+      "lessonComplete",
+      "wrong",
+      "correct",
+      "press",
+    ] as const) {
+      haptics.stop();
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      haptics.trigger(cue);
+    }
+    expect(heardFiles()).toEqual([
+      SOUND_FILES.select,
+      SOUND_FILES.lessonComplete,
+      SOUND_FILES.wrong,
+      SOUND_FILES.correct,
+      SOUND_FILES.press,
     ]);
+  });
+
+  it("stay silent when the recordings cannot be fetched", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 404 })),
+    );
+    await load();
+    await tap(button());
+    expect(heard()).toBe(0);
   });
 
   it("are silent while the teacher's voice plays, and return when she stops", async () => {
@@ -145,7 +178,7 @@ describe("the sounds", () => {
     expect(heard()).toBe(1);
   });
 
-  it("keep to the rate cap, so quick taps tick once", async () => {
+  it("keep to the rate cap, so quick taps sound once", async () => {
     await load();
     const go = button();
     await tap(go);

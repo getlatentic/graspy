@@ -18,14 +18,9 @@ export interface HapticsDeps {
   now: () => number;
 }
 
-export interface TriggerOptions {
-  /** False for a cue whose tone would get in the way (the microphone's button). */
-  sound?: boolean;
-}
-
 export interface Haptics {
   /** Plays the cue if it is allowed; otherwise does nothing. */
-  trigger: (cue: Cue, options?: TriggerOptions) => void;
+  trigger: (cue: Cue) => void;
   stop: () => void;
   /** Whether this device can make a cue felt, or heard, at all. */
   supported: (channel: Channel) => boolean;
@@ -37,11 +32,10 @@ export function createHaptics(deps: HapticsDeps): Haptics {
 
   // A phone ignores a vibration before the first tap, and a sound cannot start
   // before one; a controller does not mind.
-  const reaching = (options: TriggerOptions) =>
+  const reaching = () =>
     deps.outputs.filter(
       (output) =>
         deps.allows(output.channel) &&
-        (output.channel !== "sound" || options.sound !== false) &&
         (!output.needsActivation || deps.activated()),
     );
 
@@ -52,9 +46,9 @@ export function createHaptics(deps: HapticsDeps): Haptics {
     PRIORITY[cue] <= PRIORITY[lastCue];
 
   return {
-    trigger: (cue, options = {}) => {
+    trigger: (cue) => {
       if (deps.hidden()) return;
-      const outputs = reaching(options);
+      const outputs = reaching();
       const now = deps.now();
       if (outputs.length === 0 || crowded(cue, now)) return;
       lastAt = now;

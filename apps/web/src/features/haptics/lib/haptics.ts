@@ -3,6 +3,7 @@ import { createHaptics } from "./create-haptics";
 import { vibrationOutput } from "./haptic-device";
 import { gamepadOutput } from "./haptic-gamepad";
 import { getSettings } from "./haptic-settings";
+import { FETCH_TIMEOUT_MS } from "./sound-files";
 import { createSound } from "./sound-output";
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
@@ -35,14 +36,23 @@ function activation(): () => boolean {
   return () => touched;
 }
 
+async function fetchBytes(url: string): Promise<ArrayBuffer> {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`${url}: ${response.status}`);
+  return response.arrayBuffer();
+}
+
 const sound = createSound(
   present && typeof AudioContext === "function"
     ? () => new AudioContext({ latencyHint: "interactive" })
     : undefined,
+  fetchBytes,
 );
 
 /**
- * Feel and sound for answers, finished lessons and chosen items:
+ * Feel and recorded sound for answers, finished lessons and chosen items:
  * `haptics.trigger("correct")`. Vibration is silent where the device cannot,
  * under reduced motion and when the learner has turned it off. Sound is silent
  * while the teacher speaks or the microphone is open, and when the learner has

@@ -21,6 +21,12 @@ describe("caching", () => {
     );
   });
 
+  it("keeps the versioned cue sounds for a year, unchanged", () => {
+    expect(rule("/sounds/*")).toContain(
+      "Cache-Control: public, max-age=31536000, immutable",
+    );
+  });
+
   it("leaves the page and the service worker to be checked every time", () => {
     expect(rule("/*").join(" ")).not.toMatch(/Cache-Control/);
     expect(rule("/sw.js")).toContain("Cache-Control: no-cache");
