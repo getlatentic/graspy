@@ -1,22 +1,22 @@
 // Where the code and the maths are in a reply, found in one pass.
 //
 // Protected from every repair: fenced and indented code, inline code, TikZ,
-// maths already tagged, a span over its cap, an unclosed tag, and the pieces of
-// a tag a stream was cut in. Maths delimiters are found here too, so one rule
-// says what a span is. Nothing runs over a blank line, and each closer is
-// searched for within its paragraph and cap, with the answer "none from here"
-// remembered, so the work grows with the text and not with the text times its
-// openers.
+// HTML pre and code, a link's address and a bare URL, maths already tagged, a
+// span over its cap, an unclosed tag, and the pieces of a tag a stream was cut
+// in. Maths delimiters are found here too, so one rule says what a span is.
+// Nothing runs over a blank line, and each closer is searched for within its
+// paragraph and cap, with the answer "none from here" remembered, so the work
+// grows with the text and not with the text times its openers.
 //
 // This is apps/server/src/app/domains/lesson/maths_scan.py, which the server
 // applies to a reply; tests/fixtures/math-repair.json holds the cases both must
 // agree on. apps/web/src/lib/latex-scan.ts is this file's twin.
 
+import { indentedEnd, precededByListItem } from "./latex-layout";
+
 // Inline maths, and display maths, a derivation of many lines.
 export const MAX_INLINE = 3000;
 export const MAX_DISPLAY = 20000;
-
-const LIST_ITEM = /^[ \t]*(?:[-*+]|[0-9]+[.)])[ \t]/;
 
 const TAG_PARTS = [
   "<latex-block>",
@@ -47,12 +47,18 @@ const OPENER_SOURCE = [
   String.raw`<(pre|code)(?![A-Za-z0-9])[^>\n]*>`,
   String.raw`\\begin\{tikzpicture\}`,
   // Indented code follows a blank line, and is not an indented fence.
-  String.raw`\n[ \t]*\r?\n(?![ \t]*(?:\`{3,}|~{3,}))(?: {4}|\t)`,
+  String.raw`(\n[ \t]*\r?\n(?![ \t]*(?:\`{3,}|~{3,}))(?: {4}|\t))`,
+  // It may also follow a heading.
+  String.raw`((?:^|\n)[ ]{0,3}#{1,6}(?:[ \t][^\n]*)?\n(?: {4}|\t))`,
+  String.raw`https?://[^\s<>)\]]+`,
+  String.raw`\]\([^()\s]*\)`,
   String.raw`\\\\|\\\$`,
   String.raw`\$\$|\\\[|\\\(|\$`,
-  "`",
+  "(`+)",
   CUT_TAG,
 ].join("|");
+const [TAG, FENCE_BACKTICKS, FENCE_TILDES, HTML, INDENT, HEADING_INDENT, CODE_RUN] =
+  [1, 2, 3, 4, 5, 6, 7];
 
 const LENGTH_UNITS = "pt|pc|bp|dd|cc|sp|mm|cm|in|em|ex|mu|px|nd|nc";
 // \[ opens display maths unless it is the length of a line break, as in
@@ -81,6 +87,13 @@ const span = (
   kind: Span["kind"],
   inner: [number, number] = [0, 0],
 ): Span => ({ start, end, kind, inner });
+
+/** Whether an odd number of backslashes come right before the position. */
+export function isEscaped(text: string, position: number): boolean {
+  let count = 0;
+  while (position - count > 0 && text[position - count - 1] === "\\") count++;
+  return count % 2 === 1;
+}
 
 /** Paragraph ends and closers of one text. */
 export class Searcher {
@@ -118,10 +131,19 @@ export class Searcher {
     }
     return end;
   }
+
+  /** As find, passing over a closer a backslash escapes. */
+  findUnescaped(closer: string, after: number, limit: number): number {
+    let end = this.find(closer, after, limit);
+    while (end >= 0 && isEscaped(this.text, end)) {
+      end = this.find(closer, end + 1, limit);
+    }
+    return end;
+  }
 }
 
 function fenceEnd(text: Searcher, opener: RegExpExecArray): number {
-  const run = opener[2] ?? opener[3];
+  const run = opener[FENCE_BACKTICKS] ?? opener[FENCE_TILDES];
   const closing = new RegExp(
     `\\n${FENCE_LINE}${escapeRegExp(run[0])}{${run.length},}[ \\t]*\\r?(?=\\n|(?![\\s\\S]))`,
     "g",
@@ -132,74 +154,17 @@ function fenceEnd(text: Searcher, opener: RegExpExecArray): number {
   return found ? found.index + found[0].length : text.text.length;
 }
 
-const BLANK_CHARS = /[^ \t\r\n\f\v]/;
-const isBlank = (text: string) => !BLANK_CHARS.test(text);
-
-const lineStartBefore = (text: string, cursor: number) =>
-  cursor <= 0 ? 0 : text.lastIndexOf("\n", cursor - 1) + 1;
-
-function blockStart(text: string, end: number): number {
-  let start = end;
-  let cursor = end;
-  for (let step = 0; step < 200; step++) {
-    const lineStart = lineStartBefore(text, cursor);
-    if (isBlank(text.slice(lineStart, cursor))) break;
-    start = lineStart;
-    if (lineStart === 0) break;
-    cursor = lineStart - 1;
+/** The end of the code span a run of backticks opens: the next run of as many, in the same paragraph. */
+function codeSpanEnd(text: Searcher, opener: RegExpExecArray): number | null {
+  const run = opener[CODE_RUN];
+  const after = opener.index + opener[0].length;
+  const limit = text.paragraphEnd(after);
+  let at = text.find(run, after, limit);
+  while (at >= 0 && text.text.charAt(at + run.length) === "`") {
+    while (text.text.charAt(at) === "`") at++;
+    at = text.find(run, at, limit);
   }
-  return start;
-}
-
-function previousBlockEnd(text: string, start: number): number {
-  let cursor = start - 1;
-  while (cursor > 0) {
-    const lineStart = lineStartBefore(text, cursor);
-    if (!isBlank(text.slice(lineStart, cursor))) return cursor;
-    cursor = lineStart - 1;
-  }
-  return -1;
-}
-
-/** Whether the paragraph before the blank line at `blank` is a list item, or the indented continuation of one: an indent after it is a paragraph of the item, not code. Each paragraph is decided once. */
-function precededByListItem(index: Searcher, blank: number): boolean {
-  const text = index.text;
-  const chain: number[] = [];
-  // Blank lines may come between the item and the indent.
-  let end = previousBlockEnd(text, blank + 1);
-  let result = false;
-  while (end >= 0) {
-    const start = blockStart(text, end);
-    if (start === end) break;
-    const known = index.inList.get(start);
-    if (known !== undefined) {
-      result = known;
-      break;
-    }
-    chain.push(start);
-    const lineEnd = text.indexOf("\n", start);
-    const first = text.slice(start, lineEnd < 0 || lineEnd >= end ? end : lineEnd);
-    if (LIST_ITEM.test(first)) {
-      result = true;
-      break;
-    }
-    if (!first.startsWith(" ") && !first.startsWith("\t")) break;
-    end = previousBlockEnd(text, start);
-    if (end < 0) break;
-  }
-  for (const start of chain) index.inList.set(start, result);
-  return result;
-}
-
-function indentedEnd(text: string, after: number): number {
-  let lineEnd = text.indexOf("\n", after);
-  while (
-    lineEnd >= 0 &&
-    (text.startsWith("    ", lineEnd + 1) || text.startsWith("\t", lineEnd + 1))
-  ) {
-    lineEnd = text.indexOf("\n", lineEnd + 1);
-  }
-  return lineEnd < 0 ? text.length : lineEnd;
+  return at < 0 ? null : at + run.length;
 }
 
 /** The span the delimiter opens: null when it opens none, "code" when it is longer than its cap, which is then left exactly as it was. */
@@ -211,7 +176,7 @@ function delimited(text: Searcher, opener: string, start: number): Span | null {
     if (length.test(text.text)) return null;
   }
   const closer = CLOSERS[opener];
-  const end = text.find(closer, after, text.paragraphEnd(after));
+  const end = text.findUnescaped(closer, after, text.paragraphEnd(after));
   if (end < 0) return null;
   const display = opener === "$$" || opener === "\\[";
   const stop = end + closer.length;
@@ -221,7 +186,8 @@ function delimited(text: Searcher, opener: string, start: number): Span | null {
   if (opener === "$") {
     // Money in a word problem is two dollar signs in one sentence, so a bare
     // pair is not enough to mean maths: the span must not open or close on
-    // whitespace, and a digit after the closing $ means it was a price.
+    // whitespace, and one that opens on a digit and is followed by another is
+    // a price.
     const maths = text.text.slice(after, end);
     if (
       !maths ||
@@ -231,7 +197,9 @@ function delimited(text: Searcher, opener: string, start: number): Span | null {
       return null;
     }
     const following = text.text.charAt(end + 1);
-    if (following >= "0" && following <= "9") return null;
+    if (maths[0] >= "0" && maths[0] <= "9" && following >= "0" && following <= "9") {
+      return null;
+    }
   }
   const kind = display ? "display" : opener === "$" ? "dollar" : "inline";
   return span(start, stop, kind, [after, end]);
@@ -240,42 +208,55 @@ function delimited(text: Searcher, opener: string, start: number): Span | null {
 function tagSpan(text: Searcher, opener: RegExpExecArray): Span {
   const start = opener.index;
   const after = start + opener[0].length;
-  const close = `</latex-${opener[1]}>`;
+  const close = `</latex-${opener[TAG]}>`;
   const limit = text.paragraphEnd(after);
   const end = text.find(close, after, limit);
   // An unclosed tag: the maths is still being written.
   if (end < 0) return span(start, limit, "code");
-  const cap = opener[1] === "block" ? MAX_DISPLAY : MAX_INLINE;
+  const cap = opener[TAG] === "block" ? MAX_DISPLAY : MAX_INLINE;
   const stop = end + close.length;
   if (end - after > cap) return span(start, stop, "code");
   return span(start, stop, "tag", [after, end]);
+}
+
+function indented(text: Searcher, opener: RegExpExecArray): Span | null {
+  const start = opener.index;
+  const after = start + opener[0].length;
+  if (opener[INDENT]) {
+    if (precededByListItem(text.text, start, text.inList)) return null;
+    return span(start, indentedEnd(text.text, after), "code");
+  }
+  // After a heading: the code begins on the line that follows it.
+  const newline = after - (opener[0].endsWith("\t") ? 1 : 4) - 1;
+  return span(newline, indentedEnd(text.text, after), "code");
 }
 
 function spanAt(text: Searcher, opener: RegExpExecArray): Span | null {
   const source = opener[0];
   const start = opener.index;
   const after = start + source.length;
-  if (opener[1]) return tagSpan(text, opener);
-  if (source.startsWith("<") && !opener[4]) return span(start, after, "code");
-  if (opener[2] || opener[3]) return span(start, fenceEnd(text, opener), "code");
-  if (opener[4]) {
-    const close = `</${opener[4]}>`;
+  if (opener[TAG]) return tagSpan(text, opener);
+  if (source.startsWith("<") && !opener[HTML]) return span(start, after, "code");
+  if (opener[FENCE_BACKTICKS] || opener[FENCE_TILDES]) {
+    return span(start, fenceEnd(text, opener), "code");
+  }
+  if (opener[HTML]) {
+    const close = `</${opener[HTML]}>`;
     const end = text.find(close, after, text.text.length);
     return end < 0 ? null : span(start, end + close.length, "code");
   }
-  if (source.startsWith("\n")) {
-    if (precededByListItem(text, start)) return null;
-    return span(start, indentedEnd(text.text, after), "code");
-  }
+  if (opener[INDENT] || opener[HEADING_INDENT]) return indented(text, opener);
   if (source.startsWith("\\begin")) {
     const close = "\\end{tikzpicture}";
     const end = text.find(close, after, text.text.length);
     return end < 0 ? null : span(start, end + close.length, "tikz");
   }
-  if (source === "`") {
-    const end = text.text.indexOf("`", after);
-    if (end < 0 || text.text.slice(after, end).includes("\n")) return null;
-    return span(start, end + 1, "code");
+  if (opener[CODE_RUN]) {
+    const end = codeSpanEnd(text, opener);
+    return end === null ? null : span(start, end, "code");
+  }
+  if (source.startsWith("http") || source.startsWith("](")) {
+    return span(start, after, "code");
   }
   return delimited(text, source, start);
 }
@@ -298,7 +279,8 @@ export function scan(text: string): Span[] {
     }
     const next = spanAt(prepared, match);
     if (next === null) {
-      search = "$\\`".includes(source[0]) ? match.index + 1 : after;
+      const retry = "$\\".includes(source[0]) && !match[CODE_RUN];
+      search = retry ? match.index + 1 : after;
       continue;
     }
     found.push(next);
@@ -347,9 +329,7 @@ export function tagDelimiters(text: string, dollars: boolean): string {
   let done = 0;
   for (const { start, end, kind, inner } of scan(text)) {
     const converted =
-      kind === "display" ||
-      kind === "inline" ||
-      (kind === "dollar" && dollars);
+      kind === "display" || kind === "inline" || (kind === "dollar" && dollars);
     if (!converted) continue;
     const tag = kind === "display" ? "block" : "inline";
     pieces.push(
@@ -362,6 +342,16 @@ export function tagDelimiters(text: string, dollars: boolean): string {
   return pieces.join("");
 }
 
+/** The text a tagged span is written as: $ pairs that open and close on text. A pair that opens on a digit and is followed by one would be read as a price, so it is written with $$. */
+function dollarsFor(maths: string, block: boolean, following: string): [string, string] {
+  if (block) return ["$$", maths];
+  const trimmed = maths.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
+  if (!trimmed) return ["", trimmed];
+  const price =
+    trimmed[0] >= "0" && trimmed[0] <= "9" && following >= "0" && following <= "9";
+  return [price ? "$$" : "$", trimmed];
+}
+
 /** Each tagged span written with $ or $$; an unclosed tag is left alone. */
 export function tagsAsDollars(text: string): string {
   const pieces: string[] = [];
@@ -369,10 +359,11 @@ export function tagsAsDollars(text: string): string {
   for (const { start, end, kind, inner } of scan(text)) {
     if (kind !== "tag") continue;
     const block = text.startsWith("<latex-block>", start);
-    let maths = text.slice(inner[0], inner[1]);
-    // A $ pair that opens or closes on a space is not maths to the reader.
-    if (!block) maths = maths.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
-    const mark = block ? "$$" : maths ? "$" : "";
+    const [mark, maths] = dollarsFor(
+      text.slice(inner[0], inner[1]),
+      block,
+      text.charAt(end),
+    );
     pieces.push(text.slice(done, start), `${mark}${maths}${mark}`);
     done = end;
   }

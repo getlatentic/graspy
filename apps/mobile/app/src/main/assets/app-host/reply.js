@@ -6,13 +6,20 @@
   if (!app) return;
   const root = document.getElementById("reply");
 
-  // As the web's processLatex: \( \) and \[ \] become the $ and $$ the maths reader takes.
+  // As the web's processLatex: \( \) and \[ \] become the $ and $$ the maths reader takes. A backslash
+  // that another backslash comes before is a line break (\\[4pt]), which opens nothing.
+  const delimiter = (pattern, mark) => (text) =>
+    text.replace(pattern, (whole, slashes) => (slashes.length % 2 ? whole : slashes + mark));
+  const brackets = delimiter(/(\\*)\\[[\]]/g, "$$");
+  const parentheses = delimiter(/(\\*)\\[()]/g, "$");
   const latex = (text) =>
-    text
-      .replace(/<latex-block>|<\/latex-block>/g, "$$$$")
-      .replace(/<latex-inline>|<\/latex-inline>/g, "$")
-      .replace(/\\\[|\\\]/g, "$$$$")
-      .replace(/\\\(|\\\)/g, "$");
+    parentheses(
+      brackets(
+        text
+          .replace(/<latex-block>|<\/latex-block>/g, "$$$$")
+          .replace(/<latex-inline>|<\/latex-inline>/g, "$"),
+      ),
+    );
 
   const escape = (text) =>
     text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

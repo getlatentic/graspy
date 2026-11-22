@@ -46,8 +46,8 @@ def test_repairing_twice_changes_nothing(case):
 
 def test_the_corpus_has_cases_that_are_left_alone_and_cases_that_change():
     assert sum(case["input"] == case["web"] for case in CASES) > 40
-    assert sum(case["input"] != case["web"] for case in CASES) > 100
-    assert len(CASES) > 180
+    assert sum(case["input"] != case["web"] for case in CASES) > 120
+    assert len(CASES) > 220
 
 
 def test_the_vocabulary_is_the_corpus_vocabulary():
@@ -55,7 +55,10 @@ def test_the_vocabulary_is_the_corpus_vocabulary():
         "commands": maths_vocabulary.COMMANDS,
         "environments": maths_vocabulary.ENVIRONMENTS,
         "displayOnlyEnvironments": maths_vocabulary.DISPLAY_ONLY_ENVIRONMENTS,
+        "needsArgument": maths_vocabulary.NEEDS_ARGUMENT,
+        "infix": maths_vocabulary.INFIX,
         "names": maths_runs.NAMES,
+        "functions": maths_runs.FUNCTIONS,
     }
 
 
@@ -73,26 +76,36 @@ def test_every_display_only_environment_has_an_inline_form_or_is_block_maths():
 # the text from every one. The cost of a repair is linear in the input, which
 # is made long enough to measure.
 PATHOLOGICAL = {
-    "unclosed environments": "\\begin{pmatrix} 1 ",
-    "unclosed tags": "<latex-inline>a ",
-    "unclosed dollar pairs": "$$ a ",
-    "unclosed brackets": "\\[ a ",
-    "unclosed parentheses delimiters": "\\( a ",
-    "single dollar signs": "$ a ",
-    "unclosed braces": "\\frac{a ",
-    "unclosed parentheses": "(a + \\frac12 ",
-    "backticks": "` a ",
-    "fences with a body": "```\na\n```\nb\n",
-    "unclosed fences": "```\na\n",
-    "tilde fences": "~~~\na\n~~~\nb\n",
-    "indented fences in lists": "- a\n\n    ```\n    b\n    ```\n\n",
-    "block quote fences": "> ```\n> a\n> ```\n\n",
-    "unclosed tikz": "\\begin{tikzpicture} a ",
-    "unclosed pre": "<pre> a ",
-    "long command runs": "\\alpha + ",
-    "long runs of formulas": "\\alpha = 1 and \\beta ",
-    "indented code": "\n\n    a ",
-    "list items and indents": "- a\n\n    b\n\n",
+    "unclosed environments": lambda n: "\\begin{pmatrix} 1 " * n,
+    "unclosed tags": lambda n: "<latex-inline>a " * n,
+    "unclosed dollar pairs": lambda n: "$$ a " * n,
+    "unclosed brackets": lambda n: "\\[ a " * n,
+    "unclosed parentheses delimiters": lambda n: "\\( a " * n,
+    "single dollar signs": lambda n: "$ a " * n,
+    "unclosed braces": lambda n: "\\frac{a " * n,
+    "unclosed parentheses": lambda n: "(a + \\frac12 " * n,
+    "backticks": lambda n: "` a " * n,
+    "double backticks": lambda n: "`` a " * n,
+    "fences with a body": lambda n: "```\na\n```\nb\n" * n,
+    "unclosed fences": lambda n: "```\na\n" * n,
+    "tilde fences": lambda n: "~~~\na\n~~~\nb\n" * n,
+    "indented fences in lists": lambda n: "- a\n\n    ```\n    b\n    ```\n\n" * n,
+    "block quote fences": lambda n: "> ```\n> a\n> ```\n\n" * n,
+    "unclosed tikz": lambda n: "\\begin{tikzpicture} a " * n,
+    "unclosed pre": lambda n: "<pre> a " * n,
+    "long command runs": lambda n: "\\alpha + " * n,
+    "long runs of formulas": lambda n: "\\alpha = 1 and \\beta " * n,
+    "indented code": lambda n: "\n\n    a " * n,
+    "list items and indents": lambda n: "- a\n\n    b\n\n" * n,
+    "operators after a command": lambda n: "\\alpha " + "= + - * / " * n,
+    "closing brackets after a command": lambda n: "\\alpha ) " * n,
+    "minus signs after a command": lambda n: "\\alpha - " * n,
+    "opening brackets before a command": lambda n: "[ " * n + "\\alpha",
+    "closing brackets after commands": lambda n: "\\alpha ] " * n,
+    "table rows": lambda n: "| a | \\alpha |\n" * n,
+    "letters": lambda n: "a b c " * n,
+    "labels": lambda n: "a) b) " * n,
+    "doubled backslashes": lambda n: "\\\\[ x " * n,
 }
 
 
@@ -108,15 +121,15 @@ def _seconds(text: str) -> float:
 
 @pytest.mark.parametrize("name", PATHOLOGICAL)
 def test_the_cost_of_a_repair_is_linear(name):
-    unit = PATHOLOGICAL[name]
+    make = PATHOLOGICAL[name]
     copies = 1000
-    small = _seconds(unit * copies)
+    small = _seconds(make(copies))
     while small < 0.02 and copies < 64000:
         copies *= 2
-        small = _seconds(unit * copies)
+        small = _seconds(make(copies))
     # Eight times the input costs about eight times as much; a scan that is
     # quadratic costs sixty-four times, and load on the machine does not.
-    large = _seconds(unit * copies * 8)
+    large = _seconds(make(copies * 8))
     assert large < max(small * 28, 0.2), (name, small, large)
     assert large < 6, (name, large)
 

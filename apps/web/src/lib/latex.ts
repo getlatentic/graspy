@@ -21,8 +21,10 @@ import {
 } from "./latex-runs";
 import {
   LENGTH,
+  isEscaped,
   mapMaths,
   mapUnprotected,
+  scan,
   tagDelimiters,
   tagsAsDollars,
 } from "./latex-scan";
@@ -65,6 +67,11 @@ const DISPLAY_ONLY = new RegExp(
 // the whole formula as source. \_ is the underscore itself.
 const BLANK = /\\_|_{2,}/g;
 
+// A dollar sign cannot be written in maths as \$: the reader of $...$ ends the
+// span at it. KaTeX sets the character with \char.
+const DOLLAR_IN_MATHS = /\\\\|\\?\$/g;
+const DOLLAR_SIGN = '\\char"24{}';
+
 function inlineMaths(maths: string): string {
   // Environments KaTeX refuses within a line of text are written as the ones
   // it accepts.
@@ -74,7 +81,8 @@ function inlineMaths(maths: string): string {
         ? ""
         : `\\${edge}{${RENAMED_ENVIRONMENTS[name]}}`,
     )
-    .replace(BLANK, (run) => (run === "\\_" ? run : "\\_".repeat(run.length)));
+    .replace(BLANK, (run) => (run === "\\_" ? run : "\\_".repeat(run.length)))
+    .replace(DOLLAR_IN_MATHS, (mark) => (mark === "\\\\" ? mark : DOLLAR_SIGN));
 }
 
 function tagUndelimited(text: string): string {
@@ -85,12 +93,34 @@ function tagUndelimited(text: string): string {
 }
 
 const DOLLAR = /\\\\|\\\$|\$/g;
+const escapedDollars = (text: string) =>
+  text.replace(DOLLAR, (mark) => (mark === "$" ? "\\$" : mark));
+const OPENING_INLINE = "<latex-inline>";
+// The escaped dollar signs that end a piece of text.
+const TRAILING_DOLLARS = /(?:\\\$)+$/;
 
-/** A dollar sign outside every span is a dollar sign, not an opener. */
+/** A dollar sign outside every span is a dollar sign, not an opener, and is written \$. One right before a span of maths is the sign of its amount (`$5 \times 3`), and goes into the maths: `\$$` is no good to a reader. */
 function escapeStrayDollars(text: string): string {
-  return mapUnprotected(text, (part) =>
-    part.replace(DOLLAR, (mark) => (mark === "$" ? "\\$" : mark)),
-  );
+  const pieces: string[] = [];
+  let done = 0;
+  for (const next of [...scan(text), null]) {
+    const end = next === null ? text.length : next.start;
+    let segment = escapedDollars(text.slice(done, end));
+    let opening = next === null ? "" : text.slice(next.start, next.end);
+    const touching =
+      segment.endsWith("\\$") && isEscaped(segment, segment.length - 1);
+    if (touching && opening.startsWith(OPENING_INLINE)) {
+      const amounts = (TRAILING_DOLLARS.exec(segment)?.[0].length ?? 0) / 2;
+      segment = segment.slice(0, segment.length - 2 * amounts);
+      const rest = opening.slice(OPENING_INLINE.length);
+      opening = `${OPENING_INLINE}${DOLLAR_SIGN.repeat(amounts)}${rest}`;
+    } else if (touching && next !== null) {
+      segment += " ";
+    }
+    pieces.push(segment, opening);
+    done = next === null ? end : next.end;
+  }
+  return pieces.join("");
 }
 
 /** Rewrites the tutor's maths, however delimited or not, into the $$ and $ that remark-math reads. */

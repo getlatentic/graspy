@@ -17,7 +17,7 @@ from .maths import (
     tag_undelimited,
     unmangled_line_breaks,
 )
-from .maths_scan import MAX_INLINE, map_tikz, map_unprotected
+from .maths_scan import Searcher, map_tikz, map_unprotected
 
 # A maths span holding only single letters separated by spaces or commas is a
 # list of letters (the alphabet), which KaTeX would set in italic maths type.
@@ -30,11 +30,9 @@ _LETTER_LIST = re.compile(
 # bracket it is never meant; a LaTeX line break is \\ before a space or a line
 # end, and stays. \\[4pt] is a line break with extra space, so a [ opening a
 # length is not a doubled backslash, and a [ opens one only where a doubled
-# backslash closes it.
-_DOUBLED_CLOSE = rf"(?:[^\n]|\n(?![ \t]*\n)){{0,{MAX_INLINE}}}?\\\\\]"
-_DOUBLED_BACKSLASH = re.compile(
-    rf"\\\\(?=[A-Za-z()\]]|\[(?!{LENGTH})(?={_DOUBLED_CLOSE}))"
-)
+# backslash closes it in the same paragraph.
+_DOUBLED_BACKSLASH = re.compile(r"\\\\(?=([A-Za-z()\]])|(\[))")
+_LENGTH_AT = re.compile(LENGTH)
 
 # JSON parsing turns a lone \t, \r, \f or \b into a control character; one
 # before a letter was a LaTeX command such as \text. A newline is ambiguous,
@@ -50,11 +48,25 @@ _BOLD_NEWLINE = re.compile(
 )
 
 
+def _undoubled(text: str) -> str:
+    index = Searcher(text)
+
+    def single(match: re.Match) -> str:
+        bracket = match.end() + 1
+        if match.group(2) and (
+            _LENGTH_AT.match(text, bracket)
+            or index.find("\\\\]", bracket, index.paragraph_end(bracket)) == -1
+        ):
+            return match.group(0)
+        return "\\"
+
+    return _DOUBLED_BACKSLASH.sub(single, text)
+
+
 def _restored(text: str) -> str:
     # The model writes @@ for a LaTeX backslash ("@@frac12"), sparing it the
     # escaping a backslash needs inside JSON.
-    text = text.replace("@@", "\\")
-    text = _DOUBLED_BACKSLASH.sub(r"\\", text)
+    text = _undoubled(text.replace("@@", "\\"))
     return _CONTROL_BEFORE_LETTER.sub(
         lambda m: "\\" + _CONTROL_LETTERS[m.group(0)], text
     )

@@ -20,8 +20,10 @@ import re
 from .maths_runs import RENAMED_ENVIRONMENTS, UNWRAPPED_ENVIRONMENTS, tag_bare_maths
 from .maths_scan import (
     LENGTH,
+    is_escaped,
     map_maths,
     map_unprotected,
+    scan,
     tag_delimiters,
     tags_as_dollars,
 )
@@ -79,11 +81,20 @@ def _inline_environment(match: re.Match) -> str:
     return f"\\{match.group(1)}{{{RENAMED_ENVIRONMENTS[name]}}}"
 
 
+# A dollar sign cannot be written in maths as \$: the reader of $...$ ends the
+# span at it. KaTeX sets the character with \char.
+_DOLLAR_IN_MATHS = re.compile(r"\\\\|\\?\$")
+_DOLLAR_SIGN = '\\char"24{}'
+
+
 def _inline_maths(maths: str) -> str:
     # Environments KaTeX refuses within a line of text are written as the ones
     # it accepts.
     inline = _DISPLAY_ONLY.sub(_inline_environment, maths)
-    return _BLANK.sub(lambda run: "\\_" * len(run[0]), inline)
+    inline = _BLANK.sub(lambda run: "\\_" * len(run[0]), inline)
+    return _DOLLAR_IN_MATHS.sub(
+        lambda m: m.group(0) if m.group(0) == "\\\\" else _DOLLAR_SIGN, inline
+    )
 
 
 def tag_undelimited(text: str) -> str:
@@ -94,6 +105,8 @@ def tag_undelimited(text: str) -> str:
 
 
 _DOLLAR = re.compile(r"\\\\|\\\$|\$")
+# The escaped dollar signs that end a piece of text.
+_TRAILING_DOLLARS = re.compile(r"(?:\\\$)+$")
 
 
 def _escaped_dollars(text: str) -> str:
@@ -101,8 +114,25 @@ def _escaped_dollars(text: str) -> str:
 
 
 def escape_stray_dollars(text: str) -> str:
-    """A dollar sign outside every span is a dollar sign, not an opener."""
-    return map_unprotected(text, _escaped_dollars)
+    """A dollar sign outside every span is a dollar sign, not an opener, and is
+    written \\$. One right before a span of maths is the sign of its amount
+    (`$5 \\times 3`), and goes into the maths: `\\$$` is no good to a reader."""
+    pieces, done = [], 0
+    for span in [*scan(text), None]:
+        end = len(text) if span is None else span.start
+        segment = _escaped_dollars(text[done:end])
+        opening = "" if span is None else text[span.start : span.end]
+        touching = segment.endswith("\\$") and is_escaped(segment, len(segment) - 1)
+        if touching and opening.startswith("<latex-inline>"):
+            amounts = len(_TRAILING_DOLLARS.search(segment)[0]) // 2
+            segment = segment[: len(segment) - 2 * amounts]
+            rest = opening[len("<latex-inline>") :]
+            opening = f"<latex-inline>{_DOLLAR_SIGN * amounts}{rest}"
+        elif touching and span is not None:
+            segment += " "
+        pieces.extend((segment, opening))
+        done = end if span is None else span.end
+    return "".join(pieces)
 
 
 def repair_reply(text: str) -> str:

@@ -14,6 +14,7 @@
 // a command, and the rest are. Environments are tried the same way, and one
 // that KaTeX refuses outside display mode is display-only.
 
+import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -35,7 +36,8 @@ const NEVER = new Set(
   (
     "begin end def gdef edef xdef let futurelet newcommand renewcommand providecommand " +
     "global long outer relax href url includegraphics htmlClass htmlId htmlStyle htmlData " +
-    "verb input include expandafter noexpand csname endcsname"
+    "verb input include expandafter noexpand csname endcsname " +
+    "show message errmessage detokenize unexpanded"
   ).split(" "),
 );
 
@@ -61,6 +63,28 @@ const commands = [
       ).includes("Undefined control sequence"),
   )
   .sort();
+
+// A command that KaTeX refuses with nothing after it needs an argument; one
+// that is written alone ("use \\frac for fractions") is not maths.
+const needsArgument = commands.filter((name) =>
+  messageOf(() =>
+    katex.renderToString(`\\${name}`, { throwOnError: true, strict: false }),
+  ),
+);
+
+// A command KaTeX sets as a relation or a binary operator stands between two
+// terms: a letter before it is a variable, not a word.
+const infix = commands.filter((name) => {
+  try {
+    const html = katex.renderToString(`a \\${name} b`, {
+      throwOnError: true,
+      strict: false,
+    });
+    return /class="m(?:rel|bin)"/.test(html);
+  } catch {
+    return false;
+  }
+});
 
 const environments = [];
 const displayOnly = [];
@@ -88,12 +112,27 @@ scripts/generate-math-vocabulary.mjs: do not edit."""
 _COMMANDS = ${JSON.stringify(list(commands))}
 _ENVIRONMENTS = ${JSON.stringify(list(environments))}
 _DISPLAY_ONLY_ENVIRONMENTS = ${JSON.stringify(list(displayOnly))}
+_NEEDS_ARGUMENT = ${JSON.stringify(list(needsArgument))}
+_INFIX = ${JSON.stringify(list(infix))}
 
 COMMANDS = _COMMANDS.split()
 ENVIRONMENTS = _ENVIRONMENTS.split()
 DISPLAY_ONLY_ENVIRONMENTS = _DISPLAY_ONLY_ENVIRONMENTS.split()
+NEEDS_ARGUMENT = _NEEDS_ARGUMENT.split()
+INFIX = _INFIX.split()
 `,
 );
+
+// The Python file is formatted as the project's ruff formats it, so that
+// writing it again leaves no change.
+execFileSync("uv", [
+  "run",
+  "--directory",
+  join(root, "apps/server"),
+  "ruff",
+  "format",
+  join(root, "apps/server/src/app/domains/lesson/maths_vocabulary.py"),
+]);
 
 const typescript = `// The commands and environments KaTeX accepts, written by
 // scripts/generate-math-vocabulary.mjs: do not edit.
@@ -109,6 +148,12 @@ export const ENVIRONMENTS = words(
 export const DISPLAY_ONLY_ENVIRONMENTS = words(
   ${JSON.stringify(list(displayOnly))},
 );
+export const NEEDS_ARGUMENT = words(
+  ${JSON.stringify(list(needsArgument))},
+);
+export const INFIX = words(
+  ${JSON.stringify(list(infix))},
+);
 `;
 writeFileSync(join(root, "apps/web/src/lib/latex-vocabulary.ts"), typescript);
 writeFileSync(
@@ -123,8 +168,9 @@ corpus.vocabulary = {
   commands,
   environments,
   displayOnlyEnvironments: displayOnly,
+  needsArgument,
+  infix,
 };
-delete corpus.vocabulary.functions;
 writeFileSync(corpusPath, `${JSON.stringify(corpus, null, 2)}\n`);
 
 console.log(

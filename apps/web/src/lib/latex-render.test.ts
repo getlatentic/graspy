@@ -78,6 +78,57 @@ describe("the chat's maths and its dollar signs", () => {
     expect(bash).toContain("In bash $HOME holds the path;");
   });
 
+  const caseText = (name: string) => corpus.cases.find((c) => c.name === name)!.input;
+
+  it("keeps a table's rows and puts a formula in its own cell", () => {
+    const page = html(caseText("a table row with a formula is repaired cell by cell"));
+    expect(count(page, /<th>/g)).toBe(2);
+    expect(count(page, /<td>/g)).toBe(2);
+    expect(count(page, /<td>1<\/td>/g)).toBe(1);
+    expect(count(page, /<td><span class="katex"/g)).toBe(1);
+    expect(page).not.toContain("katex-error");
+
+    const cells = html(caseText("a table cell with a product"));
+    expect(cells).not.toContain("katex-error");
+    expect(html("| $x$ | \\frac{1}{2} |\n|---|---|\n| 1 | \\pi r^2 |")).toContain("<table>");
+  });
+
+  it("keeps bold and italic words and puts the formula after them in maths", () => {
+    for (const [name, strong] of [
+      ["bold before a formula", "<strong>x</strong>"],
+      ["a bold step label before a formula", "<strong>Step 1:</strong>"],
+      ["italics before a formula", "<em>n</em>"],
+      ["a bold word before a command", "<strong>bold</strong>"],
+    ]) {
+      const page = html(caseText(name));
+      expect(page).toContain(strong);
+      expect(count(page, /class="katex"/g)).toBe(1);
+      expect(page).not.toContain("katex-error");
+    }
+    const underscores = html(caseText("underscores that are emphasis"));
+    expect(underscores).not.toContain("katex-error");
+    expect(underscores).toContain("<em>x</em>");
+  });
+
+  it("keeps a link's address and text", () => {
+    const page = html(caseText("a link before a formula"));
+    expect(page).toContain('<a href="http://a.b">link</a>');
+    expect(count(page, /class="katex"/g)).toBe(1);
+    const inside = html(caseText("a command in a link's address is left in it"));
+    expect(inside).toContain('<a href="http://a.b/%5Calpha">x</a>');
+    expect(count(inside, /class="katex"/g)).toBe(1);
+  });
+
+  it("shows a dollar sign inside maths, and an amount before a formula", () => {
+    const pen = html(caseText("a dollar sign in maths"));
+    expect(count(pen, /class="katex"/g)).toBe(1);
+    expect(pen).not.toContain("katex-error");
+    expect(html(caseText("escaped dollars in a pair of dollar signs"))).not.toContain(
+      "katex-error",
+    );
+    expect(html("cost = $5 \\times 3")).not.toContain("katex-error");
+  });
+
   it("leaves code alone", () => {
     for (const code of [
       "```sh\ncd $HOME/$USER\n```",

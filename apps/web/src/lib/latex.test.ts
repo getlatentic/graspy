@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import corpus from "../../../../tests/fixtures/math-repair.json";
 import { processLatex } from "./latex";
-import { COMMANDS, DISPLAY_ONLY_ENVIRONMENTS, ENVIRONMENTS, NAMES } from "./latex-runs";
+import { FUNCTIONS, NAMES } from "./latex-runs";
+import {
+  COMMANDS,
+  DISPLAY_ONLY_ENVIRONMENTS,
+  ENVIRONMENTS,
+  INFIX,
+  NEEDS_ARGUMENT,
+} from "./latex-vocabulary";
 
 describe("processLatex", () => {
   it("puts the tutor's formulas in remark-math's delimiters", () => {
@@ -14,8 +21,13 @@ describe("processLatex", () => {
 
   it("writes a dollar sign that opens no maths as \\$", () => {
     expect(processLatex("It costs $5 and $10")).toBe("It costs \\$5 and \\$10");
-    expect(processLatex("Let $x\\le 5 be fine")).toBe("Let \\$$x\\le 5$ be fine");
-    expect(processLatex("$|\\le")).toBe("\\$$|\\le$");
+    expect(processLatex("$|\\le")).toBe("\\$|$\\le$");
+  });
+
+  it("puts the sign of an amount before a formula into the formula", () => {
+    expect(processLatex("cost = $5 \\times 3")).toBe(
+      'cost = $\\char"24{}5 \\times 3$',
+    );
   });
 
   it("restores a line break's length that an earlier web wrote as \\$$4pt]", () => {
@@ -27,8 +39,8 @@ describe("the repair corpus the server's repair_reply is tested with", () => {
   it("has cases left alone, cases changed, and cases for each family", () => {
     const same = corpus.cases.filter((c) => c.input === c.web).length;
     expect(same).toBeGreaterThan(40);
-    expect(corpus.cases.length - same).toBeGreaterThan(100);
-    expect(corpus.cases.length).toBeGreaterThan(180);
+    expect(corpus.cases.length - same).toBeGreaterThan(120);
+    expect(corpus.cases.length).toBeGreaterThan(220);
   });
 
   it.each(corpus.cases)("$name", ({ input, web }) => {
@@ -45,35 +57,48 @@ describe("the repair corpus the server's repair_reply is tested with", () => {
       commands: COMMANDS,
       environments: ENVIRONMENTS,
       displayOnlyEnvironments: DISPLAY_ONLY_ENVIRONMENTS,
+      needsArgument: NEEDS_ARGUMENT,
+      infix: INFIX,
       names: NAMES,
+      functions: FUNCTIONS,
     });
   });
 });
 
 // Each of these grows with the number of openers when a scan runs to the end of
-// the text from every one. The cost of a repair is linear in the input, which
-// is made long enough to measure.
-const PATHOLOGICAL: Record<string, string> = {
-  "unclosed environments": "\\begin{pmatrix} 1 ",
-  "unclosed tags": "<latex-inline>a ",
-  "unclosed dollar pairs": "$$ a ",
-  "unclosed brackets": "\\[ a ",
-  "unclosed parentheses delimiters": "\\( a ",
-  "single dollar signs": "$ a ",
-  "unclosed braces": "\\frac{a ",
-  "unclosed parentheses": "(a + \\frac12 ",
-  backticks: "` a ",
-  "fences with a body": "```\na\n```\nb\n",
-  "unclosed fences": "```\na\n",
-  "tilde fences": "~~~\na\n~~~\nb\n",
-  "indented fences in lists": "- a\n\n    ```\n    b\n    ```\n\n",
-  "block quote fences": "> ```\n> a\n> ```\n\n",
-  "unclosed tikz": "\\begin{tikzpicture} a ",
-  "unclosed pre": "<pre> a ",
-  "long command runs": "\\alpha + ",
-  "long runs of formulas": "\\alpha = 1 and \\beta ",
-  "indented code": "\n\n    a ",
-  "list items and indents": "- a\n\n    b\n\n",
+// the text from every one, or with the square of the length of a run. The cost
+// of a repair is linear in the input, which is made long enough to measure.
+const PATHOLOGICAL: Record<string, (copies: number) => string> = {
+  "unclosed environments": (n) => "\\begin{pmatrix} 1 ".repeat(n),
+  "unclosed tags": (n) => "<latex-inline>a ".repeat(n),
+  "unclosed dollar pairs": (n) => "$$ a ".repeat(n),
+  "unclosed brackets": (n) => "\\[ a ".repeat(n),
+  "unclosed parentheses delimiters": (n) => "\\( a ".repeat(n),
+  "single dollar signs": (n) => "$ a ".repeat(n),
+  "unclosed braces": (n) => "\\frac{a ".repeat(n),
+  "unclosed parentheses": (n) => "(a + \\frac12 ".repeat(n),
+  backticks: (n) => "` a ".repeat(n),
+  "double backticks": (n) => "`` a ".repeat(n),
+  "fences with a body": (n) => "```\na\n```\nb\n".repeat(n),
+  "unclosed fences": (n) => "```\na\n".repeat(n),
+  "tilde fences": (n) => "~~~\na\n~~~\nb\n".repeat(n),
+  "indented fences in lists": (n) => "- a\n\n    ```\n    b\n    ```\n\n".repeat(n),
+  "block quote fences": (n) => "> ```\n> a\n> ```\n\n".repeat(n),
+  "unclosed tikz": (n) => "\\begin{tikzpicture} a ".repeat(n),
+  "unclosed pre": (n) => "<pre> a ".repeat(n),
+  "long command runs": (n) => "\\alpha + ".repeat(n),
+  "long runs of formulas": (n) => "\\alpha = 1 and \\beta ".repeat(n),
+  "indented code": (n) => "\n\n    a ".repeat(n),
+  "list items and indents": (n) => "- a\n\n    b\n\n".repeat(n),
+  "operators after a command": (n) => "\\alpha " + "= + - * / ".repeat(n),
+  "closing brackets after a command": (n) => "\\alpha ) ".repeat(n),
+  "minus signs after a command": (n) => "\\alpha - ".repeat(n),
+  "opening brackets before a command": (n) => "[ ".repeat(n) + "\\alpha",
+  "closing brackets after commands": (n) => "\\alpha ] ".repeat(n),
+  "table rows": (n) => "| a | \\alpha |\n".repeat(n),
+  "letters": (n) => "a b c ".repeat(n),
+  "labels": (n) => "a) b) ".repeat(n),
+  "doubled backslashes": (n) => "\\\\[ x ".repeat(n),
 };
 
 function seconds(text: string): number {
@@ -88,16 +113,15 @@ function seconds(text: string): number {
 
 describe("the cost of a repair", () => {
   it.each(Object.keys(PATHOLOGICAL))("is linear: %s", (name) => {
-    const unit = PATHOLOGICAL[name];
     let copies = 1000;
-    let small = seconds(unit.repeat(copies));
+    let small = seconds(PATHOLOGICAL[name](copies));
     while (small < 0.02 && copies < 64000) {
       copies *= 2;
-      small = seconds(unit.repeat(copies));
+      small = seconds(PATHOLOGICAL[name](copies));
     }
     // Eight times the input costs about eight times as much; a scan that is
     // quadratic costs sixty-four times, and load on the machine does not.
-    const large = seconds(unit.repeat(copies * 8));
+    const large = seconds(PATHOLOGICAL[name](copies * 8));
     expect(large).toBeLessThan(Math.max(small * 28, 0.2));
     expect(large).toBeLessThan(6);
   });

@@ -26,7 +26,7 @@ def test_at_proxy_becomes_a_backslash():
         ("\rho", "\\rho"),
         ("\x0corall", "\\forall"),
         ("\x08eta", "\\beta"),
-        ("\rVert", "\\rVert"),
+        ("\rightarrow", "\\rightarrow"),
     ],
 )
 def test_control_characters_before_a_letter_are_restored(raw, expected):
@@ -157,7 +157,7 @@ def test_phonetic_commands_inside_maths_are_left_for_katex():
         ("x @@times 3", "<latex-inline>x \\times 3</latex-inline>"),
         (
             "@@frac{@@sqrt{2}}{3} m",
-            "<latex-inline>\\frac{\\sqrt{2}}{3} m</latex-inline>",
+            "<latex-inline>\\frac{\\sqrt{2}}{3}</latex-inline> m",
         ),
     ],
 )
