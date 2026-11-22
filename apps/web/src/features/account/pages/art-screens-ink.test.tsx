@@ -60,7 +60,6 @@ describe("text on the art screens' ground", () => {
     );
     container.querySelector(".rounded-sheet")?.remove();
     expect(container.querySelector(".art-ground")).toBeTruthy();
-    expect(container.querySelector("a[href='/app/sign-in']")).toBeTruthy();
     expect(themedText(container)).toEqual([]);
   });
 });

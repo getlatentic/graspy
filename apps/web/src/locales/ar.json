@@ -119,7 +119,6 @@
     }
   },
   "onboarding": {
-    "contact": "اتصل بنا",
     "home": "الصفحة الرئيسية لـ graspy",
     "stepOf": "الخطوة {current} من {total}",
     "back": "رجوع",

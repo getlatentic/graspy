@@ -12,24 +12,14 @@ function useSignInOffered(): boolean {
   return FIREBASE_CONFIG !== null && account === null;
 }
 
-/** `onArt` is for the art screens, whose ground stays light in dark mode: the ink does not change with the theme. */
-export function SignInLink({
-  className,
-  onArt = false,
-}: {
-  className?: string;
-  onArt?: boolean;
-}) {
+export function SignInLink({ className }: { className?: string }) {
   const { t } = useI18n();
   if (!useSignInOffered()) return null;
   return (
     <Link
       to={SIGN_IN_PAGE}
       className={cn(
-        "text-sm font-semibold transition",
-        onArt
-          ? "text-on-art hover:underline"
-          : "text-accent-ink hover:text-ink",
+        "text-sm font-semibold text-accent-ink transition hover:text-ink",
         className,
       )}
     >

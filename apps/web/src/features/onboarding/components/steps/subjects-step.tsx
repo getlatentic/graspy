@@ -24,28 +24,18 @@ export default function SubjectsStep({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 sm:gap-4">
+    <div className="flex flex-col gap-3 sm:gap-4">
       <SubjectsNotices chosen={selected.length} loading={loading} />
-      <div className="relative flex-1 min-h-0 rounded-card border border-line bg-surface/90">
-        {!loading && !error && (
-          <>
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-6 rounded-t-2xl bg-surface" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 rounded-b-2xl bg-surface" />
-          </>
-        )}
-        <div className="absolute inset-0 overflow-y-auto px-2 py-3">
-          <SubjectsBody
-            failed={Boolean(error)}
-            loading={loading}
-            subjects={available}
-            selected={selected}
-            onToggle={toggle}
-            onRetry={subjects.refetch}
-          />
-        </div>
+      <div className="rounded-card border border-line bg-surface/90 px-2 py-3">
+        <SubjectsBody
+          failed={Boolean(error)}
+          loading={loading}
+          subjects={available}
+          selected={selected}
+          onToggle={toggle}
+          onRetry={subjects.refetch}
+        />
       </div>
-
-      <div className="h-0" aria-hidden />
     </div>
   );
 }
@@ -122,7 +112,7 @@ function SubjectsBody({
 function SubjectsFailed({ onRetry }: { onRetry: () => void }) {
   const { t } = useI18n();
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
       <p className="text-sm text-muted">
         {t("onboarding.subjects.loadFailed")}
       </p>

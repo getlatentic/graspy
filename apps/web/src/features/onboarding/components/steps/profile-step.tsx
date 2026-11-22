@@ -39,7 +39,7 @@ export default function ProfileStep({
   };
 
   return (
-    <div className="flex h-full flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-6">
         <div>
           <SearchableSelect
