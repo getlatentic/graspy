@@ -48,14 +48,18 @@ describe.each([
   });
 });
 
-it("aborts once and lets go of the other signals", () => {
+it("aborts once and lets go of every other signal", () => {
   stubChromium108();
   const a = new AbortController();
   const b = new AbortController();
+  const letGoOfA = vi.spyOn(a.signal, "removeEventListener");
+  const letGoOfB = vi.spyOn(b.signal, "removeEventListener");
   const merged = abortAny([a.signal, b.signal]);
   const onAbort = vi.fn();
   merged.addEventListener("abort", onAbort);
   a.abort();
   b.abort();
   expect(onAbort).toHaveBeenCalledTimes(1);
+  expect(letGoOfA).toHaveBeenCalledWith("abort", expect.any(Function));
+  expect(letGoOfB).toHaveBeenCalledWith("abort", expect.any(Function));
 });
