@@ -73,7 +73,7 @@ describe("Onboarding's ground", () => {
       [...document.querySelectorAll("img")].map((img) =>
         img.getAttribute("src"),
       ),
-    ).toEqual(["/brand/sprout.svg", "/brand/wordmark.png"]);
+    ).toEqual(["/brand/graspy-lockup-v1.svg"]);
     for (
       let box: Element | null = heading;
       box && box !== root;

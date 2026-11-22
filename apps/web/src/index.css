@@ -4,6 +4,11 @@
 @import "tw-animate-css";
 
 @theme {
+  /* Wide screens and TVs: the layouts and the logo grow at these widths. */
+  --breakpoint-3xl: 120rem;
+  --breakpoint-4xl: 160rem;
+  --breakpoint-5xl: 240rem;
+
   --animate-enter: enter 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   @keyframes enter {
     from {

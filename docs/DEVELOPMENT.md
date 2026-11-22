@@ -170,6 +170,18 @@ npm run tauri dev     # the app, with the Vite server on port 1420
 - **Build.** `npm run tauri build` writes `src-tauri/target/release/bundle/macos/graspy.app` and a `.dmg`. `scripts/launch-smoke.sh` then opens the app twice, as a teacher would, and checks that one instance runs and nothing crashed.
 - **Content packages** in `src-tauri/resources/content` are built by `scripts/export_curriculum_packages.py`, `export_pacing_packages.py` and `export_textbook_corpus.py` from the plan-to-tutor dataset. Pass its paths as arguments, or set `PLAN_TO_TUTOR_ROOT` to its checkout. `scripts/extract_nerdc_revision.py` reads the NERDC PDF: `uv run scripts/extract_nerdc_revision.py --pdf … --dataset-root … --output …`.
 
+## The logo
+
+`apps/web/public/brand/graspy-lockup-v1.svg` is the web's logo: the sprout and the word "graspy" in one SVG, so they line up by construction and stay sharp at any size. The viewBox (`0 -563 4552 836`) is cropped to the ink: the sprout is as tall as the word, from the x-height top to the bottom of the descenders, and its left edge is the file's left edge. `Logo` (`apps/web/src/components/brand/logo.tsx`) reserves the same ratio with `width` and `height`. The service worker caches `/brand` by path, so a changed lockup gets a new file name (`-v2`) and `Logo` points at it. `sprout.svg` stays for the favicon and the sprout alone.
+
+The word is Poppins SemiBold (SIL Open Font License, so it may be embedded and modified), drawn as outlines from `@fontsource/poppins` weight 600, not live text. To regenerate it:
+
+1. Shape "graspy" with HarfBuzz (kerning on, no letter-spacing) from the 600 `.woff2` after decoding it to `.ttf` with fontTools, and write each glyph as an SVG path with fontTools' `SVGPathPen`, y flipped, baseline at 0.
+2. Take the ink box of the word: x-height top to descender bottom is the lockup's height (-563 to 273 in font units).
+3. Put the sprout path from `sprout.svg` (viewBox 24) in the same file, scaled so its stem bottom (y 23) lands on the descender line and its left leaf edge (x 3.4) on x 0, about 44.95 units per sprout unit; put the word to its right with the gap shown in the file, and set the viewBox to the combined ink.
+
+The shipped file also has `role="img"` and `aria-label="graspy"`.
+
 ## Names compared alike on the server and the web
 
 `normalise` (apps/server/src/app/agent/subject_match.py) and `nameKey`
