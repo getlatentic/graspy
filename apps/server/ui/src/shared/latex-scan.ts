@@ -36,13 +36,18 @@ const PROPER_STARTS = [
 ].sort((a, b) => b.length - a.length);
 const CUT_TAG = `(?:${PROPER_STARTS.map(escapeRegExp).join("|")})(?![\\s\\S])`;
 
+// A fence may sit in a block quote or be indented within a list item, so what
+// comes before it on its line is any run of `>` and spaces.
+const FENCE_LINE = String.raw`(?:[ \t]*>)*[ \t]*`;
+
 const OPENER_SOURCE = [
   String.raw`<latex-(block|inline)>`,
   String.raw`</latex-(?:block|inline)>`,
-  "(?:^|\\n)[ ]{0,3}(?:(`{3,})[^`\\n]*|(~{3,})[^\\n]*)",
+  `(?:^|\\n)${FENCE_LINE}(?:(\`{3,})[^\`\\n]*|(~{3,})[^\\n]*)`,
+  String.raw`<(pre|code)(?![A-Za-z0-9])[^>\n]*>`,
   String.raw`\\begin\{tikzpicture\}`,
-  // Indented code follows a blank line.
-  String.raw`\n[ \t]*\r?\n(?: {4}|\t)`,
+  // Indented code follows a blank line, and is not an indented fence.
+  String.raw`\n[ \t]*\r?\n(?![ \t]*(?:\`{3,}|~{3,}))(?: {4}|\t)`,
   String.raw`\\\\|\\\$`,
   String.raw`\$\$|\\\[|\\\(|\$`,
   "`",
@@ -52,7 +57,7 @@ const OPENER_SOURCE = [
 const LENGTH_UNITS = "pt|pc|bp|dd|cc|sp|mm|cm|in|em|ex|mu|px|nd|nc";
 // \[ opens display maths unless it is the length of a line break, as in
 // \\[4pt]. The units are TeX's and KaTeX's.
-const LENGTH = String.raw`[ \t\r\n]*[-+]?(?:[0-9]+\.?[0-9]*|\.[0-9]+)[ \t\r\n]*(?:${LENGTH_UNITS})[ \t\r\n]*\]`;
+export const LENGTH = String.raw`[ \t\r\n]*[-+]?(?:[0-9]+\.?[0-9]*|\.[0-9]+)[ \t\r\n]*(?:${LENGTH_UNITS})[ \t\r\n]*\]`;
 
 const CLOSERS: Record<string, string> = {
   $$: "$$",
@@ -118,7 +123,7 @@ export class Searcher {
 function fenceEnd(text: Searcher, opener: RegExpExecArray): number {
   const run = opener[2] ?? opener[3];
   const closing = new RegExp(
-    `\\n {0,3}${escapeRegExp(run[0])}{${run.length},}[ \\t]*\\r?(?=\\n|(?![\\s\\S]))`,
+    `\\n${FENCE_LINE}${escapeRegExp(run[0])}{${run.length},}[ \\t]*\\r?(?=\\n|(?![\\s\\S]))`,
     "g",
   );
   closing.lastIndex = opener.index + opener[0].length;
@@ -126,6 +131,9 @@ function fenceEnd(text: Searcher, opener: RegExpExecArray): number {
   // An unclosed fence is a block still being written: code to the end.
   return found ? found.index + found[0].length : text.text.length;
 }
+
+const BLANK_CHARS = /[^ \t\r\n\f\v]/;
+const isBlank = (text: string) => !BLANK_CHARS.test(text);
 
 const lineStartBefore = (text: string, cursor: number) =>
   cursor <= 0 ? 0 : text.lastIndexOf("\n", cursor - 1) + 1;
@@ -135,7 +143,7 @@ function blockStart(text: string, end: number): number {
   let cursor = end;
   for (let step = 0; step < 200; step++) {
     const lineStart = lineStartBefore(text, cursor);
-    if (!text.slice(lineStart, cursor).trim()) break;
+    if (isBlank(text.slice(lineStart, cursor))) break;
     start = lineStart;
     if (lineStart === 0) break;
     cursor = lineStart - 1;
@@ -147,7 +155,7 @@ function previousBlockEnd(text: string, start: number): number {
   let cursor = start - 1;
   while (cursor > 0) {
     const lineStart = lineStartBefore(text, cursor);
-    if (text.slice(lineStart, cursor).trim()) return cursor;
+    if (!isBlank(text.slice(lineStart, cursor))) return cursor;
     cursor = lineStart - 1;
   }
   return -1;
@@ -157,9 +165,10 @@ function previousBlockEnd(text: string, start: number): number {
 function precededByListItem(index: Searcher, blank: number): boolean {
   const text = index.text;
   const chain: number[] = [];
-  let end = blank;
+  // Blank lines may come between the item and the indent.
+  let end = previousBlockEnd(text, blank + 1);
   let result = false;
-  for (;;) {
+  while (end >= 0) {
     const start = blockStart(text, end);
     if (start === end) break;
     const known = index.inList.get(start);
@@ -247,8 +256,13 @@ function spanAt(text: Searcher, opener: RegExpExecArray): Span | null {
   const start = opener.index;
   const after = start + source.length;
   if (opener[1]) return tagSpan(text, opener);
-  if (source.startsWith("<")) return span(start, after, "code");
+  if (source.startsWith("<") && !opener[4]) return span(start, after, "code");
   if (opener[2] || opener[3]) return span(start, fenceEnd(text, opener), "code");
+  if (opener[4]) {
+    const close = `</${opener[4]}>`;
+    const end = text.find(close, after, text.text.length);
+    return end < 0 ? null : span(start, end + close.length, "code");
+  }
   if (source.startsWith("\n")) {
     if (precededByListItem(text, start)) return null;
     return span(start, indentedEnd(text.text, after), "code");
@@ -354,11 +368,12 @@ export function tagsAsDollars(text: string): string {
   let done = 0;
   for (const { start, end, kind, inner } of scan(text)) {
     if (kind !== "tag") continue;
-    const mark = text.startsWith("<latex-block>", start) ? "$$" : "$";
-    pieces.push(
-      text.slice(done, start),
-      `${mark}${text.slice(inner[0], inner[1])}${mark}`,
-    );
+    const block = text.startsWith("<latex-block>", start);
+    let maths = text.slice(inner[0], inner[1]);
+    // A $ pair that opens or closes on a space is not maths to the reader.
+    if (!block) maths = maths.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "");
+    const mark = block ? "$$" : maths ? "$" : "";
+    pieces.push(text.slice(done, start), `${mark}${maths}${mark}`);
     done = end;
   }
   pieces.push(text.slice(done));

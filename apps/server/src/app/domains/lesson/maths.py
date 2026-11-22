@@ -3,20 +3,21 @@ r"""The tutor's maths as the frontend renders it: every delimiter made a
 delimiters tagged too.
 
 repair_reply is the rule for free text, the tutor's chat answers. A pair of
-dollar signs is left alone in it: remark-math reads $...$ itself, and in a
-sentence about a shell or a URL it is not maths. reply_text is what clients are
-sent, the tags written as $ and $$. The same rule is
-apps/web/src/lib/latex.ts and apps/server/ui/src/shared/latex.ts, which apply
-it to text that never passed through here (lessons stored before it, replies
-still streaming); tests/fixtures/math-repair.json holds the cases all three
-must agree on. markdown.py adds what only a lesson's JSON fields need.
+dollar signs is left to remark-math in it, which reads $...$ itself, and every
+other dollar sign is written \$, so that none pairs with another in a sentence
+about a shell, a URL or a price. reply_text is what clients are sent, the tags
+written as $ and $$. The same rule is apps/web/src/lib/latex.ts and
+apps/server/ui/src/shared/latex.ts, which apply it to text that never passed
+through here (lessons stored before it, replies still streaming);
+tests/fixtures/math-repair.json holds the cases all three must agree on.
+markdown.py adds what only a lesson's JSON fields need.
 
 Code is never touched: see maths_scan.py. Bare maths is maths_runs.py.
 """
 
 import re
 
-from .maths_runs import tag_bare_maths
+from .maths_runs import RENAMED_ENVIRONMENTS, UNWRAPPED_ENVIRONMENTS, tag_bare_maths
 from .maths_scan import (
     LENGTH,
     map_maths,
@@ -32,6 +33,7 @@ __all__ = [
     "reply_text",
     "tag_delimiters",
     "tag_undelimited",
+    "unmangled_line_breaks",
 ]
 
 # Text-mode LaTeX for letters used in phonetics. Outside a maths span nothing
@@ -52,15 +54,35 @@ def _phonetic_letters(text: str) -> str:
     return _TEXT_COMMAND.sub(lambda m: _TEXT_COMMANDS[m.group(1)], text)
 
 
-_DISPLAY_ONLY = re.compile(r"\\(begin|end)\{(align|gather)\*?\}")
+# A line break with a length, \\[4pt], that an earlier version of the web
+# read as a display delimiter and wrote as \$$4pt].
+_MANGLED_LINE_BREAK = re.compile(rf"\\\$\$(?={LENGTH})")
+
+
+def unmangled_line_breaks(text: str) -> str:
+    return _MANGLED_LINE_BREAK.sub(lambda _m: "\\\\[", text)
+
+
+_ENVIRONMENT_NAME = "|".join(
+    re.escape(name) for name in (*RENAMED_ENVIRONMENTS, *UNWRAPPED_ENVIRONMENTS)
+)
+_DISPLAY_ONLY = re.compile(rf"\\(begin|end)\{{({_ENVIRONMENT_NAME})\}}")
 # A worksheet blank typed as ___ is a double subscript to KaTeX, which shows
 # the whole formula as source. \_ is the underscore itself.
 _BLANK = re.compile(r"(?<!\\)_{2,}")
 
 
+def _inline_environment(match: re.Match) -> str:
+    name = match.group(2)
+    if name in UNWRAPPED_ENVIRONMENTS:
+        return ""
+    return f"\\{match.group(1)}{{{RENAMED_ENVIRONMENTS[name]}}}"
+
+
 def _inline_maths(maths: str) -> str:
-    # align and gather are display-only, which KaTeX refuses inside a line.
-    inline = _DISPLAY_ONLY.sub(r"\\\1{\2ed}", maths)
+    # Environments KaTeX refuses within a line of text are written as the ones
+    # it accepts.
+    inline = _DISPLAY_ONLY.sub(_inline_environment, maths)
     return _BLANK.sub(lambda run: "\\_" * len(run[0]), inline)
 
 
@@ -71,10 +93,24 @@ def tag_undelimited(text: str) -> str:
     return map_maths(tag_bare_maths(text), _inline_maths)
 
 
+_DOLLAR = re.compile(r"\\\\|\\\$|\$")
+
+
+def _escaped_dollars(text: str) -> str:
+    return _DOLLAR.sub(lambda m: "\\$" if m.group(0) == "$" else m.group(0), text)
+
+
+def escape_stray_dollars(text: str) -> str:
+    """A dollar sign outside every span is a dollar sign, not an opener."""
+    return map_unprotected(text, _escaped_dollars)
+
+
 def repair_reply(text: str) -> str:
     if not text:
         return text
-    return tag_undelimited(tag_delimiters(text, dollars=False))
+    text = unmangled_line_breaks(text)
+    text = tag_undelimited(tag_delimiters(text, dollars=False))
+    return escape_stray_dollars(text)
 
 
 def reply_text(text: str) -> str:

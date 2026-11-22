@@ -10,7 +10,13 @@ from a chat answer's "let $a, b, c, d$ be the coefficients"."""
 
 import re
 
-from .maths import LENGTH, repair_reply, tag_delimiters, tag_undelimited
+from .maths import (
+    LENGTH,
+    repair_reply,
+    tag_delimiters,
+    tag_undelimited,
+    unmangled_line_breaks,
+)
 from .maths_scan import MAX_INLINE, map_tikz, map_unprotected
 
 # A maths span holding only single letters separated by spaces or commas is a
@@ -66,6 +72,7 @@ def _tikz_fenced(picture: str) -> str:
 def repair_markdown(text: str) -> str:
     if not text:
         return text
+    text = unmangled_line_breaks(text)
     text = map_unprotected(text, _restored, indented=False, in_maths=True)
     text = _LETTER_LIST.sub(
         lambda m: m.group(2).strip(), tag_delimiters(text, dollars=True)

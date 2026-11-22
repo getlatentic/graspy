@@ -32,13 +32,17 @@ _PROPER_STARTS = sorted(
 )
 _CUT_TAG = rf"(?:{'|'.join(map(re.escape, _PROPER_STARTS))})(?![\s\S])"
 
+# A fence may sit in a block quote or be indented within a list item, so what
+# comes before it on its line is any run of `>` and spaces.
+_FENCE_LINE = r"(?:[ \t]*>)*[ \t]*"
 _OPENER = re.compile(
     r"<latex-(block|inline)>"
     r"|</latex-(?:block|inline)>"
-    r"|(?:^|\n)[ ]{0,3}(?:(`{3,})[^`\n]*|(~{3,})[^\n]*)"
+    rf"|(?:^|\n){_FENCE_LINE}(?:(`{{3,}})[^`\n]*|(~{{3,}})[^\n]*)"
+    r"|<(pre|code)(?![A-Za-z0-9])[^>\n]*>"
     r"|\\begin\{tikzpicture\}"
-    # Indented code follows a blank line.
-    r"|\n[ \t]*\r?\n(?: {4}|\t)"
+    # Indented code follows a blank line, and is not an indented fence.
+    rf"|\n[ \t]*\r?\n(?![ \t]*(?:`{{3,}}|~{{3,}}))(?: {{4}}|\t)"
     r"|\\\\|\\\$"
     r"|\$\$|\\\[|\\\(|\$"
     r"|`"
@@ -53,6 +57,22 @@ _LENGTH_AT = re.compile(LENGTH)
 
 _CLOSERS = {"$$": "$$", "\\[": "\\]", "\\(": "\\)", "$": "$"}
 _WHITESPACE = " \t\r\n"
+_BLANK_CHARS = " \t\r\n\f\v"
+
+
+def is_blank(text: str) -> bool:
+    return not text.strip(_BLANK_CHARS)
+
+
+def exceeds(text: str, start: int, end: int, cap: int) -> bool:
+    """Whether text[start:end] is longer than ``cap`` UTF-16 units, as a
+    string of the web is measured."""
+    count = end - start
+    if count > cap:
+        return True
+    if count * 2 <= cap:
+        return False
+    return len(text[start:end].encode("utf-16-le")) // 2 > cap
 
 
 @dataclass(frozen=True)
@@ -95,7 +115,7 @@ class Searcher:
 def _fence_end(text: Searcher, opener: re.Match) -> int:
     run = opener.group(2) or opener.group(3)
     closing = re.compile(
-        rf"\n {{0,3}}{re.escape(run[0])}{{{len(run)},}}[ \t]*\r?(?=\n|(?![\s\S]))"
+        rf"\n{_FENCE_LINE}{re.escape(run[0])}{{{len(run)},}}[ \t]*\r?(?=\n|(?![\s\S]))"
     )
     found = closing.search(text.text, opener.end())
     # An unclosed fence is a block still being written: code to the end.
@@ -107,7 +127,7 @@ def _block_start(text: str, end: int) -> int:
     start, cursor = end, end
     for _ in range(200):
         line_start = text.rfind("\n", 0, cursor) + 1
-        if not text[line_start:cursor].strip():
+        if is_blank(text[line_start:cursor]):
             break
         start = line_start
         if line_start == 0:
@@ -122,7 +142,7 @@ def _previous_block_end(text: str, start: int) -> int:
     cursor = start - 1
     while cursor > 0:
         line_start = text.rfind("\n", 0, cursor) + 1
-        if text[line_start:cursor].strip():
+        if not is_blank(text[line_start:cursor]):
             return cursor
         cursor = line_start - 1
     return -1
@@ -132,8 +152,10 @@ def _preceded_by_list_item(index: Searcher, blank: int) -> bool:
     """Whether the paragraph before the blank line at ``blank`` is a list item,
     or the indented continuation of one: an indent after it is a paragraph of
     the item, not code. Each paragraph is decided once."""
-    text, chain, end, result = index.text, [], blank, False
-    while True:
+    text, chain, result = index.text, [], False
+    # Blank lines may come between the item and the indent.
+    end = _previous_block_end(text, blank + 1)
+    while end >= 0:
         start = _block_start(text, end)
         if start == end:
             break
@@ -175,7 +197,7 @@ def _delimited(text: Searcher, opener: str, start: int) -> Span | None:
         return None
     display = opener in ("$$", "\\[")
     stop = end + len(closer)
-    if end - after > (MAX_DISPLAY if display else MAX_INLINE):
+    if exceeds(text.text, after, end, MAX_DISPLAY if display else MAX_INLINE):
         return Span(start, stop, "code")
     if opener == "$":
         # Money in a word problem is two dollar signs in one sentence, so a
@@ -201,7 +223,7 @@ def _tag_span(text: Searcher, opener: re.Match) -> Span:
         return Span(opener.start(), limit, "code")
     cap = MAX_DISPLAY if opener.group(1) == "block" else MAX_INLINE
     stop = end + len(close)
-    if end - after > cap:
+    if exceeds(text.text, after, end, cap):
         return Span(opener.start(), stop, "code")
     return Span(opener.start(), stop, "tag", (after, end))
 
@@ -210,10 +232,14 @@ def _span_at(text: Searcher, opener: re.Match, indented: bool) -> Span | None:
     source = opener.group(0)
     if opener.group(1):
         return _tag_span(text, opener)
-    if source.startswith("<"):
+    if source.startswith("<") and not opener.group(4):
         return Span(opener.start(), opener.end(), "code")
     if opener.group(2) or opener.group(3):
         return Span(opener.start(), _fence_end(text, opener), "code")
+    if opener.group(4):
+        close = f"</{opener.group(4)}>"
+        end = text.find(close, opener.end(), len(text.text))
+        return None if end == -1 else Span(opener.start(), end + len(close), "code")
     if source.startswith("\n"):
         if not indented or _preceded_by_list_item(text, opener.start()):
             return None
@@ -317,9 +343,14 @@ def tags_as_dollars(text: str) -> str:
     for span in scan(text):
         if span.kind != "tag":
             continue
-        mark = "$$" if text.startswith("<latex-block>", span.start) else "$"
+        block = text.startswith("<latex-block>", span.start)
+        maths = text[span.inner[0] : span.inner[1]]
+        if not block:
+            # A $ pair that opens or closes on a space is not maths to the reader.
+            maths = maths.strip(_WHITESPACE)
+        mark = "$$" if block else "$" if maths else ""
         pieces.append(text[done : span.start])
-        pieces.append(f"{mark}{text[span.inner[0] : span.inner[1]]}{mark}")
+        pieces.append(f"{mark}{maths}{mark}")
         done = span.end
     pieces.append(text[done:])
     return "".join(pieces)
