@@ -1,6 +1,9 @@
 import type { Output } from "./haptic-device";
 import type { Cue } from "./haptic-patterns";
 import {
+  DECODE_TIMEOUT_MS,
+  MAX_DECODE_ATTEMPTS,
+  PENDING_CUE_MS,
   RETRY_BASE_MS,
   RETRY_MAX_MS,
   SOUND_FILES,
@@ -25,9 +28,35 @@ export interface SoundDeps {
   fetchBytes: (url: string) => Promise<ArrayBuffer>;
   /** A monotonic clock in milliseconds. */
   now: () => number;
+  /** Whether the learner has Sounds on. Off, nothing is fetched, decoded, created or woken. */
+  enabled: () => boolean;
 }
 
 const CUES = Object.keys(SOUND_FILES) as Cue[];
+
+/** The cues that answer the learner's work: one that arrives while the audio wakes still plays, if it is fresh. */
+const WAITS_FOR_AUDIO: ReadonlySet<Cue> = new Set([
+  "correct",
+  "wrong",
+  "lessonComplete",
+]);
+
+/** Settles with the decoded buffer, or rejects when the decode fails or takes longer than DECODE_TIMEOUT_MS. */
+function decodeWithin(
+  context: AudioContext,
+  data: ArrayBuffer,
+): Promise<AudioBuffer> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error("decode timed out")),
+      DECODE_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([context.decodeAudioData(data), timeout]).finally(() =>
+    clearTimeout(timer),
+  );
+}
 
 /**
  * Recorded cue sounds through Web Audio. One AudioContext serves the whole app.
@@ -36,17 +65,22 @@ const CUES = Object.keys(SOUND_FILES) as Cue[];
  * context, because a browser lets a context make sound only after one. iOS puts
  * the context back to "suspended" or "interrupted" after a call or a lock, so
  * every gesture wakes it. A cue that comes while it sleeps, or before its
- * buffer exists, is dropped, never queued to play late.
+ * buffer exists, is dropped, never played late; except that the latest answer
+ * cue (right, wrong, lesson done) waits one slot for PENDING_CUE_MS, because a
+ * graded answer from a lesson's frame comes with no gesture to wake the audio
+ * first. A stop (a hold, a hidden page) empties the slot.
  *
  * A failed fetch (the network) waits, longer each time, and is tried again
  * when something asks after the wait or the network returns; many gestures in
- * a burst spend one try. A recording that cannot be decoded (a codec this
- * browser lacks) is not tried again. Either way that cue is silent, with no error.
+ * a burst spend one try. A recording that fails to decode is tried a few more
+ * times, a wait apart, then given up (a codec this browser lacks); a decode
+ * that hangs counts as failed. Either way that cue is silent, with no error.
  */
 export function createSound({
   makeContext,
   fetchBytes,
   now,
+  enabled,
 }: SoundDeps): Sound {
   let context: AudioContext | null = null;
   let master: GainNode | null = null;
@@ -56,18 +90,64 @@ export function createSound({
   const decoding = new Set<Cue>();
   const undecodable = new Set<Cue>();
   const failedFetches = new Map<Cue, number>();
+  const failedDecodes = new Map<Cue, number>();
   const waitUntil = new Map<Cue, number>();
   const sounding = new Set<AudioBufferSourceNode>();
+  let pending: { cue: Cue; at: number } | null = null;
+
+  const waiting = (cue: Cue) => (waitUntil.get(cue) ?? 0) > now();
+
+  const ready = (cue: Cue) =>
+    context !== null &&
+    master !== null &&
+    context.state === "running" &&
+    buffers.has(cue);
+
+  function start(cue: Cue) {
+    if (!context || !master) return;
+    const source = context.createBufferSource();
+    source.buffer = buffers.get(cue) ?? null;
+    source.connect(master);
+    sounding.add(source);
+    source.onended = () => {
+      sounding.delete(source);
+      source.disconnect();
+    };
+    source.start();
+  }
+
+  const flush = () => {
+    const waited = pending;
+    if (!waited || !ready(waited.cue)) return;
+    pending = null;
+    if (now() - waited.at <= PENDING_CUE_MS) start(waited.cue);
+  };
+
+  const backOff = (cue: Cue, failed: number) => {
+    const wait = Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (failed - 1));
+    waitUntil.set(cue, now() + wait);
+  };
 
   async function decode(cue: Cue) {
     const data = bytes.get(cue);
-    if (!context || !data || decoding.has(cue)) return;
+    if (!enabled() || !context || !data || decoding.has(cue) || waiting(cue)) {
+      return;
+    }
     decoding.add(cue);
-    bytes.delete(cue);
     try {
-      buffers.set(cue, await context.decodeAudioData(data));
+      // decodeAudioData takes its argument's memory, so a copy is kept for a retry.
+      buffers.set(cue, await decodeWithin(context, data.slice(0)));
+      bytes.delete(cue);
+      flush();
     } catch {
-      undecodable.add(cue);
+      const failed = (failedDecodes.get(cue) ?? 0) + 1;
+      failedDecodes.set(cue, failed);
+      if (failed >= MAX_DECODE_ATTEMPTS) {
+        undecodable.add(cue);
+        bytes.delete(cue);
+      } else {
+        backOff(cue, failed);
+      }
     } finally {
       decoding.delete(cue);
     }
@@ -82,8 +162,7 @@ export function createSound({
     } catch {
       const failed = (failedFetches.get(cue) ?? 0) + 1;
       failedFetches.set(cue, failed);
-      const wait = Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (failed - 1));
-      waitUntil.set(cue, now() + wait);
+      backOff(cue, failed);
     } finally {
       fetching.delete(cue);
     }
@@ -96,31 +175,21 @@ export function createSound({
     !fetching.has(cue) &&
     !decoding.has(cue) &&
     !undecodable.has(cue) &&
-    (waitUntil.get(cue) ?? 0) <= now();
+    !waiting(cue);
 
   const prefetch = () => {
-    if (makeContext === undefined) return;
+    if (makeContext === undefined || !enabled()) return;
     for (const cue of CUES) if (wanted(cue)) void fetchOne(cue);
   };
 
   const play = (cue: Cue) => {
-    const buffer = buffers.get(cue);
-    if (!context || !master || !buffer || context.state !== "running") return;
-    const source = context.createBufferSource();
-    source.buffer = buffer;
-    source.connect(master);
-    sounding.add(source);
-    source.onended = () => {
-      sounding.delete(source);
-      source.disconnect();
-    };
-    source.start();
+    if (ready(cue)) start(cue);
+    else if (WAITS_FOR_AUDIO.has(cue)) pending = { cue, at: now() };
   };
 
   const wake = () => {
-    if (context && context.state !== "running") {
-      void context.resume().catch(() => undefined);
-    }
+    if (!enabled() || !context || context.state === "running") return;
+    void context.resume().then(flush, () => undefined);
   };
 
   const guarded = (work: () => void) => () => {
@@ -136,9 +205,11 @@ export function createSound({
     retry: guarded(() => {
       waitUntil.clear();
       prefetch();
+      for (const cue of CUES) void decode(cue);
     }),
     resume: guarded(wake),
     unlock: guarded(() => {
+      if (!enabled()) return;
       if (!context) {
         context = makeContext?.() ?? null;
         if (!context) return;
@@ -156,6 +227,7 @@ export function createSound({
       needsActivation: true,
       play,
       stop: () => {
+        pending = null;
         for (const source of sounding) {
           try {
             source.stop();

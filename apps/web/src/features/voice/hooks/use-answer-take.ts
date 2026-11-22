@@ -42,6 +42,7 @@ export function useAnswerTake(
 ) {
   const take = useRef<Take | null>(null);
   const left = useRef(false);
+  const starting = useRef(false);
   const [levels, setLevels] = useState<number[]>([]);
   const waiting = awaited(phase);
 
@@ -63,12 +64,17 @@ export function useAnswerTake(
 
   const record = useCallback(
     async (move: LessonMove) => {
+      // A second request while a take is opening or open would orphan the first.
+      if (starting.current || take.current) return;
       setLevels([]);
+      starting.current = true;
       try {
         take.current = await startTake((level) =>
           setLevels((shown) => [...shown, level].slice(-WAVE_BARS)),
         );
+        starting.current = false;
       } catch (error) {
+        starting.current = false;
         const note = microphoneRefused(error)
           ? "micDenied"
           : microphoneMissing()

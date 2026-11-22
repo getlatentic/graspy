@@ -23,7 +23,10 @@ export function fakeFetch(options: { missing?: readonly string[] } = {}) {
 }
 
 /** A stand-in AudioContext that records the recordings it decoded and the sources it played. */
-export function fakeAudio(options: { undecodable?: boolean } = {}) {
+export function fakeAudio(
+  options: { undecodable?: boolean; failFirst?: number; hangs?: boolean } = {},
+) {
+  let decodes = 0;
   const sources: FakeSource[] = [];
   const masters: { gain: { value: number } }[] = [];
   const contexts: {
@@ -42,7 +45,11 @@ export function fakeAudio(options: { undecodable?: boolean } = {}) {
       }),
     );
     decodeAudioData = vi.fn(async (bytes: ArrayBuffer): Promise<FakeBuffer> => {
-      if (options.undecodable) throw new Error("cannot decode");
+      decodes += 1;
+      if (options.hangs) return new Promise<FakeBuffer>(() => undefined);
+      if (options.undecodable || decodes <= (options.failFirst ?? 0)) {
+        throw new Error("cannot decode");
+      }
       return { file: new TextDecoder().decode(bytes) };
     });
     constructor() {

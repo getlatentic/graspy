@@ -53,6 +53,43 @@ async function recording(take: ReturnType<typeof lesson>) {
   return { answered };
 }
 
+describe("asking to record twice", () => {
+  it("opens one microphone and one take, whether the second ask comes while it opens or while it records", async () => {
+    const allow = microphone.ask();
+    const open = vi.spyOn(navigator.mediaDevices, "getUserMedia");
+    const take = lesson();
+    let first: Promise<void> = Promise.resolve();
+    act(() => {
+      first = take.result.current.record(ASKED);
+      void take.result.current.record(ASKED);
+    });
+    expect(open).toHaveBeenCalledOnce();
+    allow();
+    await vi.waitFor(() =>
+      expect(dispatch).toHaveBeenCalledWith({ type: "recordStarted" }),
+    );
+    await act(async () => {
+      await take.result.current.record(ASKED);
+    });
+    expect(open).toHaveBeenCalledOnce();
+    expect(
+      dispatch.mock.calls.filter(([e]) => e.type === "recordStarted"),
+    ).toHaveLength(1);
+    take.result.current.stop();
+    await act(() => first);
+  });
+
+  it("can record again after the microphone was refused", async () => {
+    microphone.refuse();
+    const take = lesson();
+    await act(() => take.result.current.record(ASKED));
+    await act(() => take.result.current.record(ASKED));
+    expect(
+      dispatch.mock.calls.filter(([e]) => e.type === "recordFailed"),
+    ).toHaveLength(2);
+  });
+});
+
 describe("a spoken answer when the lesson goes out of sight", () => {
   it("ends unsent, releases the microphone and gives the child the turn again", async () => {
     const { answered } = await recording(lesson());

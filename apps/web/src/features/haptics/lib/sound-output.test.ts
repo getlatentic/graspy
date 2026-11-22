@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fakeAudio, fakeFetch, settle } from "./audio.fake";
 import type { Cue } from "./haptic-patterns";
 import {
+  DECODE_TIMEOUT_MS,
+  MAX_DECODE_ATTEMPTS,
+  PENDING_CUE_MS,
   RETRY_BASE_MS,
   RETRY_MAX_MS,
   SOUND_FILES,
@@ -18,12 +21,14 @@ function setup(
   const audio = fakeAudio(audioOptions);
   const fetchBytes = fakeFetch(fetchOptions);
   const clock = { at: 1000 };
+  const on = { sounds: true };
   const sound = createSound({
     makeContext: () => new audio.Context(),
     fetchBytes,
     now: () => clock.at,
+    enabled: () => on.sounds,
   });
-  return { audio, fetchBytes, sound, clock };
+  return { audio, fetchBytes, sound, clock, on };
 }
 
 describe("the sound files", () => {
@@ -243,6 +248,7 @@ describe("a fetch that fails", () => {
         return fetchBytes(url);
       },
       now: () => clock.at,
+      enabled: () => true,
     });
     sound.unlock();
     await settle();
@@ -265,6 +271,7 @@ describe("where there is no audio", () => {
       makeContext: undefined,
       fetchBytes,
       now: () => 0,
+      enabled: () => true,
     });
     expect(none.output.available()).toBe(false);
     expect(() => {
@@ -282,7 +289,160 @@ describe("where there is no audio", () => {
       },
       fetchBytes,
       now: () => 0,
+      enabled: () => true,
     });
     expect(() => broken.unlock()).not.toThrow();
+  });
+});
+
+describe("Sounds switched off", () => {
+  it("fetches, decodes, creates and wakes nothing, whoever asks, until it is on again", async () => {
+    const { audio, fetchBytes, sound, on } = setup();
+    on.sounds = false;
+    sound.prefetch();
+    sound.retry();
+    sound.unlock();
+    sound.resume();
+    await settle();
+    expect(fetchBytes).not.toHaveBeenCalled();
+    expect(audio.contexts).toHaveLength(0);
+    on.sounds = true;
+    sound.unlock();
+    await settle();
+    sound.output.play("select");
+    expect(audio.sources).toHaveLength(1);
+  });
+
+  it("stops decoding what was already fetched", async () => {
+    const { audio, sound, on } = setup();
+    sound.unlock();
+    on.sounds = false;
+    await settle();
+    sound.retry();
+    sound.unlock();
+    await settle();
+    const decoded = audio.contexts[0].decodeAudioData.mock.calls.length;
+    expect(decoded).toBeLessThan(FILES);
+  });
+});
+
+describe("a decode that fails", () => {
+  it("is tried again after its wait, from the kept bytes, and then plays", async () => {
+    const { audio, fetchBytes, sound, clock } = setup({ failFirst: 1 });
+    sound.unlock();
+    await settle();
+    sound.output.play("select");
+    expect(audio.sources).toHaveLength(0);
+    clock.at += RETRY_BASE_MS;
+    sound.unlock();
+    await settle();
+    sound.output.play("select");
+    expect(audio.sources).toHaveLength(1);
+    expect(fetchBytes).toHaveBeenCalledTimes(FILES);
+  });
+
+  it("spends one try on a burst of gestures", async () => {
+    const { audio, sound } = setup({ undecodable: true });
+    for (let event = 0; event < 6; event++) sound.unlock();
+    await settle();
+    for (let event = 0; event < 6; event++) sound.unlock();
+    await settle();
+    expect(audio.contexts[0].decodeAudioData).toHaveBeenCalledTimes(FILES);
+  });
+
+  it("is given up after a few tries", async () => {
+    const { audio, sound, clock } = setup({ undecodable: true });
+    for (let gesture = 0; gesture < 8; gesture++) {
+      clock.at += RETRY_MAX_MS;
+      sound.unlock();
+      await settle();
+    }
+    expect(audio.contexts[0].decodeAudioData).toHaveBeenCalledTimes(
+      FILES * MAX_DECODE_ATTEMPTS,
+    );
+  });
+
+  it("counts a decode that hangs as failed, so it cannot stick the cue for ever", async () => {
+    vi.useFakeTimers();
+    try {
+      const { audio, sound, clock } = setup({ hangs: true });
+      sound.unlock();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(audio.contexts[0].decodeAudioData).toHaveBeenCalledTimes(FILES);
+      await vi.advanceTimersByTimeAsync(DECODE_TIMEOUT_MS);
+      clock.at += RETRY_BASE_MS;
+      sound.unlock();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(audio.contexts[0].decodeAudioData).toHaveBeenCalledTimes(
+        FILES * 2,
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("an answer cue that comes before the audio is awake", () => {
+  async function asleep() {
+    const world = setup();
+    world.sound.unlock();
+    await settle();
+    world.audio.contexts[0].state = "interrupted";
+    return world;
+  }
+
+  it("plays once the context wakes, if it is fresh", async () => {
+    const { audio, sound } = await asleep();
+    sound.output.play("correct");
+    expect(audio.sources).toHaveLength(0);
+    sound.resume();
+    await settle();
+    expect(audio.sources.map((source) => source.buffer)).toEqual([
+      { file: SOUND_FILES.correct },
+    ]);
+  });
+
+  it("plays once its recording is decoded", async () => {
+    const { audio, sound } = setup();
+    sound.unlock();
+    sound.output.play("lessonComplete");
+    expect(audio.sources).toHaveLength(0);
+    await settle();
+    expect(audio.sources).toHaveLength(1);
+  });
+
+  it("keeps only the latest, and drops it when stale", async () => {
+    const { audio, sound, clock } = await asleep();
+    sound.output.play("correct");
+    sound.output.play("wrong");
+    sound.resume();
+    await settle();
+    expect(audio.sources.map((source) => source.buffer)).toEqual([
+      { file: SOUND_FILES.wrong },
+    ]);
+    audio.contexts[0].state = "interrupted";
+    sound.output.play("correct");
+    clock.at += PENDING_CUE_MS + 1;
+    sound.resume();
+    await settle();
+    expect(audio.sources).toHaveLength(1);
+  });
+
+  it("does not wait for a select or a press, which would be late", async () => {
+    const { audio, sound } = await asleep();
+    sound.output.play("select");
+    sound.output.play("press");
+    sound.resume();
+    await settle();
+    expect(audio.sources).toHaveLength(0);
+  });
+
+  it("is dropped by a stop, as a quiet hold or a hidden page makes", async () => {
+    const { audio, sound } = await asleep();
+    sound.output.play("correct");
+    sound.output.stop();
+    sound.resume();
+    await settle();
+    expect(audio.sources).toHaveLength(0);
   });
 });

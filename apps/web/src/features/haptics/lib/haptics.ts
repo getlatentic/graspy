@@ -45,15 +45,17 @@ const sound = createSound({
       : undefined,
   fetchBytes: (url) => fetchBytes(url, FETCH_TIMEOUT_MS),
   now: () => performance.now(),
+  enabled: () => getSettings().sound,
 });
 
 /**
  * Feel and recorded sound for answers, finished lessons and chosen items:
  * `haptics.trigger("correct")`. Vibration is silent where the device cannot,
- * under reduced motion and when the learner has turned it off. Sound is silent
- * while the teacher speaks or the microphone is open, and when the learner has
- * turned it off (reduced motion is about movement, not sound). Neither runs in
- * a hidden page or before the learner has touched it.
+ * under reduced motion and when the learner has turned it off. Both are silent
+ * while the teacher speaks or the microphone is open (a motor is picked up by
+ * the microphone too), and sound when the learner has turned it off (reduced
+ * motion is about movement, not sound). Neither runs in a hidden page or
+ * before the learner has touched it.
  */
 export const haptics = createHaptics({
   outputs: present
@@ -65,7 +67,7 @@ export const haptics = createHaptics({
     : [],
   allows: (channel) =>
     channel === "touch"
-      ? getSettings().vibration && !reducedMotion()
+      ? getSettings().vibration && !reducedMotion() && !isQuiet()
       : getSettings().sound && !isQuiet(),
   hidden: () => !present || document.visibilityState === "hidden",
   activated: activation(),
@@ -79,7 +81,7 @@ if (present) {
   // The recordings are fetched once the page is idle, so the first tap finds them; they are
   // decoded by the first gesture, which is also what creates the audio context.
   void whenIdle().then(() => {
-    if (getSettings().sound) sound.prefetch();
+    sound.prefetch();
   });
   window.addEventListener("online", sound.retry);
   // A context the system put to sleep wakes when the page comes back to the front. A tap inside a

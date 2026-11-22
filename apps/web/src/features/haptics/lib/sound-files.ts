@@ -18,6 +18,15 @@ export const VOLUME = 0.5;
 /** A file that has not arrived by now is given up on until it is asked for again. */
 export const FETCH_TIMEOUT_MS = 10_000;
 
+/** A decode that has not finished by now has failed. */
+export const DECODE_TIMEOUT_MS = 10_000;
+
+/** A recording that fails to decode this many times is not tried again. */
+export const MAX_DECODE_ATTEMPTS = 3;
+
+/** An answer cue that came before the audio was awake plays when it wakes, if it is no older than this. */
+export const PENDING_CUE_MS = 1_500;
+
 /** After a failed fetch a file waits this long before it is asked for again, doubling with each failure up to the longest. */
 export const RETRY_BASE_MS = 2_000;
 export const RETRY_MAX_MS = 60_000;

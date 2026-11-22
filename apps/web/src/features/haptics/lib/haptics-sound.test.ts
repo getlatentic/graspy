@@ -101,6 +101,30 @@ describe("the sounds", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("touch nothing when Sounds is off: no fetch or context for a gesture, a wake or the network returning", async () => {
+    const { haptics, setSettings } = await load();
+    setSettings({ vibration: true, sound: false });
+    document.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    haptics.wake();
+    window.dispatchEvent(new Event("online"));
+    window.dispatchEvent(new Event("focus"));
+    await new Promise((resolve) => setTimeout(resolve, 450));
+    expect(fetch).not.toHaveBeenCalled();
+    expect(audio.contexts).toHaveLength(0);
+  });
+
+  it("play a graded answer from a lesson's frame once the audio wakes, with no gesture on the page", async () => {
+    const { haptics } = await load();
+    await vi.waitFor(() =>
+      expect(fetch).toHaveBeenCalledTimes(Object.keys(SOUND_FILES).length),
+    );
+    await settle();
+    haptics.wake();
+    haptics.trigger("correct");
+    await settle();
+    expect(heardFiles()).toEqual([SOUND_FILES.correct]);
+  });
+
   it("cut a cue already sounding when the microphone or the teacher takes a hold", async () => {
     const { haptics, holdQuiet } = await load();
     await tap(button());
@@ -278,5 +302,48 @@ describe("the sounds", () => {
     expect(heard()).toBe(0);
     two.click();
     expect(heard()).toBe(1);
+  });
+});
+
+describe("the vibration", () => {
+  function phone() {
+    const vibrate = vi.fn(() => true);
+    Object.defineProperty(navigator, "vibrate", {
+      configurable: true,
+      value: vibrate,
+    });
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("coarse"),
+    }));
+    return vibrate;
+  }
+  afterEach(() => {
+    delete (navigator as { vibrate?: unknown }).vibrate;
+  });
+
+  it("keeps quiet under a hold, like the sounds, and returns with it", async () => {
+    const vibrate = phone();
+    const { haptics, holdQuiet } = await load();
+    haptics.trigger("correct");
+    expect(vibrate).toHaveBeenCalledOnce();
+    const release = holdQuiet();
+    expect(vibrate).toHaveBeenLastCalledWith(0);
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    vibrate.mockClear();
+    haptics.trigger("correct");
+    expect(vibrate).not.toHaveBeenCalled();
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    haptics.trigger("correct");
+    expect(vibrate).toHaveBeenCalledWith([35]);
+  });
+
+  it("still buzzes the Record press, which comes before the take's hold", async () => {
+    const vibrate = phone();
+    const { haptics, holdQuiet } = await load();
+    haptics.trigger("press");
+    expect(vibrate).toHaveBeenCalledWith([12]);
+    holdQuiet();
+    expect(vibrate).toHaveBeenLastCalledWith(0);
   });
 });
