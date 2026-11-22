@@ -10,6 +10,8 @@ import "./index.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { haptics } from "@/features/haptics/lib/haptics";
+import { installSelectSound } from "@/features/haptics/lib/select-sound";
 import { I18nProvider } from "@/lib/i18n-provider";
 import { installAppWorker } from "@/lib/app-worker";
 import { markDevice } from "@/lib/device";
@@ -36,6 +38,7 @@ const queryClient = new QueryClient({
 
 markDevice();
 installRemoteInput();
+installSelectSound(haptics);
 installFragmentLinks();
 listenForStaleChunks();
 listenForInstall();

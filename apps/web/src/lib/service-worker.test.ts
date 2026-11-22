@@ -256,6 +256,25 @@ describe("the service worker's refusal to keep what is not the app", () => {
     expect(await files.match(ORIGIN + "/assets/a.js")).toBeDefined();
   });
 
+  it.each([
+    "/sounds/select-v1.wav",
+    "/sounds/press-v1.wav",
+    "/sounds/correct-v1.wav",
+    "/sounds/wrong-v1.wav",
+    "/sounds/complete-v1.m4a",
+  ])("keeps the cue sound %s, so it plays offline", async (path) => {
+    const calls: string[] = [];
+    const worker = startWorker(async (url) => {
+      calls.push(String(url));
+      return new Response("riff", { headers: { "content-type": "audio/wav" } });
+    });
+    await worker.openFile(path);
+    await worker.openFile(path);
+    const files = await worker.caches.open("graspy-files-v2");
+    expect(await files.match(ORIGIN + path)).toBeDefined();
+    expect(calls).toHaveLength(1);
+  });
+
   it("deletes the caches of older versions when it takes over, and keeps its own", async () => {
     const worker = startWorker(async () => new Response("{}"));
     await worker.caches.open("graspy-files-v1");

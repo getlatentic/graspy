@@ -15,6 +15,8 @@ export interface ViewHost {
     name: string,
     args: Record<string, unknown>,
   ) => Promise<CallToolResult>;
+  /** A call as it arrives from the view, before the server has answered it. */
+  toolCalling?: (name: string, args: Record<string, unknown>) => void;
   toolCalled: (
     name: string,
     args: Record<string, unknown>,
@@ -48,6 +50,7 @@ export function bridgeTo(
     { hostContext: context },
   );
   bridge.oncalltool = async ({ name, arguments: args = {} }) => {
+    host().toolCalling?.(name, args);
     const call = host().callTool ?? callOrKeep;
     const result = await call(name, args);
     if (!result.isError) host().toolCalled(name, args, result);

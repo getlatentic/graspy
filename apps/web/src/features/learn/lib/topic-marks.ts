@@ -61,8 +61,7 @@ export function standingOf(
 ): Standing {
   const key = keyOf(subjectSlug, topicIndex, topic);
   const owed = marks.review.some(
-    (due) =>
-      keyOf(due.subjectSlug, due.topicIndex, due.topic) === key,
+    (due) => keyOf(due.subjectSlug, due.topicIndex, due.topic) === key,
   );
   if (owed) return "review";
   if (marks.learnt.has(key)) return "learnt";

@@ -1,10 +1,15 @@
+import { useEffect, useRef } from "react";
 import { Mic, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { haptics } from "@/features/haptics/lib/haptics";
 import { Spinner } from "@/components/ui/spinner";
 import { useOnline } from "@/hooks/use-online";
 import { useI18n } from "@/lib/i18n-context";
 import type { Phase } from "../lib/lesson-state";
 import { VoiceWave } from "./voice-wave";
+
+/** The Record press is a click of a few milliseconds and a 12 ms buzz; this is long enough for both. */
+export const PRESS_LEAD_MS = 60;
 
 interface AnswerControlsProps {
   phase: Phase;
@@ -41,10 +46,34 @@ export function AnswerControls({
   onCarryOn,
 }: AnswerControlsProps) {
   const { t } = useI18n();
+  const recordTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (recordTimer.current) clearTimeout(recordTimer.current);
+    },
+    [],
+  );
+  const record = () => {
+    // A second tap while the first is waiting would start a second take.
+    if (recordTimer.current) return;
+    // Opening the microphone holds every cue quiet and cuts one sounding, so the
+    // press is given this long to be felt and heard first. Recording starts
+    // whatever the cue does.
+    recordTimer.current = setTimeout(() => {
+      recordTimer.current = null;
+      onRecord();
+    }, PRESS_LEAD_MS);
+    haptics.trigger("press");
+  };
   if (phase.name === "your-turn") {
     return (
       <div className="flex flex-wrap items-center gap-3">
-        <Button size="lg" onClick={onRecord} className="rounded-full">
+        <Button
+          size="lg"
+          onClick={record}
+          className="rounded-full"
+          data-no-sound
+        >
           <Mic className="size-5" aria-hidden="true" />
           {t("voice.lesson.record")}
         </Button>

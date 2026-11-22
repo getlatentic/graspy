@@ -22,7 +22,11 @@ vi.mock("../lib/lesson-offline", () => ({
 
 const { useTopicProgress } = await import("./use-topic-progress");
 
-const plan = { planId: "plan-1", updatedAt: 1, subjects: [] } as unknown as CurriculumData;
+const plan = {
+  planId: "plan-1",
+  updatedAt: 1,
+  subjects: [],
+} as unknown as CurriculumData;
 
 describe("useTopicProgress", () => {
   beforeEach(() => {

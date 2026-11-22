@@ -1,8 +1,8 @@
 // The app's service worker, so graspy opens at once, and without a connection
 // once it has opened with one. It answers two kinds of request from this
 // origin: a page, which is the one app document, from its last copy at once
-// while it asks the network for a newer one; and the build's files, which are
-// hashed and never change, from its cache first. Everything else, the API
+// while it asks the network for a newer one; and the build's files and the cue
+// sounds, which never change under one name, from its cache first. Everything else, the API
 // included, goes to the network as if it were not here.
 //
 // A page answered from the last copy may be a deploy behind. When the network's
@@ -43,6 +43,7 @@ self.addEventListener("activate", (event) => {
 const isFile = (url) =>
   url.pathname.startsWith("/assets/") ||
   url.pathname.startsWith("/brand/") ||
+  url.pathname.startsWith("/sounds/") ||
   url.pathname === "/favicon.ico";
 
 async function trimmed(cache) {
