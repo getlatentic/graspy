@@ -96,9 +96,8 @@
 /* Scales the type, the spacing and the widths under it with the screen, so a
    form made for a laptop still reads from across a room. Anything inside it
    that is sized in the theme scale grows by --zoom; borders stay as they are.
-   A monitor grows to 1.5 by 2560px; a TV (the device flag set in main.tsx)
-   starts at 1.5 and grows to 2.5, because a TV is read from three metres.
-   Every step also needs the height to hold it. */
+   A monitor grows to 1.5 by 2560px, each step needing the height to hold it.
+   A TV is scaled below by the root size instead. */
 .zoom {
   --zoom: 1;
   --spacing: calc(0.25rem * var(--zoom));
@@ -165,7 +164,16 @@ html:has(.art-ground) {
   scroll-padding-block-end: 8rem;
 }
 
-:is(a, button, input, select, textarea, summary, [role="option"], [tabindex]) {
+:where(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [role="option"],
+  [tabindex]
+) {
   scroll-margin-block: 1rem;
 }
 
@@ -174,9 +182,11 @@ html:has(.art-ground) {
    and the control, so it reads on the gradient, on white, on the blue and on
    the dark theme. On a TV the browser may not apply :focus-visible, so a key
    that moves focus (see remote-input.ts) shows it on :focus as well. It is not
-   in a layer on purpose: it must win over a control's own focus utility. A
-   heading or a page that only a program focuses shows none. */
-:is(
+   in a layer on purpose: it must win over a control's own focus utility. The
+   list is in :where() so the two rules below, for a field that draws its own
+   focus (`data-own-focus`, the chat box) and for a heading or page that only a
+   program focuses (tabindex -1), are not outweighed by it. */
+:where(
     a,
     button,
     input,
@@ -188,7 +198,7 @@ html:has(.art-ground) {
     [tabindex]
   ):not([data-own-focus]):focus-visible,
 [data-input="remote"]
-  :is(
+  :where(
     a,
     button,
     input,

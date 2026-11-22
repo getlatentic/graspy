@@ -107,6 +107,32 @@ PATHOLOGICAL = {
     "letters": lambda n: "a b c " * n,
     "labels": lambda n: "a) b) " * n,
     "doubled backslashes": lambda n: "\\\\[ x " * n,
+    "spaces before an opener": lambda n: " " * n + "a \\[\nx\n\\]",
+    "spaces after a closer": lambda n: "a \\[\nx\n\\]" + " " * n + "b",
+    "tabs after a closer": lambda n: "a \\[\nx\n\\]" + "\t" * n + "b",
+    "spaces after a closer and nothing else": lambda n: "a \\[\nx\n\\]" + " " * n,
+    "spaces at the end of body lines": lambda n: "a \\[\nx" + " " * n + "\ny\n\\] b",
+    "spaces before body lines": lambda n: "a \\[\n" + " " * n + "x\ny\n\\] b",
+    "blank lines before a display": lambda n: "\n" * n + "a \\[\nx\n\\] b",
+    "spaces before a display in a quote": lambda n: (
+        "> " + " " * n + "a \\[\n> x\n> \\] b"
+    ),
+    "displays after text": lambda n: "a \\[\nx\n\\] " * n,
+    "displays after text, closed by punctuation": lambda n: "a \\[\nx\n\\]. " * n,
+    "displays on one line": lambda n: "a \\[ x \\] " * n,
+    "displays in block quotes": lambda n: "> a \\[\n> x\n> \\] b\n" * n,
+    "displays in list items": lambda n: "- a \\[\n  x\n  \\] b\n" * n,
+    "dots in text": lambda n: "\\(\\text{a\u00b7b}\\) " * n,
+    "subscripts in text": lambda n: "\\(\\text{OCH_2CH_3}\\) " * n,
+    "unclosed texts": lambda n: "\\(\\text{a " * n,
+    "many groups in one formula": lambda n: "\\(" + "\\text{a\u00b7b}" * n + "\\)",
+    "a long text with subscripts": lambda n: "\\(\\text{" + "a_2" * n + "}\\)",
+    "a long text with exponents": lambda n: "\\(\\text{" + "m^2/" * n + "}\\)",
+    "a long text with underscores": lambda n: "\\(\\text{" + "_" * n + "}\\)",
+    "a long text with escaped underscores": lambda n: (
+        "\\(\\text{" + "\\_2" * n + "}\\)"
+    ),
+    "a long text with braces": lambda n: "\\(\\text{" + "{a_2} " * n + "}\\)",
 }
 
 

@@ -59,6 +59,12 @@
       content="Personalized, culturally-aware education for children in crisis zones"
     />
     <title>graspy — AI Tutor</title>
+    <style>
+      /* Built by the boot script below, only for a browser that cannot run the app. Nothing of it exists on a supported browser. */
+      #too-old { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 2rem; text-align: center; color: #12232e; background: #e3eefa; background: linear-gradient(135deg, #fef4ec, #e3eefa 50%, #c4e2fe); font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+      #too-old h1 { margin: 0 0 1.5rem; max-width: 40rem; font-size: 2.75rem; line-height: 1.2; font-weight: 700; }
+      #too-old p { margin: 0; max-width: 40rem; font-size: 1.75rem; line-height: 1.5; }
+    </style>
     <script>
       // Sets lang and dir before first paint, so a right-to-left page does not
       // flash left-to-right while the app loads.
@@ -68,6 +74,68 @@
         var rtl = ['ar', 'he', 'fa', 'ur', 'ps', 'ku'];
         document.documentElement.lang = locale;
         document.documentElement.dir = rtl.indexOf(locale) !== -1 ? 'rtl' : 'ltr';
+      })();
+
+      // The app needs Chromium 108 (cascade layers, dvh). An older browser gets
+      // a notice over the page for good. A browser that passes those checks but
+      // cannot parse the app's scripts gets it too, until src/main.tsx calls
+      // __graspyBooted (all its scripts parsed), so a stray SyntaxError cannot
+      // leave it up. The page stays light on purpose, like the art screens.
+      // Plain ES5, because this is the one script that runs in every browser.
+      (function () {
+        var box = null;
+        var booted = false;
+        var forGood = false;
+        function root() {
+          return document.getElementById('root');
+        }
+        function hide() {
+          if (!box) return;
+          var app = root();
+          if (app) {
+            app.removeAttribute('inert');
+            app.removeAttribute('aria-hidden');
+          }
+          box.parentNode.removeChild(box);
+          box = null;
+        }
+        function show(permanent) {
+          if (permanent) forGood = true;
+          if (box || (booted && !forGood)) return;
+          if (!document.body || !root()) {
+            document.addEventListener('DOMContentLoaded', function () { show(false); });
+            return;
+          }
+          box = document.createElement('div');
+          box.id = 'too-old';
+          box.setAttribute('role', 'alert');
+          box.setAttribute('tabindex', '-1');
+          var title = document.createElement('h1');
+          title.appendChild(document.createTextNode('This browser is too old for graspy.'));
+          var hint = document.createElement('p');
+          hint.appendChild(document.createTextNode('Open graspy.getlatentic.com on a phone, tablet or computer, or update your TV’s browser.'));
+          box.appendChild(title);
+          box.appendChild(hint);
+          root().setAttribute('inert', '');
+          root().setAttribute('aria-hidden', 'true');
+          document.body.appendChild(box);
+          box.focus();
+        }
+        window.__graspyBooted = function () {
+          booted = true;
+          if (!forGood) hide();
+        };
+        var modern = typeof window.CSSLayerBlockRule !== 'undefined' &&
+          !!(window.CSS && CSS.supports && CSS.supports('height', '1dvh'));
+        if (!modern) show(true);
+        window.addEventListener('error', function (event) {
+          var error = event && event.error;
+          if (booted || !(error instanceof SyntaxError)) return;
+          if (String(event.filename).indexOf('/assets/') === -1) return;
+          var app = root();
+          if (app && app.children.length > 0) return;
+          show(false);
+        });
       })();
     </script>
   </head>

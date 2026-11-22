@@ -17,9 +17,10 @@ export function SproutMark({ className }: { className?: string }) {
  * line up by construction and stay sharp at any size. The sprout is as tall as
  * the word's ink, from the x-height top to the bottom of the descenders, and
  * the viewBox is cropped to the ink, so the sprout's left edge is the logo's
- * left edge. Its ink is 20px tall at the header size, and the lockup grows at
- * 2xl; a TV scales the whole app by the root font size (see index.css), so the logo grows with it. The file name carries
- * a version because the service worker caches /brand by path.
+ * left edge. Its ink is 20px tall at the header size and a little taller on a
+ * large monitor; a TV scales the whole app by the root font size (see
+ * index.css), so the logo grows with it. The file name carries a version
+ * because the service worker caches /brand by path.
  */
 const LOCKUP = "h-5 2xl:h-6.25";
 

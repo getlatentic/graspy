@@ -20,6 +20,15 @@ import { finishPendingWipe } from "@/lib/wipe-pending";
 import { warmApi } from "@/lib/warm-api";
 import { router } from "./routes";
 
+declare global {
+  interface Window {
+    /** Set by index.html: tells it the app's scripts all parsed. */
+    __graspyBooted?: () => void;
+  }
+}
+
+window.__graspyBooted?.();
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60 * 1000 } },
 });

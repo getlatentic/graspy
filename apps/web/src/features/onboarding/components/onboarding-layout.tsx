@@ -76,6 +76,9 @@ export default function OnboardingLayout({
   );
 }
 
+/** The split layout's own condition, as index.css names it (rem in a media query is the browser's 16px). */
+const SPLIT = "(min-width: 64rem) and (min-height: 40rem)";
+
 /** The scroller of the fields: back to the top on a new step, and reachable by keyboard when it scrolls. */
 function useFields(resetKey: string | undefined) {
   const ref = useRef<HTMLDivElement>(null);
@@ -83,6 +86,13 @@ function useFields(resetKey: string | undefined) {
 
   useEffect(() => {
     if (ref.current) ref.current.scrollTop = 0;
+    // In the single column the page is what scrolls: a new step starts at its top.
+    if (
+      typeof window.matchMedia === "function" &&
+      !window.matchMedia(SPLIT).matches
+    ) {
+      window.scrollTo(0, 0);
+    }
   }, [resetKey]);
 
   useEffect(() => {

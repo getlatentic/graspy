@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { KeysApp } from "@/test/keys-app";
 import en from "@/locales/en.json";
 import ar from "@/locales/ar.json";
@@ -121,11 +121,42 @@ describe("the onboarding page", () => {
 });
 
 describe("the headline", () => {
+  // The product is English only for now: the other locales carry the English strings as
+  // placeholders by design, until their translations are written.
   it("is in all four locales", () => {
     for (const locale of [en, ar, pcm, yo]) {
       expect(locale.onboarding.headline.length).toBeGreaterThan(0);
       expect(locale.onboarding.subline.length).toBeGreaterThan(0);
       expect(locale.onboarding.skip.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("a new step in the single column", () => {
+  const withScreen = (matches: boolean) => {
+    const scrolled = vi.fn();
+    vi.stubGlobal("matchMedia", () => ({ matches }));
+    vi.stubGlobal("scrollTo", scrolled);
+    return scrolled;
+  };
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("scrolls the page back to its top, and leaves the page alone in the split layout", () => {
+    const single = withScreen(false);
+    const { rerender } = layout("one");
+    single.mockClear();
+    rerender(
+      <KeysApp>
+        <OnboardingLayout resetKey="two">
+          <p>fields</p>
+        </OnboardingLayout>
+      </KeysApp>,
+    );
+    expect(single).toHaveBeenCalledWith(0, 0);
+    cleanup();
+    vi.unstubAllGlobals();
+    const split = withScreen(true);
+    layout("three");
+    expect(split).not.toHaveBeenCalled();
   });
 });
