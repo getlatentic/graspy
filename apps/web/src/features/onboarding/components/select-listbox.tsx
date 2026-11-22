@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { useRef, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "@/lib/i18n-context";
 import { useAnchoredStyle, usePressOutside } from "../hooks/use-anchored-list";
@@ -30,6 +30,18 @@ export default function SelectListbox(props: SelectListboxProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const style = useAnchoredStyle(props.anchor, [props.options, value]);
   usePressOutside(combobox.close, props.container, listRef);
+  const movedByPointer = useRef(false);
+  const activeId = combobox.active && `${id}-option-${combobox.active.value}`;
+
+  // Only the keyboard scrolls the list; a hover must not shift it under the pointer.
+  useEffect(() => {
+    if (movedByPointer.current) {
+      movedByPointer.current = false;
+      return;
+    }
+    if (activeId)
+      document.getElementById(activeId)?.scrollIntoView({ block: "nearest" });
+  }, [activeId]);
 
   const list = (
     <div ref={listRef} style={{ ...style, zIndex: 9999 }}>
@@ -37,7 +49,7 @@ export default function SelectListbox(props: SelectListboxProps) {
         id={`${id}-listbox`}
         role="listbox"
         aria-label={props.label}
-        className="max-h-96 w-full overflow-auto rounded-control border-2 border-line bg-surface shadow-lift"
+        className="max-h-96 w-full scroll-pt-9 overflow-auto rounded-control border-2 border-line bg-surface shadow-lift"
       >
         {combobox.matches.length === 0 ? (
           <div className="px-4 py-3 text-sm text-muted">
@@ -52,6 +64,9 @@ export default function SelectListbox(props: SelectListboxProps) {
               members={members}
               value={value}
               combobox={combobox}
+              onHover={() => {
+                movedByPointer.current = true;
+              }}
             />
           ))
         )}
@@ -67,7 +82,13 @@ function OptionGroup({
   members,
   value,
   combobox,
-}: GroupedOptions & { id: string; value: string; combobox: Combobox }) {
+  onHover,
+}: GroupedOptions & {
+  id: string;
+  value: string;
+  combobox: Combobox;
+  onHover: () => void;
+}) {
   return (
     <div>
       {heading && (
@@ -82,7 +103,10 @@ function OptionGroup({
           option={option}
           selected={option.value === value}
           highlighted={index === combobox.highlighted}
-          onHighlight={() => combobox.setHighlighted(index)}
+          onHighlight={() => {
+            if (index !== combobox.highlighted) onHover();
+            combobox.setHighlighted(index);
+          }}
           onSelect={() => combobox.select(option.value)}
         />
       ))}

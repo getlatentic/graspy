@@ -3,6 +3,7 @@ import { useAccount } from "@/lib/account/use-account";
 import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
 import { Art } from "@/components/brand/art";
+import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/cn";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
@@ -15,13 +16,9 @@ export default function SignInPage() {
   return (
     <main className="relative isolate flex min-h-dvh flex-col items-center justify-center gap-6 overflow-x-hidden bg-art-sky px-5 py-8 text-on-art sm:px-10 lg:grid lg:grid-cols-2 lg:grid-rows-[1fr_auto_1fr] lg:gap-x-12 lg:gap-y-0 lg:px-20">
       <Shapes />
-      <img
-        src="/brand/logo-lockup.webp"
-        alt="graspy"
-        width={640}
-        height={136}
-        className="h-12 w-auto lg:absolute lg:start-20 lg:top-16"
-      />
+      <div className="lg:absolute lg:start-20 lg:top-16">
+        <Logo />
+      </div>
       <Art
         name="tablet"
         eager
