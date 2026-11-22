@@ -132,13 +132,16 @@ function SystemsStatus({
   return (
     <>
       {loading && (
-        <p className="mt-2 flex items-center gap-2 text-sm text-muted">
+        <p className="mt-2 flex items-center gap-2 text-sm text-ink">
           <Spinner />
           {t("onboarding.profile.gradesLoading")}
         </p>
       )}
       {failed && (
-        <p role="alert" className="mt-2 text-sm text-danger">
+        <p
+          role="alert"
+          className="mt-2 rounded-control bg-surface px-3 py-2 text-sm font-medium text-danger"
+        >
           {t("onboarding.profile.gradesFailed")}{" "}
           <button
             type="button"

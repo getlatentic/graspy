@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
 import type { StepKey } from "../lib/onboarding-steps";
+import { ActionBar } from "./action-bar";
 
 export function StepHeading({
   step,
@@ -25,10 +26,10 @@ export function StepHeading({
       </h1>
 
       <div className="mt-8 space-y-3">
-        <span className="text-sm font-semibold text-accent-ink">
+        <span className="text-sm font-semibold text-accent-strong">
           {t("onboarding.stepOf", { current: index + 1, total: count })}
         </span>
-        <div className="h-3 rounded-full bg-track">
+        <div className="h-3 rounded-full bg-ink/10 ring-1 ring-ink/20">
           <div
             className="h-full rounded-full bg-accent transition-all duration-300"
             style={{ width: `${percent}%` }}
@@ -57,10 +58,12 @@ export function StepFooter({
 }) {
   const enabled = canNext && !busy;
   return (
-    // Sticky on a short screen, where iOS Safari's toolbar would cover it.
-    <div className="sticky bottom-0 -mx-8 mt-6 flex flex-col gap-3 bg-surface/95 px-8 py-4 backdrop-blur sm:-mx-10 sm:px-10 lg:static lg:mx-0 lg:mt-10 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+    <ActionBar className="flex flex-col gap-3">
       {problem && (
-        <p role="alert" className="text-sm text-danger">
+        <p
+          role="alert"
+          className="rounded-control bg-surface px-3 py-2 text-sm font-medium text-danger"
+        >
           {problem}
         </p>
       )}
@@ -78,7 +81,7 @@ export function StepFooter({
           busy={busy}
         />
       </div>
-    </div>
+    </ActionBar>
   );
 }
 
@@ -109,7 +112,7 @@ function StepButtons({
         size="lg"
         onClick={onNext}
         disabled={!enabled}
-        className="min-w-0 flex-1 sm:flex-none"
+        className="min-w-0 flex-1 disabled:bg-surface/60 disabled:text-muted disabled:opacity-100 disabled:ring-1 disabled:ring-inset disabled:ring-muted/40 sm:flex-none"
       >
         {nextLabel}
         <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />

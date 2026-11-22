@@ -26,7 +26,7 @@ export default function SubjectsStep({
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
       <SubjectsNotices chosen={selected.length} loading={loading} />
-      <div className="rounded-card border border-line bg-surface/90 px-2 py-3">
+      <div>
         <SubjectsBody
           failed={Boolean(error)}
           loading={loading}
@@ -52,7 +52,7 @@ function SubjectsNotices({
   const error = formState.errors.selectedSubjects;
   return (
     <>
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink">
         {t("onboarding.subjects.heading")}
       </p>
       {chosen >= SUBJECT_SELECTION_LIMIT && (
@@ -95,7 +95,7 @@ function SubjectsBody({
   if (failed) return <SubjectsFailed onRetry={onRetry} />;
   if (loading) return <SubjectsSkeleton />;
   return (
-    <div className="space-y-1.5 pe-1">
+    <div className="space-y-1.5">
       {subjects.map((subject, index) => (
         <SubjectButton
           key={subject.id}
@@ -113,9 +113,7 @@ function SubjectsFailed({ onRetry }: { onRetry: () => void }) {
   const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-      <p className="text-sm text-muted">
-        {t("onboarding.subjects.loadFailed")}
-      </p>
+      <p className="text-sm text-ink">{t("onboarding.subjects.loadFailed")}</p>
       <button
         type="button"
         onClick={onRetry}
@@ -129,11 +127,11 @@ function SubjectsFailed({ onRetry }: { onRetry: () => void }) {
 
 function SubjectsSkeleton() {
   return (
-    <div className="space-y-2 pe-1">
+    <div className="space-y-2">
       {Array.from({ length: 8 }).map((_, index) => (
         <div
           key={`subject-skeleton-${index}`}
-          className="h-11 rounded-lg border border-line bg-track/70 animate-pulse"
+          className="h-11 rounded-lg border border-line bg-surface/60 animate-pulse"
         />
       ))}
     </div>
@@ -164,7 +162,7 @@ function SubjectButton({
       style={{
         animationDelay: `${Math.min(place, MAX_STAGGERED) * STAGGER_MS}ms`,
       }}
-      className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-start transition motion-safe:animate-enter ${
+      className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-start transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-safe:animate-enter ${
         chosen
           ? "border-accent bg-accent-soft text-ink"
           : "border-line bg-surface hover:border-accent hover:bg-raised"

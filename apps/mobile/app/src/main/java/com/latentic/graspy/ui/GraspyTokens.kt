@@ -1,4 +1,4 @@
-// graspy-tokens source=91e96bc945cffda91ee7c3babd9a1636b8198fb4305580bd2557e72b60d1572b content=310dcf4552d4f39ac641865fe1d8e4e671447659026a5789878e01c9ccf62823
+// graspy-tokens source=fb3dc885f69c9c9b5101565170cbad6b046c48bb34fc0205831e5c2bb82a9459 content=310dcf4552d4f39ac641865fe1d8e4e671447659026a5789878e01c9ccf62823
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 

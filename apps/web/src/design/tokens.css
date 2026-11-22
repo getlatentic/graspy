@@ -1,4 +1,4 @@
-/* graspy-tokens source=91e96bc945cffda91ee7c3babd9a1636b8198fb4305580bd2557e72b60d1572b content=9ffe41019962a8f9201ccd09d2c4e7a2667329a5cf9388720d90f73746b4f7e5 */
+/* graspy-tokens source=fb3dc885f69c9c9b5101565170cbad6b046c48bb34fc0205831e5c2bb82a9459 content=9aae1e7c8210d5c86f816b6c4c76e4646f66f1068ca5b5dfa5f3c4a9b61b1feb */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -151,4 +151,38 @@
     --color-tint-purple-soft: #241f47;
     --color-on-danger: #3a1714;
   }
+}
+
+/* A page that stays light in dark mode, like the art screens: put this class on its root. */
+.theme-light {
+  color-scheme: light;
+  --color-canvas: #f5f8fa;
+  --color-surface: #ffffff;
+  --color-raised: #f9fbfc;
+  --color-ink: #12232e;
+  --color-muted: #5a6672;
+  --color-subtle: #6b7682;
+  --color-faint: #8a95a0;
+  --color-line: #e5e9ee;
+  --color-track: #eef1f4;
+  --color-accent: #1f7099;
+  --color-accent-strong: #175573;
+  --color-accent-ink: #1f6f9c;
+  --color-accent-soft: #eaf4fa;
+  --color-accent-line: #cfe7f3;
+  --color-on-accent: #ffffff;
+  --color-success: #0f7838;
+  --color-success-soft: #eaf7e4;
+  --color-warning: #8a6416;
+  --color-warning-soft: #fdf3d6;
+  --color-warning-line: #f3de9a;
+  --color-danger: #c0392b;
+  --color-danger-soft: #fbebe8;
+  --color-tint-green: #2f9e6e;
+  --color-tint-green-soft: #e6f6ee;
+  --color-tint-orange: #d9772b;
+  --color-tint-orange-soft: #fdf0e4;
+  --color-tint-purple: #7057d1;
+  --color-tint-purple-soft: #f0ecfc;
+  --color-on-danger: #ffffff;
 }
