@@ -5,27 +5,28 @@ import { Logo } from "./logo";
 
 afterEach(cleanup);
 
-// 20px wordmark, 28px sprout: the wordmark sits 4px (mt-1) below the sprout's top, so the leaves
-// span the lowercase body and the stem drops to the descender line. Larger screens keep the ratios.
 describe("Logo", () => {
-  it("lines the sprout's leaves up with the wordmark's lowercase body", () => {
+  it("is one lockup image named graspy, with its ratio set so nothing shifts", () => {
     const { container } = render(<Logo />);
-    const lockup = container.firstElementChild;
-    const wordmark = screen.getByAltText("graspy");
-    const sprout = container.querySelector("img[src$='sprout.svg']");
-    expect(lockup?.classList.contains("items-start")).toBe(true);
-    expect(sprout?.classList.contains("h-7")).toBe(true);
-    expect(wordmark.classList.contains("h-5")).toBe(true);
-    expect(wordmark.classList.contains("mt-1")).toBe(true);
+    const logo = screen.getByAltText("graspy");
+    expect(container.querySelectorAll("img")).toHaveLength(1);
+    expect(logo.getAttribute("src")).toBe("/brand/graspy-lockup-v1.svg");
+    expect(logo.getAttribute("width")).toBe("4552");
+    expect(logo.getAttribute("height")).toBe("836");
+    expect(logo.classList.contains("w-auto")).toBe(true);
   });
 
-  it("grows with the screen in the same proportions", () => {
+  it("is 20px tall at the header size and grows with the screen in the same proportions", () => {
     render(<Logo />);
-    const wordmark = screen.getByAltText("graspy");
-    // 3xl: 1.5 times the base (30px wordmark, 6px offset); 4xl: twice (40px, 8px).
-    expect(wordmark.className).toContain("3xl:h-7.5");
-    expect(wordmark.className).toContain("3xl:mt-1.5");
-    expect(wordmark.className).toContain("4xl:h-10");
-    expect(wordmark.className).toContain("4xl:mt-2");
+    const logo = screen.getByAltText("graspy");
+    for (const name of [
+      "h-5",
+      "2xl:h-6.25",
+      "3xl:h-7.5",
+      "4xl:h-10",
+      "5xl:h-15",
+    ]) {
+      expect(logo.classList.contains(name), name).toBe(true);
+    }
   });
 });

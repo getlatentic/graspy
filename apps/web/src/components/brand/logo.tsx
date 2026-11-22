@@ -13,29 +13,25 @@ export function SproutMark({ className }: { className?: string }) {
 }
 
 /**
- * The sprout's leaves span the wordmark's lowercase body (x-height top to
- * baseline) and its stem drops to the descender line. The wordmark is 126px
- * tall with its baseline at row 85, the sprout 24 units with its leaves at
- * 4.6 to 14 and its stem to 23, so at a 20px wordmark and a 28px sprout the
- * wordmark sits 4px lower. Every size keeps those ratios, and the lockup
- * grows with the screen so it still reads across a room.
+ * One SVG lockup: the sprout and the word "graspy" drawn together, so the two
+ * line up by construction and stay sharp at any size. The sprout is as tall as
+ * the word's ink, from the x-height top to the bottom of the descenders, and
+ * the viewBox is cropped to the ink, so the sprout's left edge is the logo's
+ * left edge. Its ink is 20px tall at the header size, and the lockup grows at
+ * 2xl, 3xl, 4xl and 5xl so it still reads across a room. The file name carries
+ * a version because the service worker caches /brand by path.
  */
-const SPROUT = "h-7 2xl:h-8.75 3xl:h-10.5 4xl:h-14 5xl:h-21";
-const WORDMARK =
-  "mt-1 h-5 w-auto 2xl:mt-1.25 2xl:h-6.25 3xl:mt-1.5 3xl:h-7.5 4xl:mt-2 4xl:h-10 5xl:mt-3 5xl:h-15";
+const LOCKUP = "h-5 2xl:h-6.25 3xl:h-7.5 4xl:h-10 5xl:h-15";
 
-/** `alt` sits on the wordmark alone so screen readers hear "graspy" once. */
+/** `alt` is the lockup's own name, so screen readers hear "graspy" once. */
 export function Logo() {
   return (
-    <span className="flex items-start gap-2 2xl:gap-2.5 3xl:gap-3 4xl:gap-4 5xl:gap-6">
-      <SproutMark className={SPROUT} />
-      <img
-        src="/brand/wordmark.png"
-        alt="graspy"
-        width={532}
-        height={126}
-        className={WORDMARK}
-      />
-    </span>
+    <img
+      src="/brand/graspy-lockup-v1.svg"
+      alt="graspy"
+      width={4552}
+      height={836}
+      className={cn("block w-auto", LOCKUP)}
+    />
   );
 }
