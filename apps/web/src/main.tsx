@@ -16,7 +16,9 @@ import { I18nProvider } from "@/lib/i18n-provider";
 import { installAppWorker } from "@/lib/app-worker";
 import { markDevice } from "@/lib/device";
 import { installFragmentLinks } from "@/lib/fragment-links";
+import { installFocusMemory } from "@/lib/focus-memory";
 import { installRemoteInput } from "@/lib/remote-input";
+import { installSpatialNav } from "@/lib/spatial-nav";
 import { listenForInstall } from "@/lib/install";
 import { dismissBootSplashWhenDrawn } from "@/app/boot-splash";
 import { listenForStaleChunks } from "@/app/page-chunks";
@@ -38,7 +40,8 @@ const queryClient = new QueryClient({
 });
 
 markDevice();
-installRemoteInput();
+const stops = [installRemoteInput(), installSpatialNav(), installFocusMemory()];
+import.meta.hot?.dispose(() => stops.forEach((stop) => stop()));
 installSelectSound(haptics);
 installFragmentLinks();
 listenForStaleChunks();

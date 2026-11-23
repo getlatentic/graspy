@@ -29,7 +29,7 @@ export default function LandingPage() {
 
   return (
     // pb-20 ends the page above the tab bar fixed over a phone's screen.
-    <div className="min-h-dvh bg-surface pb-20 text-ink lg:pb-0">
+    <div className="min-h-dvh bg-surface pt-[var(--overscan-y)] pb-20 text-ink lg:pb-0">
       <SiteHeader />
       <main>
         <Hero />

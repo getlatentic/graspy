@@ -45,6 +45,37 @@ html {
   }
 }
 
+/* How far a control keeps from the screen's edge. A TV may crop the outer few
+   percent of the picture (overscan), so from 1600px wide up (a TV at 1080p or
+   4K, a large monitor) it is 5% of the width at the sides and 5% of the height
+   above and below; below that it is 0 (a phone's notch is the body's
+   env() padding). Viewport units, no device guess. It is padding for the
+   content of a layout, in max() with the layout's own padding, so a surface
+   (a header, a side menu, a page background) still reaches the edge. */
+:root {
+  --overscan-x: 0px;
+  --overscan-y: 0px;
+}
+
+@media (min-width: 100rem) {
+  :root {
+    --overscan-x: 5vw;
+    --overscan-y: 5vh;
+  }
+}
+
+/* What the arrows or Tab scroll to stops short of the overscan at the foot
+   and the end, on the page and in the learn shell's scroll area (`scroll-pb`). */
+html {
+  scroll-padding-bottom: var(--overscan-y);
+  scroll-padding-inline-end: var(--overscan-x);
+}
+
+/* A page with a sticky header keeps what the arrows or Tab scroll to clear of it. */
+html:has(.sticky-header) {
+  scroll-padding-top: calc(4rem + var(--overscan-y));
+}
+
 @layer base {
   :root {
     color-scheme: light dark;

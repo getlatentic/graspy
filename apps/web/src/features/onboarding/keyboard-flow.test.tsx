@@ -99,7 +99,7 @@ describe("the class picker with a keyboard or a remote", () => {
     const field = screen.getByRole("combobox");
     field.focus();
     for (const code of [461, 10009]) {
-      await user.keyboard("{ArrowDown}");
+      await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
       expect(field.getAttribute("aria-expanded")).toBe("true");
       back(field, code);
       await Promise.resolve();

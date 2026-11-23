@@ -28,6 +28,14 @@ export const routes: RouteObject[] = [
           ).default,
         }),
       },
+      {
+        path: "/tv-diagnostics",
+        lazy: async () => ({
+          Component: (
+            await import("@/features/diagnostics/pages/tv-diagnostics-page")
+          ).default,
+        }),
+      },
       { path: "/link", lazy: lazyPage("tvLink") },
       ...chatLinks,
       {

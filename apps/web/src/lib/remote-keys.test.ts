@@ -214,13 +214,24 @@ describe("installRemoteInput", () => {
     stop();
   });
 
-  it("leaves Escape to the popups that handle it themselves", () => {
+  it("closes the topmost popup on Escape on a desktop, and does nothing when none is open or a popup took the key", () => {
     const stop = installRemoteInput();
     const closed = vi.fn();
     const remove = pushBack(closed);
     const event = press(document, { key: "Escape" });
-    expect(closed).not.toHaveBeenCalled();
-    expect(event.defaultPrevented).toBe(false);
+    expect(closed).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+    remove();
+    const none = press(document, { key: "Escape" });
+    expect(none.defaultPrevented).toBe(false);
+    const again = pushBack(closed);
+    document.addEventListener("keydown", (e) => e.preventDefault(), {
+      once: true,
+      capture: true,
+    });
+    press(document, { key: "Escape" });
+    expect(closed).toHaveBeenCalledOnce();
+    again();
     remove();
     stop();
   });
@@ -243,13 +254,14 @@ describe("installRemoteInput", () => {
     stop();
   });
 
-  it("takes Escape as Back on a TV, where a Google or Fire TV remote sends it, and not on a keyboard", () => {
+  it("takes Escape as Back on a TV (it also leaves a field and steps back), where a desktop's closes a popup only", () => {
     const stop = installRemoteInput();
     const closed = vi.fn();
     const remove = pushBack(closed);
     const keyboard = press(document, { key: "Escape" });
-    expect(closed).not.toHaveBeenCalled();
-    expect(keyboard.defaultPrevented).toBe(false);
+    expect(closed).toHaveBeenCalledOnce();
+    expect(keyboard.defaultPrevented).toBe(true);
+    closed.mockClear();
     document.documentElement.dataset.device = "tv";
     const remote = press(document, { key: "Escape" });
     expect(closed).toHaveBeenCalledOnce();

@@ -7,7 +7,7 @@ export default function TopMenu() {
 
   return (
     <header className="border-b border-line bg-surface">
-      <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <div className="flex items-center justify-between gap-4 px-[max(1rem,var(--overscan-x))] pt-[max(0.75rem,var(--overscan-y))] pb-3 sm:px-[max(1.5rem,var(--overscan-x))]">
         <Link
           to="/app/learn"
           aria-label={t("menu.tagline")}

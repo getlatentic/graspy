@@ -16,6 +16,14 @@ export function pushBack(close: Closer): () => void {
   };
 }
 
+/** Closes the topmost open popup, if any; says whether it did. No navigation: Escape on a desktop does this. */
+export function closeTopPopup(): boolean {
+  const top = open[open.length - 1];
+  if (!top) return false;
+  top();
+  return true;
+}
+
 export type BackResult = "closed" | "blurred" | "history" | "stayed";
 
 type Past = Pick<History, "back"> & { state: unknown };
@@ -42,7 +50,7 @@ export function goBack(
   history: Past = window.history,
   field: HTMLElement | null = null,
 ): BackResult {
-  const top = open.at(-1);
+  const top = open[open.length - 1];
   if (top) {
     top();
     return "closed";
