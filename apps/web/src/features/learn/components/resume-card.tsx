@@ -1,9 +1,11 @@
 import { ArrowRight, ChevronRight } from "lucide-react";
+import { artSizes } from "@/components/brand/art-urls";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
-import type { AgeBand } from "@/lib/age-band";
+import { knownBand, type AgeBand } from "@/lib/age-band";
+import { useAgeBand } from "@/lib/use-age-band";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 import type { CurrentTopic } from "@/features/learn/lib/current-topic";
@@ -17,10 +19,16 @@ const PICTURE_SIZE: Record<AgeBand, string> = {
   teen: "size-12 sm:size-16 lg:size-20",
 };
 
+// The widths of PICTURE_SIZE, in rem.
+const PICTURE_SIZES: Record<AgeBand, string> = {
+  child: artSizes([{ rem: 4 }, { from: 40, rem: 6 }, { from: 64, rem: 8 }]),
+  tween: artSizes([{ rem: 4 }, { from: 40, rem: 6 }, { from: 64, rem: 7 }]),
+  teen: artSizes([{ rem: 3 }, { from: 40, rem: 4 }, { from: 64, rem: 5 }]),
+};
+
 interface ResumeCardProps {
   current: CurrentTopic;
   grade: string;
-  band: AgeBand;
   completed: number;
   onOpenTopic: (index: number) => void;
   className?: string;
@@ -29,12 +37,12 @@ interface ResumeCardProps {
 export function ResumeCard({
   current,
   grade,
-  band,
   completed,
   onOpenTopic,
   className,
 }: ResumeCardProps) {
   const { t } = useI18n();
+  const band = knownBand(useAgeBand());
   const { subject, topic, topics, topicIndex, started } = current;
   const onStart = () => onOpenTopic(topicIndex);
 
@@ -44,7 +52,8 @@ export function ResumeCard({
         <div className="flex items-center gap-3 sm:items-start sm:gap-5">
           <SubjectPicture
             name={subject.name}
-            band={band}
+            priority
+            sizes={PICTURE_SIZES[band]}
             frame={band === "teen" ? "small" : "full"}
             className={PICTURE_SIZE[band]}
             iconClassName="size-8 sm:size-10 lg:size-14"

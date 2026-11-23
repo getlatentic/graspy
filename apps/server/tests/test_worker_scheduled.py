@@ -14,11 +14,17 @@ def test_the_cron_handler_sweeps_with_the_workers_bindings_though_env_and_ctx_ar
         async def sweep(env):
             swept.append(env)
 
+        purged = []
+
+        async def purge(env):
+            purged.append(env)
+
         worker.sweep_audio = sweep
+        worker.purge_tv_sign_in = purge
         handler = worker.Default()
         handler.env = SimpleNamespace(name="the worker's bindings")
         asyncio.run(handler.scheduled(None, None, None))
-        print(swept == [handler.env])
+        print(swept == [handler.env] and purged == [handler.env])
         """
     )
 

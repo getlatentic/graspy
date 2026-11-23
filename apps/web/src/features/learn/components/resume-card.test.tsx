@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
 import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
 import type { CurrentTopic } from "@/features/learn/lib/current-topic";
 import { ResumeCard } from "./resume-card";
+
+const { band } = vi.hoisted(() => ({
+  band: { now: "child" as "child" | "tween" | "teen" },
+}));
+vi.mock("@/lib/use-age-band", () => ({ useAgeBand: () => band.now }));
 
 afterEach(cleanup);
 
@@ -19,13 +24,13 @@ const current = {
 const t = (key: string) =>
   key.split(".").reduce<unknown>((v, part) => (v as never)?.[part], en) ?? key;
 
-function pictureFor(band: "child" | "tween" | "teen") {
+function pictureFor(now: "child" | "tween" | "teen") {
+  band.now = now;
   const { container } = render(
     <I18nContext.Provider value={{ t } as never}>
       <ResumeCard
         current={current}
         grade="SS 3"
-        band={band}
         completed={0}
         onOpenTopic={() => {}}
       />
@@ -36,14 +41,27 @@ function pictureFor(band: "child" | "tween" | "teen") {
 }
 
 describe("ResumeCard picture", () => {
-  it.each(["child", "tween", "teen"] as const)(
-    "uses the %s picture",
-    (band) => {
-      expect(pictureFor(band).img.getAttribute("src")).toBe(
-        `/brand/art/math-${band}.webp`,
-      );
-    },
-  );
+  it.each(["child", "tween", "teen"] as const)("uses the %s picture", (now) => {
+    expect(pictureFor(now).img.getAttribute("src")).toBe(
+      `/brand/art/math-${now}.webp`,
+    );
+  });
+
+  it("loads at once and ahead of other images: it is the largest paint on Learn home", () => {
+    const { img } = pictureFor("child");
+    expect(img.getAttribute("loading")).toBe("eager");
+    expect(img.getAttribute("fetchpriority")).toBe("high");
+  });
+
+  it("tells the browser the width it is shown at from the page's root size, smaller for a teen", () => {
+    const child = pictureFor("child").img.getAttribute("sizes");
+    cleanup();
+    const teen = pictureFor("teen").img.getAttribute("sizes");
+
+    expect(child).toContain("calc(8 * max(1rem,");
+    expect(teen).toContain("calc(5 * max(1rem,");
+    expect(child).not.toMatch(/\dpx/);
+  });
 
   it("is a small hairline-framed mark for a teen and a large bold-framed one for a child", () => {
     const child = pictureFor("child").box.className;

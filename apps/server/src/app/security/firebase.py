@@ -43,6 +43,8 @@ class SignedIn:
     auth_time: int | None = None
     # How the person signed in, or None when the token does not say.
     provider: str | None = None
+    # The account's address, when Google gives one.
+    email: str | None = None
 
     def signed_in_within(self, seconds: int, now: float) -> bool:
         return self.auth_time is not None and now - self.auth_time <= seconds
@@ -119,9 +121,11 @@ async def verified(
     if not isinstance(uid, str) or not _UID.match(uid):
         raise InvalidSignIn("The sign-in is not valid. Sign in again.")
     name = user.get("displayName")
+    email = user.get("email")
     return SignedIn(
         uid=uid,
         name=name if isinstance(name, str) else "",
         auth_time=token_auth_time(id_token),
         provider=token_sign_in_provider(id_token),
+        email=email if isinstance(email, str) and email else None,
     )

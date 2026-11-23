@@ -14,7 +14,7 @@ from app.security.rate_limit import (
 )
 from app.settings import Settings
 
-BUDGETS = ("session", "generate", "agent", "api")
+BUDGETS = ("session", "generate", "agent", "api", "pairing")
 
 
 class Budget:

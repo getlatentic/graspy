@@ -13,6 +13,7 @@ import {
   HideChatButton,
 } from "@/features/learn/components/chat-pane";
 import { SideNav } from "@/features/learn/components/side-nav";
+import { PlanWait } from "@/features/learn/components/plan-wait";
 import { InstallNotice } from "@/features/learn/components/install-notice";
 import { TutorAskBar } from "@/features/learn/components/tutor-ask-bar";
 import { AppTabBar } from "@/features/learn/components/app-tab-bar";
@@ -122,7 +123,7 @@ function PageArea({
   const pageRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
   // Drawn before the saved plan is read, a page would flash its placeholder.
-  const { isLoaded } = usePlan();
+  const { isLoaded, loadSaved } = usePlan();
 
   // The page scrolls inside the shell, so it would keep the last page's offset.
   useEffect(() => {
@@ -141,7 +142,19 @@ function PageArea({
           : "overflow-y-auto overscroll-contain scroll-pb-[var(--overscan-y)] scroll-pe-[var(--overscan-x)] bg-linear-to-b from-accent-soft to-canvas to-60% p-4 pe-[max(1rem,var(--overscan-x))] pb-[max(1rem,var(--overscan-y))] has-[+aside]:pe-4 sm:p-6 sm:pe-[max(1.5rem,var(--overscan-x))] sm:pb-[max(1.5rem,var(--overscan-y))] sm:has-[+aside]:pe-6",
       )}
     >
-      {isLoaded && (redirect ? <Navigate to={redirect} replace /> : <Outlet />)}
+      {isLoaded ? (
+        redirect ? (
+          <Navigate to={redirect} replace />
+        ) : (
+          <Outlet />
+        )
+      ) : (
+        <PlanWait
+          pathname={pathname}
+          chat={chat}
+          onRetry={() => void loadSaved()}
+        />
+      )}
     </main>
   );
 }

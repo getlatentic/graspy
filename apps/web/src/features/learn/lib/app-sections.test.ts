@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   pageRedirect,
+  pageShape,
   pageShown,
   sectionOf,
   sectionsFor,
@@ -83,5 +84,25 @@ describe("pageShown", () => {
     "/app/learn/you/learners",
   ])("shows %s to a class that learns by voice alone", (path) => {
     expect(pageShown(path, true)).toBe(true);
+  });
+});
+
+describe("pageShape", () => {
+  it("is Home's at the learn path, with or without a trailing slash", () => {
+    expect(pageShape("/app/learn")).toBe("home");
+    expect(pageShape("/app/learn/")).toBe("home");
+  });
+
+  it("is a subject page's for a subject's slug", () => {
+    expect(pageShape("/app/learn/mathematics")).toBe("subject");
+    expect(pageShape("/app/learn/basic-science/")).toBe("subject");
+  });
+
+  it("is a list for the pages that are not a subject", () => {
+    for (const path of ["subjects", "you", "plan", "voice", "ask"]) {
+      expect(pageShape(`/app/learn/${path}`)).toBe("list");
+    }
+    expect(pageShape("/app/learn/you/details")).toBe("list");
+    expect(pageShape("/app/learn/mathematics/lesson/2")).toBe("list");
   });
 });

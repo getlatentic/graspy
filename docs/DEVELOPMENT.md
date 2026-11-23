@@ -22,6 +22,8 @@ npx firebase-tools@15.31.0 emulators:start --only auth --project demo-graspy
 
 Its sign-in window lets you make up a Google account.
 
+To try signing a TV in from a phone with two browsers, see [TV sign-in](TV_SIGN_IN.md#test-with-two-browsers).
+
 A parent's consent is kept only in the Worker (D1), so under `npm run dev` adding a learner in the web app answers `503 consent_unavailable`. Run the Worker (see below) and point `VITE_API_URL` at it in `apps/web/.env.local` to add learners and try the voice recordings page.
 
 ## Configure
@@ -70,6 +72,7 @@ cd apps/server && uv run mutmut run                       # finds tests that che
 - The server's unit tests never call a model. A stand-in model (`tests/stand_in.py`) answers through the real DSPy adapter, and each test reads back what every stage asked.
 - The e2e specs stub nothing: a real browser, server and model, and Google's sign-in is the Auth emulator. A full run takes about five minutes.
 - `tests/fixtures/slug-corpus.json` is read by both the server and the web app's tests. Both must spell a subject's slug the same way.
+- `tests/fixtures/math-repair.json` is read by the server's, the web app's and the lesson views' tests: the maths repair is written in Python and twice in TypeScript, and all must give the same text for each case. A new failure is a case in it first. [The maths repair](MATHS_REPAIR.md) says what the rules are and what a KaTeX-driven repair would and would not cover.
 - `apps/server/scripts/export_thread_contract.py` writes what a device sends of its tutor conversations and what the server returns into the web app's and the Android app's tests. After a change to `app/threads/wire.py`, run it; both apps' tests fail until they send and read the new shape.
 - `apps/server/scripts/voice/turn_baseline.py` reads one D1 database with SELECT only and prints the voice turns' counts, verdicts and times for a date range. [Voice turn baseline](VOICE_TURN_BASELINE.md) has the baselines taken with it.
 - `apps/web/src/lib/csp.test.ts` fails with the new hash when the inline script in `index.html` changes. Put that hash in `public/_headers`.
@@ -111,6 +114,34 @@ Deploy with `scripts/deploy.sh staging|production`. [Deploying](DEPLOYING.md) ha
 ### The web app's launch images
 
 iOS ignores the manifest for the launch screen of an installed app, so `apps/web/public/brand/splash/` holds one JPEG per screen size, linked in `index.html`. `node apps/web/scripts/make-splash.mjs` makes them and writes the links (it needs ImageMagick with WebP and librsvg). `public/sw.js` keeps `/brand` cache-first by path, so a changed image, like a changed icon, needs a new file name: raise `VERSION` in the script when the art or the mark changes, and it renames the set. An installed app keeps the launch image it had until the icon is removed and added again. Not covered: iPhone landscape, and a dark-mode launch image.
+
+## Loading states and deploys
+
+A screen is never blank while something is on the way. Each wait has one thing on it, in the order a load goes through them. All of them are drawn on the canvas colour, in rem, so they scale with the adaptive root size, and none has words of its own beyond "Opening…" and "Try again" (`loading.opening`, `loading.tryAgain`).
+
+1. **The page's first paint** (`index.html`). `#boot` is the logo lockup, inline, and a progress line, on the canvas and track colours of both schemes, with no script needed. The colours are written out because the stylesheet's variables do not exist yet; `boot-paint.test.ts` fails when one differs from `design/tokens.css`, and when the inline logo differs from `public/brand/graspy-lockup-v1.svg`. `dismissBootSplashWhenDrawn` (`src/app/boot-splash.ts`) takes it down in the same turn the app first draws anything into `#root` (a loading screen, a page or the error screen), so the one is never gone before the other is there. After 8 seconds with no app, a CSS animation swaps the line for a "Try again" link, so a page whose script never arrives is not left spinning. A browser with script turned off gets "Turn on JavaScript to use graspy." (a `noscript` block, whose style hides the line and the link) instead. The styles are not covered by the Content-Security-Policy hash (`style-src` allows inline styles); the boot script is, see Test above.
+2. **The loading screen** (`LoadingScreen`, shown as `PageLoading` while a route's first chunk loads). The same logo size, gap and line as `#boot`, so the hand-over moves nothing. It announces "Opening…" once as a status (not inside an `aria-busy` region, which would mute it; the visible title beside "Try again" is `aria-hidden`, so it is not read twice), and after `SLOW_MS` (8 s, `src/hooks/use-slow.ts`) the line gives way to "Try again", which reloads. The line's slot has the button's height, so nothing shifts.
+3. **The learn pages while the plan is read** (`PlanWait`). The page area shows a skeleton in the shape of the page it stands for: Home's grid (`HOME_GRID`, shared with the page), a subject page, or a plain list (`pageShape` in `app-sections.ts` chooses). Past `SLOW_MS` it shows "Opening…" and "Try again", which reads the plan again; the first read goes on behind it, so an answer that arrives still shows the page. `getJson` cuts a try off when the answer's headers have not come in 30 s (`HEADERS_TIMEOUT_MS`) and tries again, so no read waits for good; once the headers are in the limit is lifted, so a large body on a slow link finishes. Only reads are retried; `sendJson` sends once. The consent gate's wait for the server has the same retry.
+
+`index.html` also asks the API's `/health` while the page parses, at the address its preconnect link carries (Vite fills that in), so a Worker's cold start (1 to 7 s) overlaps the scripts' download. `warmApi` asks only when that did not.
+
+### Deploys
+
+A deploy removes the last build's hashed files, and Cloudflare Pages answers a file it does not have with the app's page and status 200. An old page that asks for such a file gets HTML where a script should be, and the app does not start.
+
+- **`public/sw.js` answers a page from the network first.** It waits `NAVIGATION_WAIT_MS` (2 s) for the document, so a visit after a deploy runs the deployed build. A reload (the request's cache mode is `no-cache` or `reload`) waits `RELOAD_WAIT_MS` (10 s): a reload is how a page leaves a build whose chunk has gone, and answering it with the copy that just failed would send it round again. Offline, on an error or past the wait, the last copy answers; when the network's document then arrives and differs, the page, which asks once it has loaded, is told, and one the learner has not touched reloads into the new build (`src/lib/app-update.ts`). A new build's startup files are kept before its document is, so that reload does not fetch them cold; the page and the worker share one download of a file, which is the worker's own fetch of the address, so the first asker leaving does not end it. Whether a page's answer was a deploy behind is kept for that page (`resultingClientId`), not for all pages.
+- **Files are cache-first** (`/assets`, `/brand`, `/sounds`), and a file the host no longer has is answered with 404, not the app's page.
+- **A build file that fails to load reloads the page once.** The boot script does it for a startup file (the entry script, a preload or the stylesheet) before the app has started; `src/app/page-chunks.ts` does it for a chunk loaded later. Both keep one record in `sessionStorage` (`graspy.reloaded-for-stale-chunk`) and never reload offline, within 10 s of the last reload, or where storage cannot keep the record, since those would loop. A page that still cannot start shows the "Try again" link at 8 s.
+
+### Measuring a load
+
+`apps/web` has no harness for this in the repository; the steps are:
+
+1. Build with `npx vite build --mode development --outDir <dir>`, which points the bundle at `http://localhost:8081/api`. A second copy under new file names (every hashed file renamed) stands for the next deploy.
+2. Serve each directory as Pages does: `/assets/*` immutable, `/sw.js` and `/manifest.webmanifest` `no-cache`, brotli for text, the `Content-Security-Policy` of `public/_headers` with the API's host swapped, and the app's page with status 200 for any file that is not there. Switching which directory it serves is the deploy.
+3. Answer the API from a real HTTP server on 8081 that holds every request made before its cold start has passed (`first`), then 150 ms each. Do not mock it with Playwright's `context.route`: request interception stalls the service worker's own fetches in Chromium and leaves a page blank that is not blank for a person.
+4. Seed a signed-in learner (`graspy.account`, `graspy_user_profile`, `graspy.service-consent.<uid>/<learner>`, `graspy.plan.joined`, `graspy_device_id` in `localStorage`; `graspy.session` in `sessionStorage`), load `/app/learn` with `playwright-core`, throttle with `Network.emulateNetworkConditions` (Slow 4G is 1.6 Mbit/s down, 150 ms), and record each frame what `document.body` shows: nothing, the page's first paint, a skeleton, the shell with an empty page area, or content.
+5. A returning visit primes the service worker with the first build and waits for the plan to be in IndexedDB; a deploy then switches the directory before the measured load.
 
 ## Browser support
 

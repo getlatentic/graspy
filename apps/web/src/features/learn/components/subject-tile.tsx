@@ -1,15 +1,28 @@
-import type { AgeBand } from "@/lib/age-band";
+import { knownBand, type AgeBand } from "@/lib/age-band";
+import { useAgeBand } from "@/lib/use-age-band";
+import { artSizes } from "@/components/brand/art-urls";
 import { cn } from "@/lib/cn";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
 
 interface SubjectTileProps {
   name: string;
-  band?: AgeBand;
   onSelect: () => void;
 }
 
 const TILE =
   "flex h-full w-full overflow-hidden rounded-card bg-surface text-start shadow-card transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none";
+
+// size-12, a teen's small picture.
+const TEEN_SIZES = artSizes([{ rem: 3 }]);
+
+// A child or tween tile is a column of the grid in SubjectTiles: two across, four from sm, two
+// beside the Home rail from lg and four from xl. Measured from 390 to 3840 wide.
+const TILE_SIZES = artSizes([
+  { vw: 45 },
+  { from: 40, vw: 22 },
+  { from: 64, vw: 27 },
+  { from: 80, vw: 13 },
+]);
 
 // The tile's outline follows the band, like the picture's own frame.
 const OUTLINE: Record<AgeBand, string> = {
@@ -24,11 +37,8 @@ const OUTLINE: Record<AgeBand, string> = {
  * beside it. A name such as "Mathematics" needs the tile's width, so only the
  * small picture sits beside.
  */
-export function SubjectTile({
-  name,
-  band = "child",
-  onSelect,
-}: SubjectTileProps) {
+export function SubjectTile({ name, onSelect }: SubjectTileProps) {
+  const band = knownBand(useAgeBand());
   return (
     <button
       type="button"
@@ -42,16 +52,16 @@ export function SubjectTile({
       {band === "teen" ? (
         <SubjectPicture
           name={name}
-          band={band}
-          frame="small"
-          className="size-12"
+          frame="none"
+          sizes={TEEN_SIZES}
+          className="size-12 rounded-control"
           iconClassName="size-6"
         />
       ) : (
         <SubjectPicture
           name={name}
-          band={band}
           frame="none"
+          sizes={TILE_SIZES}
           className={cn(
             "w-full",
             band === "child" ? "aspect-4/3" : "aspect-video",

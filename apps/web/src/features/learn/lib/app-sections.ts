@@ -104,3 +104,16 @@ export function isRestPage(pathname: string): boolean {
 export function isChatPath(pathname: string): boolean {
   return trimmed(pathname).startsWith(`${ASK_HUB}/`);
 }
+
+/** What a page looks like before its data is in, so the screen can hold that shape meanwhile. */
+export type PageShape = "home" | "subject" | "list";
+
+// The first path segments under /app/learn that are not a subject's slug.
+const NOT_A_SUBJECT = new Set(["subjects", "you", "plan", "voice", "ask"]);
+
+export function pageShape(pathname: string): PageShape {
+  const path = trimmed(pathname);
+  if (path === LEARN) return "home";
+  const subject = matchPath(`${LEARN}/:subject`, path)?.params.subject;
+  return subject && !NOT_A_SUBJECT.has(subject) ? "subject" : "list";
+}

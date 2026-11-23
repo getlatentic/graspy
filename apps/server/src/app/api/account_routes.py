@@ -35,6 +35,7 @@ from ..account.learners import (
     renamed,
     unadded,
 )
+from ..account.tv_sessions import forget_account as forget_tvs
 from ..caller import Caller, Keeping
 from ..learner.record import DeviceJoined
 from ..learner.time import now_ms
@@ -57,13 +58,23 @@ logger = logging.getLogger(__name__)
 account_router = APIRouter(prefix="/account", tags=["account"])
 
 
-async def _account(session: Annotated[Session, Depends(require_session)]) -> str:
+def _signed_in(session: Session) -> str:
     if not session.account:
         raise HTTPException(
             status_code=403,
             detail={"error": "Sign in to manage learners", "code": "account_required"},
         )
     return session.account
+
+
+async def _account(session: Annotated[Session, Depends(require_session)]) -> str:
+    # A TV learns as its learner and manages nothing of the account, nor signs another TV in.
+    if session.tv:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "A TV cannot do this", "code": "tv_session"},
+        )
+    return _signed_in(session)
 
 
 Uid = Annotated[str, Depends(_account)]
@@ -183,8 +194,22 @@ async def grant_for_held_learner(
 
 
 @account_router.get("/learners", response_model=ListedLearners)
-async def learners(request: Request, uid: Uid, keeping: KeepingDep) -> ListedLearners:
+async def learners(
+    request: Request,
+    session: Annotated[Session, Depends(require_session)],
+    keeping: KeepingDep,
+) -> ListedLearners:
+    """A TV reads this too, to see who it learns as, and sees only that learner."""
+    uid = _signed_in(session)
     directory = await keeping.learners.directory(account_key(uid))
+    if session.tv:
+        directory = Directory(
+            learners=[
+                one
+                for one in directory.learners
+                if learner_key(uid, one.id) == session.learner
+            ]
+        )
     return await listed_with_consents(request.app.state.voice, uid, directory)
 
 
@@ -315,6 +340,7 @@ async def delete_account(request: Request, uid: Uid, keeping: KeepingDep) -> Non
     first: a Firebase failure leaves nothing but that record, and asking again removes it,
     where the other order could leave the data with no one able to sign in to ask."""
     await closed(keeping, uid)
+    await forget_tvs(request.app.state.tv_db, uid)
     admin = request.app.state.firebase_admin
     if admin is None:
         return

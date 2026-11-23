@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
 import { SignIn } from "./sign-in-page";
@@ -61,5 +61,40 @@ describe("the sign-in card", () => {
       expect(control.className).toContain("px-3");
     }
     expect(button.querySelector("span")?.className).toContain("shrink-0");
+  });
+
+  it("offers no phone sign-in away from a television", () => {
+    card();
+
+    expect(screen.queryByRole("link", { name: en.tvSignIn.title })).toBeNull();
+  });
+
+  describe("on a television", () => {
+    beforeEach(() => {
+      document.documentElement.dataset.device = "tv";
+    });
+    afterEach(() => {
+      delete document.documentElement.dataset.device;
+    });
+
+    it("offers to sign in with a phone first, as a big link that the remote can focus", () => {
+      card();
+
+      const phone = screen.getByRole("link", { name: en.tvSignIn.title });
+      const google = screen.getByRole("button", { name: en.you.signIn });
+      expect(phone.getAttribute("href")).toBe("/app/sign-in/phone");
+      expect(phone.className).toContain("w-full");
+      expect(
+        phone.compareDocumentPosition(google) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it("keeps Google's button, and a way in without an account", () => {
+      card();
+
+      expect(screen.getByRole("button", { name: en.you.signIn })).toBeTruthy();
+      expect(screen.getByRole("link", { name: en.signIn.start })).toBeTruthy();
+    });
   });
 });

@@ -123,6 +123,13 @@ const PATHOLOGICAL: Record<string, (copies: number) => string> = {
   "a long text with underscores": (n) => "\\(\\text{" + "_".repeat(n) + "}\\)",
   "a long text with escaped underscores": (n) => "\\(\\text{" + "\\_2".repeat(n) + "}\\)",
   "a long text with braces": (n) => "\\(\\text{" + "{a_2} ".repeat(n) + "}\\)",
+  "unclosed font commands": (n) => "\\(\\mathrm{a ".repeat(n),
+  "font commands with words": (n) => "\\(" + "\\mathrm{ab cd}".repeat(n) + "\\)",
+  "a long group of words in a font command": (n) => "\\(\\mathrm{" + "ab ".repeat(n) + "}\\)",
+  "spaces between a font command and its group": (n) => "\\(\\mathrm" + " ".repeat(n) + "{ab cd}\\)",
+  "font commands with no group": (n) => "\\(\\mathrm ".repeat(n),
+  "backslashes before a font command": (n) => "\\(" + "\\".repeat(n) + "\\mathrm{ab cd}\\)",
+  "escaped font commands": (n) => "\\(a \\\\mathrm{ab cd} \\) ".repeat(n),
 };
 
 function seconds(text: string): number {

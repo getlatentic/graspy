@@ -20,6 +20,7 @@ import { installFocusMemory } from "@/lib/focus-memory";
 import { installRemoteInput } from "@/lib/remote-input";
 import { installSpatialNav } from "@/lib/spatial-nav";
 import { listenForInstall } from "@/lib/install";
+import { dismissBootSplashWhenDrawn } from "@/app/boot-splash";
 import { listenForStaleChunks } from "@/app/page-chunks";
 import { finishPendingWipe } from "@/lib/wipe-pending";
 import { warmApi } from "@/lib/warm-api";
@@ -49,6 +50,7 @@ installAppWorker();
 warmApi();
 
 function render(): void {
+  dismissBootSplashWhenDrawn();
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <ErrorBoundary>

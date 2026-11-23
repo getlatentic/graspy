@@ -1,11 +1,14 @@
 import { ACCOUNT_KEY } from "@/lib/account/account-store";
 import { isServiceConsentKey } from "@/lib/account/service-consent";
+import { TV_CREDENTIAL_KEY } from "@/lib/account/tv-credential";
 import { DEVICE_ID_KEY, newDeviceId } from "@/lib/device-id";
 import { committed, openDB } from "@/lib/idb";
 import { INSTALL_DISMISSED_KEY } from "@/lib/install";
 
 // A device shared by a family or a school keeps nothing of one learner for the next.
 // What the device itself remembers, that its owner declined to install the app, stays.
+// A TV's credential belongs to the account, not to the learner: wiping a learner must not strand
+// it, where the account still lists the TV as signed in.
 
 // Firebase manages its own keys, and signing out of it removes them.
 const isFirebases = (key: string) => key.startsWith("firebase:");
@@ -42,7 +45,8 @@ export async function wipeLearnerData(): Promise<void> {
       key === DEVICE_ID_KEY ||
       key === INSTALL_DISMISSED_KEY ||
       isFirebases(key) ||
-      isServiceConsentKey(key),
+      isServiceConsentKey(key) ||
+      key === TV_CREDENTIAL_KEY,
   );
 }
 

@@ -9,14 +9,19 @@ import { ConsentProblemNote } from "./consent-problem-note";
  * device does not reach them. */
 export function ParentSignIn({
   start,
+  message,
 }: {
   start: (firebaseIdToken: string) => Promise<void>;
+  /** What the sign-in is for; by default, the recordings. */
+  message?: string;
 }) {
   const { t } = useI18n();
   const signIn = useAgreement(start);
   return (
     <Card className="flex flex-col gap-3">
-      <p className="text-pretty text-ink">{t("voiceRecordings.signInAgain")}</p>
+      <p className="text-pretty text-ink">
+        {message ?? t("voiceRecordings.signInAgain")}
+      </p>
       <Button
         variant="secondary"
         className="self-start"

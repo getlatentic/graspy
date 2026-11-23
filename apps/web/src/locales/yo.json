@@ -365,6 +365,51 @@
     "explain": "Wọlé láti fi ìtẹ̀síwájú rẹ pamọ́, tàbí kọ́kọ́ ṣàwárí.",
     "start": "Gbìyànjú láìsí àkọọ́lẹ̀"
   },
+  "tvSignIn": {
+    "title": "Wọlé pẹ̀lú fóònù rẹ",
+    "open": "Lórí fóònù rẹ, ya kóòdù náà tàbí ṣí",
+    "qr": "Kóòdù QR láti wọlé",
+    "expires": "Yóò parí ní {time}",
+    "newCode": "Kóòdù tuntun",
+    "cancel": "Fagilé",
+    "expired": "Kóòdù náà ti parí.",
+    "denied": "Fóònù rẹ kọ̀.",
+    "failed": "A kò rí kóòdù gbà. Tún gbìyànjú.",
+    "linking": "Ń so mọ́ {name}",
+    "continue": "Tẹ̀síwájú",
+    "approvedBy": "{account} ló fọwọ́ sí i lórí {device}.",
+    "approvedOn": "A fọwọ́ sí i lórí {device}.",
+    "aPhone": "fóònù kan",
+    "full": "Àkọọ́lẹ̀ yìí ní tẹlifíṣọ̀n mẹ́wàá. Yọ ọ̀kan kúrò lórí fóònù rẹ, lẹ́yìn náà tẹ̀síwájú."
+  },
+  "tvLink": {
+    "signIn": "Wọlé láti so tẹlifíṣọ̀n rẹ pọ̀",
+    "title": "So tẹlifíṣọ̀n rẹ pọ̀",
+    "code": "Kóòdù lórí tẹlifíṣọ̀n rẹ",
+    "next": "Tẹ̀síwájú",
+    "confirm": "Wọlé lórí {device}?",
+    "learner": "Akẹ́kọ̀ọ́",
+    "addLearner": "Kọ́kọ́ fi akẹ́kọ̀ọ́ kún un",
+    "approve": "Wọlé",
+    "deny": "Má wọlé",
+    "done": "Ní báyìí, fọwọ́ sí i lórí tẹlifíṣọ̀n rẹ.",
+    "denied": "Kò wọlé.",
+    "finish": "Ó parí",
+    "another": "So tẹlifíṣọ̀n mìíràn pọ̀",
+    "invalid": "Kóòdù yẹn kò tọ̀nà. Wo tẹlifíṣọ̀n rẹ.",
+    "busy": "Ìgbìyànjú pọ̀ jù. Dúró ìṣẹ́jú kan.",
+    "full": "Yọ tẹlifíṣọ̀n kan kúrò kọ́kọ́.",
+    "consent": "Òbí gbọ́dọ̀ kọ́kọ́ fọwọ́ sí i fún akẹ́kọ̀ọ́ yìí.",
+    "failed": "Kò ṣiṣẹ́. Tún gbìyànjú.",
+    "tvs": "Àwọn tẹlifíṣọ̀n rẹ",
+    "remove": "Yọ kúrò",
+    "removeNamed": "Yọ {name} kúrò",
+    "warn": "Tẹ̀síwájú nìkan tí o bá ń wo tẹlifíṣọ̀n yìí.",
+    "wrongEnd": "Àwọn yẹn kì í ṣe ọ̀rọ̀ tó kẹ́yìn lórí tẹlifíṣọ̀n.",
+    "inUse": "Àkọọ́lẹ̀ mìíràn ń so tẹlifíṣọ̀n yìí pọ̀ tẹ́lẹ̀.",
+    "endLabel": "Ọ̀rọ̀ mẹ́rin tó kẹ́yìn lórí tẹlifíṣọ̀n",
+    "parent": "Tún wọlé láti so tẹlifíṣọ̀n pọ̀."
+  },
   "voice": {
     "title": "Ẹ̀kọ́ ohùn",
     "start": "Bẹ̀rẹ̀",
@@ -467,5 +512,9 @@
     "playAt": "Tẹ́tí sí ohùn ti {when}",
     "stopAt": "Dá ohùn ti {when} dúró",
     "deleteAt": "Pa ohùn ti {when} rẹ́"
+  },
+  "loading": {
+    "opening": "Ó ń ṣí…",
+    "tryAgain": "Tún gbìyànjú"
   }
 }

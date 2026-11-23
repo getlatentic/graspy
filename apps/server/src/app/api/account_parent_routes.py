@@ -10,6 +10,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import Field
 
+from ..account.tv_codes import masked_email
 from ..security.guard import Session, require_session
 from ..security.session import issue
 from ..wire import Wire
@@ -46,8 +47,13 @@ async def start_parent_session(
 ) -> SessionResponse:
     """For the parent who signed in with Google in the last 5 minutes, as this session's
     account."""
-    await require_fresh_sign_in(request, uid, body.firebase_id_token)
-    issued = issue(request.app.state.session_secret, account=uid, parent=True)
+    signed = await require_fresh_sign_in(request, uid, body.firebase_id_token)
+    issued = issue(
+        request.app.state.session_secret,
+        account=uid,
+        parent=True,
+        hint=masked_email(signed.email),
+    )
     return SessionResponse(
         token=issued.token, expires_in=issued.expires_in, signed_in=True
     )

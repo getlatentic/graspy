@@ -148,12 +148,14 @@ async def _account_session(request: Request, body: SessionRequest) -> SessionRes
 
 
 def learner_session(
-    request: Request, uid: str, learner: Learner | None
+    request: Request, uid: str, learner: Learner | None, *, tv: str | None = None
 ) -> SessionResponse:
+    """``tv`` is the credential of the TV the session is for (api/tv_sign_in_routes.py)."""
     issued = issue(
         request.app.state.session_secret,
         learner=learner_key(uid, learner.id) if learner else None,
         account=uid,
+        tv=tv,
     )
     return SessionResponse(
         token=issued.token,

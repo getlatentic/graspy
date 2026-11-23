@@ -32,6 +32,7 @@ from .api.learner_routes import learner_router
 from .api.routes import api_router
 from .api.service_consent import session_consent_refusal
 from .api.thread_routes import thread_router
+from .api.tv_sign_in_routes import tv_sign_in_router
 from .api.voice_routes import voice_router
 from .caller import Keeping
 from .config.cors import build_origin_rules, origin_matcher
@@ -101,6 +102,8 @@ def create_app(
     _add_state(app, settings, session_secret, origins, keeping, views)
     app.state.voice = voice
     app.state.turns = turns
+    app.state.tv_db = voice.DB if voice is not None else _local_database()
+    app.state.pairing_limiter = budgets.pairing if budgets else None
 
     app.include_router(api_router, prefix="/api")
     app.include_router(learner_router, prefix="/api")
@@ -109,6 +112,7 @@ def create_app(
     app.include_router(account_router, prefix="/api")
     app.include_router(parent_session_router, prefix="/api")
     app.include_router(account_voice_router, prefix="/api")
+    app.include_router(tv_sign_in_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
     app.include_router(voice_router, prefix="/api")
     tutor = Tutor(keeping.conversations)
@@ -167,11 +171,15 @@ def _keeping(
     )
 
 
-def _local_threads() -> ThreadStore:
-    """Imported only here: a Worker keeps threads in D1 and has no SQLite."""
+def _local_database():
+    """Imported only here: a Worker keeps its data in D1 and has no SQLite."""
     from .local_d1 import LocalD1
 
-    return ThreadStore(LocalD1())
+    return LocalD1()
+
+
+def _local_threads() -> ThreadStore:
+    return ThreadStore(_local_database())
 
 
 def _add_state(

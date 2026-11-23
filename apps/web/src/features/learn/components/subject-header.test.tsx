@@ -79,7 +79,11 @@ describe("SubjectHeader picture", () => {
       expect(header.querySelector("img")?.getAttribute("src")).toBe(
         `/brand/art/math-${now}.webp`,
       );
-      expect(header.querySelector("svg.lucide-pi")).toBeNull();
+      expect(
+        header
+          .querySelector("[data-subject-picture]")
+          ?.getAttribute("data-subject-picture"),
+      ).toBe("art");
       expect(header.querySelector(".rounded-full")).toBeNull();
     },
   );
@@ -90,6 +94,8 @@ describe("SubjectHeader picture", () => {
     const header = screen.getByRole("banner");
 
     expect(header.querySelector("img")).toBeNull();
-    expect(header.querySelectorAll("svg.lucide-book-marked").length).toBe(1);
+    const picture = header.querySelector("[data-subject-picture]");
+    expect(picture?.getAttribute("data-subject-picture")).toBe("icon");
+    expect(picture?.querySelectorAll("svg").length).toBe(1);
   });
 });

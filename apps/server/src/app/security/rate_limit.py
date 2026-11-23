@@ -5,6 +5,7 @@ account's spend cap is the only absolute ceiling."""
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import re
 from dataclasses import dataclass
@@ -28,6 +29,9 @@ class Budgets:
     generate: Limiter
     agent: Limiter
     api: Limiter
+    # Asking for a TV's code and looking codes up, counted per key the route names. Required, so
+    # a caller that forgets it does not leave signing a TV in unlimited.
+    pairing: Limiter
 
 
 class RateLimitMiddleware:
@@ -83,6 +87,28 @@ class RateLimitMiddleware:
 def _evaluation(path: str) -> bool:
     """Marking a recording runs speech recognition and models."""
     return path.startswith("/api/voice/samples/") and path.endswith("/evaluation")
+
+
+def source_of(address: str) -> str:
+    """What one source of requests is counted as: an IPv4 address, or an IPv6 address's /64, which
+    is what one subscriber holds and so cannot be stepped around by changing the low bits."""
+    try:
+        parsed = ipaddress.ip_address(address)
+    except ValueError:
+        return address
+    if isinstance(parsed, ipaddress.IPv6Address):
+        return str(ipaddress.ip_network(f"{address}/64", strict=False))
+    return address
+
+
+def prefix_of(address: str) -> str:
+    """The wider network a source belongs to: an IPv4 address's /24, an IPv6 address's /48."""
+    try:
+        parsed = ipaddress.ip_address(address)
+    except ValueError:
+        return address
+    bits = 48 if isinstance(parsed, ipaddress.IPv6Address) else 24
+    return str(ipaddress.ip_network(f"{address}/{bits}", strict=False))
 
 
 def client_key(scope) -> str:
