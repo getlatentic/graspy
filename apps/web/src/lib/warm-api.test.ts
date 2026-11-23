@@ -17,6 +17,16 @@ describe("warmApi", () => {
     });
   });
 
+  it("leaves it to index.html when that already asked while the page loaded", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("__graspyWarmed", true);
+
+    warmApi();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("does not raise when the server cannot be reached", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("offline")));
 

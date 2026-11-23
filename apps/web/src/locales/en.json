@@ -467,5 +467,9 @@
     "playAt": "Play the recording of {when}",
     "stopAt": "Stop the recording of {when}",
     "deleteAt": "Delete the recording of {when}"
+  },
+  "loading": {
+    "opening": "Opening…",
+    "tryAgain": "Try again"
   }
 }

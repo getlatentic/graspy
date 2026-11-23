@@ -11,6 +11,17 @@
       transform: translateY(0.375rem);
     }
   }
+
+  /* The progress line of a screen waiting for the app; index.html's first paint draws the same. */
+  --animate-sweep: sweep 1.4s ease-in-out infinite;
+  @keyframes sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
 }
 
 /* One root size scales the whole interface with the screen. It follows the

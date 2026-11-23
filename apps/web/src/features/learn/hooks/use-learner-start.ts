@@ -12,7 +12,11 @@ export function useLearnerStart(): UserProfile | null {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { curriculum, isGenerating, generate, loadSaved } = usePlan();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  // Read at once, so the first frame draws the shell rather than nothing while the effect runs.
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    const saved = getUserProfile();
+    return saved?.onboardingCompleted ? saved : null;
+  });
   const [loaded, setLoaded] = useState(false);
   // A ref: StrictMode's double effect run would read stale state.
   const generated = useRef(false);

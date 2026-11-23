@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -7,6 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SLOW_MS } from "@/hooks/use-slow";
 import { setAccount } from "@/lib/account/account-store";
 import { SERVICE_NOTICE } from "@/lib/account/consent-notices";
 import { toApiError } from "@/lib/api/errors";
@@ -328,9 +330,23 @@ describe("a parent who cannot agree, in front of the gate", () => {
 
     gated();
 
-    expect(screen.getByRole("status").getAttribute("aria-label")).toBe(
-      "learners.opening",
-    );
+    expect(screen.getByRole("status").textContent).toBe("loading.opening");
+  });
+
+  it("offers another try once the server has been silent for a while", () => {
+    vi.useFakeTimers();
+    signedInAs(ADA);
+    listLearners.mockReturnValue(new Promise(() => undefined));
+
+    gated();
+    expect(
+      screen.queryByRole("button", { name: "loading.tryAgain" }),
+    ).toBeNull();
+    act(() => vi.advanceTimersByTime(SLOW_MS));
+    fireEvent.click(screen.getByRole("button", { name: "loading.tryAgain" }));
+
+    expect(listLearners).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
   });
 });
 
