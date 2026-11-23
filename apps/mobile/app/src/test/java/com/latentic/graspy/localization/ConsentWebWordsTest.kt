@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** The parent's screens say what the web's do (`consent` and `voiceRecordings` in apps/web/src/locales) in every language. */
@@ -25,7 +26,6 @@ class ConsentWebWordsTest {
             val copy = accountCopyFor(language).consent
             mapOf(
                 "serviceTitle" to copy.title,
-                "who" to copy.who,
                 "agree" to copy.agree,
                 "decline" to copy.decline,
                 "needed" to copy.needed,
@@ -33,6 +33,10 @@ class ConsentWebWordsTest {
                 "notKept" to copy.notKept,
                 "otherAccount" to copy.otherAccount,
             ).forEach { (key, text) -> assertEquals("${language.tag} consent.$key", words.text("consent", key), text) }
+            // The web asks the parent for the parent PIN and says so only by asking; Android still has the
+            // parent sign in with Google again, and its line says that after the web's own words.
+            val web = words.text("consent", "who")!!
+            assertTrue("${language.tag} consent.who", copy.who.startsWith(web) && copy.who.length > web.length)
         }
     }
 
