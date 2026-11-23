@@ -16,6 +16,7 @@ const TARGETS = {
   kotlin: `${ANDROID_SOURCE}/java/com/latentic/graspy/ui/GraspyTokens.kt`,
   xml: `${ANDROID_SOURCE}/res/values/graspy_tokens.xml`,
   pageCss: `${ANDROID_SOURCE}/assets/app-host/tokens.css`,
+  viewCss: "apps/server/ui/src/shared/tokens.css",
 };
 const REGENERATE = "node content/design/build.mjs";
 
@@ -130,6 +131,24 @@ function renderCss(tokens) {
     "",
     ...cssAge(tokens),
     ...cssDark(tokens),
+    "",
+  ].join("\n");
+  return stamp("/* ", body, " */");
+}
+
+/** The colours of the lesson, practice and passage views: light by default, dark once the host's theme says so. */
+function renderViewCss(tokens) {
+  const themed = Object.entries(tokens.color).filter(([, { dark }]) => dark !== undefined);
+  const body = [
+    `/* Generated from content/design/tokens.json; do not edit. Regenerate: ${REGENERATE} */`,
+    "@theme {",
+    ...cssColors(tokens),
+    "}",
+    "",
+    "/* The host's theme (hostContext.theme), applied by the view as data-theme. */",
+    ':root[data-theme="dark"] {',
+    ...themed.map(([name, { dark }]) => `  --color-${name}: ${dark};`),
+    "}",
     "",
   ].join("\n");
   return stamp("/* ", body, " */");
@@ -277,7 +296,7 @@ function renderPageCss(tokens) {
   return stamp("/* ", body, " */");
 }
 
-const RENDERERS = { css: renderCss, kotlin: renderKotlin, xml: renderXml, pageCss: renderPageCss };
+const RENDERERS = { css: renderCss, kotlin: renderKotlin, xml: renderXml, pageCss: renderPageCss, viewCss: renderViewCss };
 
 function outputs() {
   const tokens = JSON.parse(readFileSync(SOURCE, "utf8"));

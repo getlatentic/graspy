@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { BackLink } from "@/components/ui/back-link";
 import { useNavigate } from "react-router";
 import { useI18n } from "@/lib/i18n-context";
 import { useLessonTopic } from "@/features/learn/hooks/use-lesson-topic";
@@ -27,14 +27,9 @@ export default function LessonPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <button
-        type="button"
-        onClick={back}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-ink hover:underline"
-      >
-        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
+      <BackLink onClick={back}>
         {t("lesson.backTo", { subject: lesson.subjectName })}
-      </button>
+      </BackLink>
       <LessonBody lesson={lesson} onBack={back} />
     </div>
   );

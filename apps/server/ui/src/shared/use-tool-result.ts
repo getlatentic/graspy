@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import type { App, McpUiHostContext } from "@modelcontextprotocol/ext-apps";
+import {
+  applyDocumentTheme,
+  type App,
+  type McpUiHostContext,
+} from "@modelcontextprotocol/ext-apps";
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import type { ToolResult } from "@/lib/content";
 import { directionOf, wordsFor, type Words } from "./words";
@@ -38,6 +42,16 @@ export function useToolResult<C>(
   useEffect(() => {
     if (app) setContext((current) => ({ ...app.getHostContext(), ...current }));
   }, [app]);
+
+  // Only a theme the views know is applied; any other value leaves the
+  // document on both schemes, the device's.
+  const theme =
+    context.theme === "light" || context.theme === "dark"
+      ? context.theme
+      : undefined;
+  useEffect(() => {
+    if (theme) applyDocumentTheme(theme);
+  }, [theme]);
 
   const locale = context.locale ?? "en";
   useEffect(() => {

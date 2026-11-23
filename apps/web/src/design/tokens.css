@@ -1,4 +1,4 @@
-/* graspy-tokens source=fb3dc885f69c9c9b5101565170cbad6b046c48bb34fc0205831e5c2bb82a9459 content=9aae1e7c8210d5c86f816b6c4c76e4646f66f1068ca5b5dfa5f3c4a9b61b1feb */
+/* graspy-tokens source=4f8157b4466e72bd5bded59bae93fc62bd1365023c24ab057e71dedf938e031a content=8460317066354af9605dfc1cf1ab56c45732397eb112a7bea48f1d5b86c6f54b */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 @theme {
   /* Page ground behind cards. */
@@ -35,6 +35,8 @@
   --color-success: #0f7838;
   /* The ground of a right answer or a finished topic. */
   --color-success-soft: #eaf7e4;
+  /* Text and icons on a success fill. */
+  --color-on-success: #ffffff;
   /* Dark enough for small text: 5.4:1; 4.8:1 on warning-soft. */
   --color-warning: #8a6416;
   /* The ground of a caution. */
@@ -138,6 +140,7 @@
     --color-on-accent: #ffffff;
     --color-success: #62d08c;
     --color-success-soft: #11301f;
+    --color-on-success: #11301f;
     --color-warning: #e8c46e;
     --color-warning-soft: #33280d;
     --color-warning-line: #5a4716;
@@ -173,6 +176,7 @@
   --color-on-accent: #ffffff;
   --color-success: #0f7838;
   --color-success-soft: #eaf7e4;
+  --color-on-success: #ffffff;
   --color-warning: #8a6416;
   --color-warning-soft: #fdf3d6;
   --color-warning-line: #f3de9a;

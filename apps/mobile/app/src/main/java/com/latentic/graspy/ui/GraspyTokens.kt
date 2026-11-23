@@ -1,4 +1,4 @@
-// graspy-tokens source=fb3dc885f69c9c9b5101565170cbad6b046c48bb34fc0205831e5c2bb82a9459 content=310dcf4552d4f39ac641865fe1d8e4e671447659026a5789878e01c9ccf62823
+// graspy-tokens source=4f8157b4466e72bd5bded59bae93fc62bd1365023c24ab057e71dedf938e031a content=e180c082014ffc51bf707ebd5d9c44dd075465aeb415bbbbab759321194747af
 // Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs
 @file:OptIn(ExperimentalTextApi::class)
 
@@ -55,6 +55,8 @@ object GraspyColor {
     val Success = Color(0xFF0F7838)
     /** The ground of a right answer or a finished topic. */
     val SuccessSoft = Color(0xFFEAF7E4)
+    /** Text and icons on a success fill. */
+    val OnSuccess = Color(0xFFFFFFFF)
     /** Dark enough for small text: 5.4:1; 4.8:1 on warning-soft. */
     val Warning = Color(0xFF8A6416)
     /** The ground of a caution. */

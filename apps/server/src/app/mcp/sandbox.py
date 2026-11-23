@@ -33,7 +33,7 @@ WORKER_SERVER = "__SERVER__"
 HOST_MARK = "{host}"
 # Loaded, then written over with the view, so that the view's frame is a page
 # of this origin the worker controls: the worker then serves its files.
-FRAME_PAGE = '<!doctype html><html><head><meta charset="utf-8" /></head></html>'
+FRAME_PAGE = '<!doctype html><html><head><meta charset="utf-8" /><meta name="color-scheme" content="light dark" /></head></html>'
 _BUILD = re.compile(r"^[0-9a-f]{16}$")
 
 

@@ -51,7 +51,7 @@ function Lesson({
   }
 
   return (
-    <section aria-label={words.label} className="space-y-6 p-1">
+    <section aria-label={words.label} className="space-y-6">
       <Header content={view} words={words} />
       {view.lesson?.grounding && (
         <LessonSource

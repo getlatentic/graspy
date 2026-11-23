@@ -1,0 +1,106 @@
+/* graspy-tokens source=4f8157b4466e72bd5bded59bae93fc62bd1365023c24ab057e71dedf938e031a content=d4610cbc55b5418299804a1f055d690ec82f7367fb8ebb2a28d180af42de6a40 */
+/* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
+@theme {
+  /* Page ground behind cards. */
+  --color-canvas: #f5f8fa;
+  /* Cards, sheets, the tab bar. */
+  --color-surface: #ffffff;
+  /* A quiet band inside a card. */
+  --color-raised: #f9fbfc;
+  /* Any text. 16.1:1; 15.1:1 on canvas. */
+  --color-ink: #12232e;
+  /* Secondary text. 5.9:1; 5.5:1 on canvas. */
+  --color-muted: #5a6672;
+  /* Small print that still reads as text: 4.6:1 on white, 4.3:1 on canvas, so on canvas use muted. */
+  --color-subtle: #6b7682;
+  /* Only for icons beside a label and other non-text: 3.05:1. */
+  --color-faint: #8a95a0;
+  /* Card borders and dividers. */
+  --color-line: #e5e9ee;
+  /* The empty part of a progress bar. */
+  --color-track: #eef1f4;
+  /* The brand blue. 5.5:1 under white labels: fills, borders, focus rings and button labels. Dark: 5.0:1 under white, 3.2:1 on a card. */
+  --color-accent: #1f7099;
+  /* A pressed or hovered accent fill, and the lip under a button. 8.1:1. */
+  --color-accent-strong: #175573;
+  /* Blue text and links. 5.5:1; 4.9:1 on accent-soft. */
+  --color-accent-ink: #1f6f9c;
+  /* A selected row, the selected tab's pill, the tutor's ground. */
+  --color-accent-soft: #eaf4fa;
+  /* The border of an accent-soft area. */
+  --color-accent-line: #cfe7f3;
+  /* Text and icons on an accent fill. */
+  --color-on-accent: #ffffff;
+  /* Right or finished, and nothing else. 5.6:1; 5.0:1 on success-soft. */
+  --color-success: #0f7838;
+  /* The ground of a right answer or a finished topic. */
+  --color-success-soft: #eaf7e4;
+  /* Text and icons on a success fill. */
+  --color-on-success: #ffffff;
+  /* Dark enough for small text: 5.4:1; 4.8:1 on warning-soft. */
+  --color-warning: #8a6416;
+  /* The ground of a caution. */
+  --color-warning-soft: #fdf3d6;
+  /* The border of a warning-soft area. */
+  --color-warning-line: #f3de9a;
+  /* Errors and destructive actions. 5.4:1; 4.7:1 on danger-soft. */
+  --color-danger: #c0392b;
+  /* The ground of an error. */
+  --color-danger-soft: #fbebe8;
+  /* Subject tiles only; never for text. */
+  --color-tint-green: #2f9e6e;
+  /* Subject tiles only. */
+  --color-tint-green-soft: #e6f6ee;
+  /* Subject tiles only; never for text. */
+  --color-tint-orange: #d9772b;
+  /* Subject tiles only. */
+  --color-tint-orange-soft: #fdf0e4;
+  /* Subject tiles only; never for text. */
+  --color-tint-purple: #7057d1;
+  /* Subject tiles only. */
+  --color-tint-purple-soft: #f0ecfc;
+  /* Text on a danger fill. */
+  --color-on-danger: #ffffff;
+  /* Where the art screens' ground starts, warm ivory at the left and top; light in dark mode too, because the picture on it is. */
+  --color-art-ground-start: #fef4ec;
+  /* The middle of the art screens' ground; also the flat colour behind it where an image is not drawn. */
+  --color-art-ground-mid: #e3eefa;
+  /* Where the art screens' ground ends, pale blue at the right and foot. */
+  --color-art-ground-end: #c4e2fe;
+  /* Text on the art screens' ground, from art-ground-start to art-ground-end. */
+  --color-on-art: #12232e;
+}
+
+/* The host's theme (hostContext.theme), applied by the view as data-theme. */
+:root[data-theme="dark"] {
+  --color-canvas: #0d1a22;
+  --color-surface: #15252f;
+  --color-raised: #1a2d39;
+  --color-ink: #eaf2f7;
+  --color-muted: #a6b5c0;
+  --color-subtle: #97a8b4;
+  --color-faint: #72848f;
+  --color-line: #27404f;
+  --color-track: #223744;
+  --color-accent: #2177a3;
+  --color-accent-strong: #175573;
+  --color-accent-ink: #74c3ec;
+  --color-accent-soft: #12303e;
+  --color-accent-line: #1d4a5f;
+  --color-on-accent: #ffffff;
+  --color-success: #62d08c;
+  --color-success-soft: #11301f;
+  --color-on-success: #11301f;
+  --color-warning: #e8c46e;
+  --color-warning-soft: #33280d;
+  --color-warning-line: #5a4716;
+  --color-danger: #ff8d7d;
+  --color-danger-soft: #3a1714;
+  --color-tint-green: #4cc592;
+  --color-tint-green-soft: #102f27;
+  --color-tint-orange: #f0975a;
+  --color-tint-orange-soft: #3a2514;
+  --color-tint-purple: #a994f2;
+  --color-tint-purple-soft: #241f47;
+  --color-on-danger: #3a1714;
+}

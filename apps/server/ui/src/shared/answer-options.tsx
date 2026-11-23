@@ -13,9 +13,9 @@ const OPTION_STYLE: Record<Verdict, string> = {
 };
 
 const MARK_STYLE: Record<Verdict, string> = {
-  correct: "border-success bg-success text-white",
-  wrong: "border-danger bg-danger text-white",
-  chosen: "border-accent bg-accent text-white",
+  correct: "border-success bg-success text-on-success",
+  wrong: "border-danger bg-danger text-on-danger",
+  chosen: "border-accent bg-accent text-on-accent",
   open: "border-line",
   struck: "border-line",
 };
@@ -99,7 +99,7 @@ function AnswerOption({
         {verdict === "correct" && <Check className="size-3" />}
         {verdict === "wrong" && <X className="size-3" />}
         {verdict === "chosen" && (
-          <span className="size-2 rounded-full bg-white" />
+          <span className="size-2 rounded-full bg-on-accent" />
         )}
       </span>
       <span dir="auto" className="min-w-0 flex-1 leading-6 text-ink">

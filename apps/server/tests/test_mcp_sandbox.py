@@ -140,6 +140,19 @@ def test_the_proxy_registers_its_builds_worker_and_frames_its_page():
     assert 'new URL("frame", location.href)' in page
 
 
+def test_the_pages_a_view_passes_through_declare_both_colour_schemes(client):
+    """A frame whose colour scheme differs from its parent's is painted on an
+    opaque canvas: a white rectangle on a dark page, until the view's theme is
+    known."""
+    meta = '<meta name="color-scheme" content="light dark"'
+    proxy = client.get(SANDBOX, params={"host": APP})
+    frame = client.get(f"{SANDBOX}frame", params={"host": APP})
+
+    assert meta in proxy.text
+    assert meta in frame.text
+    assert "color-scheme: inherit" in proxy.text
+
+
 def test_the_current_builds_worker_carries_the_servers_pages(client):
     worker = client.get(f"{SANDBOX}sw.js")
 

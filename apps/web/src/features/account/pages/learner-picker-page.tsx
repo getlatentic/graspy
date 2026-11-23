@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { BackLink } from "@/components/ui/back-link";
+import { Navigate, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { Account } from "@/lib/account/account-store";
@@ -148,13 +148,9 @@ function Choosing({
 function BackToYou() {
   const { t } = useI18n();
   return (
-    <Link
-      to="/app/learn/you"
-      className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent-ink hover:underline"
-    >
-      <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
+    <BackLink to="/app/learn/you" className="mb-4">
       {t("learners.back")}
-    </Link>
+    </BackLink>
   );
 }
 

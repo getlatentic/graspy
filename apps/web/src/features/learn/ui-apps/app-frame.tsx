@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { TutorCard } from "@/lib/a2a/reply-data";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useI18n } from "@/lib/i18n-context";
 import { abortAny } from "@/lib/abort-any";
 import { uiView } from "@/lib/mcp/server";
+import type { AppBridge } from "@modelcontextprotocol/ext-apps/app-bridge";
 import {
   bridgeTo,
   closeView,
+  hostContextFor,
   showView,
-  VIEW_MAX_HEIGHT,
+  tellHostContext,
   type ViewHost,
 } from "./view-bridge";
 
@@ -60,17 +63,19 @@ function useViewTitle(resourceUri: string): string {
   return title;
 }
 
-/** True once the view has failed to show. */
+/** True once the view has failed to show. The view's colours follow the page's scheme, also while it is open. */
 function useShownView(
   frame: RefObject<HTMLIFrameElement | null>,
   card: TutorCard,
   host: ViewHost,
 ): boolean {
   const { locale } = useI18n();
-  const latest = useRef({ card, host });
+  const theme = useColorScheme();
+  const latest = useRef({ card, host, theme });
+  const open = useRef<AppBridge | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
-    latest.current = { card, host };
+    latest.current = { card, host, theme };
   });
   const { resourceUri } = card;
 
@@ -78,19 +83,22 @@ function useShownView(
     const element = frame.current;
     if (!element) return;
     const leaving = new AbortController();
-    const bridge = bridgeTo(element, () => latest.current.host, {
-      theme: "light",
-      platform: "web",
-      locale,
-      displayMode: "inline",
-      availableDisplayModes: ["inline"],
-      containerDimensions: { maxHeight: VIEW_MAX_HEIGHT },
-    });
+    const bridge = bridgeTo(
+      element,
+      () => latest.current.host,
+      hostContextFor(locale, latest.current.theme),
+    );
     const signal = abortAny([
       leaving.signal,
       AbortSignal.timeout(SHOW_WITHIN_MS),
     ]);
-    showView(element, bridge, latest.current.card, signal).catch(
+    showView(element, bridge, latest.current.card, signal).then(
+      () => {
+        if (leaving.signal.aborted) return;
+        open.current = bridge;
+        // A change of scheme during the handshake is told now.
+        tellHostContext(bridge, { theme: latest.current.theme });
+      },
       (error: unknown) => {
         if (leaving.signal.aborted) return;
         console.error("A view could not be shown:", error);
@@ -98,10 +106,15 @@ function useShownView(
       },
     );
     return () => {
+      open.current = null;
       leaving.abort();
       void closeView(bridge);
     };
   }, [frame, resourceUri, locale]);
+
+  useEffect(() => {
+    if (open.current) tellHostContext(open.current, { theme });
+  }, [theme]);
 
   return failed;
 }

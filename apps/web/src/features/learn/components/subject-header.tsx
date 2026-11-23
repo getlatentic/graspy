@@ -1,5 +1,5 @@
-import { ArrowLeft } from "lucide-react";
 import type { CurriculumSource } from "@/lib/curriculum-record";
+import { BackLink } from "@/components/ui/back-link";
 import { useI18n } from "@/lib/i18n-context";
 import { useAgeBand } from "@/lib/use-age-band";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
@@ -23,14 +23,7 @@ export function SubjectHeader({
   const band = useAgeBand();
   return (
     <header>
-      <button
-        type="button"
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-ink hover:underline"
-      >
-        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-        {t("subject.back")}
-      </button>
+      <BackLink onClick={onBack}>{t("subject.back")}</BackLink>
       <div className="mt-4 flex items-center gap-3">
         <SubjectPicture
           name={name}

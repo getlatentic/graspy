@@ -1,8 +1,8 @@
 import { useState } from "react";
+import { BackLink } from "@/components/ui/back-link";
 import { FormProvider, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useLocation, useNavigate } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ProfileStep from "@/features/onboarding/components/steps/profile-step";
@@ -44,13 +44,7 @@ export default function DetailsPage() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
       <div>
-        <Link
-          to={YOU}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-ink hover:underline"
-        >
-          <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-          {t("details.back")}
-        </Link>
+        <BackLink to={YOU}>{t("details.back")}</BackLink>
         <h1 className="mt-4 text-balance font-display text-3xl font-semibold text-ink">
           {t("details.title")}
         </h1>

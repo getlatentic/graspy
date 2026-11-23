@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, X } from "lucide-react";
+import { X } from "lucide-react";
+import { BackArrow } from "@/components/ui/back-link";
 import type { ThreadScope } from "@/lib/chat-db";
 import { useDialog } from "@/hooks/use-dialog";
 import { useI18n } from "@/lib/i18n-context";
@@ -81,7 +82,7 @@ function BackToLesson({ onBack }: { onBack: () => void }) {
       title={t("chat.backToLesson")}
       className="-ms-2 shrink-0 rounded-full p-2 text-accent-ink transition-colors hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
-      <ArrowLeft className="size-5 rtl:rotate-180" aria-hidden="true" />
+      <BackArrow className="size-5" />
     </button>
   );
 }
