@@ -671,7 +671,9 @@ async def test_forgot_pin_is_a_sign_in_just_made_and_it_ends_a_lock(pinned, cloc
 
 @pytest.fixture
 def one_clock(clock, monkeypatch):
-    """Sessions and the lockout keep the same time, so a reset can come after them."""
+    """Sessions and the lockout keep the same time, so a reset can come after them. The clock is
+    brought up to now first: a session made since it was made would otherwise be later than it."""
+    clock.ms = max(clock.ms, int(time.time() * 1000))
     monkeypatch.setattr(time, "time", lambda: clock.ms / 1000)
     return clock
 
