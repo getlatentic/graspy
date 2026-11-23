@@ -9,9 +9,21 @@ import { anchoredStyle } from "../lib/select-options";
 
 type Box = RefObject<HTMLElement | null>;
 
-/** `relayoutOn` lists what can move the anchor without a scroll or resize. */
+/** The height the popup would take with room to spare: its card's parts at their full height. */
+function naturalHeight(popup: HTMLElement | null): number {
+  const card = popup?.firstElementChild;
+  if (!(card instanceof HTMLElement)) return 0;
+  const parts = [...card.children].reduce(
+    (sum, part) => sum + part.scrollHeight,
+    0,
+  );
+  return parts + (card.offsetHeight - card.clientHeight);
+}
+
+/** `relayoutOn` lists what can move the anchor or change the popup's height without a scroll or resize. */
 export function useAnchoredStyle(
   anchor: Box,
+  popup: Box,
   relayoutOn: readonly unknown[],
 ): CSSProperties {
   const [style, setStyle] = useState<CSSProperties>({});
@@ -19,8 +31,16 @@ export function useAnchoredStyle(
   useLayoutEffect(() => {
     const place = () => {
       if (!anchor.current) return;
+      const rem = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
       setStyle(
-        anchoredStyle(anchor.current.getBoundingClientRect(), innerHeight),
+        anchoredStyle(
+          anchor.current.getBoundingClientRect(),
+          innerHeight,
+          naturalHeight(popup.current),
+          rem || 16,
+        ),
       );
     };
     place();
@@ -33,7 +53,7 @@ export function useAnchoredStyle(
     };
     // The caller fixes relayoutOn's length, so the spread is a fixed list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [anchor, ...relayoutOn]);
+  }, [anchor, popup, ...relayoutOn]);
 
   return style;
 }

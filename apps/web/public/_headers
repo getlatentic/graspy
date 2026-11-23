@@ -38,7 +38,7 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# The cue sounds carry a version in their names (select-v1.wav), so a changed sound has a new name
+# The cue sounds carry a version in their names (select-v2.wav), so a changed sound has a new name
 # and a file under one name never changes.
 /sounds/*
   Cache-Control: public, max-age=31536000, immutable

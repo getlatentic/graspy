@@ -78,10 +78,24 @@ describe("the onboarding page", () => {
     expect(physical.filter((name) => !name.includes("left-1/2"))).toEqual([]);
   });
 
-  it("scales the form and the headline with the screen", () => {
+  it("answers to its own width (a container), not a zoom scope or the device", () => {
     const { container } = layout();
-    expect(container.querySelector("main .zoom")).toBeTruthy();
-    expect(container.querySelector("aside .zoom")).toBeTruthy();
+    const ground = container.firstElementChild as HTMLElement;
+    const holder = container.querySelector(".\\@container");
+    expect(holder).toBeTruthy();
+    expect(container.querySelector(".zoom")).toBeNull();
+    // A container has layout containment, which would hold the ground's fixed picture to itself.
+    expect(ground.classList.contains("@container")).toBe(false);
+    expect(ground.classList.contains("art-ground")).toBe(true);
+    expect(ground.contains(holder)).toBe(true);
+    expect(holder?.querySelector("aside")).toBeTruthy();
+  });
+
+  it("keeps the fields' scrollbar out of sight and the action outside what scrolls", () => {
+    layout();
+    const fields = screen.getByText("fields").parentElement;
+    expect(fields?.classList.contains("quiet-scroll")).toBe(true);
+    expect(fields?.contains(screen.getByText("go"))).toBe(false);
   });
 
   it("brings the fields back to the top when the step changes", () => {

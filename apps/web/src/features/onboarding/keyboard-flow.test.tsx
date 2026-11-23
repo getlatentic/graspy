@@ -69,20 +69,27 @@ describe("the class picker with a keyboard or a remote", () => {
     expect(field.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("leaves Home and End to the search field's own cursor, open or not", async () => {
+  it("moves in the list with Home, End, PageUp and PageDown while it is a button, and leaves Home and End to the text cursor once Search is pressed", async () => {
     const user = userEvent.setup();
     render(<Picker />);
     const field = screen.getByRole("combobox") as HTMLInputElement;
     field.focus();
     await user.keyboard("{ArrowDown}");
-    for (const key of ["Home", "End"]) {
+    const handled = (key: string) => {
       const event = new KeyboardEvent("keydown", {
         key,
         bubbles: true,
         cancelable: true,
       });
       field.dispatchEvent(event);
-      expect(event.defaultPrevented, key).toBe(false);
+      return event.defaultPrevented;
+    };
+    for (const key of ["Home", "End", "PageUp", "PageDown"]) {
+      expect(handled(key), key).toBe(true);
+    }
+    await user.click(screen.getByRole("button", { name: /search/i }));
+    for (const key of ["Home", "End"]) {
+      expect(handled(key), key).toBe(false);
     }
   });
 

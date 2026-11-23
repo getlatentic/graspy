@@ -4,6 +4,7 @@ import {
   DECODE_TIMEOUT_MS,
   MAX_DECODE_ATTEMPTS,
   PENDING_CUE_MS,
+  PENDING_TAP_MS,
   RETRY_BASE_MS,
   RETRY_MAX_MS,
   SOUND_FILES,
@@ -94,6 +95,8 @@ export function createSound({
   const waitUntil = new Map<Cue, number>();
   const sounding = new Set<AudioBufferSourceNode>();
   let pending: { cue: Cue; at: number } | null = null;
+  /** The first tap's select or press, kept apart so it never replaces a waiting answer. */
+  let pendingTap: { cue: Cue; at: number } | null = null;
 
   const waiting = (cue: Cue) => (waitUntil.get(cue) ?? 0) > now();
 
@@ -117,10 +120,16 @@ export function createSound({
   }
 
   const flush = () => {
-    const waited = pending;
-    if (!waited || !ready(waited.cue)) return;
-    pending = null;
-    if (now() - waited.at <= PENDING_CUE_MS) start(waited.cue);
+    const answer = pending;
+    const tap = pendingTap;
+    if (answer && ready(answer.cue)) {
+      pending = null;
+      if (now() - answer.at <= PENDING_CUE_MS) start(answer.cue);
+    }
+    if (tap && ready(tap.cue)) {
+      pendingTap = null;
+      if (now() - tap.at <= PENDING_TAP_MS) start(tap.cue);
+    }
   };
 
   const backOff = (cue: Cue, failed: number) => {
@@ -182,9 +191,16 @@ export function createSound({
     for (const cue of CUES) if (wanted(cue)) void fetchOne(cue);
   };
 
+  /** Whether the recording is on its way (fetching or decoding) in a context this visit made: the first tap of a visit. */
+  const preparing = (cue: Cue) =>
+    context !== null &&
+    !buffers.has(cue) &&
+    (fetching.has(cue) || decoding.has(cue));
+
   const play = (cue: Cue) => {
     if (ready(cue)) start(cue);
     else if (WAITS_FOR_AUDIO.has(cue)) pending = { cue, at: now() };
+    else if (preparing(cue)) pendingTap = { cue, at: now() };
   };
 
   const wake = () => {
@@ -228,6 +244,7 @@ export function createSound({
       play,
       stop: () => {
         pending = null;
+        pendingTap = null;
         for (const source of sounding) {
           try {
             source.stop();

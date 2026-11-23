@@ -59,6 +59,45 @@ describe("the select sound", () => {
     expect(trigger).not.toHaveBeenCalled();
   });
 
+  it("ticks for a click on a select's field, which opens its list, and not for focusing it", () => {
+    const body = page(
+      '<input role="combobox" readonly aria-expanded="false"><input role="combobox" disabled>',
+    );
+    const [field, disabled] = Array.from(body.querySelectorAll("input"));
+    field.focus();
+    expect(trigger).not.toHaveBeenCalled();
+    click(field);
+    expect(trigger).toHaveBeenCalledExactlyOnceWith("select");
+    click(disabled);
+    expect(trigger).toHaveBeenCalledOnce();
+  });
+
+  it("ticks a select's field only when the press opens its list, not for a click on an open field or in its text", () => {
+    const body = page('<input role="combobox" aria-expanded="false">');
+    const field = body.firstElementChild as HTMLInputElement;
+    const press = () =>
+      field.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+
+    // A press on a closed field: focus opens it before the click arrives.
+    press();
+    field.setAttribute("aria-expanded", "true");
+    click(field);
+    expect(trigger).toHaveBeenCalledOnce();
+
+    // A press and a click on the field that is already open (a caret click while typing).
+    trigger.mockClear();
+    press();
+    click(field);
+    expect(trigger).not.toHaveBeenCalled();
+
+    // A click with no press seen reads the field as it is.
+    click(field);
+    expect(trigger).not.toHaveBeenCalled();
+    field.setAttribute("aria-expanded", "false");
+    click(field);
+    expect(trigger).toHaveBeenCalledOnce();
+  });
+
   it("is silent for focus, hover, typing and the remote's arrow keys", () => {
     const body = page("<button>One</button><button>Two</button>");
     const [one, two] = Array.from(body.querySelectorAll("button"));

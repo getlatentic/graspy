@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { canStepBack, goBack, pushBack } from "./back-stack";
 import { installRemoteInput } from "./remote-input";
-import { isBack, remoteKey } from "./remote-keys";
+import { isBack, isEditable, remoteKey } from "./remote-keys";
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -54,6 +54,14 @@ describe("isBack", () => {
     expect(isBack(backspace(field), true)).toBe(false);
     expect(isBack(backspace(button), true)).toBe(false);
     expect(isBack(backspace(select), true)).toBe(false);
+  });
+
+  it("does not take a read-only field (a closed select) for a field of text", () => {
+    const closed = document.createElement("input");
+    closed.readOnly = true;
+    expect(isEditable(closed)).toBe(false);
+    closed.readOnly = false;
+    expect(isEditable(closed)).toBe(true);
   });
 });
 
