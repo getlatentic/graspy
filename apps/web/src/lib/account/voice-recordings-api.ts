@@ -64,12 +64,10 @@ export function keepRecordings(
   learner: string,
   noticeVersion: number,
   retentionDays: RetentionDays,
-  firebaseIdToken: string,
 ): Promise<RecordingsConsent> {
   return asParent(`${voiceUrl(learner)}/consent`, "PUT", {
     noticeVersion,
     retentionDays,
-    firebaseIdToken,
   });
 }
 

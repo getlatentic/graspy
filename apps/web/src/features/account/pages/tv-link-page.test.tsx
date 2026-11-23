@@ -11,11 +11,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
 import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
+import { parentSession } from "@/test/parent-session";
 
 const api = vi.hoisted(() => {
-  class ParentSignInNeeded extends Error {}
   return {
-    ParentSignInNeeded,
+    getPinStatus: vi.fn(),
+    verifyPin: vi.fn(),
     lookUpTv: vi.fn(),
     approveTv: vi.fn(),
     denyTv: vi.fn(),
@@ -23,7 +24,6 @@ const api = vi.hoisted(() => {
     removeTv: vi.fn(),
     listLearners: vi.fn(),
     signInAsParent: vi.fn(),
-    parent: { held: true },
     account: { current: null as object | null },
   };
 });
@@ -37,14 +37,22 @@ vi.mock("@/lib/account/tv-link-api", () => ({
 vi.mock("@/lib/account/learners-api", () => ({
   listLearners: api.listLearners,
 }));
-vi.mock("@/lib/account/use-account", () => ({
-  useAccount: () => api.account.current,
-}));
-vi.mock("@/lib/api/session", () => ({
-  ParentSignInNeeded: api.ParentSignInNeeded,
-  hasParentSession: () => api.parent.held,
-  parentSessionEnds: () => null,
-  startParentSession: vi.fn(),
+vi.mock("@/lib/account/use-account", async () => {
+  const { useSyncExternalStore } = await import("react");
+  const { parentSession } = await import("@/test/parent-session");
+  return {
+    // The account changes with the parent's session in these tests: a sign-in makes both.
+    useAccount: () =>
+      useSyncExternalStore(parentSession.subscribe, () => api.account.current),
+  };
+});
+vi.mock("@/lib/api/session", async (original) =>
+  (await import("@/test/parent-session")).withParentSession(await original()),
+);
+vi.mock("@/lib/account/parent-pin-api", async (original) => ({
+  ...(await original<typeof import("@/lib/account/parent-pin-api")>()),
+  getPinStatus: api.getPinStatus,
+  verifyPin: api.verifyPin,
 }));
 vi.mock("@/lib/account/sign-in", () => ({
   prepareSignIn: () => undefined,
@@ -56,6 +64,8 @@ vi.mock("@/lib/account/sign-in", () => ({
 }));
 
 import TvLinkPage from "./tv-link-page";
+
+const { ParentSignInNeeded } = await import("@/lib/api/session");
 
 const ADA = {
   id: "a1b2c3d4e5f6",
@@ -108,7 +118,17 @@ function typeInto(fields: HTMLElement[], text: string) {
 beforeEach(() => {
   window.location.hash = "#code=ABCD2345";
   api.account.current = signedIn;
-  api.parent.held = true;
+  parentSession.reset();
+  parentSession.grant();
+  api.getPinStatus.mockReset().mockResolvedValue({
+    hasPin: true,
+    length: 6,
+    lockedUntil: null,
+    disabled: false,
+  });
+  api.verifyPin
+    .mockReset()
+    .mockImplementation(async () => parentSession.grant());
   api.lookUpTv.mockReset().mockResolvedValue(ASKED);
   api.approveTv.mockReset().mockResolvedValue(undefined);
   api.denyTv.mockReset().mockResolvedValue(undefined);
@@ -117,7 +137,7 @@ beforeEach(() => {
   api.listLearners.mockReset().mockResolvedValue([ADA]);
   api.signInAsParent.mockReset().mockImplementation(async () => {
     api.account.current = signedIn;
-    api.parent.held = true;
+    parentSession.grant();
   });
 });
 
@@ -126,7 +146,7 @@ afterEach(cleanup);
 describe("signing in once", () => {
   beforeEach(() => {
     api.account.current = null;
-    api.parent.held = false;
+    parentSession.end();
   });
 
   it("shows one Google button and nothing else to do before it: no code field, no second sign-in", () => {
@@ -152,14 +172,6 @@ describe("signing in once", () => {
     expect(api.lookUpTv).toHaveBeenCalledWith("ABCD2345");
     expect(google()).toBeNull();
     expect(document.body.textContent).not.toMatch(/again/i);
-  });
-
-  it("is the same one button when the phone is signed in but not as the parent", () => {
-    api.account.current = signedIn;
-    page();
-
-    expect(screen.getAllByRole("button")).toHaveLength(1);
-    expect(google()).toBeTruthy();
   });
 
   it("says a blocked sign-in window plainly, and offers the button again", async () => {
@@ -203,14 +215,50 @@ describe("a parent who is already signed in", () => {
 
   it("is sent back to the one sign-in when the parent's session ends in the middle", async () => {
     api.lookUpTv.mockImplementation(async () => {
-      api.parent.held = false;
-      throw new api.ParentSignInNeeded();
+      parentSession.end();
+      throw new ParentSignInNeeded();
     });
     page();
 
     expect(
-      await screen.findByRole("button", { name: en.you.signIn }),
+      await screen.findByRole("group", { name: en.parentPin.title }),
     ).toBeTruthy();
+  });
+});
+
+describe("a phone signed in without a parent's session (a learner's)", () => {
+  beforeEach(() => parentSession.end());
+
+  it("asks for the PIN, and looks nothing up, until it is typed; then goes on to the TV, with no Google", async () => {
+    page();
+
+    await screen.findByRole("group", { name: en.parentPin.title });
+    expect(api.lookUpTv).not.toHaveBeenCalled();
+    expect(google()).toBeNull();
+    for (const digit of "482915") {
+      fireEvent.click(screen.getByRole("button", { name: digit }));
+    }
+
+    expect(
+      await screen.findByRole("heading", { name: "Link Samsung TV?" }),
+    ).toBeTruthy();
+    expect(api.verifyPin).toHaveBeenCalledTimes(1);
+    expect(api.lookUpTv).toHaveBeenCalledWith("ABCD2345");
+    expect(api.signInAsParent).not.toHaveBeenCalled();
+  });
+
+  it("is not asked for the PIN again for the next TV in the parent's session", async () => {
+    page();
+    await screen.findByRole("group", { name: en.parentPin.title });
+    for (const digit of "482915") {
+      fireEvent.click(screen.getByRole("button", { name: digit }));
+    }
+    await screen.findByRole("heading", { name: "Link Samsung TV?" });
+
+    expect(
+      screen.queryByRole("group", { name: en.parentPin.title }),
+    ).toBeNull();
+    expect(api.verifyPin).toHaveBeenCalledTimes(1);
   });
 });
 

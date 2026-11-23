@@ -10,22 +10,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAccount } from "@/lib/account/account-store";
 import { SERVICE_NOTICE } from "@/lib/account/consent-notices";
 import { KeysApp } from "@/test/keys-app";
-import {
-  AGREED,
-  listed,
-  refused,
-  signedInAs,
-  WINDOW_CLOSED,
-} from "@/test/account-session";
+import { parentSession } from "@/test/parent-session";
+import { AGREED, listed, refused, signedInAs } from "@/test/account-session";
 
-const { listLearners, addLearner, agreeToService, signInAgain, chooseLearner } =
-  vi.hoisted(() => ({
-    listLearners: vi.fn(),
-    addLearner: vi.fn(),
-    agreeToService: vi.fn(),
-    signInAgain: vi.fn(),
-    chooseLearner: vi.fn(),
-  }));
+const {
+  listLearners,
+  addLearner,
+  agreeToService,
+  signInAgain,
+  chooseLearner,
+  getPinStatus,
+} = vi.hoisted(() => ({
+  listLearners: vi.fn(),
+  addLearner: vi.fn(),
+  agreeToService: vi.fn(),
+  signInAgain: vi.fn(),
+  chooseLearner: vi.fn(),
+  getPinStatus: vi.fn(),
+}));
+vi.mock("@/lib/api/session", async (original) =>
+  (await import("@/test/parent-session")).withParentSession(await original()),
+);
+vi.mock("@/lib/account/parent-pin-api", async (original) => ({
+  ...(await original<typeof import("@/lib/account/parent-pin-api")>()),
+  getPinStatus,
+}));
 vi.mock("@/lib/account/learners-api", () => ({
   listLearners,
   addLearner,
@@ -66,6 +75,15 @@ async function untilListed(name: string) {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  parentSession.reset();
+  // The parent has typed the PIN: what a test of the PIN gate itself takes away.
+  parentSession.grant();
+  getPinStatus.mockResolvedValue({
+    hasPin: true,
+    length: 6,
+    lockedUntil: null,
+    disabled: false,
+  });
   window.localStorage.clear();
   signedInAs(null);
   listLearners.mockResolvedValue([ADA, GRACE]);
@@ -112,41 +130,28 @@ describe("choosing a learner nobody has agreed for", () => {
     expect(chooseLearner).not.toHaveBeenCalled();
   });
 
-  it("opens them once the parent has signed in again and agreed, with the fresh sign-in", async () => {
+  it("opens them once the parent has agreed under the parent's session", async () => {
     await chosen();
 
     tap("consent.agree");
 
     await waitFor(() => expect(chooseLearner).toHaveBeenCalled());
-    expect(agreeToService).toHaveBeenCalledWith(GRACE.id, {
-      noticeVersion: 1,
-      firebaseIdToken: "fresh-token",
-    });
+    expect(agreeToService).toHaveBeenCalledWith(GRACE.id, { noticeVersion: 1 });
     expect(chooseLearner.mock.calls[0][0]).toMatchObject({ id: GRACE.id });
-    expect(signInAgain.mock.invocationCallOrder[0]).toBeLessThan(
-      agreeToService.mock.invocationCallOrder[0],
-    );
     expect(agreeToService.mock.invocationCallOrder[0]).toBeLessThan(
       chooseLearner.mock.invocationCallOrder[0],
     );
   });
 
-  it("does not agree for a parent who did not sign in again", async () => {
-    signInAgain.mockRejectedValueOnce(WINDOW_CLOSED);
+  it("does not agree for a parent who does not type the PIN", async () => {
+    parentSession.end();
     await chosen();
 
     tap("consent.agree");
 
-    await waitFor(() => expect(signInAgain).toHaveBeenCalled());
-    await waitFor(() =>
-      expect(
-        (
-          screen.getByRole("button", {
-            name: "consent.agree",
-          }) as HTMLButtonElement
-        ).disabled,
-      ).toBe(false),
-    );
+    await screen.findByRole("group", { name: "parentPin.title" });
+    tap("parentPin.cancel");
+    await screen.findByText(SERVICE_NOTICE);
     expect(agreeToService).not.toHaveBeenCalled();
     expect(chooseLearner).not.toHaveBeenCalled();
     expect(screen.queryByRole("alert")).toBeNull();
@@ -165,9 +170,7 @@ describe("choosing a learner nobody has agreed for", () => {
   });
 
   it.each([
-    [401, "sign_in_stale", "consent.signIn"],
-    [401, "sign_in_invalid", "consent.signIn"],
-    [403, "sign_in_other_account", "consent.otherAccount"],
+    [503, "consent_not_kept", "consent.notKept"],
     [400, "notice_unknown", "consent.notice"],
     [503, "consent_unavailable", "learners.failed"],
   ])(
@@ -187,18 +190,6 @@ describe("choosing a learner nobody has agreed for", () => {
       expect(agreeToService).toHaveBeenCalledTimes(2);
     },
   );
-
-  it("tells a parent who signed in with another Google account to use the one signed in", async () => {
-    signInAgain.mockRejectedValueOnce({ code: "auth/user-mismatch" });
-    await chosen();
-
-    tap("consent.agree");
-
-    expect((await screen.findByRole("alert")).textContent).toBe(
-      "consent.otherAccount",
-    );
-    expect(agreeToService).not.toHaveBeenCalled();
-  });
 });
 
 describe("adding a learner", () => {
@@ -213,7 +204,7 @@ describe("adding a learner", () => {
     await screen.findByText(SERVICE_NOTICE);
   }
 
-  it("sends the parent's agreement, with the fresh sign-in, with the learner", async () => {
+  it("sends the parent's agreement, under the parent's session, with the learner", async () => {
     addLearner.mockResolvedValue(listed("c00000000003", "Tolu", AGREED));
     await named("Tolu");
 
@@ -221,10 +212,7 @@ describe("adding a learner", () => {
     tap("consent.agree");
 
     await waitFor(() => expect(chooseLearner).toHaveBeenCalled());
-    expect(addLearner).toHaveBeenCalledWith("Tolu", {
-      noticeVersion: 1,
-      firebaseIdToken: "fresh-token",
-    });
+    expect(addLearner).toHaveBeenCalledWith("Tolu", { noticeVersion: 1 });
     expect(chooseLearner.mock.calls[0][0]).toMatchObject({
       id: "c00000000003",
     });
@@ -240,27 +228,27 @@ describe("adding a learner", () => {
     expect(signInAgain).not.toHaveBeenCalled();
   });
 
-  it("does not add the learner for a parent who did not sign in again", async () => {
-    signInAgain.mockRejectedValueOnce(WINDOW_CLOSED);
+  it("does not add the learner for a parent who does not type the PIN", async () => {
+    parentSession.end();
     await named("Tolu");
 
     tap("consent.agree");
 
-    await waitFor(() => expect(signInAgain).toHaveBeenCalled());
+    await screen.findByRole("group", { name: "parentPin.title" });
     expect(addLearner).not.toHaveBeenCalled();
     expect(chooseLearner).not.toHaveBeenCalled();
   });
 
-  it("asks to try again when the server calls the sign-in stale, and adds them on the next try", async () => {
+  it("asks to try again when the server did not keep the agreement, and adds them on the next try", async () => {
     addLearner
-      .mockRejectedValueOnce(refused(401, "sign_in_stale"))
+      .mockRejectedValueOnce(refused(503, "consent_not_kept"))
       .mockResolvedValueOnce(listed("c00000000003", "Tolu", AGREED));
     await named("Tolu");
 
     tap("consent.agree");
 
     expect((await screen.findByRole("alert")).textContent).toBe(
-      "consent.signIn",
+      "consent.notKept",
     );
     expect(chooseLearner).not.toHaveBeenCalled();
 
@@ -313,7 +301,7 @@ describe("a learner who was added, when opening them fails", () => {
     await screen.findByRole("button", { name: "learners.tryAgain" });
   }
 
-  it("moves on to opening them: no agreeing again, no second sign-in", async () => {
+  it("moves on to opening them: no agreeing again, no second PIN", async () => {
     await addedButNotOpened();
 
     expect(screen.queryByRole("button", { name: "consent.agree" })).toBeNull();
@@ -329,7 +317,7 @@ describe("a learner who was added, when opening them fails", () => {
     await waitFor(() => expect(chooseLearner).toHaveBeenCalledTimes(2));
     expect(chooseLearner.mock.calls[1][0]).toMatchObject({ id: TOLU.id });
     expect(addLearner).toHaveBeenCalledTimes(1);
-    expect(signInAgain).toHaveBeenCalledTimes(1);
+    expect(getPinStatus).not.toHaveBeenCalled();
   });
 
   it("lists them when the parent leaves instead, and asks again for a new learner", async () => {

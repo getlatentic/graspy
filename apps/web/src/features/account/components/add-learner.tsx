@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import type { AccountLearner } from "@/lib/account/learners-api";
 import { NOTICE_VERSION, SERVICE_NOTICE } from "@/lib/account/consent-notices";
 import { useI18n } from "@/lib/i18n-context";
-import { useAgreement } from "../hooks/use-agreement";
+import { useParentAgreement } from "../hooks/use-parent-agreement";
 import type { useLearnerChoice } from "../hooks/use-learner-choice";
 import { AddLearnerForm } from "./add-learner-form";
 import { ConsentStep } from "./consent-step";
+import { ParentGate } from "./parent-gate";
 
 /** The account holds the learner now, so all that is left is to open the app as them: trying
  * again chooses them, and never adds them a second time. */
@@ -54,14 +55,10 @@ export function AddLearner({
   const [asking, setAsking] = useState(false);
 
   const submit = useCallback(
-    (firebaseIdToken: string) =>
-      addAndChoose(name.trim(), {
-        noticeVersion: NOTICE_VERSION,
-        firebaseIdToken,
-      }),
+    () => addAndChoose(name.trim(), { noticeVersion: NOTICE_VERSION }),
     [addAndChoose, name],
   );
-  const agreement = useAgreement(submit);
+  const agreement = useParentAgreement(submit);
 
   if (choice.added) {
     return (
@@ -83,11 +80,20 @@ export function AddLearner({
       />
     );
   }
+  if (agreement.asking) {
+    return (
+      <ParentGate
+        heading="h1"
+        onUnlocked={agreement.proceed}
+        onCancel={agreement.cancel}
+      />
+    );
+  }
   return (
     <ConsentStep
       title={t("consent.serviceTitle", { name: name.trim() })}
       notice={SERVICE_NOTICE}
-      busy={agreement.busy || choice.busy}
+      busy={choice.busy}
       problem={agreement.problem}
       onAgree={agreement.agree}
       onDecline={onCancel}

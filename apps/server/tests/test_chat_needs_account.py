@@ -5,7 +5,7 @@ what is not the chat (the record, lessons, views, voice) stays open to a device.
 import pytest
 from consent_sign_ins import consent_app
 from service_agreed import service_agreed
-from signed_in import UID, client, signed_in, use
+from signed_in import UID, client, parent_headers, signed_in, use
 from voice_worker import worker_env
 
 from app.cloudflare_sockets import PROTOCOL, connect
@@ -74,7 +74,9 @@ async def test_a_learner_the_account_holds_gets_to_the_chat(app, env, method, ur
         await signed_in(http, firebaseIdToken="good")
         learner = (
             await http.post(
-                "/api/account/learners", json={"name": "Ada", "guardian": True}
+                "/api/account/learners",
+                json={"name": "Ada", "guardian": True},
+                headers=await parent_headers(http),
             )
         ).json()["id"]
         await service_agreed(env, learner)

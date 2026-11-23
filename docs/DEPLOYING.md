@@ -45,6 +45,12 @@ Migrations are applied before the new code goes live. So:
 - New code that needs a new table or column ships in the same deploy as the migration that adds it, since the migration is already applied when it goes up.
 - A migration that must follow its code (a data fix that relies on it) waits for the deploy after the code and says so in its header.
 
+### The parent PIN
+
+`0026_parent_pin.sql` adds a table and a defaulted column (`consents.gate`), so it works with the code before it and after it. The code needs a new rate-limit binding, `PIN_LIMITER`, in `apps/server/wrangler.jsonc` for each environment: `scripts/deploy.sh` creates it with the Worker, and the Worker refuses to start without it. The PIN's key is derived from `SESSION_SECRET`, so rotating that secret also ends every parent PIN; parents use Forgot PIN ([Parent PIN](PARENT_PIN.md)). Migration 0026 and the `PIN_LIMITER` binding apply on staging automatically (the deploy after each push to `main`) and have to be applied to production by hand (`scripts/deploy.sh production`, which applies migrations first).
+
+**Owner's decision before production, Android:** these now need the parent's session, which the Android app does not make, so its calls are refused (`403 account_required`): **renaming a learner, removing one, adding one without a consent that carries a Google token, and deleting the account** (which needs a Google sign-in of the last five minutes). Agreeing with a fresh Google token in the body still works, and is recorded as `gate = google-token`, the weakest gate; adding a learner on a bare token works only for an account's first learner or an account with no PIN. **Android follow-up:** it should make a parent session (a Google sign-in sent to `POST /api/account/parent-session`) and use that, which is the stronger gate and what the other calls need; a Google token is also spent by the first request that proves with it, so a token must not be sent to two proof endpoints. The migration was edited in place (0026 is not on `main`); a database that applied an earlier 0026 must be reset. Production must not get this API change until Android makes that session first, or the owner accepts that Android's delete breaks.
+
 ## One-time setup
 
 Done: D1 `graspy-staging`, R2 `graspy-audio-staging`, the Worker `graspy-staging` for the web, the Firebase authorized domain `graspy-staging.getlatentic.com`, and the Firebase Android app for `com.latentic.graspy.staging` with the debug key's fingerprints.

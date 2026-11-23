@@ -23,8 +23,10 @@ TV                                   API                                  Parent
  |  POST /token  (every `interval`)   |                                     |
  |----------------------------------->| pending / slow_down                 |
  |                                    |   1. scans the QR: /link#code=...
- |                                    |   2. "Continue with Google", once, if there is no parent session:
+ |                                    |   2. "Continue with Google", once, if signed out:
  |                                    |      POST /api/session + POST /account/parent-session, one token
+ |                                    |      (a phone signed in without a parent's session types the
+ |                                    |      parent PIN instead: POST /account/parent-pin/verify)
  |                                    |<------------------------------------| POST /lookup (on page load)
  |                                    | holds the request for this account  |
  |                                    |------------------------------------>| device, country, time
@@ -48,6 +50,17 @@ Lookup and approve are still two guarded server calls; the page runs them back t
 
 The TV keeps two things: the session token (an hour) and a refresh credential (`localStorage`, `graspy.tv-credential`). A TV has no Google sign-in to renew from, so the credential stands where Firebase's does on other devices. `lib/api/session.ts` renews from it in place of Firebase and keeps the credential each renewal returns. A `401`, `403` or `404` from a renewal signs the TV out and wipes the device, as when Google no longer holds a sign-in. A `5xx` or no answer is tried again with the same credential, at 2, 5 and 12 seconds (inside the minute the server answers a replaced credential again), reading the credential from storage before each try, so a tab of the TV that renewed meanwhile is not overwritten; if all four fail the credential is kept and the next request tries again.
 
+### How many actions it takes
+
+| The phone | Actions |
+|---|---|
+| Signed in, parent's session in force (typed the PIN or signed in with Google in the last 15 minutes) | scan, type 4 = 2 |
+| Signed in as a learner (no parent's session) | scan, PIN, type 4 = 3 |
+| Signed out | scan, Google (this one sign-in makes the account and the parent's session, so no PIN), type 4 = 3 |
+| Signed in, no PIN set yet | scan, then the gate's set-a-PIN steps once (choose, again, Google), type 4 |
+
+The PIN pad is one extra screen before the code is looked up, shown only when there is no parent's session.
+
 ## Endpoints
 
 All under `/api/tv-sign-in`. Bodies and answers are camelCase JSON. Every answer carries `Cache-Control: no-store`.
@@ -66,7 +79,7 @@ All under `/api/tv-sign-in`. Bodies and answers are camelCase JSON. Every answer
 | `GET /devices` | Parent | The account's TVs: `id`, `label`, `learner`, `createdAt`, `lastUsedAt` |
 | `DELETE /devices/{id}` | Parent | Revokes one TV. `404` for an id the account does not hold |
 
-"Parent" is a session made by `POST /api/account/parent-session`: a Google sign-in in the last five minutes, lasting 15. A child's learner session, or an account session that did not just sign in, gets `403 account_required` from every one of those routes, and so does a TV's.
+"Parent" is a session made by typing the parent PIN (`POST /api/account/parent-pin/verify`) or by `POST /api/account/parent-session` (a Google sign-in in the last five minutes), lasting 15 either way: the PIN is typed once in those minutes, and the phone's page shows the PIN pad only when there is no such session ([Parent PIN](PARENT_PIN.md)). A child's learner session, or an account session that did not just sign in, gets `403 account_required` from every one of those routes, and so does a TV's.
 
 Refusals on the phone's calls: `404 code_not_found` (unknown, expired, ended, malformed, or held by another account when approving or denying: one answer for all), `409 code_in_use` (another account looked the code up first), `403 confirm_mismatch`, `404 no_such_learner`, `403 consent_required` (the learner has no parent's agreement, as for any learner session), `409 too_many_tvs` (ten per account), `409 already_decided`, `429 rate_limited` with `Retry-After`. Starting a request answers `429` when its source (12) or the network around it (40) already holds as many open ones or the network has made 120 an hour, and `503 tv_sign_in_busy` when 5,000 are open in all, 2,500 from one country or 500 from unplaced connections.
 
@@ -98,7 +111,7 @@ What an attacker wants: a session for an account they do not own, or a TV signed
 | Guessing the short code | 32 symbols, 8 characters: 40 bits, over at most ten minutes. Only a parent's session can try. Every call that names a code spends the account's and the source's pairing budget (10 a minute), and a wrong guess spends a second, separate pair of budgets, so guessing is limited per account and per source (an IPv6 address counts as its /64). The code is kept as an HMAC with the server's secret, so a stolen table gives no codes. **The cap of ten attempts per request counts only calls of the account holding it that found the request** (lookups, approvals, denials, wrong confirmations). Another account's lookup is turned away with `409` and counts nothing, so it cannot use a request up; a guess that hits nothing has nothing to count against, so wrong guesses are bounded by the rate limits and the size of the space, not by that cap |
 | Taking the session after someone else's approval | The request is bound at approval to the account and learner of the parent's session. The device code is the only way to take it. The take makes the session and consumes the request in one transaction, so a second continue, a replay of the device code and continues at once get nothing (`expired`) |
 | A second account approving a request the first is deciding | The first account to look a code up holds it for two minutes (`locked_by`, `locked_until`). Another account's lookup gets `409 code_in_use`; its approve and deny find nothing. Approving needs the hold to be this account's and still running |
-| A child, or a stolen or stale session, minting a 90-day credential | Lookup, approve, deny, list and remove need the parent's session: a Google sign-in within the last five minutes, as for recordings and consent. A child's learner session and a 12-hour account session get `403` |
+| A child, or a stolen or stale session, minting a 90-day credential | Lookup, approve, deny, list and remove need the parent's session: the parent's session (the PIN, or a Google sign-in within the last five minutes), as for recordings and consent. A child's learner session and a 12-hour account session get `403` |
 | A TV nobody is at, linked to whoever types its code | The TV goes on by itself only with proof someone is there, and otherwise waits for a press. See *An unattended TV* below |
 | Approving an attacker's TV (phishing) | The last four characters, typed from the TV's screen, are the confirmation; a victim with only a link fails them. See below |
 | A TV approving more TVs, or managing the account | Its session carries `tv`; `/api/account` and the phone's routes refuse it |
@@ -115,7 +128,7 @@ The grant's weakness is that the phone approves *a TV it cannot see*. Two attack
 
 **A link or QR code sent to a victim.** The attacker starts a request on their own TV and sends the victim the link (`/link#code=...`) or a QR code ("scan to claim a prize"). If the victim approved, the attacker's TV would learn as the victim's learner. What stops it:
 
-- The page needs the parent's session: the victim must sign in with Google, which a link alone does not do.
+- The page needs the parent's session: the victim must sign in with Google, or type the parent PIN on a phone already signed in, which a link alone does not do. A PIN is a weaker barrier than a second Google sign-in against someone who holds the victim's unlocked phone, and no barrier against a victim talked into typing it; the checks below are what stop a link.
 - **Typing the last four characters is the confirmation.** The page never shows any of the code: not on the confirm screen, not in a box. The fourth character is the approval, and the server checks the four against the code (`403 confirm_mismatch`, one attempt counted, the boxes clear). Those characters are on the TV's screen and nowhere the victim can see, so a victim who followed a link alone cannot give them.
 - The confirm screen shows the device label, the country and when it asked, above the boxes.
 

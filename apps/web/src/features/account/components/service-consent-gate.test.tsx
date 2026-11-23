@@ -14,6 +14,7 @@ import { SERVICE_NOTICE } from "@/lib/account/consent-notices";
 import { toApiError } from "@/lib/api/errors";
 import { serviceConsentKept } from "@/lib/account/service-consent";
 import { KeysApp } from "@/test/keys-app";
+import { parentSession } from "@/test/parent-session";
 import {
   AGREED,
   listed,
@@ -22,16 +23,33 @@ import {
   UID,
 } from "@/test/account-session";
 
-const { listLearners, agreeToService, signInAgain, signOut, flushUnsent } =
-  vi.hoisted(() => ({
-    listLearners: vi.fn(),
-    agreeToService: vi.fn(),
-    signInAgain: vi.fn(),
-    signOut: vi.fn(),
-    flushUnsent: vi.fn(),
-  }));
+const {
+  listLearners,
+  agreeToService,
+  signInAgain,
+  signOut,
+  flushUnsent,
+  getPinStatus,
+  verifyPin,
+} = vi.hoisted(() => ({
+  listLearners: vi.fn(),
+  agreeToService: vi.fn(),
+  signInAgain: vi.fn(),
+  signOut: vi.fn(),
+  flushUnsent: vi.fn(),
+  getPinStatus: vi.fn(),
+  verifyPin: vi.fn(),
+}));
+vi.mock("@/lib/account/parent-pin-api", async (original) => ({
+  ...(await original<typeof import("@/lib/account/parent-pin-api")>()),
+  getPinStatus,
+  verifyPin,
+}));
 vi.mock("@/lib/account/learner-choice", () => ({ flushUnsent }));
 vi.mock("@/lib/account/learners-api", () => ({ listLearners, agreeToService }));
+vi.mock("@/lib/api/session", async (original) =>
+  (await import("@/test/parent-session")).withParentSession(await original()),
+);
 vi.mock("@/lib/account/sign-in", async (original) => ({
   ...(await original<typeof import("@/lib/account/sign-in")>()),
   prepareSignIn: () => undefined,
@@ -39,6 +57,7 @@ vi.mock("@/lib/account/sign-in", async (original) => ({
   signOut,
 }));
 
+const { ParentSignInNeeded } = await import("@/lib/api/session");
 const { ServiceConsentGate } = await import("./service-consent-gate");
 
 const ADA = { id: "a00000000001", name: "Ada" };
@@ -65,6 +84,7 @@ const refusedForConsent = () =>
 
 beforeEach(() => {
   vi.resetAllMocks();
+  parentSession.reset();
   window.localStorage.clear();
   signInAgain.mockResolvedValue("fresh-token");
   agreeToService.mockResolvedValue(AGREED);
@@ -128,36 +148,107 @@ describe("the pages of a learner in use", () => {
     expect(serviceConsentKept(UID, ADA.id)).toBe(false);
   });
 
-  it("open once a parent has signed in again and agreed, with the fresh sign-in", async () => {
+  it("open once the parent has agreed under the parent's session in force", async () => {
     signedInAs(ADA);
     listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    parentSession.grant();
     gated();
     await screen.findByText(SERVICE_NOTICE);
 
     fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
 
     expect(await screen.findByText("the learner's pages")).toBeTruthy();
-    expect(agreeToService).toHaveBeenCalledWith(ADA.id, {
-      noticeVersion: 1,
-      firebaseIdToken: "fresh-token",
-    });
+    expect(agreeToService).toHaveBeenCalledWith(ADA.id, { noticeVersion: 1 });
     expect(serviceConsentKept(UID, ADA.id)).toBe(true);
+  });
+
+  it("ask for the parent PIN first when the parent's session is not in force, and send nothing before it", async () => {
+    signedInAs(ADA);
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    getPinStatus.mockResolvedValue({
+      hasPin: true,
+      length: 6,
+      lockedUntil: null,
+      disabled: false,
+    });
+    verifyPin.mockImplementation(async () => parentSession.grant());
+    gated();
+    await screen.findByText(SERVICE_NOTICE);
+
+    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
+    await screen.findByRole("group", { name: "parentPin.title" });
+    expect(agreeToService).not.toHaveBeenCalled();
+    for (const digit of "482915") {
+      fireEvent.click(screen.getByRole("button", { name: digit }));
+    }
+
+    expect(await screen.findByText("the learner's pages")).toBeTruthy();
+    expect(verifyPin).toHaveBeenCalledWith("482915");
+    expect(agreeToService).toHaveBeenCalledTimes(1);
+  });
+
+  it("come back to the notice, shut, when the parent cancels the PIN", async () => {
+    signedInAs(ADA);
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    getPinStatus.mockResolvedValue({
+      hasPin: true,
+      length: 6,
+      lockedUntil: null,
+      disabled: false,
+    });
+    gated();
+    await screen.findByText(SERVICE_NOTICE);
+    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "parentPin.cancel" }),
+    );
+
+    expect(await screen.findByText(SERVICE_NOTICE)).toBeTruthy();
+    expect(agreeToService).not.toHaveBeenCalled();
+    expect(pages()).toBeNull();
   });
 
   it("stay shut when the server refuses the agreement, and say to try again", async () => {
     signedInAs(ADA);
     listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
-    agreeToService.mockRejectedValueOnce(refused(401, "sign_in_stale"));
+    agreeToService.mockRejectedValueOnce(refused(503, "consent_not_kept"));
+    parentSession.grant();
     gated();
     await screen.findByText(SERVICE_NOTICE);
 
     fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
 
     expect((await screen.findByRole("alert")).textContent).toBe(
-      "consent.signIn",
+      "consent.notKept",
     );
     expect(pages()).toBeNull();
     expect(serviceConsentKept(UID, ADA.id)).toBe(false);
+  });
+
+  it("ask for the PIN again when the parent's session ended before the agreement was sent", async () => {
+    signedInAs(ADA);
+    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
+    agreeToService.mockImplementationOnce(async () => {
+      parentSession.end();
+      throw new ParentSignInNeeded();
+    });
+    getPinStatus.mockResolvedValue({
+      hasPin: true,
+      length: 6,
+      lockedUntil: null,
+      disabled: false,
+    });
+    parentSession.grant();
+    gated();
+    await screen.findByText(SERVICE_NOTICE);
+
+    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
+
+    expect(
+      await screen.findByRole("group", { name: "parentPin.title" }),
+    ).toBeTruthy();
+    expect(pages()).toBeNull();
   });
 
   it("lead a parent who declines to choose someone else, and stay shut", async () => {
@@ -286,44 +377,6 @@ describe("a parent who cannot agree, in front of the gate", () => {
     expect(signOut).toHaveBeenCalledTimes(1);
   });
 
-  it("is led to sign in again when Firebase no longer holds the sign-in", async () => {
-    signInAgain.mockRejectedValueOnce({ code: "graspy/not-signed-in" });
-    signedInAs(ADA);
-    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
-    gated();
-    await screen.findByText(SERVICE_NOTICE);
-
-    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
-
-    expect((await screen.findByRole("alert")).textContent).toBe(
-      "consent.signedOut",
-    );
-    fireEvent.click(
-      screen.getByRole("button", { name: "consent.signInAgain" }),
-    );
-    expect((await screen.findByTestId("elsewhere")).textContent).toBe(
-      "/app/sign-in",
-    );
-    expect(signOut).toHaveBeenCalledTimes(1);
-    expect(agreeToService).not.toHaveBeenCalled();
-  });
-
-  it("says in the browser to open graspy elsewhere when Google's window cannot open", async () => {
-    signInAgain.mockRejectedValueOnce({
-      code: "auth/operation-not-supported-in-this-environment",
-    });
-    signedInAs(ADA);
-    listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
-    gated();
-    await screen.findByText(SERVICE_NOTICE);
-
-    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
-
-    expect((await screen.findByRole("alert")).textContent).toBe(
-      "consent.browser",
-    );
-  });
-
   it("names what it waits for while the server is asked", () => {
     signedInAs(ADA);
     listLearners.mockReturnValue(new Promise(() => undefined));
@@ -418,21 +471,6 @@ describe("signing out from in front of the gate, with answers still to be sent",
     gated();
 
     fireEvent.click(await screen.findByRole("button", { name: "you.signOut" }));
-
-    expect(await screen.findByRole("alertdialog")).toBeTruthy();
-    expect(signOut).not.toHaveBeenCalled();
-  });
-
-  it("asks the same before signing in again, when Firebase no longer holds the sign-in", async () => {
-    flushUnsent.mockResolvedValue(false);
-    signInAgain.mockRejectedValueOnce({ code: "graspy/not-signed-in" });
-    await agreeStep();
-    fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
-    await screen.findByText("consent.signedOut");
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "consent.signInAgain" }),
-    );
 
     expect(await screen.findByRole("alertdialog")).toBeTruthy();
     expect(signOut).not.toHaveBeenCalled();

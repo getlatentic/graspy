@@ -70,6 +70,8 @@ describe("signInAsParent", () => {
     await signInAsParent();
 
     expect(google.signInWithGoogle).toHaveBeenCalledTimes(1);
+    // The credentials are asked for again: this sign-in makes the parent.
+    expect(google.signInWithGoogle).toHaveBeenCalledWith(true);
     expect(google.reauthenticateWithGoogle).not.toHaveBeenCalled();
     expect(session.startAccountSession).toHaveBeenCalledWith("id", ACCOUNT);
     expect(session.startParentSession).toHaveBeenCalledWith("id");

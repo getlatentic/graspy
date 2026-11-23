@@ -51,16 +51,28 @@ export async function prepareGoogle(): Promise<void> {
   await configuredAuth().authStateReady();
 }
 
+/** Google's window never signs a person in on a tap alone: the account is chosen. For what proves
+ * a parent (`fresh`) the credentials are asked for again whatever Google's window remembers
+ * (`prompt=login`, an age of 0), so a phone left signed in to Google cannot be made the parent's
+ * by a child's tap. The server holds the ID token to five minutes by its own `auth_time`. */
+function googleProvider(fresh: boolean): GoogleAuthProvider {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters(
+    fresh ? { prompt: "login", max_age: "0" } : { prompt: "select_account" },
+  );
+  return provider;
+}
+
 export interface GoogleSignIn {
   account: Identity;
   idToken: string;
 }
 
 /** Call from the tap itself, with nothing awaited before it. */
-export async function signInWithGoogle(): Promise<GoogleSignIn> {
+export async function signInWithGoogle(fresh = false): Promise<GoogleSignIn> {
   const { user } = await signInWithPopup(
     configuredAuth(),
-    new GoogleAuthProvider(),
+    googleProvider(fresh),
   );
   return {
     account: { uid: user.uid, name: user.displayName, email: user.email },
@@ -76,7 +88,7 @@ export async function reauthenticateWithGoogle(): Promise<string> {
   if (!currentUser) {
     throw Object.assign(new Error("Not signed in"), { code: NOT_SIGNED_IN });
   }
-  await reauthenticateWithPopup(currentUser, new GoogleAuthProvider());
+  await reauthenticateWithPopup(currentUser, googleProvider(true));
   return currentUser.getIdToken(true);
 }
 

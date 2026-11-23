@@ -79,6 +79,7 @@ def build_worker_app(env: Any, js_object: JsObject) -> FastAPI:
             agent=BindingLimiter(env.AGENT_LIMITER, js_object),
             api=BindingLimiter(env.API_LIMITER, js_object),
             pairing=BindingLimiter(env.PAIRING_LIMITER, js_object),
+            pin=BindingLimiter(env.PIN_LIMITER, js_object),
         ),
         voice=env,
         threads=ThreadStore(env.DB),

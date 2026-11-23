@@ -8,6 +8,7 @@ import sqlite3
 from types import SimpleNamespace
 from urllib.parse import unquote, urlsplit
 
+from fresh_sign_in import fresh_auth_time
 from signed_in import UID
 
 from app.factory import create_app
@@ -138,6 +139,13 @@ def voice_app(monkeypatch, env=None):
     """The app over these bindings, with Google's sign-in vouching for UID."""
 
     async def verified(id_token, _api_key, **_):
+        if id_token == "fresh":
+            return firebase.SignedIn(
+                uid=UID,
+                name="Ada",
+                auth_time=fresh_auth_time(),
+                provider="google.com",
+            )
         if id_token != "good":
             raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
         return firebase.SignedIn(uid=UID, name="Ada")

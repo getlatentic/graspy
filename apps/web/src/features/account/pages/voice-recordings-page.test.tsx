@@ -17,13 +17,8 @@ import type {
   VoiceOverview,
 } from "@/lib/account/voice-recordings-api";
 import { KeysApp } from "@/test/keys-app";
-import {
-  AGREED,
-  listed,
-  refused,
-  signedInAs,
-  WINDOW_CLOSED,
-} from "@/test/account-session";
+import { parentSession } from "@/test/parent-session";
+import { AGREED, listed, refused, signedInAs } from "@/test/account-session";
 import { whenOf } from "../lib/recording-format";
 
 const api = vi.hoisted(() => ({
@@ -34,20 +29,21 @@ const api = vi.hoisted(() => ({
   deleteRecordings: vi.fn(),
   recordingAudio: vi.fn(),
 }));
-const { listLearners, signInAgain } = vi.hoisted(() => ({
-  listLearners: vi.fn(),
-  signInAgain: vi.fn(),
-}));
-const parent = vi.hoisted(() => ({
-  has: vi.fn(() => true),
-  ends: vi.fn<() => number | null>(() => null),
-  start: vi.fn(),
-}));
-vi.mock("@/lib/api/session", async (original) => ({
-  ...(await original<typeof import("@/lib/api/session")>()),
-  hasParentSession: parent.has,
-  parentSessionEnds: parent.ends,
-  startParentSession: parent.start,
+const { listLearners, signInAgain, getPinStatus, verifyPin } = vi.hoisted(
+  () => ({
+    listLearners: vi.fn(),
+    signInAgain: vi.fn(),
+    getPinStatus: vi.fn(),
+    verifyPin: vi.fn(),
+  }),
+);
+vi.mock("@/lib/api/session", async (original) =>
+  (await import("@/test/parent-session")).withParentSession(await original()),
+);
+vi.mock("@/lib/account/parent-pin-api", async (original) => ({
+  ...(await original<typeof import("@/lib/account/parent-pin-api")>()),
+  getPinStatus,
+  verifyPin,
 }));
 vi.mock("@/lib/account/voice-recordings-api", async (original) => ({
   ...(await original<typeof import("@/lib/account/voice-recordings-api")>()),
@@ -127,9 +123,15 @@ beforeEach(() => {
   URL.revokeObjectURL = vi.fn();
   listLearners.mockResolvedValue([listed(ADA, "Ada", AGREED)]);
   signInAgain.mockResolvedValue("fresh-token");
-  parent.has.mockReturnValue(true);
-  parent.ends.mockReturnValue(null);
-  parent.start.mockResolvedValue(undefined);
+  parentSession.reset();
+  parentSession.grant();
+  getPinStatus.mockResolvedValue({
+    hasPin: true,
+    length: 6,
+    lockedUntil: null,
+    disabled: false,
+  });
+  verifyPin.mockImplementation(async () => parentSession.grant());
   api.stopKeepingRecordings.mockResolvedValue({ deleted: 0, more: false });
   api.deleteRecording.mockResolvedValue(undefined);
 });
@@ -321,7 +323,7 @@ describe("turning recordings on", () => {
     expect(screen.queryByText(recordingsNotice(30))).toBeNull();
   });
 
-  it("keeps them once the parent has signed in again and agreed, for the days chosen", async () => {
+  it("keeps them once the parent has agreed under the parent's session, for the days chosen", async () => {
     api.keepRecordings.mockResolvedValue({
       noticeVersion: 1,
       retentionDays: 90,
@@ -337,10 +339,7 @@ describe("turning recordings on", () => {
         "true",
       ),
     );
-    expect(api.keepRecordings).toHaveBeenCalledWith(ADA, 1, 90, "fresh-token");
-    expect(signInAgain.mock.invocationCallOrder[0]).toBeLessThan(
-      api.keepRecordings.mock.invocationCallOrder[0],
-    );
+    expect(api.keepRecordings).toHaveBeenCalledWith(ADA, 1, 90);
     expect(screen.getByText("voiceRecordings.keptFor 90")).toBeTruthy();
   });
 
@@ -354,20 +353,22 @@ describe("turning recordings on", () => {
     expect(api.keepRecordings).not.toHaveBeenCalled();
   });
 
-  it("keeps nothing for a parent who did not sign in again", async () => {
-    signInAgain.mockRejectedValueOnce(WINDOW_CLOSED);
+  it("asks for the PIN again, and keeps nothing before it, when the parent's session ended meanwhile", async () => {
+    api.keepRecordings.mockImplementationOnce(async () => {
+      parentSession.end();
+      throw new ParentSignInNeeded();
+    });
     await asked();
 
     tap("consent.agree");
 
-    await waitFor(() => expect(signInAgain).toHaveBeenCalled());
-    expect(api.keepRecordings).not.toHaveBeenCalled();
-    expect(screen.queryByRole("alert")).toBeNull();
+    await screen.findByRole("group", { name: "parentPin.title" });
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(api.keepRecordings).toHaveBeenCalledTimes(1);
   });
 
   it.each([
-    [401, "sign_in_stale", "consent.signIn"],
-    [403, "sign_in_other_account", "consent.otherAccount"],
+    [503, "consent_not_kept", "consent.notKept"],
     [400, "notice_unknown", "consent.notice"],
     [422, "invalid", "learners.failed"],
   ])(
@@ -811,52 +812,61 @@ describe("for a screen reader and the keyboard", () => {
 });
 
 describe("the voice recordings page, for a learner's session", () => {
-  it("asks the parent to sign in again, and shows no recordings until they have", async () => {
-    parent.has.mockReturnValue(false);
+  const typePin = () => {
+    for (const digit of "482915") {
+      fireEvent.click(screen.getByRole("button", { name: digit }));
+    }
+  };
+
+  it("asks the parent for the PIN, and shows no recordings until they have typed it", async () => {
+    parentSession.end();
     open(keeping(30, KEPT));
 
-    expect(await screen.findByText("voiceRecordings.signInAgain")).toBeTruthy();
+    await screen.findByRole("group", { name: "parentPin.title" });
     expect(api.getVoice).not.toHaveBeenCalled();
     expect(screen.queryByRole("switch")).toBeNull();
 
-    tap("you.signIn");
+    typePin();
 
     await waitFor(() => expect(api.getVoice).toHaveBeenCalledWith(ADA));
-    expect(parent.start).toHaveBeenCalledWith("fresh-token");
+    expect(verifyPin).toHaveBeenCalledWith("482915");
     expect(await keepSwitch()).toBeTruthy();
   });
 
-  it("asks again once the server no longer holds the parent's session", async () => {
-    api.getVoice.mockRejectedValue(new ParentSignInNeeded());
+  it("asks for the PIN again once the server no longer holds the parent's session", async () => {
+    api.getVoice.mockImplementation(async () => {
+      parentSession.end();
+      throw new ParentSignInNeeded();
+    });
     render(
       <KeysApp at={`/learners/${ADA}/voice`} path="/learners/:learnerId/voice">
         <VoiceRecordingsPage />
       </KeysApp>,
     );
 
-    expect(await screen.findByText("voiceRecordings.signInAgain")).toBeTruthy();
+    expect(
+      await screen.findByRole("group", { name: "parentPin.title" }),
+    ).toBeTruthy();
   });
 
-  it("starts nothing for a parent who closed Google's window", async () => {
-    parent.has.mockReturnValue(false);
-    signInAgain.mockRejectedValueOnce(WINDOW_CLOSED);
+  it("asks for nothing, and loads at once, when the parent's session is in force", async () => {
     open(keeping(30, KEPT));
 
-    tap("you.signIn");
-
-    await waitFor(() => expect(signInAgain).toHaveBeenCalled());
-    expect(parent.start).not.toHaveBeenCalled();
-    expect(api.getVoice).not.toHaveBeenCalled();
+    expect(await keepSwitch()).toBeTruthy();
+    expect(getPinStatus).not.toHaveBeenCalled();
+    expect(screen.queryByRole("group", { name: "parentPin.title" })).toBeNull();
   });
 });
 
 describe("the voice recordings page, as the parent's session runs out", () => {
-  it("asks the parent to sign in again when the minutes are up, and hides the recordings", async () => {
-    parent.ends.mockReturnValue(Date.now() + 60);
+  it("asks for the PIN when the minutes are up, and hides the recordings", async () => {
+    parentSession.endsAt(Date.now() + 80);
     open(keeping(30, KEPT));
     expect(await keepSwitch()).toBeTruthy();
 
-    expect(await screen.findByText("voiceRecordings.signInAgain")).toBeTruthy();
+    expect(
+      await screen.findByRole("group", { name: "parentPin.title" }),
+    ).toBeTruthy();
     expect(screen.queryByRole("switch")).toBeNull();
     expect(screen.queryByText("Counting to ten")).toBeNull();
   });

@@ -2,8 +2,10 @@
 
 There are two scopes. `service` is consent to use graspy at all; `recordings` is consent to keep the
 learner's voice recordings for `retention_days` of the days below, without which a recording is
-deleted as soon as its turn ends. A consent names the version of the notice the parent was shown. The
-newest grant of a scope is the active one: granting again revokes the row it replaces."""
+deleted as soon as its turn ends. A consent names the version of the notice the parent was shown, and the
+`gate` they passed to agree: `google` (a sign-in with Google just made) or `pin` (the parent PIN, which is
+weaker evidence of a parent's agreement; docs/PARENT_PIN.md). The newest grant of a scope is the active one:
+granting again revokes the row it replaces."""
 
 from __future__ import annotations
 
@@ -14,14 +16,20 @@ RECORDINGS = "recordings"
 # The notices a parent may be shown before agreeing; their texts are in docs/API.md.
 NOTICE_VERSIONS = {SERVICE: frozenset({1}), RECORDINGS: frozenset({1})}
 RETENTION_DAYS = (30, 90, 365)
+GATE_GOOGLE = "google"
+GATE_PIN = "pin"
+# A bare Google token sent with the request, and no parent's session: what Android sends. It shows
+# a Google sign-in was made, not that it was made for this action by a parent at the screen, so it
+# ranks below a Google parent session, which ranks below... nothing: see docs/PARENT_PIN.md.
+GATE_GOOGLE_TOKEN = "google-token"
 DAY_MS = 24 * 60 * 60 * 1000
 
 ACTIVE_SQL = (
-    "SELECT notice_version, retention_days, granted_at FROM consents "
+    "SELECT notice_version, retention_days, granted_at, gate FROM consents "
     "WHERE learner_key = ?1 AND scope = ?2 AND revoked_at IS NULL"
 )
 ACTIVE_OF_ACCOUNT_SQL = (
-    "SELECT learner_key, scope, notice_version, retention_days, granted_at "
+    "SELECT learner_key, scope, notice_version, retention_days, granted_at, gate "
     "FROM consents WHERE account_uid = ?1 AND revoked_at IS NULL"
 )
 FORGET_SQL = "DELETE FROM consents WHERE learner_key = ?1"
@@ -31,7 +39,7 @@ REVOKE_SQL = (
 )
 GRANT_SQL = (
     "INSERT INTO consents (learner_key, account_uid, scope, notice_version, "
-    "retention_days, granted_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)"
+    "retention_days, granted_at, gate, proved_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
 )
 
 
@@ -54,13 +62,22 @@ async def grant_consent(
     notice_version: int,
     retention_days: int | None,
     now_ms: int,
+    gate: str,
+    proved_at: int | None = None,
 ) -> dict:
     """One batch, so no reader sees the learner with two consents of a scope or none."""
     await database.batch(
         [
             database.prepare(REVOKE_SQL).bind(learner_key, scope, now_ms),
             database.prepare(GRANT_SQL).bind(
-                learner_key, uid, scope, notice_version, retention_days, now_ms
+                learner_key,
+                uid,
+                scope,
+                notice_version,
+                retention_days,
+                now_ms,
+                gate,
+                proved_at,
             ),
         ]
     )
@@ -68,6 +85,7 @@ async def grant_consent(
         "notice_version": notice_version,
         "retention_days": retention_days,
         "granted_at": now_ms,
+        "gate": gate,
     }
 
 

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const fetchWithSession = vi.fn();
-vi.mock("@/lib/api/session", () => ({ fetchWithSession }));
+const fetchAsParent = vi.fn();
+vi.mock("@/lib/api/session", () => ({ fetchWithSession, fetchAsParent }));
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
 
 const api = await import("./learners-api");
@@ -13,22 +14,27 @@ const ADA = {
   serviceConsent: null,
   voiceConsent: null,
 };
-const PROOF = { noticeVersion: 1, firebaseIdToken: "fresh-token" };
+const PROOF = { noticeVersion: 1 };
 
 function answers(status: number, body?: unknown) {
-  fetchWithSession.mockResolvedValue({
+  const answer = {
     ok: status < 400,
     status,
     json: async () => body,
-  });
+  };
+  fetchWithSession.mockResolvedValue(answer);
+  fetchAsParent.mockResolvedValue(answer);
 }
 
-const sent = () => {
-  const [url, init] = fetchWithSession.mock.calls[0];
+const sent = (send = fetchWithSession) => {
+  const [url, init] = send.mock.calls[0];
   return { url, method: init.method, body: init.body && JSON.parse(init.body) };
 };
 
-beforeEach(() => fetchWithSession.mockReset());
+beforeEach(() => {
+  fetchWithSession.mockReset();
+  fetchAsParent.mockReset();
+});
 
 describe("the account's learners", () => {
   it("are listed", async () => {
@@ -41,11 +47,12 @@ describe("the account's learners", () => {
     });
   });
 
-  it("are added by their parent, guardian or themselves, who agree for them", async () => {
+  it("are added under the parent's session, by whoever agrees for them", async () => {
     answers(201, ADA);
 
     await expect(api.addLearner("Ada", PROOF)).resolves.toEqual(ADA);
-    expect(sent()).toMatchObject({
+    expect(fetchWithSession).not.toHaveBeenCalled();
+    expect(sent(fetchAsParent)).toMatchObject({
       url: "https://api.test/api/account/learners",
       method: "POST",
       body: { name: "Ada", guardian: true, consent: PROOF },
@@ -59,26 +66,29 @@ describe("the account's learners", () => {
       noticeVersion: 1,
       grantedAt: 5,
     });
-    expect(sent()).toMatchObject({
+    expect(fetchWithSession).not.toHaveBeenCalled();
+    expect(sent(fetchAsParent)).toMatchObject({
       url: `https://api.test/api/account/learners/${ADA.id}/consent`,
       method: "PUT",
       body: PROOF,
     });
   });
 
-  it("are renamed and removed by id", async () => {
+  it("are renamed and removed by id, under the parent's session", async () => {
     answers(200, { ...ADA, name: "Ada L." });
     await api.renameLearner(ADA.id, "Ada L.");
-    expect(sent()).toMatchObject({
+    expect(fetchWithSession).not.toHaveBeenCalled();
+    expect(sent(fetchAsParent)).toMatchObject({
       url: `https://api.test/api/account/learners/${ADA.id}`,
       method: "PATCH",
       body: { name: "Ada L." },
     });
 
-    fetchWithSession.mockReset();
+    fetchAsParent.mockReset();
     answers(200, { learners: [] });
     await expect(api.removeLearner(ADA.id)).resolves.toEqual([]);
-    expect(sent().method).toBe("DELETE");
+    expect(sent(fetchAsParent).method).toBe("DELETE");
+    expect(fetchWithSession).not.toHaveBeenCalled();
   });
 
   it("each have a session, which with the device's id takes in its record", async () => {
@@ -97,7 +107,8 @@ describe("the account's learners", () => {
     answers(204);
 
     await expect(api.deleteAccount()).resolves.toBeUndefined();
-    expect(sent()).toMatchObject({
+    expect(fetchWithSession).not.toHaveBeenCalled();
+    expect(sent(fetchAsParent)).toMatchObject({
       url: "https://api.test/api/account",
       method: "DELETE",
     });

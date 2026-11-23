@@ -144,11 +144,16 @@ async def _account_session(request: Request, body: SessionRequest) -> SessionRes
         request.app.state.keeping, signed.uid, signed.name, now_ms()
     )
     learner = directory.find(body.learner_id) if body.learner_id else None
-    return learner_session(request, signed.uid, learner)
+    return learner_session(request, signed.uid, learner, auth_time=signed.auth_time)
 
 
 def learner_session(
-    request: Request, uid: str, learner: Learner | None, *, tv: str | None = None
+    request: Request,
+    uid: str,
+    learner: Learner | None,
+    *,
+    tv: str | None = None,
+    auth_time: int | None = None,
 ) -> SessionResponse:
     """``tv`` is the credential of the TV the session is for (api/tv_sign_in_routes.py)."""
     issued = issue(
@@ -156,6 +161,7 @@ def learner_session(
         learner=learner_key(uid, learner.id) if learner else None,
         account=uid,
         tv=tv,
+        auth_time=auth_time,
     )
     return SessionResponse(
         token=issued.token,

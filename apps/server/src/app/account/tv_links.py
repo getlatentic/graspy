@@ -114,9 +114,13 @@ HELD_SQL = (
 )
 APPROVE_SQL = (
     "UPDATE tv_links SET status = 'approved', account_uid = ?2, learner_id = ?3, approved_at = ?4, "
-    "approved_hint = ?5, approved_label = ?6, approved_country = ?7 "
+    "approved_hint = ?5, approved_label = ?6, approved_country = ?7, approved_gate = ?8 "
     "WHERE id = ?1 AND status = 'pending' AND expires_at > ?4 "
     "AND locked_by = ?2 AND locked_until > ?4"
+)
+VOID_PIN_APPROVED_SQL = (
+    "UPDATE tv_links SET status = 'denied' "
+    "WHERE account_uid = ?1 AND status = 'approved' AND approved_gate = 'pin'"
 )
 DENY_SQL = (
     "UPDATE tv_links SET status = 'denied' "
@@ -331,14 +335,22 @@ async def approve(
     hint: str | None = None,
     label: str | None = None,
     country: str | None = None,
+    gate: str = "google",
 ) -> bool:
-    """`hint`, `label` and `country` say who approved, for the person at the TV to read."""
+    """`hint`, `label` and `country` say who approved, for the person at the TV to read; `gate` is
+    how the parent proved themselves, which the TV's session keeps."""
     result = (
         await database.prepare(APPROVE_SQL)
-        .bind(link_id, uid, learner_id, now, hint, label, country)
+        .bind(link_id, uid, learner_id, now, hint, label, country, gate)
         .run()
     )
     return changed(result)
+
+
+async def void_pin_approved(database: Any, uid: str) -> None:
+    """Requests the PIN approved that the TV has not yet taken are ended, so they cannot make a
+    session after the PIN was reset."""
+    await database.prepare(VOID_PIN_APPROVED_SQL).bind(uid).run()
 
 
 async def deny(database: Any, link_id: int, uid: str, now: int) -> bool:

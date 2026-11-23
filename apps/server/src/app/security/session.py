@@ -33,6 +33,9 @@ TV_TOKEN_TTL_SECONDS = 60 * 60
 
 _SIGNATURE_ALGORITHM = sha256
 
+# How a parent proved themselves: by the parent PIN, or by signing in with Google again.
+PARENT_GATES = ("pin", "google")
+
 
 class InvalidSessionToken(Exception):
     """The message is sent to the client."""
@@ -62,14 +65,21 @@ def issue(
     learner: str | None = None,
     account: str | None = None,
     parent: bool = False,
+    gate: str | None = None,
     tv: str | None = None,
     hint: str | None = None,
+    auth_time: int | None = None,
     now: float | None = None,
 ) -> IssuedToken:
     """``learner`` is whose record the session reads and writes; ``account``
     is the signed-in account whose learners it may manage. ``parent`` marks a session
-    made just after the account's holder signed in again: it carries no learner. ``tv`` is the
-    id of the TV credential (account/tv_sessions.py) a TV's session was renewed from."""
+    made just after the account's holder proved themselves: it carries no learner, and ``gate``
+    says how they did, by the parent PIN or by signing in with Google again. ``tv`` is the
+    id of the TV credential (account/tv_sessions.py) a TV's session was renewed from. Every token
+    says when it was made (`iat`). ``auth_time`` is when the Google sign-in it was made from was
+    done (`at`): a parent's session from Google keeps it as the time of its proof, and an account
+    session keeps the one it was minted from, so a sign-in is not taken as the proof for a session
+    it did not make, and is taken for one only once."""
     issued_at = int(time.time() if now is None else now)
     if parent:
         ttl = PARENT_TOKEN_TTL_SECONDS
@@ -79,10 +89,16 @@ def issue(
         ttl = TOKEN_TTL_SECONDS
     claims: dict = {
         "jti": secrets.token_urlsafe(9),
+        "iat": issued_at,
         "exp": issued_at + ttl,
     }
+    if auth_time is not None:
+        claims["at"] = auth_time
     if parent:
+        if gate not in PARENT_GATES:
+            raise ValueError("A parent's session says how the parent proved themselves")
         claims["par"] = True
+        claims["gate"] = gate
     if learner:
         claims["sub"] = learner
     if account:
@@ -142,6 +158,33 @@ def learner_of(claims: dict) -> str | None:
 
 def parent_of(claims: dict) -> bool:
     return claims.get("par") is True
+
+
+def gate_of(claims: dict) -> str | None:
+    """How a parent's session was earned. A parent's session made before the claim existed was
+    made with Google."""
+    if not parent_of(claims):
+        return None
+    gate = claims.get("gate")
+    return gate if gate in PARENT_GATES else "google"
+
+
+def started_at(claims: dict) -> int | None:
+    """When a session was made, in epoch seconds. A parent's session made before `iat` existed
+    lasts a fixed time from then."""
+    made = claims.get("iat")
+    if isinstance(made, int) and not isinstance(made, bool):
+        return made
+    expires_at = claims.get("exp")
+    if not parent_of(claims) or not isinstance(expires_at, (int, float)):
+        return None
+    return int(expires_at) - PARENT_TOKEN_TTL_SECONDS
+
+
+def auth_time_of(claims: dict) -> int | None:
+    """When the Google sign-in this session was made from was done."""
+    at = claims.get("at")
+    return at if isinstance(at, int) and not isinstance(at, bool) else None
 
 
 def hint_of(claims: dict) -> str | None:

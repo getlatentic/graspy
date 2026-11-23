@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 import pytest
 from service_agreed import service_agreed
-from signed_in import UID, added, chosen, client, signed_in
+from signed_in import UID, added, as_parent, chosen, client, parent_headers, signed_in
 from voice_worker import Bucket, voice_app, worker_env
 
 from app.voice.keeping import BoundVoice
@@ -114,7 +114,9 @@ async def test_removing_a_learner_forgets_their_voice_lessons_and_no_one_elses(
     async with client(app) as http:
         ada, bo = await two_learners(http, env)
         before = kept(env, ada), kept(env, bo)
-        removed = await http.delete(f"/api/account/learners/{ada}")
+        removed = await http.delete(
+            f"/api/account/learners/{ada}", headers=await parent_headers(http)
+        )
 
     assert removed.status_code == 200
     assert before[0] == {
@@ -139,6 +141,7 @@ async def test_removing_a_learner_forgets_their_voice_lessons_and_no_one_elses(
 async def test_deleting_the_account_forgets_every_learners_voice_lessons(app, env):
     async with client(app) as http:
         ada, bo = await two_learners(http, env)
+        await as_parent(http)
         deleted = await http.delete("/api/account")
 
     assert deleted.status_code == 204
@@ -165,6 +168,8 @@ async def test_without_the_workers_bindings_there_is_nothing_to_forget(monkeypat
     async with client(voice_app(monkeypatch, env=None)) as http:
         await signed_in(http, firebaseIdToken="good")
         ada = await added(http, "Ada")
-        removed = await http.delete(f"/api/account/learners/{ada}")
+        removed = await http.delete(
+            f"/api/account/learners/{ada}", headers=await parent_headers(http)
+        )
 
     assert removed.status_code == 200

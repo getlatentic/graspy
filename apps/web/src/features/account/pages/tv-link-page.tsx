@@ -6,13 +6,14 @@ import { buttonStyles } from "@/components/ui/button-styles";
 import { CodeBoxes } from "@/components/ui/code-boxes";
 import { Spinner } from "@/components/ui/spinner";
 import { useAccount } from "@/lib/account/use-account";
+import { parentRefused } from "@/lib/api/session";
 import { useI18n } from "@/lib/i18n-context";
 import { AccountFrame } from "../components/account-frame";
+import { ParentGate } from "../components/parent-gate";
 import { ProblemNote } from "../components/problem-note";
 import { TvConfirm } from "../components/tv-confirm";
 import { TvList } from "../components/tv-list";
 import { useLearners } from "../hooks/use-learners";
-import { useParentGate } from "../hooks/use-parent-gate";
 import { useParentSignIn } from "../hooks/use-parent-sign-in";
 import { useTvApproval, type ApprovalProblem } from "../hooks/use-tv-approval";
 import { useTvs } from "../hooks/use-tvs";
@@ -45,28 +46,32 @@ function codeInAddress(hash: string): string {
 const normalised = (typed: string) => typed.replace(/[\s-]/g, "").toUpperCase();
 
 /**
- * Where a TV is linked, on a phone, in three steps: the QR code opens this page, Google signs the
- * parent in once if the phone is not already (that one sign-in is the parent's session, so none
- * is asked for again), and the last four characters of the code shown on the TV are typed.
+ * Where a TV is linked, on a phone: the QR code opens this page, Google signs the parent in once
+ * if the phone is signed out (that one sign-in is the parent's session, so no PIN is asked), and
+ * the last four characters of the code shown on the TV are typed. A phone signed in without a
+ * parent's session is asked for the parent PIN first, once in the minutes that session lasts.
  */
 export default function TvLinkPage() {
   const account = useAccount();
-  const gate = useParentGate();
   return (
     <AccountFrame>
-      {account && !gate.needsParent ? (
-        <Linking refused={gate.refused} />
+      {account ? (
+        <ParentGate heading="h1">
+          <Linking refused={parentRefused} />
+        </ParentGate>
       ) : (
-        <SignInOnce signedIn={gate.signedIn} />
+        <SignInOnce />
       )}
     </AccountFrame>
   );
 }
 
+const noop = () => undefined;
+
 /** One Google button, whose sign-in makes the parent's session; nothing else is asked first. */
-function SignInOnce({ signedIn }: { signedIn: () => void }) {
+function SignInOnce() {
   const { t } = useI18n();
-  const parent = useParentSignIn(signedIn);
+  const parent = useParentSignIn(noop);
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-balance font-display text-2xl font-semibold text-ink sm:text-3xl">

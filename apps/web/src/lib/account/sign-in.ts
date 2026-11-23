@@ -74,7 +74,7 @@ export async function signInAsParent(): Promise<void> {
     await startParentSession(await google.reauthenticateWithGoogle());
     return;
   }
-  const { account, idToken } = await google.signInWithGoogle();
+  const { account, idToken } = await google.signInWithGoogle(true);
   try {
     await startAccountSession(idToken, account);
     await startParentSession(idToken);

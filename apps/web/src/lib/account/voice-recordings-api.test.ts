@@ -60,19 +60,15 @@ describe("a learner's voice recordings", () => {
     expect(sent().url).toBe(`${VOICE}?before=1700&beforeId=gvm_a%20b`);
   });
 
-  it("are kept once a parent agrees, with the days and the fresh sign-in", async () => {
+  it("are kept once a parent agrees, with the days, under the parent's session", async () => {
     answers(200, { noticeVersion: 1, retentionDays: 90, grantedAt: 3 });
 
-    await api.keepRecordings(LEARNER, 1, 90, "fresh-token");
+    await api.keepRecordings(LEARNER, 1, 90);
 
     expect(sent()).toMatchObject({
       url: `${VOICE}/consent`,
       method: "PUT",
-      body: {
-        noticeVersion: 1,
-        retentionDays: 90,
-        firebaseIdToken: "fresh-token",
-      },
+      body: { noticeVersion: 1, retentionDays: 90 },
     });
   });
 

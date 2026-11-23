@@ -32,6 +32,9 @@ class Budgets:
     # Asking for a TV's code and looking codes up, counted per key the route names. Required, so
     # a caller that forgets it does not leave signing a TV in unlimited.
     pairing: Limiter
+    # Typing the parent PIN or proving the old one, counted per account and per source. Required,
+    # so a caller that forgets it does not leave the PIN's guesses to the lockout alone.
+    pin: Limiter
 
 
 class RateLimitMiddleware:

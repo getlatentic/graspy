@@ -56,10 +56,27 @@ const PARENT_MARGIN_MS = 30 * 1000;
 let cached: Session | null = readStored();
 let pending: Promise<string> | null = null;
 
-// The parent's own session, made just after they signed in again: what a learner's recordings
-// are managed under, as a learner's session is refused them. Held in memory only, for the
-// signed-in account, and only for the minutes the server gives it.
-let parent: { token: string; expiresAt: number; account: string } | null = null;
+// The parent's own session, made just after they typed their PIN or signed in again: what a
+// learner's recordings are managed under, as a learner's session is refused them. Held in memory
+// only, for the signed-in account, and only for the minutes the server gives it.
+let parent: {
+  token: string;
+  expiresAt: number;
+  startedAt: number;
+  account: string;
+} | null = null;
+const parentListeners = new Set<() => void>();
+
+function setParent(next: typeof parent): void {
+  parent = next;
+  parentListeners.forEach((listener) => listener());
+}
+
+/** Called when the parent's session is made, refused or ended: what the parent gate shows. */
+export function subscribeParentSession(listener: () => void): () => void {
+  parentListeners.add(listener);
+  return () => void parentListeners.delete(listener);
+}
 
 function readStored(): Session | null {
   try {
@@ -383,17 +400,33 @@ export function leaveLearnerSession(): void {
 /** Back to the device's own session. */
 export function endAccountSession(): void {
   pending = null;
-  parent = null;
+  setParent(null);
   forgetTvCredential();
   setAccount(null);
   keep(null);
 }
 
-/** The parent's session is not made or kept without their signing in again. */
+/** The parent's session is not made or kept without their proving who they are. */
 export class ParentSignInNeeded extends ApiError {
   constructor() {
-    super("Sign in again as the parent", 401);
+    super("Prove you are the parent", 401);
   }
+}
+
+/** How long the parent's session has been in force, in milliseconds, or null without one. */
+export function parentSessionAge(): number | null {
+  return hasParentSession() && parent ? Date.now() - parent.startedAt : null;
+}
+
+/** Lets go of the parent's session, so the parent gate asks for the PIN again: an agreement needs
+ * a session that is minutes old at most. */
+export function dropParentSession(): void {
+  setParent(null);
+}
+
+/** Whether a call failed for want of the parent's session: the parent gate then asks again. */
+export function parentRefused(error: unknown): boolean {
+  return error instanceof ParentSignInNeeded;
 }
 
 /** When the parent's session ends, in milliseconds since the epoch, or null without one. */
@@ -412,29 +445,36 @@ export function hasParentSession(): boolean {
   );
 }
 
-/** Exchanges a Google sign-in made just now for the parent's session, which the server
- * keeps for minutes. Sent under the session in use, as the server checks it is the same
- * account's. */
-export async function startParentSession(
-  firebaseIdToken: string,
+/** Asks for the parent's session, which the server keeps for minutes: a call that carries a
+ * proof (the PIN, or a Google sign-in just made) and answers with it. Sent under the session in
+ * use, as the server checks it is the same account's. A refusal is thrown as it came. */
+export async function askForParentSession(
+  path: string,
+  method: "POST" | "PUT",
+  body: object,
 ): Promise<void> {
   const account = currentAccount();
   if (!account) throw new ApiError("Sign in first", 401);
-  const response = await fetchWithSession(
-    `${API_BASE_URL}/account/parent-session`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firebaseIdToken }),
-    },
-  );
+  const response = await fetchWithSession(`${API_BASE_URL}${path}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
   const { token, expiresIn } = await issued(response);
   if (currentAccount()?.uid !== account.uid) return;
-  parent = {
+  setParent({
     token,
     expiresAt: Date.now() + expiresIn * 1000,
+    startedAt: Date.now(),
     account: account.uid,
-  };
+  });
+}
+
+/** The parent's session from a Google sign-in made just now. */
+export function startParentSession(firebaseIdToken: string): Promise<void> {
+  return askForParentSession("/account/parent-session", "POST", {
+    firebaseIdToken,
+  });
 }
 
 const REFUSED_SESSION = new Set(["session_invalid", "session_required"]);
@@ -450,8 +490,8 @@ async function sessionRefused(response: Response): Promise<boolean> {
   return REFUSED_SESSION.has(code) || code === "account_required";
 }
 
-/** Sent as the parent, with the session `startParentSession` made, whichever learner is in
- * use. Without one, or once the server refuses it, the parent is asked to sign in again. */
+/** Sent as the parent, with the session the parent's proof made, whichever learner is in use.
+ * Without one, or once the server refuses it, the parent is asked to prove themselves again. */
 export async function fetchAsParent(
   input: string | URL,
   init: RequestInit = {},
@@ -462,7 +502,7 @@ export async function fetchAsParent(
   headers.set("Authorization", `Bearer ${sent.token}`);
   const response = await fetch(input, { ...init, headers });
   if (await sessionRefused(response)) {
-    if (parent === sent) parent = null;
+    if (parent === sent) setParent(null);
     throw new ParentSignInNeeded();
   }
   return response;

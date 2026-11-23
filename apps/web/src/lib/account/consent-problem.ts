@@ -18,6 +18,7 @@ export type ConsentProblem =
 // What the server names when the sign-in sent with a consent does not hold (docs/API.md).
 const REFUSALS: Record<string, ConsentProblem> = {
   sign_in_stale: "signIn",
+  sign_in_reused: "signIn",
   sign_in_invalid: "signIn",
   sign_in_unchecked: "signIn",
   sign_in_other_account: "otherAccount",

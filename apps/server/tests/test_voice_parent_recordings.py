@@ -2,11 +2,12 @@
 hearing and deleting what was kept, and stopping. No one else's account reaches any of it."""
 
 import time
+from unittest.mock import ANY
 
 import pytest
 from consent_sign_ins import consent_app
 from service_agreed import service_agreed
-from signed_in import UID, added, as_parent, chosen, client, signed_in
+from signed_in import UID, added, as_parent, chosen, client, parent_headers, signed_in
 from test_voice_routes import METADATA, T2, as_device, offered
 from voice_worker import worker_env
 
@@ -170,7 +171,9 @@ async def test_a_device_has_no_parent_session(app):
 
 
 async def test_the_parent_session_is_refused_once_its_minutes_are_up(app):
-    lapsed = issue("s", account=UID, parent=True, now=time.time() - 16 * 60)
+    lapsed = issue(
+        "s", account=UID, parent=True, gate="google", now=time.time() - 16 * 60
+    )
     async with client(app) as http:
         http.headers["Authorization"] = f"Bearer {lapsed.token}"
         refused = await http.get(voice("a1b2c3d4e5f6"))
@@ -245,6 +248,8 @@ async def test_a_parent_who_signed_in_just_now_agrees_and_it_is_kept_as_a_record
             "retention_days": 90,
             "granted_at": body["grantedAt"],
             "revoked_at": None,
+            "gate": "google",
+            "proved_at": ANY,
         }
     ]
 
@@ -520,7 +525,7 @@ async def test_another_account_cannot_list_hear_or_delete_a_recording(app, env):
         mine = http.headers["Authorization"]
         await signed_in(http, firebaseIdToken="good2")
         await as_parent(http, "other")
-        theirs = await added(http, "Grace")
+        theirs = await added(http, "Grace", "other")
         answers = [
             await http.get(voice(learner)),
             await http.get(voice(learner, f"/recordings/{sample}/audio")),
@@ -592,7 +597,9 @@ async def test_removing_a_learner_forgets_their_consent_and_kept_recordings(app,
         await agree(http, learner)
         await agree(http, another)
         await recorded(http, env, learner, n=2)
-        removed = await http.delete(f"/api/account/learners/{learner}")
+        removed = await http.delete(
+            f"/api/account/learners/{learner}", headers=await parent_headers(http)
+        )
 
     assert removed.status_code == 200
     assert [row["learner_key"] for row in env.DB.rows("SELECT * FROM consents")] == [

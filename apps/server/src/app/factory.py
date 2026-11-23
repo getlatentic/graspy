@@ -22,7 +22,9 @@ from pydantic import ValidationError
 from .agent.lazy_a2a import LazyA2ARoutes
 from .agent.memory import ConversationStore, InMemoryConversationStore
 from .agent.tutor import Tutor
+from .api.account_deletion_routes import account_deletion_router
 from .api.account_parent_routes import parent_session_router
+from .api.account_pin_routes import parent_pin_router
 from .api.account_routes import account_router
 from .api.account_voice_routes import account_voice_router
 from .api.chat_access import chat_refusal
@@ -104,13 +106,16 @@ def create_app(
     app.state.turns = turns
     app.state.tv_db = voice.DB if voice is not None else _local_database()
     app.state.pairing_limiter = budgets.pairing if budgets else None
+    app.state.pin_limiter = budgets.pin if budgets else None
 
     app.include_router(api_router, prefix="/api")
     app.include_router(learner_router, prefix="/api")
     app.include_router(thread_router, prefix="/api")
     app.include_router(chat_router, prefix="/api")
     app.include_router(account_router, prefix="/api")
+    app.include_router(account_deletion_router, prefix="/api")
     app.include_router(parent_session_router, prefix="/api")
+    app.include_router(parent_pin_router, prefix="/api")
     app.include_router(account_voice_router, prefix="/api")
     app.include_router(tv_sign_in_router, prefix="/api")
     app.include_router(education_router, prefix="/api")

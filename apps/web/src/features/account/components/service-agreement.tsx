@@ -8,11 +8,12 @@ import {
 import { keepServiceConsent } from "@/lib/account/service-consent";
 import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
-import { useAgreement } from "../hooks/use-agreement";
+import { useParentAgreement } from "../hooks/use-parent-agreement";
 import { ConsentStep } from "./consent-step";
+import { ParentGate } from "./parent-gate";
 
-/** A parent agrees to graspy teaching a learner who has no agreement yet: the notice, then
- * signing in again. The learner stays unusable until they have. */
+/** A parent agrees to graspy teaching a learner who has no agreement yet: the notice, then the
+ * parent PIN. The learner stays unusable until they have. */
 export function ServiceAgreement({
   learner,
   heading,
@@ -32,24 +33,29 @@ export function ServiceAgreement({
 }) {
   const { t } = useI18n();
   const uid = useAccount()?.uid;
-  const submit = useCallback(
-    async (firebaseIdToken: string) => {
-      const consent = await agreeToService(learner.id, {
-        noticeVersion: NOTICE_VERSION,
-        firebaseIdToken,
-      });
-      if (uid) keepServiceConsent(uid, learner.id);
-      onAgreed(consent);
-    },
-    [learner.id, uid, onAgreed],
-  );
-  const agreement = useAgreement(submit);
+  const submit = useCallback(async () => {
+    const consent = await agreeToService(learner.id, {
+      noticeVersion: NOTICE_VERSION,
+    });
+    if (uid) keepServiceConsent(uid, learner.id);
+    onAgreed(consent);
+  }, [learner.id, uid, onAgreed]);
+  const agreement = useParentAgreement(submit);
+  if (agreement.asking) {
+    return (
+      <ParentGate
+        heading={heading}
+        onUnlocked={agreement.proceed}
+        onCancel={agreement.cancel}
+      />
+    );
+  }
   return (
     <ConsentStep
       heading={heading}
       title={t("consent.serviceTitle", { name: learner.name })}
       notice={SERVICE_NOTICE}
-      busy={agreement.busy || busy}
+      busy={busy}
       problem={agreement.problem}
       onAgree={agreement.agree}
       onDecline={onDecline}

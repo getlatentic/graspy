@@ -145,6 +145,7 @@ LIMITERS = (
     "AGENT_LIMITER",
     "API_LIMITER",
     "PAIRING_LIMITER",
+    "PIN_LIMITER",
 )
 VIEW = "<!doctype html><html><head><title>practice</title></head></html>"
 WORKER = "// the views' build's sandbox worker"

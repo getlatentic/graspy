@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ConsentProblem } from "@/lib/account/consent-problem";
 import { cn } from "@/lib/cn";
@@ -7,8 +6,8 @@ import { useI18n } from "@/lib/i18n-context";
 import { useFocusInto } from "../hooks/use-focus-into";
 import { ConsentProblemNote } from "./consent-problem-note";
 
-/** What a parent reads before agreeing: the notice, word for word, then signing in with
- * Google again to agree. Declining leaves things as they were. */
+/** What a parent reads before agreeing: the notice, word for word, then the parent PIN to
+ * agree. Declining leaves things as they were. */
 export function ConsentStep({
   title,
   notice,
@@ -24,7 +23,6 @@ export function ConsentStep({
   notice: string;
   busy: boolean;
   problem: ConsentProblem | null;
-  /** Called by the tap itself: Google's window must open within it. */
   onAgree: () => void;
   onDecline: () => void;
   /** A way out for a parent who cannot agree here: the control that signs out. */
@@ -63,8 +61,7 @@ export function ConsentStep({
       {problem && <ConsentProblemNote problem={problem} />}
       <div className="flex flex-wrap gap-2">
         <Button onClick={onAgree} disabled={busy}>
-          <LogIn className="size-4 rtl:-scale-x-100" aria-hidden="true" />
-          {busy ? t("you.signingIn") : t("consent.agree")}
+          {t("consent.agree")}
         </Button>
         <Button variant="ghost" onClick={onDecline} disabled={busy}>
           {t("consent.decline")}

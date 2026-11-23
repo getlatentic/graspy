@@ -2,6 +2,7 @@
 device takes through it."""
 
 import httpx2
+from fresh_sign_in import fresh_auth_time
 
 from app.factory import create_app
 from app.learner.store import InMemoryLearnerStore
@@ -16,6 +17,13 @@ def signed_in_app(monkeypatch, name: str = "Ada Lovelace"):
     async def verified(id_token, _api_key, **_):
         if id_token == "unchecked":
             raise firebase.SignInUnchecked("Sign-in could not be checked. Try again.")
+        if id_token == "fresh":
+            return firebase.SignedIn(
+                uid=UID,
+                name=name,
+                auth_time=fresh_auth_time(),
+                provider="google.com",
+            )
         if id_token != "good":
             raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
         return firebase.SignedIn(uid=UID, name=name)
@@ -55,9 +63,21 @@ async def as_parent(http, token: str = "fresh") -> None:
     use(http, response.json())
 
 
-async def added(http, name: str) -> str:
+async def parent_headers(http, proof: str = "fresh") -> dict:
+    """The header of a parent's session made from a Google sign-in just now, for one request: the
+    session in use stays the one it was."""
+    made = await http.post(
+        "/api/account/parent-session", json={"firebaseIdToken": proof}
+    )
+    return {"Authorization": f"Bearer {made.json()['token']}"}
+
+
+async def added(http, name: str, proof: str = "fresh") -> str:
+    """Adding a learner takes the parent, so the request is the parent's."""
     response = await http.post(
-        "/api/account/learners", json={"name": name, "guardian": True}
+        "/api/account/learners",
+        json={"name": name, "guardian": True},
+        headers=await parent_headers(http, proof),
     )
     return response.json()["id"]
 

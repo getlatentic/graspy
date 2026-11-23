@@ -3,10 +3,11 @@ without it, a learner is added as before and nothing is recorded; a consent that
 no learner."""
 
 import time
+from unittest.mock import ANY
 
 import pytest
 from consent_sign_ins import consent_app
-from signed_in import UID, as_parent, client, signed_in, signed_in_app
+from signed_in import UID, as_parent, client, parent_headers, signed_in, signed_in_app
 from voice_worker import worker_env
 
 from app.account.directory import account_key
@@ -66,6 +67,8 @@ async def test_a_learner_added_with_a_fresh_sign_in_has_the_parents_consent_reco
             "retention_days": None,
             "granted_at": consent["grantedAt"],
             "revoked_at": None,
+            "gate": "google-token",
+            "proved_at": ANY,
         }
     ]
 
@@ -74,7 +77,9 @@ async def test_a_learner_added_the_old_way_is_added_and_nothing_is_recorded(app,
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")
         added = await http.post(
-            "/api/account/learners", json={"name": "Ada", "guardian": True}
+            "/api/account/learners",
+            json={"name": "Ada", "guardian": True},
+            headers=await parent_headers(http),
         )
         listed = await learners(http)
 
@@ -90,7 +95,9 @@ async def test_a_learner_added_the_old_way_without_the_workers_bindings_is_added
     async with client(signed_in_app(monkeypatch)) as http:
         await signed_in(http, firebaseIdToken="good")
         added = await http.post(
-            "/api/account/learners", json={"name": "Ada", "guardian": True}
+            "/api/account/learners",
+            json={"name": "Ada", "guardian": True},
+            headers=await parent_headers(http),
         )
         listed = await learners(http)
 
@@ -207,7 +214,9 @@ async def test_removing_a_learner_forgets_their_consent(app, env):
                 "/api/account/learners", json=adding("Bo", firebaseIdToken="fresh")
             )
         ).json()["id"]
-        await http.delete(f"/api/account/learners/{first}")
+        await http.delete(
+            f"/api/account/learners/{first}", headers=await parent_headers(http)
+        )
 
     assert [row["learner_key"] for row in env.DB.rows("SELECT * FROM consents")] == [
         f"account:{UID}/{second}"
@@ -216,7 +225,9 @@ async def test_removing_a_learner_forgets_their_consent(app, env):
 
 async def added_without_consent(http, name: str = "Ada") -> str:
     added = await http.post(
-        "/api/account/learners", json={"name": name, "guardian": True}
+        "/api/account/learners",
+        json={"name": name, "guardian": True},
+        headers=await parent_headers(http),
     )
     return added.json()["id"]
 
