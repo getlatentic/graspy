@@ -23,7 +23,6 @@ export function PlanWait({
   if (slow) waiting = <SlowRetry onRetry={onRetry} />;
   return (
     <div
-      aria-busy="true"
       className={
         slow || chat
           ? "flex min-h-full items-center justify-center"

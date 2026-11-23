@@ -142,17 +142,45 @@ describe("getJson with a signal", () => {
 });
 
 describe("getJson's time limit", () => {
-  it("cuts each try off after thirty seconds, so a screen is not left waiting for good", async () => {
-    const limit = new AbortController();
-    const timeout = vi
-      .spyOn(AbortSignal, "timeout")
-      .mockReturnValue(limit.signal);
-    fetchWithSession.mockResolvedValue(Response.json({ ok: 1 }));
+  it("cuts a try off when thirty seconds pass with no answer, and tries again", async () => {
+    const signals: AbortSignal[] = [];
+    fetchWithSession
+      .mockImplementationOnce(async (_url, init) => {
+        signals.push(init!.signal!);
+        return new Promise<Response>(() => undefined);
+      })
+      .mockResolvedValueOnce(Response.json({ ok: 1 }));
 
-    await settled(getJson("/thing"));
+    const pending = getJson<{ ok: number }>("/thing");
+    await vi.advanceTimersByTimeAsync(29_999);
+    expect(signals[0]!.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(signals[0]!.aborted).toBe(true);
+    expect(signals[0]!.reason).toMatchObject({ name: "TimeoutError" });
+    // The first try never settles, as a hung request does; the limit ends the wait for it.
+    expect(fetchWithSession).toHaveBeenCalledTimes(1);
+    pending.catch(() => undefined);
+  });
 
-    expect(timeout).toHaveBeenCalledWith(30_000);
-    expect(fetchWithSession.mock.calls[0][1]?.signal).toBe(limit.signal);
+  it("lets a body that is slow to arrive finish once the headers are in, without a second request", async () => {
+    const signals: AbortSignal[] = [];
+    fetchWithSession.mockImplementation(async (_url, init) => {
+      signals.push(init!.signal!);
+      return {
+        ok: true,
+        status: 200,
+        text: () =>
+          new Promise<string>((resolve) =>
+            setTimeout(() => resolve('{"ok":1}'), 90_000),
+          ),
+      } as unknown as Response;
+    });
+
+    const outcome = await settled(getJson("/thing"));
+
+    expect(outcome).toEqual({ value: { ok: 1 } });
+    expect(fetchWithSession).toHaveBeenCalledTimes(1);
+    expect(signals[0]!.aborted).toBe(false);
   });
 
   it("tries again a read the limit cut off", async () => {
@@ -164,5 +192,13 @@ describe("getJson's time limit", () => {
 
     expect(await settled(getJson("/thing"))).toEqual({ value: { ok: 1 } });
     expect(fetchWithSession).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends a write once, whatever the wait", async () => {
+    fetchWithSession.mockRejectedValue(new NetworkError("Failed to fetch"));
+
+    await settled(sendJson("/thing", "PUT", { a: 1 }));
+
+    expect(fetchWithSession).toHaveBeenCalledTimes(1);
   });
 });

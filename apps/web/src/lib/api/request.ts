@@ -5,9 +5,10 @@ import { LearnerChanged } from "@/lib/learner-pin";
 import { fetchWithSession } from "./session";
 
 const RETRY_DELAYS_MS = [400, 1200];
-// A cold server answers within about seven seconds; a read that is still silent after this is
-// cut off, so a screen waiting on it is not left waiting for good, and tried again.
-const READ_TIMEOUT_MS = 30_000;
+// A cold server answers within about seven seconds; a read whose answer has not begun after this
+// is cut off, so a screen waiting on it is not left waiting for good, and tried again. Once the
+// headers are in the limit is lifted, so a large body on a slow link can finish.
+const HEADERS_TIMEOUT_MS = 30_000;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -29,8 +30,10 @@ async function answered<T>(
   url: string,
   init: RequestInit,
   still?: () => boolean,
+  headersArrived?: () => void,
 ): Promise<T> {
   const response = await sent(url, init, still);
+  headersArrived?.();
   if (!response.ok) throw await toApiError(response);
   return readJson<T>(response);
 }
@@ -44,14 +47,25 @@ export async function getJson<T>(
   signal?: AbortSignal,
 ): Promise<T> {
   for (let attempt = 0; ; attempt += 1) {
+    const limit = new AbortController();
+    const timer = setTimeout(
+      () =>
+        limit.abort(
+          new DOMException("The operation timed out.", "TimeoutError"),
+        ),
+      HEADERS_TIMEOUT_MS,
+    );
+    const stop = signal ? abortAny([signal, limit.signal]) : limit.signal;
     try {
-      const limit = AbortSignal.timeout(READ_TIMEOUT_MS);
-      const stop = signal ? abortAny([signal, limit]) : limit;
-      return await answered<T>(url, { signal: stop }, still);
+      return await answered<T>(url, { signal: stop }, still, () =>
+        clearTimeout(timer),
+      );
     } catch (error) {
       if (signal?.aborted) throw error;
       const retryable = error instanceof ApiError && error.retryable;
       if (!retryable || attempt === RETRY_DELAYS_MS.length) throw error;
+    } finally {
+      clearTimeout(timer);
     }
     await wait(RETRY_DELAYS_MS[attempt]);
   }

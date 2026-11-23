@@ -31,7 +31,8 @@ describe("LoadingScreen", () => {
     const { container } = open();
     const main = container.querySelector("main")!;
     expect(main.className).toContain("bg-canvas");
-    expect(main.getAttribute("aria-busy")).toBe("true");
+    // Busy would mute the status inside it.
+    expect(main.hasAttribute("aria-busy")).toBe(false);
     const logo = container.querySelector("img")!;
     expect(logo.getAttribute("src")).toBe("/brand/graspy-lockup-v1.svg");
     expect(logo.getAttribute("width")).toBe("4552");
@@ -46,6 +47,9 @@ describe("LoadingScreen", () => {
     expect(screen.getAllByRole("status")).toHaveLength(1);
     expect(screen.getByRole("status").textContent).toBe("loading.opening");
     expect(container.textContent).toBe("loading.opening");
+    expect(
+      container.querySelector("[role=status]")!.closest("[aria-busy]"),
+    ).toBeNull();
   });
 
   it("keeps its parts where they were when the line gives way to the button", () => {
@@ -83,6 +87,9 @@ describe("SlowRetry", () => {
       </KeysApp>,
     );
     expect(container.textContent).toBe("loading.openingloading.tryAgain");
+    expect(container.querySelector("p")!.getAttribute("aria-hidden")).toBe(
+      "true",
+    );
     fireEvent.click(screen.getByRole("button"));
     expect(onRetry).toHaveBeenCalledOnce();
   });

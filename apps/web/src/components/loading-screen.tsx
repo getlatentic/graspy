@@ -16,12 +16,14 @@ export function LoadingBar() {
 }
 
 /** What stands where a page will be when the server has not answered in a while: the one thing
- * to do. The wait goes on behind it, so an answer that arrives still shows the page. */
+ * to do. Its title is for the eye: the status beside it has already said it. The wait goes on behind it, so an answer that arrives still shows the page. */
 export function SlowRetry({ onRetry }: { onRetry: () => void }) {
   const { t } = useI18n();
   return (
     <div className="flex flex-col items-center gap-6 text-center">
-      <p className="text-lg font-semibold text-ink">{t("loading.opening")}</p>
+      <p aria-hidden="true" className="text-lg font-semibold text-ink">
+        {t("loading.opening")}
+      </p>
       <Button onClick={onRetry}>{t("loading.tryAgain")}</Button>
     </div>
   );
@@ -33,7 +35,7 @@ export function LoadingScreen({ onRetry }: { onRetry: () => void }) {
   const { t } = useI18n();
   const slow = useSlow(true);
   return (
-    <main aria-busy="true" className="min-h-dvh bg-canvas">
+    <main className="min-h-dvh bg-canvas">
       <p role="status" className="sr-only">
         {t("loading.opening")}
       </p>

@@ -16,8 +16,8 @@ async function tokens(): Promise<string> {
 }
 
 const BOOT_STYLE = html.slice(
-  html.indexOf("#boot {"),
-  html.indexOf("</style>", html.indexOf("#boot {")),
+  html.indexOf("html { background"),
+  html.indexOf("</style>", html.indexOf("html { background")),
 );
 
 describe("the page's first paint", () => {
@@ -33,22 +33,56 @@ describe("the page's first paint", () => {
     expect([...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)]).toHaveLength(1);
   });
 
-  // The page paints these before the stylesheet's variables exist, so each is written out.
-  it.each(["canvas", "track", "accent", "accent-strong", "on-accent"])(
-    "uses the design tokens' %s, light and dark",
-    async (name) => {
-      const css = await tokens();
-      const value = new RegExp(`--color-${name}: (#[0-9a-f]{6})`, "i");
-      const lowered = html.toLowerCase();
-      expect(lowered).toContain(css.match(value)![1]!.toLowerCase());
-      const dark = css
-        .slice(css.indexOf("prefers-color-scheme: dark"))
-        .match(value);
-      if (name !== "accent-strong" && name !== "on-accent") {
-        expect(lowered).toContain(dark![1]!.toLowerCase());
-      }
-    },
-  );
+  // The page paints these before the stylesheet's variables exist, so each is written out, in the
+  // rule that uses it: a colour found elsewhere in the page would not do.
+  const [LIGHT, DARK] = BOOT_STYLE.split(
+    "@media (prefers-color-scheme: dark)",
+  ) as [string, string];
+  const colour = async (name: string, dark: boolean) => {
+    const css = await tokens();
+    const from = dark ? css.indexOf("prefers-color-scheme: dark") : 0;
+    return css
+      .slice(from)
+      .match(new RegExp(`--color-${name}: (#[0-9a-f]{6})`, "i"))![1]!
+      .toLowerCase();
+  };
+  const rule = (css: string, selector: string) =>
+    css
+      .toLowerCase()
+      .match(
+        new RegExp(`${selector.replace(/[.#]/g, "\\$&")} \\{([^}]*)\\}`),
+      )![1]!;
+
+  it("paints the canvas, track and accent of the design tokens, light", async () => {
+    expect(rule(LIGHT, "#boot")).toContain(
+      `background: ${await colour("canvas", false)}`,
+    );
+    expect(rule(LIGHT, "html")).toContain(
+      `background: ${await colour("canvas", false)}`,
+    );
+    expect(rule(LIGHT, "#boot .bar")).toContain(
+      `background: ${await colour("track", false)}`,
+    );
+    expect(rule(LIGHT, "#boot .bar i")).toContain(
+      `background: ${await colour("accent", false)}`,
+    );
+    const again = rule(LIGHT, "#boot .again");
+    expect(again).toContain(`background: ${await colour("accent", false)}`);
+    expect(again).toContain(`${await colour("accent-strong", false)}`);
+    expect(again).toContain(`color: ${await colour("on-accent", false)}`);
+  });
+
+  it("paints the canvas, track and accent of the design tokens, dark", async () => {
+    expect(rule(DARK, "html, #boot")).toContain(
+      `background: ${await colour("canvas", true)}`,
+    );
+    expect(rule(DARK, "#boot .bar")).toContain(
+      `background: ${await colour("track", true)}`,
+    );
+    expect(rule(DARK, "#boot .bar i, #boot .again")).toContain(
+      `background: ${await colour("accent", true)}`,
+    );
+  });
 
   it("sizes everything in rem, so the adaptive root size scales it", () => {
     expect(BOOT_STYLE).not.toMatch(/\d(px|vw|vh|vmin|vmax)\b/);
@@ -66,6 +100,15 @@ describe("the page's first paint", () => {
   it("preloads the logo the loading screen draws next, so the hand-over shows no gap", () => {
     expect(html).toContain(
       '<link rel="preload" as="image" href="/brand/graspy-lockup-v1.svg"',
+    );
+  });
+
+  it("tells a browser without script what it needs, and hides what would wait for one", () => {
+    expect(html).toContain(
+      "<noscript><p>Turn on JavaScript to use graspy.</p></noscript>",
+    );
+    expect(html).toMatch(
+      /<noscript>\s*<style>[\s\S]*#boot \.bar, #boot \.again \{ display: none; \}/,
     );
   });
 });

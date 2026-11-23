@@ -9,6 +9,7 @@
 // copy answer; that copy may be a deploy behind, and when the network's document then arrives
 // and differs, the page, which asks once it has loaded, is told: one the learner has not touched
 // reloads into the new build, and any other opens it on the next visit (src/lib/app-update.ts).
+// A reload waits longer (RELOAD_WAIT_MS), since it is how a page gets off a build whose files are gone.
 //
 // A file is answered from the cache first, and kept as it passes. A file the host no longer has
 // is answered as missing, not with the app's page, so the page that asked sees it fail (see the
@@ -23,6 +24,11 @@ const KEPT = new Set([SHELL, FILES]);
 const APP = "/";
 // How long a page waits for the network's document before the last copy answers instead.
 const NAVIGATION_WAIT_MS = 2000;
+// A reload (the browser sets the request's cache mode to "no-cache" or "reload") is how a page
+// gets onto a new build after a file of the old one failed, and how a learner asks for the
+// newest. Answering it with the copy that just failed would send the page round again, so it
+// waits longer for the network before the copy may answer.
+const RELOAD_WAIT_MS = 10000;
 // A deploy leaves the last one's hashed files behind; past this many, the
 // oldest go.
 const MAX_FILES = 200;
@@ -62,21 +68,31 @@ async function trimmed(cache) {
 }
 
 // One download of a file at a time: the page asking for a startup file while the worker keeps the
-// same one shares it, and each gets its own copy of the answer.
+// same one shares it, and each gets its own copy of the answer. The download is the worker's own
+// fetch of the address, not the first asker's request, so that asker leaving (a page that
+// closes, a request it aborts) does not end the download the others wait on.
 const downloads = new Map();
 function download(request) {
   const url = typeof request === "string" ? request : request.url;
   let pending = downloads.get(url);
   if (!pending) {
-    pending = fetch(request).finally(() => downloads.delete(url));
+    pending = fetch(url).finally(() => downloads.delete(url));
     downloads.set(url, pending);
   }
   return pending.then((response) => response.clone());
 }
 
-// Whether a deploy's document, as the network has it now, differs from the copy kept, as the page
-// last answered found it; the page asks once it is loaded (see "check" below).
-let latestChanged = Promise.resolve(false);
+// Whether a deploy's document, as the network has it now, differs from the copy kept, by the page
+// the answer went to: the page asks once it is loaded (see "check" below). Each navigation has its
+// own, so one page's answer is never told to another; the oldest go past MAX_PAGES.
+const MAX_PAGES = 20;
+const latestChanged = new Map();
+function expectChange(clientId, changed) {
+  latestChanged.delete(clientId);
+  latestChanged.set(clientId, changed);
+  if (latestChanged.size > MAX_PAGES)
+    latestChanged.delete(latestChanged.keys().next().value);
+}
 
 // The files a document names under /assets: its entry script and the ones it preloads.
 const NAMED_FILE = /(?:src|href)="(\/assets\/[^"]+)"/g;
@@ -136,12 +152,17 @@ async function page(event) {
   event.waitUntil(changed);
   if (!kept) return (await found).response;
   // The learner waits only a moment for the network; a failed answer leaves the copy as it is.
+  const reload =
+    event.request.cache === "no-cache" || event.request.cache === "reload";
   const now = await Promise.race([
     found.catch(() => null),
-    after(NAVIGATION_WAIT_MS),
+    after(reload ? RELOAD_WAIT_MS : NAVIGATION_WAIT_MS),
   ]);
   // The page is on the network's build already, so there is nothing to reload into.
-  latestChanged = now ? changed.then(() => false) : changed;
+  expectChange(
+    event.resultingClientId,
+    now ? changed.then(() => false) : changed,
+  );
   return now ? now.response : kept;
 }
 
@@ -187,9 +208,11 @@ self.addEventListener("message", (event) => {
   // The page asks, rather than being told, because a page still loading may not be there to hear.
   if (type === "check") {
     event.waitUntil(
-      latestChanged.then((changed) => {
-        if (changed) event.source.postMessage({ type: UPDATE_READY });
-      }),
+      (latestChanged.get(event.source.id) || Promise.resolve(false)).then(
+        (changed) => {
+          if (changed) event.source.postMessage({ type: UPDATE_READY });
+        },
+      ),
     );
   }
   if (type === "keep" && Array.isArray(urls)) {

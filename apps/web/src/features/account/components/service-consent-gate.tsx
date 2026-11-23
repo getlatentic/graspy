@@ -75,7 +75,7 @@ function Checking({ onRetry }: { onRetry: () => void }) {
   const { t } = useI18n();
   const slow = useSlow(true);
   return (
-    <div aria-busy="true" className="flex justify-center py-8">
+    <div className="flex justify-center py-8">
       <p role="status" className="sr-only">
         {t("loading.opening")}
       </p>

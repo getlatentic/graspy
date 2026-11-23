@@ -34,7 +34,7 @@ describe("PlanWait", () => {
     ).toBeGreaterThan(3);
     expect(container.querySelectorAll("section")).toHaveLength(2);
     expect(screen.getByRole("status").textContent).toBe("loading.opening");
-    expect(container.firstElementChild?.getAttribute("aria-busy")).toBe("true");
+    expect(container.querySelector("[aria-busy]")).toBeNull();
   });
 
   it("holds the shape of a subject page on a subject's path", () => {
@@ -57,9 +57,13 @@ describe("PlanWait", () => {
     const { container, onRetry } = wait("/app/learn");
     act(() => vi.advanceTimersByTime(SLOW_MS));
     expect(container.querySelector("[data-skeleton]")).toBeNull();
-    expect(container.textContent).toBe(
-      "loading.openingloading.openingloading.tryAgain",
-    );
+    // Said once: the status is read, and the title beside the button is for the eye.
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    const said = screen
+      .getAllByText("loading.opening")
+      .filter((one) => !one.closest("[aria-hidden=true]"));
+    expect(said).toHaveLength(1);
+    expect(said[0]!.getAttribute("role")).toBe("status");
     fireEvent.click(screen.getByRole("button", { name: "loading.tryAgain" }));
     expect(onRetry).toHaveBeenCalledOnce();
   });

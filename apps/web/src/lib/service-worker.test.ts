@@ -32,7 +32,10 @@ function fakeCaches() {
 function startWorker(network: (url?: string) => Promise<Response>) {
   const listeners: Record<string, (event: unknown) => void> = {};
   const told: unknown[] = [];
-  const asker = { postMessage: (message: unknown) => told.push(message) };
+  const asker = (id?: string) => ({
+    id,
+    postMessage: (message: unknown) => told.push(message),
+  });
   const caches = fakeCaches();
   const self = {
     addEventListener: (type: string, listener: (event: unknown) => void) =>
@@ -43,22 +46,26 @@ function startWorker(network: (url?: string) => Promise<Response>) {
   };
   new Function("self", "caches", "fetch", source)(self, caches, network);
 
-  async function open(path = "/app/learn") {
+  async function open(
+    path = "/app/learn",
+    { cache = "default", client }: { cache?: string; client?: string } = {},
+  ) {
     const waits: Promise<unknown>[] = [];
     let answer: Promise<Response> = new Promise(() => undefined);
     listeners.fetch({
-      request: { method: "GET", url: ORIGIN + path, mode: "navigate" },
+      request: { method: "GET", url: ORIGIN + path, mode: "navigate", cache },
+      resultingClientId: client,
       respondWith: (response: Promise<Response>) => void (answer = response),
       waitUntil: (work: Promise<unknown>) => void waits.push(work),
     });
     return { answer, settled: () => Promise.all(waits) };
   }
   /** The loaded page asking whether the document it was served was a deploy behind. */
-  async function check() {
+  async function check(client?: string) {
     const waits: Promise<unknown>[] = [];
     listeners.message({
       data: { type: "check" },
-      source: asker,
+      source: asker(client),
       waitUntil: (work: Promise<unknown>) => void waits.push(work),
     });
     await Promise.all(waits);
@@ -93,6 +100,8 @@ const kept = async (worker: ReturnType<typeof startWorker>, body: string) => {
 
 // What public/sw.js waits for the network's document before the last copy answers.
 const NAVIGATION_WAIT_MS = 2000;
+// What public/sw.js waits for a reload.
+const RELOAD_WAIT_MS = 10000;
 
 describe("the service worker's page", () => {
   afterEach(() => vi.useRealTimers());
@@ -174,6 +183,56 @@ describe("the service worker's page", () => {
     await reload.settled();
     await worker.check();
     expect(worker.told).toHaveLength(1);
+  });
+
+  it("makes a reload wait longer for the network than a visit, so a page off a removed build is not sent back to the copy that failed", async () => {
+    vi.useFakeTimers();
+    const worker = startWorker(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      return new Response(NEW);
+    });
+    await kept(worker, OLD);
+    // The visit gives up on the network after the wait and gets the old document.
+    const visit = await worker.open();
+    await vi.advanceTimersByTimeAsync(NAVIGATION_WAIT_MS);
+    expect(await (await visit.answer).text()).toBe(OLD);
+    await vi.advanceTimersByTimeAsync(5000);
+    await visit.settled();
+    // The reload that follows a failed chunk asks again, with the browser's reload cache mode.
+    const reload = await worker.open("/app/learn", { cache: "no-cache" });
+    let answered = false;
+    void reload.answer.then(() => (answered = true));
+    await vi.advanceTimersByTimeAsync(NAVIGATION_WAIT_MS + 1000);
+    expect(answered).toBe(false);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(await (await reload.answer).text()).toBe(NEW);
+  });
+
+  it("still lets a reload fall back to the copy once the longer wait has passed", async () => {
+    vi.useFakeTimers();
+    const worker = startWorker(() => new Promise<Response>(() => undefined));
+    await kept(worker, OLD);
+    const reload = await worker.open("/app/learn", { cache: "reload" });
+    await vi.advanceTimersByTimeAsync(RELOAD_WAIT_MS);
+    expect(await (await reload.answer).text()).toBe(OLD);
+  });
+
+  it("tells only the page whose answer was a deploy behind", async () => {
+    vi.useFakeTimers();
+    let answerNetwork: (response: Response) => void = () => undefined;
+    const worker = startWorker(
+      () => new Promise<Response>((resolve) => (answerNetwork = resolve)),
+    );
+    await kept(worker, OLD);
+    const behind = await worker.open("/app/learn", { client: "behind" });
+    await vi.advanceTimersByTimeAsync(NAVIGATION_WAIT_MS);
+    await behind.answer;
+    answerNetwork(new Response(NEW));
+    await behind.settled();
+    await worker.check("another");
+    expect(worker.told).toEqual([]);
+    await worker.check("behind");
+    expect(worker.told).toEqual([{ type: "update-ready" }]);
   });
 
   it("says nothing when the document is the same", async () => {
@@ -260,6 +319,19 @@ describe("the service worker's new build", () => {
     await settled();
     // The entry script and the one it preloads, once each: the page's ask shared the first.
     expect(calls.filter((url) => url !== "/")).toHaveLength(2);
+  });
+
+  it("downloads each file by its address alone, so the first asker's request ending does not end a download others share", async () => {
+    const calls: unknown[] = [];
+    const worker = startWorker(async (target) => {
+      calls.push(target);
+      return new Response(String(target) === "/" ? withScripts : "script");
+    });
+    await kept(worker, OLD);
+    await (await worker.open()).settled();
+    await worker.openFile("/assets/other.js");
+    expect(calls.length).toBe(2);
+    expect(calls.every((target) => typeof target === "string")).toBe(true);
   });
 
   it("keeps the old document, and says nothing, when a file cannot be kept", async () => {
