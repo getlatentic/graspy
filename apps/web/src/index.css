@@ -39,6 +39,22 @@ html {
     color-scheme: light dark;
   }
 
+  /* The filter on a picture: a dim in the dark colour set, none (so no extra compositing layer)
+     otherwise and under `.theme-light`, which keeps its subtree in the light set. */
+  :root {
+    --picture-filter: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --picture-filter: brightness(0.9);
+    }
+  }
+
+  .theme-light {
+    --picture-filter: none;
+  }
+
   body {
     background: var(--color-canvas);
     color: var(--color-ink);
@@ -182,6 +198,10 @@ html {
   .art-ground::before {
     background-image: none;
   }
+}
+
+@utility picture-dim {
+  filter: var(--picture-filter);
 }
 
 /* The split layout: two halves the height of the screen. It needs a landscape

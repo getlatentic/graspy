@@ -1,3 +1,4 @@
+import { artSizes } from "@/components/brand/art-urls";
 import { ChevronRight, History, MessageCircle } from "lucide-react";
 import type { ChatThread, ThreadScope } from "@/lib/chat-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
@@ -5,9 +6,11 @@ import { useI18n } from "@/lib/i18n-context";
 import { timeAgo } from "@/lib/time-ago";
 import { cn } from "@/lib/cn";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
-import { useAgeBand } from "@/lib/use-age-band";
 import { UnreadDot } from "@/features/learn/components/unread-dot";
 import { describeScope } from "@/features/learn/lib/describe-scope";
+
+// Its callers size it at most size-12.
+const ICON_SIZES = artSizes([{ rem: 3 }]);
 
 /** What a conversation is about: the subject's picture, or an icon for the earlier and general chats. */
 export function ScopeIcon({
@@ -19,7 +22,6 @@ export function ScopeIcon({
   subject: string | null;
   className?: string;
 }) {
-  const band = useAgeBand();
   if (kind === "earlier" || kind === "general" || subject === null) {
     const Icon = kind === "earlier" ? History : MessageCircle;
     return (
@@ -36,8 +38,8 @@ export function ScopeIcon({
   return (
     <SubjectPicture
       name={subject}
-      band={band}
       frame="small"
+      sizes={ICON_SIZES}
       className={className}
       iconClassName="size-5"
     />
