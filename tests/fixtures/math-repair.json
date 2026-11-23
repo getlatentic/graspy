@@ -3114,10 +3114,100 @@
       "web": "$5\\ \\mathrm{m s}$"
     },
     {
-      "name": "a word with spaces around it stays",
+      "name": "a word with a space on each side is text, so its spaces show",
       "input": "\\(a \\mathrm{ and } b\\)",
-      "tagged": "<latex-inline>a \\mathrm{ and } b</latex-inline>",
-      "web": "$a \\mathrm{ and } b$"
+      "tagged": "<latex-inline>a \\text{ and } b</latex-inline>",
+      "web": "$a \\text{ and } b$"
+    },
+    {
+      "name": "a word with a space before it is text",
+      "input": "\\(a \\mathrm{ and} b\\)",
+      "tagged": "<latex-inline>a \\text{ and} b</latex-inline>",
+      "web": "$a \\text{ and} b$"
+    },
+    {
+      "name": "a word with a space after it is text",
+      "input": "\\(a \\mathrm{and } b\\)",
+      "tagged": "<latex-inline>a \\text{and } b</latex-inline>",
+      "web": "$a \\text{and } b$"
+    },
+    {
+      "name": "a bold word with spaces round it is textbf",
+      "input": "\\(\\mathbf{ Note } x\\)",
+      "tagged": "<latex-inline>\\textbf{ Note } x</latex-inline>",
+      "web": "$\\textbf{ Note } x$"
+    },
+    {
+      "name": "a letter with spaces round it stays",
+      "input": "\\(\\int f\\,\\mathrm{ d }x\\)",
+      "tagged": "<latex-inline>\\int f\\,\\mathrm{ d }x</latex-inline>",
+      "web": "$\\int f\\,\\mathrm{ d }x$"
+    },
+    {
+      "name": "a word with no space stays",
+      "input": "\\(a \\mathrm{and} b\\)",
+      "tagged": "<latex-inline>a \\mathrm{and} b</latex-inline>",
+      "web": "$a \\mathrm{and} b$"
+    },
+    {
+      "name": "a bold symbol with the boldsymbol command stays",
+      "input": "\\(\\boldsymbol{\\alpha} + \\boldsymbol{v}\\)",
+      "tagged": "<latex-inline>\\boldsymbol{\\alpha} + \\boldsymbol{v}</latex-inline>",
+      "web": "$\\boldsymbol{\\alpha} + \\boldsymbol{v}$"
+    },
+    {
+      "name": "a phrase in boldsymbol is textbf",
+      "input": "\\(\\boldsymbol{Key idea} = 5\\)",
+      "tagged": "<latex-inline>\\textbf{Key idea} = 5</latex-inline>",
+      "web": "$\\textbf{Key idea} = 5$"
+    },
+    {
+      "name": "a phrase in bm is textbf",
+      "input": "\\(\\bm{Key idea} = 5\\)",
+      "tagged": "<latex-inline>\\textbf{Key idea} = 5</latex-inline>",
+      "web": "$\\textbf{Key idea} = 5$"
+    },
+    {
+      "name": "a phrase in pmb is textbf",
+      "input": "\\(\\pmb{Key idea} = 5\\)",
+      "tagged": "<latex-inline>\\textbf{Key idea} = 5</latex-inline>",
+      "web": "$\\textbf{Key idea} = 5$"
+    },
+    {
+      "name": "a phrase in mathnormal is textit",
+      "input": "\\(\\mathnormal{Key idea} = 5\\)",
+      "tagged": "<latex-inline>\\textit{Key idea} = 5</latex-inline>",
+      "web": "$\\textit{Key idea} = 5$"
+    },
+    {
+      "name": "a word with spaces round it in bm is textbf",
+      "input": "\\(\\bm{ Key } = 5\\)",
+      "tagged": "<latex-inline>\\textbf{ Key } = 5</latex-inline>",
+      "web": "$\\textbf{ Key } = 5$"
+    },
+    {
+      "name": "bmod and pmod are not font commands",
+      "input": "\\(a \\bmod b \\pmod{n}\\)",
+      "tagged": "<latex-inline>a \\bmod b \\pmod{n}</latex-inline>",
+      "web": "$a \\bmod b \\pmod{n}$"
+    },
+    {
+      "name": "a padded operator name stays",
+      "input": "\\(\\operatorname{ sin } x\\)",
+      "tagged": "<latex-inline>\\operatorname{ sin } x</latex-inline>",
+      "web": "$\\operatorname{ sin } x$"
+    },
+    {
+      "name": "a multi-word operator name, ess sup, stays",
+      "input": "\\(\\operatorname{ess sup} f\\)",
+      "tagged": "<latex-inline>\\operatorname{ess sup} f</latex-inline>",
+      "web": "$\\operatorname{ess sup} f$"
+    },
+    {
+      "name": "an operator name of words that are not an operator's is text",
+      "input": "\\(\\operatorname{Total cost}(x)\\)",
+      "tagged": "<latex-inline>\\text{Total cost}(x)</latex-inline>",
+      "web": "$\\text{Total cost}(x)$"
     },
     {
       "name": "a name with a subscript stays",
@@ -3138,13 +3228,13 @@
       "web": "$\\mathrm{Akwa\\ Ibom}$"
     },
     {
-      "name": "a nested font command stays",
-      "input": "\\(\\mathrm{\\mathrm{a b} c}\\)",
-      "tagged": "<latex-inline>\\mathrm{\\mathrm{a b} c}</latex-inline>",
-      "web": "$\\mathrm{\\mathrm{a b} c}$"
+      "name": "a phrase inside a font command is text inside it, and the outer group stays",
+      "input": "\\(\\mathrm{\\mathrm{ab cd} ef}\\)",
+      "tagged": "<latex-inline>\\mathrm{\\text{ab cd} ef}</latex-inline>",
+      "web": "$\\mathrm{\\text{ab cd} ef}$"
     },
     {
-      "name": "an operator that has its own words stays",
+      "name": "a two-word operator name of an operator's own words stays",
       "input": "\\(\\operatorname{arg max}_x f(x)\\)",
       "tagged": "<latex-inline>\\operatorname{arg max}_x f(x)</latex-inline>",
       "web": "$\\operatorname{arg max}_x f(x)$"
@@ -3180,20 +3270,52 @@
       "web": "$\\mathrmx{Akwa Ibom}$"
     },
     {
-      "name": "a line break before the word mathrm is no command",
+      "name": "a line break right before the word mathrm leaves no command",
       "input": "\\(a \\\\mathrm{Akwa Ibom}\\)",
       "tagged": "<latex-inline>a \\\\mathrm{Akwa Ibom}</latex-inline>",
       "web": "$a \\\\mathrm{Akwa Ibom}$",
       "lesson": "<latex-inline>a \\text{Akwa Ibom}</latex-inline>"
     },
     {
-      "name": "a bare command with a phrase is tagged, and its phrase is text",
+      "name": "a line break and then a command is a command",
+      "input": "\\(a \\\\\\mathrm{ab cd}\\)",
+      "tagged": "<latex-inline>a \\\\\\text{ab cd}</latex-inline>",
+      "web": "$a \\\\\\text{ab cd}$",
+      "lesson": "<latex-inline>a \\\\mathrm{ab cd}</latex-inline>"
+    },
+    {
+      "name": "an escaped backslash and a line break and then a command",
+      "input": "\\(a \\\\\\\\\\mathrm{ab cd}\\)",
+      "tagged": "<latex-inline>a \\\\\\\\\\text{ab cd}</latex-inline>",
+      "web": "$a \\\\\\\\\\text{ab cd}$",
+      "lesson": "<latex-inline>a \\\\\\\\mathrm{ab cd}</latex-inline>"
+    },
+    {
+      "name": "a phrase inside a text with dollar maths",
+      "input": "\\(\\text{see $\\mathrm{ab cd}$ here}\\)",
+      "tagged": "<latex-inline>\\text{see \\char\"24{}\\text{ab cd}\\char\"24{} here}</latex-inline>",
+      "web": "$\\text{see \\char\"24{}\\text{ab cd}\\char\"24{} here}$"
+    },
+    {
+      "name": "letters outside the first plane are letters",
+      "input": "\\(\\mathrm{𝐀𝐁 𝐂𝐃}\\)",
+      "tagged": "<latex-inline>\\text{𝐀𝐁 𝐂𝐃}</latex-inline>",
+      "web": "$\\text{𝐀𝐁 𝐂𝐃}$"
+    },
+    {
+      "name": "an emoji in the group is no letter or mark",
+      "input": "\\(\\mathrm{ab 😀}\\)",
+      "tagged": "<latex-inline>\\mathrm{ab 😀}</latex-inline>",
+      "web": "$\\mathrm{ab 😀}$"
+    },
+    {
+      "name": "a phrase outside maths is as it is",
       "input": "Write \\mathrm{Akwa Ibom} in the answer.",
       "tagged": "Write <latex-inline>\\text{Akwa Ibom}</latex-inline> in the answer.",
       "web": "Write $\\text{Akwa Ibom}$ in the answer."
     },
     {
-      "name": "a phrase in code is left as it is",
+      "name": "a phrase in code is as it is",
       "input": "Use `\\mathrm{Akwa Ibom}` in LaTeX.",
       "tagged": "Use `\\mathrm{Akwa Ibom}` in LaTeX.",
       "web": "Use `\\mathrm{Akwa Ibom}` in LaTeX."

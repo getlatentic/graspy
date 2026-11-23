@@ -17,6 +17,7 @@
 // grounding study, which are a model's own output where the corpus is not.
 
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 import { build } from "esbuild";
 import katex from "katex";
@@ -37,7 +38,7 @@ const argument = (name) => process.argv.includes(name);
 
 async function bundle(path) {
   const out = await build({
-    entryPoints: [new URL(path, root).pathname],
+    entryPoints: [fileURLToPath(new URL(path, root))],
     bundle: true,
     format: "esm",
     write: false,
@@ -64,8 +65,9 @@ function parseError(tex, display) {
   }
 }
 
-/** What strict mode would refuse in a formula that parses: LaTeX that KaTeX
- * accepts and a TeX engine would not, such as a Unicode letter in maths. */
+/** The distinct codes of what strict mode would refuse in a formula that
+ * parses: LaTeX that KaTeX accepts and a TeX engine would not, such as a
+ * Unicode letter in maths. */
 function strictCodes(tex, display) {
   const codes = [];
   const strict = (code) => (codes.push(code), "ignore");
@@ -79,7 +81,7 @@ function strictCodes(tex, display) {
   } catch {
     // A formula that does not parse has no codes to count.
   }
-  return codes;
+  return [...new Set(codes)];
 }
 
 function typeset(tex, display) {
@@ -119,9 +121,15 @@ function view(text) {
       const span = { tex: node.value, display: node.type === "math" };
       span.error = parseError(span.tex, span.display);
       if (span.error) errors.push(span);
-      else
-        for (const code of strictCodes(span.tex, span.display))
-          bump(strict, code);
+      else {
+        const codes = strictCodes(span.tex, span.display);
+        for (const code of codes) bump(strict, code);
+        if (codes.length)
+          strict.set(
+            "(formulas with any code)",
+            (strict.get("(formulas with any code)") ?? 0) + 1,
+          );
+      }
       parts.push({ span });
       return "skip";
     }
@@ -292,13 +300,10 @@ function print(result) {
   );
   rows("KaTeX parse errors left after the repair", result.errorsAfter);
   rows(
-    "strict-mode codes on formulas that parse, delimiters only",
+    "formulas that parse and that strict mode flags, by code (a formula with two codes counts under both), delimiters only",
     result.strictBefore,
   );
-  rows(
-    "strict-mode codes on formulas that parse, after the repair",
-    result.strictAfter,
-  );
+  rows("the same, after the repair", result.strictAfter);
   const { loop } = result;
   console.log(`  formulas the font-phrase rule changes: ${result.fontPhrases}`);
   console.log(
@@ -327,14 +332,33 @@ const repair = {
 };
 const fonts = await bundle("apps/web/src/lib/latex-fonts.ts");
 const corpus = JSON.parse(read("tests/fixtures/math-repair.json"));
+// The corpus lists failures that were found, not a sample of what the model
+// writes. Its first cases are those of the earlier repair; the cases after them
+// were written with the font rule, so they are reported apart.
+const EARLIER_CASES = 486;
+const inputs = (cases) => cases.map((c) => c.input);
 const results = [
   measure(
-    "repair corpus",
-    corpus.cases.map((c) => c.input),
+    "repair corpus, the 486 earlier cases",
+    inputs(corpus.cases.slice(0, EARLIER_CASES)),
     repair,
     fonts,
   ),
-  measure("grounding-study lessons", lessonTexts(), repair, fonts),
+  measure(
+    "repair corpus, the cases added with the font rule",
+    inputs(corpus.cases.slice(EARLIER_CASES)),
+    repair,
+    fonts,
+  ),
+  // These lessons passed the server's repair before they were stored: their
+  // maths is in <latex-*> tags. They show what the repair leaves, not what the
+  // model wrote.
+  measure(
+    "grounding-study lessons, as stored after the server's repair",
+    lessonTexts(),
+    repair,
+    fonts,
+  ),
 ];
 if (argument("--json")) console.log(JSON.stringify(results, null, 2));
 else results.forEach(print);

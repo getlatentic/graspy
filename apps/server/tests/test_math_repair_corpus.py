@@ -133,6 +133,19 @@ PATHOLOGICAL = {
         "\\(\\text{" + "\\_2" * n + "}\\)"
     ),
     "a long text with braces": lambda n: "\\(\\text{" + "{a_2} " * n + "}\\)",
+    "unclosed font commands": lambda n: "\\(\\mathrm{a " * n,
+    "font commands with words": lambda n: "\\(" + "\\mathrm{ab cd}" * n + "\\)",
+    "a long group of words in a font command": lambda n: (
+        "\\(\\mathrm{" + "ab " * n + "}\\)"
+    ),
+    "spaces between a font command and its group": lambda n: (
+        "\\(\\mathrm" + " " * n + "{ab cd}\\)"
+    ),
+    "font commands with no group": lambda n: "\\(\\mathrm " * n,
+    "backslashes before a font command": lambda n: (
+        "\\(" + "\\" * n + "\\mathrm{ab cd}\\)"
+    ),
+    "escaped font commands": lambda n: "\\(a \\\\mathrm{ab cd} \\) " * n,
 }
 
 
