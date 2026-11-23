@@ -76,7 +76,7 @@ html {
     input[type="checkbox"],
     input[type="radio"],
     input[type="range"],
-    input[role="combobox"]
+    input[role="combobox"][readonly]
   ):not(:disabled, [aria-disabled="true"], label:has(:disabled)) {
     cursor: pointer;
   }

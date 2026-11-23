@@ -2,7 +2,6 @@ import { Search } from "lucide-react";
 import { useRef } from "react";
 import { flushSync } from "react-dom";
 import { useI18n } from "@/lib/i18n-context";
-import { useButtonMode } from "../hooks/use-button-mode";
 import { SEARCH_KEY, useCombobox } from "../hooks/use-combobox";
 import type { SelectOption } from "../lib/select-options";
 import SelectListbox from "./select-listbox";
@@ -18,29 +17,28 @@ interface SearchableSelectProps {
   disabled?: boolean;
 }
 
-function inputClass(disabled: boolean, typing: boolean, button: boolean) {
+function inputClass(disabled: boolean, typing: boolean) {
   const ground = disabled
     ? "bg-track text-muted placeholder:text-muted"
     : "bg-surface";
   const caret = typing ? "" : "caret-transparent select-none";
-  const room = button ? "pe-24" : "pe-12";
+  const room = typing ? "pe-12" : "pe-24";
   return `w-full truncate ${room} placeholder:text-muted ${ground} ${caret} ${FIELD}`;
 }
 
 /**
- * On a desktop (a mouse and a keyboard) this is a text field that filters. On a
- * TV or a touch screen a closed select looks and acts like a button that opens
- * a list, not a text field: it is read-only with no text keyboard
- * (`inputMode="none"`), so the list shows at once, and no caret blinks in it.
- * There, letters typed on a hardware keyboard jump to the option that starts
- * with them, and the Search button (or "/") turns the field into a text field
- * that filters, with the on-screen keyboard asked for.
+ * A select acts like a native one on every device, with no device or
+ * pointer test (a TV's browser can pass for a desktop's): a closed field is
+ * read-only with no text keyboard (`inputMode="none"`), so the list shows at
+ * once and no caret blinks in it. Letters typed on a hardware keyboard jump to
+ * the option that starts with them (several in a row make a prefix); the
+ * Search button, which is in the tab order, or the "/" key makes the field a
+ * text field that filters, and only then is the on-screen keyboard asked for.
  */
 export default function SearchableSelect(props: SearchableSelectProps) {
   const { id, label, value, options, disabled = false } = props;
   const { t } = useI18n();
-  const buttonMode = useButtonMode();
-  const combobox = useCombobox(options, value, props.onChange, buttonMode);
+  const combobox = useCombobox(options, value, props.onChange);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
@@ -54,7 +52,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
     inputRef.current?.focus();
   };
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (buttonMode && !typing && event.key === SEARCH_KEY) {
+    if (!typing && event.key === SEARCH_KEY) {
       event.preventDefault();
       startTyping();
       return;
@@ -74,7 +72,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           type="text"
           value={typing && isOpen ? combobox.searchTerm : selectedLabel}
           readOnly={!typing}
-          inputMode={buttonMode ? (typing ? "search" : "none") : undefined}
+          inputMode={typing ? "search" : "none"}
           onChange={(event) => combobox.search(event.target.value)}
           onFocus={combobox.open}
           onClick={combobox.open}
@@ -85,12 +83,12 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           aria-expanded={isOpen}
           aria-controls={`${id}-listbox`}
           aria-autocomplete={typing ? "list" : "none"}
-          aria-keyshortcuts={buttonMode && !typing ? SEARCH_KEY : undefined}
+          aria-keyshortcuts={typing ? undefined : SEARCH_KEY}
           aria-activedescendant={active && `${id}-option-${active.value}`}
-          className={inputClass(disabled, typing, buttonMode)}
+          className={inputClass(disabled, typing)}
           autoComplete="off"
         />
-        {buttonMode && !typing && !disabled && (
+        {!typing && !disabled && (
           <button
             type="button"
             onClick={startTyping}

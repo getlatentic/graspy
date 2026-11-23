@@ -85,15 +85,15 @@ function pickingKeyActions(
 }
 
 /**
- * `buttonMode` is a select for a touch screen or a TV: read-only, with letters
- * that jump, and a text field that filters only after `startTyping`. Without
- * it the field is a text field from the start, as on a desktop.
+ * A select works like a native one, on every device: read-only, letters jump
+ * to the option that starts with them, and the field becomes a text field that
+ * filters only after `startTyping` (the Search button or the "/" key), which
+ * is what asks for an on-screen keyboard.
  */
 export function useCombobox(
   options: SelectOption[],
   value: string,
   onChange: (value: string) => void,
-  buttonMode = false,
 ) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -101,7 +101,7 @@ export function useCombobox(
   const [highlighted, setHighlighted] = useState(0);
   const typed = useRef({ text: "", at: 0 });
   const matches = matchingOptions(options, searchTerm);
-  const typing = !buttonMode || searching;
+  const typing = searching;
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -183,7 +183,6 @@ export function useCombobox(
     ...list,
     searchTerm,
     typing,
-    buttonMode,
     /** The highlighted option, while the list is open. */
     active: isOpen ? matches[highlighted] : undefined,
     open,

@@ -67,9 +67,7 @@ export default function SelectListbox(props: SelectListboxProps) {
       className="art-popup theme-light"
     >
       <div className="flex max-h-[inherit] flex-col overflow-hidden rounded-control border-2 border-line bg-surface shadow-lift">
-        {combobox.buttonMode && !combobox.typing && (
-          <Toolbar combobox={combobox} />
-        )}
+        {!combobox.typing && <Toolbar combobox={combobox} />}
         <div
           id={`${id}-listbox`}
           role="listbox"

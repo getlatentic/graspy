@@ -34,9 +34,6 @@ const isOpen = () => field().getAttribute("aria-expanded") === "true";
 const elsewhere = () => screen.getByText("elsewhere");
 const startSearch = () =>
   fireEvent.click(screen.getByRole("button", { name: /search/i }));
-const asTv = () => {
-  document.documentElement.dataset.device = "tv";
-};
 
 type Where = { clientX: number; clientY: number };
 const at = (x: number, y: number): Where => ({ clientX: x, clientY: y });
@@ -94,6 +91,7 @@ describe("SearchableSelect opening", () => {
   it("keeps the highlight when a click in the open field only moves the caret", () => {
     render(<Picker />);
     fireEvent.focus(field());
+    startSearch();
     fireEvent.change(field(), { target: { value: "grade" } });
     fireEvent.keyDown(field(), { key: "ArrowDown" });
     fireEvent.keyDown(field(), { key: "ArrowDown" });
@@ -123,6 +121,7 @@ describe("SearchableSelect closing", () => {
   it("stays open for a swipe outside, a scroll that the browser cancels or that moves", () => {
     render(<Picker />);
     fireEvent.focus(field());
+    startSearch();
     fireEvent.change(field(), { target: { value: "gra" } });
 
     press(document.body, "pointerdown");
@@ -191,36 +190,7 @@ describe("SearchableSelect list", () => {
   });
 });
 
-describe("SearchableSelect on a desktop", () => {
-  it("is a text field that filters as it is typed in, with no search button and a list autocomplete", () => {
-    render(<Picker />);
-    expect(field().readOnly).toBe(false);
-    expect(field().hasAttribute("inputmode")).toBe(false);
-    expect(field().getAttribute("aria-autocomplete")).toBe("list");
-    expect(screen.queryByRole("button", { name: /search/i })).toBeNull();
-    fireEvent.focus(field());
-    fireEvent.change(field(), { target: { value: "year" } });
-    expect(screen.getAllByRole("option")).toHaveLength(1);
-  });
-
-  it("leaves Home and End to the text cursor and a letter to the text", () => {
-    render(<Picker />);
-    fireEvent.focus(field());
-    for (const key of ["Home", "End", "g"]) {
-      const event = new KeyboardEvent("keydown", {
-        key,
-        bubbles: true,
-        cancelable: true,
-      });
-      field().dispatchEvent(event);
-      expect(event.defaultPrevented, key).toBe(false);
-    }
-  });
-});
-
 describe("SearchableSelect as a button, not a text field", () => {
-  beforeEach(asTv);
-
   it("is read-only with no text keyboard, so a TV or a phone shows the list at once", () => {
     render(<Picker />);
     expect(field().readOnly).toBe(true);
@@ -231,15 +201,25 @@ describe("SearchableSelect as a button, not a text field", () => {
     expect(field().classList.contains("caret-transparent")).toBe(true);
   });
 
-  it("is a button too on a touch screen and where nothing can hover", () => {
-    delete document.documentElement.dataset.device;
+  it("is a button with no device or pointer test: a desktop user agent with a mouse gets it too", () => {
     const real = window.matchMedia;
     window.matchMedia = ((query: string) => ({
-      matches: query === "(pointer: coarse)",
+      matches: query === "(pointer: fine)" || query === "(hover: hover)",
     })) as typeof window.matchMedia;
     render(<Picker />);
     window.matchMedia = real;
     expect(field().readOnly).toBe(true);
+    expect(field().getAttribute("inputmode")).toBe("none");
+    expect(document.documentElement.dataset.device).toBeUndefined();
+  });
+
+  it("does not raise the keyboard when it is clicked or focused: it stays read-only", () => {
+    render(<Picker />);
+    field().focus();
+    fireEvent.click(field());
+    expect(isOpen()).toBe(true);
+    expect(field().readOnly).toBe(true);
+    expect(field().getAttribute("inputmode")).toBe("none");
   });
 
   it("does not claim a filtering list while it cannot filter, and names its key", () => {
@@ -307,8 +287,6 @@ describe("SearchableSelect as a button, not a text field", () => {
 });
 
 describe("SearchableSelect jumping", () => {
-  beforeEach(asTv);
-
   const COUNTRIES = ["Albania", "Algeria", "Belgium", "Brazil", "Chad"]
     .concat(["Denmark", "Egypt", "Fiji", "Ghana", "Haiti", "India", "Japan"])
     .concat(["Kenya", "Laos"])
@@ -342,6 +320,42 @@ describe("SearchableSelect jumping", () => {
     expect(active()).toBe("country-option-japan");
     expect(screen.getAllByRole("option")).toHaveLength(COUNTRIES.length);
     expect(field().value).toBe("");
+  });
+
+  it("jumps to a name from its first letters typed on the closed field, so Slo finds Slovakia", () => {
+    const names = ["Slovakia", "Slovenia", "Spain", "Sweden"].map((label) => ({
+      value: label.toLowerCase(),
+      label,
+    }));
+    function Slo() {
+      const [value, setValue] = useState("");
+      return (
+        <KeysApp>
+          <SearchableSelect
+            id="c"
+            label="Country"
+            value={value}
+            onChange={setValue}
+            options={names}
+            placeholder="Choose"
+          />
+        </KeysApp>
+      );
+    }
+    render(<Slo />);
+    for (const key of ["S", "l", "o"]) {
+      fireEvent.keyDown(field(), { key });
+    }
+    expect(field().getAttribute("aria-activedescendant")).toBe(
+      "c-option-slovakia",
+    );
+    for (const key of ["v", "e"]) {
+      fireEvent.keyDown(field(), { key });
+    }
+    expect(field().getAttribute("aria-activedescendant")).toBe(
+      "c-option-slovenia",
+    );
+    expect(field().readOnly).toBe(true);
   });
 
   it("follows more letters typed in a row, and the same letter again goes on through its options", () => {

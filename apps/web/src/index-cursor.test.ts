@@ -59,6 +59,12 @@ describe("the pointer rule's selector", () => {
     },
   );
 
+  it("does not match a select's field once it is a text field (Search), which keeps the text cursor", async () => {
+    expect(
+      first('<input role="combobox">').matches(await pointerSelector()),
+    ).toBe(false);
+  });
+
   it("does not match the label of a disabled checkbox", async () => {
     const label = first('<label><input type="checkbox" disabled> x</label>');
     expect(label.matches(await pointerSelector())).toBe(false);

@@ -21,7 +21,6 @@ beforeEach(() => {
 
 afterEach(() => {
   stopRemote();
-  delete document.documentElement.dataset.device;
   cleanup();
 });
 
@@ -70,8 +69,7 @@ describe("the class picker with a keyboard or a remote", () => {
     expect(field.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("moves in the list with Home, End, PageUp and PageDown while it is a button (a TV), and leaves Home and End to the text cursor once Search is pressed", async () => {
-    document.documentElement.dataset.device = "tv";
+  it("moves in the list with Home, End, PageUp and PageDown while it is a button, and leaves Home and End to the text cursor once Search is pressed", async () => {
     const user = userEvent.setup();
     render(<Picker />);
     const field = screen.getByRole("combobox") as HTMLInputElement;
