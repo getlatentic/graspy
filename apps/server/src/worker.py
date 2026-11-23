@@ -20,6 +20,7 @@ from pyodide.ffi import to_js
 from workers import DurableObject, WorkerEntrypoint, asgi
 
 from app.account.directory import directory_changed
+from app.account.tv_sessions import purge_tv_sign_in
 from app.agent.memory import appended, folded
 from app.learner.record import changed
 from app.learner.time import now_ms
@@ -216,9 +217,13 @@ class Default(WorkerEntrypoint):
         return await asgi.fetch(_app_for(self.env), request, self.env)
 
     async def scheduled(self, controller, env, ctx):
-        """Deletes the recordings due for it (voice/recording_retention). The runtime passes
+        """Deletes the recordings due for it (voice/recording_retention) and the TV sign-in
+        requests and credentials past their time. The runtime passes
         `env` and `ctx` as None to a Python Worker's handler, so the sweep reads `self.env`."""
-        await sweep_audio(self.env)
+        try:
+            await sweep_audio(self.env)
+        finally:
+            await purge_tv_sign_in(self.env)
 
 
 class Lesson(DurableObject):

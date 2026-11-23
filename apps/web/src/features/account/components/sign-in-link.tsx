@@ -5,6 +5,7 @@ import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
 
 export const SIGN_IN_PAGE = "/app/sign-in";
+export const TV_SIGN_IN_PAGE = `${SIGN_IN_PAGE}/phone`;
 
 /** Offered while nobody is signed in on the device. */
 function useSignInOffered(): boolean {

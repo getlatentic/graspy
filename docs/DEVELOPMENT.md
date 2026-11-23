@@ -22,6 +22,8 @@ npx firebase-tools@15.31.0 emulators:start --only auth --project demo-graspy
 
 Its sign-in window lets you make up a Google account.
 
+To try signing a TV in from a phone with two browsers, see [TV sign-in](TV_SIGN_IN.md#test-with-two-browsers).
+
 A parent's consent is kept only in the Worker (D1), so under `npm run dev` adding a learner in the web app answers `503 consent_unavailable`. Run the Worker (see below) and point `VITE_API_URL` at it in `apps/web/.env.local` to add learners and try the voice recordings page.
 
 ## Configure

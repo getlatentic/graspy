@@ -27,6 +27,10 @@ TOKEN_TTL_SECONDS = 12 * 60 * 60
 # A parent's session is for the minutes after they signed in again, not for the day.
 PARENT_TOKEN_TTL_SECONDS = 15 * 60
 
+# A TV's session is renewed from a credential the account can revoke, so a revoked TV is out
+# within this time.
+TV_TOKEN_TTL_SECONDS = 60 * 60
+
 _SIGNATURE_ALGORITHM = sha256
 
 
@@ -58,13 +62,21 @@ def issue(
     learner: str | None = None,
     account: str | None = None,
     parent: bool = False,
+    tv: str | None = None,
+    hint: str | None = None,
     now: float | None = None,
 ) -> IssuedToken:
     """``learner`` is whose record the session reads and writes; ``account``
     is the signed-in account whose learners it may manage. ``parent`` marks a session
-    made just after the account's holder signed in again: it carries no learner."""
+    made just after the account's holder signed in again: it carries no learner. ``tv`` is the
+    id of the TV credential (account/tv_sessions.py) a TV's session was renewed from."""
     issued_at = int(time.time() if now is None else now)
-    ttl = PARENT_TOKEN_TTL_SECONDS if parent else TOKEN_TTL_SECONDS
+    if parent:
+        ttl = PARENT_TOKEN_TTL_SECONDS
+    elif tv:
+        ttl = TV_TOKEN_TTL_SECONDS
+    else:
+        ttl = TOKEN_TTL_SECONDS
     claims: dict = {
         "jti": secrets.token_urlsafe(9),
         "exp": issued_at + ttl,
@@ -75,6 +87,10 @@ def issue(
         claims["sub"] = learner
     if account:
         claims["acct"] = account
+    if tv:
+        claims["tv"] = tv
+    if hint:
+        claims["hint"] = hint
     payload = json.dumps(claims, separators=(",", ":")).encode()
 
     return IssuedToken(
@@ -126,6 +142,15 @@ def learner_of(claims: dict) -> str | None:
 
 def parent_of(claims: dict) -> bool:
     return claims.get("par") is True
+
+
+def hint_of(claims: dict) -> str | None:
+    """A masked form of the address the account signed in with, in a parent's session."""
+    return _text_claim(claims, "hint")
+
+
+def tv_of(claims: dict) -> str | None:
+    return _text_claim(claims, "tv")
 
 
 def account_of(claims: dict) -> str | None:

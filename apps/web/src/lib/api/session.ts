@@ -7,6 +7,12 @@ import {
   type Learner,
 } from "@/lib/account/account-store";
 import { deviceId, fingerprint } from "@/lib/device-id";
+import {
+  forgetTvCredential,
+  keepTvCredential,
+  tvCredential,
+} from "@/lib/account/tv-credential";
+import type { TvApproval } from "@/lib/account/tv-link-api";
 import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import { LearnerChanged } from "@/lib/learner-pin";
@@ -194,6 +200,7 @@ async function accountSession(
 // Firebase no longer holds the sign-in (revoked, or the Google account deleted): signed
 // out as from the account card, nothing of the learner stays, and the app starts again.
 async function signedOutElsewhere(): Promise<never> {
+  forgetTvCredential();
   setAccount(null);
   keep(null);
   await wipeDevice();
@@ -202,7 +209,62 @@ async function signedOutElsewhere(): Promise<never> {
   throw new ApiError("Signed out", 401);
 }
 
+const GONE_FOR_GOOD = new Set([401, 403, 404]);
+
+// A renewal whose answer is lost has already changed the credential at the server, which answers
+// the old one again for about a minute. So the same credential is presented again, a few times
+// within that minute, before giving up: a TV on a poor network is not signed out for it.
+const RENEWAL_RETRY_MS = [2_000, 5_000, 12_000];
+
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The credential is read from storage before each try, not once: another tab of this TV may have
+// renewed since, and the one it kept is the one that is current. Null when there is none.
+async function renewalAnswer(): Promise<Response | null> {
+  for (let attempt = 0; ; attempt += 1) {
+    const credential = tvCredential();
+    if (!credential) return null;
+    const last = attempt === RENEWAL_RETRY_MS.length;
+    try {
+      const response = await fetch(`${API_BASE_URL}/tv-sign-in/session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: credential }),
+      });
+      if (response.status < 500 || last) return response;
+    } catch (cause) {
+      if (last) throw toNetworkError(cause);
+    }
+    await pause(RENEWAL_RETRY_MS[attempt]);
+  }
+}
+
+// Each renewal replaces the credential: the new one is kept before the session is used, as the
+// one just spent is of no use again.
+async function keepRenewedCredential(response: Response): Promise<void> {
+  if (!response.ok) return;
+  const body = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as { refreshToken?: unknown } | null;
+  if (typeof body?.refreshToken === "string") {
+    keepTvCredential(body.refreshToken);
+  }
+}
+
+// A TV has no Google sign-in: its sessions are renewed from the credential the phone's approval
+// gave it, until the account removes the TV.
+async function tvSession(account: Account) {
+  const response = await renewalAnswer();
+  if (!response) return signedOutElsewhere();
+  // Revoked, or its learner or the parent's agreement is gone: nothing will make it work.
+  if (GONE_FOR_GOOD.has(response.status)) return signedOutElsewhere();
+  await keepRenewedCredential(response);
+  return { response, account: account.uid };
+}
+
 async function signedInSession(device: string, account: Account) {
+  if (tvCredential()) return tvSession(account);
   const response = await accountSession(device, account);
   if (!response) return signedOutElsewhere();
   return { response, account: account.uid };
@@ -270,6 +332,28 @@ export async function startAccountSession(
   });
 }
 
+/** A TV signed in from a phone: it learns as the learner the phone chose, and renews its
+ * session from the credential it was given. */
+export function startTvSession(approval: TvApproval): void {
+  const { token, expiresIn, refreshToken, account, learner } = approval;
+  pending = null;
+  keepTvCredential(refreshToken);
+  setAccount({
+    uid: account,
+    name: null,
+    email: null,
+    learner: { id: learner.id, name: learner.name },
+    deviceJoins: false,
+  });
+  keep({
+    token,
+    expiresAt: Date.now() + expiresIn * 1000,
+    device: deviceId(),
+    account,
+    learner: learner.id,
+  });
+}
+
 /** Takes a session the server issued for one of the account's learners. */
 export function keepLearnerSession({
   token,
@@ -300,6 +384,7 @@ export function leaveLearnerSession(): void {
 export function endAccountSession(): void {
   pending = null;
   parent = null;
+  forgetTvCredential();
   setAccount(null);
   keep(null);
 }

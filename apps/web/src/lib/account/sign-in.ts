@@ -4,6 +4,8 @@ import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import type * as GoogleAuth from "./google-auth";
 import { deleteAccount } from "./learners-api";
+import { tvCredential } from "./tv-credential";
+import { signOutTv } from "./tv-link-api";
 
 type Google = typeof GoogleAuth;
 
@@ -55,6 +57,10 @@ export async function signInAgain(): Promise<string> {
 
 /** Nothing of the account or its learner stays on the device. */
 export async function signOut(): Promise<void> {
+  // The TV's credential is revoked while it is still held; if the server cannot be reached it
+  // stays on the account's list of TVs, to remove there.
+  const credential = tvCredential();
+  if (credential) await signOutTv(credential).catch(() => undefined);
   endAccountSession();
   await wipeDevice();
   wipeOnNextStart("device");
