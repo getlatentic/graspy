@@ -1,6 +1,5 @@
 import { ChevronRight } from "lucide-react";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
-import { useAgeBand } from "@/lib/use-age-band";
 import { ProgressBar } from "@/components/ui/progress";
 import type { CurriculumSubject } from "@/lib/curriculum-record";
 
@@ -45,7 +44,6 @@ interface SubjectRowProps {
 
 function SubjectRow({ row, progressLabel, onSelect }: SubjectRowProps) {
   const { subject, nextTopic, completed, total } = row;
-  const band = useAgeBand();
   return (
     <button
       type="button"
@@ -54,8 +52,8 @@ function SubjectRow({ row, progressLabel, onSelect }: SubjectRowProps) {
     >
       <SubjectPicture
         name={subject.name}
-        band={band}
         frame="small"
+        sizes="(min-width: 40rem) 56px, 48px"
         className="size-12 sm:size-14"
         iconClassName="size-6"
       />

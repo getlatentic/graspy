@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
-import type { AgeBand } from "@/lib/age-band";
+import { knownBand, type AgeBand } from "@/lib/age-band";
+import { useAgeBand } from "@/lib/use-age-band";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 import type { CurrentTopic } from "@/features/learn/lib/current-topic";
@@ -20,7 +21,6 @@ const PICTURE_SIZE: Record<AgeBand, string> = {
 interface ResumeCardProps {
   current: CurrentTopic;
   grade: string;
-  band: AgeBand;
   completed: number;
   onOpenTopic: (index: number) => void;
   className?: string;
@@ -29,12 +29,12 @@ interface ResumeCardProps {
 export function ResumeCard({
   current,
   grade,
-  band,
   completed,
   onOpenTopic,
   className,
 }: ResumeCardProps) {
   const { t } = useI18n();
+  const band = knownBand(useAgeBand());
   const { subject, topic, topics, topicIndex, started } = current;
   const onStart = () => onOpenTopic(topicIndex);
 
@@ -44,7 +44,8 @@ export function ResumeCard({
         <div className="flex items-center gap-3 sm:items-start sm:gap-5">
           <SubjectPicture
             name={subject.name}
-            band={band}
+            priority
+            sizes="(min-width: 64rem) 128px, (min-width: 40rem) 96px, 64px"
             frame={band === "teen" ? "small" : "full"}
             className={PICTURE_SIZE[band]}
             iconClassName="size-8 sm:size-10 lg:size-14"

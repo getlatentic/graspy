@@ -39,6 +39,22 @@ html {
     color-scheme: light dark;
   }
 
+  /* How far a picture is dimmed: in the dark colour set, and not under `.theme-light`, which
+     keeps its subtree in the light one. */
+  :root {
+    --picture-brightness: 1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --picture-brightness: 0.9;
+    }
+  }
+
+  .theme-light {
+    --picture-brightness: 1;
+  }
+
   body {
     background: var(--color-canvas);
     color: var(--color-ink);
@@ -189,6 +205,10 @@ html {
    width is the page's own) and 40rem tall; anything less keeps the single
    column that scrolls as a page, which is also where a form that cannot fit
    goes. */
+@utility picture-dim {
+  filter: brightness(var(--picture-brightness));
+}
+
 @custom-variant split {
   @media (orientation: landscape) and (min-height: 40rem) {
     @container (min-width: 64rem) {

@@ -1,10 +1,10 @@
-import type { AgeBand } from "@/lib/age-band";
+import { knownBand, type AgeBand } from "@/lib/age-band";
+import { useAgeBand } from "@/lib/use-age-band";
 import { cn } from "@/lib/cn";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
 
 interface SubjectTileProps {
   name: string;
-  band?: AgeBand;
   onSelect: () => void;
 }
 
@@ -24,11 +24,8 @@ const OUTLINE: Record<AgeBand, string> = {
  * beside it. A name such as "Mathematics" needs the tile's width, so only the
  * small picture sits beside.
  */
-export function SubjectTile({
-  name,
-  band = "child",
-  onSelect,
-}: SubjectTileProps) {
+export function SubjectTile({ name, onSelect }: SubjectTileProps) {
+  const band = knownBand(useAgeBand());
   return (
     <button
       type="button"
@@ -42,16 +39,16 @@ export function SubjectTile({
       {band === "teen" ? (
         <SubjectPicture
           name={name}
-          band={band}
-          frame="small"
-          className="size-12"
+          frame="none"
+          sizes="48px"
+          className="size-12 rounded-control"
           iconClassName="size-6"
         />
       ) : (
         <SubjectPicture
           name={name}
-          band={band}
           frame="none"
+          sizes="(min-width: 40rem) 320px, 50vw"
           className={cn(
             "w-full",
             band === "child" ? "aspect-4/3" : "aspect-video",

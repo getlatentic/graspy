@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { useUserProfile } from "@/lib/use-user-profile";
-import { ageBand } from "@/lib/age-band";
 import { useI18n } from "@/lib/i18n-context";
 import { levelLabel } from "@/lib/learner-level";
 import { curriculumRequest } from "@/features/learn/lib/curriculum-request";
@@ -132,7 +131,6 @@ function ContinueSection({ current }: { current: CurrentTopic }) {
       <ResumeCard
         current={current}
         grade={userProfile ? levelLabel(userProfile, t) : ""}
-        band={userProfile ? ageBand(userProfile) : "child"}
         completed={learntIn(current.subject.slug, current.topics)}
         onOpenTopic={(index) =>
           navigate(lessonPath(current.subject.slug, index))
@@ -164,7 +162,6 @@ function ReviewSection() {
 function SubjectsSection({ subjects }: { subjects: CurriculumSubject[] }) {
   const navigate = useNavigate();
   const { t } = useI18n();
-  const userProfile = useUserProfile();
   return (
     <div className="min-w-0">
       <HomeSection
@@ -173,7 +170,6 @@ function SubjectsSection({ subjects }: { subjects: CurriculumSubject[] }) {
       >
         <SubjectTiles
           subjects={subjects}
-          band={userProfile ? ageBand(userProfile) : "child"}
           onSelect={(subject) => navigate(subjectPath(subject.slug))}
         />
       </HomeSection>

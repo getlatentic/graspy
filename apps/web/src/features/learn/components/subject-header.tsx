@@ -1,7 +1,6 @@
 import type { CurriculumSource } from "@/lib/curriculum-record";
 import { BackLink } from "@/components/ui/back-link";
 import { useI18n } from "@/lib/i18n-context";
-import { useAgeBand } from "@/lib/use-age-band";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
 
 interface SubjectHeaderProps {
@@ -20,15 +19,14 @@ export function SubjectHeader({
   onBack,
 }: SubjectHeaderProps) {
   const { t } = useI18n();
-  const band = useAgeBand();
   return (
     <header>
       <BackLink onClick={onBack}>{t("subject.back")}</BackLink>
       <div className="mt-4 flex items-center gap-3">
         <SubjectPicture
           name={name}
-          band={band}
           frame="small"
+          sizes="(min-width: 40rem) 64px, 56px"
           className="size-14 sm:size-16"
           iconClassName="size-7 sm:size-8"
         />

@@ -5,7 +5,6 @@ import { useI18n } from "@/lib/i18n-context";
 import { timeAgo } from "@/lib/time-ago";
 import { cn } from "@/lib/cn";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
-import { useAgeBand } from "@/lib/use-age-band";
 import { UnreadDot } from "@/features/learn/components/unread-dot";
 import { describeScope } from "@/features/learn/lib/describe-scope";
 
@@ -19,7 +18,6 @@ export function ScopeIcon({
   subject: string | null;
   className?: string;
 }) {
-  const band = useAgeBand();
   if (kind === "earlier" || kind === "general" || subject === null) {
     const Icon = kind === "earlier" ? History : MessageCircle;
     return (
@@ -36,8 +34,8 @@ export function ScopeIcon({
   return (
     <SubjectPicture
       name={subject}
-      band={band}
       frame="small"
+      sizes="48px"
       className={className}
       iconClassName="size-5"
     />

@@ -6,6 +6,11 @@ export type AgeBand = "child" | "tween" | "teen";
 const TWEEN_FROM = 11;
 const TEEN_FROM = 15;
 
+/** A band from a value that may be missing or unknown: child. */
+export function knownBand(band: string | null | undefined): AgeBand {
+  return band === "tween" || band === "teen" ? band : "child";
+}
+
 /** The learner's age band: the age in the class's descriptor ("JSS 1, Nigeria, age 12"), or teen after school. */
 export function ageBand(learner: {
   level: string;
