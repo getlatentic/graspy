@@ -12,6 +12,7 @@ from signed_in import (
     as_parent,
     chosen,
     client,
+    parent_headers,
     signed_in,
     signed_in_app,
 )
@@ -102,7 +103,9 @@ async def test_a_learner_is_added_only_by_their_parent_guardian_or_themselves(ap
         await signed_in(http, firebaseIdToken="good")
         unconfirmed = await http.post("/api/account/learners", json={"name": "Ada"})
         confirmed = await http.post(
-            "/api/account/learners", json={"name": "Ada", "guardian": True}
+            "/api/account/learners",
+            json={"name": "Ada", "guardian": True},
+            headers=await parent_headers(http),
         )
         listed = (await http.get("/api/account/learners")).json()
 
@@ -125,7 +128,9 @@ async def test_an_account_takes_no_more_learners_than_its_limit(app):
         for n in range(MAX_LEARNERS):
             await added(http, f"Child {n}")
         refused = await http.post(
-            "/api/account/learners", json={"name": "One more", "guardian": True}
+            "/api/account/learners",
+            json={"name": "One more", "guardian": True},
+            headers=await parent_headers(http),
         )
 
     assert refused.status_code == 409
@@ -162,7 +167,9 @@ async def test_a_device_whose_learner_was_removed_signs_in_to_the_account(app):
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")
         ada = await added(http, "Ada")
-        await http.delete(f"/api/account/learners/{ada}")
+        await http.delete(
+            f"/api/account/learners/{ada}", headers=await parent_headers(http)
+        )
         again = await signed_in(http, firebaseIdToken="good", learnerId=ada)
         chosen_again = await http.post(f"/api/account/learners/{ada}/session")
 
@@ -219,7 +226,11 @@ async def test_removing_a_learner_forgets_everything_kept_for_them(app):
         await signed_in(http, firebaseIdToken="good")
         ada, grace = await added(http, "Ada"), await added(http, "Grace")
         await _learnt_and_talked(app, ada)
-        left = (await http.delete(f"/api/account/learners/{ada}")).json()
+        left = (
+            await http.delete(
+                f"/api/account/learners/{ada}", headers=await parent_headers(http)
+            )
+        ).json()
 
     assert [one["id"] for one in left["learners"]] == [grace]
     assert await _forgotten(app, ada)

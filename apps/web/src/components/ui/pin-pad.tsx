@@ -3,7 +3,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { buttonStyles } from "./button-styles";
 
-const DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
+const IN_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+
+/** The digits in a random order, from the browser's own source of randomness. */
+function shuffled(): string[] {
+  const digits = [...IN_ORDER];
+  const random = new Uint32Array(digits.length);
+  crypto.getRandomValues(random);
+  for (let at = digits.length - 1; at > 0; at -= 1) {
+    const other = random[at] % (at + 1);
+    [digits[at], digits[other]] = [digits[other], digits[at]];
+  }
+  return digits;
+}
 
 interface PinPadProps {
   /** Names the pad for a screen reader. */
@@ -23,6 +35,10 @@ interface PinPadProps {
   busy?: boolean;
   /** Goes up each time an entry was not accepted: the pad shakes and clears itself. */
   failures?: number;
+  /** The keys are in a random order, new for each go, so someone watching over a shoulder sees
+   * where a finger went and not which digit it was. The number keys of a keyboard are not
+   * affected. On by default. */
+  shuffle?: boolean;
   /** Why the last entry was not accepted. */
   error?: string | null;
   /** Said to a screen reader as digits are typed, with how many there are so far. */
@@ -36,13 +52,14 @@ interface PinPadProps {
 export function PinPad({
   label,
   length,
-  min = 4,
+  min = 6,
   max = 8,
   doneLabel,
   deleteLabel,
   onEntered,
   busy = false,
   failures = 0,
+  shuffle = true,
   error = null,
   typedLabel,
 }: PinPadProps) {
@@ -59,9 +76,11 @@ export function PinPad({
   // An entry that was not accepted starts again, in the render that shows the error, so a digit
   // typed at once is not lost to an effect that has yet to run.
   const [seenFailures, setSeenFailures] = useState(failures);
+  const [keys, setKeys] = useState(() => (shuffle ? shuffled() : IN_ORDER));
   if (seenFailures !== failures) {
     setSeenFailures(failures);
     setDigits("");
+    if (shuffle) setKeys(shuffled());
   }
 
   // Sent once, when the digits are complete: a new callback on a render does not send it again.
@@ -122,14 +141,14 @@ export function PinPad({
         {error}
       </p>
       <div className="grid w-full grid-cols-3 gap-3">
-        {DIGITS.map((digit) => (
+        {keys.slice(0, 9).map((digit, at) => (
           <button
             key={digit}
             type="button"
             className={key}
             disabled={busy}
             onClick={() => press(digit)}
-            autoFocus={digit === "1"}
+            autoFocus={at === 0}
           >
             {digit}
           </button>
@@ -139,9 +158,9 @@ export function PinPad({
           type="button"
           className={key}
           disabled={busy}
-          onClick={() => press("0")}
+          onClick={() => press(keys[9])}
         >
-          0
+          {keys[9]}
         </button>
         <button
           type="button"

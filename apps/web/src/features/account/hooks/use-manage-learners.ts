@@ -4,7 +4,7 @@ import { forgetLearner } from "@/lib/account/learner-choice";
 import { renameLearner, type ServiceConsent } from "@/lib/account/learners-api";
 import { consentProblemOf } from "@/lib/account/consent-problem";
 import { deleteAccountAndSignOut, signInAgain } from "@/lib/account/sign-in";
-import { startParentSession } from "@/lib/api/session";
+import { parentRefused, startParentSession } from "@/lib/api/session";
 import { useLearners } from "./use-learners";
 
 /** Renames and removes the account's learners, and deletes the account. */
@@ -21,8 +21,11 @@ export function useManageLearners() {
       await work();
       return true;
     } catch (error) {
-      console.warn("Changing the account's learners failed:", error);
-      setFailed(true);
+      // A parent's session that is gone is for the parent gate to answer, by asking for the PIN.
+      if (!parentRefused(error)) {
+        console.warn("Changing the account's learners failed:", error);
+        setFailed(true);
+      }
       return false;
     } finally {
       setBusy(false);

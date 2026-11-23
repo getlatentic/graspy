@@ -17,7 +17,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from pydantic import Field
 
-from ..account import tv_links, tv_sessions
+from ..account import pin_events, tv_links, tv_sessions
 from ..account.directory import Learner, LearnerId, account_key, learner_key
 from ..account.learners import NoSuchLearner, learner_of
 from ..account.tv_codes import (
@@ -32,9 +32,9 @@ from ..learner.time import now_ms
 from ..security.guard import Session, require_session
 from ..security.rate_limit import client_key, prefix_of, source_of
 from ..wire import Wire
-from .account_parent_routes import ParentUid
 from .budget import spend, too_many
 from .consent_proof import refusal
+from .parent_access import ParentUid
 from .routes import SessionResponse, learner_session
 from .service_consent import service_consent_refusal
 
@@ -434,8 +434,11 @@ async def approve_link(
         session.hint,
         device_label(request.headers.get("user-agent")),
         country_of(request.headers.get("cf-ipcountry")),
+        session.gate or "google",
     ):
         raise refusal(409, "already_decided", "That request was already answered")
+    if session.gate == "pin":
+        await pin_events.record(_database(request), uid, "tv_linked", now)
     return Response(status_code=204)
 
 

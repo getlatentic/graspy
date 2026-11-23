@@ -35,8 +35,13 @@ vi.mock("@/lib/account/sign-in", async (original) => ({
 
 const { ParentGate } = await import("./parent-gate");
 
-const HAS_PIN = { hasPin: true, length: 4, lockedUntil: null };
-const NO_PIN = { hasPin: false, length: null, lockedUntil: null };
+const HAS_PIN = { hasPin: true, length: 6, lockedUntil: null, disabled: false };
+const NO_PIN = {
+  hasPin: false,
+  length: null,
+  lockedUntil: null,
+  disabled: false,
+};
 
 function gate(props: Parameters<typeof ParentGate>[0] = {}) {
   return render(
@@ -82,10 +87,10 @@ describe("what is behind the parent gate", () => {
 
     await pad();
     expect(behind()).toBeNull();
-    type("4827");
+    type("482915");
 
     expect(await screen.findByText("what only the parent may do")).toBeTruthy();
-    expect(api.verifyPin).toHaveBeenCalledWith("4827");
+    expect(api.verifyPin).toHaveBeenCalledWith("482915");
   });
 
   it("goes out of sight again, asking for the PIN, when the parent's session ends", async () => {
@@ -108,7 +113,7 @@ describe("what is behind the parent gate", () => {
     );
     await pad();
 
-    type("4827");
+    type("482915");
 
     await waitFor(() => expect(unlocked).toHaveBeenCalledTimes(1));
     expect(screen.queryByRole("group")).toBeNull();
@@ -135,11 +140,11 @@ describe("a parent who has a PIN", () => {
     await pad();
     expect(dots()).toHaveLength(6);
 
-    type("48271");
+    type("48291");
     expect(api.verifyPin).not.toHaveBeenCalled();
-    type("9");
+    type("5");
 
-    expect(api.verifyPin).toHaveBeenCalledWith("482719");
+    expect(api.verifyPin).toHaveBeenCalledWith("482915");
   });
 
   it("is told it was wrong, can type again, and is let in by the right one", async () => {
@@ -149,11 +154,11 @@ describe("a parent who has a PIN", () => {
     gate();
     await pad();
 
-    type("1357");
+    type("739164");
 
     expect(await screen.findByText("parentPin.wrong")).toBeTruthy();
     expect(document.querySelectorAll("[data-filled]")).toHaveLength(0);
-    type("4827");
+    type("482915");
     expect(await screen.findByText("what only the parent may do")).toBeTruthy();
     expect(api.verifyPin).toHaveBeenCalledTimes(2);
   });
@@ -163,7 +168,7 @@ describe("a parent who has a PIN", () => {
     gate();
     await pad();
 
-    type("1357");
+    type("739164");
 
     expect(await screen.findByText("parentPin.busy")).toBeTruthy();
   });
@@ -173,7 +178,7 @@ describe("a parent who has a PIN", () => {
     gate();
     await pad();
 
-    type("1357");
+    type("739164");
 
     expect(await screen.findByText("parentPin.failed")).toBeTruthy();
   });
@@ -209,7 +214,7 @@ describe("a parent who has a PIN", () => {
     gate();
     await pad();
 
-    type("1357");
+    type("739164");
 
     expect(await screen.findByText(/parentPin.lockedMinutes/)).toBeTruthy();
     expect(screen.queryByRole("group")).toBeNull();
@@ -240,7 +245,7 @@ describe("a parent who has a PIN", () => {
     gate();
     await pad();
 
-    type("1357");
+    type("739164");
 
     await pad("parentPin.set");
   });
@@ -291,7 +296,7 @@ describe("a parent with no PIN yet", () => {
 
   it("chooses one, types it again, then signs in with Google to save it", async () => {
     api.getPinStatus.mockResolvedValue(NO_PIN);
-    await chosen("48271");
+    await chosen("519274");
     expect(api.savePin).not.toHaveBeenCalled();
     expect(api.signInAgain).not.toHaveBeenCalled();
     expect(await screen.findByText("parentPin.save")).toBeTruthy();
@@ -299,7 +304,7 @@ describe("a parent with no PIN yet", () => {
     tap("you.signIn");
 
     expect(await screen.findByText("what only the parent may do")).toBeTruthy();
-    expect(api.savePin).toHaveBeenCalledWith("48271", {
+    expect(api.savePin).toHaveBeenCalledWith("519274", {
       firebaseIdToken: "fresh-token",
     });
     expect(api.verifyPin).not.toHaveBeenCalled();
@@ -309,18 +314,18 @@ describe("a parent with no PIN yet", () => {
     api.getPinStatus.mockResolvedValue(NO_PIN);
     gate();
     await pad("parentPin.set");
-    type("4827");
+    type("482915");
     tap("parentPin.next");
     await pad("parentPin.again");
 
-    type("4828");
+    type("482916");
 
     expect(await screen.findByText("parentPin.mismatch")).toBeTruthy();
     await pad("parentPin.set");
     expect(api.savePin).not.toHaveBeenCalled();
   });
 
-  it.each(["0000", "1234", "9876", "55555"])(
+  it.each(["000000", "123456", "987654", "250199", "123123", "147852"])(
     "is told %s is too easy, and is not asked to type it again",
     async (easy) => {
       api.getPinStatus.mockResolvedValue(NO_PIN);
@@ -340,7 +345,7 @@ describe("a parent with no PIN yet", () => {
   it("is not given a PIN the server refuses as too easy, and chooses again", async () => {
     api.getPinStatus.mockResolvedValue(NO_PIN);
     api.savePin.mockRejectedValueOnce(refused(422, "pin_too_easy"));
-    await chosen("4827");
+    await chosen("482915");
     await screen.findByText("parentPin.save");
 
     tap("you.signIn");
@@ -352,7 +357,7 @@ describe("a parent with no PIN yet", () => {
   it("is led to sign in when Firebase holds nobody, and saves nothing", async () => {
     api.getPinStatus.mockResolvedValue(NO_PIN);
     api.signInAgain.mockRejectedValueOnce({ code: "graspy/not-signed-in" });
-    await chosen("4827");
+    await chosen("482915");
     await screen.findByText("parentPin.save");
 
     tap("you.signIn");
@@ -366,7 +371,7 @@ describe("a parent with no PIN yet", () => {
   it("is told nothing, and may press again, when Google's window is closed", async () => {
     api.getPinStatus.mockResolvedValue(NO_PIN);
     api.signInAgain.mockRejectedValueOnce(WINDOW_CLOSED);
-    await chosen("4827");
+    await chosen("482915");
     await screen.findByText("parentPin.save");
 
     tap("you.signIn");
@@ -382,13 +387,13 @@ describe("a parent with no PIN yet", () => {
 
   it("uses a PIN of up to eight digits", async () => {
     api.getPinStatus.mockResolvedValue(NO_PIN);
-    await chosen("48271935");
+    await chosen("48291537");
     await screen.findByText("parentPin.save");
 
     tap("you.signIn");
 
     await waitFor(() =>
-      expect(api.savePin).toHaveBeenCalledWith("48271935", {
+      expect(api.savePin).toHaveBeenCalledWith("48291537", {
         firebaseIdToken: "fresh-token",
       }),
     );
@@ -402,14 +407,14 @@ describe("a parent who forgot the PIN", () => {
 
     tap("parentPin.forgot");
     await pad("parentPin.set");
-    type("7391");
+    type("264819");
     tap("parentPin.next");
     await pad("parentPin.again");
-    type("7391");
+    type("264819");
     tap("you.signIn");
 
     expect(await screen.findByText("what only the parent may do")).toBeTruthy();
-    expect(api.savePin).toHaveBeenCalledWith("7391", {
+    expect(api.savePin).toHaveBeenCalledWith("264819", {
       firebaseIdToken: "fresh-token",
     });
     expect(api.verifyPin).not.toHaveBeenCalled();
@@ -437,13 +442,64 @@ describe("the PIN, on the page and off it", () => {
     const { container } = gate();
     await pad();
 
-    type("4827");
+    type("482915");
     await screen.findByText("parentPin.wrong");
 
-    expect(container.innerHTML.replace(/>[0-9]</g, "><")).not.toContain("4827");
-    expect(window.location.href).not.toContain("4827");
+    expect(container.innerHTML.replace(/>[0-9]</g, "><")).not.toContain(
+      "482915",
+    );
+    expect(window.location.href).not.toContain("482915");
     expect(stored).not.toHaveBeenCalled();
-    expect(JSON.stringify(logged.mock.calls)).not.toContain("4827");
+    expect(JSON.stringify(logged.mock.calls)).not.toContain("482915");
     stored.mockRestore();
+  });
+});
+
+describe("a PIN that is turned off", () => {
+  it("offers only Forgot PIN, and no pad, and no way to try", async () => {
+    api.getPinStatus.mockResolvedValue({ ...HAS_PIN, disabled: true });
+    gate();
+
+    expect(await screen.findByText("parentPin.disabled")).toBeTruthy();
+    expect(screen.queryByRole("group")).toBeNull();
+    tap("parentPin.forgot");
+    await pad("parentPin.set");
+  });
+
+  it("is shown when the server says the PIN went off on that very try", async () => {
+    api.verifyPin.mockRejectedValueOnce(refused(403, "pin_disabled"));
+    gate();
+    await pad();
+
+    type("739164");
+
+    expect(await screen.findByText("parentPin.disabled")).toBeTruthy();
+    expect(screen.queryByRole("group")).toBeNull();
+  });
+});
+
+describe("choosing a PIN", () => {
+  it("says not to use a phone or card PIN, and asks for six digits at least", async () => {
+    api.getPinStatus.mockResolvedValue(NO_PIN);
+    gate();
+    await pad("parentPin.set");
+
+    expect(screen.getByText("parentPin.choose")).toBeTruthy();
+    type("48291");
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "parentPin.next",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    type("5");
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "parentPin.next",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false);
   });
 });

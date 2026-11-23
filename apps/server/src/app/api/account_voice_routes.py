@@ -29,7 +29,6 @@ from ..voice.parent_recordings import (
 )
 from ..voice.samples import SAMPLE_ID
 from ..wire import Wire
-from .account_parent_routes import ParentUid as Uid
 from .account_routes import (
     KeepingDep,
     grant_for_held_learner,
@@ -37,6 +36,7 @@ from .account_routes import (
 )
 from .consent_proof import consent_gate, refusal, require_known_notice
 from .listed_learners import VoiceConsent
+from .parent_access import ParentUid as Uid
 from .voice_routes import EnvDep
 
 account_voice_router = APIRouter(
@@ -124,7 +124,7 @@ async def agree_to_keep(
     """The parent typed their PIN or signed in again just now, as the account this session
     belongs to; which, is kept with the consent."""
     require_known_notice(NOTICE_VERSIONS[RECORDINGS], body.notice_version)
-    gate = await consent_gate(request, session, uid, body.firebase_id_token)
+    proof = await consent_gate(request, session, uid, body.firebase_id_token)
     granted = await grant_for_held_learner(
         keeping,
         env.DB,
@@ -133,7 +133,7 @@ async def agree_to_keep(
         RECORDINGS,
         body.notice_version,
         body.retention_days,
-        gate,
+        proof,
     )
     return ConsentState(**granted)
 

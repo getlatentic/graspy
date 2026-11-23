@@ -40,7 +40,8 @@ UNRENEWED_MS = 7 * DAY_MS + TV_TOKEN_TTL_SECONDS * 1000
 
 TAKE_SQL = (
     "INSERT INTO tv_sessions (id, refresh_hash, account_uid, learner_id, label, created_at, "
-    "last_used_at, expires_at) SELECT ?1, ?2, account_uid, learner_id, label, ?3, ?3, ?4 "
+    "last_used_at, expires_at, gate) SELECT ?1, ?2, account_uid, learner_id, label, ?3, ?3, ?4, "
+    "COALESCE(approved_gate, 'google') "
     "FROM tv_links WHERE device_code_hash = ?5 AND status = 'approved' AND expires_at > ?3 "
     "AND (SELECT COUNT(*) FROM tv_sessions WHERE account_uid = tv_links.account_uid "
     "AND revoked_at IS NULL AND expires_at > ?3 AND last_used_at > ?6) < ?7"
@@ -89,6 +90,11 @@ REVOKE_SQL = (
     "WHERE id = ?1 AND account_uid = ?2 AND revoked_at IS NULL"
 )
 REVOKE_OWN_SQL = "UPDATE tv_sessions SET revoked_at = ?2 WHERE refresh_hash = ?1 AND revoked_at IS NULL"
+# A PIN reset by a Google sign-in signs out the TVs a PIN let in: the PIN may have been a child's.
+REVOKE_PIN_GATED_SQL = (
+    "UPDATE tv_sessions SET revoked_at = ?2 "
+    "WHERE account_uid = ?1 AND gate = 'pin' AND revoked_at IS NULL AND expires_at > ?2"
+)
 FORGET_ACCOUNT_SQL = "DELETE FROM tv_sessions WHERE account_uid = ?1"
 FORGET_LINKS_SQL = "DELETE FROM tv_links WHERE account_uid = ?1"
 UNRENEWED_SQL = (
@@ -203,6 +209,12 @@ async def revoke(database: Any, uid: str, session_id: str, now: int) -> bool:
 async def revoke_own(database: Any, refresh_token: str, now: int) -> None:
     """The TV signing itself out."""
     await database.prepare(REVOKE_OWN_SQL).bind(hash_secret(refresh_token), now).run()
+
+
+async def revoke_pin_gated(database: Any, uid: str, now: int) -> int:
+    """Signs out the account's TVs that were linked with the PIN; how many."""
+    result = await database.prepare(REVOKE_PIN_GATED_SQL).bind(uid, now).run()
+    return int(result.meta.changes)
 
 
 async def forget_account(database: Any, uid: str) -> None:

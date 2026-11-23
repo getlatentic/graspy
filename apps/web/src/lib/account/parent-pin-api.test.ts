@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
+import corpus from "../../../../../tests/fixtures/weak-pins.json";
 
 const fetchWithSession = vi.fn();
 const askForParentSession = vi.fn();
@@ -35,28 +36,32 @@ describe("the parent PIN's calls", () => {
   });
 
   it("send the PIN typed in the body of one call that makes the parent's session", async () => {
-    await api.verifyPin("4827");
+    await api.verifyPin("482915");
 
     expect(askForParentSession).toHaveBeenCalledWith(
       "/account/parent-pin/verify",
       "POST",
-      { pin: "4827" },
+      { pin: "482915" },
     );
   });
 
   it("send a new PIN with a Google sign-in just made, or with the one it replaces", async () => {
-    await api.savePin("7391", { firebaseIdToken: "fresh" });
-    await api.savePin("7391", { currentPin: "4827" });
+    await api.savePin("264819", { firebaseIdToken: "fresh" });
+    await api.savePin("264819", { currentPin: "482915" });
 
     expect(askForParentSession.mock.calls).toEqual([
-      ["/account/parent-pin", "PUT", { pin: "7391", firebaseIdToken: "fresh" }],
-      ["/account/parent-pin", "PUT", { pin: "7391", currentPin: "4827" }],
+      [
+        "/account/parent-pin",
+        "PUT",
+        { pin: "264819", firebaseIdToken: "fresh" },
+      ],
+      ["/account/parent-pin", "PUT", { pin: "264819", currentPin: "482915" }],
     ]);
   });
 
   it("never put the PIN in an address", async () => {
-    await api.verifyPin("4827");
-    await api.savePin("7391", { currentPin: "4827" });
+    await api.verifyPin("482915");
+    await api.savePin("264819", { currentPin: "482915" });
 
     expect(
       JSON.stringify(askForParentSession.mock.calls.map((c) => c[0])),
@@ -95,21 +100,26 @@ describe("what the server says of a refused PIN", () => {
   });
 });
 
-describe("a PIN that is a run or a repeat", () => {
-  it.each(["0000", "1111", "1234", "4321", "123456", "98765432", "99999999"])(
-    "is too easy: %s",
-    (pin) => expect(api.tooEasy(pin)).toBe(true),
-  );
+describe("the PINs a person tries first", () => {
+  it.each(corpus.weak)("are refused: %s", (pin) => {
+    expect(api.tooEasy(pin)).toBe(true);
+  });
 
-  it.each(["4827", "1235", "1243", "135790", "1212", "4829"])(
-    "is not: %s",
-    (pin) => expect(api.tooEasy(pin)).toBe(false),
-  );
+  it.each(corpus.fine)("are not refused: %s", (pin) => {
+    expect(api.tooEasy(pin)).toBe(false);
+  });
 
-  it("is judged as the server judges it", () => {
-    // The same cases as tests/test_parent_pin.py: the server refuses what the pad refuses.
-    for (const easy of ["0000", "1111", "1234", "4321", "123456", "98765432"]) {
-      expect(api.tooEasy(easy)).toBe(true);
-    }
+  it("are the server's own list, which reads the same file", () => {
+    expect(corpus.weak.length).toBeGreaterThan(100);
+  });
+});
+
+describe("the length of a PIN", () => {
+  it("is six to eight digits, six by default", () => {
+    expect([
+      api.MIN_PIN_LENGTH,
+      api.DEFAULT_PIN_LENGTH,
+      api.MAX_PIN_LENGTH,
+    ]).toEqual([6, 6, 8]);
   });
 });

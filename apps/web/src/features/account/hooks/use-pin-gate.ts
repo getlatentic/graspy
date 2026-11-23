@@ -22,6 +22,7 @@ export type PinStage =
   | { kind: "unreachable" }
   | { kind: "enter"; length: number }
   | { kind: "locked"; until: number }
+  | { kind: "disabled" }
   | { kind: "choose" }
   | { kind: "again"; pin: string }
   | { kind: "save"; pin: string };
@@ -31,6 +32,7 @@ export type PinError = "wrong" | "mismatch" | "easy" | "busy" | "failed";
 
 function stageOf(status: PinStatus): PinStage {
   if (!status.hasPin) return { kind: "choose" };
+  if (status.disabled) return { kind: "disabled" };
   if (status.lockedUntil && status.lockedUntil > Date.now()) {
     return { kind: "locked", until: status.lockedUntil };
   }
@@ -74,6 +76,8 @@ export function usePinGate() {
         const refusal = pinRefusalOf(cause);
         if (refusal?.kind === "locked") {
           setStage({ kind: "locked", until: refusal.until });
+        } else if (refusal?.kind === "disabled") {
+          setStage({ kind: "disabled" });
         } else if (refusal?.kind === "notSet") {
           load();
         } else if (refusal?.kind === "wrong") {

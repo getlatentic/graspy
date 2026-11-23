@@ -49,7 +49,7 @@ Migrations are applied before the new code goes live. So:
 
 `0026_parent_pin.sql` adds a table and a defaulted column (`consents.gate`), so it works with the code before it and after it. The code needs a new rate-limit binding, `PIN_LIMITER`, in `apps/server/wrangler.jsonc` for each environment: `scripts/deploy.sh` creates it with the Worker, and the Worker refuses to start without it. The PIN's key is derived from `SESSION_SECRET`, so rotating that secret also ends every parent PIN; parents use Forgot PIN ([Parent PIN](PARENT_PIN.md)). Migration 0026 and the `PIN_LIMITER` binding apply on staging automatically (the deploy after each push to `main`) and have to be applied to production by hand (`scripts/deploy.sh production`, which applies migrations first).
 
-**Owner's decision before production:** deleting an account now needs the parent's session made from a Google sign-in, which the Android delete-account call does not make, so that call is refused. Production must not get this API change until Android makes that session first, or the owner accepts that Android's delete breaks.
+**Owner's decision before production, Android:** these now need the parent's session, which the Android app does not make, so its calls are refused (`403 account_required`): **renaming a learner, removing one, adding one without a consent that carries a Google token, and deleting the account** (which needs a Google sign-in of the last five minutes). Agreeing with a fresh Google token in the body still works. The migration was edited in place (0026 is not on `main`); a database that applied an earlier 0026 must be reset. Production must not get this API change until Android makes that session first, or the owner accepts that Android's delete breaks.
 
 ## One-time setup
 

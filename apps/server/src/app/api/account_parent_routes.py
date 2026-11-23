@@ -5,21 +5,15 @@ session carries the same account, so the account alone does not tell the two apa
 
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from pydantic import Field
 
 from ..account.consents import GATE_GOOGLE
 from ..account.tv_codes import masked_email
-from ..security.guard import Session, require_session
 from ..security.session import issue
 from ..wire import Wire
 from .account_routes import Uid as AccountUid
 from .consent_proof import (
-    parent_gate,
-    parent_required,
-    refusal,
     require_fresh_sign_in,
 )
 from .routes import SessionResponse
@@ -29,38 +23,6 @@ parent_session_router = APIRouter(prefix="/account", tags=["accounts"])
 
 class ParentSignIn(Wire):
     firebase_id_token: str = Field(max_length=4096)
-
-
-async def _parent(
-    request: Request, session: Annotated[Session, Depends(require_session)]
-) -> str:
-    """The account's uid, for a session made as the parent and still in force."""
-    if await parent_gate(request, session) is None:
-        raise parent_required()
-    assert session.account
-    return session.account
-
-
-ParentUid = Annotated[str, Depends(_parent)]
-
-
-async def _google_parent(
-    request: Request, session: Annotated[Session, Depends(require_session)]
-) -> str:
-    """The account's uid, for a parent's session made from a Google sign-in just now: not the
-    PIN's. What Firebase's user is deleted for is the Google account's own to ask."""
-    gate = await parent_gate(request, session)
-    if gate is None:
-        raise parent_required()
-    if gate != GATE_GOOGLE:
-        raise refusal(
-            403, "google_sign_in_required", "Sign in with Google again to do this"
-        )
-    assert session.account
-    return session.account
-
-
-GoogleParentUid = Annotated[str, Depends(_google_parent)]
 
 
 def parent_session_response(

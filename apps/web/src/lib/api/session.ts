@@ -59,7 +59,12 @@ let pending: Promise<string> | null = null;
 // The parent's own session, made just after they typed their PIN or signed in again: what a
 // learner's recordings are managed under, as a learner's session is refused them. Held in memory
 // only, for the signed-in account, and only for the minutes the server gives it.
-let parent: { token: string; expiresAt: number; account: string } | null = null;
+let parent: {
+  token: string;
+  expiresAt: number;
+  startedAt: number;
+  account: string;
+} | null = null;
 const parentListeners = new Set<() => void>();
 
 function setParent(next: typeof parent): void {
@@ -408,6 +413,17 @@ export class ParentSignInNeeded extends ApiError {
   }
 }
 
+/** How long the parent's session has been in force, in milliseconds, or null without one. */
+export function parentSessionAge(): number | null {
+  return hasParentSession() && parent ? Date.now() - parent.startedAt : null;
+}
+
+/** Lets go of the parent's session, so the parent gate asks for the PIN again: an agreement needs
+ * a session that is minutes old at most. */
+export function dropParentSession(): void {
+  setParent(null);
+}
+
 /** Whether a call failed for want of the parent's session: the parent gate then asks again. */
 export function parentRefused(error: unknown): boolean {
   return error instanceof ParentSignInNeeded;
@@ -449,6 +465,7 @@ export async function askForParentSession(
   setParent({
     token,
     expiresAt: Date.now() + expiresIn * 1000,
+    startedAt: Date.now(),
     account: account.uid,
   });
 }

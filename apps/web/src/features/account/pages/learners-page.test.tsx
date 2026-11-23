@@ -34,6 +34,15 @@ vi.mock("@/lib/account/learners-api", () => ({
   renameLearner,
   agreeToService,
 }));
+vi.mock("@/lib/account/parent-pin-api", async (original) => ({
+  ...(await original<typeof import("@/lib/account/parent-pin-api")>()),
+  getPinStatus: async () => ({
+    hasPin: true,
+    length: 6,
+    lockedUntil: null,
+    disabled: false,
+  }),
+}));
 vi.mock("@/lib/account/learner-choice", () => ({ forgetLearner: vi.fn() }));
 vi.mock("@/lib/api/session", async (original) => ({
   ...(await import("@/test/parent-session")).withParentSession(
@@ -262,5 +271,18 @@ describe("deleting the account", () => {
 
     expect(await screen.findByText("learners.failed")).toBeTruthy();
     expect(deleteAccountAndSignOut).not.toHaveBeenCalled();
+  });
+});
+
+describe("the learners are the parent's", () => {
+  it("asks for the PIN, and shows no learner to rename or remove, until it is typed", async () => {
+    parentSession.end();
+    manage();
+
+    await screen.findByRole("group", { name: "parentPin.title" });
+    expect(screen.queryByText("Ada")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "learners.rename" }),
+    ).toBeNull();
   });
 });

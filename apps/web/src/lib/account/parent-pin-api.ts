@@ -1,4 +1,4 @@
-import { askForParentSession } from "@/lib/api/session";
+import { askForParentSession, fetchAsParent } from "@/lib/api/session";
 import { ACCOUNT_URL, call, refusalCode } from "./account-call";
 
 // The parent PIN (app/api/account_pin_routes.py, docs/PARENT_PIN.md). Typing it, or setting one
@@ -7,10 +7,10 @@ import { ACCOUNT_URL, call, refusalCode } from "./account-call";
 
 const PIN_URL = `${ACCOUNT_URL}/parent-pin`;
 
-export const MIN_PIN_LENGTH = 4;
+export const MIN_PIN_LENGTH = 6;
 export const MAX_PIN_LENGTH = 8;
 /** The length the pad asks for when a parent has no PIN yet. */
-export const DEFAULT_PIN_LENGTH = 4;
+export const DEFAULT_PIN_LENGTH = 6;
 
 export interface PinStatus {
   hasPin: boolean;
@@ -18,6 +18,8 @@ export interface PinStatus {
   length: number | null;
   /** Until when the account is locked, in milliseconds since the epoch. */
   lockedUntil: number | null;
+  /** Too many wrong PINs since the last Google sign-in: only Forgot PIN works. */
+  disabled: boolean;
 }
 
 export function getPinStatus(): Promise<PinStatus> {
@@ -44,6 +46,7 @@ export type PinRefusal =
   | { kind: "locked"; until: number }
   | { kind: "notSet" }
   | { kind: "busy" }
+  | { kind: "disabled" }
   | { kind: "tooEasy" };
 
 export function pinRefusalOf(error: unknown): PinRefusal | null {
@@ -68,6 +71,8 @@ export function pinRefusalOf(error: unknown): PinRefusal | null {
       return { kind: "notSet" };
     case "rate_limited":
       return { kind: "busy" };
+    case "pin_disabled":
+      return { kind: "disabled" };
     case "pin_too_easy":
       return { kind: "tooEasy" };
     default:
@@ -75,13 +80,28 @@ export function pinRefusalOf(error: unknown): PinRefusal | null {
   }
 }
 
-/** Digits that repeat or run on are the first guesses of someone trying PINs (the server
- * refuses them too). */
-export function tooEasy(pin: string): boolean {
-  if (new Set(pin).size === 1) return true;
-  const steps = new Set<number>();
-  for (let at = 1; at < pin.length; at += 1) {
-    steps.add(Number(pin[at]) - Number(pin[at - 1]));
-  }
-  return steps.size === 1 && (steps.has(1) || steps.has(-1));
+export { tooEasy } from "./weak-pins";
+
+/** What a parent has not yet seen of their PIN. */
+export interface PinEvent {
+  id: number;
+  kind: "locked" | "disabled" | "reset";
+  at: number;
+  /** The wrong PINs of a lock, or the TVs a reset signed out. */
+  count: number | null;
+}
+
+export async function getPinActivity(): Promise<PinEvent[]> {
+  return (await call<{ events: PinEvent[] }>(`${PIN_URL}/activity`, "GET"))
+    .events;
+}
+
+/** Only under the parent's session made from a Google sign-in just now. */
+export function acknowledgePinActivity(): Promise<void> {
+  return call(
+    `${PIN_URL}/activity/acknowledge`,
+    "POST",
+    undefined,
+    fetchAsParent,
+  );
 }

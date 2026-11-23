@@ -145,10 +145,26 @@ function Asking({
       return (
         <Locked until={stage.until} heading={heading} gate={gate} back={back} />
       );
+    case "disabled":
+      return (
+        <>
+          <Title as={heading}>{t("parentPin.title")}</Title>
+          <p role="status" className="text-center text-ink">
+            {t("parentPin.disabled")}
+          </p>
+          <Button variant="ghost" className="self-center" onClick={gate.forgot}>
+            {t("parentPin.forgot")}
+          </Button>
+          {back}
+        </>
+      );
     case "choose":
       return (
         <>
           <Title as={heading}>{t("parentPin.set")}</Title>
+          <p className="text-center text-sm text-muted">
+            {t("parentPin.choose")}
+          </p>
           <PinPad
             key="choose"
             label={t("parentPin.set")}

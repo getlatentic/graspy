@@ -54,7 +54,7 @@ data class RecordingsCopy(
 
 internal val ENGLISH_CONSENT = ConsentCopy(
     title = "Let {name} use graspy?",
-    who = "Agree as the learner, or their parent or guardian. You'll sign in with Google again to confirm it's you.",
+    who = "Agree as the learner, or their parent or guardian.",
     agree = "I agree",
     decline = "Don't agree",
     needed = "Not agreed yet",
@@ -90,7 +90,7 @@ internal val ENGLISH_RECORDINGS = RecordingsCopy(
 
 internal val YORUBA_CONSENT = ConsentCopy(
     title = "Ṣé kí {name} lo graspy?",
-    who = "Fọwọ́ sí gẹ́gẹ́ bí akẹ́kọ̀ọ́, tàbí òbí tàbí alágbàtọ́ rẹ̀. Wàá tún wọlé pẹ̀lú Google láti jẹ́rìí pé ìwọ ni.",
+    who = "Fọwọ́ sí gẹ́gẹ́ bí akẹ́kọ̀ọ́, tàbí òbí tàbí alágbàtọ́ rẹ̀.",
     agree = "Mo fọwọ́ sí",
     decline = "Kò fọwọ́ sí",
     needed = "A kò tíì fọwọ́ sí i",
@@ -126,7 +126,7 @@ internal val YORUBA_RECORDINGS = RecordingsCopy(
 
 internal val PIDGIN_CONSENT = ConsentCopy(
     title = "Make {name} use graspy?",
-    who = "Agree as the learner, or as im papa, mama or guardian. You go sign in with Google again to show say na you.",
+    who = "Agree as the learner, or as im papa, mama or guardian.",
     agree = "I agree",
     decline = "I no agree",
     needed = "Dem never agree yet",
@@ -162,7 +162,7 @@ internal val PIDGIN_RECORDINGS = RecordingsCopy(
 
 internal val ARABIC_CONSENT = ConsentCopy(
     title = "هل يستخدم {name} تطبيق graspy؟",
-    who = "وافق بصفتك المتعلّم، أو والده أو وليّ أمره. ستسجّل الدخول عبر Google مرة أخرى للتأكد أنك أنت.",
+    who = "وافق بصفتك المتعلّم، أو والده أو وليّ أمره.",
     agree = "أوافق",
     decline = "لا أوافق",
     needed = "لم تتم الموافقة بعد",

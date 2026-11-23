@@ -127,8 +127,9 @@ beforeEach(() => {
   parentSession.grant();
   getPinStatus.mockResolvedValue({
     hasPin: true,
-    length: 4,
+    length: 6,
     lockedUntil: null,
+    disabled: false,
   });
   verifyPin.mockImplementation(async () => parentSession.grant());
   api.stopKeepingRecordings.mockResolvedValue({ deleted: 0, more: false });
@@ -812,7 +813,7 @@ describe("for a screen reader and the keyboard", () => {
 
 describe("the voice recordings page, for a learner's session", () => {
   const typePin = () => {
-    for (const digit of "4827") {
+    for (const digit of "482915") {
       fireEvent.click(screen.getByRole("button", { name: digit }));
     }
   };
@@ -828,7 +829,7 @@ describe("the voice recordings page, for a learner's session", () => {
     typePin();
 
     await waitFor(() => expect(api.getVoice).toHaveBeenCalledWith(ADA));
-    expect(verifyPin).toHaveBeenCalledWith("4827");
+    expect(verifyPin).toHaveBeenCalledWith("482915");
     expect(await keepSwitch()).toBeTruthy();
   });
 

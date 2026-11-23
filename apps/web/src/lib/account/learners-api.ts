@@ -63,16 +63,24 @@ export function agreeToService(
   return call(`${LEARNERS_URL}/${id}/consent`, "PUT", consent, fetchAsParent);
 }
 
+/** Renaming, removing and adding are the parent's: a child's session is refused them. */
 export function renameLearner(
   id: string,
   name: string,
 ): Promise<RenamedLearner> {
-  return call(`${LEARNERS_URL}/${id}`, "PATCH", { name });
+  return call(`${LEARNERS_URL}/${id}`, "PATCH", { name }, fetchAsParent);
 }
 
 /** Their plan, progress, lessons and conversations go with them. */
 export async function removeLearner(id: string): Promise<AccountLearner[]> {
-  return (await call<Listed>(`${LEARNERS_URL}/${id}`, "DELETE")).learners;
+  return (
+    await call<Listed>(
+      `${LEARNERS_URL}/${id}`,
+      "DELETE",
+      undefined,
+      fetchAsParent,
+    )
+  ).learners;
 }
 
 /** A session for the learner. With the device's id, its own record joins theirs, once. */

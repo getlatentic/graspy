@@ -532,7 +532,14 @@
     "busy": "Too many tries. Wait a minute.",
     "failed": "That didn't work. Try again.",
     "lockedMinutes": "Locked. Try again in {count} min.",
-    "lockedHours": "Locked. Try again in {count} h."
+    "lockedHours": "Locked. Try again in {count} h.",
+    "choose": "Six to eight digits. Don't use your phone or card PIN.",
+    "disabled": "The PIN is turned off. Use Forgot PIN.",
+    "noticeLocked": "Someone entered the wrong PIN {count} times on {date}.",
+    "noticeDisabled": "The PIN was turned off after {count} wrong tries on {date}.",
+    "noticeReset": "The PIN was reset on {date}.",
+    "noticeResetTvs": "{count} TVs linked with the old PIN were signed out.",
+    "noticeDismiss": "Got it"
   },
   "loading": {
     "opening": "E dey open…",

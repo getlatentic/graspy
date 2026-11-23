@@ -3,6 +3,7 @@ import { UserRound } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { Card } from "@/components/ui/card";
 import { GoogleSignInButton } from "@/features/account/components/google-sign-in-button";
+import { PinActivityNotice } from "@/features/account/components/pin-activity-notice";
 import { SignOutControl } from "@/features/account/components/sign-out-control";
 import type { Account } from "@/lib/account/account-store";
 import { useAccount } from "@/lib/account/use-account";
@@ -60,6 +61,7 @@ function SignedIn({ account }: { account: Account }) {
           {t("you.manageLearners")}
         </Link>
       </div>
+      <PinActivityNotice />
       <SignOut />
     </>
   );

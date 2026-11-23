@@ -167,8 +167,9 @@ describe("the pages of a learner in use", () => {
     listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
     getPinStatus.mockResolvedValue({
       hasPin: true,
-      length: 4,
+      length: 6,
       lockedUntil: null,
+      disabled: false,
     });
     verifyPin.mockImplementation(async () => parentSession.grant());
     gated();
@@ -177,12 +178,12 @@ describe("the pages of a learner in use", () => {
     fireEvent.click(screen.getByRole("button", { name: "consent.agree" }));
     await screen.findByRole("group", { name: "parentPin.title" });
     expect(agreeToService).not.toHaveBeenCalled();
-    for (const digit of "4827") {
+    for (const digit of "482915") {
       fireEvent.click(screen.getByRole("button", { name: digit }));
     }
 
     expect(await screen.findByText("the learner's pages")).toBeTruthy();
-    expect(verifyPin).toHaveBeenCalledWith("4827");
+    expect(verifyPin).toHaveBeenCalledWith("482915");
     expect(agreeToService).toHaveBeenCalledTimes(1);
   });
 
@@ -191,8 +192,9 @@ describe("the pages of a learner in use", () => {
     listLearners.mockResolvedValue([listed(ADA.id, "Ada", null)]);
     getPinStatus.mockResolvedValue({
       hasPin: true,
-      length: 4,
+      length: 6,
       lockedUntil: null,
+      disabled: false,
     });
     gated();
     await screen.findByText(SERVICE_NOTICE);
@@ -233,8 +235,9 @@ describe("the pages of a learner in use", () => {
     });
     getPinStatus.mockResolvedValue({
       hasPin: true,
-      length: 4,
+      length: 6,
       lockedUntil: null,
+      disabled: false,
     });
     parentSession.grant();
     gated();

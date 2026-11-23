@@ -6,6 +6,7 @@ with Google sent with the request; which one it was is kept with the consent."""
 from __future__ import annotations
 
 import time
+from typing import NamedTuple
 
 from fastapi import HTTPException, Request
 
@@ -60,15 +61,35 @@ async def parent_gate(request: Request, session: Session) -> str | None:
     return session.gate
 
 
+# A parent's session that has been in force longer than this is not proof of an agreement: a child
+# handed an unlocked phone within the 15 minutes must not be able to tap "I agree". The app asks
+# for the PIN again at the consent step.
+CONSENT_FRESH_SECONDS = 2 * 60
+
+
+class Proof(NamedTuple):
+    """How a parent agreed, and when they proved themselves, in milliseconds."""
+
+    gate: str
+    proved_at: int | None
+
+
 async def consent_gate(
     request: Request, session: Session, uid: str, id_token: str | None
-) -> str:
+) -> Proof:
     """Proves the parent agreed, and says how: a fresh sign-in with Google sent with the request,
-    or else the parent's session the request is made under."""
+    or else the parent's session the request is made under, if it began in the last two minutes."""
     if id_token is not None:
-        await require_fresh_sign_in(request, uid, id_token)
-        return GATE_GOOGLE
+        signed = await require_fresh_sign_in(request, uid, id_token)
+        return Proof(GATE_GOOGLE, signed.auth_time * 1000 if signed.auth_time else None)
     gate = await parent_gate(request, session)
     if gate is None or session.account != uid:
         raise parent_required()
-    return gate
+    started = session.started_at
+    if started is None or time.time() - started > CONSENT_FRESH_SECONDS:
+        raise refusal(
+            403,
+            "parent_fresh_required",
+            "Type the parent PIN again to agree",
+        )
+    return Proof(gate, started * 1000)

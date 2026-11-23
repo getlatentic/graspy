@@ -35,7 +35,7 @@ REVOKE_SQL = (
 )
 GRANT_SQL = (
     "INSERT INTO consents (learner_key, account_uid, scope, notice_version, "
-    "retention_days, granted_at, gate) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"
+    "retention_days, granted_at, gate, proved_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
 )
 
 
@@ -59,13 +59,21 @@ async def grant_consent(
     retention_days: int | None,
     now_ms: int,
     gate: str,
+    proved_at: int | None = None,
 ) -> dict:
     """One batch, so no reader sees the learner with two consents of a scope or none."""
     await database.batch(
         [
             database.prepare(REVOKE_SQL).bind(learner_key, scope, now_ms),
             database.prepare(GRANT_SQL).bind(
-                learner_key, uid, scope, notice_version, retention_days, now_ms, gate
+                learner_key,
+                uid,
+                scope,
+                notice_version,
+                retention_days,
+                now_ms,
+                gate,
+                proved_at,
             ),
         ]
     )

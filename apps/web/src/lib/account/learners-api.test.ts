@@ -74,19 +74,21 @@ describe("the account's learners", () => {
     });
   });
 
-  it("are renamed and removed by id", async () => {
+  it("are renamed and removed by id, under the parent's session", async () => {
     answers(200, { ...ADA, name: "Ada L." });
     await api.renameLearner(ADA.id, "Ada L.");
-    expect(sent()).toMatchObject({
+    expect(fetchWithSession).not.toHaveBeenCalled();
+    expect(sent(fetchAsParent)).toMatchObject({
       url: `https://api.test/api/account/learners/${ADA.id}`,
       method: "PATCH",
       body: { name: "Ada L." },
     });
 
-    fetchWithSession.mockReset();
+    fetchAsParent.mockReset();
     answers(200, { learners: [] });
     await expect(api.removeLearner(ADA.id)).resolves.toEqual([]);
-    expect(sent().method).toBe("DELETE");
+    expect(sent(fetchAsParent).method).toBe("DELETE");
+    expect(fetchWithSession).not.toHaveBeenCalled();
   });
 
   it("each have a session, which with the device's id takes in its record", async () => {

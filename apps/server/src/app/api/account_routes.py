@@ -10,7 +10,9 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from ..account import pin_events
 from ..account.consents import (
+    GATE_PIN,
     NOTICE_VERSIONS,
     SERVICE,
     forget_consents,
@@ -39,7 +41,14 @@ from ..learner.record import DeviceJoined
 from ..learner.time import now_ms
 from ..security.guard import Session, require_session
 from ..wire import Wire
-from .consent_proof import consent_gate, refusal, require_known_notice
+from .consent_proof import (
+    Proof,
+    consent_gate,
+    parent_gate,
+    parent_required,
+    refusal,
+    require_known_notice,
+)
 from .listed_learners import (
     ListedLearner,
     ListedLearners,
@@ -47,6 +56,7 @@ from .listed_learners import (
     listed,
     listed_with_consents,
 )
+from .parent_access import ParentUid
 from .routes import SessionResponse, learner_session
 from .service_consent import service_consent_refusal
 
@@ -165,7 +175,7 @@ async def grant_for_held_learner(
     scope: str,
     notice_version: int,
     retention_days: int | None,
-    gate: str,
+    proof: Proof,
 ) -> dict:
     """Writes the consent, then checks the account still holds the learner. Removing a learner
     takes them out of the directory before it forgets what was kept for them, so a consent written
@@ -176,7 +186,15 @@ async def grant_for_held_learner(
     key = learner_key(uid, learner_id)
     try:
         granted = await grant_consent(
-            database, key, uid, scope, notice_version, retention_days, now_ms(), gate
+            database,
+            key,
+            uid,
+            scope,
+            notice_version,
+            retention_days,
+            now_ms(),
+            proof.gate,
+            proof.proved_at,
         )
     except Exception:
         logger.exception("Consent for a learner was not kept")
@@ -189,6 +207,8 @@ async def grant_for_held_learner(
     except Exception:
         logger.exception("The learner a consent was written for could not be checked")
         raise ConsentNotKept() from None
+    if proof.gate == GATE_PIN:
+        await pin_events.record(database, uid, "consent", now_ms())
     return granted
 
 
@@ -214,7 +234,7 @@ async def learners(
 
 async def _proved(
     request: Request, session: Session, uid: str, consent: ServiceConsentGrant
-) -> str:
+) -> Proof:
     """A consent is checked before it is recorded, and before a new learner is added. Says how
     the parent proved themselves."""
     require_known_notice(NOTICE_VERSIONS[SERVICE], consent.notice_version)
@@ -231,9 +251,13 @@ async def add_learner(
     keeping: KeepingDep,
     body: NewLearner,
 ) -> ListedLearner:
-    gate = None
+    # Adding a learner takes the parent, for a child must not fill the account's eight places: with
+    # the parent's agreement and its proof, or at least the parent's session.
+    proof = None
     if body.consent is not None:
-        gate = await _proved(request, session, uid, body.consent)
+        proof = await _proved(request, session, uid, body.consent)
+    elif await parent_gate(request, session) is None:
+        raise parent_required()
     try:
         learner = await added(keeping, uid, body.name, now_ms())
     except TooManyLearners:
@@ -255,7 +279,7 @@ async def add_learner(
             SERVICE,
             body.consent.notice_version,
             None,
-            gate,
+            proof,
         )
     except ConsentNotKept:
         await _undo_added(keeping, uid, learner.id)
@@ -284,7 +308,7 @@ async def agree_to_service(
 ) -> ServiceConsent:
     """The parent of a learner added without consent agrees to graspy teaching them."""
     await require_learner(keeping, uid, learner_id)
-    gate = await _proved(request, session, uid, body)
+    proof = await _proved(request, session, uid, body)
     granted = await grant_for_held_learner(
         keeping,
         request.app.state.voice.DB,
@@ -293,14 +317,14 @@ async def agree_to_service(
         SERVICE,
         body.notice_version,
         None,
-        gate,
+        proof,
     )
     return ServiceConsent.model_validate(granted)
 
 
 @account_router.patch("/learners/{learner_id}", response_model=Learner)
 async def rename_learner(
-    uid: Uid, keeping: KeepingDep, learner_id: LearnerId, body: LearnerRename
+    uid: ParentUid, keeping: KeepingDep, learner_id: LearnerId, body: LearnerRename
 ) -> Learner:
     try:
         return await renamed(keeping, uid, learner_id, body.name)
@@ -310,7 +334,7 @@ async def rename_learner(
 
 @account_router.delete("/learners/{learner_id}", response_model=Learners)
 async def remove_learner(
-    uid: Uid, keeping: KeepingDep, learner_id: LearnerId
+    uid: ParentUid, keeping: KeepingDep, learner_id: LearnerId
 ) -> Learners:
     try:
         return _listed(await removed(keeping, uid, learner_id))

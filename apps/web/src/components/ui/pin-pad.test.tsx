@@ -23,6 +23,7 @@ function pad(props: Partial<Parameters<typeof PinPad>[0]> = {}) {
       typedLabel={(count) => `${count} typed`}
       onEntered={onEntered}
       length={4}
+      shuffle={false}
       {...props}
     />,
   );
@@ -278,5 +279,86 @@ describe("a PIN of the person's own length", () => {
         .disabled,
     ).toBe(true);
     act(() => undefined);
+  });
+});
+
+describe("the PIN pad's shuffled keys", () => {
+  const order = () =>
+    [...screen.getAllByRole("button")]
+      .map((button) => button.textContent ?? "")
+      .filter((text) => /^[0-9]$/.test(text));
+
+  it("are all ten digits, in a random order by default", () => {
+    onEntered.mockReset();
+    render(
+      <PinPad
+        label="Parent PIN"
+        deleteLabel="Delete last digit"
+        typedLabel={(count) => `${count} typed`}
+        onEntered={onEntered}
+        length={6}
+      />,
+    );
+
+    expect([...order()].sort().join("")).toBe("0123456789");
+    const seen = new Set<string>();
+    for (let tries = 0; tries < 5; tries += 1) {
+      cleanup();
+      render(
+        <PinPad
+          label="Parent PIN"
+          deleteLabel="Delete last digit"
+          typedLabel={(count) => `${count} typed`}
+          onEntered={onEntered}
+          length={6}
+        />,
+      );
+      seen.add(order().join(""));
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("are in the usual order when asked, and the number keys of a keyboard are the same either way", () => {
+    pad();
+    expect(order().join("")).toBe("1234567890");
+    cleanup();
+    pad({ shuffle: true });
+
+    press("4");
+    press("8");
+    press("2");
+    press("7");
+
+    expect(onEntered).toHaveBeenCalledWith("4827");
+  });
+
+  it("are shuffled again after a PIN that was not accepted", () => {
+    function Host() {
+      const [failures, setFailures] = useState(0);
+      return (
+        <>
+          <PinPad
+            label="Parent PIN"
+            deleteLabel="Delete last digit"
+            typedLabel={() => ""}
+            length={6}
+            failures={failures}
+            onEntered={onEntered}
+          />
+          <button type="button" onClick={() => setFailures((n) => n + 1)}>
+            fail
+          </button>
+        </>
+      );
+    }
+    render(<Host />);
+    const seen = new Set([order().join("")]);
+
+    for (let tries = 0; tries < 5; tries += 1) {
+      fireEvent.click(screen.getByRole("button", { name: "fail" }));
+      seen.add(order().join(""));
+    }
+
+    expect(seen.size).toBeGreaterThan(1);
   });
 });

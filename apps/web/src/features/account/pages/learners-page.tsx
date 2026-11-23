@@ -8,6 +8,7 @@ import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { ConfirmCard } from "../components/confirm-card";
 import { LearnerRow } from "../components/learner-row";
+import { ParentGate } from "../components/parent-gate";
 import { ProblemNote } from "../components/problem-note";
 import { useManageLearners } from "../hooks/use-manage-learners";
 
@@ -25,8 +26,10 @@ export default function LearnersPage() {
           {t("learners.manageTitle")}
         </h1>
       </div>
-      <LearnerList manage={manage} />
-      {manage.failed && <ProblemNote>{t("learners.failed")}</ProblemNote>}
+      <ParentGate framed>
+        <LearnerList manage={manage} />
+        {manage.failed && <ProblemNote>{t("learners.failed")}</ProblemNote>}
+      </ParentGate>
       <DeleteAccount manage={manage} />
     </div>
   );

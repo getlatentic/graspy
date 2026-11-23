@@ -2,8 +2,10 @@
 device sends what it has not sent and reads what changed since it last read,
 and one learner's threads are never another's."""
 
+import time
+
 import pytest
-from signed_in import DEVICE, UID, added, chosen, client, signed_in
+from signed_in import DEVICE, UID, added, chosen, client, parent_headers, signed_in
 
 from app.factory import create_app
 from app.learner.store import InMemoryLearnerStore
@@ -433,6 +435,13 @@ def app(monkeypatch):
 
     async def verified(id_token, _api_key, **_):
         accounts = {"good": UID, "other": "uid456"}
+        if id_token in ("fresh", "fresh-other"):
+            return firebase.SignedIn(
+                uid=UID if id_token == "fresh" else "uid456",
+                name="Ada",
+                auth_time=int(time.time()) - 30,
+                provider="google.com",
+            )
         if id_token not in accounts:
             raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
         return firebase.SignedIn(uid=accounts[id_token], name="Ada")
@@ -451,7 +460,8 @@ def app(monkeypatch):
 
 async def learning_as(http, name: str, token: str = "good") -> dict:
     await signed_in(http, firebaseIdToken=token)
-    return await chosen(http, await added(http, name))
+    proof = "fresh" if token == "good" else "fresh-other"
+    return await chosen(http, await added(http, name, proof))
 
 
 async def pushed(http, *threads: dict):
@@ -555,7 +565,10 @@ async def test_a_removed_learners_threads_are_forgotten_and_none_kept_after(app)
     async with client(app) as http:
         ada = await learning_as(http, "Ada")
         await pushed(http, thread("t", messages=[message("m1", 1)]))
-        removed = await http.delete(f"/api/account/learners/{ada['learner']['id']}")
+        removed = await http.delete(
+            f"/api/account/learners/{ada['learner']['id']}",
+            headers=await parent_headers(http),
+        )
         late = await pushed(http, thread("t", messages=[message("m2", 2)]))
         read = await read_all(http)
 

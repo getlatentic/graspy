@@ -11,6 +11,8 @@ const auth: {
   currentUser: typeof user | null;
   authStateReady: () => Promise<void>;
 } = { currentUser: user, authStateReady: async () => undefined };
+const parameters: Record<string, string>[] = [];
+const signInWithPopup = vi.fn(async () => ({ user }));
 const reauthenticateWithPopup = vi.fn(async () => {
   steps.push("popup");
   return { user };
@@ -21,11 +23,15 @@ vi.mock("firebase/auth", () => ({
   browserLocalPersistence: {},
   browserPopupRedirectResolver: {},
   connectAuthEmulator: vi.fn(),
-  GoogleAuthProvider: class {},
+  GoogleAuthProvider: class {
+    setCustomParameters(custom: Record<string, string>) {
+      parameters.push(custom);
+    }
+  },
   indexedDBLocalPersistence: {},
   initializeAuth: () => auth,
   reauthenticateWithPopup,
-  signInWithPopup: vi.fn(),
+  signInWithPopup,
   signOut: vi.fn(),
 }));
 vi.mock("@/lib/env", () => ({
@@ -33,10 +39,12 @@ vi.mock("@/lib/env", () => ({
   FIREBASE_AUTH_EMULATOR: null,
 }));
 
-const { reauthenticateWithGoogle } = await import("./google-auth");
+const { reauthenticateWithGoogle, signInWithGoogle } =
+  await import("./google-auth");
 
 beforeEach(() => {
   steps.length = 0;
+  parameters.length = 0;
   auth.currentUser = user;
   reauthenticateWithPopup.mockClear();
   user.getIdToken.mockClear();
@@ -51,6 +59,12 @@ describe("signing in again with Google", () => {
       expect.anything(),
     );
     expect(steps).toEqual(["popup", "token true"]);
+  });
+
+  it("asks for the credentials again, whatever Google's window remembers, so one tap is not enough", async () => {
+    await reauthenticateWithGoogle();
+
+    expect(parameters).toEqual([{ prompt: "login", max_age: "0" }]);
   });
 
   it("fails when Firebase has nobody signed in", async () => {
@@ -71,5 +85,19 @@ describe("signing in again with Google", () => {
       code: "auth/popup-closed-by-user",
     });
     expect(user.getIdToken).not.toHaveBeenCalled();
+  });
+});
+
+describe("signing in with Google", () => {
+  it("always has the account chosen, never a tap on whoever Google's window remembers", async () => {
+    await signInWithGoogle();
+
+    expect(parameters).toEqual([{ prompt: "select_account" }]);
+  });
+
+  it("asks for the credentials again when it is to make the parent", async () => {
+    await signInWithGoogle(true);
+
+    expect(parameters).toEqual([{ prompt: "login", max_age: "0" }]);
   });
 });

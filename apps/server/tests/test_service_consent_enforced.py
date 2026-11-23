@@ -7,7 +7,7 @@ import asyncio
 import pytest
 from consent_sign_ins import consent_app
 from service_agreed import service_agreed
-from signed_in import UID, client, signed_in, use
+from signed_in import UID, client, parent_headers, signed_in, use
 from voice_worker import worker_env
 
 from app.account.consents import SERVICE, revoke_consent
@@ -50,7 +50,9 @@ async def learner_session(http, learner: str) -> None:
 
 async def added(http, name: str = "Ada") -> str:
     created = await http.post(
-        "/api/account/learners", json={"name": name, "guardian": True}
+        "/api/account/learners",
+        json={"name": name, "guardian": True},
+        headers=await parent_headers(http),
     )
     return created.json()["id"]
 

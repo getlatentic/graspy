@@ -120,9 +120,12 @@ beforeEach(() => {
   api.account.current = signedIn;
   parentSession.reset();
   parentSession.grant();
-  api.getPinStatus
-    .mockReset()
-    .mockResolvedValue({ hasPin: true, length: 4, lockedUntil: null });
+  api.getPinStatus.mockReset().mockResolvedValue({
+    hasPin: true,
+    length: 6,
+    lockedUntil: null,
+    disabled: false,
+  });
   api.verifyPin
     .mockReset()
     .mockImplementation(async () => parentSession.grant());
@@ -232,7 +235,7 @@ describe("a phone signed in without a parent's session (a learner's)", () => {
     await screen.findByRole("group", { name: en.parentPin.title });
     expect(api.lookUpTv).not.toHaveBeenCalled();
     expect(google()).toBeNull();
-    for (const digit of "4827") {
+    for (const digit of "482915") {
       fireEvent.click(screen.getByRole("button", { name: digit }));
     }
 
@@ -247,7 +250,7 @@ describe("a phone signed in without a parent's session (a learner's)", () => {
   it("is not asked for the PIN again for the next TV in the parent's session", async () => {
     page();
     await screen.findByRole("group", { name: en.parentPin.title });
-    for (const digit of "4827") {
+    for (const digit of "482915") {
       fireEvent.click(screen.getByRole("button", { name: digit }));
     }
     await screen.findByRole("heading", { name: "Link Samsung TV?" });

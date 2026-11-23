@@ -39,6 +39,8 @@ class Session:
     parent: bool = False
     # How: "pin" or "google" (a parent's session only).
     gate: str | None = None
+    # The token's own id: what a rate budget that must not be shared with another session keys on.
+    jti: str | None = None
     # When it was made, in epoch seconds (a parent's session only).
     started_at: int | None = None
     # A TV's: the id of the credential it was renewed from. It learns as its learner and
@@ -64,6 +66,7 @@ def checked(authorization: str | None, secret: str) -> Session | dict:
         started_at=parent_started_at(claims),
         tv=tv_of(claims),
         hint=hint_of(claims),
+        jti=claims.get("jti") if isinstance(claims.get("jti"), str) else None,
     )
 
 

@@ -13,7 +13,8 @@ One component, `ParentGate` (`apps/web/src/features/account/components/parent-ga
 | The account has | The parent sees |
 |---|---|
 | a PIN | a pad as long as the PIN (`length` from the status), and the PIN is sent when its last digit is typed. A wrong PIN shakes the dots and clears them. "Forgot PIN?" |
-| no PIN | "Set a parent PIN": a PIN of 4 to 8 digits and Next, then the same again, then one Google sign-in to save it |
+| no PIN | "Set a parent PIN": a PIN of 6 to 8 digits ("Don't use your phone or card PIN") and Next, then the same again, then one Google sign-in to save it |
+| a PIN turned off | "The PIN is turned off. Use Forgot PIN." (after 15 wrong tries since the last Google proof) |
 | a lock | "Locked. Try again in 15 min." (an hour; 24 h), and "Forgot PIN?" |
 | a PIN and a forgotten one | "Forgot PIN?" leads to the same three steps as setting one, and the Google sign-in is what proves them: the new PIN replaces the old, and ends the lock |
 
@@ -21,7 +22,7 @@ One component, `ParentGate` (`apps/web/src/features/account/components/parent-ga
 
 `/link` keeps the three-step flow ([TV sign-in](TV_SIGN_IN.md)): a Google sign-in on `/link` makes the account and the parent's session from one token, so a signed-out parent is never asked for the PIN there; the PIN pad appears only for a phone signed in without a parent's session.
 
-The pad (`components/ui/pin-pad.tsx`) is ten real buttons and a delete key, which a finger, a pointer, the arrow keys and OK of a remote (spatial navigation), and the number keys of a keyboard or a remote all use. The digits are kept in the component's state and never put in the page: the dots count them, and there is no field, so there is nothing for a password manager, a paste or an autofill to find. It writes nothing to storage, the address or the log (tests check each).
+The pad (`components/ui/pin-pad.tsx`) is ten real buttons and a delete key, in a **random order, new for each go**, so someone watching over a shoulder sees where a finger went and not which digit (the number keys of a keyboard or a remote are not affected; `shuffle={false}` gives the usual layout), which a finger, a pointer, the arrow keys and OK of a remote (spatial navigation), and the number keys of a keyboard or a remote all use. The digits are kept in the component's state and never put in the page: the dots count them, and there is no field, so there is nothing for a password manager, a paste or an autofill to find. It writes nothing to storage, the address or the log (tests check each).
 
 ## The server
 
@@ -44,33 +45,58 @@ keyed   = HMAC-SHA256(pepper, "pin:" + account + ":" + PIN)
 hash    = PBKDF2-HMAC-SHA256(keyed, salt, 100,000 iterations, 32 bytes)
 ```
 
-- **The pepper is never stored**, so a copy of the table cannot even test a guess: there are only 10,000 four-digit PINs, and without the pepper none of them can be tried. It is derived from `SESSION_SECRET` for this one purpose, as the TV credential's successor key is, so the secret itself is the key of nothing else.
+- **The pepper is never stored**, so a copy of the table cannot even test a guess: there are only a million six-digit PINs, and without the pepper none of them can be tried. It is derived from `SESSION_SECRET` for this one purpose, as the TV credential's successor key is, so the secret itself is the key of nothing else.
 - **The salt is the row's own**, so two accounts with the same PIN, or one account setting it twice, have different hashes.
 - **The comparison is constant time** (`hmac.compare_digest`).
 - **100,000 iterations is the most the Workers runtime allows PBKDF2** in WebCrypto. Pyodide's `hashlib` has no `pbkdf2_hmac` at all (checked), so the Worker calls WebCrypto, which runs natively; Python elsewhere uses `hashlib` for the same sum, and a test compares the two on the same input. Measured: 15 ms in CPython with OpenSSL, 15.7 ms in Node's WebCrypto, 16 ms on average (18.6 ms for the first call) through the same Python code under Pyodide on Node. Not measured in `workerd` itself, because deploying a Worker was outside this change.
 - **`SESSION_SECRET` rotation ends every parent PIN**, since the pepper is derived from it: the account's next try is "wrong", and the parent uses Forgot PIN. That is the same blast radius as rotating the secret has for every session; deployments should know it.
 
-### The lockout
+### The guess budget
 
-Five wrong PINs lock the account for 15 minutes; the next five, for an hour; every five after that, for 24 hours. A right PIN, or a new PIN set after a Google sign-in, starts again from the first. While locked, even the right PIN is refused (`429 pin_locked`, with `lockedUntil` and `Retry-After`), so the lock is no oracle. A wrong PIN answers `403 pin_wrong` with `attemptsLeft`.
+A PIN is a small number, so what stops a child on a shared phone is how few guesses they get. These are the numbers, for a child who does not know the PIN:
 
-- **It is the account's, in D1.** It does not live in a session or on a device, so a new learner session, a second phone or a cleared browser does not reset it.
-- **Each attempt is charged before it is compared**, by one guarded `UPDATE ... RETURNING`: it adds one to the count, starts the lock when the count reaches five, and answers only while the account is not locked. The hash is computed only for a request the statement answered, so at most five are computed per lock however many arrive at once, and a request cut off after the charge has still been counted. A right PIN clears the count and the lock. This is `parent_pins.CHARGE_SQL`.
-- **A test sends 40 wrong attempts at once** with `asyncio.gather`: four answer `pin_wrong`, 36 `pin_locked`, and five hashes are computed. That shows the charge is one statement that holds on its own. It does not prove D1's atomicity: in-process SQLite finishes a statement before the next starts. That rests on D1 running a single statement as one transaction, as the TV sign-in's guards do.
-- **Two budgets sit in front of it** (`PIN_LIMITER`, a new binding, 10 a minute per key): one per account and one per source address (an IPv6 address as its /64). A request over a budget is `429 rate_limited` and charges nothing. Like the other budgets they count per Cloudflare location, so they slow a flood and the lockout is the control.
-- **The time to try every PIN**: five tries at once, five after 15 minutes, five more after an hour and 15 minutes, then five a day. For the 10,000 four-digit PINs, less the 24 runs and repeats that are refused, that is about 2,000 days to try them all, and half that on average. A longer PIN costs a guesser more: a six-digit one is a hundred times that.
+| Since the last Google proof | Guesses | Then |
+|---|---|---|
+| first 5 wrong | 5 | locked 15 minutes |
+| next 5 wrong | 10 | locked 1 hour |
+| next 5 wrong | **15** | **the PIN is turned off** (`403 pin_disabled`, the same error shape) until Forgot PIN, a Google sign-in just made |
+
+- **15 guesses per Google proof**, whatever the parent does between: a parent typing the right PIN clears the count of wrong ones, and **only that**. The ladder (how long the next lock is) is not reset by a success: it steps down one rung for each 7 clean days since the last lock. Before this, a success reset the ladder, which gave a child about 465 guesses a term (4.7% of 10,000 four-digit PINs), and about 1,365 if the parent unlocked daily.
+- **Six digits at least**, so 15 guesses are 0.0015% of a uniform PIN, against 0.15% of four digits. People do not choose uniformly, so the PINs they choose first are not offered (below): a child who guesses a birthday or 123456 gets nothing.
+- **Not offered**: a repeat or a run (000000, 123456, 654321, wrapping 890123), one block said over or each digit doubled (121212, 123123, 112233), a pattern on a phone's keypad (2580, 147852, 159753), anything that parses as a date (DDMMYY, MMDDYY, YYMMDD, month and year, DDMMYYYY, MMDDYYYY, YYYYMMDD; years 1900 to 2035), and a list of about 150 common ones. The server decides; the app checks the same rules to say so before the Google sign-in. Both read `tests/fixtures/weak-pins.json` in their tests, so the lists cannot drift. About 11% of the six-digit PINs are refused.
+- **It is the account's, in D1.** It does not live in a session or on a device, so a new learner session, a second phone or a cleared browser does not reset it. A Google proof (Forgot PIN) clears the lock and the disabling and starts the 15 guesses again.
+- **Each attempt is charged before it is compared**, by one guarded `UPDATE ... RETURNING` that answers only while the account is not locked or disabled and has fewer than five uncleared wrong PINs. The hash is computed only for a request the statement answered, so at most five are computed per lock however many arrive at once, and a request cut off after the charge has still been counted. A wrong PIN then starts the lock with a second guarded statement that takes effect once for the five (`parent_pins.LOCK_SQL`); a lock whose writer was cut off is written by the next attempt. A right PIN clears the count, nothing else.
+- **A test sends 40 wrong attempts at once** with `asyncio.gather`: five hashes are computed, one lock is written, and the rest are told it is locked. That shows the charge is one statement that holds on its own. It does not prove D1's atomicity: in-process SQLite finishes a statement before the next starts. That rests on D1 running a single statement as one transaction, as the TV sign-in's guards do.
+- **The budgets in front of it** (`PIN_LIMITER`, a binding, 10 a minute per key) are one per **session** and one per **source** address (an IPv6 address as its /64), not per account: a child spamming PINs from their session spends their own, and does not hold the parent at `rate_limited`. A request over a budget is `429 rate_limited` and charges nothing. Forgot PIN (a Google sign-in) spends none. Like the other budgets they count per Cloudflare location, so they slow a flood and the lockout is the control.
+- **What the parent is told** (below).
+
+### What a row must be
+
+- `kdf`, `kdf_version` and `iterations` are in the row, and the server hashes only with a function, version and count it accepts (100,000 iterations, the Workers WebCrypto ceiling): a row outside that is treated as no PIN, never hashed with, so a tampered count cannot weaken a hash or cost CPU. A new function is a new version, not a table rebuild.
+- `pepper_id` names the key the hash was made with. After `SESSION_SECRET` is rotated the account answers "no PIN" (`GET` says `hasPin: false`, `verify` says `409 pin_not_set`) and the parent sets a new one with Google, instead of burning attempts on a hash that can never match.
+- **Changing the PIN with the old one is written only against the hash that was typed** (`UPDATE ... WHERE hash = ?old`): two changes at once make one and refuse one (`409 pin_changed`).
 
 ### The parent's session
 
-`POST .../verify` and `PUT .../parent-pin` answer with the session the Google route always made (`par` claim, 15 minutes, the account and no learner), and a `gate` claim, `pin` or `google`. A parent's session made before the claim existed reads as `google`. `ParentUid`, the dependency every parent route uses, still refuses a child's session, an account session and a TV's, as before; it now also reads the PIN's row.
+`POST .../verify` and `PUT .../parent-pin` answer with the session the Google route always made (`par` claim, 15 minutes, the account and no learner), and a `gate` claim, `pin` or `google`. A parent's session made before the claim existed reads as `google`. `ParentUid` (`api/parent_access.py`), the dependency every parent route uses, refuses a child's session, an account session and a TV's, and reads the PIN's row. **It now guards renaming a learner, removing one and adding one** (`PATCH` and `DELETE /api/account/learners/{id}`, `POST /api/account/learners`): before, any account session could, so a child could erase a sibling's records, recordings and consent trail, or fill the account's eight places. A learner is added with the parent's agreement (`consent`, with the parent's session or a fresh Google token in the body, as before), so first-learner creation at onboarding still works: the web asks for the PIN (or sets one) at that agreement. Adding without `consent` needs the parent's session. Listing and choosing a learner stay the account's, a child's included (a TV reads its own learner).
 
-**Setting a PIN ends the parent sessions made before it** (changing it, or resetting it after a Google sign-in, the same). Sessions are signed, not stored, so each parent route compares the session's start with the row's `set_at`: one read of one row by primary key per parent call. A session made in the same second as the reset is kept (the session the reset itself answers with is one). TV sessions are not touched: a TV was linked by a parent, can be removed from the phone's list, and renews from its own credential, none of which a PIN is part of. The TV list is still one parent action away, and a parent who fears a child had the PIN can remove the TVs there.
+**Setting a PIN ends the parent sessions made before it** (changing it, or resetting it after a Google sign-in, the same). Sessions are signed, not stored, so each parent route compares the session's start with the row's `set_at`: one read of one row by primary key per parent call. A session made in the same second as the reset is kept (the session the reset itself answers with is one). **TVs record the gate they were linked under** (`tv_sessions.gate`, from the approving parent's session). A reset with Google signs out the TVs linked with the PIN, since the PIN may have been a child's, and tells the parent how many (`tvsSignedOut`, and in the notice); TVs linked with Google stay. Changing the PIN with the old one signs out none.
 
 ### The consent record
 
-A consent is a row in `consents`; it now carries `gate`, `pin` or `google`, taken from the parent's session the request was made under, or `google` when a Google sign-in is sent with the request (Android sends one, and the routes still accept it). Every consent kept before is `google` (the column's default). Nothing in the app reads the column back: it is for whoever has to decide how much a parent's agreement is worth.
+A consent is a row in `consents`; it now carries `gate`, `pin` or `google`, taken from the parent's session the request was made under, or `google` when a Google sign-in is sent with the request (Android sends one, and the routes still accept it), and `proved_at`, when that parent's session began (or the Google sign-in was made).
+
+**An agreement needs a parent's session under two minutes old** (`403 parent_fresh_required` otherwise). A parent's session lasts 15 minutes for the TV list and the recordings, but a child handed an unlocked phone inside that time must not be able to tap "I agree": the app lets go of a session older than 100 seconds when "I agree" is tapped, so `ParentGate` asks for the PIN again at the consent step, and does the same when the server says it was stale. Recordings retention and service consent are both held to this. Every consent kept before is `google` (the column's default). Nothing in the app reads the column back: it is for whoever has to decide how much a parent's agreement is worth.
 
 **A PIN is weaker evidence of a parent's agreement than a Google sign-in.** A sign-in just made shows the holder of the account typed their Google credentials, or approved on a device that holds them. A PIN shows someone who knows four digits was at the phone: it could be a child who watched the parent type it, or a grandparent the parent told. Whether either is enough for parental consent under the rules that apply to a child's data, under 13 in particular, is an open question for the owner and counsel (the voice recordings' consent is the case that raised it). The decision for PIN-based consent was made knowing this; the `gate` column is how it can be revisited: a consent given through `pin` can be asked for again with Google, one by one or all together, without a migration.
+
+### What the parent is told
+
+`pin_events` records a lock, the PIN turning off, a set and a reset, and what a PIN let through (a TV linked, a consent given); the newest 50 of an account are kept. The You page shows a quiet banner of what the parent has not seen ("Someone entered the wrong PIN 5 times on 20 November", "The PIN was turned off after 15 wrong tries", "The PIN was reset on ... 2 TVs linked with the old PIN were signed out"). Any session of the account may read it, a child's too, which deters more than it harms; **only a parent's session made from Google a moment ago clears it** (`POST .../activity/acknowledge`, "Got it" asks for the Google sign-in), so a child cannot hide their own guesses. There is no email: the notice is what a parent sees next time they use the account.
+
+### Google proofs
+
+The web app's `signInWithGoogle` always asks for the account to be chosen (`prompt=select_account`), and what makes a parent (`reauthenticateWithGoogle`, `signInAsParent`, resetting the PIN, deleting the account, clearing the notice) asks for the credentials again whatever Google's window remembers (`prompt=login`, `max_age=0`), so a phone left signed in to Google does not make a child's tap a proof. The server holds every proof to five minutes by the ID token's own `auth_time`, and a Google parent session to five minutes for deleting the account (`403 google_sign_in_required` after). The emulator ignores those parameters, so this is checked by a test of the call, not by running Google.
 
 ## Threat model
 
@@ -78,22 +104,27 @@ What an attacker wants: a child's recordings, a TV signed in as their learner, o
 
 | Threat | What stops it, and what does not |
 |---|---|
-| A child on the parent's phone guesses the PIN | The lockout above, shared by every session of the account; the answers while locked reveal nothing; the obvious PINs (runs and repeats: 0000, 1234, 4321) cannot be chosen. A child who has watched the PIN typed knows it: nothing in a PIN prevents that, and the 15-minute session is what limits a PIN that was seen once |
-| A child sets or resets the PIN to lock the parent out or to own it | Setting needs a Google sign-in just made as this account (`require_fresh_sign_in`, which also needs Google rather than a password), and changing needs the old PIN or the same. The sign-in is Firebase's `reauthenticateWithPopup`, which opens Google's window. **What it does not stop**: a phone whose Google session is open in the browser, where the window may need only a tap on the account. A child there can do the same today with the Google re-sign-in this replaces |
+| A child on the parent's phone guesses the PIN | 15 guesses per Google proof, six digits at least, the PINs people choose first not offered, the ladder kept across successes (above); the answers while locked or disabled reveal nothing; the notice shows the attempt. A child who has watched the PIN typed knows it: the shuffled pad makes that harder over a shoulder, not impossible (the dots and the finger's path are visible, and a camera sees the layout too), and nothing in a PIN prevents it. The session's 15 minutes and, for an agreement, its two minutes are what limit a PIN that was seen once |
+| A child sets or resets the PIN to lock the parent out or to own it | Setting needs a Google sign-in just made as this account (`require_fresh_sign_in`, which also needs Google rather than a password), and changing needs the old PIN or the same. The sign-in is Firebase's `reauthenticateWithPopup`, which opens Google's window. The credentials are asked for again (`prompt=login`), so a Google window that remembers the account is not enough; **what it does not stop** is a child who knows the parent's Google password |
 | A stolen copy of the table | No PIN is stored. The hash needs the pepper, which is not in the database, to test a guess at all; the salt is per account |
 | A stolen `SESSION_SECRET` | It makes the pepper, so with it and the table every PIN can be tried offline at 15 ms each: ten thousand PINs in minutes. The same secret signs every session, a parent's too, so it is already the key to everything else |
 | Guessing without the lockout (many accounts at once, many addresses) | The lockout is per account, so many addresses do not get more guesses at one account. Many accounts need many Google accounts and a session for each |
 | Two requests at once spending one attempt | The charge is one statement before the compare; see above |
 | Learning whether a PIN is set, or its length | `GET` answers `{hasPin, length}` to any session of the account, a child's included, because the pad needs them. The pad of someone who has none is the "Set" pad, which is no secret on the phone itself. `verify` with no PIN answers `409 pin_not_set` for the same reason |
 | A session of the parent kept after a reset | Ended by the reset (above), not by the clock |
+| A child handed an unlocked phone taps "I agree" | An agreement needs a parent's session under two minutes old; the PIN is asked for again at the consent step |
+| A child renames, removes or adds learners | `ParentUid` on all three; a child's session gets `403 account_required` (and a TV's `403 tv_session`, walked by a test) |
+| A TV linked by a child who knew the PIN stays after the PIN is reset | TVs linked with the PIN are signed out by a reset with Google |
+| A hash made under a rotated secret burns the parent's attempts | `pepper_id`: it reads as no PIN |
 | A child reaching a parent route with a learner's session, a device's or a TV's | `ParentUid` and `Uid` as before; a TV's session reaches no route here (walked by a test) |
-| Deleting the account with the PIN | Needs `gate: google`: `403 google_sign_in_required` for the PIN's session, `403 account_required` for the rest. **Before this change the route needed only the account's session, so a child's session could delete it; that is fixed here, and Android's delete call (`apps/mobile`) must make the parent's session with a Google sign-in first, or it is refused** |
+| Deleting the account with the PIN | Needs `gate: google` and a session under five minutes old: `403 google_sign_in_required` for the PIN's session, `403 account_required` for the rest. **Before this change the route needed only the account's session, so a child's session could delete it; that is fixed here, and Android's delete call (`apps/mobile`) must make the parent's session with a Google sign-in first, or it is refused** |
 | The PIN in a log, an address, storage or a page | Never written; a rejected body is not echoed; the pad has no field. Tests read the log, the address, `localStorage` and the page |
 | Someone watching the PIN typed | Not stopped. The dots show only how many digits there are |
 | A parent who loses the PIN | Forgot PIN: a Google sign-in just made, and a new one. The lock ends with it |
 
 ## Not done
 
+- Email or push to the parent: the notice shows on their next visit only.
 - Removing the PIN, so that a parent action asks for Google again. There is no route: a PIN can only be replaced.
 - Reusing a Google sign-in made a minute ago to save the first PIN. A new parent who has just signed in for the first time signs in with Google a second time when saving the PIN. Reusing the first sign-in would be safe by the server's own rule (the sign-in is fresh for five minutes), and is a change for the owner to ask for.
 - Raising the iteration count, or moving to a stronger function: `kdf` and `iterations` are in the row for it. The Workers runtime's cap is what limits it now.

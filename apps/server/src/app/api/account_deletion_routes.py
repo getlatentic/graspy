@@ -11,9 +11,9 @@ from ..account.learners import closed
 from ..account.parent_pins import forget as forget_pin
 from ..account.tv_sessions import forget_account as forget_tvs
 from ..security.firebase_admin import RemovalFailed
-from .account_parent_routes import GoogleParentUid
 from .account_routes import KeepingDep
 from .consent_proof import refusal
+from .parent_access import GoogleParentUid
 
 logger = logging.getLogger(__name__)
 

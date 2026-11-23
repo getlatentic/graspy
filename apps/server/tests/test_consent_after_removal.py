@@ -4,7 +4,7 @@ not when something other than the learner's absence is what fails."""
 
 import pytest
 from consent_sign_ins import consent_app
-from signed_in import UID, as_parent, client, signed_in
+from signed_in import UID, as_parent, client, parent_headers, signed_in
 from voice_worker import worker_env
 
 from app.account.directory import LearnerRemoved, account_key
@@ -43,7 +43,9 @@ async def added_with_consent(http) -> str:
 
 async def added_without_consent(http) -> str:
     created = await http.post(
-        "/api/account/learners", json={"name": "Ada", "guardian": True}
+        "/api/account/learners",
+        json={"name": "Ada", "guardian": True},
+        headers=await parent_headers(http),
     )
     return created.json()["id"]
 
@@ -70,7 +72,9 @@ async def test_a_consent_sent_while_a_learner_is_being_forgotten_does_not_come_b
             sent_during.append(await http.put(consent_url(learner), json=CONSENT))
 
         monkeypatch.setattr(app.state.keeping.voice, "forget", forgetting)
-        removal = await http.delete(f"/api/account/learners/{learner}")
+        removal = await http.delete(
+            f"/api/account/learners/{learner}", headers=await parent_headers(http)
+        )
 
     assert removal.status_code == 200
     assert [reply.status_code for reply in sent_during] == [404]
@@ -276,7 +280,9 @@ async def test_a_removal_whose_forgetting_fails_once_is_tried_again_and_complete
         learner = await added_with_consent(http)
         key = await kept_for(app, learner)
         forgetting_fails(monkeypatch, app, 1)
-        removal = await http.delete(f"/api/account/learners/{learner}")
+        removal = await http.delete(
+            f"/api/account/learners/{learner}", headers=await parent_headers(http)
+        )
 
     assert removal.status_code == 200
     assert consents(env) == []
@@ -292,9 +298,13 @@ async def test_a_removal_whose_forgetting_keeps_failing_is_finished_by_sending_i
         key = await kept_for(app, learner)
         forgetting_fails(monkeypatch, app, FORGET_TRIES)
         with pytest.raises(RuntimeError):
-            await http.delete(f"/api/account/learners/{learner}")
+            await http.delete(
+                f"/api/account/learners/{learner}", headers=await parent_headers(http)
+            )
         listed_between = await directory_of(app)
-        again = await http.delete(f"/api/account/learners/{learner}")
+        again = await http.delete(
+            f"/api/account/learners/{learner}", headers=await parent_headers(http)
+        )
 
     assert listed_between == []
     assert again.status_code == 404
@@ -308,8 +318,12 @@ async def test_a_removal_of_a_learner_already_gone_answers_404_though_forgetting
     async with client(app) as http:
         await signed_in(http, firebaseIdToken="good")
         learner = await added_with_consent(http)
-        await http.delete(f"/api/account/learners/{learner}")
+        await http.delete(
+            f"/api/account/learners/{learner}", headers=await parent_headers(http)
+        )
         forgetting_fails(monkeypatch, app, 99)
-        again = await http.delete(f"/api/account/learners/{learner}")
+        again = await http.delete(
+            f"/api/account/learners/{learner}", headers=await parent_headers(http)
+        )
 
     assert again.status_code == 404

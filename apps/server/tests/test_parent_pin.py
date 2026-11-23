@@ -14,7 +14,7 @@ import time
 import pytest
 from consent_sign_ins import OTHER_UID, consent_app
 from service_agreed import service_agreed
-from signed_in import UID, as_parent, client, signed_in, use
+from signed_in import UID, as_parent, client, parent_headers, signed_in, use
 from voice_worker import worker_env
 
 from app.account import parent_pin_kdf, parent_pins
@@ -23,8 +23,8 @@ from app.security.session import issue, verify
 
 STATUS = "/api/account/parent-pin"
 VERIFY = f"{STATUS}/verify"
-PIN = "4827"
-OTHER_PIN = "7391"
+PIN = "482915"
+OTHER_PIN = "739164"
 SECRET = "s"
 MINUTE = 60 * 1000
 
@@ -104,13 +104,23 @@ def row(env) -> dict:
 async def test_an_account_without_a_pin_says_so_and_nothing_more(phone):
     status = await phone.get(STATUS)
 
-    assert status.json() == {"hasPin": False, "length": None, "lockedUntil": None}
+    assert status.json() == {
+        "hasPin": False,
+        "length": None,
+        "lockedUntil": None,
+        "disabled": False,
+    }
 
 
 async def test_the_status_says_how_long_the_pin_is_and_that_it_is_not_locked(pinned):
     status = await pinned.get(STATUS)
 
-    assert status.json() == {"hasPin": True, "length": 4, "lockedUntil": None}
+    assert status.json() == {
+        "hasPin": True,
+        "length": 6,
+        "lockedUntil": None,
+        "disabled": False,
+    }
 
 
 async def test_typing_a_pin_the_account_does_not_have_is_told_apart_for_the_app(phone):
@@ -139,20 +149,40 @@ async def test_a_pin_may_be_eight_digits_and_no_longer_or_shorter(phone):
     assert (
         await set_pin(phone, "48271935", firebaseIdToken="fresh")
     ).status_code == 200
-    for bad in ("482", "482719356", "48a7", "4 27", "", "４８２７"):
+    for bad in ("48291", "482719356", "48a715", "48 915", "", "４８２９１５"):
         refused = await set_pin(phone, bad, firebaseIdToken="fresh")
         assert refused.status_code == 422, bad
 
 
 async def test_a_rejected_pin_is_not_echoed_back_or_logged(phone, caplog):
     with caplog.at_level(logging.DEBUG):
-        refused = await set_pin(phone, "48x2", firebaseIdToken="fresh")
+        refused = await set_pin(phone, "48x215", firebaseIdToken="fresh")
 
     assert refused.status_code == 422
-    assert "48x2" not in refused.text and "48x2" not in caplog.text
+    assert "48x215" not in refused.text and "48x215" not in caplog.text
 
 
-@pytest.mark.parametrize("easy", ["0000", "1111", "1234", "4321", "123456", "98765432"])
+@pytest.mark.parametrize(
+    "easy",
+    [
+        "000000",
+        "111111",
+        "123456",
+        "654321",
+        "987654",
+        "121212",
+        "123123",
+        "112233",
+        "258369",
+        "147852",
+        "159753",
+        "250199",
+        "01012000",
+        "19991231",
+        "123321",
+        "520520",
+    ],
+)
 async def test_a_run_or_a_repeat_is_not_accepted_as_a_pin(phone, easy):
     refused = await set_pin(phone, easy, firebaseIdToken="fresh")
 
@@ -196,13 +226,31 @@ async def test_a_child_on_the_phone_cannot_set_the_pin_by_knowing_the_old_one_th
 
 async def test_the_pin_is_kept_as_a_salted_keyed_hash_and_nowhere_else(pinned, env):
     kept = row(env)
+    salt = bytes.fromhex(kept["salt"])
+    pepper = parent_pin_kdf.pepper_of(SECRET)
 
     assert kept["kdf"] == "pbkdf2-sha256" and kept["iterations"] == 100_000
-    assert kept["pin_length"] == 4
-    assert PIN not in str(kept)
-    assert len(bytes.fromhex(kept["salt"])) == 16
-    assert len(bytes.fromhex(kept["hash"])) == 32
-    assert kept["hash"] != hashlib.sha256(PIN.encode()).hexdigest()
+    assert kept["pin_length"] == 6
+    assert len(salt) == 16 and len(bytes.fromhex(kept["hash"])) == 32
+    # What is stored is the keyed, salted derivation, and none of the plain ones.
+    assert kept["hash"] == await parent_pin_kdf.hash_pin(pepper, UID, PIN, salt)
+    plain = {
+        hashlib.sha256(PIN.encode()).hexdigest(),
+        hashlib.pbkdf2_hmac("sha256", PIN.encode(), salt, 100_000, 32).hex(),
+        hashlib.pbkdf2_hmac("sha256", PIN.encode(), b"", 100_000, 32).hex(),
+        PIN.encode().hex(),
+    }
+    assert kept["hash"] not in plain
+    # No stored field is, or is made of, the PIN as typed.
+    assert all(
+        PIN not in str(value)
+        for key, value in kept.items()
+        if key not in ("hash", "salt")
+    )
+    assert all(
+        value != PIN and value != PIN.encode().hex()
+        for value in (kept["hash"], kept["salt"])
+    )
     assert not any(PIN in str(table) for table in env.DB.rows("SELECT * FROM consents"))
 
 
@@ -268,7 +316,9 @@ async def test_the_session_made_from_the_pin_reaches_what_only_the_parent_may(
 ):
     learner = (
         await pinned.post(
-            "/api/account/learners", json={"name": "Ada", "guardian": True}
+            "/api/account/learners",
+            json={"name": "Ada", "guardian": True},
+            headers=await parent_headers(pinned),
         )
     ).json()["id"]
     url = f"/api/account/learners/{learner}/voice"
@@ -304,10 +354,10 @@ async def test_a_wrong_pin_is_refused_with_the_attempts_left(pinned):
 
 
 async def test_a_wrong_pin_of_the_right_length_and_of_another_look_the_same(pinned):
-    short = await typed(pinned, "482")
+    short = await typed(pinned, "48291")
     assert short.status_code == 422
     wrong = await typed(pinned, OTHER_PIN)
-    longer = await typed(pinned, "48271")
+    longer = await typed(pinned, "4829151")
 
     assert wrong.status_code == longer.status_code == 403
     assert set(wrong.json()["detail"]) == set(longer.json()["detail"])
@@ -343,7 +393,7 @@ async def test_while_locked_even_the_right_pin_is_turned_away(pinned, clock):
     assert "token" not in right.text
 
 
-async def test_when_the_lock_ends_the_right_pin_works_and_clears_the_count(
+async def test_when_the_lock_ends_the_right_pin_works_and_clears_the_count_only(
     pinned, clock, env
 ):
     await wrong_five(pinned)
@@ -352,30 +402,97 @@ async def test_when_the_lock_ends_the_right_pin_works_and_clears_the_count(
     right = await typed(pinned, PIN)
 
     assert right.status_code == 200
-    assert (
-        row(env)["failed_count"],
-        row(env)["lockouts"],
-        row(env)["locked_until"],
-    ) == (
-        0,
-        0,
-        0,
-    )
+    kept = row(env)
+    # The count is cleared; how far up the ladder the account is, and the locks since the last
+    # Google proof, are not: they are the guess budget.
+    assert (kept["failed_count"], kept["lockouts"], kept["proof_locks"]) == (0, 1, 1)
 
 
-async def test_the_lock_grows_to_an_hour_and_then_a_day_and_a_right_pin_starts_again(
-    pinned, clock
-):
+async def test_the_lock_grows_to_an_hour_and_the_third_turns_the_pin_off(pinned, clock):
     locks = []
-    for _ in range(4):
+    for _ in range(2):
         last = (await wrong_five(pinned))[-1]
         locks.append(last.json()["detail"]["lockedUntil"] - clock.ms)
         clock.advance(locks[-1])
+    third = (await wrong_five(pinned))[-1]
 
-    assert locks == [15 * MINUTE, 60 * MINUTE, 24 * 60 * MINUTE, 24 * 60 * MINUTE]
+    assert locks == [15 * MINUTE, 60 * MINUTE]
+    assert (third.status_code, third.json()["detail"]["code"]) == (403, "pin_disabled")
+    assert set(third.json()["detail"]) == {"error", "code"}
+
+
+async def test_a_pin_that_is_turned_off_refuses_even_the_right_one_for_ever(
+    pinned, clock, env
+):
+    for _ in range(3):
+        await wrong_five(pinned)
+        clock.advance(25 * 60 * MINUTE)
+
+    right = await typed(pinned, PIN)
+    status = (await pinned.get(STATUS)).json()
+
+    assert (right.status_code, right.json()["detail"]["code"]) == (403, "pin_disabled")
+    assert status["disabled"] is True and status["hasPin"] is True
+    assert "token" not in right.text
+
+
+async def test_fifteen_guesses_are_all_a_child_gets_per_google_proof(
+    pinned, clock, monkeypatch
+):
+    compared = []
+    real = parent_pin_kdf.hash_pin
+
+    async def counting(*args, **kwargs):
+        compared.append(1)
+        return await real(*args, **kwargs)
+
+    monkeypatch.setattr("app.account.parent_pins.hash_pin", counting)
+    for _ in range(6):
+        await wrong_five(pinned)
+        clock.advance(25 * 60 * MINUTE)
+
+    assert len(compared) == 15
+
+
+async def test_forgot_pin_with_google_turns_a_disabled_pin_on_again(pinned, clock, env):
+    for _ in range(3):
+        await wrong_five(pinned)
+        clock.advance(25 * 60 * MINUTE)
+
+    reset = await set_pin(pinned, OTHER_PIN, firebaseIdToken="fresh")
+
+    assert reset.status_code == 200
+    kept = row(env)
+    assert (kept["disabled"], kept["proof_locks"], kept["failed_count"]) == (0, 0, 0)
+    assert (await typed(pinned, OTHER_PIN)).status_code == 200
+
+
+async def test_a_right_pin_does_not_climb_down_the_ladder(pinned, clock):
+    await wrong_five(pinned)
+    clock.advance(15 * MINUTE)
     assert (await typed(pinned, PIN)).status_code == 200
+
+    second = (await wrong_five(pinned))[-1]
+
+    assert second.json()["detail"]["lockedUntil"] - clock.ms == 60 * MINUTE
+
+
+async def test_the_ladder_steps_down_one_rung_for_each_clean_week(pinned, clock):
+    await wrong_five(pinned)
+    clock.advance(15 * MINUTE + 7 * 24 * 60 * MINUTE)
+
     again = (await wrong_five(pinned))[-1]
+
     assert again.json()["detail"]["lockedUntil"] - clock.ms == 15 * MINUTE
+
+
+async def test_a_clean_six_days_does_not_step_it_down(pinned, clock):
+    await wrong_five(pinned)
+    clock.advance(6 * 24 * 60 * MINUTE)
+
+    again = (await wrong_five(pinned))[-1]
+
+    assert again.json()["detail"]["lockedUntil"] - clock.ms == 60 * MINUTE
 
 
 async def test_a_wrong_pin_after_a_lock_counts_from_one_again(pinned, clock):
@@ -429,10 +546,19 @@ async def test_attempts_at_once_are_counted_each_and_only_five_are_compared(
     answers = await asyncio.gather(*(typed(pinned, OTHER_PIN) for _ in range(40)))
 
     codes = [a.json()["detail"]["code"] for a in answers]
-    assert codes.count("pin_wrong") == 4
-    assert codes.count("pin_locked") == 36
+    assert set(codes) <= {"pin_wrong", "pin_locked"}
+    assert codes.count("pin_wrong") <= 4
     assert len(compared) == 5
-    assert (row(env)["failed_count"], row(env)["lockouts"]) == (0, 1)
+    # One lock for the five, however they interleave.
+    assert (
+        row(env)["failed_count"],
+        row(env)["lockouts"],
+        row(env)["proof_locks"],
+    ) == (
+        0,
+        1,
+        1,
+    )
 
 
 async def test_a_right_pin_among_wrong_ones_at_once_is_the_only_way_in(
@@ -461,14 +587,14 @@ async def test_an_attempt_cut_off_after_it_was_charged_stays_counted(
 # The budgets in front of it
 
 
-async def test_a_typed_pin_spends_the_budget_of_the_account_and_of_the_source(
+async def test_a_typed_pin_spends_the_budget_of_the_session_and_of_the_source(
     app, pinned
 ):
     app.state.pin_limiter = budget = Budget()
 
     await typed(pinned, OTHER_PIN)
 
-    assert budget.keys[0] == f"pin:account:{UID}"
+    assert budget.keys[0].startswith(f"pin:session:{UID}:")
     assert budget.keys[1].startswith("pin:source:") and len(budget.keys) == 2
 
 
@@ -509,7 +635,7 @@ async def test_the_old_pin_changes_the_pin_and_the_session_says_it_was_the_pin(p
 async def test_a_wrong_old_pin_changes_nothing_and_is_counted_with_the_rest(
     pinned, env
 ):
-    refused = await set_pin(pinned, "5926", currentPin=OTHER_PIN)
+    refused = await set_pin(pinned, "264819", currentPin=OTHER_PIN)
 
     assert (refused.status_code, refused.json()["detail"]["attemptsLeft"]) == (403, 4)
     assert row(env)["failed_count"] == 1
@@ -517,7 +643,7 @@ async def test_a_wrong_old_pin_changes_nothing_and_is_counted_with_the_rest(
 
 
 async def test_guessing_through_the_change_route_meets_the_same_lock(pinned, clock):
-    answers = [await set_pin(pinned, "5926", currentPin=OTHER_PIN) for _ in range(5)]
+    answers = [await set_pin(pinned, "264819", currentPin=OTHER_PIN) for _ in range(5)]
 
     assert answers[-1].status_code == 429
     assert (await typed(pinned, PIN)).status_code == 429
@@ -543,26 +669,33 @@ async def test_forgot_pin_is_a_sign_in_just_made_and_it_ends_a_lock(pinned, cloc
     assert (await typed(pinned, OTHER_PIN)).status_code == 200
 
 
-async def test_setting_a_pin_ends_the_parent_sessions_made_before_it(pinned, env):
-    learner = (
-        await pinned.post(
-            "/api/account/learners", json={"name": "Ada", "guardian": True}
-        )
-    ).json()["id"]
+@pytest.fixture
+def one_clock(clock, monkeypatch):
+    """Sessions and the lockout keep the same time, so a reset can come after them."""
+    monkeypatch.setattr(time, "time", lambda: clock.ms / 1000)
+    return clock
+
+
+async def test_setting_a_pin_ends_the_parent_sessions_made_before_it(pinned, one_clock):
+    learner = await added_learner(pinned)
     url = f"/api/account/learners/{learner}/voice"
     old = (await typed(pinned, PIN)).json()
     google = await as_parent_of(pinned)
     for session in (old, google):
         use(pinned, session)
         assert (await pinned.get(url)).status_code == 200
-    # A session made in the second of a reset is kept; these were made earlier than that.
-    env.DB.connection.execute("UPDATE parent_pins SET set_at = set_at + 5000")
+    one_clock.advance(3000)
 
+    reset = await set_pin(pinned, OTHER_PIN, firebaseIdToken="fresh")
+
+    assert reset.status_code == 200
     for session in (old, google):
         use(pinned, session)
         refused = await pinned.get(url)
         assert refused.status_code == 403
         assert refused.json()["detail"]["code"] == "account_required"
+    use(pinned, reset.json())
+    assert (await pinned.get(url)).status_code == 200
 
 
 async def as_parent_of(http) -> dict:
@@ -573,11 +706,7 @@ async def as_parent_of(http) -> dict:
 
 
 async def test_the_session_a_reset_makes_is_not_ended_by_that_reset(pinned, env):
-    learner = (
-        await pinned.post(
-            "/api/account/learners", json={"name": "Ada", "guardian": True}
-        )
-    ).json()["id"]
+    learner = await added_learner(pinned)
     reset = await set_pin(pinned, OTHER_PIN, firebaseIdToken="fresh")
     use(pinned, reset.json())
 
@@ -586,22 +715,46 @@ async def test_the_session_a_reset_makes_is_not_ended_by_that_reset(pinned, env)
     ).status_code == 200
 
 
-async def test_a_reset_leaves_the_tvs_of_the_account_signed_in(pinned, env):
+def add_tv(env, tv_id: str, gate: str) -> None:
     env.DB.connection.execute(
         "INSERT INTO tv_sessions (id, refresh_hash, account_uid, learner_id, label, "
-        "created_at, last_used_at, expires_at) VALUES ('t1', 'h', ?, 'l', 'TV', 1, 1, ?)",
-        (UID, 2**50),
+        "created_at, last_used_at, expires_at, gate) VALUES (?, ?, ?, 'l', 'TV', 1, 1, ?, ?)",
+        (tv_id, tv_id, UID, 2**50, gate),
     )
 
-    await set_pin(pinned, OTHER_PIN, firebaseIdToken="fresh")
 
+async def test_a_reset_with_google_signs_out_the_tvs_linked_with_the_pin_and_no_others(
+    pinned, env
+):
+    add_tv(env, "t-pin", "pin")
+    add_tv(env, "t-google", "google")
+
+    reset = await set_pin(pinned, OTHER_PIN, firebaseIdToken="fresh")
+
+    assert reset.json()["tvsSignedOut"] == 1
+    assert env.DB.rows(
+        "SELECT id, revoked_at IS NOT NULL AS gone FROM tv_sessions"
+    ) == [
+        {"id": "t-pin", "gone": 1},
+        {"id": "t-google", "gone": 0},
+    ]
+
+
+async def test_changing_the_pin_with_the_old_one_signs_out_no_tv(pinned, env):
+    add_tv(env, "t-pin", "pin")
+
+    changed = await set_pin(pinned, OTHER_PIN, currentPin=PIN)
+
+    assert changed.json()["tvsSignedOut"] == 0
     assert env.DB.rows("SELECT revoked_at FROM tv_sessions") == [{"revoked_at": None}]
 
 
 async def test_the_google_parent_session_still_works_where_there_is_no_pin(phone):
     learner = (
         await phone.post(
-            "/api/account/learners", json={"name": "Ada", "guardian": True}
+            "/api/account/learners",
+            json={"name": "Ada", "guardian": True},
+            headers=await parent_headers(phone),
         )
     ).json()["id"]
     await as_parent(phone)
@@ -667,7 +820,9 @@ async def consent_of(env) -> dict:
 
 async def added_learner(http) -> str:
     created = await http.post(
-        "/api/account/learners", json={"name": "Ada", "guardian": True}
+        "/api/account/learners",
+        json={"name": "Ada", "guardian": True},
+        headers=await parent_headers(http),
     )
     return created.json()["id"]
 

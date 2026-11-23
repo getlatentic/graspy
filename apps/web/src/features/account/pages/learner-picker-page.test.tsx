@@ -80,8 +80,9 @@ beforeEach(() => {
   parentSession.grant();
   getPinStatus.mockResolvedValue({
     hasPin: true,
-    length: 4,
+    length: 6,
     lockedUntil: null,
+    disabled: false,
   });
   window.localStorage.clear();
   signedInAs(null);

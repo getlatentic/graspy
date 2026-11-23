@@ -112,6 +112,12 @@ async def tv(app):
         yield http
 
 
+@pytest.fixture
+async def tv2(app):
+    async with client(app) as http:
+        yield http
+
+
 async def requested(tv, **headers) -> dict:
     response = await tv.post(START, headers={"User-Agent": SAMSUNG, **headers})
     assert response.status_code == 201, response.text
@@ -167,6 +173,51 @@ def rows(app, table: str) -> list[dict]:
         dict(row)
         for row in app.state.tv_db.connection.execute(f"SELECT * FROM {table}")
     ]
+
+
+# The gate a TV was linked under
+
+
+async def as_pin_parent(phone) -> None:
+    """The phone's parent session is the PIN's: a PIN is set with Google, then typed."""
+    await phone.put(
+        "/api/account/parent-pin", json={"pin": "482915", "firebaseIdToken": "fresh"}
+    )
+    use(
+        phone,
+        (
+            await phone.post("/api/account/parent-pin/verify", json={"pin": "482915"})
+        ).json(),
+    )
+
+
+async def test_a_tv_keeps_which_gate_its_parent_passed_to_link_it(
+    app, tv, tv2, phone, clock
+):
+    await signed_in_tv(tv, phone, clock)
+    await as_pin_parent(phone)
+    await signed_in_tv(tv2, phone, clock)
+
+    assert [r["gate"] for r in rows(app, "tv_sessions")] == ["google", "pin"]
+    assert [r["kind"] for r in rows(app, "pin_events") if r["kind"] == "tv_linked"] == [
+        "tv_linked"
+    ]
+
+
+async def test_a_reset_with_google_signs_out_the_tv_linked_with_the_pin_only(
+    tv, tv2, phone, clock
+):
+    answer = await signed_in_tv(tv, phone, clock)
+    await as_pin_parent(phone)
+    pinned_answer = await signed_in_tv(tv2, phone, clock)
+
+    reset = await phone.put(
+        "/api/account/parent-pin", json={"pin": "739164", "firebaseIdToken": "fresh"}
+    )
+
+    assert reset.json()["tvsSignedOut"] == 1
+    assert (await renew(tv, answer["refreshToken"])).status_code == 200
+    assert (await renew(tv2, pinned_answer["refreshToken"])).status_code == 401
 
 
 # What a TV is asked for and shown
@@ -1896,18 +1947,18 @@ def test_every_route_of_the_app_is_classified_so_a_new_one_is_decided_on(app):
 # The schema, from the migration alone
 
 
-def test_every_statement_the_code_runs_compiles_against_the_schema_of_0025_alone():
-    """Built from 0025_tv_sign_in.sql and nothing else, so a column or an index the code needs
+def test_every_statement_the_code_runs_compiles_against_the_schema_of_0025_and_0026_alone():
+    """Built from 0025_tv_sign_in.sql and 0026_parent_pin.sql (which adds to its tables) and nothing else, so a column or an index the code needs
     and the migration lacks fails here, not in a deployed database. The statements are compiled
     (EXPLAIN), not run."""
     import sqlite3
     from pathlib import Path
 
-    migration = (
-        Path(tv_links.__file__).parents[3] / "migrations" / "0025_tv_sign_in.sql"
-    )
+    migrations = Path(tv_links.__file__).parents[3] / "migrations"
     database = sqlite3.connect(":memory:")
-    database.executescript(migration.read_text())
+    for name in ("0018_consents.sql", "0025_tv_sign_in.sql"):
+        database.executescript((migrations / name).read_text())
+    database.executescript((migrations / "0026_parent_pin.sql").read_text())
     statements = {
         f"{module.__name__}.{name}": value
         for module in (tv_links, tv_sessions)
