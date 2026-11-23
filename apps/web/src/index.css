@@ -39,20 +39,20 @@ html {
     color-scheme: light dark;
   }
 
-  /* How far a picture is dimmed: in the dark colour set, and not under `.theme-light`, which
-     keeps its subtree in the light one. */
+  /* The filter on a picture: a dim in the dark colour set, none (so no extra compositing layer)
+     otherwise and under `.theme-light`, which keeps its subtree in the light set. */
   :root {
-    --picture-brightness: 1;
+    --picture-filter: none;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --picture-brightness: 0.9;
+      --picture-filter: brightness(0.9);
     }
   }
 
   .theme-light {
-    --picture-brightness: 1;
+    --picture-filter: none;
   }
 
   body {
@@ -200,15 +200,15 @@ html {
   }
 }
 
+@utility picture-dim {
+  filter: var(--picture-filter);
+}
+
 /* The split layout: two halves the height of the screen. It needs a landscape
    screen at least 64rem wide (a container query on the page's root, so the
    width is the page's own) and 40rem tall; anything less keeps the single
    column that scrolls as a page, which is also where a form that cannot fit
    goes. */
-@utility picture-dim {
-  filter: brightness(var(--picture-brightness));
-}
-
 @custom-variant split {
   @media (orientation: landscape) and (min-height: 40rem) {
     @container (min-width: 64rem) {

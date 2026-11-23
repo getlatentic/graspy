@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ROOT_SIZE_LANDSCAPE, ROOT_SIZE_PORTRAIT } from "./art-urls";
 
 type ReadFile = (path: URL, encoding: "utf8") => string;
 
@@ -16,11 +17,26 @@ describe("picture dimming", () => {
   it("dims only under the dark colour set, never in a `.theme-light` subtree", async () => {
     const css = await indexCss();
     expect(css).toMatch(
-      /prefers-color-scheme: dark\) \{\s*:root \{\s*--picture-brightness: 0\.9;/,
+      /prefers-color-scheme: dark\) \{\s*:root \{\s*--picture-filter: brightness\(0\.9\);/,
     );
-    expect(css).toMatch(/\.theme-light \{\s*--picture-brightness: 1;/);
+    expect(css).toMatch(/:root \{\s*--picture-filter: none;/);
+    expect(css).toMatch(/\.theme-light \{\s*--picture-filter: none;/);
     expect(css).toMatch(
-      /@utility picture-dim \{\s*filter: brightness\(var\(--picture-brightness\)\);/,
+      /@utility picture-dim \{\s*filter: var\(--picture-filter\);/,
+    );
+  });
+});
+
+describe("picture sizes", () => {
+  it("read the root font size from the expressions index.css sets", async () => {
+    const css = await indexCss();
+    const rootSize = (opening: string) =>
+      new RegExp(`${opening}\\s*html \\{\\s*font-size: ([^;]+);`)
+        .exec(css)?.[1]
+        ?.replace("100%", "1rem");
+    expect(rootSize("\\*/")).toBe(ROOT_SIZE_LANDSCAPE);
+    expect(rootSize("\\(orientation: portrait\\) \\{")).toBe(
+      ROOT_SIZE_PORTRAIT,
     );
   });
 });

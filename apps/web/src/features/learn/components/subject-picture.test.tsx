@@ -74,6 +74,11 @@ describe("SubjectPicture", () => {
     );
   });
 
+  it("carries the dimming class on the picture, which the stylesheet turns on only in the dark set", () => {
+    const img = shown({ name: "Mathematics" }).querySelector("img")!;
+    expect(img.classList.contains("picture-dim")).toBe(true);
+  });
+
   it("loads lazily unless it is the page's largest paint", () => {
     const lazy = shown({ name: "Mathematics" }).querySelector("img")!;
     expect(lazy.getAttribute("loading")).toBe("lazy");

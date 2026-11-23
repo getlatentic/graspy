@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AgeBand } from "@/lib/age-band";
-import { ART_NAMES, artSrcSet, artUrl } from "./art-urls";
+import { ART_NAMES, artSizes, artSrcSet, artUrl } from "./art-urls";
 
 const BANDS: AgeBand[] = ["child", "tween", "teen"];
 
@@ -45,6 +45,25 @@ describe("artUrl", () => {
       if (!(await exists(url))) missing.push(url);
     }
     expect(missing).toEqual([]);
+  });
+});
+
+describe("artSizes", () => {
+  it("writes a width in rem from the page's root size, for each orientation", () => {
+    expect(artSizes([{ rem: 3 }, { from: 40, rem: 4 }])).toBe(
+      [
+        "(orientation: portrait) and (min-width: 40rem) calc(4 * max(1rem, min(1.0417vh, 1.8519vw)))",
+        "(min-width: 40rem) calc(4 * max(1rem, min(1.0417vw, 1.8519vh)))",
+        "(orientation: portrait) calc(3 * max(1rem, min(1.0417vh, 1.8519vw)))",
+        "calc(3 * max(1rem, min(1.0417vw, 1.8519vh)))",
+      ].join(", "),
+    );
+  });
+
+  it("writes a width in vw as it is, widest breakpoint first", () => {
+    expect(artSizes([{ vw: 45 }, { from: 64, vw: 27 }])).toBe(
+      "(min-width: 64rem) 27vw, 45vw",
+    );
   });
 });
 

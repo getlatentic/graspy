@@ -1,4 +1,5 @@
 import { ArrowRight, ChevronRight } from "lucide-react";
+import { artSizes } from "@/components/brand/art-urls";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,13 @@ const PICTURE_SIZE: Record<AgeBand, string> = {
   child: "size-16 sm:size-24 lg:size-32",
   tween: "size-16 sm:size-24 lg:size-28",
   teen: "size-12 sm:size-16 lg:size-20",
+};
+
+// The widths of PICTURE_SIZE, in rem.
+const PICTURE_SIZES: Record<AgeBand, string> = {
+  child: artSizes([{ rem: 4 }, { from: 40, rem: 6 }, { from: 64, rem: 8 }]),
+  tween: artSizes([{ rem: 4 }, { from: 40, rem: 6 }, { from: 64, rem: 7 }]),
+  teen: artSizes([{ rem: 3 }, { from: 40, rem: 4 }, { from: 64, rem: 5 }]),
 };
 
 interface ResumeCardProps {
@@ -45,7 +53,7 @@ export function ResumeCard({
           <SubjectPicture
             name={subject.name}
             priority
-            sizes="(min-width: 64rem) 128px, (min-width: 40rem) 96px, 64px"
+            sizes={PICTURE_SIZES[band]}
             frame={band === "teen" ? "small" : "full"}
             className={PICTURE_SIZE[band]}
             iconClassName="size-8 sm:size-10 lg:size-14"

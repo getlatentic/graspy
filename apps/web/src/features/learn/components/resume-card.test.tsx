@@ -53,6 +53,16 @@ describe("ResumeCard picture", () => {
     expect(img.getAttribute("fetchpriority")).toBe("high");
   });
 
+  it("tells the browser the width it is shown at from the page's root size, smaller for a teen", () => {
+    const child = pictureFor("child").img.getAttribute("sizes");
+    cleanup();
+    const teen = pictureFor("teen").img.getAttribute("sizes");
+
+    expect(child).toContain("calc(8 * max(1rem,");
+    expect(teen).toContain("calc(5 * max(1rem,");
+    expect(child).not.toMatch(/\dpx/);
+  });
+
   it("is a small hairline-framed mark for a teen and a large bold-framed one for a child", () => {
     const child = pictureFor("child").box.className;
     cleanup();

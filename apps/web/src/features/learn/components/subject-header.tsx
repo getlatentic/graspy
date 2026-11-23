@@ -1,7 +1,11 @@
+import { artSizes } from "@/components/brand/art-urls";
 import type { CurriculumSource } from "@/lib/curriculum-record";
 import { BackLink } from "@/components/ui/back-link";
 import { useI18n } from "@/lib/i18n-context";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
+
+// size-14, and size-16 from sm.
+const PICTURE_SIZES = artSizes([{ rem: 3.5 }, { from: 40, rem: 4 }]);
 
 interface SubjectHeaderProps {
   name: string;
@@ -26,7 +30,7 @@ export function SubjectHeader({
         <SubjectPicture
           name={name}
           frame="small"
-          sizes="(min-width: 40rem) 64px, 56px"
+          sizes={PICTURE_SIZES}
           className="size-14 sm:size-16"
           iconClassName="size-7 sm:size-8"
         />
