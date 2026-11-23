@@ -38,7 +38,7 @@ export default function OnboardingLayout({
         {t("onboarding.skip")}
       </a>
       <div className="@container min-h-dvh">
-        <div className="grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
+        <div className="safe-frame grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
           <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 @2xl:px-6 split:px-12 split:pt-11 split:@7xl:px-24">
             <Link
               to="/"

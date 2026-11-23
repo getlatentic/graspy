@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { useRef } from "react";
 import { flushSync } from "react-dom";
 import { useI18n } from "@/lib/i18n-context";
+import { arrivedByArrow } from "@/lib/spatial-nav";
 import { SEARCH_KEY, useCombobox } from "../hooks/use-combobox";
 import type { SelectOption } from "../lib/select-options";
 import SelectListbox from "./select-listbox";
@@ -74,7 +75,9 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           readOnly={!typing}
           inputMode={typing ? "search" : "none"}
           onChange={(event) => combobox.search(event.target.value)}
-          onFocus={combobox.open}
+          onFocus={() => {
+            if (!arrivedByArrow()) combobox.open();
+          }}
           onClick={combobox.open}
           onKeyDown={onKeyDown}
           placeholder={props.placeholder}

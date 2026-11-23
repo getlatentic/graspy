@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { whileArrowMoves } from "@/lib/spatial-nav/arrival";
 import { KeysApp } from "@/test/keys-app";
 import SearchableSelect from "./searchable-select";
 
@@ -73,9 +74,22 @@ describe("SearchableSelect opening", () => {
     expect(isOpen()).toBe(true);
   });
 
-  it("opens on ArrowUp as well as ArrowDown", () => {
+  it("leaves the arrows to focus navigation while closed, and opens on Alt with Up or Down", () => {
     render(<Picker />);
-    fireEvent.keyDown(field(), { key: "ArrowUp" });
+    for (const key of ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]) {
+      const untouched = fireEvent.keyDown(field(), { key });
+      expect(untouched, key).toBe(true);
+      expect(isOpen(), key).toBe(false);
+    }
+    fireEvent.keyDown(field(), { key: "ArrowUp", altKey: true });
+    expect(isOpen()).toBe(true);
+  });
+
+  it("opens on a focus that an arrow key caused only when OK or a click asks", () => {
+    render(<Picker />);
+    whileArrowMoves(() => field().focus());
+    expect(isOpen()).toBe(false);
+    fireEvent.keyDown(field(), { key: "Enter" });
     expect(isOpen()).toBe(true);
   });
 
@@ -372,7 +386,7 @@ describe("SearchableSelect jumping", () => {
 
   it("steps by letter with the arrows and the toolbar's buttons, which leave the focus on the field", () => {
     render(<Countries />);
-    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "Enter" });
     fireEvent.keyDown(field(), { key: "ArrowRight" });
     expect(active()).toBe("country-option-belgium");
     const next = letterButton(/nextLetter/i);
@@ -387,7 +401,7 @@ describe("SearchableSelect jumping", () => {
 
   it("follows the writing direction: in right-to-left, Left is the next letter", () => {
     render(<Countries dir="rtl" />);
-    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "Enter" });
     fireEvent.keyDown(field(), { key: "ArrowLeft" });
     expect(active()).toBe("country-option-belgium");
     fireEvent.keyDown(field(), { key: "ArrowRight" });
@@ -396,7 +410,7 @@ describe("SearchableSelect jumping", () => {
 
   it("moves a page with PageDown and PageUp and to the ends with Home and End", () => {
     render(<Countries />);
-    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "Enter" });
     fireEvent.keyDown(field(), { key: "PageDown" });
     expect(active()).toBe("country-option-ghana");
     fireEvent.keyDown(field(), { key: "PageDown" });

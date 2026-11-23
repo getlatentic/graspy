@@ -7,4 +7,5 @@ export function contactHref(subject?: string): string {
   return `mailto:${CONTACT_EMAIL}${query}`;
 }
 
-export const PAGE = "mx-auto w-full max-w-5xl px-5 sm:px-8";
+export const PAGE =
+  "mx-auto w-full max-w-5xl px-[max(1.25rem,var(--page-gutter))] sm:px-[max(2rem,var(--page-gutter))]";

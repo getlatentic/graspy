@@ -24,6 +24,9 @@ const MOVES_IN_LIST = new Set([
   "PageUp",
 ]);
 
+/** Arrows that move focus between controls while the list is closed (a remote's pad must be able to leave the field); Alt with Up or Down opens it, as a native select's does. */
+const ARROWS = new Set(["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]);
+
 /** Turns a read-only select into a text field that filters, from a keyboard (handled by the field, which must also focus it). */
 export const SEARCH_KEY = "/";
 
@@ -172,8 +175,9 @@ export function useCombobox(
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (!typing && onPickingKey(event)) return;
     const { key } = event;
+    if (!typing && !isOpen && ARROWS.has(key) && !event.altKey) return;
+    if (!typing && onPickingKey(event)) return;
     if (!Object.hasOwn(keys, key)) return;
     if (MOVES_IN_LIST.has(key)) event.preventDefault();
     keys[key]();
