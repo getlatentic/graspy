@@ -127,7 +127,23 @@ describe("polling", () => {
     expect(states.at(-1)).toEqual({
       kind: "linking",
       learnerName: "Ada",
+      approver: {},
       busy: false,
+    });
+  });
+
+  it("carries who approved, as the server named them", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: APPROVAL.learner,
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    run();
+    await secondsPass(6);
+
+    expect(states.at(-1)).toMatchObject({
+      kind: "linking",
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
     });
   });
 

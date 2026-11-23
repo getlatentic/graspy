@@ -27,7 +27,13 @@ from ..account.tv_codes import (
     normalised_user_code,
 )
 from ..learner.time import now_ms
-from ..security.rate_limit import RETRY_AFTER_SECONDS, client_key, source_of
+from ..security.guard import Session, require_session
+from ..security.rate_limit import (
+    RETRY_AFTER_SECONDS,
+    client_key,
+    prefix_of,
+    source_of,
+)
 from ..wire import Wire
 from .account_parent_routes import ParentUid
 from .consent_proof import refusal
@@ -59,6 +65,11 @@ def _database(request: Request):
 def _source(request: Request) -> str:
     """The network a request counts against: its address, or an IPv6 address's /64."""
     return source_of(client_key(request.scope))
+
+
+def _prefix(request: Request) -> str:
+    """The wider network around the source: an IPv4 /24, an IPv6 /48."""
+    return prefix_of(client_key(request.scope))
 
 
 def _too_many() -> HTTPException:
@@ -107,6 +118,7 @@ async def request_link(request: Request) -> Requested:
     the person reads off its screen. One source holds a few requests open at a time, and is told
     to slow down (429) before everyone is told the service is full (503)."""
     await _spend(request, f"tv-start:{_source(request)}")
+    await _spend(request, f"tv-start-prefix:{_prefix(request)}")
     try:
         started = await tv_links.start(
             _database(request),
@@ -114,6 +126,7 @@ async def request_link(request: Request) -> Requested:
             device_label(request.headers.get("user-agent")),
             country_of(request.headers.get("cf-ipcountry")),
             _source(request),
+            _prefix(request),
             now_ms(),
         )
     except tv_links.TooManyFromSource:
@@ -137,6 +150,14 @@ class Polling(Wire):
     device_code: str = Field(min_length=20, max_length=128)
 
 
+class Approver(Wire):
+    """Who approved, for the person at the TV to recognise or not."""
+
+    account: str | None = None
+    label: str | None = None
+    country: str | None = None
+
+
 class Polled(Wire):
     status: Literal["pending", "slow_down", "expired", "denied", "linking", "approved"]
     interval: int | None = None
@@ -148,6 +169,7 @@ class Polled(Wire):
     refresh_token: str | None = None
     account: str | None = None
     learner: Learner | None = None
+    approver: Approver | None = None
 
 
 async def _approved_learner(request: Request, uid: str, learner_id: str) -> Learner:
@@ -187,7 +209,16 @@ async def poll_link(request: Request, body: Polling) -> Polled:
             raise
         await tv_links.cancel(_database(request), body.device_code)
         return Polled(status=tv_links.DENIED)
-    return Polled(status=tv_links.LINKING, interval=polled.interval, learner=learner)
+    return Polled(
+        status=tv_links.LINKING,
+        interval=polled.interval,
+        learner=learner,
+        approver=Approver(
+            account=polled.approver_hint,
+            label=polled.approver_label,
+            country=polled.approver_country,
+        ),
+    )
 
 
 @tv_sign_in_router.post(
@@ -241,25 +272,44 @@ class TvSessionResponse(SessionResponse):
     refresh_token: str = Field(serialization_alias="refreshToken")
 
 
+async def _renewable_learner(request: Request, held: dict, now: int) -> Learner:
+    """The learner a TV's credential is for; the credential is revoked when they are gone."""
+    try:
+        return await _approved_learner(request, held["account_uid"], held["learner_id"])
+    except HTTPException as refused:
+        if refused.status_code in GONE:
+            await tv_sessions.revoke(
+                _database(request), held["account_uid"], held["id"], now
+            )
+        raise
+
+
 @tv_sign_in_router.post("/session", response_model=TvSessionResponse)
 async def renew_session(request: Request, body: Renewing) -> TvSessionResponse:
     """The TV's next session, while its credential stands, and the next credential. A credential
     whose learner or consent is gone is revoked, and one presented again after it was replaced
     revokes the TV."""
     now = now_ms()
-    renewed = await tv_sessions.renew(_database(request), body.refresh_token, now)
+    database = _database(request)
+    # The learner and the parent's agreement are checked before the credential changes: a
+    # failure after it would leave the TV without the new one, and its retry would look like a copy.
+    known = await tv_sessions.peek(database, body.refresh_token, now)
+    learner = await _renewable_learner(request, known, now) if known else None
+    renewed = await tv_sessions.renew(
+        database, request.app.state.session_secret, body.refresh_token, now
+    )
     if renewed is None:
         raise refusal(401, "tv_revoked", "This TV is signed out")
-    try:
-        learner = await _approved_learner(
-            request, renewed.account_uid, renewed.learner_id
+    if learner is None:
+        learner = await _renewable_learner(
+            request,
+            {
+                "id": renewed.id,
+                "account_uid": renewed.account_uid,
+                "learner_id": renewed.learner_id,
+            },
+            now,
         )
-    except HTTPException as refused:
-        if refused.status_code in GONE:
-            await tv_sessions.revoke(
-                _database(request), renewed.account_uid, renewed.id, now
-            )
-        raise
     session = learner_session(request, renewed.account_uid, learner, tv=renewed.id)
     return TvSessionResponse(
         token=session.token,
@@ -361,7 +411,12 @@ class Approval(Wire):
 
 
 @tv_sign_in_router.post("/approve", status_code=204)
-async def approve_link(request: Request, uid: ParentUid, body: Approval) -> Response:
+async def approve_link(
+    request: Request,
+    uid: ParentUid,
+    session: Annotated[Session, Depends(require_session)],
+    body: Approval,
+) -> Response:
     """The parent signs the TV in as one of the account's learners. Only the account that looked
     the code up, and only with the last four characters of it as typed from the TV's screen. The
     TV is then asked to confirm the learner before it receives anything."""
@@ -378,7 +433,14 @@ async def approve_link(request: Request, uid: ParentUid, body: Approval) -> Resp
     ):
         raise refusal(409, "too_many_tvs", "Remove a TV before signing in another")
     if not await tv_links.approve(
-        _database(request), link["id"], uid, body.learner_id, now
+        _database(request),
+        link["id"],
+        uid,
+        body.learner_id,
+        now,
+        session.hint,
+        device_label(request.headers.get("user-agent")),
+        country_of(request.headers.get("cf-ipcountry")),
     ):
         raise refusal(409, "already_decided", "That request was already answered")
     return Response(status_code=204)

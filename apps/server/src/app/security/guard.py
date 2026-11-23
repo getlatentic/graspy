@@ -13,6 +13,7 @@ from fastapi import HTTPException, Request
 from .session import (
     InvalidSessionToken,
     account_of,
+    hint_of,
     learner_of,
     parent_of,
     tv_of,
@@ -37,6 +38,8 @@ class Session:
     # A TV's: the id of the credential it was renewed from. It learns as its learner and
     # manages nothing of the account.
     tv: str | None = None
+    # A parent's session: the account's address with most of it hidden.
+    hint: str | None = None
 
 
 def checked(authorization: str | None, secret: str) -> Session | dict:
@@ -52,6 +55,7 @@ def checked(authorization: str | None, secret: str) -> Session | dict:
         account=account_of(claims),
         parent=parent_of(claims),
         tv=tv_of(claims),
+        hint=hint_of(claims),
     )
 
 

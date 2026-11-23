@@ -376,7 +376,10 @@
     "denied": "Your phone said no.",
     "failed": "Couldn't get a code. Try again.",
     "linking": "Linking to {name}",
-    "continue": "Continue"
+    "continue": "Continue",
+    "approvedBy": "Approved by {account} on {device}.",
+    "approvedOn": "Approved on {device}.",
+    "aPhone": "a phone"
   },
   "tvLink": {
     "signIn": "Sign in to link your TV",

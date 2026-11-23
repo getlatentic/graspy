@@ -5,6 +5,8 @@ has the design."""
 import asyncio
 import logging
 import re
+import time
+from dataclasses import replace
 
 import pytest
 from consent_sign_ins import OTHER_UID, consent_app
@@ -18,9 +20,12 @@ from app.account.tv_codes import (
     confirmation_matches,
     device_label,
     hash_secret,
+    masked_email,
     new_user_code,
     normalised_user_code,
+    successor_of,
 )
+from app.api import routes as routes_module
 from app.security.rate_limit import Budgets, source_of
 from app.security.session import TV_TOKEN_TTL_SECONDS, tv_of, verify
 
@@ -56,7 +61,16 @@ def clock(monkeypatch):
 
 @pytest.fixture
 def app(monkeypatch, clock):
-    return consent_app(monkeypatch, worker_env())
+    application = consent_app(monkeypatch, worker_env())
+    signs_in = routes_module.verified
+
+    async def with_address(id_token, api_key, **kwargs):
+        return replace(
+            await signs_in(id_token, api_key, **kwargs), email="tosin@gmail.com"
+        )
+
+    monkeypatch.setattr(routes_module, "verified", with_address)
+    return application
 
 
 async def add_learner(http, name: str, token: str) -> str:
@@ -1018,7 +1032,7 @@ async def test_a_credential_is_kept_only_as_a_hash_and_so_is_the_next(
     assert row["prev_hash"] == hash_secret(answer["refreshToken"])
 
 
-async def test_a_replaced_credential_is_a_copy_and_revokes_the_whole_tv(
+async def test_a_replaced_credential_after_the_grace_is_a_copy_and_revokes_the_whole_tv(
     app, tv, phone, clock
 ):
     answer = await signed_in_tv(tv, phone, clock)
@@ -1034,47 +1048,118 @@ async def test_a_replaced_credential_is_a_copy_and_revokes_the_whole_tv(
     assert rows(app, "tv_sessions")[0]["revoked_at"] is not None
 
 
-async def test_a_lost_answer_is_forgiven_once_within_a_minute(app, tv, phone, clock):
+def test_the_successor_of_a_credential_is_the_same_each_time_and_needs_the_secret():
+    assert successor_of("old", "s") == successor_of("old", "s")
+    assert successor_of("old", "s") != successor_of("old", "t")
+    assert successor_of("old", "s") != successor_of("older", "s")
+    assert len(successor_of("old", "s")) >= 20
+
+
+async def test_a_lost_answer_is_answered_again_with_the_same_successor_twice_in_a_row(
+    app, tv, phone, clock
+):
     answer = await signed_in_tv(tv, phone, clock)
     clock.advance(10)
-    lost = (await renew(tv, answer["refreshToken"])).json()
-    clock.advance(59)
+    first = (await renew(tv, answer["refreshToken"])).json()
+    clock.advance(20)
+    again = (await renew(tv, answer["refreshToken"])).json()
+    clock.advance(20)
+    third = (await renew(tv, answer["refreshToken"])).json()
 
-    retried = await renew(tv, answer["refreshToken"])
-
-    assert retried.status_code == 200
-    retry = retried.json()
-    assert retry["refreshToken"] not in (lost["refreshToken"], answer["refreshToken"])
-    assert (await renew(tv, retry["refreshToken"])).status_code == 200
+    assert first["refreshToken"] == again["refreshToken"] == third["refreshToken"]
     assert len(rows(app, "tv_sessions")) == 1
     assert (await phone.get(DEVICES)).json()["devices"]
 
 
-async def test_the_forgiveness_is_once_and_then_the_old_credential_revokes_the_tv(
+async def test_the_credential_the_first_caller_received_is_still_the_current_one_after_a_redelivery(
+    app, tv, phone, clock
+):
+    answer = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    first = (await renew(tv, answer["refreshToken"])).json()
+    clock.advance(5)
+    await renew(tv, answer["refreshToken"])
+
+    renewed = await renew(tv, first["refreshToken"])
+
+    assert renewed.status_code == 200
+    assert rows(app, "tv_sessions")[0]["revoked_at"] is None
+
+
+async def test_a_replaced_credential_presented_a_third_time_within_the_grace_revokes_the_tv(
     tv, phone, clock
 ):
     answer = await signed_in_tv(tv, phone, clock)
     clock.advance(10)
     await renew(tv, answer["refreshToken"])
-    clock.advance(5)
-    assert (await renew(tv, answer["refreshToken"])).status_code == 200
-    clock.advance(5)
+    for _ in range(tv_sessions.GRACE_REDELIVERIES):
+        clock.advance(1)
+        assert (await renew(tv, answer["refreshToken"])).status_code == 200
+    clock.advance(1)
 
     assert (await renew(tv, answer["refreshToken"])).status_code == 401
     assert (await phone.get(DEVICES)).json() == {"devices": []}
 
 
-async def test_the_credential_the_lost_answer_held_is_not_accepted_after_the_retry(
-    tv, phone, clock
-):
+async def test_a_credential_two_generations_old_revokes_the_tv(tv, phone, clock):
+    first = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    second = (await renew(tv, first["refreshToken"])).json()
+    clock.advance(10)
+    third = (await renew(tv, second["refreshToken"])).json()
+    clock.advance(1)
+
+    assert (await renew(tv, first["refreshToken"])).status_code == 401
+    assert (await renew(tv, third["refreshToken"])).status_code == 401
+
+
+async def test_two_tabs_renewing_at_once_end_with_one_successor(app, tv, phone, clock):
     answer = await signed_in_tv(tv, phone, clock)
     clock.advance(10)
-    lost = (await renew(tv, answer["refreshToken"])).json()
-    clock.advance(5)
-    retry = (await renew(tv, answer["refreshToken"])).json()
 
-    assert (await renew(tv, lost["refreshToken"])).status_code == 401
-    assert (await renew(tv, retry["refreshToken"])).status_code == 200
+    both = await asyncio.gather(
+        renew(tv, answer["refreshToken"]), renew(tv, answer["refreshToken"])
+    )
+
+    assert [one.status_code for one in both] == [200, 200]
+    assert both[0].json()["refreshToken"] == both[1].json()["refreshToken"]
+    assert rows(app, "tv_sessions")[0]["revoked_at"] is None
+    assert (await renew(tv, both[0].json()["refreshToken"])).status_code == 200
+
+
+async def test_a_renewal_that_fails_with_a_503_does_not_use_up_the_credential(
+    app, tv, phone, clock, monkeypatch
+):
+    from fastapi import HTTPException
+
+    from app.api import tv_sign_in_routes
+
+    answer = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    before = rows(app, "tv_sessions")[0]
+    real = tv_sign_in_routes.service_consent_refusal
+    reading = {"works": False}
+
+    async def sometimes(application, key):
+        if reading["works"]:
+            return await real(application, key)
+        return HTTPException(
+            status_code=503, detail={"error": "later", "code": "consent_unavailable"}
+        )
+
+    monkeypatch.setattr(tv_sign_in_routes, "service_consent_refusal", sometimes)
+
+    failed = await renew(tv, answer["refreshToken"])
+    after = rows(app, "tv_sessions")[0]
+    reading["works"] = True
+    retried = await renew(tv, answer["refreshToken"])
+
+    assert failed.status_code == 503
+    assert after["refresh_hash"] == before["refresh_hash"]
+    assert after["prev_hash"] == before["prev_hash"]
+    assert retried.status_code == 200
+    assert rows(app, "tv_sessions")[0]["revoked_at"] is None
+    assert (await renew(tv, retried.json()["refreshToken"])).status_code == 200
 
 
 async def test_a_credential_nobody_issued_is_refused_and_revokes_nothing(
@@ -1199,7 +1284,12 @@ async def test_asking_for_a_code_spends_the_pairing_budget_of_the_source(app, tv
     await requested(tv, **{"CF-Connecting-IP": "198.51.100.7"})
     await requested(tv, **{"CF-Connecting-IP": "2001:db8:1:2:aaaa::1"})
 
-    assert budget.keys == ["tv-start:198.51.100.7", "tv-start:2001:db8:1:2::/64"]
+    assert budget.keys == [
+        "tv-start:198.51.100.7",
+        "tv-start-prefix:198.51.100.0/24",
+        "tv-start:2001:db8:1:2::/64",
+        "tv-start-prefix:2001:db8:1::/48",
+    ]
 
 
 async def test_a_spent_budget_refuses_a_request_with_a_retry_after(app, tv):
@@ -1412,18 +1502,19 @@ async def test_expired_requests_and_ended_credentials_are_purged(app, tv, phone,
     assert rows(app, "tv_sessions") == []
 
 
-async def test_a_credential_that_was_never_renewed_is_revoked_after_a_day_and_one_that_was_is_not(
+async def test_a_credential_never_renewed_is_revoked_a_week_after_its_first_session_ended_and_one_that_was_is_not(
     app, tv, phone, clock
 ):
-    lost = await signed_in_tv(tv, phone, clock)
+    unused = await signed_in_tv(tv, phone, clock)
     kept = await signed_in_tv(tv, phone, clock)
     clock.advance(600)
     renewed = (await renew(tv, kept["refreshToken"])).json()
     env = Env(app.state.tv_db)
 
-    await tv_sessions.purge_tv_sign_in(env, clock.ms + 23 * 3600 * 1000)
+    await tv_sessions.purge_tv_sign_in(env, clock.ms + 2 * 86400 * 1000)
+    await tv_sessions.purge_tv_sign_in(env, clock.ms + 7 * 86400 * 1000)
     assert len((await phone.get(DEVICES)).json()["devices"]) == 2
-    clock.advance(25 * 3600)
+    clock.advance(8 * 86400)
     await tv_sessions.purge_tv_sign_in(env, clock.ms)
 
     by_hash = {row["refresh_hash"]: row for row in rows(app, "tv_sessions")}
@@ -1433,10 +1524,19 @@ async def test_a_credential_that_was_never_renewed_is_revoked_after_a_day_and_on
         for row in rows(app, "tv_sessions")
         if row["renewed_at"] is None
     ] == [True]
-    assert lost["refreshToken"]
+    assert unused["refreshToken"]
 
 
-# What answers carry
+async def test_a_tv_linked_on_saturday_and_opened_on_monday_is_still_signed_in(
+    app, tv, phone, clock
+):
+    answer = await signed_in_tv(tv, phone, clock)
+    await tv_sessions.purge_tv_sign_in(
+        Env(app.state.tv_db), clock.ms + 2 * 86400 * 1000
+    )
+    clock.advance(2 * 86400)
+
+    assert (await renew(tv, answer["refreshToken"])).status_code == 200
 
 
 async def test_every_answer_that_may_hold_a_secret_says_not_to_keep_it(
@@ -1480,3 +1580,236 @@ async def test_no_secret_reaches_the_logs(app, tv, phone, clock, caplog):
         renewed["refreshToken"],
     ):
         assert secret not in logged
+
+
+# Who approved, as the TV shows it
+
+
+def test_an_address_is_masked_to_its_first_letter_and_its_domain():
+    assert masked_email("tosin@gmail.com") == "t***@gmail.com"
+    assert masked_email("a@b.co") == "a***@b.co"
+    assert masked_email("a@b@c.example") == "a***@c.example"
+    for none in (None, "", "nobody", "@x.com", "x@"):
+        assert masked_email(none) is None
+
+
+@pytest.mark.parametrize(
+    ("agent", "label"),
+    [
+        ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Safari/604.1", "iPhone"),
+        ("Mozilla/5.0 (iPad; CPU OS 17_0) Safari/604.1", "iPad"),
+        ("Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/120 Mobile", "Android phone"),
+        ("Mozilla/5.0 (Linux; Android 9; AFTMM) Chrome/80", "Fire TV"),
+        ("Mozilla/5.0 (Linux; Android 11; BRAVIA 4K) Chrome/90", "Sony TV"),
+    ],
+)
+def test_a_phone_is_named_and_a_tv_that_runs_android_is_not_taken_for_one(agent, label):
+    assert device_label(agent) == label
+
+
+async def test_the_tv_is_told_who_approved_the_account_masked_and_the_phone_and_where(
+    tv, phone, clock
+):
+    request = await requested(tv)
+    await looked_up(phone, request)
+    await phone.post(
+        APPROVE,
+        json={
+            "userCode": request["userCode"],
+            "learnerId": phone.learner,
+            "confirm": last_four(request),
+        },
+        headers={
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Safari/604.1",
+            "CF-IPCountry": "ng",
+        },
+    )
+    clock.advance(5)
+
+    linking = await polled(tv, request)
+
+    assert linking["approver"] == {
+        "account": "t***@gmail.com",
+        "label": "iPhone",
+        "country": "NG",
+    }
+    assert "tosin" not in str(linking)
+
+
+async def test_a_parent_session_carries_the_address_masked_and_never_whole(phone):
+    from app.security.session import hint_of
+
+    token = phone.headers["Authorization"].removeprefix("Bearer ")
+    claims = verify(token, "s")
+
+    assert hint_of(claims) == "t***@gmail.com"
+    assert "tosin" not in token
+
+
+async def test_an_approval_by_a_session_with_no_address_says_only_the_phone(
+    app, tv, clock, monkeypatch
+):
+    async def no_address(id_token, api_key, **kwargs):
+        from app.security import firebase
+
+        return firebase.SignedIn(
+            uid=UID,
+            name="Ada",
+            auth_time=int(time.time()),
+            provider="google.com",
+        )
+
+    async with client(app) as bare:
+        await signed_in(bare, firebaseIdToken="good")
+        learner = await add_learner(bare, "Ada", "fresh")
+        monkeypatch.setattr(routes_module, "verified", no_address)
+        await as_parent(bare)
+        request = await requested(tv)
+        await looked_up(bare, request)
+        await bare.post(
+            APPROVE,
+            json={
+                "userCode": request["userCode"],
+                "learnerId": learner,
+                "confirm": last_four(request),
+            },
+        )
+        clock.advance(5)
+
+        linking = await polled(tv, request)
+
+    assert linking["approver"].get("account") is None
+
+
+# Open requests: the wider shares
+
+
+async def test_a_network_holds_only_so_many_requests_open_whatever_its_addresses(
+    tv, monkeypatch
+):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_PER_PREFIX", 3)
+    for host in range(1, 4):
+        await requested(tv, **{"CF-Connecting-IP": f"198.51.100.{host}"})
+
+    refused = await tv.post(START, headers={"CF-Connecting-IP": "198.51.100.200"})
+    elsewhere = await tv.post(START, headers={"CF-Connecting-IP": "198.51.101.1"})
+
+    assert refused.status_code == 429
+    assert elsewhere.status_code == 201
+
+
+async def test_an_ipv6_48_is_one_network_for_the_open_requests(tv, monkeypatch):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_PER_PREFIX", 2)
+    await requested(tv, **{"CF-Connecting-IP": "2001:db8:1:1::1"})
+    await requested(tv, **{"CF-Connecting-IP": "2001:db8:1:2::1"})
+
+    refused = await tv.post(START, headers={"CF-Connecting-IP": "2001:db8:1:ffff::1"})
+    other = await tv.post(START, headers={"CF-Connecting-IP": "2001:db8:2::1"})
+
+    assert refused.status_code == 429
+    assert other.status_code == 201
+
+
+async def test_one_country_holds_only_its_share_of_the_open_requests(tv, monkeypatch):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_PER_COUNTRY", 2)
+    for network in (1, 2):
+        await requested(
+            tv, **{"CF-Connecting-IP": f"198.51.{network}.1", "CF-IPCountry": "NG"}
+        )
+
+    full = await tv.post(
+        START, headers={"CF-Connecting-IP": "198.51.3.1", "CF-IPCountry": "NG"}
+    )
+    other = await tv.post(
+        START, headers={"CF-Connecting-IP": "198.51.4.1", "CF-IPCountry": "GH"}
+    )
+    unknown = await tv.post(START, headers={"CF-Connecting-IP": "198.51.5.1"})
+
+    assert full.status_code == 503
+    assert (other.status_code, unknown.status_code) == (201, 201)
+
+
+async def test_a_tv_behind_a_shared_address_can_hold_several_requests_open(tv):
+    here = {"CF-Connecting-IP": "198.51.100.7"}
+
+    for _ in range(6):
+        assert (await tv.post(START, headers=here)).status_code == 201
+
+
+# A holder's attempts, and nobody else's
+
+
+async def test_another_accounts_lookups_neither_count_nor_use_the_request_up(
+    app, tv, phone, other_phone
+):
+    request = await requested(tv)
+    await looked_up(phone, request)
+
+    for _ in range(tv_links.MAX_ATTEMPTS * 2):
+        assert (await looked_up(other_phone, request)).status_code == 409
+
+    assert rows(app, "tv_links")[0]["attempts"] == 1
+    assert rows(app, "tv_links")[0]["status"] == "pending"
+    assert (await approved(phone, request)).status_code == 204
+
+
+# The cap of TVs, checked where the session is made
+
+
+async def test_the_session_is_not_made_for_an_account_that_filled_its_tvs_since_the_approval(
+    app, tv, phone, clock, monkeypatch
+):
+    first, second = await requested(tv), await requested(tv)
+    assert (await approved(phone, first)).status_code == 204
+    assert (await approved(phone, second)).status_code == 204
+    clock.advance(5)
+    monkeypatch.setattr(tv_sessions, "MAX_TVS_PER_ACCOUNT", 1)
+
+    one = await continued(tv, first)
+    two = await continued(tv, second)
+
+    assert one["status"] == "approved"
+    assert two == {"status": "expired"}
+    assert len(rows(app, "tv_sessions")) == 1
+
+
+# Every router a TV session could reach
+
+
+def test_every_route_of_the_app_is_classified_so_a_new_one_is_decided_on(app):
+    """A TV's session is a learner's, so it reaches the learner's routes by design. Anything else
+    must be named here, as refused (and walked above) or as open to a TV. A route added to the
+    app falls in neither and fails this test, until someone says which it is. (The tutor chat
+    over /a2a and the MCP views are not in the OpenAPI document; they sit behind the session
+    guard and the learner's consent, as a learner's do.)"""
+    refused = ("/api/account", "/api/tv-sign-in")
+    tv_own = {
+        f"{START}",
+        TOKEN,
+        CONTINUE,
+        CANCEL,
+        SESSION,
+        SIGN_OUT,
+    }
+    learner_routes = (
+        "/api/learner",
+        "/api/chats",
+        "/api/threads",
+        "/api/curriculum",
+        "/api/subjects",
+        "/api/education",
+        "/api/voice",
+        "/api/health",
+        "/api/session",
+    )
+    unclassified = [
+        path
+        for path in app.openapi()["paths"]
+        if not path.startswith(refused) and not path.startswith(learner_routes)
+    ]
+
+    assert unclassified == []
+    walked = {path for _, path in tv_forbidden_routes(app)}
+    assert walked | tv_own | {"/api/account/learners"} >= {
+        path for path in app.openapi()["paths"] if path.startswith(refused)
+    }

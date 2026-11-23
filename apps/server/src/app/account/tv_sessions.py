@@ -5,9 +5,11 @@ an hour, and a refresh credential that makes the next one. The credential is a r
 hash, which the account can list and revoke; revoking stops the TV renewing, and its last token
 ends within the hour. A credential ends after 90 days, or after 30 days without use.
 
-The credential changes at every renewal. The one it replaced is accepted once more within a minute,
-for a TV whose answer was lost on the way; presented again, or after the minute, it is a copy
-somewhere it should not be, and the whole TV is revoked."""
+The credential changes at every renewal, to a successor that follows from the one it replaces
+(tv_codes.successor_of). A TV whose answer was lost presents the replaced one again, within a
+minute and at most twice, and is given the same successor; two tabs renewing at once end with one.
+The replaced credential presented after that, or the one before it, is a copy somewhere it should
+not be, and the whole TV is revoked."""
 
 from __future__ import annotations
 
@@ -16,8 +18,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..learner.time import now_ms
+from ..security.session import TV_TOKEN_TTL_SECONDS
 from . import tv_links
-from .tv_codes import hash_secret, new_refresh_token
+from .tv_codes import hash_secret, new_refresh_token, successor_of
 from .tv_links import changed, row_of, rows_of
 
 DAY_MS = 24 * 60 * 60 * 1000
@@ -27,36 +30,48 @@ IDLE_LIMIT_MS = 30 * DAY_MS
 MAX_TVS_PER_ACCOUNT = 10
 # Revoked and expired rows are kept this long, then purged.
 KEEP_AFTER_END_MS = DAY_MS
-# The credential a renewal replaced is accepted once within this long.
+# The credential a renewal replaced is answered again within this long, this many times.
 GRACE_MS = 60 * 1000
-# A TV that took its session and never renewed it, a day on, has most likely lost the answer that
-# held the credential; it is revoked, so it does not linger toward the limit of TVs.
-UNRENEWED_MS = DAY_MS
+GRACE_REDELIVERIES = 2
+# A TV that took its session and never renewed it, a week after that session ended, has most
+# likely lost the answer that held the credential; it is revoked, so it does not linger toward
+# the limit of TVs. A TV linked on Saturday and opened on Monday is not that.
+UNRENEWED_MS = 7 * DAY_MS + TV_TOKEN_TTL_SECONDS * 1000
 
 TAKE_SQL = (
     "INSERT INTO tv_sessions (id, refresh_hash, account_uid, learner_id, label, created_at, "
     "last_used_at, expires_at) SELECT ?1, ?2, account_uid, learner_id, label, ?3, ?3, ?4 "
-    "FROM tv_links WHERE device_code_hash = ?5 AND status = 'approved' AND expires_at > ?3"
+    "FROM tv_links WHERE device_code_hash = ?5 AND status = 'approved' AND expires_at > ?3 "
+    "AND (SELECT COUNT(*) FROM tv_sessions WHERE account_uid = tv_links.account_uid "
+    "AND revoked_at IS NULL AND expires_at > ?3 AND last_used_at > ?6) < ?7"
 )
 CONSUME_SQL = (
     "UPDATE tv_links SET status = 'consumed' "
     "WHERE device_code_hash = ?1 AND status = 'approved' AND expires_at > ?2"
 )
 TAKEN_SQL = "SELECT account_uid, learner_id, label FROM tv_sessions WHERE id = ?1"
+PEEK_SQL = (
+    "SELECT id, account_uid, learner_id FROM tv_sessions "
+    "WHERE (refresh_hash = ?1 OR prev_hash = ?1) AND revoked_at IS NULL AND expires_at > ?2"
+)
 ROTATE_SQL = (
-    "UPDATE tv_sessions SET prev_hash = refresh_hash, refresh_hash = ?4, rotated_at = ?2, "
-    "grace_used = 0, last_used_at = ?2, renewed_at = COALESCE(renewed_at, ?2) "
+    "UPDATE tv_sessions SET prev2_hash = prev_hash, prev_hash = refresh_hash, refresh_hash = ?4, "
+    "rotated_at = ?2, grace_used = 0, last_used_at = ?2, "
+    "renewed_at = COALESCE(renewed_at, ?2) "
     "WHERE refresh_hash = ?1 AND revoked_at IS NULL AND expires_at > ?2 AND last_used_at > ?3 "
     "RETURNING id, account_uid, learner_id"
 )
-GRACE_SQL = (
-    "UPDATE tv_sessions SET refresh_hash = ?4, grace_used = 1, last_used_at = ?2 "
-    "WHERE prev_hash = ?1 AND grace_used = 0 AND rotated_at >= ?5 AND revoked_at IS NULL "
-    "AND expires_at > ?2 AND last_used_at > ?3 RETURNING id, account_uid, learner_id"
+# The successor was given already: the same one is answered again, a limited number of times.
+REDELIVER_SQL = (
+    "UPDATE tv_sessions SET grace_used = grace_used + 1, last_used_at = ?2 "
+    "WHERE prev_hash = ?1 AND refresh_hash = ?4 AND grace_used < ?5 AND rotated_at >= ?6 "
+    "AND revoked_at IS NULL AND expires_at > ?2 AND last_used_at > ?3 "
+    "RETURNING id, account_uid, learner_id"
 )
-# A credential that was replaced and is presented outside its one grace is a copy.
+# A credential that was replaced and is presented outside its grace, or the one before, is a copy.
 REUSE_SQL = (
-    "UPDATE tv_sessions SET revoked_at = ?2 WHERE prev_hash = ?1 AND revoked_at IS NULL"
+    "UPDATE tv_sessions SET revoked_at = ?2 "
+    "WHERE (prev_hash = ?1 OR prev2_hash = ?1) AND revoked_at IS NULL"
 )
 ACTIVE_SQL = (
     "SELECT id, label, learner_id, created_at, last_used_at FROM tv_sessions "
@@ -102,7 +117,7 @@ class Renewed:
 async def take(database: Any, device_code: str, now: int) -> Taken | None:
     """The approved request's session, made once: the request is consumed in the same
     transaction that makes the session, so a second poll, or a replay of the device code, finds
-    nothing to take."""
+    nothing to take. Nothing is taken for an account that already holds the most TVs."""
     code_hash = hash_secret(device_code)
     session_id, refresh_token = secrets.token_urlsafe(9), new_refresh_token()
     await database.batch(
@@ -113,6 +128,8 @@ async def take(database: Any, device_code: str, now: int) -> Taken | None:
                 now,
                 now + CREDENTIAL_TTL_MS,
                 code_hash,
+                now - IDLE_LIMIT_MS,
+                MAX_TVS_PER_ACCOUNT,
             ),
             database.prepare(CONSUME_SQL).bind(code_hash, now),
         ]
@@ -125,22 +142,38 @@ async def take(database: Any, device_code: str, now: int) -> Taken | None:
     )
 
 
-async def renew(database: Any, refresh_token: str, now: int) -> Renewed | None:
-    """The TV renews its session: the credential is live, unrevoked and used within 30 days. It
-    is replaced by a new one, which is returned. A credential already replaced is accepted once
-    within the grace, and otherwise revokes the TV."""
+async def peek(database: Any, refresh_token: str, now: int) -> dict | None:
+    """Whose credential this is, without changing anything: for the checks that must come before
+    a renewal, since a renewal that fails afterwards would leave the TV without its new credential."""
+    return row_of(
+        await database.prepare(PEEK_SQL).bind(hash_secret(refresh_token), now).first()
+    )
+
+
+async def renew(
+    database: Any, secret: str, refresh_token: str, now: int
+) -> Renewed | None:
+    """The TV renews its session: the credential is live, unrevoked and used within 30 days. It is
+    replaced by its successor, which is returned. A credential already replaced is answered with
+    the same successor, up to twice within the grace; any other use of it, or of the one before,
+    revokes the TV."""
     presented = hash_secret(refresh_token)
-    fresh = new_refresh_token()
+    successor = successor_of(refresh_token, secret)
     idle_before = now - IDLE_LIMIT_MS
-    for sql, grace in ((ROTATE_SQL, ()), (GRACE_SQL, (now - GRACE_MS,))):
+    attempts = (
+        (ROTATE_SQL, (hash_secret(successor),)),
+        (REDELIVER_SQL, (hash_secret(successor), GRACE_REDELIVERIES, now - GRACE_MS)),
+    )
+    for sql, extra in attempts:
         found = rows_of(
-            await database.prepare(sql)
-            .bind(presented, now, idle_before, hash_secret(fresh), *grace)
-            .all()
+            await database.prepare(sql).bind(presented, now, idle_before, *extra).all()
         )
         if found:
             return Renewed(
-                found[0]["id"], found[0]["account_uid"], found[0]["learner_id"], fresh
+                found[0]["id"],
+                found[0]["account_uid"],
+                found[0]["learner_id"],
+                successor,
             )
     await database.prepare(REUSE_SQL).bind(presented, now).run()
     return None

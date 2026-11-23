@@ -4,6 +4,7 @@ import {
   continueTvLink,
   pollTvLink,
   startTvLink,
+  type TvApprover,
   type TvApproval,
   type TvLinkRequest,
   type TvPoll,
@@ -13,7 +14,12 @@ export type TvLinkState =
   | { kind: "starting" }
   | { kind: "waiting"; request: TvLinkRequest; expiresAt: number }
   /** The phone approved; the person at the TV decides whether to be linked to this learner. */
-  | { kind: "linking"; learnerName: string; busy: boolean }
+  | {
+      kind: "linking";
+      learnerName: string;
+      approver: TvApprover;
+      busy: boolean;
+    }
   | { kind: "expired" }
   | { kind: "denied" }
   | { kind: "declined" }
@@ -127,6 +133,7 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
         linking = {
           kind: "linking",
           learnerName: polled.learner.name,
+          approver: polled.approver ?? {},
           busy: false,
         };
         return report(linking);

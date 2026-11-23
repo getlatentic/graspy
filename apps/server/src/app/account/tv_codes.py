@@ -7,6 +7,7 @@ bare hash to resist a stolen table."""
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 import re
@@ -70,6 +71,9 @@ _DEVICES = (
         ),
         "Smart TV",
     ),
+    (re.compile(r"iPhone", re.IGNORECASE), "iPhone"),
+    (re.compile(r"iPad", re.IGNORECASE), "iPad"),
+    (re.compile(r"Android", re.IGNORECASE), "Android phone"),
     (re.compile(r"Edg/", re.IGNORECASE), "Edge browser"),
     (re.compile(r"Firefox/", re.IGNORECASE), "Firefox browser"),
     (re.compile(r"Chrome/|CriOS/", re.IGNORECASE), "Chrome browser"),
@@ -96,6 +100,25 @@ def country_of(header: str | None) -> str | None:
 
 
 CONFIRM_LENGTH = 4
+
+
+def successor_of(refresh_token: str, secret: str) -> str:
+    """The credential that replaces `refresh_token`, the same every time it is asked for, so a
+    renewal whose answer was lost is answered again with the credential already given, and two
+    tabs renewing at once end with one. It needs the server's secret, so a copy of a credential
+    does not tell what comes next."""
+    digest = hmac.new(
+        secret.encode(), b"tv-next:" + refresh_token.encode(), "sha256"
+    ).digest()
+    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
+def masked_email(email: str | None) -> str | None:
+    """ "t***@gmail.com": enough for a person to know whose account it is, not to know the address."""
+    if not email or "@" not in email:
+        return None
+    local, _, domain = email.rpartition("@")
+    return f"{local[:1]}***@{domain}" if local and domain else None
 
 
 def hash_source(source: str, secret: str) -> str:

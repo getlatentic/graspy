@@ -376,7 +376,10 @@
     "denied": "Your phone talk no.",
     "failed": "We no fit get code. Try again.",
     "linking": "We dey link to {name}",
-    "continue": "Continue"
+    "continue": "Continue",
+    "approvedBy": "{account} approve am for {device}.",
+    "approvedOn": "Dem approve am for {device}.",
+    "aPhone": "phone"
   },
   "tvLink": {
     "signIn": "Sign in to link your TV",

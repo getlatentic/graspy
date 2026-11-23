@@ -270,7 +270,8 @@ async def test_asking_for_a_tv_code_spends_the_pairing_binding_by_address():
     )
 
     assert env.PAIRING_LIMITER.calls == [
-        {"converted": {"key": "tv-start:198.51.100.7"}}
+        {"converted": {"key": "tv-start:198.51.100.7"}},
+        {"converted": {"key": "tv-start-prefix:198.51.100.0/24"}},
     ]
 
 

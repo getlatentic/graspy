@@ -35,9 +35,14 @@ EARLY_POLL_TOLERANCE_MS = 1000
 MAX_ATTEMPTS = 10
 # A phone that looked a code up holds it this long; no other account can approve it meanwhile.
 LOCK_MS = 2 * 60 * 1000
-# Open (pending, unexpired) requests all together, and from one source.
+# Open (pending, unexpired) requests all together, from one source (an IPv4 address, or an IPv6
+# /64), from the wider network around it (an IPv4 /24, an IPv6 /48) and from one country. A
+# household or a school behind one address holds several TVs, so the source's share is not small;
+# the wider shares keep one network, or one country, from taking the whole.
 MAX_OPEN_LINKS = 5000
-MAX_OPEN_PER_SOURCE = 8
+MAX_OPEN_PER_SOURCE = 12
+MAX_OPEN_PER_PREFIX = 40
+MAX_OPEN_PER_COUNTRY = 2500
 START_TRIES = 3
 # Requests are kept this long after they expire, so a TV that asks late is told so.
 KEEP_AFTER_EXPIRY_MS = 60 * 60 * 1000
@@ -55,25 +60,36 @@ LINKING = "linking"
 # a check and the insert.
 INSERT_SQL = (
     "INSERT INTO tv_links (device_code_hash, user_code_hash, label, country, source_hash, "
-    "interval_s, created_at, expires_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8 "
-    "WHERE (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?7) < ?9 "
-    "AND (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?7 "
-    "AND source_hash = ?5) < ?10"
+    "prefix_hash, interval_s, created_at, expires_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9 "
+    "WHERE (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?8) < ?10 "
+    "AND (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?8 "
+    "AND source_hash = ?5) < ?11 "
+    "AND (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?8 "
+    "AND prefix_hash = ?6) < ?12 "
+    "AND (?4 IS NULL OR (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' "
+    "AND expires_at > ?8 AND country = ?4) < ?13)"
 )
-SOURCE_COUNT_SQL = (
-    "SELECT COUNT(*) AS n FROM tv_links "
-    "WHERE status = 'pending' AND expires_at > ?1 AND source_hash = ?2"
+SHARES_SQL = (
+    "SELECT (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?1 "
+    "AND source_hash = ?2) AS by_source, "
+    "(SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?1 "
+    "AND prefix_hash = ?3) AS by_prefix"
 )
 POLL_SQL = (
     "SELECT device_code_hash, status, expires_at, interval_s, last_polled_at, "
-    "account_uid, learner_id FROM tv_links WHERE device_code_hash = ?1"
+    "account_uid, learner_id, approved_hint, approved_label, approved_country "
+    "FROM tv_links WHERE device_code_hash = ?1"
 )
 POLLED_SQL = "UPDATE tv_links SET last_polled_at = ?2, interval_s = ?3 WHERE device_code_hash = ?1"
-# The tenth attempt ends the request, and is told it did. The account that looks first holds the
-# request; the same account may look again, any other is turned away while the hold lasts.
+# The account that looks first holds the request; the same account may look again, any other is
+# turned away while the hold lasts, and its lookup counts no attempt, so it cannot use the
+# request up. The tenth attempt of the holder ends the request, and is told it did.
 LOOK_SQL = (
-    "UPDATE tv_links SET attempts = attempts + 1, "
-    "status = CASE WHEN attempts + 1 >= ?3 THEN 'denied' ELSE status END, "
+    "UPDATE tv_links SET "
+    "attempts = attempts + CASE WHEN locked_by IS NULL OR locked_until <= ?2 OR locked_by = ?4 "
+    "THEN 1 ELSE 0 END, "
+    "status = CASE WHEN (locked_by IS NULL OR locked_until <= ?2 OR locked_by = ?4) "
+    "AND attempts + 1 >= ?3 THEN 'denied' ELSE status END, "
     "locked_by = CASE WHEN locked_by IS NULL OR locked_until <= ?2 OR locked_by = ?4 "
     "THEN ?4 ELSE locked_by END, "
     "locked_until = CASE WHEN locked_by IS NULL OR locked_until <= ?2 OR locked_by = ?4 "
@@ -89,7 +105,8 @@ HELD_SQL = (
     "AND locked_by = ?3 AND locked_until > ?2 RETURNING id, status"
 )
 APPROVE_SQL = (
-    "UPDATE tv_links SET status = 'approved', account_uid = ?2, learner_id = ?3, approved_at = ?4 "
+    "UPDATE tv_links SET status = 'approved', account_uid = ?2, learner_id = ?3, approved_at = ?4, "
+    "approved_hint = ?5, approved_label = ?6, approved_country = ?7 "
     "WHERE id = ?1 AND status = 'pending' AND expires_at > ?4 "
     "AND locked_by = ?2 AND locked_until > ?4"
 )
@@ -107,7 +124,7 @@ PURGE_SQL = "DELETE FROM tv_links WHERE expires_at < ?1"
 
 
 class TooManyFromSource(Exception):
-    """One source holds as many open requests as it may."""
+    """One source, or the network around it, holds as many open requests as it may."""
 
 
 class TooManyOpenLinks(Exception):
@@ -133,6 +150,9 @@ class Polled:
     # With `linking`: whom the approved request is for.
     account_uid: str | None = None
     learner_id: str | None = None
+    approver_hint: str | None = None
+    approver_label: str | None = None
+    approver_country: str | None = None
 
 
 def row_of(row: Any) -> dict | None:
@@ -156,10 +176,13 @@ async def start(
     label: str,
     country: str | None,
     source: str,
+    prefix: str,
     now: int,
 ) -> Started:
-    """A new request. Raises TooManyFromSource, then TooManyOpenLinks, when a cap stops it."""
+    """A new request. Raises TooManyFromSource (the source's or its network's share), then
+    TooManyOpenLinks (all together, or the country's share), when a cap stops it."""
     source_hash = hash_source(source, secret)
+    prefix_hash = hash_source("prefix:" + prefix, secret)
     for attempt in range(START_TRIES):
         device_code, user_code = new_device_code(), new_user_code()
         try:
@@ -171,11 +194,14 @@ async def start(
                     label,
                     country,
                     source_hash,
+                    prefix_hash,
                     FIRST_INTERVAL_S,
                     now,
                     now + LINK_TTL_MS,
                     MAX_OPEN_LINKS,
                     MAX_OPEN_PER_SOURCE,
+                    MAX_OPEN_PER_PREFIX,
+                    MAX_OPEN_PER_COUNTRY,
                 )
                 .run()
             )
@@ -189,17 +215,20 @@ async def start(
             return Started(
                 device_code, user_code, LINK_TTL_MS // 1000, FIRST_INTERVAL_S
             )
-        await _refused(database, source_hash, now)
+        await _refused(database, source_hash, prefix_hash, now)
     raise AssertionError("unreachable")
 
 
-async def _refused(database: Any, source_hash: str, now: int) -> None:
-    """Which cap stopped the insert: the source's own first, so one source is told to slow down
-    before everyone is told the service is full."""
+async def _refused(database: Any, source_hash: str, prefix_hash: str, now: int) -> None:
+    """Which cap stopped the insert: the source's and its network's first, so one source is told
+    to slow down before everyone is told the service is full."""
     held = row_of(
-        await database.prepare(SOURCE_COUNT_SQL).bind(now, source_hash).first()
+        await database.prepare(SHARES_SQL).bind(now, source_hash, prefix_hash).first()
     )
-    if held and int(held["n"]) >= MAX_OPEN_PER_SOURCE:
+    if held and (
+        int(held["by_source"]) >= MAX_OPEN_PER_SOURCE
+        or int(held["by_prefix"]) >= MAX_OPEN_PER_PREFIX
+    ):
         raise TooManyFromSource
     raise TooManyOpenLinks
 
@@ -224,7 +253,15 @@ async def poll(database: Any, device_code: str, now: int) -> Polled:
     if early:
         return Polled(SLOW_DOWN, interval)
     if row["status"] == APPROVED:
-        return Polled(LINKING, interval, row["account_uid"], row["learner_id"])
+        return Polled(
+            LINKING,
+            interval,
+            row["account_uid"],
+            row["learner_id"],
+            row["approved_hint"],
+            row["approved_label"],
+            row["approved_country"],
+        )
     return Polled(row["status"], interval)
 
 
@@ -272,10 +309,20 @@ async def held(
 
 
 async def approve(
-    database: Any, link_id: int, uid: str, learner_id: str, now: int
+    database: Any,
+    link_id: int,
+    uid: str,
+    learner_id: str,
+    now: int,
+    hint: str | None = None,
+    label: str | None = None,
+    country: str | None = None,
 ) -> bool:
+    """`hint`, `label` and `country` say who approved, for the person at the TV to read."""
     result = (
-        await database.prepare(APPROVE_SQL).bind(link_id, uid, learner_id, now).run()
+        await database.prepare(APPROVE_SQL)
+        .bind(link_id, uid, learner_id, now, hint, label, country)
+        .run()
     )
     return changed(result)
 

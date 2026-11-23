@@ -7,7 +7,7 @@ import time
 
 from fastapi import HTTPException, Request
 
-from ..security.firebase import FRESH_SIGN_IN_SECONDS
+from ..security.firebase import FRESH_SIGN_IN_SECONDS, SignedIn
 from .routes import verified_sign_in
 
 GOOGLE = "google.com"
@@ -22,9 +22,9 @@ def require_known_notice(known: frozenset[int], version: int) -> None:
         raise refusal(400, "notice_unknown", "That notice is not one graspy shows")
 
 
-async def require_fresh_sign_in(request: Request, uid: str, id_token: str) -> None:
+async def require_fresh_sign_in(request: Request, uid: str, id_token: str) -> SignedIn:
     """The token is Google's for this session's own account, came from signing in with Google,
-    and its sign-in is recent."""
+    and its sign-in is recent. Returns who signed in."""
     signed = await verified_sign_in(request, id_token)
     if signed.uid != uid:
         raise refusal(
@@ -36,3 +36,4 @@ async def require_fresh_sign_in(request: Request, uid: str, id_token: str) -> No
         raise refusal(
             401, "sign_in_stale", "Sign in again to agree, then send the new token"
         )
+    return signed

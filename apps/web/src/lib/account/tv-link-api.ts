@@ -32,6 +32,14 @@ export interface TvApproval {
   learner: { id: string; name: string };
 }
 
+/** Who approved, for the person at the TV to recognise or not: the account's address with most
+ * of it hidden, and the phone's label and country. */
+export interface TvApprover {
+  account?: string;
+  label?: string;
+  country?: string;
+}
+
 export type TvPoll =
   | {
       status: "pending" | "slow_down" | "expired" | "denied";
@@ -42,6 +50,7 @@ export type TvPoll =
       status: "linking";
       interval?: number;
       learner: { id: string; name: string };
+      approver?: TvApprover;
     }
   | ({ status: "approved" } & TvApproval);
 

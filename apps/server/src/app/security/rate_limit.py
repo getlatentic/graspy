@@ -101,6 +101,16 @@ def source_of(address: str) -> str:
     return address
 
 
+def prefix_of(address: str) -> str:
+    """The wider network a source belongs to: an IPv4 address's /24, an IPv6 address's /48."""
+    try:
+        parsed = ipaddress.ip_address(address)
+    except ValueError:
+        return address
+    bits = 48 if isinstance(parsed, ipaddress.IPv6Address) else 24
+    return str(ipaddress.ip_network(f"{address}/{bits}", strict=False))
+
+
 def client_key(scope) -> str:
     """The client's address as Cloudflare saw it at the edge."""
     for name, value in scope.get("headers", []):

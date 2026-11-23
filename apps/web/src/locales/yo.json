@@ -376,7 +376,10 @@
     "denied": "Fóònù rẹ kọ̀.",
     "failed": "A kò rí kóòdù gbà. Tún gbìyànjú.",
     "linking": "Ń so mọ́ {name}",
-    "continue": "Tẹ̀síwájú"
+    "continue": "Tẹ̀síwájú",
+    "approvedBy": "{account} ló fọwọ́ sí i lórí {device}.",
+    "approvedOn": "A fọwọ́ sí i lórí {device}.",
+    "aPhone": "fóònù kan"
   },
   "tvLink": {
     "signIn": "Wọlé láti so tẹlifíṣọ̀n rẹ pọ̀",

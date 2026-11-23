@@ -43,6 +43,7 @@ const DEVICE = {
   "graspy.view.ui://graspy/lesson": "<html>",
   "graspy.service-consent.uid/ada": "1",
   "graspy.tv-credential": "credential-1",
+  "graspy.tv-known-accounts": '["t***@gmail.com"]',
 };
 
 beforeEach(() => {
@@ -62,6 +63,7 @@ describe("wipeLearnerData", () => {
       "graspy.account",
       "graspy.service-consent.uid/ada",
       "graspy.tv-credential",
+      "graspy.tv-known-accounts",
       "graspy_device_id",
       "graspy_install_dismissed",
     ]);

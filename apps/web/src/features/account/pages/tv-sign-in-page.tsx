@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { QrCode } from "@/components/ui/qr-code";
 import { Spinner } from "@/components/ui/spinner";
-import type { TvLinkRequest } from "@/lib/account/tv-link-api";
+import type { TvApprover, TvLinkRequest } from "@/lib/account/tv-link-api";
+import { knownAccount } from "@/lib/account/tv-known-accounts";
+import type { Translate } from "@/lib/i18n-context";
 import { useAccount } from "@/lib/account/use-account";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
@@ -33,6 +35,31 @@ export default function TvSignInPage() {
   );
 }
 
+const pageLanguage = () => document.documentElement.lang || "en";
+
+function regionName(country: string | undefined, language: string) {
+  if (!country) return null;
+  try {
+    return (
+      new Intl.DisplayNames([language], { type: "region" }).of(country) ??
+      country
+    );
+  } catch {
+    return country;
+  }
+}
+
+/** "Approved by t***@gmail.com on iPhone (Nigeria)": what the person here is to recognise. */
+function approvedBy(t: Translate, approver: TvApprover): string {
+  const place = regionName(approver.country, pageLanguage());
+  const device =
+    [approver.label, place && `(${place})`].filter(Boolean).join(" ") ||
+    t("tvSignIn.aPhone");
+  return approver.account
+    ? t("tvSignIn.approvedBy", { account: approver.account, device })
+    : t("tvSignIn.approvedOn", { device });
+}
+
 const minutesAndSeconds = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
@@ -49,13 +76,25 @@ function TvLink() {
   if (ended.kind === "declined") return <Navigate to={SIGN_IN_PAGE} replace />;
 
   if (ended.kind === "linking") {
+    // Continue is the first choice only for an account this TV has been linked to before: a name
+    // it does not know starts on Cancel.
+    const known =
+      !!ended.approver.account && knownAccount(ended.approver.account);
     return (
       <div className="flex flex-col gap-6">
         <h1 className="text-balance font-display text-3xl font-semibold text-ink sm:text-4xl">
           {t("tvSignIn.linking", { name: ended.learnerName })}
         </h1>
+        <p className="text-pretty text-lg text-ink" dir="auto">
+          {approvedBy(t, ended.approver)}
+        </p>
         <div className="flex flex-wrap gap-3">
-          <Button size="lg" onClick={confirm} disabled={ended.busy} autoFocus>
+          <Button
+            size="lg"
+            onClick={confirm}
+            disabled={ended.busy}
+            autoFocus={known}
+          >
             {t("tvSignIn.continue")}
           </Button>
           <Button
@@ -63,6 +102,7 @@ function TvLink() {
             size="lg"
             onClick={decline}
             disabled={ended.busy}
+            autoFocus={!known}
           >
             {t("tvSignIn.cancel")}
           </Button>

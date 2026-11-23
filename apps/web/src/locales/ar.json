@@ -376,7 +376,10 @@
     "denied": "رفض هاتفك الطلب.",
     "failed": "تعذّر الحصول على رمز. حاول مرة أخرى.",
     "linking": "الربط مع {name}",
-    "continue": "متابعة"
+    "continue": "متابعة",
+    "approvedBy": "وافق عليه {account} على {device}.",
+    "approvedOn": "تمت الموافقة على {device}.",
+    "aPhone": "هاتف"
   },
   "tvLink": {
     "signIn": "سجّل الدخول لربط تلفازك",

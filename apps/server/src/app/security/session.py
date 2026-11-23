@@ -63,6 +63,7 @@ def issue(
     account: str | None = None,
     parent: bool = False,
     tv: str | None = None,
+    hint: str | None = None,
     now: float | None = None,
 ) -> IssuedToken:
     """``learner`` is whose record the session reads and writes; ``account``
@@ -88,6 +89,8 @@ def issue(
         claims["acct"] = account
     if tv:
         claims["tv"] = tv
+    if hint:
+        claims["hint"] = hint
     payload = json.dumps(claims, separators=(",", ":")).encode()
 
     return IssuedToken(
@@ -139,6 +142,11 @@ def learner_of(claims: dict) -> str | None:
 
 def parent_of(claims: dict) -> bool:
     return claims.get("par") is True
+
+
+def hint_of(claims: dict) -> str | None:
+    """A masked form of the address the account signed in with, in a parent's session."""
+    return _text_claim(claims, "hint")
 
 
 def tv_of(claims: dict) -> str | None:

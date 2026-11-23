@@ -75,6 +75,7 @@ const secondsPass = (seconds: number) =>
   act(() => vi.advanceTimersByTimeAsync(seconds * 1000));
 
 beforeEach(() => {
+  localStorage.clear();
   vi.useFakeTimers();
   account.current = null;
   startTvLink.mockReset().mockResolvedValue(REQUEST);
@@ -162,10 +163,69 @@ describe("the TV's sign-in with a phone", () => {
     expect(continueTvLink).not.toHaveBeenCalled();
   });
 
-  it("focuses Continue, a real button the remote can press, and signs in only when it is pressed", async () => {
+  it("says which account approved it, on what phone and where, so the person here can tell it is not theirs", async () => {
     pollTvLink.mockResolvedValue({
       status: "linking",
       learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    page();
+    await secondsPass(6);
+
+    expect(
+      screen.getByText("Approved by t***@gmail.com on iPhone (Nigeria)."),
+    ).toBeTruthy();
+  });
+
+  it("says only the phone when no address was given", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { label: "iPhone" },
+    });
+    page();
+    await secondsPass(6);
+
+    expect(screen.getByText("Approved on iPhone.")).toBeTruthy();
+  });
+
+  it("starts on Cancel when the account is not one this TV has been linked to", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    page();
+    await secondsPass(6);
+
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: en.tvSignIn.cancel }),
+    );
+  });
+
+  it("starts on Continue when the account is one this TV has been linked to", async () => {
+    localStorage.setItem(
+      "graspy.tv-known-accounts",
+      JSON.stringify(["t***@gmail.com"]),
+    );
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    page();
+    await secondsPass(6);
+
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: en.tvSignIn.continue }),
+    );
+  });
+
+  it("signs in only when Continue is pressed, a real button the remote can press, and remembers the account", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
     });
     continueTvLink.mockResolvedValue({
       status: "approved",
@@ -179,7 +239,6 @@ describe("the TV's sign-in with a phone", () => {
     await secondsPass(6);
     const go = screen.getByRole("button", { name: en.tvSignIn.continue });
     expect(go.tagName).toBe("BUTTON");
-    expect(document.activeElement).toBe(go);
     await secondsPass(60);
     expect(startTvSession).not.toHaveBeenCalled();
 
@@ -196,6 +255,9 @@ describe("the TV's sign-in with a phone", () => {
       account: "uid-1",
       learner: { id: "a1b2c3d4e5f6", name: "Ada" },
     });
+    expect(
+      JSON.parse(localStorage.getItem("graspy.tv-known-accounts") ?? "[]"),
+    ).toEqual(["t***@gmail.com"]);
   });
 
   it("declines on Cancel: the request is cancelled, nothing is signed in and the sign-in page returns", async () => {
