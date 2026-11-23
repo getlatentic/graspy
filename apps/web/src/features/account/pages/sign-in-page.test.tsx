@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
+import { forgetInput, sinceInput } from "@/lib/account/tv-presence";
 import { SignIn } from "./sign-in-page";
 
 vi.mock("../hooks/use-google-sign-in", () => ({
@@ -88,6 +89,16 @@ describe("the sign-in card", () => {
         phone.compareDocumentPosition(google) &
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
+    });
+
+    it("notes the press of the link as the TV's proof that someone is there only when a person made it", () => {
+      forgetInput();
+      card();
+
+      fireEvent.click(screen.getByRole("link", { name: en.tvSignIn.title }));
+
+      // A test's click is a script's, which the browser marks untrusted: it counts for nothing.
+      expect(sinceInput()).toBeNull();
     });
 
     it("keeps Google's button, and a way in without an account", () => {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { noteUserInput, trackInput } from "@/lib/account/tv-presence";
 import { startTvSession } from "@/lib/api/session";
 import {
   runTvLink,
@@ -15,15 +16,27 @@ export function useTvLink() {
   const link = useRef<TvLink | null>(null);
 
   useEffect(() => {
+    // What a person does here from now on is the TV's proof that someone is there. Starting the
+    // flow is not: a boot, a redirect or a restart by a timer lands here too, and presence comes
+    // only from the press that asked for it (the sign-in card's link and `again`).
+    const stopTracking = trackInput();
     const running = runTvLink({
       onState: setState,
       onApproved: startTvSession,
     });
     link.current = running;
-    return running.stop;
+    return () => {
+      stopTracking();
+      running.stop();
+    };
   }, [round]);
 
-  const again = useCallback(() => setRound((n) => n + 1), []);
+  /** A new code. Called from the press that asked for it, with that event, which is the
+   * proof someone is there; called with none, by anything automatic, it renews nothing. */
+  const again = useCallback((event?: Pick<Event, "isTrusted">) => {
+    if (event) noteUserInput(event);
+    setRound((n) => n + 1);
+  }, []);
   const confirm = useCallback(() => link.current?.confirm(), []);
   const decline = useCallback(() => link.current?.decline(), []);
   return { state, again, confirm, decline };

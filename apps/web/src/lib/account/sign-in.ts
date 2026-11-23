@@ -1,4 +1,9 @@
-import { endAccountSession, startAccountSession } from "@/lib/api/session";
+import {
+  endAccountSession,
+  startAccountSession,
+  startParentSession,
+} from "@/lib/api/session";
+import { currentAccount } from "./account-store";
 import { warmApi } from "@/lib/warm-api";
 import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
@@ -53,6 +58,31 @@ export async function signIn(): Promise<void> {
 export async function signInAgain(): Promise<string> {
   const google = prepared ?? (await loadGoogle());
   return google.reauthenticateWithGoogle();
+}
+
+/**
+ * One Google sign-in that is both the account's session and the parent's, for what only a parent
+ * may do. Signed out, the sign-in makes the account's session and, from the same token, the
+ * parent's; signed in as a child or after the parent's minutes, signing in again makes the
+ * parent's. Either way it is one tap, and the second sign-in a parent would otherwise be asked
+ * for never comes. Call from the tap itself.
+ */
+export async function signInAsParent(): Promise<void> {
+  warmApi();
+  const google = prepared ?? (await loadGoogle());
+  if (currentAccount()) {
+    await startParentSession(await google.reauthenticateWithGoogle());
+    return;
+  }
+  const { account, idToken } = await google.signInWithGoogle();
+  try {
+    await startAccountSession(idToken, account);
+    await startParentSession(idToken);
+  } catch (error) {
+    endAccountSession();
+    await google.signOutOfGoogle().catch(() => undefined);
+    throw error;
+  }
 }
 
 /** Nothing of the account or its learner stays on the device. */
