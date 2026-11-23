@@ -10,9 +10,12 @@ const google = {
 vi.mock("./google-auth", () => google);
 const session = {
   startAccountSession: vi.fn(async () => undefined),
+  startParentSession: vi.fn(async () => undefined),
   endAccountSession: vi.fn(),
 };
 vi.mock("@/lib/api/session", () => session);
+const signedIn = { current: null as object | null };
+vi.mock("./account-store", () => ({ currentAccount: () => signedIn.current }));
 const wipeDevice = vi.fn(async () => undefined);
 vi.mock("@/lib/device-wipe", () => ({ wipeDevice }));
 const deleteAccount = vi.fn(async () => undefined);
@@ -20,10 +23,19 @@ vi.mock("./learners-api", () => ({ deleteAccount }));
 const warmApi = vi.fn();
 vi.mock("@/lib/warm-api", () => ({ warmApi }));
 
-const { deleteAccountAndSignOut, signIn, signInAgain, signInProblem, signOut } =
-  await import("./sign-in");
+const {
+  deleteAccountAndSignOut,
+  signIn,
+  signInAgain,
+  signInAsParent,
+  signInProblem,
+  signOut,
+} = await import("./sign-in");
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  signedIn.current = null;
+});
 
 describe("signIn", () => {
   it("wakes the server while the popup is open, so the call after it is not the first", async () => {
@@ -50,6 +62,76 @@ describe("signIn", () => {
     await expect(signIn()).rejects.toThrow("refused");
 
     expect(google.signOutOfGoogle).toHaveBeenCalled();
+  });
+});
+
+describe("signInAsParent", () => {
+  it("is one Google sign-in, from a phone signed out, that makes the account's session and the parent's from the same token", async () => {
+    await signInAsParent();
+
+    expect(google.signInWithGoogle).toHaveBeenCalledTimes(1);
+    expect(google.reauthenticateWithGoogle).not.toHaveBeenCalled();
+    expect(session.startAccountSession).toHaveBeenCalledWith("id", ACCOUNT);
+    expect(session.startParentSession).toHaveBeenCalledWith("id");
+    expect(
+      session.startAccountSession.mock.invocationCallOrder[0],
+    ).toBeLessThan(session.startParentSession.mock.invocationCallOrder[0]);
+  });
+
+  it("is one Google sign-in, from a phone signed in as someone's learner, that makes the parent's session and no new account session", async () => {
+    signedIn.current = { uid: "uid-1" };
+
+    await signInAsParent();
+
+    expect(google.reauthenticateWithGoogle).toHaveBeenCalledTimes(1);
+    expect(google.signInWithGoogle).not.toHaveBeenCalled();
+    expect(session.startAccountSession).not.toHaveBeenCalled();
+    expect(session.startParentSession).toHaveBeenCalledWith("fresh-id");
+  });
+
+  it("opens Google's window once and no more, either way", async () => {
+    await signInAsParent();
+    signedIn.current = { uid: "uid-1" };
+    await signInAsParent();
+
+    expect(
+      google.signInWithGoogle.mock.calls.length +
+        google.reauthenticateWithGoogle.mock.calls.length,
+    ).toBe(2);
+  });
+
+  it("wakes the server while the window is open", async () => {
+    let asked = 0;
+    google.signInWithGoogle.mockImplementationOnce(async () => {
+      asked = warmApi.mock.calls.length;
+      return { account: ACCOUNT, idToken: "id" };
+    });
+
+    await signInAsParent();
+
+    expect(asked).toBe(1);
+  });
+
+  it("leaves nobody half signed in when the server refuses the parent's session", async () => {
+    session.startParentSession.mockRejectedValueOnce(new Error("refused"));
+
+    await expect(signInAsParent()).rejects.toThrow("refused");
+
+    expect(session.endAccountSession).toHaveBeenCalled();
+    expect(google.signOutOfGoogle).toHaveBeenCalled();
+  });
+
+  it("fails as Google does when the window is closed, and makes no session", async () => {
+    google.signInWithGoogle.mockRejectedValueOnce({
+      code: "auth/popup-closed-by-user",
+    });
+
+    await expect(signInAsParent()).rejects.toEqual({
+      code: "auth/popup-closed-by-user",
+    });
+
+    expect(session.startAccountSession).not.toHaveBeenCalled();
+    expect(session.startParentSession).not.toHaveBeenCalled();
   });
 });
 

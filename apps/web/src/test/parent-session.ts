@@ -21,6 +21,10 @@ export const parentSession = {
   endsAt(at: number | null) {
     endsAt = at;
   },
+  subscribe(listener: () => void) {
+    listeners.add(listener);
+    return () => void listeners.delete(listener);
+  },
   get held() {
     return inForce();
   },

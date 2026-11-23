@@ -12,6 +12,9 @@ const TV_SIGN_IN_URL = `${API_BASE_URL}/tv-sign-in`;
 
 // Signing out must not wait on a server that does not answer.
 const SIGN_OUT_MS = 5_000;
+// Asking for the session is waited for, but not for ever: a screen that was left or declined
+// while it hangs ends in a defined state.
+const CONTINUE_MS = 15_000;
 
 export interface TvLinkRequest {
   deviceCode: string;
@@ -89,11 +92,20 @@ export function pollTvLink(
 }
 
 /** The person at the TV confirms the learner: the TV is given its session, once. */
-export function continueTvLink(
+export async function continueTvLink(
   deviceCode: string,
   signal?: AbortSignal,
 ): Promise<TvPoll> {
-  return post("/continue", { deviceCode }, signal);
+  const giveUp = new AbortController();
+  const timer = setTimeout(() => giveUp.abort(), CONTINUE_MS);
+  const aborted = () => giveUp.abort();
+  signal?.addEventListener("abort", aborted, { once: true });
+  try {
+    return await post("/continue", { deviceCode }, giveUp.signal);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", aborted);
+  }
 }
 
 /** The TV gives up its request, or the person there declines it. */

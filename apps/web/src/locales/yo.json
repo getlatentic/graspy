@@ -381,19 +381,18 @@
     "approvedBy": "{account} ló fọwọ́ sí i lórí {device}.",
     "approvedOn": "A fọwọ́ sí i lórí {device}.",
     "aPhone": "fóònù kan",
-    "full": "Àkọọ́lẹ̀ yìí ní tẹlifíṣọ̀n mẹ́wàá. Yọ ọ̀kan kúrò lórí fóònù rẹ, lẹ́yìn náà tẹ̀síwájú."
+    "full": "Àkọọ́lẹ̀ yìí ní tẹlifíṣọ̀n mẹ́wàá. Yọ ọ̀kan kúrò lórí fóònù rẹ, lẹ́yìn náà tẹ̀síwájú.",
+    "goesOn": "Ń tẹ̀síwájú ní {seconds}…",
+    "goesOnAnnounce": "Yóò tẹ̀síwájú ní ìṣẹ́jú-àáyá 5 àfi tí o bá tẹ Fagilé."
   },
   "tvLink": {
-    "signIn": "Wọlé láti so tẹlifíṣọ̀n rẹ pọ̀",
     "title": "So tẹlifíṣọ̀n rẹ pọ̀",
     "code": "Kóòdù lórí tẹlifíṣọ̀n rẹ",
-    "next": "Tẹ̀síwájú",
-    "confirm": "Wọlé lórí {device}?",
+    "confirm": "So {device} pọ̀?",
     "learner": "Akẹ́kọ̀ọ́",
     "addLearner": "Kọ́kọ́ fi akẹ́kọ̀ọ́ kún un",
-    "approve": "Wọlé",
-    "deny": "Má wọlé",
-    "done": "Ní báyìí, fọwọ́ sí i lórí tẹlifíṣọ̀n rẹ.",
+    "deny": "Kì í ṣe tẹlifíṣọ̀n mi",
+    "done": "Ó parí. Wo tẹlifíṣọ̀n rẹ.",
     "denied": "Kò wọlé.",
     "finish": "Ó parí",
     "another": "So tẹlifíṣọ̀n mìíràn pọ̀",
@@ -405,10 +404,15 @@
     "tvs": "Àwọn tẹlifíṣọ̀n rẹ",
     "remove": "Yọ kúrò",
     "removeNamed": "Yọ {name} kúrò",
-    "warn": "Tẹ̀síwájú nìkan tí o bá ń wo tẹlifíṣọ̀n yìí.",
     "wrongEnd": "Àwọn yẹn kì í ṣe ọ̀rọ̀ tó kẹ́yìn lórí tẹlifíṣọ̀n.",
     "inUse": "Àkọọ́lẹ̀ mìíràn ń so tẹlifíṣọ̀n yìí pọ̀ tẹ́lẹ̀.",
-    "endLabel": "Ọ̀rọ̀ mẹ́rin tó kẹ́yìn lórí tẹlifíṣọ̀n"
+    "endLabel": "Tẹ ọ̀rọ̀ mẹ́rin tó kẹ́yìn tí ó hàn lórí tẹlifíṣọ̀n",
+    "endBox": "Ọ̀rọ̀ lórí tẹlifíṣọ̀n",
+    "codeBox": "Ọ̀rọ̀ kóòdù",
+    "warn": "Tẹ̀síwájú nìkan tí o bá ń wo tẹlifíṣọ̀n yìí.",
+    "timedOut": "Kóòdù yìí ti parí àkókò. Ya QR náà lẹ́ẹ̀kan sí i.",
+    "approving": "Ń fọwọ́ sí i…",
+    "checking": "Ń ṣàyẹ̀wò…"
   },
   "voice": {
     "title": "Ẹ̀kọ́ ohùn",

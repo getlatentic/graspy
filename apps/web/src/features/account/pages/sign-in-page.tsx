@@ -3,6 +3,7 @@ import { useAccount } from "@/lib/account/use-account";
 import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
 import { Logo } from "@/components/brand/logo";
+import { noteUserInput } from "@/lib/account/tv-presence";
 import { cn } from "@/lib/cn";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
@@ -52,6 +53,8 @@ export function SignIn() {
         {tv && (
           <Link
             to={TV_SIGN_IN_PAGE}
+            // The press that opens the screen is the TV's proof that someone is there.
+            onClick={noteUserInput}
             className={cn(
               buttonStyles("primary", "lg"),
               "w-full whitespace-nowrap px-3 text-base sm:px-6 lg:text-lg",

@@ -68,6 +68,9 @@ function TvLink() {
   const left = useSecondsLeft(
     state.kind === "waiting" ? state.expiresAt : null,
   );
+  const goesOnIn = useSecondsLeft(
+    state.kind === "linking" ? state.continuesAt : null,
+  );
   const ended =
     state.kind === "waiting" && left === 0
       ? ({ kind: "expired" } as const)
@@ -75,8 +78,9 @@ function TvLink() {
   if (ended.kind === "declined") return <Navigate to={SIGN_IN_PAGE} replace />;
 
   if (ended.kind === "linking") {
-    // Cancel is the first choice, always: nothing here tells the person at the TV that the
-    // account is theirs, so a press of Enter on a remote declines.
+    // Cancel has the focus, always, so a press of OK or Enter on a remote says no. When someone
+    // is plainly at the TV it goes on by itself as the seconds run out; when not, it waits for
+    // Continue, and nothing is called until it is pressed.
     return (
       <div className="flex flex-col gap-6">
         <h1 className="text-balance font-display text-3xl font-semibold text-ink sm:text-4xl">
@@ -85,19 +89,26 @@ function TvLink() {
         <p className="text-pretty text-lg text-ink" dir="auto">
           {approvedBy(t, ended.approver)}
         </p>
+        {ended.auto && (
+          <>
+            <p className="text-lg text-muted" aria-hidden="true">
+              {t("tvSignIn.goesOn", { seconds: ended.busy ? 0 : goesOnIn })}
+            </p>
+            {/* Said once, as the count starts, not every second. */}
+            <p role="status" className="sr-only">
+              {t("tvSignIn.goesOnAnnounce")}
+            </p>
+          </>
+        )}
         <div className="flex flex-wrap gap-3">
-          <Button size="lg" onClick={confirm} disabled={ended.busy}>
-            {t("tvSignIn.continue")}
-          </Button>
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={decline}
-            disabled={ended.busy}
-            autoFocus
-          >
+          <Button variant="secondary" size="lg" onClick={decline} autoFocus>
             {t("tvSignIn.cancel")}
           </Button>
+          {!ended.auto && (
+            <Button size="lg" onClick={confirm} disabled={ended.busy}>
+              {t("tvSignIn.continue")}
+            </Button>
+          )}
         </div>
       </div>
     );
