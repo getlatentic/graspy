@@ -37,6 +37,21 @@ const textOf = (content: { type: string; text?: string }[]) =>
     .map((block) => block.text)
     .join("\n");
 
+/** What the host tells a view about its surroundings; the view's colours follow `theme`. */
+export function hostContextFor(
+  locale: string,
+  theme: "light" | "dark",
+): McpUiHostContext {
+  return {
+    theme,
+    platform: "web",
+    locale,
+    displayMode: "inline",
+    availableDisplayModes: ["inline"],
+    containerDimensions: { maxHeight: VIEW_MAX_HEIGHT },
+  };
+}
+
 /** `host` is read as each message arrives, so it can change. */
 export function bridgeTo(
   frame: HTMLIFrameElement,

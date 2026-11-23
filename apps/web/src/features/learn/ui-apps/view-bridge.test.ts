@@ -22,7 +22,7 @@ vi.mock("@modelcontextprotocol/ext-apps/app-bridge", () => ({
   PostMessageTransport: class {},
 }));
 
-const { showView } = await import("./view-bridge");
+const { hostContextFor, showView } = await import("./view-bridge");
 
 const CARD = {
   resourceUri: "ui://graspy/lesson",
@@ -105,4 +105,18 @@ describe("a view being shown", () => {
     expect(bridge.sendToolResult).toHaveBeenCalled();
     expect(keepView).not.toHaveBeenCalled();
   });
+});
+
+describe("the context a view is opened in", () => {
+  it.each(["light", "dark"] as const)(
+    "names the %s theme the view's colours follow, and the page's language",
+    (theme) => {
+      expect(hostContextFor("yo", theme)).toMatchObject({
+        theme,
+        locale: "yo",
+        platform: "web",
+        displayMode: "inline",
+      });
+    },
+  );
 });

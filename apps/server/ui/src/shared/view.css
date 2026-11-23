@@ -1,7 +1,9 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
-/* graspy's palette and type from apps/web/src/index.css: a card looks the
-   same in graspy's app as in any other host. */
+/* The palette is content/design/tokens.json (tokens.css: light until the
+   host's theme says dark); the type follows apps/web/src/index.css, so a card
+   looks the same in graspy's app as in any other host. */
 @theme {
   --animate-enter: enter 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   @keyframes enter {
@@ -28,29 +30,6 @@
     }
   }
 
-  --color-surface: #ffffff;
-  --color-raised: #f9fbfc;
-  --color-ink: #12232e;
-  --color-muted: #5a6672;
-  --color-line: #e5e9ee;
-  --color-track: #eef1f4;
-
-  --color-accent: #1f7099;
-  --color-accent-strong: #175573;
-  --color-accent-ink: #1f6f9c;
-  --color-accent-soft: #eaf4fa;
-  --color-accent-line: #cfe7f3;
-  --color-on-accent: #ffffff;
-
-  --color-success: #0f7838;
-  --color-success-soft: #eaf7e4;
-
-  --color-warning: #8a6416;
-  --color-warning-soft: #fdf3d6;
-
-  --color-danger: #c0392b;
-  --color-danger-soft: #fbebe8;
-
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 12px;
@@ -58,6 +37,13 @@
 }
 
 @layer base {
+  /* Both schemes until the host names one (applyDocumentTheme). A view whose
+     scheme differs from its frame's is painted on an opaque canvas: a white
+     rectangle on a dark page. */
+  :root {
+    color-scheme: light dark;
+  }
+
   html,
   body {
     margin: 0;

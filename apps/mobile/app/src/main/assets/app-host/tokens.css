@@ -1,4 +1,4 @@
-/* graspy-tokens source=fb3dc885f69c9c9b5101565170cbad6b046c48bb34fc0205831e5c2bb82a9459 content=19261b37f47349ab5872d193d30ebd080155c107a0f4d11da61ca9b5465ff215 */
+/* graspy-tokens source=4f8157b4466e72bd5bded59bae93fc62bd1365023c24ab057e71dedf938e031a content=fbf0ea7e0eecd1c23b6ad6d91f3d1046b70bfb4155111395f0066d7cb0ea4b2c */
 /* Generated from content/design/tokens.json; do not edit. Regenerate: node content/design/build.mjs */
 :root {
   --color-canvas: #f5f8fa;
@@ -18,6 +18,7 @@
   --color-on-accent: #ffffff;
   --color-success: #0f7838;
   --color-success-soft: #eaf7e4;
+  --color-on-success: #ffffff;
   --color-warning: #8a6416;
   --color-warning-soft: #fdf3d6;
   --color-warning-line: #f3de9a;
