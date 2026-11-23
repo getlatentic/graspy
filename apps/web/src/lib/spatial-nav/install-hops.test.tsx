@@ -10,12 +10,14 @@ const size = (el: object, name: string, value: number) =>
   Object.defineProperty(el, name, { value, configurable: true });
 
 beforeEach(() => {
+  document.documentElement.dataset.device = "tv";
   remove = installSpatialNav(document);
   size(window, "innerWidth", 1000);
   size(window, "innerHeight", 800);
 });
 afterEach(() => {
   remove();
+  delete document.documentElement.dataset.device;
   cleanup();
   vi.restoreAllMocks();
 });

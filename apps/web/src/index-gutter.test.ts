@@ -31,6 +31,9 @@ describe("the overscan margin", () => {
   it("keeps scroll padding for pages with a sticky header only", async () => {
     const css = await stylesheet();
     expect(css).toMatch(/html:has\(\.sticky-header\) \{ scroll-padding-top:/);
-    expect(css).not.toMatch(/(^|\} )html \{ scroll-padding/);
+    expect(css).not.toMatch(/(^|\} )html \{[^}]*scroll-padding-top/);
+    expect(css).toMatch(
+      /html \{ scroll-padding-bottom: var\(--overscan-y\); scroll-padding-inline-end: var\(--overscan-x\); \}/,
+    );
   });
 });

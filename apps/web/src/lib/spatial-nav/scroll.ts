@@ -17,6 +17,18 @@ function scrolls(el: Element, direction: Direction): boolean {
   return SCROLLS.has(overflow) && hasRoom(el, direction);
 }
 
+/** Whether an arrow in `direction` would scroll something on its own from `from`: its scroll areas, then the page. */
+export function scrollsNatively(
+  from: Element | null,
+  direction: Direction,
+  doc: Document,
+): boolean {
+  for (let el = from; el; el = el.parentElement) {
+    if (scrolls(el, direction)) return true;
+  }
+  return hasRoom(doc.scrollingElement ?? doc.documentElement, direction);
+}
+
 /** A focused scroll area that can still scroll that way keeps the arrow, so a long text can be read with it. */
 export function isScrollerFor(el: Element, direction: Direction): boolean {
   return scrolls(el, direction);

@@ -48,7 +48,9 @@ export function ChatPane({
       }}
       className={cn(
         "relative flex shrink-0 flex-col border-s border-line pe-[var(--overscan-x)] pb-[var(--overscan-y)]",
-        open ? "max-w-1/2" : "w-14 items-center bg-surface pt-3",
+        open
+          ? "max-w-1/2"
+          : "w-[calc(3.5rem+var(--overscan-x))] items-center bg-surface pt-3",
       )}
     >
       {!open && (

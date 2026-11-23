@@ -138,7 +138,7 @@ function PageArea({
         // shrinks to its content and can outgrow the screen.
         chat
           ? "flex flex-col pe-[var(--overscan-x)] pb-[var(--overscan-y)]"
-          : "overflow-y-auto overscroll-contain bg-linear-to-b from-accent-soft to-canvas to-60% p-4 pe-[max(1rem,var(--overscan-x))] pb-[max(1rem,var(--overscan-y))] sm:p-6 sm:pe-[max(1.5rem,var(--overscan-x))] sm:pb-[max(1.5rem,var(--overscan-y))]",
+          : "overflow-y-auto overscroll-contain scroll-pb-[var(--overscan-y)] scroll-pe-[var(--overscan-x)] bg-linear-to-b from-accent-soft to-canvas to-60% p-4 pe-[max(1rem,var(--overscan-x))] pb-[max(1rem,var(--overscan-y))] has-[+aside]:pe-4 sm:p-6 sm:pe-[max(1.5rem,var(--overscan-x))] sm:pb-[max(1.5rem,var(--overscan-y))] sm:has-[+aside]:pe-6",
       )}
     >
       {isLoaded && (redirect ? <Navigate to={redirect} replace /> : <Outlet />)}

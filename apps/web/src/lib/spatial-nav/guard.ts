@@ -1,6 +1,7 @@
 import { isEditable } from "../remote-keys";
 import type { Direction } from "./geometry";
-import { isTabbable } from "./focusable";
+import { boxOf, isTabbable } from "./focusable";
+import { intersects } from "./geometry";
 import { isScrollerFor } from "./scroll";
 import type { FocusKind } from "./session";
 
@@ -46,7 +47,7 @@ function radioLeaves(radio: HTMLInputElement, direction: Direction): boolean {
     (r) => r.name === radio.name && r.form === radio.form && !r.disabled,
   );
   const forward = direction === "down" || direction === "right";
-  return radio === (forward ? group.at(-1) : group[0]);
+  return radio === (forward ? group[group.length - 1] : group[0]);
 }
 
 /** A native select changes value with Up and Down until it is at an end, and with Left and Right on some platforms; here Left and Right leave. */
@@ -101,5 +102,14 @@ export function focusKind(active: Element | null): FocusKind {
   if (!(active instanceof HTMLElement)) return "none";
   if (active === active.ownerDocument.body) return "none";
   if (!isTabbable(active)) return "title";
+  const win = active.ownerDocument.defaultView;
+  const box = boxOf(active);
+  const view = {
+    left: 0,
+    top: 0,
+    right: win?.innerWidth ?? 0,
+    bottom: win?.innerHeight ?? 0,
+  };
+  if (box && win && !intersects(box, view)) return "offscreen-control";
   return ringShown(active) ? "visible-control" : "hidden-control";
 }

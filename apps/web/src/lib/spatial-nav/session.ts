@@ -1,50 +1,69 @@
 import type { Direction } from "./geometry";
 
 /**
- * How the page is being driven: by a pointer (mouse, pen, touch, wheel), where
- * the arrows are the browser's own (reading, scrolling), or by a pad or
- * keyboard, where they move focus. A visit starts as `pad`: a TV remote has no
- * other way to begin. Pure; the DOM side is `session-tracker.ts`.
+ * How the page is being driven: by a pointer or a reader (the arrows are the
+ * browser's own: scrolling), or by a pad or keyboard navigating (they move
+ * focus). A desktop visit starts as `pointer`, so a reader on the keyboard
+ * scrolls with the arrows; a TV, or a screen with no hover or no pointer,
+ * starts as `pad`, since a remote has no other way to begin. Pure; the DOM side
+ * is `session-tracker.ts`.
  */
 export type Mode = "pad" | "pointer";
 
-export type SessionEvent = "pointer" | "tab" | "moved";
+/** `pointer`: a real pointer event. `moved`: an arrow, or a TV remote's key, took focus somewhere. */
+export type SessionEvent = "pointer" | "moved";
 
 /** What has focus when an arrow is pressed. */
-export type FocusKind = "none" | "title" | "visible-control" | "hidden-control";
+export type FocusKind =
+  "none" | "title" | "visible-control" | "hidden-control" | "offscreen-control";
 
 export interface Plan {
   action: "native" | "navigate";
   mode: Mode;
 }
 
-/** A pointer puts the session in pointer mode; Tab, and a move of focus by an arrow, put it in pad mode. */
 export function reduce(_mode: Mode, event: SessionEvent): Mode {
   return event === "pointer" ? "pointer" : "pad";
+}
+
+/** Where a visit starts: the pad on a TV, or where there is no hover or no pointer (a hint for the start only, not a layout rule). */
+export function initialMode(hints: {
+  tv: boolean;
+  noHover: boolean;
+  noPointer: boolean;
+}): Mode {
+  return hints.tv || hints.noHover || hints.noPointer ? "pad" : "pointer";
 }
 
 /**
  * What an arrow does.
  * - pad: navigate.
- * - pointer, nothing or only a title focused: native, all four arrows.
- * - pointer, a control focused with its ring shown (it came by keyboard or
- *   pad): navigate, and the session is pad.
- * - pointer, a control focused without a ring (a click, `autoFocus`, a restore
- *   on going back): Up and Down are native (reading, even when that control
- *   has scrolled out of view); Left and Right have nothing to scroll, so they
- *   navigate and the session is pad.
+ * - pointer, a control focused but off screen: native (the person scrolled away
+ *   and is reading; focus is not pulled back).
+ * - pointer, nothing or only a title focused: Up and Down native; Left and
+ *   Right scroll nothing (unless something scrolls sideways), so they mean
+ *   navigation: the session is pad, from the title or the first control.
+ * - pointer, a control focused with its ring shown (Tab, the keyboard, the
+ *   pad): navigate, and the session is pad. Tab alone changes nothing.
+ * - pointer, a control focused without its ring (a click, `autoFocus`, a
+ *   restore on going back): Up and Down native; Left and Right navigate.
  */
 export function planArrow(
   mode: Mode,
   focus: FocusKind,
   direction: Direction,
+  scrollsSideways = false,
 ): Plan {
   const navigate: Plan = { action: "navigate", mode: "pad" };
-  if (mode === "pad") return navigate;
   const native: Plan = { action: "native", mode: "pointer" };
-  if (focus === "none" || focus === "title") return native;
+  if (mode === "pad") return navigate;
+  if (focus === "offscreen-control") return native;
+  const sideways = direction === "left" || direction === "right";
+  if (focus === "none" || focus === "title") {
+    return sideways && !scrollsSideways ? navigate : native;
+  }
   if (focus === "visible-control") return navigate;
-  return direction === "left" || direction === "right" ? navigate : native;
+  return sideways ? navigate : native;
 }
 
 export interface PointerSample {

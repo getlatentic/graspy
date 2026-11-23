@@ -24,8 +24,10 @@ const MOVES_IN_LIST = new Set([
   "PageUp",
 ]);
 
-/** Arrows that move focus between controls while the list is closed (a remote's pad must be able to leave the field); Alt with Up or Down opens it, as a native select's does. */
-const ARROWS = new Set(["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]);
+/** Left and Right, with the list closed, are for moving focus (a remote's pad must be able to leave the field). */
+const SIDEWAYS = new Set(["ArrowLeft", "ArrowRight"]);
+/** Up and Down open a closed list, as the ARIA select-only combobox does, unless focus came by an arrow key, which passes over the field (OK, Enter, Space, Alt+Up and Alt+Down open it then). */
+const VERTICAL = new Set(["ArrowDown", "ArrowUp"]);
 
 /** Turns a read-only select into a text field that filters, from a keyboard (handled by the field, which must also focus it). */
 export const SEARCH_KEY = "/";
@@ -103,6 +105,7 @@ export function useCombobox(
   const [searching, setSearching] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const typed = useRef({ text: "", at: 0 });
+  const arrived = useRef(false);
   const matches = matchingOptions(options, searchTerm);
   const typing = searching;
 
@@ -176,7 +179,8 @@ export function useCombobox(
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const { key } = event;
-    if (!typing && !isOpen && ARROWS.has(key) && !event.altKey) return;
+    const leaves = SIDEWAYS.has(key) || (VERTICAL.has(key) && arrived.current);
+    if (!typing && !isOpen && leaves && !event.altKey) return;
     if (!typing && onPickingKey(event)) return;
     if (!Object.hasOwn(keys, key)) return;
     if (MOVES_IN_LIST.has(key)) event.preventDefault();
@@ -196,5 +200,9 @@ export function useCombobox(
     startTyping,
     jumpLetter,
     onKeyDown,
+    /** Noted on each focus: whether an arrow key brought it. */
+    noteArrival: (byArrow: boolean) => {
+      arrived.current = byArrow;
+    },
   };
 }

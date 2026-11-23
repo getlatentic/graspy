@@ -4,18 +4,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { place } from "@/test/layout";
 import { installSpatialNav } from "./install";
 
-let remove: () => void;
+let remove: (() => void) | null = null;
 
 const size = (el: object, name: string, value: number) =>
   Object.defineProperty(el, name, { value, configurable: true });
 
-beforeEach(() => {
+/** The page is installed fresh each time: a desktop visit starts reading, a TV on the pad. */
+function install(tv: boolean) {
+  if (tv) document.documentElement.dataset.device = "tv";
   remove = installSpatialNav(document);
+}
+
+beforeEach(() => {
   size(window, "innerWidth", 1000);
   size(window, "innerHeight", 800);
 });
 afterEach(() => {
-  remove();
+  remove?.();
+  remove = null;
+  delete document.documentElement.dataset.device;
   cleanup();
   vi.restoreAllMocks();
 });
@@ -39,6 +46,8 @@ const move = (dx: number, dy: number) => {
 };
 const focused = () => document.activeElement?.textContent;
 const text = (name: string) => screen.getByText(name);
+/** Time passes: the same direction twice within 70 ms is a held key. */
+const later = () => vi.advanceTimersByTime(300);
 
 /** What a click, `autoFocus` or a restore leaves: focus without its ring; a keyboard or pad leaves the ring. */
 function ring(el: Element, shown: boolean) {
@@ -64,109 +73,192 @@ function lesson() {
   place(text("Next"), { left: 0, top: 200, width: 100, height: 50 });
 }
 
-describe("a pointer session with nothing or a title focused", () => {
-  it("leaves all four arrows native, with a control in view", () => {
-    lesson();
-    wheel();
-    for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]) {
+/** An article: long prose with two links, one about two screens down and one far below. */
+function article() {
+  render(
+    <main>
+      <h1 tabIndex={-1}>Essay</h1>
+      <a href="/near">near</a>
+      <a href="/far">far</a>
+    </main>,
+  );
+  place(text("Essay"), { left: 0, top: 0, width: 100, height: 40 });
+  place(text("near"), { left: 0, top: 1500, width: 100, height: 20 });
+  place(text("far"), { left: 0, top: 9000, width: 100, height: 20 });
+}
+
+describe("a keyboard reader on a desktop (the visit starts reading)", () => {
+  it("scrolls with ArrowDown and ArrowUp on a long article, never hopping to a link", () => {
+    install(false);
+    article();
+    for (const key of ["ArrowDown", "ArrowUp", "ArrowDown"]) {
       expect(press(key), key).toBe(false);
     }
+    text("Essay").focus();
+    expect(press("ArrowDown", text("Essay"))).toBe(false);
+    expect(focused()).toBe("Essay");
+  });
+
+  it("is not changed by Tab alone: the arrows still scroll", () => {
+    install(false);
+    lesson();
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+    );
+    expect(press("ArrowDown")).toBe(false);
     expect(document.activeElement).toBe(document.body);
   });
 
-  it("does the same with the screen's title focused", () => {
-    lesson();
-    text("Fractions").focus();
-    document.body.dispatchEvent(new Event("mousedown", { bubbles: true }));
-    for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]) {
-      expect(press(key, text("Fractions")), key).toBe(false);
-    }
-    expect(focused()).toBe("Fractions");
-  });
-});
-
-describe("a pointer session with a control focused", () => {
-  it("keeps Up and Down native on a clicked control, though it has scrolled out of view", () => {
-    lesson();
-    place(text("Start"), { left: 0, top: 3000, width: 100, height: 50 });
-    text("Start").focus();
-    ring(text("Start"), false);
-    wheel();
-    expect(press("ArrowDown", text("Start"))).toBe(false);
-    expect(press("ArrowUp", text("Start"))).toBe(false);
-    expect(focused()).toBe("Start");
-  });
-
-  it("sends Left and Right to the pad: they move focus, and the next Down does too", () => {
-    lesson();
-    text("Start").focus();
-    ring(text("Start"), false);
-    wheel();
-    expect(press("ArrowRight", text("Start"))).toBe(true);
-    expect(focused()).toBe("Skip");
-    ring(text("Skip"), false);
-    expect(press("ArrowDown", text("Skip"))).toBe(true);
-    expect(focused()).toBe("Next");
-  });
-
-  it("treats a control with its ring shown as the pad's", () => {
+  it("navigates from a control that Tab reached, which shows its ring, and stays on the pad", () => {
+    install(false);
     lesson();
     text("Start").focus();
     ring(text("Start"), true);
-    wheel();
+    expect(press("ArrowDown", text("Start"))).toBe(true);
+    expect(focused()).toBe("Next");
+    ring(text("Next"), false);
+    expect(press("ArrowUp", text("Next"))).toBe(true);
+    expect(focused()).toBe("Start");
+  });
+
+  it("takes Left and Right, which scroll nothing, as navigation: the first control, then the pad", () => {
+    install(false);
+    lesson();
+    expect(press("ArrowRight")).toBe(true);
+    expect(focused()).toBe("Start");
+    ring(text("Start"), false);
     expect(press("ArrowDown", text("Start"))).toBe(true);
     expect(focused()).toBe("Next");
   });
 
-  it("goes back to the pad on Tab, from nothing focused too", () => {
+  it("leaves Left and Right native when the page scrolls sideways", () => {
+    install(false);
     lesson();
-    wheel();
+    size(document.documentElement, "scrollWidth", 5000);
+    size(document.documentElement, "clientWidth", 1000);
+    expect(press("ArrowRight")).toBe(false);
+    size(document.documentElement, "scrollWidth", 0);
+    size(document.documentElement, "clientWidth", 0);
+  });
+
+  it("does not change the session when Left and Right find nothing to go to", () => {
+    install(false);
+    render(<main>no controls</main>);
+    expect(press("ArrowRight")).toBe(false);
     expect(press("ArrowDown")).toBe(false);
-    document.body.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
-    );
-    expect(press("ArrowDown")).toBe(true);
+  });
+
+  it("does not pull focus back to a control that has scrolled out of view, even one with its ring", () => {
+    install(false);
+    lesson();
+    place(text("Start"), { left: 0, top: 3000, width: 100, height: 50 });
+    text("Start").focus();
+    ring(text("Start"), true);
+    for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]) {
+      expect(press(key, text("Start")), key).toBe(false);
+    }
     expect(focused()).toBe("Start");
   });
 
-  it("goes to the pointer when it moves, and not when the page moved under it", () => {
+  it("keeps Up and Down native on a clicked control, and sends Left and Right to the pad", () => {
+    install(false);
+    lesson();
+    text("Start").focus();
+    ring(text("Start"), false);
+    expect(press("ArrowDown", text("Start"))).toBe(false);
+    expect(press("ArrowRight", text("Start"))).toBe(true);
+    expect(focused()).toBe("Skip");
+  });
+
+  it("goes back to reading when the pointer moves, and not when the page moved under it", () => {
     vi.useFakeTimers();
     try {
+      install(false);
       lesson();
+      press("ArrowRight");
+      later();
       move(0, 0);
-      vi.advanceTimersByTime(300);
-      expect(press("ArrowDown")).toBe(true);
-      (document.activeElement as HTMLElement).blur();
-      vi.advanceTimersByTime(300);
+      expect(press("ArrowDown", text("Start"))).toBe(true);
+      later();
       move(4, 2);
+      (document.activeElement as HTMLElement).blur();
       expect(press("ArrowDown")).toBe(false);
     } finally {
       vi.useRealTimers();
     }
   });
-
-  it("is not set to the pointer by a click made by the keyboard, or a move just after a key", () => {
-    lesson();
-    const click = new MouseEvent("click", { bubbles: true, detail: 0 });
-    document.body.dispatchEvent(click);
-    expect(press("ArrowDown")).toBe(true);
-    (document.activeElement as HTMLElement).blur();
-    press("ArrowUp");
-    move(5, 5);
-    expect(press("ArrowDown")).toBe(true);
-  });
 });
 
-describe("a session of the pad", () => {
-  it("reaches a control below the fold, scrolled to, where the browser would not scroll", () => {
+describe("a TV (the visit starts on the pad)", () => {
+  it("starts from the title: the first arrow focuses the control below", () => {
+    install(true);
     lesson();
-    place(text("Next"), { left: 0, top: 4000, width: 100, height: 50 });
+    text("Fractions").focus();
+    expect(press("ArrowDown", text("Fractions"))).toBe(true);
+    expect(focused()).toBe("Start");
+  });
+
+  it("starts from nothing at the first control in view", () => {
+    install(true);
+    lesson();
+    expect(press("ArrowDown")).toBe(true);
+    expect(focused()).toBe("Start");
+  });
+
+  it("is back on the pad at the first key after the pointer was wiggled", () => {
+    vi.useFakeTimers();
+    try {
+      install(true);
+      lesson();
+      wheel();
+      move(5, 5);
+      later();
+      text("Start").focus();
+      ring(text("Start"), false);
+      expect(press("ArrowRight", text("Start"))).toBe(true);
+      expect(focused()).toBe("Skip");
+      later();
+      move(3, 3);
+      later();
+      expect(press("ArrowDown", text("Skip"))).toBe(true);
+      expect(focused()).toBe("Next");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("is on the pad again after OK, whatever the pointer did", () => {
+    install(true);
+    lesson();
+    wheel();
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+    );
+    expect(press("ArrowDown")).toBe(true);
+    expect(focused()).toBe("Start");
+  });
+
+  it("reaches a control below the fold, scrolled to, where the browser would not scroll", () => {
+    install(true);
+    lesson();
+    place(text("Next"), { left: 0, top: 1500, width: 100, height: 50 });
     text("Start").focus();
     expect(press("ArrowDown", text("Start"))).toBe(true);
     expect(focused()).toBe("Next");
   });
 
+  it("does not go further than three screens, so a reader of a long article is not teleported", () => {
+    install(true);
+    article();
+    text("Essay").focus();
+    expect(press("ArrowDown", text("Essay"))).toBe(true);
+    expect(focused()).toBe("near");
+    expect(press("ArrowDown", text("near"))).toBe(false);
+    expect(focused()).toBe("near");
+  });
+
   it("is not stuck when the focused control has scrolled away: Left and Right still move", () => {
+    install(true);
     lesson();
     place(text("Start"), { left: 0, top: 4000, width: 100, height: 50 });
     place(text("Skip"), { left: 150, top: 4000, width: 100, height: 50 });
@@ -175,14 +267,8 @@ describe("a session of the pad", () => {
     expect(focused()).toBe("Skip");
   });
 
-  it("starts from the title: the first arrow focuses the control below", () => {
-    lesson();
-    text("Fractions").focus();
-    expect(press("ArrowDown", text("Fractions"))).toBe(true);
-    expect(focused()).toBe("Start");
-  });
-
-  it("does not take the key when focus did not move", () => {
+  it("does not take the key when focus did not move, nor change the session", () => {
+    install(true);
     lesson();
     text("Start").focus();
     vi.spyOn(text("Next"), "focus").mockImplementation(() => undefined);
@@ -190,15 +276,25 @@ describe("a session of the pad", () => {
     expect(focused()).toBe("Start");
   });
 
-  it("lets the key scroll when there is nothing at all that way", () => {
+  it("lets the key scroll when there is nothing at all that way, and does not measure again at once", () => {
+    install(true);
     lesson();
     text("Next").focus();
     expect(press("ArrowDown", text("Next"))).toBe(false);
+    const measured = vi.fn();
+    const rect = text("Start").getBoundingClientRect;
+    text("Start").getBoundingClientRect = () => {
+      measured();
+      return rect.call(text("Start"));
+    };
+    expect(press("ArrowDown", text("Next"))).toBe(false);
+    expect(measured).not.toHaveBeenCalled();
   });
 
   it("swallows a repeat that comes too soon only when there is a control to move to", () => {
     vi.useFakeTimers();
     try {
+      install(true);
       render(
         <main>
           <button>one</button>

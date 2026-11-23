@@ -52,7 +52,12 @@ export function reveal(el: HTMLElement): void {
       view.top + px(style.scrollPaddingTop),
       view.bottom - px(style.scrollPaddingBottom),
     );
-    const dx = shift(want.left, want.right, view.left, view.right);
+    const dx = shift(
+      want.left,
+      want.right,
+      view.left + px(style.scrollPaddingLeft),
+      view.right - px(style.scrollPaddingRight),
+    );
     if (dy && (isPage || SCROLLS.has(style.overflowY)))
       scroller.scrollTop += dy;
     if (dx && (isPage || SCROLLS.has(style.overflowX)))

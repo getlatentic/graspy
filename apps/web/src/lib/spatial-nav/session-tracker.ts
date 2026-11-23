@@ -1,4 +1,5 @@
 import {
+  initialMode,
   isRealPointer,
   reduce,
   type Mode,
@@ -27,9 +28,19 @@ export interface Session {
   stop(): void;
 }
 
+function startMode(doc: Document): Mode {
+  const media = (query: string) =>
+    doc.defaultView?.matchMedia?.(query).matches === true;
+  return initialMode({
+    tv: doc.documentElement.dataset.device === "tv",
+    noHover: media("(hover: none)"),
+    noPointer: media("(pointer: none)"),
+  });
+}
+
 /** Watches the document for the events that change the input session. */
 export function trackSession(doc: Document): Session {
-  let mode: Mode = "pad";
+  let mode: Mode = startMode(doc);
   let seen: Seen | null = null;
   let keyAt = -Infinity;
 

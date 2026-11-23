@@ -1,5 +1,10 @@
 import { FOCUSABLE, measureOne } from "./focusable";
-import { intersects, type Box, type Candidate } from "./geometry";
+import {
+  intersects,
+  type Box,
+  type Candidate,
+  type Direction,
+} from "./geometry";
 
 /** A run of this many controls in a row outside the window ends the scan that way: pages are in reading order. */
 const MISS_LIMIT = 60;
@@ -69,4 +74,27 @@ export function measureAll(root: ParentNode): Candidate<HTMLElement>[] {
     if (c) found.push(c);
   }
   return found;
+}
+
+/** How many viewports away in the key's direction a control may be and still be gone to: further, a reader of a long page is not teleported. */
+const REACH = 3;
+
+/** Whether `box` is no further than REACH viewports past `view` in `direction`. */
+export function withinReach(
+  box: Box,
+  view: Box,
+  direction: Direction,
+): boolean {
+  const w = view.right - view.left;
+  const h = view.bottom - view.top;
+  switch (direction) {
+    case "down":
+      return box.top <= view.bottom + REACH * h;
+    case "up":
+      return box.bottom >= view.top - REACH * h;
+    case "right":
+      return box.left <= view.right + REACH * w;
+    default:
+      return box.right >= view.left - REACH * w;
+  }
 }

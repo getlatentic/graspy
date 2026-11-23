@@ -7,7 +7,7 @@ import { StartLearning } from "./start-learning";
 
 export function SiteHeader() {
   return (
-    <header className="sticky-header sticky top-0 z-10 bg-surface/90 pt-[var(--overscan-y)] backdrop-blur">
+    <header className="sticky-header sticky top-0 z-10 bg-surface/90 backdrop-blur">
       <div className={cn(PAGE, "flex h-16 items-center justify-between gap-4")}>
         <Link to="/" aria-label="graspy home">
           <Logo />

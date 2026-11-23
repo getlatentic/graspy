@@ -76,6 +76,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
           inputMode={typing ? "search" : "none"}
           onChange={(event) => combobox.search(event.target.value)}
           onFocus={() => {
+            combobox.noteArrival(arrivedByArrow());
             if (!arrivedByArrow()) combobox.open();
           }}
           onClick={combobox.open}

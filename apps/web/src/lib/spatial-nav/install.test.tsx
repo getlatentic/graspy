@@ -9,6 +9,7 @@ let remove: () => void;
 const scrolled = vi.fn();
 
 beforeEach(() => {
+  document.documentElement.dataset.device = "tv";
   remove = installSpatialNav(document);
   Element.prototype.scrollIntoView = scrolled;
   Object.defineProperty(window, "innerWidth", {
@@ -22,6 +23,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   remove();
+  delete document.documentElement.dataset.device;
   cleanup();
   scrolled.mockReset();
   document.documentElement.removeAttribute("style");
@@ -80,6 +82,8 @@ describe("arrow keys on a grid", () => {
     await user.keyboard("{ArrowDown}");
     expect(focused()).toBe("top");
     place(button("low"), { left: 0, top: 170, width: 100, height: 60 });
+    // A key that found nothing is not tried again at once.
+    await new Promise((r) => setTimeout(r, 250));
     await user.keyboard("{ArrowDown}");
     expect(focused()).toBe("low");
     expect(area.scrollTop).toBe(30);
@@ -210,7 +214,7 @@ describe("arrow keys with nothing focused", () => {
         <button>far</button>
       </main>,
     );
-    place(button("far"), { left: 0, top: 5000, width: 100, height: 50 });
+    place(button("far"), { left: 0, top: 2000, width: 100, height: 50 });
     const event = new KeyboardEvent("keydown", {
       key: "ArrowDown",
       bubbles: true,

@@ -9,7 +9,7 @@ import {
   type Candidate,
   type Direction,
 } from "./geometry";
-import { measureAll, measureNear, neighbourhood } from "./measure";
+import { measureAll, measureNear, neighbourhood, withinReach } from "./measure";
 import { scopeOf } from "./scope";
 
 /** Whether the writing runs right to left where the key was pressed (the focused element's own `dir`, else the page's). */
@@ -76,7 +76,13 @@ export function findTarget(
     return (
       firstUsable(order(seen)) ??
       firstUsable(order(near)) ??
-      firstUsable(order(measureAll(scope.root)))
+      firstUsable(
+        order(
+          measureAll(scope.root).filter((c) =>
+            withinReach(c.box, view, "down"),
+          ),
+        ),
+      )
     );
   }
 
@@ -101,6 +107,8 @@ export function findTarget(
   return (
     pick(near.filter((c) => intersects(c.box, view))) ??
     pick(near) ??
-    pick(measureAll(scope.root))
+    pick(
+      measureAll(scope.root).filter((c) => withinReach(c.box, view, direction)),
+    )
   );
 }

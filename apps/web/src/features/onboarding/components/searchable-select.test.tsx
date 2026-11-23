@@ -74,11 +74,24 @@ describe("SearchableSelect opening", () => {
     expect(isOpen()).toBe(true);
   });
 
-  it("leaves the arrows to focus navigation while closed, and opens on Alt with Up or Down", () => {
+  it("leaves Left and Right to focus navigation while closed, and Up and Down open it when focus came by Tab or a click", () => {
     render(<Picker />);
+    for (const key of ["ArrowLeft", "ArrowRight"]) {
+      expect(fireEvent.keyDown(field(), { key }), key).toBe(true);
+      expect(isOpen(), key).toBe(false);
+    }
+    expect(fireEvent.keyDown(field(), { key: "ArrowUp" })).toBe(false);
+    expect(isOpen()).toBe(true);
+  });
+
+  it("leaves all four arrows to focus navigation after an arrow brought focus, and opens on Alt with Up or Down", () => {
+    render(<Picker />);
+    whileArrowMoves(() => {
+      field().focus();
+      return true;
+    });
     for (const key of ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]) {
-      const untouched = fireEvent.keyDown(field(), { key });
-      expect(untouched, key).toBe(true);
+      expect(fireEvent.keyDown(field(), { key }), key).toBe(true);
       expect(isOpen(), key).toBe(false);
     }
     fireEvent.keyDown(field(), { key: "ArrowUp", altKey: true });

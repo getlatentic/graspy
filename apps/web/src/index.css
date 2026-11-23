@@ -53,6 +53,13 @@ html {
   }
 }
 
+/* What the arrows or Tab scroll to stops short of the overscan at the foot
+   and the end, on the page and in the learn shell's scroll area (`scroll-pb`). */
+html {
+  scroll-padding-bottom: var(--overscan-y);
+  scroll-padding-inline-end: var(--overscan-x);
+}
+
 /* A page with a sticky header keeps what the arrows or Tab scroll to clear of it. */
 html:has(.sticky-header) {
   scroll-padding-top: calc(4rem + var(--overscan-y));

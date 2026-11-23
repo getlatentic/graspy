@@ -33,7 +33,7 @@ function topModal(doc: Document): Element | null {
   const open = [...doc.querySelectorAll(MODAL)].filter(
     (el) => isModal(el) && !isOut(el) && isShown(el as HTMLElement),
   );
-  return open.at(-1) ?? null;
+  return open[open.length - 1] ?? null;
 }
 
 export function scopeOf(active: Element | null, doc: Document): Scope {

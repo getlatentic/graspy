@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Direction } from "./geometry";
 import {
+  initialMode,
   isRealPointer,
   planArrow,
   reduce,
@@ -13,13 +14,26 @@ describe("reduce", () => {
   const table: [Mode, SessionEvent, Mode][] = [
     ["pad", "pointer", "pointer"],
     ["pointer", "pointer", "pointer"],
-    ["pointer", "tab", "pad"],
-    ["pad", "tab", "pad"],
     ["pointer", "moved", "pad"],
     ["pad", "moved", "pad"],
   ];
   it.each(table)("%s then %s is %s", (from, event, to) => {
     expect(reduce(from, event)).toBe(to);
+  });
+});
+
+describe("initialMode", () => {
+  it("is pointer on a desktop, so a reader's arrows scroll", () => {
+    expect(initialMode({ tv: false, noHover: false, noPointer: false })).toBe(
+      "pointer",
+    );
+  });
+  it.each([
+    [{ tv: true, noHover: false, noPointer: false }],
+    [{ tv: false, noHover: true, noPointer: false }],
+    [{ tv: false, noHover: false, noPointer: true }],
+  ])("is pad for a TV, or no hover, or no pointer: %j", (hints) => {
+    expect(initialMode(hints)).toBe("pad");
   });
 });
 
@@ -32,52 +46,49 @@ describe("planArrow", () => {
     "title",
     "visible-control",
     "hidden-control",
+    "offscreen-control",
   ];
+  const navigate = { action: "navigate", mode: "pad" };
+  const native = { action: "native", mode: "pointer" };
 
   it("navigates in a pad session whatever has focus and whichever arrow", () => {
     for (const focus of focuses) {
-      for (const d of all) {
-        expect(planArrow("pad", focus, d)).toEqual({
-          action: "navigate",
-          mode: "pad",
-        });
-      }
+      for (const d of all) expect(planArrow("pad", focus, d)).toEqual(navigate);
     }
   });
 
-  it("leaves all four arrows native in a pointer session with nothing or a title focused", () => {
-    for (const focus of ["none", "title"] as const) {
-      for (const d of all) {
-        expect(planArrow("pointer", focus, d)).toEqual({
-          action: "native",
-          mode: "pointer",
-        });
-      }
-    }
-  });
-
-  it("treats a control whose ring is shown as the pad's, and goes to the pad session", () => {
+  it("leaves every arrow native when a control that is off screen has focus", () => {
     for (const d of all) {
-      expect(planArrow("pointer", "visible-control", d)).toEqual({
-        action: "navigate",
-        mode: "pad",
-      });
+      expect(planArrow("pointer", "offscreen-control", d)).toEqual(native);
+    }
+  });
+
+  it("leaves Up and Down native, and takes Left and Right for navigation, with nothing or a title focused", () => {
+    for (const focus of ["none", "title"] as const) {
+      for (const d of vertical)
+        expect(planArrow("pointer", focus, d)).toEqual(native);
+      for (const d of horizontal)
+        expect(planArrow("pointer", focus, d)).toEqual(navigate);
+    }
+  });
+
+  it("leaves Left and Right native when something scrolls sideways", () => {
+    for (const d of horizontal) {
+      expect(planArrow("pointer", "none", d, true)).toEqual(native);
+    }
+  });
+
+  it("treats a control whose ring is shown as the pad's", () => {
+    for (const d of all) {
+      expect(planArrow("pointer", "visible-control", d)).toEqual(navigate);
     }
   });
 
   it("keeps Up and Down native on a clicked control, and sends Left and Right to the pad", () => {
-    for (const d of vertical) {
-      expect(planArrow("pointer", "hidden-control", d)).toEqual({
-        action: "native",
-        mode: "pointer",
-      });
-    }
-    for (const d of horizontal) {
-      expect(planArrow("pointer", "hidden-control", d)).toEqual({
-        action: "navigate",
-        mode: "pad",
-      });
-    }
+    for (const d of vertical)
+      expect(planArrow("pointer", "hidden-control", d)).toEqual(native);
+    for (const d of horizontal)
+      expect(planArrow("pointer", "hidden-control", d)).toEqual(navigate);
   });
 });
 
