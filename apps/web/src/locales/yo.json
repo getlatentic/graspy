@@ -467,5 +467,9 @@
     "playAt": "Tẹ́tí sí ohùn ti {when}",
     "stopAt": "Dá ohùn ti {when} dúró",
     "deleteAt": "Pa ohùn ti {when} rẹ́"
+  },
+  "loading": {
+    "opening": "Ó ń ṣí…",
+    "tryAgain": "Tún gbìyànjú"
   }
 }

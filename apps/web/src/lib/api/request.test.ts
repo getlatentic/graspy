@@ -137,6 +137,32 @@ describe("getJson with a signal", () => {
 
     expect(outcome).toHaveProperty("error");
     expect(fetchWithSession).toHaveBeenCalledTimes(1);
-    expect(fetchWithSession.mock.calls[0][1]?.signal).toBe(controller.signal);
+    expect(fetchWithSession.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  });
+});
+
+describe("getJson's time limit", () => {
+  it("cuts each try off after thirty seconds, so a screen is not left waiting for good", async () => {
+    const limit = new AbortController();
+    const timeout = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockReturnValue(limit.signal);
+    fetchWithSession.mockResolvedValue(Response.json({ ok: 1 }));
+
+    await settled(getJson("/thing"));
+
+    expect(timeout).toHaveBeenCalledWith(30_000);
+    expect(fetchWithSession.mock.calls[0][1]?.signal).toBe(limit.signal);
+  });
+
+  it("tries again a read the limit cut off", async () => {
+    fetchWithSession
+      .mockRejectedValueOnce(
+        new DOMException("The operation timed out.", "TimeoutError"),
+      )
+      .mockResolvedValueOnce(Response.json({ ok: 1 }));
+
+    expect(await settled(getJson("/thing"))).toEqual({ value: { ok: 1 } });
+    expect(fetchWithSession).toHaveBeenCalledTimes(2);
   });
 });

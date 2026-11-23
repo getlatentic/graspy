@@ -467,5 +467,9 @@
     "playAt": "تشغيل تسجيل {when}",
     "stopAt": "إيقاف تسجيل {when}",
     "deleteAt": "حذف تسجيل {when}"
+  },
+  "loading": {
+    "opening": "جارٍ الفتح…",
+    "tryAgain": "حاول مرة أخرى"
   }
 }

@@ -6,6 +6,7 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <!-- The API's connection (DNS, TCP, TLS) opens while the scripts download; only the origin of the URL is used. -->
     <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
+    <link rel="preload" as="image" href="/brand/graspy-lockup-v1.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png" />
     <!-- iOS shows these, not the manifest, while an installed app starts: one per screen size, made by scripts/make-splash.mjs, which writes between the markers. -->
     <!-- splash:start -->
@@ -60,6 +61,29 @@
     />
     <title>graspy — AI Tutor</title>
     <style>
+      /* The first paint, before any script runs: the logo and a progress line on the canvas colours
+         (design/tokens.css: canvas, track, accent, accent-strong, on-accent, in both schemes). Sizes
+         are the loading screen's (src/components/loading-screen.tsx), so the hand-over moves nothing.
+         src/app/boot-splash.ts takes it down once the app has drawn. After 8 seconds with no app the
+         line gives way to a way to try again, with no script needed. */
+      html { background: #f5f8fa; }
+      #boot { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2147483646; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; background: #f5f8fa; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+      #boot svg { display: block; height: 2.5rem; width: auto; }
+      #boot .slot { position: relative; display: flex; align-items: center; height: 3rem; }
+      #boot .bar { width: 7rem; height: 0.25rem; overflow: hidden; border-radius: 624.9375rem; background: #eef1f4; animation: boot-out 1ms 8s forwards; }
+      #boot .bar i { display: block; width: 33.3333%; height: 100%; border-radius: 624.9375rem; background: #1f7099; animation: boot-sweep 1.4s ease-in-out infinite; }
+      #boot .again { position: absolute; top: 50%; left: 50%; visibility: hidden; transform: translate(-50%, -50%); box-sizing: border-box; padding: 0.75rem 1.25rem; border-radius: 0.75rem; background: #1f7099; box-shadow: 0 0.25rem 0 #175573; color: #ffffff; font-size: 1rem; font-weight: 600; line-height: 1.5rem; white-space: nowrap; text-decoration: none; animation: boot-in 1ms 8s forwards; }
+      @keyframes boot-sweep { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+      @keyframes boot-out { to { visibility: hidden; } }
+      @keyframes boot-in { to { visibility: visible; } }
+      @media (prefers-reduced-motion: reduce) { #boot .bar i { animation: none; margin-left: 2.25rem; } }
+      @media (prefers-color-scheme: dark) {
+        html, #boot { background: #0d1a22; }
+        #boot .bar { background: #223744; }
+        #boot .bar i, #boot .again { background: #2177a3; }
+      }
+    </style>
+    <style>
       /* Built by the boot script below, only for a browser that cannot run the app. Nothing of it exists on a supported browser. */
       #too-old { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 2rem; text-align: center; color: #12232e; background: #e3eefa; background: linear-gradient(135deg, #fef4ec, #e3eefa 50%, #c4e2fe); font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
       #too-old h1 { margin: 0 0 1.5rem; max-width: 40rem; font-size: 2.75rem; line-height: 1.2; font-weight: 700; }
@@ -106,6 +130,8 @@
             document.addEventListener('DOMContentLoaded', function () { show(false); });
             return;
           }
+          var splash = document.getElementById('boot');
+          if (splash) splash.parentNode.removeChild(splash);
           box = document.createElement('div');
           box.id = 'too-old';
           box.setAttribute('role', 'alert');
@@ -136,10 +162,48 @@
           if (app && app.children.length > 0) return;
           show(false);
         });
+
+        // A deploy removes the last build's files. A page the browser kept from before, or one that
+        // was mid-download, then asks for a startup file that is gone, and the host answers with a
+        // page where a script should be: nothing starts, and nothing says so. A file of the build
+        // that fails to load before the app has started reloads the page once, onto the new build.
+        // Later failures are src/app/page-chunks.ts's, which uses the same key. Never offline, nor
+        // within 10 seconds of the last such reload, nor where storage cannot remember it: those
+        // would loop.
+        var RELOADED_KEY = 'graspy.reloaded-for-stale-chunk';
+        window.addEventListener('error', function (event) {
+          var file = event && event.target;
+          if (booted || !file || (file.tagName !== 'SCRIPT' && file.tagName !== 'LINK')) return;
+          if (String(file.src || file.href).indexOf('/assets/') === -1) return;
+          if (navigator.onLine === false) return;
+          try {
+            var now = Date.now();
+            if (now - (Number(sessionStorage.getItem(RELOADED_KEY)) || 0) < 10000) return;
+            sessionStorage.setItem(RELOADED_KEY, String(now));
+          } catch (storageRefused) {
+            return;
+          }
+          location.reload();
+        }, true);
+      })();
+
+      // The server starts a fresh instance after a quiet spell and the first request pays for it:
+      // asking now, with the page only parsed, lets that wait overlap the scripts' download.
+      // The API's address is the preconnect link's, which Vite fills in. src/lib/warm-api.ts
+      // asks too when this did not.
+      (function () {
+        var link = document.querySelector('link[rel="preconnect"]');
+        if (!link || !window.fetch) return;
+        window.__graspyWarmed = true;
+        fetch(link.href + '/health', { cache: 'no-store' }).catch(function () {});
       })();
     </script>
   </head>
   <body>
+    <div id="boot">
+      <svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 -563 4552 836" role="img" aria-label="graspy"><g fill="#2893C8" transform="translate(-152.8 -760.8) scale(44.9457)"><path d="M12 22V12" stroke="#2893C8" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 14C12 9 8 5.7 3.4 6.3 3.4 11.3 7 14.5 12 14Z"/><path d="M12 12C12 7.3 15.6 4.1 20.6 4.7 20.6 9.7 16.6 12.7 12 12Z"/></g><g fill="#2893C8" transform="translate(970.1 0)"><path d="M469 -475V-554H610V4Q610 81 579.0 141.5Q548 202 486.0 237.5Q424 273 336 273Q218 273 142.5 218.0Q67 163 57 68H196Q207 106 243.5 128.5Q280 151 332 151Q393 151 431.0 114.5Q469 78 469 4V-82Q442 -43 394.5 -17.0Q347 9 286 9Q216 9 158.0 -27.0Q100 -63 66.5 -128.5Q33 -194 33 -279Q33 -363 66.5 -428.0Q100 -493 157.5 -528.0Q215 -563 286 -563Q348 -563 395.0 -538.5Q442 -514 469 -475ZM322 -440Q283 -440 250.0 -421.0Q217 -402 196.5 -365.5Q176 -329 176 -279Q176 -229 196.5 -191.5Q217 -154 250.5 -134.0Q284 -114 322 -114Q361 -114 395.0 -133.5Q429 -153 449.0 -189.5Q469 -226 469 -277Q469 -328 449.0 -364.5Q429 -401 395.0 -420.5Q361 -440 322 -440Z"/><path d="M1057.0 -562V-415H1020.0Q954.0 -415 920.5 -384.0Q887.0 -353 887.0 -276V0H747.0V-554H887.0V-468Q914.0 -512 957.5 -537.0Q1001.0 -562 1057.0 -562Z"/><path d="M1368.0 -563Q1430.0 -563 1476.5 -538.0Q1523.0 -513 1551.0 -475V-554H1692.0V0H1551.0V-81Q1524.0 -42 1476.5 -16.5Q1429.0 9 1367.0 9Q1297.0 9 1239.5 -27.0Q1182.0 -63 1148.5 -128.5Q1115.0 -194 1115.0 -279Q1115.0 -363 1148.5 -428.0Q1182.0 -493 1239.5 -528.0Q1297.0 -563 1368.0 -563ZM1404.0 -440Q1365.0 -440 1332.0 -421.0Q1299.0 -402 1278.5 -365.5Q1258.0 -329 1258.0 -279Q1258.0 -229 1278.5 -191.5Q1299.0 -154 1332.5 -134.0Q1366.0 -114 1404.0 -114Q1443.0 -114 1477.0 -133.5Q1511.0 -153 1531.0 -189.5Q1551.0 -226 1551.0 -277Q1551.0 -328 1531.0 -364.5Q1511.0 -401 1477.0 -420.5Q1443.0 -440 1404.0 -440Z"/><path d="M1799.0 -175H1940.0Q1944.0 -143 1971.5 -122.0Q1999.0 -101 2040.0 -101Q2080.0 -101 2102.5 -117.0Q2125.0 -133 2125.0 -158Q2125.0 -185 2097.5 -198.5Q2070.0 -212 2010.0 -228Q1948.0 -243 1908.5 -259.0Q1869.0 -275 1840.5 -308.0Q1812.0 -341 1812.0 -397Q1812.0 -443 1838.5 -481.0Q1865.0 -519 1914.5 -541.0Q1964.0 -563 2031.0 -563Q2130.0 -563 2189.0 -513.5Q2248.0 -464 2254.0 -380H2120.0Q2117.0 -413 2092.5 -432.5Q2068.0 -452 2027.0 -452Q1989.0 -452 1968.5 -438.0Q1948.0 -424 1948.0 -399Q1948.0 -371 1976.0 -356.5Q2004.0 -342 2063.0 -327Q2123.0 -312 2162.0 -296.0Q2201.0 -280 2229.5 -246.5Q2258.0 -213 2259.0 -158Q2259.0 -110 2232.5 -72.0Q2206.0 -34 2156.5 -12.5Q2107.0 9 2041.0 9Q1973.0 9 1919.0 -15.5Q1865.0 -40 1833.5 -82.0Q1802.0 -124 1799.0 -175Z"/><path d="M2697.0 -563Q2768.0 -563 2825.5 -528.0Q2883.0 -493 2916.5 -428.5Q2950.0 -364 2950.0 -279Q2950.0 -194 2916.5 -128.5Q2883.0 -63 2825.5 -27.0Q2768.0 9 2697.0 9Q2636.0 9 2589.5 -16.0Q2543.0 -41 2514.0 -79V264H2374.0V-554H2514.0V-474Q2541.0 -512 2588.5 -537.5Q2636.0 -563 2697.0 -563ZM2660.0 -440Q2622.0 -440 2588.5 -420.5Q2555.0 -401 2534.5 -364.0Q2514.0 -327 2514.0 -277Q2514.0 -227 2534.5 -190.0Q2555.0 -153 2588.5 -133.5Q2622.0 -114 2660.0 -114Q2699.0 -114 2732.5 -134.0Q2766.0 -154 2786.5 -191.0Q2807.0 -228 2807.0 -279Q2807.0 -329 2786.5 -365.5Q2766.0 -402 2732.5 -421.0Q2699.0 -440 2660.0 -440Z"/><path d="M3582.0 -554 3239.0 262H3090.0L3210.0 -14L2988.0 -554H3145.0L3288.0 -167L3433.0 -554Z"/></g></svg>
+      <div class="slot"><div class="bar" aria-hidden="true"><i></i></div><a class="again" href="">Try again</a></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,14 +1,18 @@
-// The app's service worker, so graspy opens at once, and without a connection
-// once it has opened with one. It answers two kinds of request from this
-// origin: a page, which is the one app document, from its last copy at once
-// while it asks the network for a newer one; and the build's files and the cue
-// sounds, which never change under one name, from its cache first. Everything else, the API
+// The app's service worker, so graspy opens without a connection once it has opened with one. It
+// answers two kinds of request from this origin: a page, which is the one app document, and the
+// build's files and the cue sounds, which never change under one name. Everything else, the API
 // included, goes to the network as if it were not here.
 //
-// A page answered from the last copy may be a deploy behind. When the network's
-// document differs the copy is replaced, and the page, which asks once it has
-// loaded, is told: one the learner has not touched reloads into the new build,
-// and any other opens it on the next visit (src/lib/app-update.ts).
+// A page is answered by the network first, for a moment (NAVIGATION_WAIT_MS): the document it
+// gets is the build now deployed, so a deploy never meets a page that asks for files the host no
+// longer has. Only when the network is offline, refuses, or is slower than that does the last
+// copy answer; that copy may be a deploy behind, and when the network's document then arrives
+// and differs, the page, which asks once it has loaded, is told: one the learner has not touched
+// reloads into the new build, and any other opens it on the next visit (src/lib/app-update.ts).
+//
+// A file is answered from the cache first, and kept as it passes. A file the host no longer has
+// is answered as missing, not with the app's page, so the page that asked sees it fail (see the
+// boot script in index.html and src/app/page-chunks.ts, which reload onto the new build).
 "use strict";
 
 const SHELL = "graspy-shell-v1";
@@ -17,6 +21,8 @@ const FILES = "graspy-files-v2";
 const KEPT = new Set([SHELL, FILES]);
 // Every page of the app is this one document.
 const APP = "/";
+// How long a page waits for the network's document before the last copy answers instead.
+const NAVIGATION_WAIT_MS = 2000;
 // A deploy leaves the last one's hashed files behind; past this many, the
 // oldest go.
 const MAX_FILES = 200;
@@ -55,8 +61,21 @@ async function trimmed(cache) {
   );
 }
 
-// Whether the document the network has now differs from the copy kept, as the page last answered
-// found it; the page asks once it is loaded (see "check" below).
+// One download of a file at a time: the page asking for a startup file while the worker keeps the
+// same one shares it, and each gets its own copy of the answer.
+const downloads = new Map();
+function download(request) {
+  const url = typeof request === "string" ? request : request.url;
+  let pending = downloads.get(url);
+  if (!pending) {
+    pending = fetch(request).finally(() => downloads.delete(url));
+    downloads.set(url, pending);
+  }
+  return pending.then((response) => response.clone());
+}
+
+// Whether a deploy's document, as the network has it now, differs from the copy kept, as the page
+// last answered found it; the page asks once it is loaded (see "check" below).
 let latestChanged = Promise.resolve(false);
 
 // The files a document names under /assets: its entry script and the ones it preloads.
@@ -81,7 +100,7 @@ async function precache(html) {
     names.map(async (name) => {
       const url = new URL(name, self.location.origin).href;
       if (await files.match(url)) return;
-      const response = await fetch(url);
+      const response = await download(url);
       if (!isFileReply(response)) throw new Error(`${name} could not be kept`);
       await files.put(url, response);
     }),
@@ -89,40 +108,55 @@ async function precache(html) {
   await trimmed(files);
 }
 
-// The document as the network has it now. The copy is replaced when it differs from the one kept,
-// once the new build's startup files are kept; a reply that is not the app's document is not kept.
-async function refresh(cache, kept) {
+// The document as the network has it now, with a copy to keep. Rejects for a reply that is not the
+// app's document: offline, an error, or a captive portal's page.
+async function latest(kept) {
   const response = await fetch(APP, { cache: "no-cache" });
-  if (!response.ok) return { response, changed: false };
+  if (!response.ok) throw new Error(`The document answered ${response.status}`);
   const html = await response.clone().text();
-  if (!html.includes(APP_MARKER)) return { response, changed: false };
+  if (!html.includes(APP_MARKER)) throw new Error("Not the app's document");
   const changed = !!kept && (await kept.text()) !== html;
-  if (changed) await precache(html);
-  if (!kept || changed) await cache.put(APP, response.clone());
-  return { response, changed };
+  return { response, copy: response.clone(), html, changed, first: !kept };
 }
+
+// Keeps the network's document in place of the copy once the files it names are kept.
+async function remember(cache, { copy, html, changed, first }) {
+  if (changed) await precache(html);
+  if (first || changed) await cache.put(APP, copy);
+  return changed;
+}
+
+const after = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function page(event) {
   const cache = await caches.open(SHELL);
   const kept = await cache.match(APP);
-  const refreshing = refresh(cache, kept && kept.clone());
-  if (!kept) return (await refreshing).response;
-  // The learner does not wait for the network; a failed refresh leaves the copy as it is.
-  latestChanged = refreshing.then(({ changed }) => changed).catch(() => false);
-  event.waitUntil(latestChanged);
-  return kept;
+  const found = latest(kept && kept.clone());
+  const changed = found.then((now) => remember(cache, now)).catch(() => false);
+  event.waitUntil(changed);
+  if (!kept) return (await found).response;
+  // The learner waits only a moment for the network; a failed answer leaves the copy as it is.
+  const now = await Promise.race([
+    found.catch(() => null),
+    after(NAVIGATION_WAIT_MS),
+  ]);
+  // The page is on the network's build already, so there is nothing to reload into.
+  latestChanged = now ? changed.then(() => false) : changed;
+  return now ? now.response : kept;
 }
 
 async function file(request) {
   const cache = await caches.open(FILES);
   const kept = await cache.match(request);
   if (kept) return kept;
-  const response = await fetch(request);
+  const response = await download(request);
   if (isFileReply(response)) {
     await cache.put(request, response.clone());
     await trimmed(cache);
+    return response;
   }
-  return response;
+  // The host's page where a file should be: the file is gone.
+  return response.ok ? new Response(null, { status: 404 }) : response;
 }
 
 // What the page loaded before this worker controlled it, which it keeps.
@@ -135,7 +169,7 @@ async function keep(urls) {
       if (url.origin !== self.location.origin) return;
       const cache = url.pathname === APP ? shell : isFile(url) ? files : null;
       if (!cache || (await cache.match(url.href))) return;
-      const response = await fetch(url.href);
+      const response = await download(url.href);
       if (url.pathname === APP) {
         const html = await response.clone().text();
         if (response.ok && html.includes(APP_MARKER))

@@ -1,9 +1,13 @@
 import { readJson } from "./body";
 import { ApiError, toApiError, toNetworkError } from "./errors";
+import { abortAny } from "@/lib/abort-any";
 import { LearnerChanged } from "@/lib/learner-pin";
 import { fetchWithSession } from "./session";
 
 const RETRY_DELAYS_MS = [400, 1200];
+// A cold server answers within about seven seconds; a read that is still silent after this is
+// cut off, so a screen waiting on it is not left waiting for good, and tried again.
+const READ_TIMEOUT_MS = 30_000;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -41,7 +45,9 @@ export async function getJson<T>(
 ): Promise<T> {
   for (let attempt = 0; ; attempt += 1) {
     try {
-      return await answered<T>(url, { signal }, still);
+      const limit = AbortSignal.timeout(READ_TIMEOUT_MS);
+      const stop = signal ? abortAny([signal, limit]) : limit;
+      return await answered<T>(url, { signal: stop }, still);
     } catch (error) {
       if (signal?.aborted) throw error;
       const retryable = error instanceof ApiError && error.retryable;

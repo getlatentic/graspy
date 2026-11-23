@@ -27,9 +27,7 @@ import {
   useVoiceOnly,
 } from "@/features/voice/hooks/use-voice-learner";
 import { homeParts } from "@/features/learn/lib/home-parts";
-
-const HOME_GRID =
-  "mx-auto grid max-w-3xl grid-cols-1 gap-8 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10 lg:gap-y-6";
+import { HOME_GRID } from "@/features/learn/lib/home-grid";
 
 export default function HomePage() {
   const { t } = useI18n();

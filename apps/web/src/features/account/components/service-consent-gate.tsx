@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { useSignOut } from "@/features/learn/hooks/use-sign-out";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingBar, SlowRetry } from "@/components/loading-screen";
+import { useSlow } from "@/hooks/use-slow";
 import type { Learner } from "@/lib/account/account-store";
 import { useI18n } from "@/lib/i18n-context";
 import { useServiceStanding } from "../hooks/use-service-standing";
@@ -66,10 +67,19 @@ function Waiting({
       </div>
     );
   }
+  return <Checking onRetry={onRetry} />;
+}
+
+/** While the server is asked, then, past a while, the one thing to do. */
+function Checking({ onRetry }: { onRetry: () => void }) {
+  const { t } = useI18n();
+  const slow = useSlow(true);
   return (
-    <Spinner
-      label={t("learners.opening")}
-      className="mx-auto size-6 text-accent-ink"
-    />
+    <div aria-busy="true" className="flex justify-center py-8">
+      <p role="status" className="sr-only">
+        {t("loading.opening")}
+      </p>
+      {slow ? <SlowRetry onRetry={onRetry} /> : <LoadingBar />}
+    </div>
   );
 }

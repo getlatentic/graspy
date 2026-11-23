@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import source from "../../public/sw.js?raw";
 
 const ORIGIN = "https://app.test";
@@ -91,35 +91,84 @@ const kept = async (worker: ReturnType<typeof startWorker>, body: string) => {
   await cache.put("/", new Response(body));
 };
 
+// What public/sw.js waits for the network's document before the last copy answers.
+const NAVIGATION_WAIT_MS = 2000;
+
 describe("the service worker's page", () => {
-  it("answers from the kept copy without waiting for the network", async () => {
-    const network = new Promise<Response>(() => undefined);
-    const worker = startWorker(() => network);
+  afterEach(() => vi.useRealTimers());
+
+  it("answers with the network's document when it comes in time, though a copy is kept", async () => {
+    const worker = startWorker(page(NEW));
     await kept(worker, OLD);
-    const { answer } = await worker.open();
-    expect(await (await answer).text()).toBe(OLD);
+    const { answer, settled } = await worker.open();
+    expect(await (await answer).text()).toBe(NEW);
+    await settled();
+    const cache = await worker.caches.open("graspy-shell-v1");
+    expect(await (await cache.match("/"))!.text()).toBe(NEW);
   });
 
-  it("keeps a newer document and tells the page that asks", async () => {
+  it("has nothing to reload into when the page is on the network's build already", async () => {
     const worker = startWorker(page(NEW));
     await kept(worker, OLD);
     const { answer, settled } = await worker.open();
     await answer;
     await settled();
-    const cache = await worker.caches.open("graspy-shell-v1");
-    expect(await (await cache.match("/"))!.text()).toBe(NEW);
     await worker.check();
+    expect(worker.told).toEqual([]);
+  });
+
+  it("answers from the kept copy once the network is slower than the wait", async () => {
+    vi.useFakeTimers();
+    const worker = startWorker(() => new Promise<Response>(() => undefined));
+    await kept(worker, OLD);
+    const { answer } = await worker.open();
+    await vi.advanceTimersByTimeAsync(NAVIGATION_WAIT_MS);
+    expect(await (await answer).text()).toBe(OLD);
+  });
+
+  it("does not make a learner wait the whole time for a network that has failed", async () => {
+    vi.useFakeTimers();
+    const worker = startWorker(
+      async () => new Response("down", { status: 503 }),
+    );
+    await kept(worker, OLD);
+    const { answer } = await worker.open();
+    // No timer is advanced: a failed answer is not waited out.
+    expect(await (await answer).text()).toBe(OLD);
+  });
+
+  it("tells the page that asks, once the slow network has answered with a newer document", async () => {
+    vi.useFakeTimers();
+    let answerNetwork: (response: Response) => void = () => undefined;
+    const worker = startWorker(
+      () => new Promise<Response>((resolve) => (answerNetwork = resolve)),
+    );
+    await kept(worker, OLD);
+    const { answer } = await worker.open();
+    await vi.advanceTimersByTimeAsync(NAVIGATION_WAIT_MS);
+    expect(await (await answer).text()).toBe(OLD);
+    const asked = worker.check();
+    answerNetwork(new Response(NEW));
+    await asked;
     expect(worker.told).toEqual([{ type: "update-ready" }]);
   });
 
-  it("is on the new build after one reload", async () => {
-    const worker = startWorker(page(NEW));
+  it("is on the new build after one reload when the network was too slow", async () => {
+    vi.useFakeTimers();
+    let slow = true;
+    const worker = startWorker(async () => {
+      if (slow) await new Promise((resolve) => setTimeout(resolve, 3000));
+      return new Response(NEW);
+    });
     await kept(worker, OLD);
     const first = await worker.open();
+    await vi.advanceTimersByTimeAsync(NAVIGATION_WAIT_MS);
     expect(await (await first.answer).text()).toBe(OLD);
+    await vi.advanceTimersByTimeAsync(NAVIGATION_WAIT_MS);
     await first.settled();
     await worker.check();
     expect(worker.told).toHaveLength(1);
+    slow = false;
     const reload = await worker.open();
     expect(await (await reload.answer).text()).toBe(NEW);
     await reload.settled();
@@ -137,21 +186,6 @@ describe("the service worker's page", () => {
     expect(worker.told).toEqual([]);
   });
 
-  it("tells a page that asks before the network has answered, once it has", async () => {
-    let answerNetwork: (response: Response) => void = () => undefined;
-    const worker = startWorker(
-      () => new Promise<Response>((resolve) => (answerNetwork = resolve)),
-    );
-    await kept(worker, OLD);
-    await (
-      await worker.open()
-    ).answer;
-    const asked = worker.check();
-    answerNetwork(new Response(NEW));
-    await asked;
-    expect(worker.told).toEqual([{ type: "update-ready" }]);
-  });
-
   it("takes the network's document on the first visit, and keeps it", async () => {
     const worker = startWorker(page(NEW));
     const { answer, settled } = await worker.open();
@@ -162,7 +196,7 @@ describe("the service worker's page", () => {
     expect(worker.told).toEqual([]);
   });
 
-  it("opens from the kept copy with no connection", async () => {
+  it("opens from the kept copy with no connection, at once", async () => {
     const worker = startWorker(async () => {
       throw new TypeError("Failed to fetch");
     });
@@ -202,7 +236,30 @@ describe("the service worker's new build", () => {
     for (const name of [entry, "/assets/cn-NEW.js"]) {
       expect(await files.match(ORIGIN + name)).toBeDefined();
     }
-    expect(worker.told).toEqual([{ type: "update-ready" }]);
+    expect(worker.told).toEqual([]);
+  });
+
+  it("downloads a startup file once when the page asks for it while the worker keeps it", async () => {
+    const calls: string[] = [];
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const worker = startWorker(async (url) => {
+      calls.push(String(url));
+      if (String(url) === "/") return new Response(withScripts);
+      await held;
+      return new Response("script");
+    });
+    await kept(worker, OLD);
+    const { answer, settled } = await worker.open();
+    await answer;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const asked = worker.openFile(entry);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    release();
+    expect(await (await asked).text()).toBe("script");
+    await settled();
+    // The entry script and the one it preloads, once each: the page's ask shared the first.
+    expect(calls.filter((url) => url !== "/")).toHaveLength(2);
   });
 
   it("keeps the old document, and says nothing, when a file cannot be kept", async () => {
@@ -300,12 +357,13 @@ describe("the service worker's refusal to keep what is not the app", () => {
     expect(await files.match(ORIGIN + "/manifest.webmanifest")).toBeUndefined();
   });
 
-  it("does not keep a page answered for a file that is not there", async () => {
+  it("does not keep a page answered for a file that is not there, and answers it as missing", async () => {
     const worker = startWorker(
       async () =>
         new Response(OLD, { headers: { "content-type": "text/html" } }),
     );
-    await worker.openFile("/assets/missing.js");
+    const answer = await worker.openFile("/assets/missing.js");
+    expect(answer.status).toBe(404);
     const files = await worker.caches.open("graspy-files-v2");
     expect(await files.match(ORIGIN + "/assets/missing.js")).toBeUndefined();
   });
