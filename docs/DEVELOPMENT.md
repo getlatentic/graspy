@@ -70,6 +70,7 @@ cd apps/server && uv run mutmut run                       # finds tests that che
 - The server's unit tests never call a model. A stand-in model (`tests/stand_in.py`) answers through the real DSPy adapter, and each test reads back what every stage asked.
 - The e2e specs stub nothing: a real browser, server and model, and Google's sign-in is the Auth emulator. A full run takes about five minutes.
 - `tests/fixtures/slug-corpus.json` is read by both the server and the web app's tests. Both must spell a subject's slug the same way.
+- `tests/fixtures/math-repair.json` is read by the server's, the web app's and the lesson views' tests: the maths repair is written in Python and twice in TypeScript, and all must give the same text for each case. A new failure is a case in it first. [The maths repair](MATHS_REPAIR.md) says what the rules are and what a KaTeX-driven repair would and would not cover.
 - `apps/server/scripts/export_thread_contract.py` writes what a device sends of its tutor conversations and what the server returns into the web app's and the Android app's tests. After a change to `app/threads/wire.py`, run it; both apps' tests fail until they send and read the new shape.
 - `apps/server/scripts/voice/turn_baseline.py` reads one D1 database with SELECT only and prints the voice turns' counts, verdicts and times for a date range. [Voice turn baseline](VOICE_TURN_BASELINE.md) has the baselines taken with it.
 - `apps/web/src/lib/csp.test.ts` fails with the new hash when the inline script in `index.html` changes. Put that hash in `public/_headers`.
