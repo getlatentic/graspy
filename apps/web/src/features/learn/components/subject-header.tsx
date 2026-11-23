@@ -1,7 +1,8 @@
 import { ArrowLeft } from "lucide-react";
 import type { CurriculumSource } from "@/lib/curriculum-record";
 import { useI18n } from "@/lib/i18n-context";
-import { SubjectBadge } from "@/features/learn/components/subject-icon";
+import { useAgeBand } from "@/lib/use-age-band";
+import { SubjectPicture } from "@/features/learn/components/subject-picture";
 
 interface SubjectHeaderProps {
   name: string;
@@ -19,6 +20,7 @@ export function SubjectHeader({
   onBack,
 }: SubjectHeaderProps) {
   const { t } = useI18n();
+  const band = useAgeBand();
   return (
     <header>
       <button
@@ -30,7 +32,13 @@ export function SubjectHeader({
         {t("subject.back")}
       </button>
       <div className="mt-4 flex items-center gap-3">
-        <SubjectBadge name={name} className="size-11 rounded-full" />
+        <SubjectPicture
+          name={name}
+          band={band}
+          frame="small"
+          className="size-14 sm:size-16"
+          iconClassName="size-7 sm:size-8"
+        />
         <div className="min-w-0">
           <h1 className="text-balance text-2xl font-semibold text-ink sm:text-3xl">
             {name}

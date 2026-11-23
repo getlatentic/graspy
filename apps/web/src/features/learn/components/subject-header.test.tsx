@@ -1,9 +1,14 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
 import { SubjectHeader } from "./subject-header";
+
+const { band } = vi.hoisted(() => ({
+  band: { now: "child" as "child" | "tween" | "teen" },
+}));
+vi.mock("@/lib/use-age-band", () => ({ useAgeBand: () => band.now }));
 
 const SOURCE = {
   packageId: "ai.graspy.curriculum.ng.nerdc.jss1.mathematics",
@@ -60,5 +65,31 @@ describe("SubjectHeader", () => {
 
     expect(text).not.toContain(en.subject.modelWritten);
     expect(text).not.toContain("Follows");
+  });
+});
+
+describe("SubjectHeader picture", () => {
+  it.each(["child", "tween", "teen"] as const)(
+    "shows the %s learner picture, not an icon in a circle",
+    (now) => {
+      band.now = now;
+      shown({ name: "Mathematics", onBack: () => {} });
+      const header = screen.getByRole("banner");
+
+      expect(header.querySelector("img")?.getAttribute("src")).toBe(
+        `/brand/art/math-${now}.webp`,
+      );
+      expect(header.querySelector("svg.lucide-pi")).toBeNull();
+      expect(header.querySelector(".rounded-full")).toBeNull();
+    },
+  );
+
+  it("falls back to the icon only for a subject with no picture", () => {
+    band.now = "teen";
+    shown({ name: "Religious Studies", onBack: () => {} });
+    const header = screen.getByRole("banner");
+
+    expect(header.querySelector("img")).toBeNull();
+    expect(header.querySelectorAll("svg.lucide-book-marked").length).toBe(1);
   });
 });

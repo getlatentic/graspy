@@ -4,11 +4,12 @@ import type { CurriculumData } from "@/lib/curriculum-record";
 import { useI18n } from "@/lib/i18n-context";
 import { timeAgo } from "@/lib/time-ago";
 import { cn } from "@/lib/cn";
-import { SubjectIcon } from "@/features/learn/components/subject-icon";
+import { SubjectPicture } from "@/features/learn/components/subject-picture";
+import { useAgeBand } from "@/lib/use-age-band";
 import { UnreadDot } from "@/features/learn/components/unread-dot";
 import { describeScope } from "@/features/learn/lib/describe-scope";
-import { subjectTintClasses } from "@/features/learn/lib/subject-icons";
 
+/** What a conversation is about: the subject's picture, or an icon for the earlier and general chats. */
 export function ScopeIcon({
   kind,
   subject,
@@ -18,22 +19,28 @@ export function ScopeIcon({
   subject: string | null;
   className?: string;
 }) {
-  const Icon =
-    kind === "earlier" ? History : kind === "general" ? MessageCircle : null;
-  return (
-    <span
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-xl",
-        subject ? subjectTintClasses(subject) : "bg-accent-soft text-accent",
-        className,
-      )}
-    >
-      {Icon ? (
+  const band = useAgeBand();
+  if (kind === "earlier" || kind === "general" || subject === null) {
+    const Icon = kind === "earlier" ? History : MessageCircle;
+    return (
+      <span
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-control bg-accent-soft text-accent",
+          className,
+        )}
+      >
         <Icon className="size-5" aria-hidden="true" />
-      ) : (
-        <SubjectIcon name={subject ?? ""} className="size-5" />
-      )}
-    </span>
+      </span>
+    );
+  }
+  return (
+    <SubjectPicture
+      name={subject}
+      band={band}
+      frame="small"
+      className={className}
+      iconClassName="size-5"
+    />
   );
 }
 
