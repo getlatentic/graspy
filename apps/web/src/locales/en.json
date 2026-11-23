@@ -374,7 +374,9 @@
     "cancel": "Cancel",
     "expired": "The code expired.",
     "denied": "Your phone said no.",
-    "failed": "Couldn't get a code. Try again."
+    "failed": "Couldn't get a code. Try again.",
+    "linking": "Linking to {name}",
+    "continue": "Continue"
   },
   "tvLink": {
     "signIn": "Sign in to link your TV",
@@ -386,7 +388,7 @@
     "addLearner": "Add a learner first",
     "approve": "Sign in",
     "deny": "Don't sign in",
-    "done": "Your TV is signed in.",
+    "done": "Now confirm on your TV.",
     "denied": "Not signed in.",
     "finish": "Done",
     "another": "Link another TV",
@@ -397,7 +399,12 @@
     "failed": "That didn't work. Try again.",
     "tvs": "Your TVs",
     "remove": "Remove",
-    "removeNamed": "Remove {name}"
+    "removeNamed": "Remove {name}",
+    "warn": "Only continue if you are looking at this TV.",
+    "wrongEnd": "Those are not the last characters on the TV.",
+    "inUse": "Another account is already linking this TV.",
+    "endLabel": "Last 4 characters on the TV",
+    "parent": "Sign in again to link a TV."
   },
   "voice": {
     "title": "Voice lessons",

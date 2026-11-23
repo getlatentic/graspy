@@ -3,7 +3,11 @@
 A signed session token cannot be taken back, so a TV holds two things: a session token that lasts
 an hour, and a refresh credential that makes the next one. The credential is a row here, kept as a
 hash, which the account can list and revoke; revoking stops the TV renewing, and its last token
-ends within the hour. A credential ends after 90 days, or after 30 days without use."""
+ends within the hour. A credential ends after 90 days, or after 30 days without use.
+
+The credential changes at every renewal. The one it replaced is accepted once more within a minute,
+for a TV whose answer was lost on the way; presented again, or after the minute, it is a copy
+somewhere it should not be, and the whole TV is revoked."""
 
 from __future__ import annotations
 
@@ -13,7 +17,7 @@ from typing import Any
 
 from ..learner.time import now_ms
 from . import tv_links
-from .tv_codes import hash_secret, new_refresh_token, same
+from .tv_codes import hash_secret, new_refresh_token
 from .tv_links import changed, row_of, rows_of
 
 DAY_MS = 24 * 60 * 60 * 1000
@@ -23,6 +27,11 @@ IDLE_LIMIT_MS = 30 * DAY_MS
 MAX_TVS_PER_ACCOUNT = 10
 # Revoked and expired rows are kept this long, then purged.
 KEEP_AFTER_END_MS = DAY_MS
+# The credential a renewal replaced is accepted once within this long.
+GRACE_MS = 60 * 1000
+# A TV that took its session and never renewed it, a day on, has most likely lost the answer that
+# held the credential; it is revoked, so it does not linger toward the limit of TVs.
+UNRENEWED_MS = DAY_MS
 
 TAKE_SQL = (
     "INSERT INTO tv_sessions (id, refresh_hash, account_uid, learner_id, label, created_at, "
@@ -34,10 +43,20 @@ CONSUME_SQL = (
     "WHERE device_code_hash = ?1 AND status = 'approved' AND expires_at > ?2"
 )
 TAKEN_SQL = "SELECT account_uid, learner_id, label FROM tv_sessions WHERE id = ?1"
-RENEW_SQL = (
-    "UPDATE tv_sessions SET last_used_at = ?2 WHERE refresh_hash = ?1 AND revoked_at IS NULL "
-    "AND expires_at > ?2 AND last_used_at > ?3 "
-    "RETURNING id, refresh_hash, account_uid, learner_id"
+ROTATE_SQL = (
+    "UPDATE tv_sessions SET prev_hash = refresh_hash, refresh_hash = ?4, rotated_at = ?2, "
+    "grace_used = 0, last_used_at = ?2, renewed_at = COALESCE(renewed_at, ?2) "
+    "WHERE refresh_hash = ?1 AND revoked_at IS NULL AND expires_at > ?2 AND last_used_at > ?3 "
+    "RETURNING id, account_uid, learner_id"
+)
+GRACE_SQL = (
+    "UPDATE tv_sessions SET refresh_hash = ?4, grace_used = 1, last_used_at = ?2 "
+    "WHERE prev_hash = ?1 AND grace_used = 0 AND rotated_at >= ?5 AND revoked_at IS NULL "
+    "AND expires_at > ?2 AND last_used_at > ?3 RETURNING id, account_uid, learner_id"
+)
+# A credential that was replaced and is presented outside its one grace is a copy.
+REUSE_SQL = (
+    "UPDATE tv_sessions SET revoked_at = ?2 WHERE prev_hash = ?1 AND revoked_at IS NULL"
 )
 ACTIVE_SQL = (
     "SELECT id, label, learner_id, created_at, last_used_at FROM tv_sessions "
@@ -55,6 +74,10 @@ REVOKE_SQL = (
 REVOKE_OWN_SQL = "UPDATE tv_sessions SET revoked_at = ?2 WHERE refresh_hash = ?1 AND revoked_at IS NULL"
 FORGET_ACCOUNT_SQL = "DELETE FROM tv_sessions WHERE account_uid = ?1"
 FORGET_LINKS_SQL = "DELETE FROM tv_links WHERE account_uid = ?1"
+UNRENEWED_SQL = (
+    "UPDATE tv_sessions SET revoked_at = ?1 "
+    "WHERE renewed_at IS NULL AND revoked_at IS NULL AND created_at < ?2"
+)
 PURGE_SQL = "DELETE FROM tv_sessions WHERE (revoked_at IS NOT NULL AND revoked_at < ?1) OR expires_at < ?1"
 
 
@@ -72,6 +95,8 @@ class Renewed:
     id: str
     account_uid: str
     learner_id: str
+    # The credential the TV holds from now on.
+    refresh_token: str
 
 
 async def take(database: Any, device_code: str, now: int) -> Taken | None:
@@ -101,16 +126,24 @@ async def take(database: Any, device_code: str, now: int) -> Taken | None:
 
 
 async def renew(database: Any, refresh_token: str, now: int) -> Renewed | None:
-    """The TV renews its session: the credential is live, unrevoked and used within 30 days."""
+    """The TV renews its session: the credential is live, unrevoked and used within 30 days. It
+    is replaced by a new one, which is returned. A credential already replaced is accepted once
+    within the grace, and otherwise revokes the TV."""
     presented = hash_secret(refresh_token)
-    found = rows_of(
-        await database.prepare(RENEW_SQL)
-        .bind(presented, now, now - IDLE_LIMIT_MS)
-        .all()
-    )
-    if not found or not same(found[0]["refresh_hash"], presented):
-        return None
-    return Renewed(found[0]["id"], found[0]["account_uid"], found[0]["learner_id"])
+    fresh = new_refresh_token()
+    idle_before = now - IDLE_LIMIT_MS
+    for sql, grace in ((ROTATE_SQL, ()), (GRACE_SQL, (now - GRACE_MS,))):
+        found = rows_of(
+            await database.prepare(sql)
+            .bind(presented, now, idle_before, hash_secret(fresh), *grace)
+            .all()
+        )
+        if found:
+            return Renewed(
+                found[0]["id"], found[0]["account_uid"], found[0]["learner_id"], fresh
+            )
+    await database.prepare(REUSE_SQL).bind(presented, now).run()
+    return None
 
 
 async def active(database: Any, uid: str, now: int) -> list[dict]:
@@ -151,7 +184,9 @@ async def purge(database: Any, now: int) -> None:
 
 
 async def purge_tv_sign_in(env: Any, now: int | None = None) -> None:
-    """The cron trigger's part: requests and credentials past their time are deleted."""
+    """The cron trigger's part: requests and credentials past their time are deleted, and a TV
+    that never renewed what it took is revoked."""
     when = now_ms() if now is None else now
     await tv_links.purge(env.DB, when)
+    await env.DB.prepare(UNRENEWED_SQL).bind(when, when - UNRENEWED_MS).run()
     await purge(env.DB, when)

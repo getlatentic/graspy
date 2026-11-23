@@ -1,20 +1,32 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { startTvSession } from "@/lib/api/session";
-import { runTvLink, type TvLinkState } from "@/lib/account/tv-link-flow";
+import {
+  runTvLink,
+  type TvLink,
+  type TvLinkState,
+} from "@/lib/account/tv-link-flow";
 
 /** A TV's request to be signed in from a phone: the code to show, and what became of it. An
- * approval signs the device in, which the account store then reports. `again` asks for a new code. */
+ * approval does not sign the device in: `linking` waits for `confirm` (which signs it in, and
+ * which the account store then reports) or `decline`. `again` asks for a new code. */
 export function useTvLink() {
   const [state, setState] = useState<TvLinkState>({ kind: "starting" });
   const [round, setRound] = useState(0);
+  const link = useRef<TvLink | null>(null);
 
-  useEffect(
-    () => runTvLink({ onState: setState, onApproved: startTvSession }),
-    [round],
-  );
+  useEffect(() => {
+    const running = runTvLink({
+      onState: setState,
+      onApproved: startTvSession,
+    });
+    link.current = running;
+    return running.stop;
+  }, [round]);
 
   const again = useCallback(() => setRound((n) => n + 1), []);
-  return { state, again };
+  const confirm = useCallback(() => link.current?.confirm(), []);
+  const decline = useCallback(() => link.current?.decline(), []);
+  return { state, again, confirm, decline };
 }
 
 const secondsUntil = (at: number) =>

@@ -374,7 +374,9 @@
     "cancel": "Cancel",
     "expired": "Di code don expire.",
     "denied": "Your phone talk no.",
-    "failed": "We no fit get code. Try again."
+    "failed": "We no fit get code. Try again.",
+    "linking": "We dey link to {name}",
+    "continue": "Continue"
   },
   "tvLink": {
     "signIn": "Sign in to link your TV",
@@ -386,7 +388,7 @@
     "addLearner": "Add learner first",
     "approve": "Sign in",
     "deny": "No sign in",
-    "done": "Your TV don sign in.",
+    "done": "Now confirm for your TV.",
     "denied": "E no sign in.",
     "finish": "Done",
     "another": "Link another TV",
@@ -397,7 +399,12 @@
     "failed": "E no work. Try again.",
     "tvs": "Your TVs",
     "remove": "Remove",
-    "removeNamed": "Remove {name}"
+    "removeNamed": "Remove {name}",
+    "warn": "Only continue if you dey look dis TV.",
+    "wrongEnd": "Dem no be di last characters for di TV.",
+    "inUse": "Another account dey link dis TV already.",
+    "endLabel": "Last 4 characters for di TV",
+    "parent": "Sign in again to link TV."
   },
   "voice": {
     "title": "Voice lessons",

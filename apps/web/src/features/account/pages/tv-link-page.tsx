@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { buttonStyles } from "@/components/ui/button-styles";
@@ -8,15 +8,19 @@ import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { AccountFrame } from "../components/account-frame";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
+import { ParentSignIn } from "../components/parent-sign-in";
 import { ProblemNote } from "../components/problem-note";
 import { TvConfirm } from "../components/tv-confirm";
 import { TvList } from "../components/tv-list";
 import { useLearners } from "../hooks/use-learners";
+import { useParentGate } from "../hooks/use-parent-gate";
 import { useTvApproval, type ApprovalProblem } from "../hooks/use-tv-approval";
 import { useTvs } from "../hooks/use-tvs";
 
 const PROBLEMS: Record<ApprovalProblem, string> = {
   invalid: "tvLink.invalid",
+  inUse: "tvLink.inUse",
+  wrongEnd: "tvLink.wrongEnd",
   busy: "tvLink.busy",
   full: "tvLink.full",
   consent: "tvLink.consent",
@@ -31,11 +35,11 @@ function codeInAddress(hash: string): string {
 /** What the server compares: case, spaces and dashes are not part of a code. */
 const normalised = (typed: string) => typed.replace(/[\s-]/g, "").toUpperCase();
 
-/** Where a TV's code is entered, on a phone: sign in if needed, give the code, and approve or deny
- * the TV it names. */
+/** Where a TV's code is entered, on a phone: sign in if needed, and again as the parent, give the
+ * code, and approve or deny the TV it names. */
 export default function TvLinkPage() {
   const account = useAccount();
-  return <AccountFrame>{account ? <Linking /> : <SignInFirst />}</AccountFrame>;
+  return <AccountFrame>{account ? <Parent /> : <SignInFirst />}</AccountFrame>;
 }
 
 function SignInFirst() {
@@ -50,30 +54,52 @@ function SignInFirst() {
   );
 }
 
-function Linking() {
+/** A TV's long-lived sign-in is the parent's to give: a session left open, or a child's, is not
+ * enough. */
+function Parent() {
+  const { t } = useI18n();
+  const gate = useParentGate();
+  if (gate.needsParent) {
+    return (
+      <ParentSignIn start={gate.startAsParent} message={t("tvLink.parent")} />
+    );
+  }
+  return <Linking refused={gate.refused} />;
+}
+
+function Linking({ refused }: { refused: (error: unknown) => boolean }) {
   const { t } = useI18n();
   const account = useAccount();
   const { learners, failed } = useLearners();
-  const { tvs, reload, remove } = useTvs();
-  const { step, problem, lookUp, approve, deny, reset } = useTvApproval(reload);
+  const { tvs, reload, remove } = useTvs(true, refused);
+  const { step, problem, lookUp, approve, deny, reset } = useTvApproval(
+    reload,
+    refused,
+  );
   const [typed, setTyped] = useState(() => codeInAddress(window.location.hash));
+  // The code from a QR code is kept out of sight: it is not for reading off the phone.
+  const [fromLink, setFromLink] = useState(() => typed !== "");
+
+  useEffect(() => {
+    if (problem && fromLink) {
+      setFromLink(false);
+      setTyped("");
+    }
+  }, [problem, fromLink]);
 
   if (step.kind === "checking" || (!learners && !failed)) {
     return <Spinner className="mx-auto size-6 text-accent-ink" />;
   }
   if (step.kind === "confirm") {
     return (
-      <div className="flex flex-col gap-6">
-        <TvConfirm
-          code={step.code}
-          asked={step.asked}
-          learners={learners ?? []}
-          chosen={account?.learner?.id ?? null}
-          onApprove={(learnerId) => approve(step.code, learnerId)}
-          onDeny={() => deny(step.code)}
-        />
-        {problem && <ProblemNote>{t(PROBLEMS[problem])}</ProblemNote>}
-      </div>
+      <TvConfirm
+        asked={step.asked}
+        learners={learners ?? []}
+        chosen={account?.learner?.id ?? null}
+        problem={problem === "wrongEnd" ? t(PROBLEMS.wrongEnd) : null}
+        onApprove={(learnerId, end) => approve(step, learnerId, end)}
+        onDeny={() => deny(step.code)}
+      />
     );
   }
   if (step.kind === "done" || step.kind === "denied") {
@@ -98,6 +124,7 @@ function Linking() {
     <div className="flex flex-col gap-8">
       <CodeForm
         typed={typed}
+        hidden={fromLink}
         onType={setTyped}
         problem={problem}
         onSubmit={(code) => lookUp(normalised(code))}
@@ -109,11 +136,14 @@ function Linking() {
 
 function CodeForm({
   typed: code,
+  hidden,
   onType: setCode,
   problem,
   onSubmit,
 }: {
   typed: string;
+  /** The code came in the link: its first four characters are shown, and no more. */
+  hidden: boolean;
   onType: (code: string) => void;
   problem: ApprovalProblem | null;
   onSubmit: (code: string) => void;
@@ -123,27 +153,37 @@ function CodeForm({
     event.preventDefault();
     if (code.trim()) onSubmit(code);
   };
+  const shown = normalised(code);
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       <h1 className="text-balance font-display text-2xl font-semibold text-ink sm:text-3xl">
         {t("tvLink.title")}
       </h1>
-      <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
-        {t("tvLink.code")}
-        <Input
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
+      {hidden ? (
+        <p
           dir="ltr"
-          autoFocus
-          autoCapitalize="characters"
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          maxLength={12}
-          aria-invalid={problem === "invalid"}
-          className="h-14 text-center font-mono text-2xl font-bold uppercase tracking-widest"
-        />
-      </label>
+          className="text-center font-mono text-3xl font-bold tracking-widest text-ink"
+        >
+          {shown.slice(0, 4)} {"•".repeat(Math.max(0, shown.length - 4))}
+        </p>
+      ) : (
+        <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
+          {t("tvLink.code")}
+          <Input
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            dir="ltr"
+            autoFocus
+            autoCapitalize="characters"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={12}
+            aria-invalid={problem === "invalid"}
+            className="h-14 text-center font-mono text-2xl font-bold uppercase tracking-widest"
+          />
+        </label>
+      )}
       {problem && <ProblemNote>{t(PROBLEMS[problem])}</ProblemNote>}
       <Button type="submit" size="lg" disabled={!code.trim()}>
         {t("tvLink.next")}

@@ -374,7 +374,9 @@
     "cancel": "Fagilé",
     "expired": "Kóòdù náà ti parí.",
     "denied": "Fóònù rẹ kọ̀.",
-    "failed": "A kò rí kóòdù gbà. Tún gbìyànjú."
+    "failed": "A kò rí kóòdù gbà. Tún gbìyànjú.",
+    "linking": "Ń so mọ́ {name}",
+    "continue": "Tẹ̀síwájú"
   },
   "tvLink": {
     "signIn": "Wọlé láti so tẹlifíṣọ̀n rẹ pọ̀",
@@ -386,7 +388,7 @@
     "addLearner": "Kọ́kọ́ fi akẹ́kọ̀ọ́ kún un",
     "approve": "Wọlé",
     "deny": "Má wọlé",
-    "done": "Tẹlifíṣọ̀n rẹ ti wọlé.",
+    "done": "Ní báyìí, fọwọ́ sí i lórí tẹlifíṣọ̀n rẹ.",
     "denied": "Kò wọlé.",
     "finish": "Ó parí",
     "another": "So tẹlifíṣọ̀n mìíràn pọ̀",
@@ -397,7 +399,12 @@
     "failed": "Kò ṣiṣẹ́. Tún gbìyànjú.",
     "tvs": "Àwọn tẹlifíṣọ̀n rẹ",
     "remove": "Yọ kúrò",
-    "removeNamed": "Yọ {name} kúrò"
+    "removeNamed": "Yọ {name} kúrò",
+    "warn": "Tẹ̀síwájú nìkan tí o bá ń wo tẹlifíṣọ̀n yìí.",
+    "wrongEnd": "Àwọn yẹn kì í ṣe ọ̀rọ̀ tó kẹ́yìn lórí tẹlifíṣọ̀n.",
+    "inUse": "Àkọọ́lẹ̀ mìíràn ń so tẹlifíṣọ̀n yìí pọ̀ tẹ́lẹ̀.",
+    "endLabel": "Ọ̀rọ̀ mẹ́rin tó kẹ́yìn lórí tẹlifíṣọ̀n",
+    "parent": "Tún wọlé láti so tẹlifíṣọ̀n pọ̀."
   },
   "voice": {
     "title": "Ẹ̀kọ́ ohùn",

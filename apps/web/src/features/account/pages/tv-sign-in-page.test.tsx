@@ -6,13 +6,27 @@ import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
 import type { TvLinkRequest, TvPoll } from "@/lib/account/tv-link-api";
 
-const { startTvLink, pollTvLink, startTvSession, account } = vi.hoisted(() => ({
+const {
+  startTvLink,
+  pollTvLink,
+  continueTvLink,
+  cancelTvLink,
+  startTvSession,
+  account,
+} = vi.hoisted(() => ({
   startTvLink: vi.fn<() => Promise<TvLinkRequest>>(),
   pollTvLink: vi.fn<(code: string) => Promise<TvPoll>>(),
+  continueTvLink: vi.fn<(code: string) => Promise<TvPoll>>(),
+  cancelTvLink: vi.fn<(code: string) => Promise<void>>(),
   startTvSession: vi.fn(),
   account: { current: null as object | null },
 }));
-vi.mock("@/lib/account/tv-link-api", () => ({ startTvLink, pollTvLink }));
+vi.mock("@/lib/account/tv-link-api", () => ({
+  startTvLink,
+  pollTvLink,
+  continueTvLink,
+  cancelTvLink,
+}));
 vi.mock("@/lib/api/session", () => ({ startTvSession }));
 vi.mock("@/lib/qr-path", async (original) => {
   const actual = await original<typeof import("@/lib/qr-path")>();
@@ -66,6 +80,8 @@ beforeEach(() => {
   startTvLink.mockReset().mockResolvedValue(REQUEST);
   pollTvLink.mockReset().mockResolvedValue({ status: "pending" });
   startTvSession.mockReset();
+  continueTvLink.mockReset();
+  cancelTvLink.mockReset().mockResolvedValue(undefined);
   vi.mocked(qrPath).mockClear();
 });
 
@@ -123,23 +139,56 @@ describe("the TV's sign-in with a phone", () => {
     expect(cancel.getAttribute("href")).toBe("/app/sign-in");
   });
 
-  it("polls the code until the phone approves, then signs the device in and goes on", async () => {
+  it("polls the code until the phone approves, then asks whom to link to and signs in nothing yet", async () => {
     pollTvLink
       .mockResolvedValueOnce({ status: "pending" })
       .mockResolvedValueOnce({
-        status: "approved",
-        token: "session",
-        expiresIn: 3600,
-        refreshToken: "refresh",
-        account: "uid-1",
+        status: "linking",
         learner: { id: "a1b2c3d4e5f6", name: "Ada" },
       });
     page();
-    await secondsPass(5);
+    await secondsPass(10);
+
+    expect(
+      screen.getByRole("heading", { name: "Linking to Ada" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: en.tvSignIn.continue }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: en.tvSignIn.cancel }),
+    ).toBeTruthy();
+    expect(startTvSession).not.toHaveBeenCalled();
+    expect(continueTvLink).not.toHaveBeenCalled();
+  });
+
+  it("focuses Continue, a real button the remote can press, and signs in only when it is pressed", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+    });
+    continueTvLink.mockResolvedValue({
+      status: "approved",
+      token: "session",
+      expiresIn: 3600,
+      refreshToken: "refresh",
+      account: "uid-1",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+    });
+    page();
+    await secondsPass(6);
+    const go = screen.getByRole("button", { name: en.tvSignIn.continue });
+    expect(go.tagName).toBe("BUTTON");
+    expect(document.activeElement).toBe(go);
+    await secondsPass(60);
     expect(startTvSession).not.toHaveBeenCalled();
 
-    await secondsPass(5);
+    await act(async () => go.click());
 
+    expect(continueTvLink).toHaveBeenCalledWith(
+      "device-code",
+      expect.anything(),
+    );
     expect(startTvSession).toHaveBeenCalledWith({
       token: "session",
       expiresIn: 3600,
@@ -147,6 +196,24 @@ describe("the TV's sign-in with a phone", () => {
       account: "uid-1",
       learner: { id: "a1b2c3d4e5f6", name: "Ada" },
     });
+  });
+
+  it("declines on Cancel: the request is cancelled, nothing is signed in and the sign-in page returns", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+    });
+    page();
+    await secondsPass(6);
+
+    await act(async () =>
+      screen.getByRole("button", { name: en.tvSignIn.cancel }).click(),
+    );
+
+    expect(cancelTvLink).toHaveBeenCalledWith("device-code");
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(startTvSession).not.toHaveBeenCalled();
+    expect(screen.getByText("the sign-in page")).toBeTruthy();
   });
 
   it("goes to the app once the device holds an account", () => {
@@ -222,6 +289,7 @@ describe("the TV's sign-in with a phone", () => {
 
     expect(screen.getByText("the sign-in page")).toBeTruthy();
     expect(pollTvLink).not.toHaveBeenCalled();
+    expect(cancelTvLink).toHaveBeenCalledWith("device-code");
   });
 
   it("reads the code out letter by letter for a screen reader", async () => {

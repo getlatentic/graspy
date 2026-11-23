@@ -209,6 +209,21 @@ async function signedOutElsewhere(): Promise<never> {
   throw new ApiError("Signed out", 401);
 }
 
+const GONE_FOR_GOOD = new Set([401, 403, 404]);
+
+// Each renewal replaces the credential: the new one is kept before the session is used, as the
+// one just spent is of no use again.
+async function keepRenewedCredential(response: Response): Promise<void> {
+  if (!response.ok) return;
+  const body = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as { refreshToken?: unknown } | null;
+  if (typeof body?.refreshToken === "string") {
+    keepTvCredential(body.refreshToken);
+  }
+}
+
 // A TV has no Google sign-in: its sessions are renewed from the credential the phone's approval
 // gave it, until the account removes the TV.
 async function tvSession(credential: string, account: Account) {
@@ -222,7 +237,9 @@ async function tvSession(credential: string, account: Account) {
   } catch (cause) {
     throw toNetworkError(cause);
   }
-  if (response.status === 401) return signedOutElsewhere();
+  // Revoked, or its learner or the parent's agreement is gone: nothing will make it work.
+  if (GONE_FOR_GOOD.has(response.status)) return signedOutElsewhere();
+  await keepRenewedCredential(response);
   return { response, account: account.uid };
 }
 

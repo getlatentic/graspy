@@ -1,32 +1,42 @@
 """Signing a TV in from a phone: every state of a request, expiry, the limits, and what an account
-that is not the approver, or a replay, can do. docs/TV_SIGN_IN.md has the design."""
+that is not the approver, a child, a copy of a credential or a replay can do. docs/TV_SIGN_IN.md
+has the design."""
 
+import asyncio
 import logging
+import re
 
 import pytest
 from consent_sign_ins import OTHER_UID, consent_app
-from signed_in import UID, as_learner, client, signed_in, signed_in_app, use
+from signed_in import UID, as_parent, chosen, client, signed_in, use
 from voice_worker import worker_env
 
 from app.account import tv_links, tv_sessions
-from app.account.directory import learner_key
+from app.account.directory import account_key, learner_key
 from app.account.tv_codes import (
     USER_CODE_ALPHABET,
+    confirmation_matches,
     device_label,
+    hash_secret,
     new_user_code,
     normalised_user_code,
 )
+from app.security.rate_limit import Budgets, source_of
 from app.security.session import TV_TOKEN_TTL_SECONDS, tv_of, verify
 
 BASE = 1_800_000_000_000
 START = "/api/tv-sign-in"
 TOKEN = f"{START}/token"
+CONTINUE = f"{START}/continue"
+CANCEL = f"{START}/cancel"
 SESSION = f"{START}/session"
+SIGN_OUT = f"{START}/sign-out"
 LOOKUP = f"{START}/lookup"
 APPROVE = f"{START}/approve"
 DENY = f"{START}/deny"
 DEVICES = f"{START}/devices"
 SAMSUNG = "Mozilla/5.0 (SMART-TV; Linux; Tizen 7.0) AppleWebKit/537.36 Chrome/94 TV Safari/537.36"
+CONSENT = {"noticeVersion": 1, "firebaseIdToken": "fresh"}
 
 
 class Clock:
@@ -40,21 +50,45 @@ class Clock:
 @pytest.fixture
 def clock(monkeypatch):
     ticking = Clock()
-    for module in ("app.api.tv_sign_in_routes",):
-        monkeypatch.setattr(f"{module}.now_ms", lambda: ticking.ms)
+    monkeypatch.setattr("app.api.tv_sign_in_routes.now_ms", lambda: ticking.ms)
     return ticking
 
 
 @pytest.fixture
 def app(monkeypatch, clock):
-    return signed_in_app(monkeypatch)
+    return consent_app(monkeypatch, worker_env())
+
+
+async def add_learner(http, name: str, token: str) -> str:
+    created = await http.post(
+        "/api/account/learners",
+        json={
+            "name": name,
+            "guardian": True,
+            "consent": {"noticeVersion": 1, "firebaseIdToken": token},
+        },
+    )
+    assert created.status_code == 201, created.text
+    return created.json()["id"]
 
 
 @pytest.fixture
 async def phone(app):
-    """A phone signed in as one account with one learner."""
+    """A parent's phone: signed in with Google just now, one learner with a parent's agreement."""
     async with client(app) as http:
-        http.learner = await as_learner(http)
+        await signed_in(http, firebaseIdToken="good")
+        http.learner = await add_learner(http, "Ada", "fresh")
+        await as_parent(http)
+        yield http
+
+
+@pytest.fixture
+async def other_phone(app):
+    """Another account's parent."""
+    async with client(app) as http:
+        await signed_in(http, firebaseIdToken="good2")
+        http.learner = await add_learner(http, "Eve", "other")
+        await as_parent(http, "other")
         yield http
 
 
@@ -66,7 +100,7 @@ async def tv(app):
 
 async def requested(tv, **headers) -> dict:
     response = await tv.post(START, headers={"User-Agent": SAMSUNG, **headers})
-    assert response.status_code == 201
+    assert response.status_code == 201, response.text
     return response.json()
 
 
@@ -76,19 +110,42 @@ async def polled(tv, request: dict) -> dict:
     return response.json()
 
 
-async def approved(phone, request: dict, learner: str | None = None):
+async def continued(tv, request: dict) -> dict:
+    response = await tv.post(CONTINUE, json={"deviceCode": request["deviceCode"]})
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def last_four(request: dict) -> str:
+    return request["userCode"][-4:]
+
+
+async def looked_up(phone, request: dict):
+    return await phone.post(LOOKUP, json={"userCode": request["userCode"]})
+
+
+async def approved(phone, request: dict, learner: str | None = None, confirm=None):
+    """Looks the code up, as the page does, then approves with the last four characters."""
+    await looked_up(phone, request)
     return await phone.post(
         APPROVE,
-        json={"userCode": request["userCode"], "learnerId": learner or phone.learner},
+        json={
+            "userCode": request["userCode"],
+            "learnerId": learner or phone.learner,
+            "confirm": confirm or last_four(request),
+        },
     )
 
 
 async def signed_in_tv(tv, phone, clock) -> dict:
-    """The whole flow, and the TV's answer."""
+    """The whole flow: approval, the TV's confirmation, and what the TV is given."""
     request = await requested(tv)
     assert (await approved(phone, request)).status_code == 204
     clock.advance(request["interval"])
-    return await polled(tv, request)
+    assert (await polled(tv, request))["status"] == "linking"
+    answer = await continued(tv, request)
+    assert answer["status"] == "approved"
+    return answer
 
 
 def rows(app, table: str) -> list[dict]:
@@ -125,6 +182,13 @@ def test_a_typed_code_ignores_case_spaces_and_dashes_and_rejects_anything_else()
         assert normalised_user_code(bad) is None
 
 
+def test_the_confirmation_is_the_last_four_characters_whatever_their_case_or_spacing():
+    assert confirmation_matches("ABCDEFG2", "efg2")
+    assert confirmation_matches("ABCDEFG2", " e-f g2 ")
+    for wrong in ("ABCD", "EFG3", "FG2", "", "XEFG2", "ABCDEFG2"):
+        assert not confirmation_matches("ABCDEFG2", wrong)
+
+
 @pytest.mark.parametrize(
     ("agent", "label"),
     [
@@ -156,18 +220,44 @@ async def test_a_request_gives_a_long_device_code_a_short_code_and_where_to_go(t
 
 
 async def test_the_link_goes_to_a_configured_origin_whatever_origin_asked(tv):
-    request = await requested(tv, Origin="https://evil.example")
+    assert (await requested(tv, Origin="https://evil.example"))[
+        "verificationUri"
+    ] == "http://localhost:5173/link"
+    assert (await requested(tv, Origin="http://localhost:3000"))[
+        "verificationUri"
+    ] == "http://localhost:3000/link"
 
-    assert request["verificationUri"] == "http://localhost:5173/link"
+
+async def test_an_origin_only_a_wildcard_rule_allows_is_not_where_a_person_is_sent(
+    monkeypatch, clock
+):
+    from app.factory import create_app
+    from app.settings import Settings
+
+    env = worker_env()
+    wild = create_app(
+        Settings(
+            aws_bearer_token_bedrock="bedrock-test",
+            session_secret="s",
+            cors_origins=["https://graspy.example", "https://*.graspy.pages.dev"],
+            _env_file=None,
+        ),
+        voice=env,
+    )
+    async with client(wild) as http:
+        request = await requested(http, Origin="https://evil.graspy.pages.dev")
+
+    assert request["verificationUri"] == "https://graspy.example/link"
 
 
 async def test_neither_code_is_kept_in_the_clear(app, tv):
-    request = await requested(tv)
+    request = await requested(tv, **{"CF-Connecting-IP": "198.51.100.7"})
 
     (row,) = rows(app, "tv_links")
     stored = " ".join(str(value) for value in row.values())
     assert request["deviceCode"] not in stored
     assert request["userCode"] not in stored
+    assert "198.51.100.7" not in stored
     assert row["label"] == "Samsung TV"
     assert row["status"] == "pending"
 
@@ -245,8 +335,7 @@ async def test_a_request_expires_after_ten_minutes_for_the_tv_and_the_phone(
     assert (await polled(tv, request))["status"] == "pending"
     clock.advance(2)
     assert (await polled(tv, request))["status"] == "expired"
-    seen = await phone.post(LOOKUP, json={"userCode": request["userCode"]})
-    assert seen.status_code == 404
+    assert (await looked_up(phone, request)).status_code == 404
     assert (await approved(phone, request)).status_code == 404
 
 
@@ -259,17 +348,20 @@ async def test_an_approval_that_the_tv_was_too_late_to_take_has_expired_too(
     clock.advance(11 * 60)
 
     assert (await polled(tv, request))["status"] == "expired"
+    assert (await continued(tv, request)) == {"status": "expired"}
     assert rows(app, "tv_sessions") == []
 
 
 # The phone looks, approves or denies
 
 
-async def test_the_phone_sees_what_it_is_asked_to_approve(tv, phone, clock):
+async def test_the_phone_sees_what_it_is_asked_to_approve_and_not_the_code(
+    tv, phone, clock
+):
     request = await requested(tv, **{"CF-IPCountry": "NG"})
     clock.advance(30)
 
-    seen = await phone.post(LOOKUP, json={"userCode": request["userCode"]})
+    seen = await looked_up(phone, request)
 
     assert seen.status_code == 200
     assert seen.json() == {
@@ -279,6 +371,7 @@ async def test_the_phone_sees_what_it_is_asked_to_approve(tv, phone, clock):
         "expiresAt": BASE + 600_000,
     }
     assert request["deviceCode"] not in seen.text
+    assert last_four(request) not in seen.text
 
 
 async def test_the_phone_may_type_the_code_in_lower_case_with_a_dash(tv, phone):
@@ -300,8 +393,26 @@ async def test_a_code_that_names_no_request_is_not_found_whatever_is_wrong_with_
         assert response.json()["detail"]["code"] == "code_not_found"
 
 
-async def test_approving_gives_the_tv_a_session_for_that_learner_once(tv, phone, clock):
-    answer = await signed_in_tv(tv, phone, clock)
+async def test_a_tv_is_signed_in_only_when_the_person_at_it_continues(
+    app, tv, phone, clock
+):
+    request = await requested(tv)
+    assert (await approved(phone, request)).status_code == 204
+    clock.advance(5)
+
+    linking = await polled(tv, request)
+
+    assert linking["status"] == "linking"
+    assert linking["learner"]["id"] == phone.learner
+    assert linking["learner"]["name"] == "Ada"
+    assert "token" not in linking
+    assert "refreshToken" not in linking
+    assert rows(app, "tv_sessions") == []
+    clock.advance(5)
+    assert (await polled(tv, request))["status"] == "linking"
+    assert rows(app, "tv_sessions") == []
+
+    answer = await continued(tv, request)
 
     assert answer["status"] == "approved"
     claims = verify(answer["token"], "s")
@@ -312,78 +423,102 @@ async def test_approving_gives_the_tv_a_session_for_that_learner_once(tv, phone,
     assert answer["account"] == UID
     assert answer["refreshToken"]
     assert answer["expiresIn"] == TV_TOKEN_TTL_SECONDS == 3600
-
-
-async def test_the_session_the_tv_takes_is_the_learners_and_works_as_theirs(
-    app, tv, phone, clock
-):
-    answer = await signed_in_tv(tv, phone, clock)
-    use(tv, answer)
-
-    assert (
-        await tv.post("/api/account/learners/x/session", json={})
-    ).status_code == 403
-
-
-async def test_a_tv_can_read_who_it_learns_as_and_nobody_else_of_the_account(
-    tv, phone, clock
-):
-    other = await phone.post(
-        "/api/account/learners", json={"name": "Ben", "guardian": True}
-    )
-    assert other.status_code == 201
-    use(tv, await signed_in_tv(tv, phone, clock))
-
-    listed = (await tv.get("/api/account/learners")).json()["learners"]
-
-    assert [one["id"] for one in listed] == [phone.learner]
-
-
-async def test_a_second_poll_of_an_approved_request_finds_nothing_to_take(
-    app, tv, phone, clock
-):
-    request = await requested(tv)
-    await approved(phone, request)
-    clock.advance(5)
-    first = await polled(tv, request)
-    clock.advance(5)
-    again = await polled(tv, request)
-
-    assert first["status"] == "approved"
-    assert again == {"status": "expired"}
     assert len(rows(app, "tv_sessions")) == 1
 
 
-async def test_a_replayed_device_code_gets_no_session(app, tv, phone, clock):
+async def test_the_person_at_the_tv_can_decline_and_no_session_is_ever_made(
+    app, tv, phone, clock
+):
+    request = await requested(tv)
+    await approved(phone, request)
+
+    cancelled = await tv.post(CANCEL, json={"deviceCode": request["deviceCode"]})
+    clock.advance(5)
+
+    assert cancelled.status_code == 204
+    assert (await polled(tv, request))["status"] == "denied"
+    assert await continued(tv, request) == {"status": "expired"}
+    assert rows(app, "tv_sessions") == []
+
+
+async def test_a_tv_that_gives_up_its_request_ends_it_for_the_phone_too(tv, phone):
+    request = await requested(tv)
+
+    await tv.post(CANCEL, json={"deviceCode": request["deviceCode"]})
+
+    assert (await looked_up(phone, request)).status_code == 404
+
+
+async def test_a_cancel_after_the_session_was_taken_changes_nothing(
+    app, tv, phone, clock
+):
     request = await requested(tv)
     await approved(phone, request)
     clock.advance(5)
-    await polled(tv, request)
+    answer = await continued(tv, request)
 
-    async with client(app) as thief:
-        clock.advance(5)
-        stolen = (
-            await thief.post(TOKEN, json={"deviceCode": request["deviceCode"]})
-        ).json()
+    await tv.post(CANCEL, json={"deviceCode": request["deviceCode"]})
 
-    assert stolen == {"status": "expired"}
+    renewed = await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
+    assert renewed.status_code == 200
 
 
-async def test_two_polls_at_once_make_one_session(app, tv, phone, clock):
+async def test_continuing_before_the_phone_approved_gives_nothing(app, tv):
+    request = await requested(tv)
+
+    assert await continued(tv, request) == {"status": "expired"}
+    assert rows(app, "tv_sessions") == []
+
+
+async def test_a_second_continue_and_a_replayed_device_code_get_nothing(
+    app, tv, phone, clock
+):
     request = await requested(tv)
     await approved(phone, request)
-    now = clock.ms
+    clock.advance(5)
+    first = await continued(tv, request)
 
-    first = await tv_sessions.take(app.state.tv_db, request["deviceCode"], now)
-    second = await tv_sessions.take(app.state.tv_db, request["deviceCode"], now)
+    async with client(app) as thief:
+        stolen = await continued(thief, request)
+        polled_again = await polled(thief, request)
 
-    assert first is not None
-    assert second is None
+    assert first["status"] == "approved"
+    assert stolen == {"status": "expired"}
+    assert polled_again == {"status": "expired"}
+    assert len(rows(app, "tv_sessions")) == 1
+
+
+async def test_two_continues_at_once_make_one_session(app, tv, phone, clock):
+    request = await requested(tv)
+    await approved(phone, request)
+    clock.advance(5)
+
+    answers = await asyncio.gather(*(continued(tv, request) for _ in range(6)))
+
+    assert (
+        sorted(answer["status"] for answer in answers) == ["approved"] + ["expired"] * 5
+    )
+    assert len(rows(app, "tv_sessions")) == 1
+
+
+async def test_two_takes_at_once_make_one_session(app, tv, phone, clock):
+    request = await requested(tv)
+    await approved(phone, request)
+
+    taken = await asyncio.gather(
+        *(
+            tv_sessions.take(app.state.tv_db, request["deviceCode"], clock.ms)
+            for _ in range(6)
+        )
+    )
+
+    assert [one is not None for one in taken].count(True) == 1
     assert len(rows(app, "tv_sessions")) == 1
 
 
 async def test_denying_tells_the_tv_and_nothing_can_approve_it_after(tv, phone, clock):
     request = await requested(tv)
+    await looked_up(phone, request)
 
     denied = await phone.post(DENY, json={"userCode": request["userCode"]})
     clock.advance(5)
@@ -402,16 +537,34 @@ async def test_a_second_approval_of_a_request_is_refused(tv, phone):
     assert (first.status_code, second.status_code) == (204, 404)
 
 
-async def test_two_approvals_racing_for_one_request_have_one_winner(app, tv, phone):
+async def test_two_approvals_at_once_have_one_winner(app, tv, phone):
     request = await requested(tv)
-    link = await tv_links.touch(app.state.tv_db, "s", request["userCode"], BASE)
+    await looked_up(phone, request)
+    body = {
+        "userCode": request["userCode"],
+        "learnerId": phone.learner,
+        "confirm": last_four(request),
+    }
 
-    won = await tv_links.approve(app.state.tv_db, link["id"], UID, "a", BASE)
-    lost = await tv_links.approve(app.state.tv_db, link["id"], OTHER_UID, "b", BASE)
+    answers = await asyncio.gather(*(phone.post(APPROVE, json=body) for _ in range(5)))
 
-    assert (won, lost) == (True, False)
+    assert sorted(answer.status_code for answer in answers) == [204, 404, 404, 404, 404]
     (row,) = rows(app, "tv_links")
     assert row["account_uid"] == UID
+
+
+async def test_the_guarded_approve_lets_one_of_two_writes_win(app, tv, phone):
+    request = await requested(tv)
+    link = await looked_up(phone, request)
+    assert link.status_code == 200
+    (row,) = rows(app, "tv_links")
+
+    won, lost = await asyncio.gather(
+        tv_links.approve(app.state.tv_db, row["id"], UID, "a", BASE),
+        tv_links.approve(app.state.tv_db, row["id"], UID, "b", BASE),
+    )
+
+    assert sorted([won, lost]) == [False, True]
 
 
 async def test_a_denial_after_an_approval_changes_nothing(app, tv, phone, clock):
@@ -422,7 +575,7 @@ async def test_a_denial_after_an_approval_changes_nothing(app, tv, phone, clock)
         await phone.post(DENY, json={"userCode": request["userCode"]})
     ).status_code == 404
     clock.advance(5)
-    assert (await polled(tv, request))["status"] == "approved"
+    assert (await polled(tv, request))["status"] == "linking"
 
 
 async def test_a_learner_the_account_does_not_hold_cannot_be_approved(tv, phone):
@@ -441,18 +594,47 @@ async def test_only_a_signed_in_account_can_look_up_approve_or_deny(tv):
 
     for path, sent in (
         (LOOKUP, body),
-        (APPROVE, {**body, "learnerId": "x"}),
+        (APPROVE, {**body, "learnerId": "0123456789ab", "confirm": "ABCD"}),
         (DENY, body),
     ):
         assert (await tv.post(path, json=sent)).status_code == 401
     assert (await tv.get(DEVICES)).status_code == 401
 
 
-async def test_a_device_with_no_account_cannot_approve(app, tv):
+# The parent's, and no one else's
+
+
+async def test_a_childs_session_cannot_look_up_approve_deny_list_or_remove(app, tv):
     request = await requested(tv)
-    async with client(app) as anonymous:
-        await signed_in(anonymous)
-        refused = await anonymous.post(LOOKUP, json={"userCode": request["userCode"]})
+    async with client(app) as child:
+        await signed_in(child, firebaseIdToken="good")
+        learner = await add_learner(child, "Ada", "fresh")
+        await chosen(child, learner)
+        body = {"userCode": request["userCode"]}
+
+        results = [
+            await child.post(LOOKUP, json=body),
+            await child.post(
+                APPROVE,
+                json={**body, "learnerId": learner, "confirm": last_four(request)},
+            ),
+            await child.post(DENY, json=body),
+            await child.get(DEVICES),
+            await child.delete(f"{DEVICES}/anything"),
+        ]
+
+    assert [one.status_code for one in results] == [403] * 5
+    assert {one.json()["detail"]["code"] for one in results} == {"account_required"}
+    assert rows(app, "tv_links")[0]["status"] == "pending"
+    assert rows(app, "tv_links")[0]["attempts"] == 0
+
+
+async def test_an_account_session_that_did_not_just_sign_in_is_not_a_parent(app, tv):
+    request = await requested(tv)
+    async with client(app) as stale:
+        await signed_in(stale, firebaseIdToken="good")
+
+        refused = await stale.post(LOOKUP, json={"userCode": request["userCode"]})
 
     assert refused.status_code == 403
     assert refused.json()["detail"]["code"] == "account_required"
@@ -467,18 +649,225 @@ async def test_a_tv_cannot_sign_another_tv_in_or_manage_the_account(
     for path in (LOOKUP, DENY):
         refused = await tv.post(path, json={"userCode": other["userCode"]})
         assert refused.status_code == 403
-        assert refused.json()["detail"]["code"] == "tv_session"
     assert (await tv.get(DEVICES)).status_code == 403
     assert (await tv.delete("/api/account")).status_code == 403
-    assert (
-        await tv.patch(f"/api/account/learners/{phone.learner}", json={"name": "Eve"})
-    ).status_code == 403
-    assert (
-        await tv.post("/api/account/parent-session", json={"firebaseIdToken": "good"})
-    ).status_code == 403
 
 
-async def test_the_tenth_attempt_on_a_code_ends_the_request(tv, phone, clock):
+def tv_forbidden_routes(app) -> list[tuple[str, str]]:
+    """Every route of the account and of the phone's side of TV sign-in, but not the TV's own
+    (which carry a secret instead of a session) and not the TV's read of its own learner."""
+    own = {
+        (f"{START}", "POST"),
+        (TOKEN, "POST"),
+        (CONTINUE, "POST"),
+        (CANCEL, "POST"),
+        (SESSION, "POST"),
+        (SIGN_OUT, "POST"),
+        ("/api/account/learners", "GET"),
+    }
+    found = []
+    for path, methods in app.openapi()["paths"].items():
+        if not path.startswith(("/api/account", START)):
+            continue
+        for method in methods:
+            if (path, method.upper()) not in own:
+                found.append((method.upper(), path))
+    return found
+
+
+def filled(path: str) -> str:
+    """A value for every path parameter, one every pattern of the routes accepts."""
+    return re.sub(r"\{[^}]+\}", "0123456789ab", path)
+
+
+async def test_every_account_route_refuses_a_tv_session_but_its_own_learners(
+    app, tv, phone, clock
+):
+    use(tv, await signed_in_tv(tv, phone, clock))
+    routes = tv_forbidden_routes(app)
+    assert ("POST", f"{APPROVE}") in routes
+    assert ("DELETE", "/api/tv-sign-in/devices/{device_id}") in routes
+    assert ("POST", "/api/account/learners") in routes
+    assert ("PUT", "/api/account/learners/{learner_id}/consent") in routes
+    assert ("DELETE", "/api/account/learners/{learner_id}") in routes
+    assert ("DELETE", "/api/account") in routes
+    assert any("/voice" in path for _, path in routes)
+
+    allowed = []
+    for method, path in routes:
+        response = await tv.request(method, filled(path), json={})
+        if response.status_code != 403:
+            allowed.append((method, path, response.status_code))
+
+    assert allowed == []
+
+
+async def test_a_tv_can_read_who_it_learns_as_and_nobody_else_of_the_account(
+    app, tv, phone, clock
+):
+    other = await phone.post(
+        "/api/account/learners",
+        json={
+            "name": "Ben",
+            "guardian": True,
+            "consent": {"noticeVersion": 1, "firebaseIdToken": "fresh"},
+        },
+    )
+    assert other.status_code == 201
+    use(tv, await signed_in_tv(tv, phone, clock))
+
+    listed = (await tv.get("/api/account/learners")).json()["learners"]
+
+    assert [one["id"] for one in listed] == [phone.learner]
+
+
+async def test_the_session_the_tv_takes_works_as_the_learner_and_only_as_them(
+    app, tv, phone, clock
+):
+    keeping = app.state.keeping
+    use(tv, await signed_in_tv(tv, phone, clock))
+
+    first = await tv.post("/api/learner/import", json={})
+    again = await tv.post("/api/learner/import", json={})
+
+    assert (first.status_code, first.json()) == (200, {"imported": True})
+    assert again.json() == {"imported": False}
+    assert (await keeping.learners.load(learner_key(UID, phone.learner))).imported
+    assert not (await keeping.learners.load(account_key(UID))).imported
+    assert (await tv.get("/api/learner", params={"planId": "p"})).status_code == 200
+
+
+# Holding a request, and the confirmation
+
+
+async def test_the_account_that_looks_a_code_up_holds_it_and_another_is_turned_away(
+    tv, phone, other_phone
+):
+    request = await requested(tv)
+    assert (await looked_up(phone, request)).status_code == 200
+
+    turned_away = await looked_up(other_phone, request)
+
+    assert turned_away.status_code == 409
+    assert turned_away.json()["detail"]["code"] == "code_in_use"
+    assert (await looked_up(phone, request)).status_code == 200
+
+
+async def test_an_account_that_did_not_look_the_code_up_cannot_approve_or_deny_it(
+    app, tv, phone, other_phone
+):
+    request = await requested(tv)
+    await looked_up(phone, request)
+    body = {
+        "userCode": request["userCode"],
+        "learnerId": other_phone.learner,
+        "confirm": last_four(request),
+    }
+
+    approving = await other_phone.post(APPROVE, json=body)
+    denying = await other_phone.post(DENY, json={"userCode": request["userCode"]})
+
+    assert (approving.status_code, denying.status_code) == (404, 404)
+    assert rows(app, "tv_links")[0]["status"] == "pending"
+
+
+async def test_nobody_can_approve_a_code_they_never_looked_up(tv, phone):
+    request = await requested(tv)
+
+    refused = await phone.post(
+        APPROVE,
+        json={
+            "userCode": request["userCode"],
+            "learnerId": phone.learner,
+            "confirm": last_four(request),
+        },
+    )
+
+    assert refused.status_code == 404
+
+
+async def test_a_hold_lasts_two_minutes_then_another_account_may_take_it(
+    tv, phone, other_phone, clock
+):
+    request = await requested(tv)
+    await looked_up(phone, request)
+
+    clock.advance(119)
+    assert (await looked_up(other_phone, request)).status_code == 409
+    clock.advance(2)
+
+    assert (await looked_up(other_phone, request)).status_code == 200
+    late = await phone.post(
+        APPROVE,
+        json={
+            "userCode": request["userCode"],
+            "learnerId": phone.learner,
+            "confirm": last_four(request),
+        },
+    )
+    assert late.status_code == 404
+
+
+async def test_an_approval_after_the_hold_ran_out_needs_another_lookup(
+    tv, phone, clock
+):
+    request = await requested(tv)
+    await looked_up(phone, request)
+    clock.advance(121)
+    body = {
+        "userCode": request["userCode"],
+        "learnerId": phone.learner,
+        "confirm": last_four(request),
+    }
+
+    assert (await phone.post(APPROVE, json=body)).status_code == 404
+    await looked_up(phone, request)
+    assert (await phone.post(APPROVE, json=body)).status_code == 204
+
+
+async def test_an_approval_needs_the_last_four_characters_as_the_tv_shows_them(
+    tv, phone, clock
+):
+    request = await requested(tv)
+    await looked_up(phone, request)
+    body = {"userCode": request["userCode"], "learnerId": phone.learner}
+
+    for wrong in ("AAAA", request["userCode"][:4], ""):
+        refused = await phone.post(APPROVE, json={**body, "confirm": wrong})
+        assert refused.status_code == 403
+        assert refused.json()["detail"]["code"] == "confirm_mismatch"
+    assert (await phone.post(APPROVE, json=body)).status_code == 422
+    clock.advance(5)
+    assert (await polled(tv, request))["status"] == "pending"
+
+    typed = last_four(request).lower()
+    assert (
+        await phone.post(APPROVE, json={**body, "confirm": typed})
+    ).status_code == 204
+
+
+async def test_wrong_confirmations_count_and_the_tenth_attempt_ends_the_request(
+    tv, phone, clock
+):
+    request = await requested(tv)
+    await looked_up(phone, request)
+    body = {
+        "userCode": request["userCode"],
+        "learnerId": phone.learner,
+        "confirm": "AAAA" if last_four(request) != "AAAA" else "BBBB",
+    }
+
+    for _ in range(tv_links.MAX_ATTEMPTS - 2):
+        assert (await phone.post(APPROVE, json=body)).status_code == 403
+    ended = await phone.post(APPROVE, json=body)
+    clock.advance(5)
+
+    assert ended.status_code == 404
+    assert (await approved(phone, request)).status_code == 404
+    assert (await polled(tv, request))["status"] == "denied"
+
+
+async def test_the_tenth_lookup_of_a_code_ends_the_request(tv, phone, clock):
     request = await requested(tv)
     body = {"userCode": request["userCode"]}
 
@@ -488,151 +877,216 @@ async def test_the_tenth_attempt_on_a_code_ends_the_request(tv, phone, clock):
     clock.advance(5)
 
     assert ended.status_code == 404
-    assert (await phone.post(LOOKUP, json=body)).status_code == 404
-    assert (await approved(phone, request)).status_code == 404
     assert (await polled(tv, request))["status"] == "denied"
+
+
+async def test_a_learner_without_a_parents_agreement_cannot_be_signed_in_on_a_tv(
+    tv, phone
+):
+    bare = (
+        await phone.post("/api/account/learners", json={"name": "Cy", "guardian": True})
+    ).json()["id"]
+    request = await requested(tv)
+
+    refused = await approved(phone, request, learner=bare)
+
+    assert refused.status_code == 403
+    assert refused.json()["detail"]["code"] == "consent_required"
+
+
+async def test_a_learner_removed_while_the_tv_waits_is_not_linked(
+    app, tv, phone, clock
+):
+    request = await requested(tv)
+    await approved(phone, request)
+    await phone.delete(f"/api/account/learners/{phone.learner}")
+    clock.advance(5)
+
+    assert (await polled(tv, request))["status"] == "denied"
+    assert await continued(tv, request) == {"status": "expired"}
+    assert rows(app, "tv_sessions") == []
+
+
+async def test_a_consent_store_that_cannot_be_read_does_not_end_the_request(
+    app, tv, phone, clock, monkeypatch
+):
+    from fastapi import HTTPException
+
+    from app.api import tv_sign_in_routes
+
+    request = await requested(tv)
+    await approved(phone, request)
+    clock.advance(5)
+    real = tv_sign_in_routes.service_consent_refusal
+    reading = {"works": False}
+
+    async def sometimes(application, key):
+        if reading["works"]:
+            return await real(application, key)
+        return HTTPException(
+            status_code=503, detail={"error": "later", "code": "consent_unavailable"}
+        )
+
+    monkeypatch.setattr(tv_sign_in_routes, "service_consent_refusal", sometimes)
+    body = {"deviceCode": request["deviceCode"]}
+    assert (await tv.post(TOKEN, json=body)).status_code == 503
+    assert (await tv.post(CONTINUE, json=body)).status_code == 503
+
+    assert rows(app, "tv_links")[0]["status"] == "approved"
+    assert rows(app, "tv_sessions") == []
+    reading["works"] = True
+    assert (await continued(tv, request))["status"] == "approved"
 
 
 # Another account
 
 
-@pytest.fixture
-def two_accounts(monkeypatch, clock):
-    env = worker_env()
-    return consent_app(monkeypatch, env), env
-
-
-async def sign_in_with_learner(http, token: str) -> str:
-    await signed_in(http, firebaseIdToken=token)
-    created = await http.post(
-        "/api/account/learners",
-        json={
-            "name": "Ada",
-            "guardian": True,
-            "consent": {
-                "noticeVersion": 1,
-                "firebaseIdToken": "fresh" if token == "good" else "other",
-            },
-        },
-    )
-    assert created.status_code == 201, created.text
-    return created.json()["id"]
-
-
 async def test_the_session_a_tv_takes_belongs_to_the_account_that_approved_it(
-    two_accounts, clock
+    tv, other_phone, clock
 ):
-    app, _ = two_accounts
-    async with client(app) as tv, client(app) as mine, client(app) as theirs:
-        mine.learner = await sign_in_with_learner(mine, "good")
-        theirs.learner = await sign_in_with_learner(theirs, "good2")
-        request = await requested(tv)
+    request = await requested(tv)
+    assert (await approved(other_phone, request)).status_code == 204
+    clock.advance(5)
+    await polled(tv, request)
 
-        approving = await theirs.post(
-            APPROVE,
-            json={"userCode": request["userCode"], "learnerId": theirs.learner},
-        )
-        clock.advance(5)
-        answer = await polled(tv, request)
+    answer = await continued(tv, request)
 
-    assert approving.status_code == 204
     assert verify(answer["token"], "s")["acct"] == OTHER_UID
     assert answer["account"] == OTHER_UID
 
 
 async def test_an_account_cannot_approve_for_a_learner_of_another_account(
-    two_accounts,
+    tv, phone, other_phone
 ):
-    app, _ = two_accounts
-    async with client(app) as tv, client(app) as mine, client(app) as theirs:
-        mine.learner = await sign_in_with_learner(mine, "good")
-        await sign_in_with_learner(theirs, "good2")
-        request = await requested(tv)
+    request = await requested(tv)
 
-        refused = await theirs.post(
-            APPROVE,
-            json={"userCode": request["userCode"], "learnerId": mine.learner},
-        )
+    refused = await approved(other_phone, request, learner=phone.learner)
 
     assert refused.status_code == 404
     assert refused.json()["detail"]["code"] == "no_such_learner"
 
 
 async def test_an_account_cannot_list_or_remove_another_accounts_tvs(
-    two_accounts, clock
+    tv, phone, other_phone, clock
 ):
-    app, _ = two_accounts
-    async with client(app) as tv, client(app) as mine, client(app) as theirs:
-        mine.learner = await sign_in_with_learner(mine, "good")
-        await sign_in_with_learner(theirs, "good2")
-        request = await requested(tv)
-        await mine.post(
-            APPROVE,
-            json={"userCode": request["userCode"], "learnerId": mine.learner},
-        )
-        clock.advance(5)
-        await polled(tv, request)
-        (listed,) = (await mine.get(DEVICES)).json()["devices"]
+    await signed_in_tv(tv, phone, clock)
+    (listed,) = (await phone.get(DEVICES)).json()["devices"]
 
-        others = (await theirs.get(DEVICES)).json()
-        removed = await theirs.delete(f"{DEVICES}/{listed['id']}")
-        still = (await mine.get(DEVICES)).json()["devices"]
+    others = (await other_phone.get(DEVICES)).json()
+    removed = await other_phone.delete(f"{DEVICES}/{listed['id']}")
 
     assert others == {"devices": []}
     assert removed.status_code == 404
-    assert still == [listed]
+    assert (await phone.get(DEVICES)).json()["devices"] == [listed]
 
 
-async def test_a_learner_without_a_parents_agreement_cannot_be_signed_in_on_a_tv(
-    two_accounts,
-):
-    app, _ = two_accounts
-    async with client(app) as tv, client(app) as mine:
-        await signed_in(mine, firebaseIdToken="good")
-        bare = (
-            await mine.post(
-                "/api/account/learners", json={"name": "Ada", "guardian": True}
-            )
-        ).json()["id"]
-        request = await requested(tv)
-
-        refused = await mine.post(
-            APPROVE, json={"userCode": request["userCode"], "learnerId": bare}
-        )
-
-    assert refused.status_code == 403
-    assert refused.json()["detail"]["code"] == "consent_required"
+# Renewing, rotating, listing and revoking
 
 
-# Renewing, listing and revoking
+async def renew(tv, token: str):
+    return await tv.post(SESSION, json={"refreshToken": token})
 
 
-async def test_the_tv_renews_its_session_from_its_credential(app, tv, phone, clock):
+async def test_the_tv_renews_its_session_and_gets_a_new_credential(tv, phone, clock):
     answer = await signed_in_tv(tv, phone, clock)
     clock.advance(3000)
 
-    renewed = await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
+    renewed = await renew(tv, answer["refreshToken"])
 
     assert renewed.status_code == 200
     body = renewed.json()
     assert body["signedIn"] is True
     assert body["learner"]["id"] == phone.learner
     assert body["expiresIn"] == TV_TOKEN_TTL_SECONDS
+    assert body["refreshToken"] != answer["refreshToken"]
     assert tv_of(verify(body["token"], "s")) == tv_of(verify(answer["token"], "s"))
+    assert (await renew(tv, body["refreshToken"])).status_code == 200
 
 
-async def test_a_credential_is_kept_only_as_a_hash(app, tv, phone, clock):
+async def test_a_credential_is_kept_only_as_a_hash_and_so_is_the_next(
+    app, tv, phone, clock
+):
     answer = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    renewed = (await renew(tv, answer["refreshToken"])).json()
 
     (row,) = rows(app, "tv_sessions")
-    assert answer["refreshToken"] not in " ".join(str(v) for v in row.values())
+    stored = " ".join(str(v) for v in row.values())
+    assert answer["refreshToken"] not in stored
+    assert renewed["refreshToken"] not in stored
+    assert row["refresh_hash"] == hash_secret(renewed["refreshToken"])
+    assert row["prev_hash"] == hash_secret(answer["refreshToken"])
 
 
-async def test_a_credential_nobody_issued_is_refused(tv):
-    refused = await tv.post(SESSION, json={"refreshToken": "r" * 43})
+async def test_a_replaced_credential_is_a_copy_and_revokes_the_whole_tv(
+    app, tv, phone, clock
+):
+    answer = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    newer = (await renew(tv, answer["refreshToken"])).json()
+    clock.advance(61)
+
+    thief = await renew(tv, answer["refreshToken"])
+
+    assert thief.status_code == 401
+    assert (await renew(tv, newer["refreshToken"])).status_code == 401
+    assert (await phone.get(DEVICES)).json() == {"devices": []}
+    assert rows(app, "tv_sessions")[0]["revoked_at"] is not None
+
+
+async def test_a_lost_answer_is_forgiven_once_within_a_minute(app, tv, phone, clock):
+    answer = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    lost = (await renew(tv, answer["refreshToken"])).json()
+    clock.advance(59)
+
+    retried = await renew(tv, answer["refreshToken"])
+
+    assert retried.status_code == 200
+    retry = retried.json()
+    assert retry["refreshToken"] not in (lost["refreshToken"], answer["refreshToken"])
+    assert (await renew(tv, retry["refreshToken"])).status_code == 200
+    assert len(rows(app, "tv_sessions")) == 1
+    assert (await phone.get(DEVICES)).json()["devices"]
+
+
+async def test_the_forgiveness_is_once_and_then_the_old_credential_revokes_the_tv(
+    tv, phone, clock
+):
+    answer = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    await renew(tv, answer["refreshToken"])
+    clock.advance(5)
+    assert (await renew(tv, answer["refreshToken"])).status_code == 200
+    clock.advance(5)
+
+    assert (await renew(tv, answer["refreshToken"])).status_code == 401
+    assert (await phone.get(DEVICES)).json() == {"devices": []}
+
+
+async def test_the_credential_the_lost_answer_held_is_not_accepted_after_the_retry(
+    tv, phone, clock
+):
+    answer = await signed_in_tv(tv, phone, clock)
+    clock.advance(10)
+    lost = (await renew(tv, answer["refreshToken"])).json()
+    clock.advance(5)
+    retry = (await renew(tv, answer["refreshToken"])).json()
+
+    assert (await renew(tv, lost["refreshToken"])).status_code == 401
+    assert (await renew(tv, retry["refreshToken"])).status_code == 200
+
+
+async def test_a_credential_nobody_issued_is_refused_and_revokes_nothing(
+    tv, phone, clock
+):
+    await signed_in_tv(tv, phone, clock)
+
+    refused = await renew(tv, "r" * 43)
 
     assert refused.status_code == 401
     assert refused.json()["detail"]["code"] == "tv_revoked"
+    assert len((await phone.get(DEVICES)).json()["devices"]) == 1
 
 
 async def test_the_account_lists_its_tvs_and_revokes_one(tv, phone, clock):
@@ -646,54 +1100,42 @@ async def test_the_account_lists_its_tvs_and_revokes_one(tv, phone, clock):
 
     assert removed.status_code == 204
     assert (await phone.get(DEVICES)).json() == {"devices": []}
-    refused = await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
-    assert refused.status_code == 401
+    assert (await renew(tv, answer["refreshToken"])).status_code == 401
     assert (await phone.delete(f"{DEVICES}/{listed['id']}")).status_code == 404
 
 
 async def test_a_credential_ends_after_thirty_days_unused(tv, phone, clock):
     answer = await signed_in_tv(tv, phone, clock)
-
     clock.advance(30 * 86400 - 60)
-    assert (
-        await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
-    ).status_code == 200
+    renewed = (await renew(tv, answer["refreshToken"])).json()
+
     clock.advance(30 * 86400 + 60)
-    assert (
-        await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
-    ).status_code == 401
+
+    assert (await renew(tv, renewed["refreshToken"])).status_code == 401
 
 
 async def test_a_credential_in_daily_use_still_ends_after_ninety_days(tv, phone, clock):
-    answer = await signed_in_tv(tv, phone, clock)
+    token = (await signed_in_tv(tv, phone, clock))["refreshToken"]
     for _ in range(89):
         clock.advance(86400)
-        assert (
-            await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
-        ).status_code == 200
+        renewed = await renew(tv, token)
+        assert renewed.status_code == 200
+        token = renewed.json()["refreshToken"]
 
     clock.advance(2 * 86400)
 
-    assert (
-        await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
-    ).status_code == 401
+    assert (await renew(tv, token)).status_code == 401
 
 
 async def test_the_tv_signing_out_revokes_its_credential(tv, phone, clock):
     answer = await signed_in_tv(tv, phone, clock)
 
-    out = await tv.post(
-        f"{START}/sign-out", json={"refreshToken": answer["refreshToken"]}
-    )
+    out = await tv.post(SIGN_OUT, json={"refreshToken": answer["refreshToken"]})
 
     assert out.status_code == 204
     assert (await phone.get(DEVICES)).json() == {"devices": []}
-    assert (
-        await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
-    ).status_code == 401
-    assert (
-        await tv.post(f"{START}/sign-out", json={"refreshToken": "z" * 43})
-    ).status_code == 204
+    assert (await renew(tv, answer["refreshToken"])).status_code == 401
+    assert (await tv.post(SIGN_OUT, json={"refreshToken": "z" * 43})).status_code == 204
 
 
 async def test_a_tv_whose_learner_was_removed_is_revoked_when_it_renews(
@@ -702,7 +1144,7 @@ async def test_a_tv_whose_learner_was_removed_is_revoked_when_it_renews(
     answer = await signed_in_tv(tv, phone, clock)
     await phone.delete(f"/api/account/learners/{phone.learner}")
 
-    refused = await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
+    refused = await renew(tv, answer["refreshToken"])
 
     assert refused.status_code == 404
     assert rows(app, "tv_sessions")[0]["revoked_at"] is not None
@@ -728,29 +1170,36 @@ async def test_deleting_the_account_removes_its_tvs(app, tv, phone, clock):
     assert (await phone.delete("/api/account")).status_code == 204
 
     assert rows(app, "tv_sessions") == []
-    assert (
-        await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
-    ).status_code == 401
+    assert (await renew(tv, answer["refreshToken"])).status_code == 401
 
 
-# Limits and clean-up
+# Starting a request: limits
 
 
 class Budget:
-    def __init__(self, allowed: bool = True) -> None:
-        self.allowed, self.keys = allowed, []
+    def __init__(self, allowed: bool = True, refuses: str = "") -> None:
+        self.allowed, self.refuses, self.keys = allowed, refuses, []
 
     async def allow(self, key: str) -> bool:
         self.keys.append(key)
-        return self.allowed
+        return self.allowed and not (self.refuses and key.startswith(self.refuses))
 
 
-async def test_asking_for_a_code_spends_the_pairing_budget_of_the_address(app, tv):
+def test_a_source_is_an_ipv4_address_or_the_64_of_an_ipv6_one():
+    assert source_of("198.51.100.7") == "198.51.100.7"
+    assert source_of("2001:db8:1:2:aaaa:bbbb:cccc:dddd") == "2001:db8:1:2::/64"
+    assert source_of("2001:db8:1:2::1") == source_of("2001:db8:1:2:ffff::9")
+    assert source_of("2001:db8:1:3::1") != source_of("2001:db8:1:2::1")
+    assert source_of("unknown") == "unknown"
+
+
+async def test_asking_for_a_code_spends_the_pairing_budget_of_the_source(app, tv):
     app.state.pairing_limiter = budget = Budget()
 
     await requested(tv, **{"CF-Connecting-IP": "198.51.100.7"})
+    await requested(tv, **{"CF-Connecting-IP": "2001:db8:1:2:aaaa::1"})
 
-    assert budget.keys == ["tv-start:198.51.100.7"]
+    assert budget.keys == ["tv-start:198.51.100.7", "tv-start:2001:db8:1:2::/64"]
 
 
 async def test_a_spent_budget_refuses_a_request_with_a_retry_after(app, tv):
@@ -764,7 +1213,122 @@ async def test_a_spent_budget_refuses_a_request_with_a_retry_after(app, tv):
     assert rows(app, "tv_links") == []
 
 
-async def test_looking_a_code_up_spends_the_budget_of_the_account_and_the_address(
+async def test_one_source_holds_only_a_few_requests_open_and_is_told_to_slow_down(
+    app, tv
+):
+    here = {"CF-Connecting-IP": "198.51.100.7"}
+    for _ in range(tv_links.MAX_OPEN_PER_SOURCE):
+        await requested(tv, **here)
+
+    refused = await tv.post(START, headers=here)
+
+    assert refused.status_code == 429
+    assert refused.json()["detail"]["code"] == "rate_limited"
+    assert len(rows(app, "tv_links")) == tv_links.MAX_OPEN_PER_SOURCE
+    assert (await requested(tv, **{"CF-Connecting-IP": "198.51.100.8"}))["userCode"]
+
+
+async def test_addresses_in_one_ipv6_64_are_one_source(app, tv):
+    for index in range(tv_links.MAX_OPEN_PER_SOURCE):
+        await requested(tv, **{"CF-Connecting-IP": f"2001:db8:1:2::{index + 1:x}"})
+
+    refused = await tv.post(START, headers={"CF-Connecting-IP": "2001:db8:1:2:ffff::1"})
+
+    assert refused.status_code == 429
+    other = await tv.post(START, headers={"CF-Connecting-IP": "2001:db8:1:3::1"})
+    assert other.status_code == 201
+
+
+async def test_starts_at_once_from_one_source_stop_at_the_cap(app, tv):
+    here = {"CF-Connecting-IP": "198.51.100.7"}
+
+    answers = await asyncio.gather(*(tv.post(START, headers=here) for _ in range(20)))
+
+    statuses = sorted(answer.status_code for answer in answers)
+    assert statuses.count(201) == tv_links.MAX_OPEN_PER_SOURCE
+    assert statuses.count(429) == 20 - tv_links.MAX_OPEN_PER_SOURCE
+    assert len(rows(app, "tv_links")) == tv_links.MAX_OPEN_PER_SOURCE
+
+
+async def test_starts_at_once_from_many_sources_stop_at_the_global_cap(
+    app, tv, monkeypatch
+):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_LINKS", 5)
+
+    answers = await asyncio.gather(
+        *(
+            tv.post(START, headers={"CF-Connecting-IP": f"198.51.100.{i}"})
+            for i in range(12)
+        )
+    )
+
+    statuses = [answer.status_code for answer in answers]
+    assert statuses.count(201) == 5
+    assert statuses.count(503) == 7
+    assert len(rows(app, "tv_links")) == 5
+
+
+async def test_the_global_cap_counts_only_open_requests(
+    app, tv, phone, clock, monkeypatch
+):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_LINKS", 2)
+    first = await requested(tv, **{"CF-Connecting-IP": "198.51.100.1"})
+    await requested(tv, **{"CF-Connecting-IP": "198.51.100.2"})
+    full = await tv.post(START, headers={"CF-Connecting-IP": "198.51.100.3"})
+    assert full.status_code == 503
+    assert full.json()["detail"]["code"] == "tv_sign_in_busy"
+
+    await tv.post(CANCEL, json={"deviceCode": first["deviceCode"]})
+    assert (
+        await tv.post(START, headers={"CF-Connecting-IP": "198.51.100.3"})
+    ).status_code == 201
+
+    clock.advance(11 * 60)
+    for index in range(2):
+        response = await tv.post(
+            START, headers={"CF-Connecting-IP": f"198.51.100.{10 + index}"}
+        )
+        assert response.status_code == 201
+
+
+async def test_a_denied_consumed_or_expired_request_does_not_count_toward_either_cap(
+    app, tv, phone, clock, monkeypatch
+):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_PER_SOURCE", 1)
+    here = {"CF-Connecting-IP": "198.51.100.7"}
+    request = await requested(tv, **here)
+    await approved(phone, request)
+    clock.advance(5)
+    await continued(tv, request)
+
+    assert (await tv.post(START, headers=here)).status_code == 201
+
+
+async def test_a_source_is_told_to_slow_down_before_everyone_is_told_it_is_full(
+    app, tv, monkeypatch
+):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_LINKS", 1)
+    monkeypatch.setattr(tv_links, "MAX_OPEN_PER_SOURCE", 1)
+    here = {"CF-Connecting-IP": "198.51.100.7"}
+    await requested(tv, **here)
+
+    same_source = await tv.post(START, headers=here)
+    another = await tv.post(START, headers={"CF-Connecting-IP": "198.51.100.8"})
+
+    assert (same_source.status_code, another.status_code) == (429, 503)
+
+
+def test_the_pairing_budget_cannot_be_left_out_of_the_budgets():
+    one = Budget()
+
+    with pytest.raises(TypeError):
+        Budgets(session=one, generate=one, agent=one, api=one)
+
+
+# Lookups: limits
+
+
+async def test_looking_a_code_up_spends_the_budget_of_the_account_and_the_source(
     app, tv, phone
 ):
     request = await requested(tv)
@@ -789,53 +1353,130 @@ async def test_a_spent_budget_stops_guessing_before_the_code_is_read(app, tv, ph
     assert rows(app, "tv_links")[0]["attempts"] == 0
 
 
-async def test_requests_stop_at_the_cap_of_open_requests(app, tv, monkeypatch):
-    monkeypatch.setattr(tv_links, "MAX_OPEN_LINKS", 2)
-    await requested(tv)
-    await requested(tv)
+async def test_wrong_guesses_have_budgets_of_their_own_per_account_and_per_source(
+    app, tv, phone
+):
+    request = await requested(tv)
+    app.state.pairing_limiter = budget = Budget(refuses="tv-miss-ip")
+    wrong = "AAAAAAAA" if request["userCode"] != "AAAAAAAA" else "BBBBBBBB"
 
-    refused = await tv.post(START)
+    guess = await phone.post(
+        LOOKUP, json={"userCode": wrong}, headers={"CF-Connecting-IP": "198.51.100.8"}
+    )
+    right = await looked_up(phone, request)
 
-    assert refused.status_code == 503
-    assert refused.json()["detail"]["code"] == "tv_sign_in_busy"
+    assert guess.status_code == 429
+    assert budget.keys[:4] == [
+        f"tv-look:{UID}",
+        "tv-look-ip:198.51.100.8",
+        f"tv-miss:{UID}",
+        "tv-miss-ip:198.51.100.8",
+    ]
+    assert right.status_code == 200
+    assert not any(key.startswith("tv-miss") for key in budget.keys[4:])
+
+
+async def test_a_wrong_guess_inside_its_budget_is_a_plain_not_found(app, tv, phone):
+    app.state.pairing_limiter = Budget()
+
+    refused = await phone.post(LOOKUP, json={"userCode": "AAAAAAAA"})
+
+    assert refused.status_code == 404
+
+
+# Clean-up
+
+
+class Env:
+    def __init__(self, database) -> None:
+        self.DB = database
 
 
 async def test_expired_requests_and_ended_credentials_are_purged(app, tv, phone, clock):
     request = await requested(tv)
     await approved(phone, request)
     clock.advance(5)
-    await polled(tv, request)
+    await continued(tv, request)
     (listed,) = (await phone.get(DEVICES)).json()["devices"]
     await phone.delete(f"{DEVICES}/{listed['id']}")
-
-    class Env:
-        DB = app.state.tv_db
+    env = Env(app.state.tv_db)
 
     clock.advance(2 * 3600)
     current = await requested(tv)
-    await tv_sessions.purge_tv_sign_in(Env, clock.ms)
+    await tv_sessions.purge_tv_sign_in(env, clock.ms)
 
     assert [row["status"] for row in rows(app, "tv_links")] == ["pending"]
     assert current["userCode"]
     assert len(rows(app, "tv_sessions")) == 1
-    await tv_sessions.purge_tv_sign_in(Env, clock.ms + 2 * 86400 * 1000)
+    await tv_sessions.purge_tv_sign_in(env, clock.ms + 2 * 86400 * 1000)
     assert rows(app, "tv_sessions") == []
+
+
+async def test_a_credential_that_was_never_renewed_is_revoked_after_a_day_and_one_that_was_is_not(
+    app, tv, phone, clock
+):
+    lost = await signed_in_tv(tv, phone, clock)
+    kept = await signed_in_tv(tv, phone, clock)
+    clock.advance(600)
+    renewed = (await renew(tv, kept["refreshToken"])).json()
+    env = Env(app.state.tv_db)
+
+    await tv_sessions.purge_tv_sign_in(env, clock.ms + 23 * 3600 * 1000)
+    assert len((await phone.get(DEVICES)).json()["devices"]) == 2
+    clock.advance(25 * 3600)
+    await tv_sessions.purge_tv_sign_in(env, clock.ms)
+
+    by_hash = {row["refresh_hash"]: row for row in rows(app, "tv_sessions")}
+    assert by_hash[hash_secret(renewed["refreshToken"])]["revoked_at"] is None
+    assert [
+        row["revoked_at"] is not None
+        for row in rows(app, "tv_sessions")
+        if row["renewed_at"] is None
+    ] == [True]
+    assert lost["refreshToken"]
+
+
+# What answers carry
+
+
+async def test_every_answer_that_may_hold_a_secret_says_not_to_keep_it(
+    tv, phone, clock
+):
+    request = await requested(tv)
+    assert (await tv.post(START)).headers["cache-control"] == "no-store"
+    await approved(phone, request)
+    clock.advance(5)
+    seen = [
+        await tv.post(TOKEN, json={"deviceCode": request["deviceCode"]}),
+        await tv.post(CONTINUE, json={"deviceCode": request["deviceCode"]}),
+    ]
+    renewal = await renew(tv, "r" * 43)
+    answer = seen[1].json()
+    seen.append(await renew(tv, answer["refreshToken"]))
+    seen.append(await looked_up(phone, await requested(tv)))
+
+    assert answer["token"]
+    assert renewal.status_code == 401
+    for response in seen:
+        assert response.headers["cache-control"] == "no-store"
 
 
 async def test_no_secret_reaches_the_logs(app, tv, phone, clock, caplog):
     caplog.set_level(logging.DEBUG)
     request = await requested(tv)
-    await phone.post(LOOKUP, json={"userCode": request["userCode"]})
     await approved(phone, request)
     clock.advance(5)
-    answer = await polled(tv, request)
-    await tv.post(SESSION, json={"refreshToken": answer["refreshToken"]})
+    await polled(tv, request)
+    answer = await continued(tv, request)
+    renewed = (await renew(tv, answer["refreshToken"])).json()
 
     logged = caplog.text
     for secret in (
         request["deviceCode"],
         request["userCode"],
+        last_four(request),
         answer["refreshToken"],
         answer["token"],
+        renewed["refreshToken"],
     ):
         assert secret not in logged

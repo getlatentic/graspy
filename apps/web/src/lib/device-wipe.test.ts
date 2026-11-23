@@ -42,6 +42,7 @@ const DEVICE = {
   "graspy.records.imported": "1",
   "graspy.view.ui://graspy/lesson": "<html>",
   "graspy.service-consent.uid/ada": "1",
+  "graspy.tv-credential": "credential-1",
 };
 
 beforeEach(() => {
@@ -60,10 +61,19 @@ describe("wipeLearnerData", () => {
       "firebase:authUser:key:[DEFAULT]",
       "graspy.account",
       "graspy.service-consent.uid/ada",
+      "graspy.tv-credential",
       "graspy_device_id",
       "graspy_install_dismissed",
     ]);
     expect(newDeviceId).not.toHaveBeenCalled();
+  });
+
+  it("keeps a TV's credential: wiping the learner must not strand what the account lists as signed in", async () => {
+    const storage = localStorageWith(DEVICE);
+
+    await wipeLearnerData();
+
+    expect(storage["graspy.tv-credential"]).toBe("credential-1");
   });
 
   it("keeps what a parent agreed to, so the next learner's switch does not ask again", async () => {

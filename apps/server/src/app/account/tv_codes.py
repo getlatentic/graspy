@@ -93,3 +93,21 @@ def country_of(header: str | None) -> str | None:
     if re.fullmatch(r"[A-Z]{2}", code) and code not in {"XX", "T1"}:
         return code
     return None
+
+
+CONFIRM_LENGTH = 4
+
+
+def hash_source(source: str, secret: str) -> str:
+    """The network a request came from, keyed, so the address is not kept."""
+    return hmac.new(
+        secret.encode(), b"tv-source:" + source.encode(), "sha256"
+    ).hexdigest()
+
+
+def confirmation_matches(code: str, typed: str) -> bool:
+    """The last four characters of the code, as typed by someone reading them off the TV screen.
+    Case, spaces and dashes are ignored; in constant time."""
+    wanted = code[-CONFIRM_LENGTH:]
+    given = re.sub(r"[\s-]", "", typed).upper()
+    return hmac.compare_digest(wanted.encode(), given.encode())

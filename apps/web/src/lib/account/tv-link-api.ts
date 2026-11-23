@@ -1,12 +1,17 @@
 import { readJson } from "@/lib/api/body";
 import { ApiError, toApiError, toNetworkError } from "@/lib/api/errors";
+import { fetchAsParent } from "@/lib/api/session";
 import { API_BASE_URL } from "@/lib/env";
 import { call } from "./account-call";
 
 // Signing a TV in from a phone (app/api/tv_sign_in_routes.py, docs/TV_SIGN_IN.md). The TV's
-// calls carry no session: the device code is what it holds. The phone's carry its account's.
+// calls carry no session: the device code is what it holds. The phone's are the parent's: a
+// session made from a Google sign-in just now.
 
 const TV_SIGN_IN_URL = `${API_BASE_URL}/tv-sign-in`;
+
+// Signing out must not wait on a server that does not answer.
+const SIGN_OUT_MS = 5_000;
 
 export interface TvLinkRequest {
   deviceCode: string;
@@ -21,7 +26,7 @@ export interface TvLinkRequest {
 export interface TvApproval {
   token: string;
   expiresIn: number;
-  /** Renews the session; the TV keeps it until signed out. */
+  /** Renews the session, and is replaced by the one each renewal returns. */
   refreshToken: string;
   account: string;
   learner: { id: string; name: string };
@@ -31,6 +36,12 @@ export type TvPoll =
   | {
       status: "pending" | "slow_down" | "expired" | "denied";
       interval?: number;
+    }
+  /** The phone approved: the person at the TV is to confirm whom it is linked to. */
+  | {
+      status: "linking";
+      interval?: number;
+      learner: { id: string; name: string };
     }
   | ({ status: "approved" } & TvApproval);
 
@@ -68,13 +79,33 @@ export function pollTvLink(
   return post("/token", { deviceCode }, signal);
 }
 
-/** The TV signing itself out: its credential is the proof. */
+/** The person at the TV confirms the learner: the TV is given its session, once. */
+export function continueTvLink(
+  deviceCode: string,
+  signal?: AbortSignal,
+): Promise<TvPoll> {
+  return post("/continue", { deviceCode }, signal);
+}
+
+/** The TV gives up its request, or the person there declines it. */
+export async function cancelTvLink(deviceCode: string): Promise<void> {
+  await post("/cancel", { deviceCode }).catch(() => undefined);
+}
+
+/** The TV signing itself out: its credential is the proof. Gives up after a few seconds. */
 export async function signOutTv(refreshToken: string): Promise<void> {
-  await fetch(`${TV_SIGN_IN_URL}/sign-out`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  });
+  const giveUp = new AbortController();
+  const timer = setTimeout(() => giveUp.abort(), SIGN_OUT_MS);
+  try {
+    await fetch(`${TV_SIGN_IN_URL}/sign-out`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      signal: giveUp.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** What the phone shows before the person approves. */
@@ -86,16 +117,26 @@ export interface TvAsked {
   expiresAt: number;
 }
 
+// What the phone does is the parent's: the server refuses a learner's session these routes.
+const asParent = <T>(path: string, method: string, body?: unknown) =>
+  call<T>(`${TV_SIGN_IN_URL}${path}`, method, body, fetchAsParent);
+
+/** Holds the request for this account for two minutes. */
 export function lookUpTv(userCode: string): Promise<TvAsked> {
-  return call(`${TV_SIGN_IN_URL}/lookup`, "POST", { userCode });
+  return asParent("/lookup", "POST", { userCode });
 }
 
-export function approveTv(userCode: string, learnerId: string): Promise<void> {
-  return call(`${TV_SIGN_IN_URL}/approve`, "POST", { userCode, learnerId });
+/** `confirm` is the last four characters of the code as the TV shows them. */
+export function approveTv(
+  userCode: string,
+  learnerId: string,
+  confirm: string,
+): Promise<void> {
+  return asParent("/approve", "POST", { userCode, learnerId, confirm });
 }
 
 export function denyTv(userCode: string): Promise<void> {
-  return call(`${TV_SIGN_IN_URL}/deny`, "POST", { userCode });
+  return asParent("/deny", "POST", { userCode });
 }
 
 export interface TvDevice {
@@ -107,11 +148,9 @@ export interface TvDevice {
 }
 
 export async function listTvs(): Promise<TvDevice[]> {
-  return (
-    await call<{ devices: TvDevice[] }>(`${TV_SIGN_IN_URL}/devices`, "GET")
-  ).devices;
+  return (await asParent<{ devices: TvDevice[] }>("/devices", "GET")).devices;
 }
 
 export function removeTv(id: string): Promise<void> {
-  return call(`${TV_SIGN_IN_URL}/devices/${id}`, "DELETE");
+  return asParent(`/devices/${id}`, "DELETE");
 }

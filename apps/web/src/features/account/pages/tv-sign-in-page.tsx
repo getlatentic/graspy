@@ -21,7 +21,8 @@ const MESSAGES = {
 } as const;
 
 /** "Sign in with your phone", for a screen with a remote: a code, where to enter it and a QR code
- * for the same, with no text to type. The phone's approval signs this device in. */
+ * for the same, with no text to type. The phone's approval does not sign this device in: the person here
+ * confirms whom it is linked to, and only then is it given a session. */
 export default function TvSignInPage() {
   const account = useAccount();
   if (account) return <Navigate to="/app" replace />;
@@ -37,7 +38,7 @@ const minutesAndSeconds = (seconds: number) =>
 
 function TvLink() {
   const { t } = useI18n();
-  const { state, again } = useTvLink();
+  const { state, again, confirm, decline } = useTvLink();
   const left = useSecondsLeft(
     state.kind === "waiting" ? state.expiresAt : null,
   );
@@ -45,6 +46,30 @@ function TvLink() {
     state.kind === "waiting" && left === 0
       ? ({ kind: "expired" } as const)
       : state;
+  if (ended.kind === "declined") return <Navigate to={SIGN_IN_PAGE} replace />;
+
+  if (ended.kind === "linking") {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-balance font-display text-3xl font-semibold text-ink sm:text-4xl">
+          {t("tvSignIn.linking", { name: ended.learnerName })}
+        </h1>
+        <div className="flex flex-wrap gap-3">
+          <Button size="lg" onClick={confirm} disabled={ended.busy} autoFocus>
+            {t("tvSignIn.continue")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={decline}
+            disabled={ended.busy}
+          >
+            {t("tvSignIn.cancel")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
