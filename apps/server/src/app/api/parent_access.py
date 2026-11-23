@@ -12,8 +12,8 @@ from ..account.consents import GATE_GOOGLE
 from ..security.guard import Session, require_session
 from .consent_proof import parent_gate, parent_required, refusal
 
-# A Google proof for deleting the account must be this recent (the ID token's own `auth_time`
-# bound is five minutes; the parent's session made from it is held to the same).
+# A Google proof for deleting the account must be this recent by the real credential time, the ID
+# token's `auth_time` that the parent's session keeps, not by when the session was made.
 GOOGLE_PROOF_SECONDS = 5 * 60
 
 
@@ -38,11 +38,11 @@ async def _google_parent(
     gate = await parent_gate(request, session)
     if gate is None:
         raise parent_required()
-    started = session.started_at
+    proved = session.auth_time
     if (
         gate != GATE_GOOGLE
-        or started is None
-        or time.time() - started > GOOGLE_PROOF_SECONDS
+        or proved is None
+        or time.time() - proved > GOOGLE_PROOF_SECONDS
     ):
         raise refusal(
             403, "google_sign_in_required", "Sign in with Google again to do this"

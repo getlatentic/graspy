@@ -118,6 +118,10 @@ APPROVE_SQL = (
     "WHERE id = ?1 AND status = 'pending' AND expires_at > ?4 "
     "AND locked_by = ?2 AND locked_until > ?4"
 )
+VOID_PIN_APPROVED_SQL = (
+    "UPDATE tv_links SET status = 'denied' "
+    "WHERE account_uid = ?1 AND status = 'approved' AND approved_gate = 'pin'"
+)
 DENY_SQL = (
     "UPDATE tv_links SET status = 'denied' "
     "WHERE id = ?1 AND status = 'pending' AND expires_at > ?2 "
@@ -341,6 +345,12 @@ async def approve(
         .run()
     )
     return changed(result)
+
+
+async def void_pin_approved(database: Any, uid: str) -> None:
+    """Requests the PIN approved that the TV has not yet taken are ended, so they cannot make a
+    session after the PIN was reset."""
+    await database.prepare(VOID_PIN_APPROVED_SQL).bind(uid).run()
 
 
 async def deny(database: Any, link_id: int, uid: str, now: int) -> bool:

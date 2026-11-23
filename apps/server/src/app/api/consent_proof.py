@@ -10,8 +10,8 @@ from typing import NamedTuple
 
 from fastapi import HTTPException, Request
 
-from ..account import parent_pins
-from ..account.consents import GATE_GOOGLE
+from ..account import google_proofs, parent_pins
+from ..account.consents import GATE_GOOGLE, GATE_GOOGLE_TOKEN
 from ..security.firebase import FRESH_SIGN_IN_SECONDS, SignedIn
 from ..security.guard import Session
 from .routes import verified_sign_in
@@ -32,9 +32,23 @@ def require_known_notice(known: frozenset[int], version: int) -> None:
         raise refusal(400, "notice_unknown", "That notice is not one graspy shows")
 
 
-async def require_fresh_sign_in(request: Request, uid: str, id_token: str) -> SignedIn:
+def sign_in_reused() -> HTTPException:
+    return refusal(
+        401,
+        "sign_in_reused",
+        "Sign in with Google again to do this, then send the new token",
+    )
+
+
+async def require_fresh_sign_in(
+    request: Request, uid: str, id_token: str, session: Session | None = None
+) -> SignedIn:
     """The token is Google's for this session's own account, came from signing in with Google,
-    and its sign-in is recent. Returns who signed in."""
+    its sign-in is recent, and **it has not proved before**: a token proves once (its `auth_time`
+    must be later than the last this account proved by), so one read off a device cannot be sent
+    again. Made under a session, it must be a sign-in later than the session was made, or the one
+    the session was minted from (a sign-in that makes the account's session and the parent's in
+    one go, which is then spent). Returns who signed in."""
     signed = await verified_sign_in(request, id_token)
     if signed.uid != uid:
         raise refusal(
@@ -46,6 +60,14 @@ async def require_fresh_sign_in(request: Request, uid: str, id_token: str) -> Si
         raise refusal(
             401, "sign_in_stale", "Sign in again to agree, then send the new token"
         )
+    assert signed.auth_time is not None
+    if session is not None and not (
+        signed.auth_time > (session.started_at or 0)
+        or signed.auth_time == session.auth_time
+    ):
+        raise sign_in_reused()
+    if not await google_proofs.accept(request.app.state.tv_db, uid, signed.auth_time):
+        raise sign_in_reused()
     return signed
 
 
@@ -74,15 +96,23 @@ class Proof(NamedTuple):
     proved_at: int | None
 
 
+def _google_time(session: Session) -> int | None:
+    """When the Google sign-in behind a Google parent's session was done, in milliseconds."""
+    when = session.auth_time or session.started_at
+    return None if when is None else when * 1000
+
+
 async def consent_gate(
     request: Request, session: Session, uid: str, id_token: str | None
 ) -> Proof:
     """Proves the parent agreed, and says how: a fresh sign-in with Google sent with the request,
     or else the parent's session the request is made under, if it began in the last two minutes."""
-    if id_token is not None:
-        signed = await require_fresh_sign_in(request, uid, id_token)
-        return Proof(GATE_GOOGLE, signed.auth_time * 1000 if signed.auth_time else None)
     gate = await parent_gate(request, session)
+    if id_token is not None:
+        signed = await require_fresh_sign_in(request, uid, id_token, session)
+        proved = signed.auth_time * 1000 if signed.auth_time else None
+        # A bare token, with no parent's session: it shows a sign-in was made, no more.
+        return Proof(GATE_GOOGLE if gate else GATE_GOOGLE_TOKEN, proved)
     if gate is None or session.account != uid:
         raise parent_required()
     started = session.started_at
@@ -92,4 +122,4 @@ async def consent_gate(
             "parent_fresh_required",
             "Type the parent PIN again to agree",
         )
-    return Proof(gate, started * 1000)
+    return Proof(gate, _google_time(session) if gate == GATE_GOOGLE else started * 1000)

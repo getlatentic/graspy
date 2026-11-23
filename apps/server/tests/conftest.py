@@ -44,3 +44,10 @@ def judge_says_safe(monkeypatch):
     from app.agent import safety_judge
 
     monkeypatch.setattr(safety_judge, "judged", _judged_safe)
+
+
+@pytest.fixture(autouse=True)
+def sign_ins_start_again():
+    import fresh_sign_in
+
+    fresh_sign_in.reset()

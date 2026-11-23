@@ -1,9 +1,8 @@
 """A server whose Google sign-in vouches for one account, and the steps a
 device takes through it."""
 
-import time
-
 import httpx2
+from fresh_sign_in import fresh_auth_time
 
 from app.factory import create_app
 from app.learner.store import InMemoryLearnerStore
@@ -22,7 +21,7 @@ def signed_in_app(monkeypatch, name: str = "Ada Lovelace"):
             return firebase.SignedIn(
                 uid=UID,
                 name=name,
-                auth_time=int(time.time()) - 30,
+                auth_time=fresh_auth_time(),
                 provider="google.com",
             )
         if id_token != "good":

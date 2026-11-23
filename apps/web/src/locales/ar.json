@@ -537,6 +537,9 @@
     "disabled": "The PIN is turned off. Use Forgot PIN.",
     "noticeLocked": "Someone entered the wrong PIN {count} times on {date}.",
     "noticeDisabled": "The PIN was turned off after {count} wrong tries on {date}.",
+    "noticeWrong": "Someone entered a wrong PIN {count} times on {date}.",
+    "noticeTv": "A TV was linked with the PIN on {date}.",
+    "noticeConsent": "An agreement was given with the PIN on {date}.",
     "noticeReset": "The PIN was reset on {date}.",
     "noticeResetTvs": "{count} TVs linked with the old PIN were signed out.",
     "noticeDismiss": "Got it"

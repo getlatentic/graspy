@@ -75,6 +75,37 @@ describe("what the parent is told of their PIN", () => {
     expect(text).toContain("parentPin.noticeResetTvs 2");
   });
 
+  it("says the wrong PINs below a lock, and a TV or an agreement the PIN let through", async () => {
+    api.getPinActivity.mockResolvedValue([
+      { id: 6, kind: "consent", at: AT, count: null },
+      { id: 5, kind: "tv_linked", at: AT, count: null },
+      { id: 4, kind: "wrong", at: AT, count: 3 },
+    ]);
+    shown();
+
+    const text = (await screen.findByRole("status")).textContent ?? "";
+    expect(text).toContain("parentPin.noticeWrong 3");
+    expect(text).toContain("parentPin.noticeTv");
+    expect(text).toContain("parentPin.noticeConsent");
+  });
+
+  it("clears only up to the newest event the page showed", async () => {
+    api.getPinActivity.mockResolvedValue([
+      { id: 9, kind: "locked", at: AT, count: 5 },
+      { id: 7, kind: "wrong", at: AT, count: 3 },
+    ]);
+    shown();
+    await screen.findByRole("status");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "parentPin.noticeDismiss" }),
+    );
+
+    await waitFor(() =>
+      expect(api.acknowledgePinActivity).toHaveBeenCalledWith(9),
+    );
+  });
+
   it("is cleared only by a Google sign-in made at the tap, then the parent's session, then the acknowledgement", async () => {
     api.getPinActivity.mockResolvedValue([
       { id: 1, kind: "locked", at: AT, count: 5 },
@@ -88,6 +119,7 @@ describe("what the parent is told of their PIN", () => {
 
     await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
     expect(api.startParentSession).toHaveBeenCalledWith("fresh");
+    expect(api.acknowledgePinActivity).toHaveBeenCalledWith(1);
     expect(api.signInAgain.mock.invocationCallOrder[0]).toBeLessThan(
       api.acknowledgePinActivity.mock.invocationCallOrder[0],
     );

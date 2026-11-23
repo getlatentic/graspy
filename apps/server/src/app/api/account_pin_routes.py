@@ -13,7 +13,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import Field
 
-from ..account import parent_pins, pin_events, tv_sessions
+from ..account import parent_pins, pin_events, tv_links, tv_sessions
 from ..account.consents import GATE_GOOGLE, GATE_PIN
 from ..account.parent_pin_kdf import PIN_PATTERN, too_easy
 from ..account.tv_codes import masked_email
@@ -106,7 +106,9 @@ async def _spend(request: Request, uid: str, session: Session) -> None:
     lockout is what is the account's."""
     limiter = request.app.state.pin_limiter
     await spend(limiter, f"pin:session:{uid}:{session.jti}")
-    await spend(limiter, f"pin:source:{source_of(client_key(request.scope))}")
+    # The source is counted with the account: everyone behind one address (a school, a carrier's
+    # NAT) would otherwise share a budget a stranger could spend, and the lockout is the control.
+    await spend(limiter, f"pin:source:{uid}:{source_of(client_key(request.scope))}")
 
 
 async def _proved_by_pin(
@@ -176,12 +178,16 @@ async def set_pin(
     )
     tvs = 0
     if body.firebase_id_token is not None:
-        signed = await require_fresh_sign_in(request, uid, body.firebase_id_token)
+        signed = await require_fresh_sign_in(
+            request, uid, body.firebase_id_token, session
+        )
         gate, hint = GATE_GOOGLE, masked_email(signed.email)
         existed = await parent_pins.exists(database, uid)
         await parent_pins.save(database, secret, uid, body.pin, hint, now)
         if existed:
             tvs = await tv_sessions.revoke_pin_gated(database, uid, now)
+            # A TV approved with the PIN and not yet taken must not take its session later.
+            await tv_links.void_pin_approved(database, uid)
         await pin_events.record(database, uid, "reset" if existed else "set", now, tvs)
     elif body.current_pin is not None:
         correct = await _proved_by_pin(request, uid, session, body.current_pin)
@@ -193,7 +199,13 @@ async def set_pin(
         await pin_events.record(database, uid, "set", now)
     else:
         raise refusal(401, "sign_in_stale", "Sign in with Google to set the PIN")
-    issued = parent_session_response(request, uid, gate, hint)
+    issued = parent_session_response(
+        request,
+        uid,
+        gate,
+        hint,
+        signed.auth_time if gate == GATE_GOOGLE else None,
+    )
     return PinSession(**issued.model_dump(), tvs_signed_out=tvs)
 
 
@@ -206,6 +218,13 @@ async def pin_activity(request: Request, uid: Uid) -> PinActivity:
     return PinActivity(events=[PinEvent(**row) for row in found])
 
 
+class Acknowledged(Wire):
+    # The newest event the page showed: later ones stay unread.
+    up_to: int
+
+
 @parent_pin_router.post("/activity/acknowledge", status_code=204)
-async def acknowledge_activity(request: Request, uid: GoogleParentUid) -> None:
-    await pin_events.acknowledge(_database(request), uid, now_ms())
+async def acknowledge_activity(
+    request: Request, uid: GoogleParentUid, body: Acknowledged
+) -> None:
+    await pin_events.acknowledge(_database(request), uid, now_ms(), body.up_to)

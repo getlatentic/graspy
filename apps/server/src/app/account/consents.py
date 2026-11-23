@@ -18,6 +18,10 @@ NOTICE_VERSIONS = {SERVICE: frozenset({1}), RECORDINGS: frozenset({1})}
 RETENTION_DAYS = (30, 90, 365)
 GATE_GOOGLE = "google"
 GATE_PIN = "pin"
+# A bare Google token sent with the request, and no parent's session: what Android sends. It shows
+# a Google sign-in was made, not that it was made for this action by a parent at the screen, so it
+# ranks below a Google parent session, which ranks below... nothing: see docs/PARENT_PIN.md.
+GATE_GOOGLE_TOKEN = "google-token"
 DAY_MS = 24 * 60 * 60 * 1000
 
 ACTIVE_SQL = (

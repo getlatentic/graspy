@@ -67,7 +67,7 @@ async def test_a_learner_added_with_a_fresh_sign_in_has_the_parents_consent_reco
             "retention_days": None,
             "granted_at": consent["grantedAt"],
             "revoked_at": None,
-            "gate": "google",
+            "gate": "google-token",
             "proved_at": ANY,
         }
     ]

@@ -7,6 +7,7 @@ import logging
 
 from fastapi import APIRouter, Request
 
+from ..account import google_proofs
 from ..account.learners import closed
 from ..account.parent_pins import forget as forget_pin
 from ..account.tv_sessions import forget_account as forget_tvs
@@ -31,6 +32,7 @@ async def delete_account(
     await closed(keeping, uid)
     await forget_tvs(request.app.state.tv_db, uid)
     await forget_pin(request.app.state.tv_db, uid)
+    await google_proofs.forget(request.app.state.tv_db, uid)
     admin = request.app.state.firebase_admin
     if admin is None:
         return

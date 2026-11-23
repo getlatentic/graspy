@@ -5,11 +5,11 @@ has the design."""
 import asyncio
 import logging
 import re
-import time
 from dataclasses import replace
 
 import pytest
 from consent_sign_ins import OTHER_UID, consent_app
+from fresh_sign_in import fresh_auth_time
 from signed_in import UID, as_parent, chosen, client, signed_in, use
 from voice_worker import worker_env
 
@@ -202,6 +202,25 @@ async def test_a_tv_keeps_which_gate_its_parent_passed_to_link_it(
     assert [r["kind"] for r in rows(app, "pin_events") if r["kind"] == "tv_linked"] == [
         "tv_linked"
     ]
+
+
+async def test_a_request_the_pin_approved_and_the_tv_has_not_taken_cannot_be_taken_after_a_reset(
+    app, tv, phone, clock
+):
+    await as_pin_parent(phone)
+    request = await requested(tv)
+    assert (await approved(phone, request)).status_code == 204
+
+    await phone.put(
+        "/api/account/parent-pin", json={"pin": "739164", "firebaseIdToken": "fresh"}
+    )
+    clock.advance(request["interval"])
+    polled_after = await polled(tv, request)
+    taken = await tv.post(CONTINUE, json={"deviceCode": request["deviceCode"]})
+
+    assert polled_after["status"] == "denied"
+    assert taken.json()["status"] in ("denied", "expired")
+    assert rows(app, "tv_sessions") == []
 
 
 async def test_a_reset_with_google_signs_out_the_tv_linked_with_the_pin_only(
@@ -1730,7 +1749,7 @@ async def test_an_approval_by_a_session_with_no_address_says_only_the_phone(
         return firebase.SignedIn(
             uid=UID,
             name="Ada",
-            auth_time=int(time.time()),
+            auth_time=fresh_auth_time(),
             provider="google.com",
         )
 

@@ -403,9 +403,9 @@ async def test_when_the_lock_ends_the_right_pin_works_and_clears_the_count_only(
 
     assert right.status_code == 200
     kept = row(env)
-    # The count is cleared; how far up the ladder the account is, and the locks since the last
-    # Google proof, are not: they are the guess budget.
-    assert (kept["failed_count"], kept["lockouts"], kept["proof_locks"]) == (0, 1, 1)
+    # The count is cleared; how far up the ladder the account is, and the wrong PINs since the last
+    # Google proof (five, with the right one's own charge given back), are not: the guess budget.
+    assert (kept["failed_count"], kept["lockouts"], kept["proof_wrong"]) == (0, 1, 5)
 
 
 async def test_the_lock_grows_to_an_hour_and_the_third_turns_the_pin_off(pinned, clock):
@@ -463,7 +463,7 @@ async def test_forgot_pin_with_google_turns_a_disabled_pin_on_again(pinned, cloc
 
     assert reset.status_code == 200
     kept = row(env)
-    assert (kept["disabled"], kept["proof_locks"], kept["failed_count"]) == (0, 0, 0)
+    assert (kept["disabled"], kept["proof_wrong"], kept["failed_count"]) == (0, 0, 0)
     assert (await typed(pinned, OTHER_PIN)).status_code == 200
 
 
@@ -553,11 +553,11 @@ async def test_attempts_at_once_are_counted_each_and_only_five_are_compared(
     assert (
         row(env)["failed_count"],
         row(env)["lockouts"],
-        row(env)["proof_locks"],
+        row(env)["proof_wrong"],
     ) == (
         0,
         1,
-        1,
+        5,
     )
 
 
@@ -904,7 +904,7 @@ async def test_a_service_consent_with_no_sign_in_and_no_parent_session_is_refuse
     assert env.DB.rows("SELECT * FROM consents") == []
 
 
-async def test_a_consent_the_old_way_with_a_sign_in_just_made_still_records_google(
+async def test_a_consent_the_old_way_with_a_bare_token_records_google_token(
     pinned, env
 ):
     created = await pinned.post(
@@ -917,7 +917,8 @@ async def test_a_consent_the_old_way_with_a_sign_in_just_made_still_records_goog
     )
 
     assert created.status_code == 201
-    assert await consent_of(env) == {"scope": "service", "gate": "google"}
+    # A bare token and no parent's session: it shows a sign-in was made, no more.
+    assert await consent_of(env) == {"scope": "service", "gate": "google-token"}
 
 
 async def test_consents_given_before_the_gate_was_recorded_read_as_google(env):

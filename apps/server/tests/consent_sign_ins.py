@@ -3,6 +3,7 @@ another account, or without saying when the person signed in."""
 
 import time
 
+from fresh_sign_in import fresh_auth_time
 from signed_in import UID
 from voice_worker import voice_app
 
@@ -26,6 +27,14 @@ def consent_app(monkeypatch, env):
     application = voice_app(monkeypatch, env)
 
     async def verified(id_token, _api_key, **_):
+        if id_token.startswith("at:"):
+            # A sign-in made this many seconds from now (negative: before).
+            return firebase.SignedIn(
+                uid=UID,
+                name="Ada",
+                auth_time=int(time.time()) + int(id_token[3:]),
+                provider="google.com",
+            )
         if id_token == "undated":
             return firebase.SignedIn(uid=UID, name="Ada", provider="google.com")
         if id_token not in AGES:
@@ -34,7 +43,11 @@ def consent_app(monkeypatch, env):
         return firebase.SignedIn(
             uid=uid,
             name="Ada",
-            auth_time=int(time.time()) - AGES[id_token],
+            auth_time=(
+                fresh_auth_time()
+                if id_token in ("fresh", "other")
+                else int(time.time()) - AGES[id_token]
+            ),
             provider="password" if id_token == "password" else "google.com",
         )
 

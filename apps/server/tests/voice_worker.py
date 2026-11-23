@@ -5,10 +5,10 @@ behind a service binding. Checked against `npm run worker:dev`."""
 
 import json
 import sqlite3
-import time
 from types import SimpleNamespace
 from urllib.parse import unquote, urlsplit
 
+from fresh_sign_in import fresh_auth_time
 from signed_in import UID
 
 from app.factory import create_app
@@ -143,7 +143,7 @@ def voice_app(monkeypatch, env=None):
             return firebase.SignedIn(
                 uid=UID,
                 name="Ada",
-                auth_time=int(time.time()) - 30,
+                auth_time=fresh_auth_time(),
                 provider="google.com",
             )
         if id_token != "good":

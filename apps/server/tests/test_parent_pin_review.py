@@ -344,8 +344,11 @@ async def test_a_lock_the_pin_turning_off_and_a_reset_are_recorded(pinned, clock
 
     assert events(env) == [
         ("set", 0),
+        ("wrong", 3),
         ("locked", 5),
+        ("wrong", 3),
         ("locked", 5),
+        ("wrong", 3),
         ("locked", 5),
         ("disabled", 15),
         ("reset", 0),
@@ -368,14 +371,16 @@ async def test_any_session_reads_the_notice_and_only_a_google_one_clears_it(
 ):
     await wrong_five(pinned)
     listed = (await pinned.get(f"{STATUS}/activity")).json()["events"]
-    assert [(e["kind"], e["count"]) for e in listed] == [("locked", 5)]
+    assert [(e["kind"], e["count"]) for e in listed] == [("locked", 5), ("wrong", 3)]
+    newest = max(e["id"] for e in listed)
+    ack = {"upTo": newest}
 
-    child_clear = await pinned.post(f"{STATUS}/activity/acknowledge")
+    child_clear = await pinned.post(f"{STATUS}/activity/acknowledge", json=ack)
     clock.advance(15 * MINUTE)
     use(pinned, (await typed(pinned, PIN)).json())
-    pin_clear = await pinned.post(f"{STATUS}/activity/acknowledge")
+    pin_clear = await pinned.post(f"{STATUS}/activity/acknowledge", json=ack)
     use(pinned, await as_parent_of(pinned))
-    google_clear = await pinned.post(f"{STATUS}/activity/acknowledge")
+    google_clear = await pinned.post(f"{STATUS}/activity/acknowledge", json=ack)
     after = (await pinned.get(f"{STATUS}/activity")).json()["events"]
 
     assert child_clear.status_code == 403
@@ -386,11 +391,68 @@ async def test_any_session_reads_the_notice_and_only_a_google_one_clears_it(
     assert google_clear.status_code == 204 and after == []
 
 
-async def test_the_audit_trail_keeps_the_newest_fifty(pinned, env):
-    for _ in range(60):
-        await pin_events.record(env.DB, UID, "consent", int(time.time() * 1000))
+async def test_each_group_of_events_keeps_its_newest_two_hundred_and_not_the_others(
+    pinned, env
+):
+    await wrong_five(pinned)
+    now = int(time.time() * 1000)
+    for _ in range(250):
+        await pin_events.record(env.DB, UID, "tv_linked", now)
 
-    assert len(env.DB.rows("SELECT id FROM pin_events")) == 50
+    kinds = [r["kind"] for r in env.DB.rows("SELECT kind FROM pin_events")]
+    assert kinds.count("tv_linked") == 200
+    # A child linking TVs does not push out the record of the wrong PINs.
+    assert kinds.count("locked") == 1 and kinds.count("wrong") == 1
+
+
+async def test_a_notice_shows_the_wrong_pins_and_the_tvs_linked_even_after_a_burst_of_tvs(
+    pinned, env
+):
+    await wrong_five(pinned)
+    now = int(time.time() * 1000)
+    for _ in range(40):
+        await pin_events.record(env.DB, UID, "tv_linked", now)
+
+    shown = (await pinned.get(f"{STATUS}/activity")).json()["events"]
+
+    kinds = [e["kind"] for e in shown]
+    assert "locked" in kinds and "wrong" in kinds and "tv_linked" in kinds
+    assert kinds.count("tv_linked") == 10
+
+
+async def test_a_wrong_burst_of_three_is_recorded_even_below_a_lock(pinned, env):
+    for _ in range(3):
+        await typed(pinned, OTHER_PIN)
+
+    assert events(env) == [("set", 0), ("wrong", 3)]
+
+
+async def test_acknowledging_clears_only_what_the_page_showed(pinned, env, clock):
+    await wrong_five(pinned)
+    shown = (await pinned.get(f"{STATUS}/activity")).json()["events"]
+    upto = max(e["id"] for e in shown)
+    clock.advance(15 * MINUTE)
+    await wrong_five(pinned)  # more happens after the page was drawn
+    use(pinned, await as_parent_of(pinned))
+
+    cleared = await pinned.post(f"{STATUS}/activity/acknowledge", json={"upTo": upto})
+    left = (await pinned.get(f"{STATUS}/activity")).json()["events"]
+
+    assert cleared.status_code == 204
+    assert [e["kind"] for e in left] == ["locked", "wrong"]
+    assert all(e["id"] > upto for e in left)
+
+
+async def test_a_pin_let_through_is_shown_to_the_parent_too(pinned, env):
+    learner = await added_learner(pinned)
+    use(pinned, (await typed(pinned, PIN)).json())
+    await pinned.put(
+        f"/api/account/learners/{learner}/consent", json={"noticeVersion": 1}
+    )
+
+    shown = (await pinned.get(f"{STATUS}/activity")).json()["events"]
+
+    assert [e["kind"] for e in shown] == ["consent"]
 
 
 async def test_deleting_the_account_deletes_its_events(pinned, env):

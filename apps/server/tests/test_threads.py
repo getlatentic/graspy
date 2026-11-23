@@ -2,9 +2,8 @@
 device sends what it has not sent and reads what changed since it last read,
 and one learner's threads are never another's."""
 
-import time
-
 import pytest
+from fresh_sign_in import fresh_auth_time
 from signed_in import DEVICE, UID, added, chosen, client, parent_headers, signed_in
 
 from app.factory import create_app
@@ -439,7 +438,7 @@ def app(monkeypatch):
             return firebase.SignedIn(
                 uid=UID if id_token == "fresh" else "uid456",
                 name="Ada",
-                auth_time=int(time.time()) - 30,
+                auth_time=fresh_auth_time(),
                 provider="google.com",
             )
         if id_token not in accounts:

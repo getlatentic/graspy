@@ -10,7 +10,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from ..account import pin_events
+from ..account import parent_pins, pin_events
 from ..account.consents import (
     GATE_PIN,
     NOTICE_VERSIONS,
@@ -240,7 +240,35 @@ async def _proved(
     require_known_notice(NOTICE_VERSIONS[SERVICE], consent.notice_version)
     if request.app.state.voice is None:
         raise refusal(503, "consent_unavailable", "Consent cannot be kept here")
-    return await consent_gate(request, session, uid, consent.firebase_id_token)
+    try:
+        return await consent_gate(request, session, uid, consent.firebase_id_token)
+    except HTTPException:
+        raise
+    except Exception:
+        # The proof's own store (the parent's session, the sign-ins taken) could not be read.
+        logger.exception("The parent's proof could not be checked")
+        raise ConsentNotKept() from None
+
+
+async def _bare_token_may_add(
+    request: Request, session: Session, keeping: KeepingDep, uid: str
+) -> None:
+    """A learner added on a bare Google token (no parent's session: what Android sends) is allowed
+    for an account's first learner, and for an account with no PIN. Once the account has a PIN and
+    a learner, adding takes the parent's session, which the PIN makes: a token that was read off a
+    device is not enough to fill the account's places."""
+    try:
+        if await parent_gate(request, session) is not None:
+            return
+        held = (await keeping.learners.directory(account_key(uid))).learners
+        has_pin = await parent_pins.exists(request.app.state.tv_db, uid)
+    except Exception:
+        logger.exception(
+            "Whether a bare Google token may add a learner could not be read"
+        )
+        raise ConsentNotKept() from None
+    if held and has_pin:
+        raise parent_required()
 
 
 @account_router.post("/learners", response_model=ListedLearner, status_code=201)
@@ -255,6 +283,8 @@ async def add_learner(
     # the parent's agreement and its proof, or at least the parent's session.
     proof = None
     if body.consent is not None:
+        if body.consent.firebase_id_token is not None:
+            await _bare_token_may_add(request, session, keeping, uid)
         proof = await _proved(request, session, uid, body.consent)
     elif await parent_gate(request, session) is None:
         raise parent_required()

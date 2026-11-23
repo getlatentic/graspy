@@ -36,7 +36,10 @@ export function PinActivityNotice() {
     setBusy(true);
     signInAgain()
       .then(startParentSession)
-      .then(acknowledgePinActivity)
+      // Only what is on the page: what happens after it was drawn stays for the next visit.
+      .then(() =>
+        acknowledgePinActivity(Math.max(...events.map((one) => one.id))),
+      )
       .then(() => setEvents([]))
       .catch((error: unknown) => {
         if (consentProblemOf(error)) {
@@ -44,7 +47,7 @@ export function PinActivityNotice() {
         }
       })
       .finally(() => setBusy(false));
-  }, []);
+  }, [events]);
 
   if (events.length === 0) return null;
   const date = (at: number) => new Date(at).toLocaleDateString(locale);
@@ -52,6 +55,9 @@ export function PinActivityNotice() {
     const values = { count: event.count ?? 0, date: date(event.at) };
     if (event.kind === "locked") return t("parentPin.noticeLocked", values);
     if (event.kind === "disabled") return t("parentPin.noticeDisabled", values);
+    if (event.kind === "wrong") return t("parentPin.noticeWrong", values);
+    if (event.kind === "tv_linked") return t("parentPin.noticeTv", values);
+    if (event.kind === "consent") return t("parentPin.noticeConsent", values);
     const reset = t("parentPin.noticeReset", values);
     return event.count
       ? `${reset} ${t("parentPin.noticeResetTvs", values)}`

@@ -85,7 +85,7 @@ export { tooEasy } from "./weak-pins";
 /** What a parent has not yet seen of their PIN. */
 export interface PinEvent {
   id: number;
-  kind: "locked" | "disabled" | "reset";
+  kind: "locked" | "disabled" | "wrong" | "reset" | "tv_linked" | "consent";
   at: number;
   /** The wrong PINs of a lock, or the TVs a reset signed out. */
   count: number | null;
@@ -97,11 +97,11 @@ export async function getPinActivity(): Promise<PinEvent[]> {
 }
 
 /** Only under the parent's session made from a Google sign-in just now. */
-export function acknowledgePinActivity(): Promise<void> {
+export function acknowledgePinActivity(upTo: number): Promise<void> {
   return call(
     `${PIN_URL}/activity/acknowledge`,
     "POST",
-    undefined,
+    { upTo },
     fetchAsParent,
   );
 }

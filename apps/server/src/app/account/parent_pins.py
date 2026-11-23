@@ -1,16 +1,18 @@
 """The parent PIN of each account, kept in D1 (docs/PARENT_PIN.md), and the lockout that guards it.
 
 Every attempt is charged before the PIN is compared, by one guarded statement that answers only
-while the account is not locked or disabled and has fewer than five uncleared wrong PINs, so
-attempts that arrive together are serialised by the database: at most five are compared per lock.
-A request cut off after the charge has still been counted. A wrong PIN then tries to start the
-lock, by a second guarded statement that takes effect once for the five. A right PIN clears the
-count, and nothing else: how many locks the account has had, and how many since the last Google
-proof, are the guess budget.
+while the account is not locked or disabled, has fewer than five uncleared wrong PINs and fewer
+than fifteen since the last Google proof, so attempts that arrive together are serialised by the
+database: at most five are compared per lock. A request cut off after the charge has still been
+counted.
 
-The budget of a child who does not know the PIN: 5 guesses, a lock of 15 minutes, 5 more, a lock
-of an hour, 5 more, and then the PIN is disabled until the parent proves themselves with Google:
-15 guesses per Google proof."""
+Two counters, for two different things. `failed_count` is the lock: wrong PINs since the last lock
+or success, five of which start a lock of 15 minutes, an hour, then a day (the ladder, `lockouts`,
+which steps down one rung for each clean week and is not reset by a success). `proof_wrong` is the
+budget: every wrong PIN since the last Google proof adds one, **a success does not take any
+back** (it gives back only its own attempt's charge), and at fifteen the PIN is disabled until the
+parent proves themselves with Google, which is the only thing that clears it. So a child who does
+not know the PIN gets exactly 15 guesses per Google proof, whatever the parent does between."""
 
 from __future__ import annotations
 
@@ -37,46 +39,60 @@ DAY_MS = 24 * 60 * MINUTE_MS
 MAX_FAILURES = 5
 # How long each successive lock lasts; the last repeats.
 LOCK_MS = (15 * MINUTE_MS, 60 * MINUTE_MS, DAY_MS)
-# Locks since the last Google proof after which the PIN is disabled: 3 x 5 = 15 guesses.
-MAX_PROOF_LOCKS = 3
+# Wrong PINs since the last Google proof after which the PIN is disabled.
+MAX_PROOF_WRONG = 15
 # The ladder steps down one rung for each this long without a lock.
 DECAY_MS = 7 * DAY_MS
+# Wrong PINs in a row (three) that are worth telling the parent of even when they do not lock.
+BURST = 3
 
+# Timestamps are cast, so the arithmetic on them is integer arithmetic on D1 as on SQLite, whatever
+# type the binding hands over.
+_NOW = "CAST(?2 AS INTEGER)"
 _RETURNED = (
     "RETURNING salt, hash, kdf, kdf_version, iterations, pepper_id, pin_length, hint, "
-    "failed_count"
+    "failed_count, proof_wrong"
 )
 CHARGE_SQL = (
-    "UPDATE parent_pins SET failed_count = failed_count + 1 "
-    "WHERE account_uid = ?1 AND locked_until <= ?2 AND disabled = 0 AND failed_count < ?3 "
+    "UPDATE parent_pins SET failed_count = failed_count + 1, proof_wrong = proof_wrong + 1 "
+    f"WHERE account_uid = ?1 AND locked_until <= {_NOW} AND disabled = 0 "
+    "AND failed_count < ?3 AND proof_wrong < ?9 "
     "AND pepper_id = ?4 AND kdf = ?5 AND kdf_version = ?6 AND iterations BETWEEN ?7 AND ?8 "
     + _RETURNED
 )
-_RUNG = "MAX(0, lockouts - (?2 - COALESCE(last_failed_at, ?2)) / ?7)"
+_RUNG = f"MAX(0, lockouts - ({_NOW} - COALESCE(last_failed_at, {_NOW})) / CAST(?7 AS INTEGER))"
 LOCK_SQL = (
     "UPDATE parent_pins SET "
     f"lockouts = {_RUNG} + 1, "
-    f"locked_until = ?2 + CASE {_RUNG} WHEN 0 THEN ?4 WHEN 1 THEN ?5 ELSE ?6 END, "
-    "proof_locks = proof_locks + 1, "
-    "disabled = CASE WHEN proof_locks + 1 >= ?8 THEN 1 ELSE 0 END, "
-    "failed_count = 0, last_failed_at = ?2 "
-    "WHERE account_uid = ?1 AND failed_count >= ?3 AND locked_until <= ?2 AND disabled = 0 "
-    "RETURNING locked_until, disabled"
+    f"locked_until = {_NOW} + CASE {_RUNG} WHEN 0 THEN ?4 WHEN 1 THEN ?5 ELSE ?6 END, "
+    f"failed_count = 0, last_failed_at = {_NOW} "
+    f"WHERE account_uid = ?1 AND failed_count >= ?3 AND locked_until <= {_NOW} AND disabled = 0 "
+    "RETURNING locked_until"
 )
-CLEAR_SQL = "UPDATE parent_pins SET failed_count = 0 WHERE account_uid = ?1"
+DISABLE_SQL = (
+    "UPDATE parent_pins SET disabled = 1 "
+    "WHERE account_uid = ?1 AND proof_wrong >= ?2 AND disabled = 0 RETURNING disabled"
+)
+# A right PIN: the count of wrong ones in a row is cleared, and its own attempt's charge is given
+# back. The wrong ones before it stay counted.
+CLEAR_SQL = (
+    "UPDATE parent_pins SET failed_count = 0, "
+    "proof_wrong = CASE WHEN proof_wrong > 0 THEN proof_wrong - 1 ELSE 0 END "
+    "WHERE account_uid = ?1"
+)
 READ_SQL = (
-    "SELECT pin_length, locked_until, disabled, failed_count, pepper_id, kdf, kdf_version, "
-    "iterations FROM parent_pins WHERE account_uid = ?1"
+    "SELECT pin_length, locked_until, disabled, failed_count, proof_wrong, pepper_id, kdf, "
+    "kdf_version, iterations FROM parent_pins WHERE account_uid = ?1"
 )
-# A Google proof: the PIN is replaced, the lock and the disabling end, and the count of locks since
-# a proof starts again. How far up the ladder the account is stays, and decays with time.
+# A Google proof: the PIN is replaced, the lock and the disabling end, and the 15 guesses start
+# again. How far up the ladder the account is stays, and decays with time.
 SET_SQL = (
     "INSERT INTO parent_pins (account_uid, salt, hash, kdf, kdf_version, iterations, pepper_id, "
     "pin_length, hint, set_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) "
     "ON CONFLICT (account_uid) DO UPDATE SET salt = excluded.salt, hash = excluded.hash, "
     "kdf = excluded.kdf, kdf_version = excluded.kdf_version, iterations = excluded.iterations, "
     "pepper_id = excluded.pepper_id, pin_length = excluded.pin_length, hint = excluded.hint, "
-    "set_at = excluded.set_at, failed_count = 0, proof_locks = 0, disabled = 0, locked_until = 0"
+    "set_at = excluded.set_at, failed_count = 0, proof_wrong = 0, disabled = 0, locked_until = 0"
 )
 # Changing it with the old PIN: written only if the PIN is still the one that was typed.
 CHANGE_SQL = (
@@ -94,7 +110,7 @@ class PinStatus:
     length: int
     # Until when the account is locked, in milliseconds since the epoch; 0 when it is not.
     locked_until: int
-    # Too many wrong PINs since the last Google proof: only Forgot PIN works.
+    # Fifteen wrong PINs since the last Google proof: only Forgot PIN works.
     disabled: bool
 
 
@@ -171,23 +187,27 @@ async def exists(database: Any, uid: str) -> bool:
     return await database.prepare(EXISTS_SQL).bind(uid).first() is not None
 
 
-async def _lock(database: Any, uid: str, now: int) -> Locked | Disabled | None:
+async def _lock(database: Any, uid: str, now: int) -> Locked | None:
     """Starts the lock once five wrong PINs are counted, if no one has: None when there is
     nothing to lock."""
     locked = _row(
         await database.prepare(LOCK_SQL)
-        .bind(uid, now, MAX_FAILURES, *LOCK_MS, DECAY_MS, MAX_PROOF_LOCKS)
+        .bind(uid, now, MAX_FAILURES, *LOCK_MS, DECAY_MS)
         .first()
     )
     if locked is None:
         return None
     await pin_events.record(database, uid, "locked", now, MAX_FAILURES)
-    if locked["disabled"]:
-        await pin_events.record(
-            database, uid, "disabled", now, MAX_FAILURES * MAX_PROOF_LOCKS
-        )
-        return Disabled()
     return Locked(locked["locked_until"])
+
+
+async def _disable(database: Any, uid: str, now: int) -> Disabled | None:
+    """Turns the PIN off once fifteen wrong PINs are counted since the last Google proof."""
+    off = _row(await database.prepare(DISABLE_SQL).bind(uid, MAX_PROOF_WRONG).first())
+    if off is None:
+        return None
+    await pin_events.record(database, uid, "disabled", now, MAX_PROOF_WRONG)
+    return Disabled()
 
 
 async def _refused(database: Any, secret: str, uid: str, now: int) -> Outcome:
@@ -197,10 +217,13 @@ async def _refused(database: Any, secret: str, uid: str, now: int) -> Outcome:
         return NotSet()
     if row["disabled"]:
         return Disabled()
+    # Fifteen wrong PINs counted and the PIN not yet turned off (the one who counted the fifteenth
+    # was cut off): it is turned off now.
+    if row["proof_wrong"] >= MAX_PROOF_WRONG:
+        return await _disable(database, uid, now) or Disabled()
     if row["locked_until"] > now:
         return Locked(row["locked_until"])
-    # Five wrong PINs counted and the lock not yet written (the one who counted the fifth is still
-    # at it, or was cut off): it is written now.
+    # Five wrong PINs counted and the lock not yet written: it is written now.
     return await _lock(database, uid, now) or await _refused_after(database, uid, now)
 
 
@@ -226,6 +249,7 @@ async def check(database: Any, secret: str, uid: str, pin: str, now: int) -> Out
             KDF_VERSION,
             MIN_ITERATIONS,
             MAX_ITERATIONS,
+            MAX_PROOF_WRONG,
         )
         .first()
     )
@@ -241,7 +265,12 @@ async def check(database: Any, secret: str, uid: str, pin: str, now: int) -> Out
     if same_hash(charged["hash"], computed):
         await database.prepare(CLEAR_SQL).bind(uid).run()
         return Correct(charged["hint"], charged["hash"])
+    if charged["failed_count"] == BURST:
+        await pin_events.record(database, uid, "wrong", now, BURST)
     locked = await _lock(database, uid, now)
+    disabled = await _disable(database, uid, now)
+    if disabled is not None:
+        return disabled
     if locked is not None:
         return locked
     row = await _read(database, uid)
