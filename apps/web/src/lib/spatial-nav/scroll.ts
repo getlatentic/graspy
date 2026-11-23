@@ -26,6 +26,17 @@ export function scrollsNatively(
   for (let el = from; el; el = el.parentElement) {
     if (scrolls(el, direction)) return true;
   }
+  return pageScrolls(doc, direction);
+}
+
+/** The page can scroll that way: it has room, and neither the root nor the body is `overflow: hidden` (a dialog sets that on the body). */
+function pageScrolls(doc: Document, direction: Direction): boolean {
+  const vertical = direction === "up" || direction === "down";
+  for (const el of [doc.documentElement, doc.body]) {
+    const style = getComputedStyle(el);
+    if ((vertical ? style.overflowY : style.overflowX) === "hidden")
+      return false;
+  }
   return hasRoom(doc.scrollingElement ?? doc.documentElement, direction);
 }
 

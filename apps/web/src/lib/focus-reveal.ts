@@ -82,3 +82,11 @@ export function focusAndReveal(el: HTMLElement): boolean {
   reveal(el);
   return true;
 }
+
+/** Focus on `el`, scrolled to only when it is already near the view: a reader who has scrolled away from where an item was is not taken back to it. */
+export function focusNear(el: HTMLElement): void {
+  el.focus({ preventScroll: true });
+  const win = el.ownerDocument.defaultView;
+  const r = el.getBoundingClientRect();
+  if (win && r.bottom > 0 && r.top < win.innerHeight) reveal(el);
+}

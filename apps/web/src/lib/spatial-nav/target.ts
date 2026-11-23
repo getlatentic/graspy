@@ -1,5 +1,5 @@
 import { reveal } from "../focus-reveal";
-import { boxOf, firstUsable } from "./focusable";
+import { boxOf, firstUsable, isTabbable } from "./focusable";
 import { mayHop, type Origin } from "./fixed";
 import {
   inReadingOrder,
@@ -53,6 +53,7 @@ export function findTarget(
   active: Element | null,
   direction: Direction,
   doc: Document,
+  viewOnly = false,
 ): HTMLElement | null {
   const win = doc.defaultView ?? window;
   const view = {
@@ -73,6 +74,7 @@ export function findTarget(
   if (!origin) {
     const order = (set: Candidate<HTMLElement>[]) => inReadingOrder(set, rtl);
     const seen = near.filter((c) => intersects(c.box, view));
+    if (viewOnly) return firstUsable(order(seen));
     return (
       firstUsable(order(seen)) ??
       firstUsable(order(near)) ??
@@ -104,11 +106,39 @@ export function findTarget(
     }
     return firstUsable(rank(origin.box, others, direction), accept);
   };
-  return (
-    pick(near.filter((c) => intersects(c.box, view))) ??
-    pick(near) ??
-    pick(
-      measureAll(scope.root).filter((c) => withinReach(c.box, view, direction)),
-    )
+  const inView = near.filter((c) => intersects(c.box, view));
+  const found = viewOnly
+    ? pick(inView)
+    : (pick(inView) ??
+      pick(near) ??
+      pick(
+        measureAll(scope.root).filter((c) =>
+          withinReach(c.box, view, direction),
+        ),
+      ));
+  if (found || isControl(active)) return found;
+  return fromStart(inView, active, direction, rtl);
+}
+
+const isControl = (el: Element | null) =>
+  el instanceof HTMLElement && el !== el.ownerDocument.body && isTabbable(el);
+
+/**
+ * From a title (a full-width heading is no useful origin: the controls under
+ * it are neither right nor left of it) nothing lies "that way", so any arrow
+ * goes to the first control in view in reading order, or for Left and Up the
+ * last.
+ */
+function fromStart(
+  inView: Candidate<HTMLElement>[],
+  active: Element | null,
+  direction: Direction,
+  rtl: boolean,
+): HTMLElement | null {
+  const ordered = inReadingOrder(
+    inView.filter((c) => c.item !== active),
+    rtl,
   );
+  const forward = direction === "down" || direction === "right";
+  return firstUsable(forward ? ordered : ordered.reverse());
 }

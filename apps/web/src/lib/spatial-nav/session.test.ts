@@ -38,9 +38,7 @@ describe("initialMode", () => {
 });
 
 describe("planArrow", () => {
-  const vertical: Direction[] = ["up", "down"];
-  const horizontal: Direction[] = ["left", "right"];
-  const all = [...vertical, ...horizontal];
+  const all: Direction[] = ["up", "down", "left", "right"];
   const focuses: FocusKind[] = [
     "none",
     "title",
@@ -53,42 +51,43 @@ describe("planArrow", () => {
 
   it("navigates in a pad session whatever has focus and whichever arrow", () => {
     for (const focus of focuses) {
-      for (const d of all) expect(planArrow("pad", focus, d)).toEqual(navigate);
+      for (const d of all) {
+        for (const canScroll of [true, false]) {
+          expect(planArrow("pad", focus, d, canScroll)).toEqual(navigate);
+        }
+      }
     }
   });
 
   it("leaves every arrow native when a control that is off screen has focus", () => {
     for (const d of all) {
-      expect(planArrow("pointer", "offscreen-control", d)).toEqual(native);
+      expect(planArrow("pointer", "offscreen-control", d, false)).toEqual(
+        native,
+      );
     }
   });
 
-  it("leaves Up and Down native, and takes Left and Right for navigation, with nothing or a title focused", () => {
-    for (const focus of ["none", "title"] as const) {
-      for (const d of vertical)
-        expect(planArrow("pointer", focus, d)).toEqual(native);
-      for (const d of horizontal)
-        expect(planArrow("pointer", focus, d)).toEqual(navigate);
-    }
-  });
-
-  it("leaves Left and Right native when something scrolls sideways", () => {
-    for (const d of horizontal) {
-      expect(planArrow("pointer", "none", d, true)).toEqual(native);
-    }
-  });
-
-  it("treats a control whose ring is shown as the pad's", () => {
+  it("navigates from a control that shows its ring, whether or not anything scrolls", () => {
     for (const d of all) {
-      expect(planArrow("pointer", "visible-control", d)).toEqual(navigate);
+      for (const canScroll of [true, false]) {
+        expect(planArrow("pointer", "visible-control", d, canScroll)).toEqual(
+          navigate,
+        );
+      }
     }
   });
 
-  it("keeps Up and Down native on a clicked control, and sends Left and Right to the pad", () => {
-    for (const d of vertical)
-      expect(planArrow("pointer", "hidden-control", d)).toEqual(native);
-    for (const d of horizontal)
-      expect(planArrow("pointer", "hidden-control", d)).toEqual(navigate);
+  it("leaves an arrow native from nothing, a title or a clicked control only where something scrolls that way", () => {
+    for (const focus of ["none", "title", "hidden-control"] as const) {
+      for (const d of all) {
+        expect(planArrow("pointer", focus, d, true), `${focus} ${d}`).toEqual(
+          native,
+        );
+        expect(planArrow("pointer", focus, d, false), `${focus} ${d}`).toEqual(
+          navigate,
+        );
+      }
+    }
   });
 });
 

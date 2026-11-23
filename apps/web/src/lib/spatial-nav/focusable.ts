@@ -85,7 +85,8 @@ export function visibleBox(el: HTMLElement, box: Box): Box | null {
   let seen: Box | null = box;
   let childPosition = getComputedStyle(el).position;
   for (let a = el.parentElement; a && seen; a = a.parentElement) {
-    if (childPosition === "fixed") break;
+    // The root's and the body's `overflow` belongs to the viewport (a dialog sets it on the body), not to a box.
+    if (childPosition === "fixed" || a === a.ownerDocument.body) break;
     const style = getComputedStyle(a);
     if (childPosition === "absolute" && style.position === "static") continue;
     childPosition = style.position;

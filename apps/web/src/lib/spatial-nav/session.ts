@@ -40,30 +40,27 @@ export function initialMode(hints: {
  * - pad: navigate.
  * - pointer, a control focused but off screen: native (the person scrolled away
  *   and is reading; focus is not pulled back).
- * - pointer, nothing or only a title focused: Up and Down native; Left and
- *   Right scroll nothing (unless something scrolls sideways), so they mean
- *   navigation: the session is pad, from the title or the first control.
  * - pointer, a control focused with its ring shown (Tab, the keyboard, the
  *   pad): navigate, and the session is pad. Tab alone changes nothing.
- * - pointer, a control focused without its ring (a click, `autoFocus`, a
- *   restore on going back): Up and Down native; Left and Right navigate.
+ * - pointer, nothing, only a title, or a control without its ring (a click,
+ *   `autoFocus`, a restore on going back) focused: native only when something
+ *   can actually scroll that way (`canScroll`: the page, or the scroll area
+ *   under the pointer or the focus), since then the arrow is reading; when
+ *   nothing can (a short page, onboarding, a dialog, the foot of a long page,
+ *   Left and Right on a normal page) it navigates.
  */
 export function planArrow(
   mode: Mode,
   focus: FocusKind,
-  direction: Direction,
-  scrollsSideways = false,
+  _direction: Direction,
+  canScroll: boolean,
 ): Plan {
   const navigate: Plan = { action: "navigate", mode: "pad" };
   const native: Plan = { action: "native", mode: "pointer" };
   if (mode === "pad") return navigate;
   if (focus === "offscreen-control") return native;
-  const sideways = direction === "left" || direction === "right";
-  if (focus === "none" || focus === "title") {
-    return sideways && !scrollsSideways ? navigate : native;
-  }
   if (focus === "visible-control") return navigate;
-  return sideways ? navigate : native;
+  return canScroll ? native : navigate;
 }
 
 export interface PointerSample {

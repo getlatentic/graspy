@@ -7,7 +7,11 @@ import { installSpatialNav } from "./install";
 let remove: (() => void) | null = null;
 
 const size = (el: object, name: string, value: number) =>
-  Object.defineProperty(el, name, { value, configurable: true });
+  Object.defineProperty(el, name, {
+    value,
+    configurable: true,
+    writable: true,
+  });
 
 /** The page is installed fresh each time: a desktop visit starts reading, a TV on the pad. */
 function install(tv: boolean) {
@@ -23,6 +27,11 @@ afterEach(() => {
   remove?.();
   remove = null;
   delete document.documentElement.dataset.device;
+  size(document.documentElement, "scrollTop", 0);
+  size(document.documentElement, "scrollHeight", 0);
+  size(document.documentElement, "clientHeight", 0);
+  size(document.documentElement, "scrollWidth", 0);
+  size(document.documentElement, "clientWidth", 0);
   cleanup();
   vi.restoreAllMocks();
 });
@@ -47,7 +56,7 @@ const move = (dx: number, dy: number) => {
 const focused = () => document.activeElement?.textContent;
 const text = (name: string) => screen.getByText(name);
 /** Time passes: the same direction twice within 70 ms is a held key. */
-const later = () => vi.advanceTimersByTime(300);
+const later = (fake = true) => (fake ? vi.advanceTimersByTime(300) : undefined);
 
 /** What a click, `autoFocus` or a restore leaves: focus without its ring; a keyboard or pad leaves the ring. */
 function ring(el: Element, shown: boolean) {
@@ -73,8 +82,15 @@ function lesson() {
   place(text("Next"), { left: 0, top: 200, width: 100, height: 50 });
 }
 
+/** The page is long: 5000px under an 800px window, so Up and Down have something to scroll. */
+function longPage(long = true) {
+  size(document.documentElement, "scrollHeight", long ? 5000 : 800);
+  size(document.documentElement, "clientHeight", 800);
+}
+
 /** An article: long prose with two links, one about two screens down and one far below. */
 function article() {
+  longPage();
   render(
     <main>
       <h1 tabIndex={-1}>Essay</h1>
@@ -101,6 +117,7 @@ describe("a keyboard reader on a desktop (the visit starts reading)", () => {
 
   it("is not changed by Tab alone: the arrows still scroll", () => {
     install(false);
+    longPage();
     lesson();
     document.body.dispatchEvent(
       new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
@@ -160,8 +177,9 @@ describe("a keyboard reader on a desktop (the visit starts reading)", () => {
     expect(focused()).toBe("Start");
   });
 
-  it("keeps Up and Down native on a clicked control, and sends Left and Right to the pad", () => {
+  it("keeps Up and Down native on a clicked control of a long page, and sends Left and Right to the pad", () => {
     install(false);
+    longPage();
     lesson();
     text("Start").focus();
     ring(text("Start"), false);
@@ -174,6 +192,7 @@ describe("a keyboard reader on a desktop (the visit starts reading)", () => {
     vi.useFakeTimers();
     try {
       install(false);
+      longPage();
       lesson();
       press("ArrowRight");
       later();
@@ -319,5 +338,147 @@ describe("a TV (the visit starts on the pad)", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/** A single column: a full-width title, then stacked controls, as onboarding and sign-in are. */
+function column(controls: string[]) {
+  render(
+    <main>
+      <h1 tabIndex={-1}>Title</h1>
+      {controls.map((c) => (
+        <button key={c}>{c}</button>
+      ))}
+    </main>,
+  );
+  place(text("Title"), { left: 0, top: 0, width: 600, height: 40 });
+  controls.forEach((c, i) =>
+    place(text(c), { left: 100, top: 100 + i * 80, width: 300, height: 50 }),
+  );
+}
+
+describe("a short single-column page, on a desktop with a pointer", () => {
+  const layouts: Record<string, string[]> = {
+    "onboarding-like": ["Country", "Language", "Class", "Next"],
+    "sign-in-like": ["Continue with Google", "Try without an account"],
+  };
+
+  for (const [name, controls] of Object.entries(layouts)) {
+    it(`${name}: from the title Down, Right and Left each land on a control`, () => {
+      for (const [key, expected] of [
+        ["ArrowDown", controls[0]],
+        ["ArrowRight", controls[0]],
+        ["ArrowLeft", controls[controls.length - 1]],
+      ] as const) {
+        install(false);
+        column(controls);
+        text("Title").focus();
+        expect(press(key, text("Title")), key).toBe(true);
+        expect(focused(), key).toBe(expected);
+        remove?.();
+        remove = null;
+        cleanup();
+      }
+    });
+  }
+
+  it("navigates Up and Down from nothing, a title and a clicked control when nothing can scroll", async () => {
+    install(false);
+    column(["One", "Two", "Three"]);
+    expect(press("ArrowDown")).toBe(true);
+    expect(focused()).toBe("One");
+    text("Two").focus();
+    ring(text("Two"), false);
+    await new Promise((r) => setTimeout(r, 90));
+    expect(press("ArrowDown", text("Two"))).toBe(true);
+    expect(focused()).toBe("Three");
+  });
+
+  it("scrolls with Up and Down at a long page but navigates once at the foot, where there is nothing to scroll", () => {
+    install(false);
+    column(["One", "Two"]);
+    longPage();
+    expect(press("ArrowDown")).toBe(false);
+    size(document.documentElement, "scrollTop", 4200);
+    expect(press("ArrowDown")).toBe(true);
+    size(document.documentElement, "scrollTop", 0);
+  });
+
+  it("navigates from a dialog's programmatically focused content, when the body is locked", () => {
+    install(false);
+    longPage();
+    document.body.style.overflowY = "hidden";
+    render(
+      <div role="dialog" aria-modal="true" aria-label="sheet" tabIndex={-1}>
+        <button>Yes</button>
+        <button>No</button>
+      </div>,
+    );
+    place(text("Yes"), { left: 0, top: 100, width: 100, height: 50 });
+    place(text("No"), { left: 0, top: 200, width: 100, height: 50 });
+    screen.getByRole("dialog").focus();
+    expect(press("ArrowDown", screen.getByRole("dialog"))).toBe(true);
+    expect(focused()).toBe("Yes");
+    document.body.style.overflowY = "";
+  });
+});
+
+describe("reading a table or equation that scrolls sideways", () => {
+  it("leaves Left and Right native when the scroll area under the pointer scrolls that way", () => {
+    install(false);
+    render(
+      <main>
+        <div data-testid="table" style={{ overflowX: "auto" }}>
+          <span data-testid="cell">cell</span>
+        </div>
+        <button>Next</button>
+      </main>,
+    );
+    size(screen.getByTestId("table"), "scrollWidth", 3000);
+    size(screen.getByTestId("table"), "clientWidth", 600);
+    place(text("Next"), { left: 0, top: 300, width: 100, height: 50 });
+    document.elementFromPoint = () => screen.getByTestId("cell");
+    document.body.dispatchEvent(new Event("wheel", { bubbles: true }));
+    expect(press("ArrowRight")).toBe(false);
+    expect(document.activeElement).toBe(document.body);
+    document.elementFromPoint = undefined as never;
+  });
+});
+
+describe("the first hop in reading mode", () => {
+  it("goes to a control in view, and leaves a control past the window to the browser", () => {
+    install(false);
+    longPage();
+    render(
+      <main>
+        <button>here</button>
+        <button>near</button>
+        <button>below</button>
+      </main>,
+    );
+    place(text("here"), { left: 0, top: 0, width: 100, height: 50 });
+    place(text("near"), { left: 0, top: 300, width: 100, height: 50 });
+    place(text("below"), { left: 0, top: 1500, width: 100, height: 50 });
+    text("here").focus();
+    ring(text("here"), true);
+    expect(press("ArrowDown", text("here"))).toBe(true);
+    expect(focused()).toBe("near");
+  });
+
+  it("leaves Down to the browser when the next control is past the window", () => {
+    install(false);
+    longPage();
+    render(
+      <main>
+        <button>here</button>
+        <button>below</button>
+      </main>,
+    );
+    place(text("here"), { left: 0, top: 0, width: 100, height: 50 });
+    place(text("below"), { left: 0, top: 1500, width: 100, height: 50 });
+    text("here").focus();
+    ring(text("here"), true);
+    expect(press("ArrowDown", text("here"))).toBe(false);
+    expect(focused()).toBe("here");
   });
 });

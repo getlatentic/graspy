@@ -1,4 +1,4 @@
-import { focusAndReveal } from "../focus-reveal";
+import { focusNear } from "../focus-reveal";
 import { findByFocusKey, focusKeyOf } from "./keys";
 import { currentRoute, remember } from "./memory";
 import { nearestSurvivor } from "./survivor";
@@ -70,7 +70,7 @@ export function installFocusMemory(doc: Document = document): () => void {
     const back = gone.key ? findByFocusKey(doc, gone.key) : null;
     const next =
       back ?? (removal && nearestSurvivor(removal.target, removal.nextSibling));
-    if (next) focusAndReveal(next);
+    if (next) focusNear(next);
   });
 
   doc.addEventListener("focusin", onFocusIn);

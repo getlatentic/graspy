@@ -100,7 +100,9 @@ export default function TvDiagnosticsPage() {
         <h1 className="text-5xl font-semibold">TV diagnostics</h1>
         <p className="text-2xl text-muted">
           Press keys on the remote and move the pointer. Each event the page
-          receives is listed below. Nothing is stored or sent.
+          receives is listed below. Nothing is stored or sent. Back is the key
+          with keyCode 461 (LG) or 10009 (Samsung), or Backspace on a TV; Escape
+          closes a popup and nothing more on a desktop.
         </p>
         <div className="flex flex-wrap items-center gap-4">
           <Button size="lg" variant="secondary" onClick={() => navigate("/")}>

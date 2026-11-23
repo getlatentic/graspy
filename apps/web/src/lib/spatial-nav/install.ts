@@ -8,6 +8,7 @@ import {
   hostInPage,
   keepsArrows,
 } from "./guard";
+import type { Direction } from "./geometry";
 import { scrollsNatively } from "./scroll";
 import { planArrow } from "./session";
 import { trackSession } from "./session-tracker";
@@ -43,6 +44,19 @@ export function installSpatialNav(doc: Document = document): () => void {
     return `${direction}|${page.scrollTop}|${page.scrollLeft}|${active ? active.tagName + (active.textContent ?? "").slice(0, 20) : ""}`;
   };
 
+  /** Whether the arrow would scroll something on its own: where the pointer last was, where focus is, then the page. */
+  const reading = (active: Element | null, direction: Direction) => {
+    const at = session.lastPointer();
+    const pointed =
+      at && typeof doc.elementFromPoint === "function"
+        ? doc.elementFromPoint(at.x, at.y)
+        : null;
+    return (
+      (pointed !== null && scrollsNatively(pointed, direction, doc)) ||
+      scrollsNatively(active ?? doc.body, direction, doc)
+    );
+  };
+
   const onKeyDown = (event: KeyboardEvent) => {
     session.keyPressed();
     if (onTelevision() && movesFocus(event)) session.apply("moved");
@@ -52,20 +66,19 @@ export function installSpatialNav(doc: Document = document): () => void {
       return;
     if (keepsArrows(deepActive(doc), direction)) return;
     const active = hostInPage(deepActive(doc));
-    const sideways =
-      (direction === "left" || direction === "right") &&
-      scrollsNatively(active ?? doc.body, direction, doc);
+    const kind = focusKind(active);
+    const mode = session.mode();
     const plan = planArrow(
-      session.mode(),
-      focusKind(active),
+      mode,
+      kind,
       direction,
-      sideways,
+      mode === "pointer" && reading(active, direction),
     );
     if (plan.action === "native") return;
     const now = performance.now();
     const place = where(active, direction);
     if (none.key === place && now - none.at < NOTHING_MS) return;
-    const target = findTarget(active, direction, doc);
+    const target = findTarget(active, direction, doc, mode === "pointer");
     if (!target) {
       none = { key: place, at: now };
       return;

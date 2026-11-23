@@ -1,4 +1,4 @@
-import { goBack } from "./back-stack";
+import { closeTopPopup, goBack } from "./back-stack";
 import { isBack, isEditable, movesFocus } from "./remote-keys";
 
 /** A pointer that moves right after a key is the page scrolling under a still pointer, not a person. */
@@ -41,11 +41,22 @@ export function installRemoteInput(root: Document = document): () => void {
     mark(false);
   };
 
+  // Escape closes the topmost open popup on every device (a TV browser may pass for a desktop's and its Back key send Escape), and never leaves the screen unless the device is a TV.
+  const onEscape = (event: KeyboardEvent) => {
+    if (event.key !== "Escape" || event.defaultPrevented || onTelevision()) {
+      return;
+    }
+    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
+    if (closeTopPopup()) event.preventDefault();
+  };
+
   root.addEventListener("keydown", onKeyDown, true);
+  root.addEventListener("keydown", onEscape);
   root.addEventListener("pointerdown", onPointer, true);
   root.addEventListener("mousemove", onPointer, true);
   return () => {
     root.removeEventListener("keydown", onKeyDown, true);
+    root.removeEventListener("keydown", onEscape);
     root.removeEventListener("pointerdown", onPointer, true);
     root.removeEventListener("mousemove", onPointer, true);
   };
