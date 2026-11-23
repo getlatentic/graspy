@@ -1,5 +1,5 @@
-import { Link, Navigate, useParams } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { Navigate, useParams } from "react-router";
+import { BackLink } from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useI18n } from "@/lib/i18n-context";
@@ -31,13 +31,7 @@ function Recordings({ learner }: { learner: string }) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
-        <Link
-          to={LEARNERS_PAGE}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-ink hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-          {t("learners.back")}
-        </Link>
+        <BackLink to={LEARNERS_PAGE}>{t("learners.back")}</BackLink>
         <h1 className="mt-4 text-balance text-2xl font-semibold text-ink">
           {t("voiceRecordings.title")}
         </h1>

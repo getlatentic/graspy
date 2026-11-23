@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { BackLink } from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
@@ -20,13 +19,7 @@ export default function LearnersPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div>
-        <Link
-          to="/app/learn/you"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-ink hover:underline"
-        >
-          <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-          {t("learners.back")}
-        </Link>
+        <BackLink to="/app/learn/you">{t("learners.back")}</BackLink>
         <h1 className="mt-4 text-balance text-2xl font-semibold text-ink">
           {t("learners.manageTitle")}
         </h1>

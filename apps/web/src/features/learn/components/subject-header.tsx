@@ -1,5 +1,5 @@
-import { ArrowLeft } from "lucide-react";
 import type { CurriculumSource } from "@/lib/curriculum-record";
+import { BackLink } from "@/components/ui/back-link";
 import { useI18n } from "@/lib/i18n-context";
 import { SubjectBadge } from "@/features/learn/components/subject-icon";
 
@@ -21,14 +21,7 @@ export function SubjectHeader({
   const { t } = useI18n();
   return (
     <header>
-      <button
-        type="button"
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-ink hover:underline"
-      >
-        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-        {t("subject.back")}
-      </button>
+      <BackLink onClick={onBack}>{t("subject.back")}</BackLink>
       <div className="mt-4 flex items-center gap-3">
         <SubjectBadge name={name} className="size-11 rounded-full" />
         <div className="min-w-0">

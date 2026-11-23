@@ -66,6 +66,11 @@
   padding-block: 0.25rem;
 }
 
+/* A rule in the lesson's text is drawn in the text colour, which is a bright line in dark. */
+:root[data-theme="dark"] hr {
+  border-color: var(--color-line);
+}
+
 .nums {
   font-variant-numeric: tabular-nums;
 }

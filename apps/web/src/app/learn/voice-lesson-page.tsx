@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, Navigate, useSearchParams } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { BackLink } from "@/components/ui/back-link";
+import { Navigate, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n-context";
 import { markVoiceNoteSeen, voiceNoteSeen } from "@/lib/voice/voice-consent";
@@ -77,13 +77,7 @@ export default function VoiceLessonPage() {
   if (!learner) return <Navigate to="/app/learn" replace />;
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <Link
-        to={voiceLessonsPath(voiceOnly)}
-        className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-accent-ink hover:underline"
-      >
-        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
-        {t("voice.title")}
-      </Link>
+      <BackLink to={voiceLessonsPath(voiceOnly)}>{t("voice.title")}</BackLink>
       <Lesson
         key={`${learner.key}:${plan ?? ""}`}
         learner={learner}
