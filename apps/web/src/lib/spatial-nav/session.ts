@@ -38,16 +38,15 @@ export function initialMode(hints: {
 /**
  * What an arrow does.
  * - pad: navigate.
- * - pointer, a control focused but off screen: native (the person scrolled away
- *   and is reading; focus is not pulled back).
- * - pointer, a control focused with its ring shown (Tab, the keyboard, the
- *   pad): navigate, and the session is pad. Tab alone changes nothing.
- * - pointer, nothing, only a title, or a control without its ring (a click,
- *   `autoFocus`, a restore on going back) focused: native only when something
- *   can actually scroll that way (`canScroll`: the page, or the scroll area
- *   under the pointer or the focus), since then the arrow is reading; when
- *   nothing can (a short page, onboarding, a dialog, the foot of a long page,
- *   Left and Right on a normal page) it navigates.
+ * - pointer, a control with its ring shown (Tab, the keyboard, the pad) in
+ *   view: navigate, and the session is pad. Tab alone changes nothing.
+ * - pointer, anything else focused (nothing, a title, a control without its
+ *   ring, or one that has scrolled out of view): the arrow is native when
+ *   something scrolls on its axis AT ALL (`canScroll`: the page, the scroll
+ *   area under the pointer or around the focus, wherever it is scrolled to), so
+ *   holding Down to the foot of a page or Up to its head never moves focus.
+ *   Where nothing scrolls on that axis (a short page, onboarding, a dialog;
+ *   Left and Right on a normal page) it navigates, to a control in view.
  */
 export function planArrow(
   mode: Mode,
@@ -58,7 +57,6 @@ export function planArrow(
   const navigate: Plan = { action: "navigate", mode: "pad" };
   const native: Plan = { action: "native", mode: "pointer" };
   if (mode === "pad") return navigate;
-  if (focus === "offscreen-control") return native;
   if (focus === "visible-control") return navigate;
   return canScroll ? native : navigate;
 }

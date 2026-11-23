@@ -47,7 +47,11 @@ export function installRemoteInput(root: Document = document): () => void {
       return;
     }
     if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
-    if (closeTopPopup()) event.preventDefault();
+    // The first listener on the document: it takes the key, so a popup's own Escape listener after it does not close a second time.
+    if (closeTopPopup()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
   };
 
   root.addEventListener("keydown", onKeyDown, true);

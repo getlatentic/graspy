@@ -1,4 +1,3 @@
-import { reveal } from "../focus-reveal";
 import { boxOf, firstUsable, isTabbable } from "./focusable";
 import { mayHop, type Origin } from "./fixed";
 import {
@@ -20,9 +19,9 @@ function isRtl(from: Element | null, doc: Document): boolean {
 }
 
 /**
- * Where the key was pressed from, or null when nothing meaningful has focus. A
- * focused control that has scrolled out of view is first scrolled into view, so
- * the keys have somewhere to start.
+ * Where the key was pressed from, or null when nothing meaningful has focus: a
+ * title that has scrolled out of view is no origin. Nothing is scrolled here;
+ * the target is revealed only once focus has really moved to it.
  */
 function originOf(
   active: Element | null,
@@ -32,12 +31,10 @@ function originOf(
   if (!(active instanceof HTMLElement)) return null;
   if (active === active.ownerDocument.body) return null;
   if (root instanceof Element && !root.contains(active)) return null;
-  let box = boxOf(active);
-  if (box && !intersects(box, view)) {
-    reveal(active);
-    box = boxOf(active);
-  }
-  return box ? { el: active, box } : null;
+  const box = boxOf(active);
+  if (!box) return null;
+  if (!isControl(active) && !intersects(box, view)) return null;
+  return { el: active, box };
 }
 
 /**
@@ -71,19 +68,22 @@ export function findTarget(
   );
   const rtl = isRtl(active, doc);
 
+  const start = (el: HTMLElement, box: Box) =>
+    mayHop(el, box, null, direction, doc);
   if (!origin) {
     const order = (set: Candidate<HTMLElement>[]) => inReadingOrder(set, rtl);
     const seen = near.filter((c) => intersects(c.box, view));
-    if (viewOnly) return firstUsable(order(seen));
+    if (viewOnly) return firstUsable(order(seen), start);
     return (
-      firstUsable(order(seen)) ??
-      firstUsable(order(near)) ??
+      firstUsable(order(seen), start) ??
+      firstUsable(order(near), start) ??
       firstUsable(
         order(
           measureAll(scope.root).filter((c) =>
             withinReach(c.box, view, "down"),
           ),
         ),
+        start,
       )
     );
   }
@@ -116,8 +116,10 @@ export function findTarget(
           withinReach(c.box, view, direction),
         ),
       ));
-  if (found || isControl(active)) return found;
-  return fromStart(inView, active, direction, rtl);
+  if (found || (isControl(active) && intersects(origin.box, view))) {
+    return found;
+  }
+  return fromStart(inView, active, direction, rtl, start);
 }
 
 const isControl = (el: Element | null) =>
@@ -134,11 +136,12 @@ function fromStart(
   active: Element | null,
   direction: Direction,
   rtl: boolean,
+  accept: (el: HTMLElement, box: Box) => boolean,
 ): HTMLElement | null {
   const ordered = inReadingOrder(
     inView.filter((c) => c.item !== active),
     rtl,
   );
   const forward = direction === "down" || direction === "right";
-  return firstUsable(forward ? ordered : ordered.reverse());
+  return firstUsable(forward ? ordered : ordered.reverse(), accept);
 }

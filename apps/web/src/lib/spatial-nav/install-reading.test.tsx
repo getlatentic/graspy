@@ -32,6 +32,7 @@ afterEach(() => {
   size(document.documentElement, "clientHeight", 0);
   size(document.documentElement, "scrollWidth", 0);
   size(document.documentElement, "clientWidth", 0);
+  document.elementFromPoint = undefined as never;
   cleanup();
   vi.restoreAllMocks();
 });
@@ -165,16 +166,18 @@ describe("a keyboard reader on a desktop (the visit starts reading)", () => {
     expect(press("ArrowDown")).toBe(false);
   });
 
-  it("does not pull focus back to a control that has scrolled out of view, even one with its ring", () => {
+  it("does not pull focus back to a control that has scrolled out of view: Up and Down scroll, Left and Right go to a control in view", () => {
     install(false);
+    longPage();
     lesson();
     place(text("Start"), { left: 0, top: 3000, width: 100, height: 50 });
     text("Start").focus();
     ring(text("Start"), true);
-    for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]) {
-      expect(press(key, text("Start")), key).toBe(false);
-    }
-    expect(focused()).toBe("Start");
+    expect(press("ArrowDown", text("Start"))).toBe(false);
+    expect(press("ArrowUp", text("Start"))).toBe(false);
+    expect(document.documentElement.scrollTop).toBe(0);
+    expect(press("ArrowRight", text("Start"))).toBe(true);
+    expect(focused()).toBe("Skip");
   });
 
   it("keeps Up and Down native on a clicked control of a long page, and sends Left and Right to the pad", () => {
@@ -394,16 +397,6 @@ describe("a short single-column page, on a desktop with a pointer", () => {
     expect(focused()).toBe("Three");
   });
 
-  it("scrolls with Up and Down at a long page but navigates once at the foot, where there is nothing to scroll", () => {
-    install(false);
-    column(["One", "Two"]);
-    longPage();
-    expect(press("ArrowDown")).toBe(false);
-    size(document.documentElement, "scrollTop", 4200);
-    expect(press("ArrowDown")).toBe(true);
-    size(document.documentElement, "scrollTop", 0);
-  });
-
   it("navigates from a dialog's programmatically focused content, when the body is locked", () => {
     install(false);
     longPage();
@@ -480,5 +473,105 @@ describe("the first hop in reading mode", () => {
     ring(text("here"), true);
     expect(press("ArrowDown", text("here"))).toBe(false);
     expect(focused()).toBe("here");
+  });
+});
+
+describe("holding an arrow to the end of a long page", () => {
+  const title = () => text("Fractions");
+
+  function longLesson(scrollTop: number, titleTop: number) {
+    longPage();
+    lesson();
+    size(document.documentElement, "scrollTop", scrollTop);
+    place(title(), { left: 0, top: titleTop, width: 100, height: 40 });
+  }
+
+  it("never moves focus, scrolls back or leaves reading, with the title focused and Down held to the foot and past it", () => {
+    install(false);
+    longLesson(4200, -4200);
+    title().focus();
+    for (let i = 0; i < 60; i += 1) {
+      expect(press("ArrowDown", title()), `press ${i}`).toBe(false);
+    }
+    expect(focused()).toBe("Fractions");
+    expect(document.documentElement.scrollTop).toBe(4200);
+    expect(press("ArrowUp", title())).toBe(false);
+    expect(press("ArrowDown")).toBe(false);
+  });
+
+  it("does the same with Up held at the head, where the title is in view", () => {
+    install(false);
+    longLesson(0, 0);
+    title().focus();
+    for (let i = 0; i < 30; i += 1) {
+      expect(press("ArrowUp", title()), `press ${i}`).toBe(false);
+    }
+    expect(focused()).toBe("Fractions");
+  });
+
+  it("does not teleport with nothing focused at the foot", () => {
+    install(false);
+    longLesson(4200, -4200);
+    expect(press("ArrowDown")).toBe(false);
+    expect(press("ArrowUp")).toBe(false);
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("is not made to navigate by a scroll area under the pointer that has room only the other way", () => {
+    install(false);
+    render(
+      <main>
+        <div data-testid="column" style={{ overflowY: "auto" }}>
+          <span data-testid="line">text</span>
+        </div>
+        <button>Go</button>
+      </main>,
+    );
+    size(screen.getByTestId("column"), "scrollHeight", 3000);
+    size(screen.getByTestId("column"), "clientHeight", 500);
+    place(text("Go"), { left: 0, top: 300, width: 100, height: 50 });
+    document.elementFromPoint = (_x, y) =>
+      y > 250 ? text("Go") : screen.getByTestId("line");
+    document.body.dispatchEvent(
+      new MouseEvent("mousedown", { bubbles: true, clientX: 10, clientY: 10 }),
+    );
+    expect(press("ArrowDown")).toBe(false);
+    expect(press("ArrowRight")).toBe(true);
+    expect(focused()).toBe("Go");
+    document.elementFromPoint = undefined as never;
+  });
+});
+
+describe("a TV that is taken for a desktop, on a long page", () => {
+  it("scrolls on the first Down, enters the pad on Right, and navigates on the next Down", () => {
+    install(false);
+    longPage();
+    lesson();
+    expect(press("ArrowDown")).toBe(false);
+    expect(press("ArrowRight")).toBe(true);
+    expect(focused()).toBe("Start");
+    ring(text("Start"), true);
+    expect(press("ArrowDown", text("Start"))).toBe(true);
+    expect(focused()).toBe("Next");
+  });
+});
+
+describe("a sticky header", () => {
+  it("is not the first control gone to at the foot of a page, on the pad", () => {
+    install(true);
+    longPage();
+    size(document.documentElement, "scrollTop", 4200);
+    render(
+      <main>
+        <header style={{ position: "sticky" }}>
+          <button>logo</button>
+        </header>
+        <button>content</button>
+      </main>,
+    );
+    place(text("logo"), { left: 0, top: 0, width: 100, height: 50 });
+    place(text("content"), { left: 0, top: 300, width: 100, height: 50 });
+    expect(press("ArrowDown")).toBe(true);
+    expect(focused()).toBe("content");
   });
 });

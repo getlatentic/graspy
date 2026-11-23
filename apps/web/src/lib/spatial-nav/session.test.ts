@@ -59,10 +59,13 @@ describe("planArrow", () => {
     }
   });
 
-  it("leaves every arrow native when a control that is off screen has focus", () => {
+  it("treats a control that is off screen like nothing: native where something scrolls at all, else navigate", () => {
     for (const d of all) {
-      expect(planArrow("pointer", "offscreen-control", d, false)).toEqual(
+      expect(planArrow("pointer", "offscreen-control", d, true)).toEqual(
         native,
+      );
+      expect(planArrow("pointer", "offscreen-control", d, false)).toEqual(
+        navigate,
       );
     }
   });

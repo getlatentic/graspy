@@ -101,7 +101,6 @@ function ringShown(el: HTMLElement): boolean {
 export function focusKind(active: Element | null): FocusKind {
   if (!(active instanceof HTMLElement)) return "none";
   if (active === active.ownerDocument.body) return "none";
-  if (!isTabbable(active)) return "title";
   const win = active.ownerDocument.defaultView;
   const box = boxOf(active);
   const view = {
@@ -111,5 +110,6 @@ export function focusKind(active: Element | null): FocusKind {
     bottom: win?.innerHeight ?? 0,
   };
   if (box && win && !intersects(box, view)) return "offscreen-control";
+  if (!isTabbable(active)) return "title";
   return ringShown(active) ? "visible-control" : "hidden-control";
 }

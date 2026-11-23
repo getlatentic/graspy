@@ -30,12 +30,13 @@ export function mayHop(
   doc: Document,
 ): boolean {
   const holder = stuckContainer(el);
-  if (!holder || !from) return true;
-  if (from.el && stuckContainer(from.el) === holder) return true;
+  if (!holder) return true;
+  if (from?.el && stuckContainer(from.el) === holder) return true;
   const page = doc.scrollingElement ?? doc.documentElement;
   if (getComputedStyle(holder).position === "sticky" && page.scrollTop === 0) {
     return true;
   }
+  if (!from) return false;
   const rem = Number.parseFloat(getComputedStyle(doc.documentElement).fontSize);
   return alongGap(from.box, box, direction) <= (rem || 16);
 }

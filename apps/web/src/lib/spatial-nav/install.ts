@@ -9,7 +9,7 @@ import {
   keepsArrows,
 } from "./guard";
 import type { Direction } from "./geometry";
-import { scrollsNatively } from "./scroll";
+import { scrollableAtAll } from "./scroll";
 import { planArrow } from "./session";
 import { trackSession } from "./session-tracker";
 import { findTarget } from "./target";
@@ -44,16 +44,22 @@ export function installSpatialNav(doc: Document = document): () => void {
     return `${direction}|${page.scrollTop}|${page.scrollLeft}|${active ? active.tagName + (active.textContent ?? "").slice(0, 20) : ""}`;
   };
 
-  /** Whether the arrow would scroll something on its own: where the pointer last was, where focus is, then the page. */
+  /**
+   * Whether anything can scroll on the arrow's axis at all: the scroll area
+   * under the pointer's last position, the scroll areas around the focus, or
+   * the page. Any one is enough, and the answer does not change with position.
+   */
   const reading = (active: Element | null, direction: Direction) => {
+    const axis =
+      direction === "up" || direction === "down" ? "vertical" : "horizontal";
     const at = session.lastPointer();
     const pointed =
       at && typeof doc.elementFromPoint === "function"
         ? doc.elementFromPoint(at.x, at.y)
         : null;
     return (
-      (pointed !== null && scrollsNatively(pointed, direction, doc)) ||
-      scrollsNatively(active ?? doc.body, direction, doc)
+      (pointed !== null && scrollableAtAll(pointed, axis, doc)) ||
+      scrollableAtAll(active ?? doc.body, axis, doc)
     );
   };
 
