@@ -45,6 +45,10 @@ Migrations are applied before the new code goes live. So:
 - New code that needs a new table or column ships in the same deploy as the migration that adds it, since the migration is already applied when it goes up.
 - A migration that must follow its code (a data fix that relies on it) waits for the deploy after the code and says so in its header.
 
+### The parent PIN
+
+`0026_parent_pin.sql` adds a table and a defaulted column (`consents.gate`), so it works with the code before it and after it. The code needs a new rate-limit binding, `PIN_LIMITER`, in `apps/server/wrangler.jsonc` for each environment: `scripts/deploy.sh` creates it with the Worker, and the Worker refuses to start without it. The PIN's key is derived from `SESSION_SECRET`, so rotating that secret also ends every parent PIN; parents use Forgot PIN ([Parent PIN](PARENT_PIN.md)). Deleting an account now needs the parent's session made from a Google sign-in; the Android app's delete call must be updated before the API reaches production.
+
 ## One-time setup
 
 Done: D1 `graspy-staging`, R2 `graspy-audio-staging`, the Worker `graspy-staging` for the web, the Firebase authorized domain `graspy-staging.getlatentic.com`, and the Firebase Android app for `com.latentic.graspy.staging` with the debug key's fingerprints.

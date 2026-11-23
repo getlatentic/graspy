@@ -50,13 +50,14 @@ A model writes its expressions, so they are hostile.
 | `GENERATE_LIMITER` | 30 a minute | Subjects, curriculum and path generation |
 | `AGENT_LIMITER` | 30 a minute | `/a2a` |
 | `API_LIMITER` | 120 a minute | The rest of `/api`, and `/mcp` |
+| `PIN_LIMITER` | 10 a minute | Typing the parent PIN, or the old one to replace it: counted per account and per address, on top of the lockout that is the account's own ([Parent PIN](PARENT_PIN.md)) |
 | `PAIRING_LIMITER` | 10 a minute | Asking for a TV's sign-in code (per address) and looking one up (per account and per address), on top of `API_LIMITER` ([TV sign-in](TV_SIGN_IN.md)) |
 
 A refusal is `429` with `Retry-After: 60` and CORS headers, so the browser can read it.
 
 ## Open risks
 
-- **No revocation.** Tokens are signed, not stored, so a leaked token lives until it expires. Rotating `SESSION_SECRET` ends every session. A TV's session is the exception in kind: it lasts an hour and is renewed from a credential the account can revoke ([TV sign-in](TV_SIGN_IN.md)).
+- **No revocation.** Tokens are signed, not stored, so a leaked token lives until it expires. Rotating `SESSION_SECRET` ends every session, and every parent PIN too, since the PIN's key is derived from it: each parent sets a new one by signing in with Google ([Parent PIN](PARENT_PIN.md)). The parent's session is the exception: setting a PIN ends the ones made before it. A TV's session is the exception in kind: it lasts an hour and is renewed from a credential the account can revoke ([TV sign-in](TV_SIGN_IN.md)).
 - **Approximate limits.** Each Cloudflare location counts on its own, per address, so a distributed client gets past them. Put Turnstile on session issuance if that happens.
 - **A device id is a claim.** Whoever knows one can read that device's record. Signing in closes this for the account: its id comes from a Firebase token Google verifies, never from the client.
 - **DSPy 3.4 is a beta, pinned exactly.** The httpx transport imports a private DSPy path, and a test imports it first.
