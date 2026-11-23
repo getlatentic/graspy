@@ -380,19 +380,17 @@
     "approvedBy": "Approved by {account} on {device}.",
     "approvedOn": "Approved on {device}.",
     "aPhone": "a phone",
-    "full": "This account has 10 TVs. Remove one on your phone, then continue."
+    "full": "This account has 10 TVs. Remove one on your phone, then continue.",
+    "goesOn": "Continuing in {seconds}…"
   },
   "tvLink": {
-    "signIn": "Sign in to link your TV",
     "title": "Link your TV",
     "code": "Code on your TV",
-    "next": "Next",
-    "confirm": "Sign in on {device}?",
+    "confirm": "Link {device}?",
     "learner": "Learner",
     "addLearner": "Add a learner first",
-    "approve": "Sign in",
-    "deny": "Don't sign in",
-    "done": "Now confirm on your TV.",
+    "deny": "Not my TV",
+    "done": "Done. Look at your TV.",
     "denied": "Not signed in.",
     "finish": "Done",
     "another": "Link another TV",
@@ -404,11 +402,11 @@
     "tvs": "Your TVs",
     "remove": "Remove",
     "removeNamed": "Remove {name}",
-    "warn": "Only continue if you are looking at this TV.",
     "wrongEnd": "Those are not the last characters on the TV.",
     "inUse": "Another account is already linking this TV.",
-    "endLabel": "Last 4 characters on the TV",
-    "parent": "Sign in again to link a TV."
+    "endLabel": "Type the last 4 characters shown on the TV",
+    "endBox": "Character on the TV",
+    "codeBox": "Character of the code"
   },
   "voice": {
     "title": "Voice lessons",

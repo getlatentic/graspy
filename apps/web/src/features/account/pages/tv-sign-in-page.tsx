@@ -68,6 +68,9 @@ function TvLink() {
   const left = useSecondsLeft(
     state.kind === "waiting" ? state.expiresAt : null,
   );
+  const goesOnIn = useSecondsLeft(
+    state.kind === "linking" ? state.continuesAt : null,
+  );
   const ended =
     state.kind === "waiting" && left === 0
       ? ({ kind: "expired" } as const)
@@ -75,8 +78,8 @@ function TvLink() {
   if (ended.kind === "declined") return <Navigate to={SIGN_IN_PAGE} replace />;
 
   if (ended.kind === "linking") {
-    // Cancel is the first choice, always: nothing here tells the person at the TV that the
-    // account is theirs, so a press of Enter on a remote declines.
+    // The TV goes on by itself when the seconds are up; Cancel is the only button and has the
+    // focus, so a press of OK or Enter on a remote says no.
     return (
       <div className="flex flex-col gap-6">
         <h1 className="text-balance font-display text-3xl font-semibold text-ink sm:text-4xl">
@@ -85,12 +88,12 @@ function TvLink() {
         <p className="text-pretty text-lg text-ink" dir="auto">
           {approvedBy(t, ended.approver)}
         </p>
+        <p className="text-lg text-muted">
+          {t("tvSignIn.goesOn", { seconds: ended.busy ? 0 : goesOnIn })}
+        </p>
         <div className="flex flex-wrap gap-3">
-          <Button size="lg" onClick={confirm} disabled={ended.busy}>
-            {t("tvSignIn.continue")}
-          </Button>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="lg"
             onClick={decline}
             disabled={ended.busy}

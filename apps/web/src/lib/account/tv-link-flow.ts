@@ -18,6 +18,8 @@ export type TvLinkState =
       kind: "linking";
       learnerName: string;
       approver: TvApprover;
+      /** When the TV goes on by itself, in milliseconds since the epoch. */
+      continuesAt: number;
       busy: boolean;
     }
   /** The account already has the most TVs: the request is kept, for the person to remove one
@@ -36,7 +38,9 @@ export interface TvLinkRun {
 export interface TvLink {
   /** Ends the request, if it is not already over, and stops everything. */
   stop: () => void;
-  /** The person at the TV confirms the learner: the session is given now, and not before. */
+  /** The TV goes on: the session is given now, and not before. It happens by itself five seconds
+   * after the phone approved, unless the person here declined; after `full` it is the person's
+   * to ask again. */
   confirm: () => void;
   /** The person at the TV declines: nothing is given, and the request ends. */
   decline: () => void;
@@ -51,6 +55,9 @@ export interface TvLinkDeps {
   /** Resolves after `ms`, or rejects when the signal aborts. */
   wait: (ms: number, signal: AbortSignal) => Promise<void>;
 }
+
+/** How long the person at the TV has to say no, once a phone has approved. */
+export const VETO_MS = 5_000;
 
 // A poll that failed to reach the server is tried again after a pause that doubles, to this.
 const FIRST_RETRY_MS = 2_000;
@@ -137,9 +144,13 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
           kind: "linking",
           learnerName: polled.learner.name,
           approver: polled.approver ?? {},
+          continuesAt: deps.now() + VETO_MS,
           busy: false,
         };
-        return report(linking);
+        report(linking);
+        // Nobody pressing anything is the person at the TV letting it go on.
+        deps.wait(VETO_MS, signal).then(confirm, () => undefined);
+        return;
       }
       if (polled.status === "expired") return end({ kind: "expired" });
       if (polled.status === "denied") return end({ kind: "denied" });
@@ -178,6 +189,19 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
     end({ kind: given.status === "denied" ? "denied" : "expired" });
   }
 
+  function confirm() {
+    if (!request || over || !linking) return;
+    report({ ...linking, busy: true });
+    void release(request);
+  }
+
+  function decline() {
+    if (!request || over) return;
+    over = true;
+    void deps.cancel(request.deviceCode);
+    report({ kind: "declined" });
+  }
+
   go().catch(() => undefined);
   return {
     stop: () => {
@@ -187,17 +211,7 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
         void deps.cancel(request.deviceCode);
       }
     },
-    confirm: () => {
-      if (!request || over || !linking) return;
-      report({ ...linking, busy: true });
-      void release(request);
-    },
-    decline: () => {
-      if (!request || over) return;
-      const asked = request;
-      over = true;
-      void deps.cancel(asked.deviceCode);
-      report({ kind: "declined" });
-    },
+    confirm,
+    decline,
   };
 }

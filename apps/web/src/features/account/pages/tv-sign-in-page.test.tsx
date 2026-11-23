@@ -140,7 +140,7 @@ describe("the TV's sign-in with a phone", () => {
     expect(cancel.getAttribute("href")).toBe("/app/sign-in");
   });
 
-  it("polls the code until the phone approves, then asks whom to link to and signs in nothing yet", async () => {
+  it("polls the code until the phone approves, then says whom it is linking to, with a countdown and Cancel focused, and signs in nothing yet", async () => {
     pollTvLink
       .mockResolvedValueOnce({ status: "pending" })
       .mockResolvedValueOnce({
@@ -153,13 +153,107 @@ describe("the TV's sign-in with a phone", () => {
     expect(
       screen.getByRole("heading", { name: "Linking to Ada" }),
     ).toBeTruthy();
+    expect(screen.getByText("Continuing in 5…")).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: en.tvSignIn.continue }),
-    ).toBeTruthy();
-    expect(
+      screen.queryByRole("button", { name: en.tvSignIn.continue }),
+    ).toBeNull();
+    expect(document.activeElement).toBe(
       screen.getByRole("button", { name: en.tvSignIn.cancel }),
-    ).toBeTruthy();
+    );
     expect(startTvSession).not.toHaveBeenCalled();
+    expect(continueTvLink).not.toHaveBeenCalled();
+  });
+
+  it("counts the five seconds down on the screen", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    page();
+    await secondsPass(5);
+    expect(screen.getByText("Continuing in 5…")).toBeTruthy();
+
+    await secondsPass(2);
+
+    expect(screen.getByText("Continuing in 3…")).toBeTruthy();
+  });
+
+  it("goes on by itself when the countdown ends, signs the device in and keeps no account of whom it linked", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    continueTvLink.mockResolvedValue({
+      status: "approved",
+      token: "session",
+      expiresIn: 3600,
+      refreshToken: "refresh",
+      account: "uid-1",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+    });
+    page();
+    await secondsPass(5);
+    expect(startTvSession).not.toHaveBeenCalled();
+
+    await secondsPass(5.1);
+
+    expect(continueTvLink).toHaveBeenCalledWith(
+      "device-code",
+      expect.anything(),
+    );
+    expect(startTvSession).toHaveBeenCalledWith({
+      token: "session",
+      expiresIn: 3600,
+      refreshToken: "refresh",
+      account: "uid-1",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+    });
+    expect(Object.keys(localStorage)).toEqual([]);
+  });
+
+  it("does not go on when Cancel is pressed inside the countdown: it cancels the request and returns to sign-in", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    continueTvLink.mockResolvedValue({
+      status: "approved",
+      token: "session",
+      expiresIn: 3600,
+      refreshToken: "refresh",
+      account: "uid-1",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+    });
+    page();
+    await secondsPass(7);
+
+    await act(async () =>
+      screen.getByRole("button", { name: en.tvSignIn.cancel }).click(),
+    );
+    await secondsPass(60);
+
+    expect(cancelTvLink).toHaveBeenCalledWith("device-code");
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(startTvSession).not.toHaveBeenCalled();
+    expect(screen.getByText("the sign-in page")).toBeTruthy();
+  });
+
+  it("cancels the request when the person goes Back out of the screen inside the countdown", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+    });
+    const view = page();
+    await secondsPass(7);
+
+    view.unmount();
+    await secondsPass(60);
+
+    expect(cancelTvLink).toHaveBeenCalledWith("device-code");
     expect(continueTvLink).not.toHaveBeenCalled();
   });
 
@@ -207,29 +301,6 @@ describe("the TV's sign-in with a phone", () => {
     );
   });
 
-  it("keeps nothing about the accounts it has linked to", async () => {
-    pollTvLink.mockResolvedValue({
-      status: "linking",
-      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
-      approver: { account: "t***@gmail.com" },
-    });
-    continueTvLink.mockResolvedValue({
-      status: "approved",
-      token: "session",
-      expiresIn: 3600,
-      refreshToken: "refresh",
-      account: "uid-1",
-      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
-    });
-    page();
-    await secondsPass(6);
-    await act(async () =>
-      screen.getByRole("button", { name: en.tvSignIn.continue }).click(),
-    );
-
-    expect(Object.keys(localStorage)).toEqual([]);
-  });
-
   it("says the account has ten TVs when the server keeps the request for that, with Continue to try again and Cancel first", async () => {
     pollTvLink.mockResolvedValue({
       status: "linking",
@@ -238,10 +309,7 @@ describe("the TV's sign-in with a phone", () => {
     });
     continueTvLink.mockResolvedValue({ status: "full" });
     page();
-    await secondsPass(6);
-    await act(async () =>
-      screen.getByRole("button", { name: en.tvSignIn.continue }).click(),
-    );
+    await secondsPass(11);
 
     expect(
       screen.getByRole("heading", { name: en.tvSignIn.full }),
@@ -251,42 +319,6 @@ describe("the TV's sign-in with a phone", () => {
     );
     expect(startTvSession).not.toHaveBeenCalled();
     expect(cancelTvLink).not.toHaveBeenCalled();
-  });
-
-  it("signs in only when Continue is pressed, a real button the remote can press, ", async () => {
-    pollTvLink.mockResolvedValue({
-      status: "linking",
-      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
-      approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
-    });
-    continueTvLink.mockResolvedValue({
-      status: "approved",
-      token: "session",
-      expiresIn: 3600,
-      refreshToken: "refresh",
-      account: "uid-1",
-      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
-    });
-    page();
-    await secondsPass(6);
-    const go = screen.getByRole("button", { name: en.tvSignIn.continue });
-    expect(go.tagName).toBe("BUTTON");
-    await secondsPass(60);
-    expect(startTvSession).not.toHaveBeenCalled();
-
-    await act(async () => go.click());
-
-    expect(continueTvLink).toHaveBeenCalledWith(
-      "device-code",
-      expect.anything(),
-    );
-    expect(startTvSession).toHaveBeenCalledWith({
-      token: "session",
-      expiresIn: 3600,
-      refreshToken: "refresh",
-      account: "uid-1",
-      learner: { id: "a1b2c3d4e5f6", name: "Ada" },
-    });
   });
 
   it("declines on Cancel: the request is cancelled, nothing is signed in and the sign-in page returns", async () => {

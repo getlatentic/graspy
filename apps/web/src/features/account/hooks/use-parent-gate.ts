@@ -28,11 +28,14 @@ export function useParentGate() {
     setNeedsParent(false);
   }, []);
 
+  /** The parent signed in by a route that made the parent's session itself. */
+  const signedIn = useCallback(() => setNeedsParent(!hasParentSession()), []);
+
   const refused = useCallback((error: unknown) => {
     if (!(error instanceof ParentSignInNeeded)) return false;
     setNeedsParent(true);
     return true;
   }, []);
 
-  return { needsParent, startAsParent, refused };
+  return { needsParent, startAsParent, signedIn, refused };
 }

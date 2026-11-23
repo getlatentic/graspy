@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
@@ -16,8 +22,7 @@ const api = vi.hoisted(() => {
     listTvs: vi.fn(),
     removeTv: vi.fn(),
     listLearners: vi.fn(),
-    startParentSession: vi.fn(),
-    signInAgain: vi.fn(),
+    signInAsParent: vi.fn(),
     parent: { held: true },
     account: { current: null as object | null },
   };
@@ -39,18 +44,15 @@ vi.mock("@/lib/api/session", () => ({
   ParentSignInNeeded: api.ParentSignInNeeded,
   hasParentSession: () => api.parent.held,
   parentSessionEnds: () => null,
-  startParentSession: api.startParentSession,
+  startParentSession: vi.fn(),
 }));
 vi.mock("@/lib/account/sign-in", () => ({
   prepareSignIn: () => undefined,
-  signInAgain: api.signInAgain,
-}));
-vi.mock("../hooks/use-google-sign-in", () => ({
-  useGoogleSignIn: () => ({
-    signIn: () => undefined,
-    busy: false,
-    problem: null,
-  }),
+  signInAsParent: api.signInAsParent,
+  signInProblem: (error: unknown) =>
+    (error as { code?: string } | null)?.code === "auth/popup-blocked"
+      ? "popupBlocked"
+      : "failed",
 }));
 
 import TvLinkPage from "./tv-link-page";
@@ -63,12 +65,6 @@ const ADA = {
   voiceConsent: null,
 };
 const BEN = { ...ADA, id: "b1b2c3d4e5f6", name: "Ben" };
-const NO_CONSENT = {
-  ...ADA,
-  id: "c1b2c3d4e5f6",
-  name: "Cy",
-  serviceConsent: null,
-};
 const ASKED = {
   label: "Samsung TV",
   country: "NG",
@@ -99,19 +95,18 @@ const signedIn = { uid: "uid-1", learner: { id: ADA.id, name: "Ada" } };
 const refused = (status: number, code: string) =>
   new ApiError("refused", status, { detail: { code } });
 
-async function enterCode(code: string) {
-  fireEvent.change(await screen.findByLabelText(en.tvLink.code), {
-    target: { value: code },
-  });
-  fireEvent.click(screen.getByRole("button", { name: en.tvLink.next }));
+const boxes = () => screen.findAllByRole("textbox");
+const google = () => screen.queryByRole("button", { name: en.you.signIn });
+
+/** Types characters one at a time, as a keyboard does, into the boxes of the group. */
+function typeInto(fields: HTMLElement[], text: string) {
+  [...text].forEach((character, index) =>
+    fireEvent.change(fields[index], { target: { value: character } }),
+  );
 }
 
-const endField = () => screen.findByLabelText(en.tvLink.endLabel);
-const approveButton = () =>
-  screen.getByRole("button", { name: en.tvLink.approve }) as HTMLButtonElement;
-
 beforeEach(() => {
-  window.location.hash = "";
+  window.location.hash = "#code=ABCD2345";
   api.account.current = signedIn;
   api.parent.held = true;
   api.lookUpTv.mockReset().mockResolvedValue(ASKED);
@@ -120,209 +115,209 @@ beforeEach(() => {
   api.listTvs.mockReset().mockResolvedValue([]);
   api.removeTv.mockReset().mockResolvedValue(undefined);
   api.listLearners.mockReset().mockResolvedValue([ADA]);
-  api.startParentSession.mockReset().mockImplementation(async () => {
+  api.signInAsParent.mockReset().mockImplementation(async () => {
+    api.account.current = signedIn;
     api.parent.held = true;
   });
-  api.signInAgain.mockReset().mockResolvedValue("fresh-token");
 });
 
 afterEach(cleanup);
 
-describe("signing in first", () => {
-  it("asks a signed-out phone to sign in, and shows no code field", () => {
+describe("signing in once", () => {
+  beforeEach(() => {
     api.account.current = null;
-    page();
-
-    expect(
-      screen.getByRole("heading", { name: en.tvLink.signIn }),
-    ).toBeTruthy();
-    expect(screen.getByRole("button", { name: en.you.signIn })).toBeTruthy();
-    expect(screen.queryByRole("textbox")).toBeNull();
-    expect(api.lookUpTv).not.toHaveBeenCalled();
-  });
-
-  it("asks a signed-in phone to sign in again as the parent before anything of the TV is asked or shown", async () => {
     api.parent.held = false;
+  });
+
+  it("shows one Google button and nothing else to do before it: no code field, no second sign-in", () => {
     page();
 
-    expect(screen.getByText(en.tvLink.parent)).toBeTruthy();
+    expect(screen.getByRole("heading", { name: en.tvLink.title })).toBeTruthy();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(google()).toBeTruthy();
     expect(screen.queryByRole("textbox")).toBeNull();
-    expect(api.listTvs).not.toHaveBeenCalled();
     expect(api.lookUpTv).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: en.you.signIn }));
-
-    expect(await screen.findByLabelText(en.tvLink.code)).toBeTruthy();
-    expect(api.startParentSession).toHaveBeenCalledWith("fresh-token");
-    expect(api.listTvs).toHaveBeenCalled();
+    expect(document.body.textContent).not.toMatch(/again/i);
   });
 
-  it("asks again when the parent's session is gone in the middle", async () => {
-    api.lookUpTv.mockRejectedValue(new api.ParentSignInNeeded());
-    page();
-    await enterCode("ABCD2345");
-
-    expect(await screen.findByText(en.tvLink.parent)).toBeTruthy();
-  });
-});
-
-describe("giving the code", () => {
-  it("keeps the code from a QR code out of sight: only its first four characters show", async () => {
-    window.location.hash = "#code=ABCD2345";
+  it("goes straight to the TV with the code from the link when the one sign-in is done, with no second sign-in", async () => {
     page();
 
-    await screen.findByRole("heading", { name: en.tvLink.title });
+    fireEvent.click(google()!);
 
-    expect(screen.getByText(/ABCD\s•{4}/)).toBeTruthy();
-    expect(screen.queryByRole("textbox")).toBeNull();
-    expect(document.body.textContent).not.toContain("2345");
-    expect(api.lookUpTv).not.toHaveBeenCalled();
-  });
-
-  it("looks the whole code from the link up when Next is pressed", async () => {
-    window.location.hash = "#code=ABCD2345";
-    page();
-    await screen.findByRole("heading", { name: en.tvLink.title });
-
-    fireEvent.click(screen.getByRole("button", { name: en.tvLink.next }));
-
-    expect(await endField()).toBeTruthy();
-    expect(api.lookUpTv).toHaveBeenCalledWith("ABCD2345");
-  });
-
-  it("falls back to typing when the code in the link was not valid", async () => {
-    window.location.hash = "#code=ABCD2345";
-    api.lookUpTv.mockRejectedValue(refused(404, "code_not_found"));
-    page();
-    await screen.findByRole("heading", { name: en.tvLink.title });
-    fireEvent.click(screen.getByRole("button", { name: en.tvLink.next }));
-
-    const field = (await screen.findByLabelText(
-      en.tvLink.code,
-    )) as HTMLInputElement;
-
-    expect(field.value).toBe("");
-    expect((await screen.findByRole("alert")).textContent).toBe(
-      en.tvLink.invalid,
-    );
-  });
-
-  it("is a field for a person: left to right, capitals, no autocorrect", async () => {
-    page();
-
-    const field = await screen.findByLabelText(en.tvLink.code);
-
-    expect(field.getAttribute("dir")).toBe("ltr");
-    expect(field.getAttribute("autocapitalize")).toBe("characters");
-    expect(field.getAttribute("autocomplete")).toBe("off");
-    expect(field.getAttribute("autocorrect")).toBe("off");
-  });
-
-  it("looks a typed code up as the server compares it", async () => {
-    page();
-    await enterCode("abcd-2345");
-
-    await endField();
-
-    expect(api.lookUpTv).toHaveBeenCalledWith("ABCD2345");
-  });
-
-  it("says when the code is not valid, and keeps what was typed", async () => {
-    api.lookUpTv.mockRejectedValue(refused(404, "code_not_found"));
-    page();
-    await enterCode("ABCD2345");
-
-    expect((await screen.findByRole("alert")).textContent).toBe(
-      en.tvLink.invalid,
-    );
     expect(
-      (screen.getByLabelText(en.tvLink.code) as HTMLInputElement).value,
-    ).toBe("ABCD2345");
+      await screen.findByRole("heading", { name: "Link Samsung TV?" }),
+    ).toBeTruthy();
+    expect(api.signInAsParent).toHaveBeenCalledTimes(1);
+    expect(api.lookUpTv).toHaveBeenCalledWith("ABCD2345");
+    expect(google()).toBeNull();
+    expect(document.body.textContent).not.toMatch(/again/i);
   });
 
-  it("says when another account is already linking this TV", async () => {
-    api.lookUpTv.mockRejectedValue(refused(409, "code_in_use"));
+  it("is the same one button when the phone is signed in but not as the parent", () => {
+    api.account.current = signedIn;
     page();
-    await enterCode("ABCD2345");
+
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(google()).toBeTruthy();
+  });
+
+  it("says a blocked sign-in window plainly, and offers the button again", async () => {
+    api.signInAsParent.mockRejectedValue(
+      Object.assign(new Error("blocked"), { code: "auth/popup-blocked" }),
+    );
+    page();
+
+    fireEvent.click(google()!);
 
     expect((await screen.findByRole("alert")).textContent).toBe(
-      en.tvLink.inUse,
+      en.you.signInBlocked,
     );
+    expect(google()).toBeTruthy();
   });
 
-  it("says when there have been too many tries", async () => {
-    api.lookUpTv.mockRejectedValue(new ApiError("slow", 429));
+  it("asks for nothing when Google's window is closed", async () => {
+    api.signInAsParent.mockRejectedValue(new Error("closed"));
     page();
-    await enterCode("ABCD2345");
 
-    expect((await screen.findByRole("alert")).textContent).toBe(en.tvLink.busy);
+    fireEvent.click(google()!);
+
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      en.you.signInFailed,
+    );
   });
 });
 
-describe("the confirmation", () => {
+describe("a parent who is already signed in", () => {
+  it("is not asked to sign in at all, and the code in the link is looked up on its own", async () => {
+    page();
+
+    expect(
+      await screen.findByRole("heading", { name: "Link Samsung TV?" }),
+    ).toBeTruthy();
+    expect(google()).toBeNull();
+    expect(api.signInAsParent).not.toHaveBeenCalled();
+    expect(api.lookUpTv).toHaveBeenCalledTimes(1);
+    expect(api.lookUpTv).toHaveBeenCalledWith("ABCD2345");
+  });
+
+  it("is sent back to the one sign-in when the parent's session ends in the middle", async () => {
+    api.lookUpTv.mockImplementation(async () => {
+      api.parent.held = false;
+      throw new api.ParentSignInNeeded();
+    });
+    page();
+
+    expect(
+      await screen.findByRole("button", { name: en.you.signIn }),
+    ).toBeTruthy();
+  });
+});
+
+describe("typing the last four characters", () => {
   async function confirming() {
     page();
-    await enterCode("ABCD2345");
-    return endField();
+    return boxes();
   }
 
-  it("shows the device, where and when it asked, and says to continue only when looking at it", async () => {
-    await confirming();
+  it("shows the device, where and when it asked, and four boxes, the first focused, and no button to approve", async () => {
+    const fields = await confirming();
 
-    expect(
-      screen.getByRole("heading", { name: "Sign in on Samsung TV?" }),
-    ).toBeTruthy();
+    expect(fields).toHaveLength(4);
+    expect(document.activeElement).toBe(fields[0]);
     expect(screen.getByText(/Nigeria/)).toBeTruthy();
     expect(screen.getByText(/1 minute ago/)).toBeTruthy();
+    expect(screen.getByText(en.tvLink.endLabel)).toBeTruthy();
     expect(
-      screen.getByText("Only continue if you are looking at this TV."),
-    ).toBeTruthy();
-    expect(api.approveTv).not.toHaveBeenCalled();
+      screen.getAllByRole("button").map((button) => button.textContent),
+    ).toEqual([en.tvLink.deny]);
   });
 
-  it("does not show the code, so the last four characters cannot be copied off the phone", async () => {
+  it("does not show the code, so the characters cannot be copied off the phone", async () => {
     await confirming();
 
     expect(document.body.textContent).not.toContain("2345");
     expect(document.body.textContent).not.toContain("ABCD");
   });
 
-  it("keeps Approve off until the last four characters are typed", async () => {
-    const field = await confirming();
-    expect(approveButton().disabled).toBe(true);
+  it("approves by itself on the fourth character, upper case, for the learner, and not before", async () => {
+    const fields = await confirming();
 
-    fireEvent.change(field, { target: { value: "23" } });
-    expect(approveButton().disabled).toBe(true);
-    fireEvent.change(field, { target: { value: "2345" } });
+    typeInto(fields, "5h9");
+    expect(api.approveTv).not.toHaveBeenCalled();
+    fireEvent.change(fields[3], { target: { value: "w" } });
 
-    expect(approveButton().disabled).toBe(false);
-  });
-
-  it("sends the last four characters as typed, capitalised, with the learner", async () => {
-    const field = await confirming();
-    fireEvent.change(field, { target: { value: " 23-45 " } });
-
-    fireEvent.click(approveButton());
-
+    await waitFor(() =>
+      expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", ADA.id, "5H9W"),
+    );
+    expect(api.approveTv).toHaveBeenCalledTimes(1);
     expect(
       await screen.findByRole("heading", { name: en.tvLink.done }),
     ).toBeTruthy();
-    expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", ADA.id, "2345");
   });
 
-  it("says plainly when the characters were not those on the TV, and lets them be typed again", async () => {
-    api.approveTv.mockRejectedValue(refused(403, "confirm_mismatch"));
-    const field = await confirming();
-    fireEvent.change(field, { target: { value: "AAAA" } });
+  it("moves to the next box as each character is typed", async () => {
+    const fields = await confirming();
 
-    fireEvent.click(approveButton());
+    fireEvent.change(fields[0], { target: { value: "5" } });
+    expect(document.activeElement).toBe(fields[1]);
+    fireEvent.change(fields[1], { target: { value: "H" } });
+    expect(document.activeElement).toBe(fields[2]);
+  });
+
+  it("goes back a box on Backspace in an empty one", async () => {
+    const fields = await confirming();
+    typeInto(fields, "5");
+    expect(document.activeElement).toBe(fields[1]);
+
+    fireEvent.keyDown(fields[1], { key: "Backspace" });
+
+    expect(document.activeElement).toBe(fields[0]);
+  });
+
+  it("takes a paste of all four, with spaces and lower case, and approves", async () => {
+    const fields = await confirming();
+
+    fireEvent.paste(fields[0], {
+      clipboardData: { getData: () => " 5h-9w " },
+    });
+
+    await waitFor(() =>
+      expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", ADA.id, "5H9W"),
+    );
+  });
+
+  it("takes a keyboard's autofill of all four into the first box", async () => {
+    const fields = await confirming();
+
+    fireEvent.change(fields[0], { target: { value: "5H9W" } });
+
+    await waitFor(() =>
+      expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", ADA.id, "5H9W"),
+    );
+  });
+
+  it("says plainly when the characters were wrong, clears the boxes and lets them be typed again", async () => {
+    api.approveTv.mockRejectedValueOnce(refused(403, "confirm_mismatch"));
+    const fields = await confirming();
+    typeInto(fields, "AAAA");
 
     expect((await screen.findByRole("alert")).textContent).toBe(
       en.tvLink.wrongEnd,
     );
-    expect(await endField()).toBeTruthy();
+    const again = await boxes();
+    expect(again.map((box) => (box as HTMLInputElement).value)).toEqual([
+      "",
+      "",
+      "",
+      "",
+    ]);
+    expect(document.activeElement).toBe(again[0]);
+    typeInto(again, "5H9W");
+    await waitFor(() => expect(api.approveTv).toHaveBeenCalledTimes(2));
   });
 
-  it("denies, and says so", async () => {
+  it("denies on 'Not my TV', and says so", async () => {
     await confirming();
 
     fireEvent.click(screen.getByRole("button", { name: en.tvLink.deny }));
@@ -334,68 +329,102 @@ describe("the confirmation", () => {
     expect(api.approveTv).not.toHaveBeenCalled();
   });
 
-  it("tells the parent to confirm on the TV, and refreshes the list of TVs", async () => {
-    const field = await confirming();
-    api.listTvs.mockClear();
-    fireEvent.change(field, { target: { value: "2345" } });
-
-    fireEvent.click(approveButton());
-    await screen.findByRole("heading", { name: en.tvLink.done });
-
-    expect(en.tvLink.done).toBe("Now confirm on your TV.");
-    expect(api.listTvs).toHaveBeenCalledTimes(1);
-  });
-
-  it("lets the person choose among the account's learners", async () => {
+  it("lets the person choose among the account's learners before typing", async () => {
     api.listLearners.mockResolvedValue([ADA, BEN]);
-    const field = await confirming();
-    fireEvent.change(field, { target: { value: "2345" } });
+    const fields = await confirming();
 
     expect(screen.getAllByRole("radio")).toHaveLength(2);
     fireEvent.click(screen.getByLabelText("Ben"));
-    fireEvent.click(approveButton());
+    typeInto(fields, "5H9W");
 
-    await screen.findByRole("heading", { name: en.tvLink.done });
-    expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", BEN.id, "2345");
+    await waitFor(() =>
+      expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", BEN.id, "5H9W"),
+    );
   });
 
-  it("offers to add a learner when the account has none, and cannot approve", async () => {
+  it("offers to add a learner when the account has none, and has no boxes", async () => {
     api.listLearners.mockResolvedValue([]);
-    const field = await confirming();
-    fireEvent.change(field, { target: { value: "2345" } });
+    page();
 
     expect(
-      screen.getByRole("link", { name: en.tvLink.addLearner }),
+      await screen.findByRole("link", { name: en.tvLink.addLearner }),
     ).toBeTruthy();
-    expect(approveButton().disabled).toBe(true);
+    expect(screen.queryByRole("textbox")).toBeNull();
   });
 
   it("says a parent must agree when the server refuses a learner with no agreement", async () => {
-    api.listLearners.mockResolvedValue([NO_CONSENT]);
     api.approveTv.mockRejectedValue(refused(403, "consent_required"));
-    const field = await confirming();
-    fireEvent.change(field, { target: { value: "2345" } });
-
-    fireEvent.click(approveButton());
+    const fields = await confirming();
+    typeInto(fields, "5H9W");
 
     expect((await screen.findByRole("alert")).textContent).toBe(
       en.tvLink.consent,
     );
   });
 
-  it("returns to the code when there are too many TVs, with the reason", async () => {
+  it("says there are too many TVs, with the reason", async () => {
     api.approveTv.mockRejectedValue(refused(409, "too_many_tvs"));
-    const field = await confirming();
-    fireEvent.change(field, { target: { value: "2345" } });
-
-    fireEvent.click(approveButton());
+    const fields = await confirming();
+    typeInto(fields, "5H9W");
 
     expect((await screen.findByRole("alert")).textContent).toBe(en.tvLink.full);
+  });
+
+  it("refreshes the list of TVs after approving", async () => {
+    const fields = await confirming();
+    api.listTvs.mockClear();
+    typeInto(fields, "5H9W");
+
+    await screen.findByRole("heading", { name: en.tvLink.done });
+
+    expect(api.listTvs).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("a link with no code, or a code that is no good", () => {
+  it("asks for the whole code in eight boxes, and looks it up on the eighth", async () => {
+    window.location.hash = "";
+    page();
+
+    const fields = await boxes();
+    expect(fields).toHaveLength(8);
+    expect(api.lookUpTv).not.toHaveBeenCalled();
+    typeInto(fields, "abcd2345");
+
+    expect(await screen.findAllByRole("textbox")).toHaveLength(4);
+    expect(api.lookUpTv).toHaveBeenCalledWith("ABCD2345");
+  });
+
+  it("falls back to typing it when the code in the link was not valid, with the reason", async () => {
+    api.lookUpTv.mockRejectedValue(refused(404, "code_not_found"));
+    page();
+
+    expect(await screen.findAllByRole("textbox")).toHaveLength(8);
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      en.tvLink.invalid,
+    );
+  });
+
+  it("says when another account is already linking this TV", async () => {
+    api.lookUpTv.mockRejectedValue(refused(409, "code_in_use"));
+    page();
+
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      en.tvLink.inUse,
+    );
+  });
+
+  it("says when there have been too many tries", async () => {
+    api.lookUpTv.mockRejectedValue(new ApiError("slow", 429));
+    page();
+
+    expect((await screen.findByRole("alert")).textContent).toBe(en.tvLink.busy);
   });
 });
 
 describe("the account's TVs", () => {
   it("lists them with a way to remove each, and removes one", async () => {
+    window.location.hash = "";
     api.listTvs.mockResolvedValue([
       {
         id: "tv1",
@@ -412,12 +441,5 @@ describe("the account's TVs", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove Samsung TV" }));
 
     expect(api.removeTv).toHaveBeenCalledWith("tv1");
-  });
-
-  it("shows no list when there are none", async () => {
-    page();
-    await screen.findByLabelText(en.tvLink.code);
-
-    expect(screen.queryByText(en.tvLink.tvs)).toBeNull();
   });
 });

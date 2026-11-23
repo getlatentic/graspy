@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, NetworkError } from "@/lib/api/errors";
-import { runTvLink, type TvLinkState } from "./tv-link-flow";
+import { runTvLink, VETO_MS, type TvLinkState } from "./tv-link-flow";
 import type { TvApproval, TvLinkRequest, TvPoll } from "./tv-link-api";
 
 const { startTvLink, pollTvLink, continueTvLink, cancelTvLink } = vi.hoisted(
@@ -114,12 +114,12 @@ describe("polling", () => {
     expect(pollTvLink).toHaveBeenCalledTimes(2);
   });
 
-  it("shows whom it is to be linked to once the phone approves, gives no session and stops polling", async () => {
+  it("shows whom it is to be linked to once the phone approves, gives no session yet and stops polling", async () => {
     pollTvLink
       .mockResolvedValueOnce({ status: "pending" })
       .mockResolvedValueOnce({ status: "linking", learner: APPROVAL.learner });
     run();
-    await secondsPass(60);
+    await secondsPass(10 + 4.9);
 
     expect(approved).toEqual([]);
     expect(continueTvLink).not.toHaveBeenCalled();
@@ -128,8 +128,31 @@ describe("polling", () => {
       kind: "linking",
       learnerName: "Ada",
       approver: {},
+      continuesAt: Date.now() - 4_900 + VETO_MS,
       busy: false,
     });
+  });
+
+  it("goes on by itself five seconds after the phone approved, with nobody pressing anything", async () => {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: APPROVAL.learner,
+    });
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    run();
+    await secondsPass(5);
+    expect(continueTvLink).not.toHaveBeenCalled();
+
+    await secondsPass(VETO_MS / 1000 - 0.1);
+    expect(continueTvLink).not.toHaveBeenCalled();
+    await secondsPass(0.2);
+
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
+    expect(continueTvLink).toHaveBeenCalledWith(
+      "device-code",
+      expect.anything(),
+    );
+    expect(approved).toEqual([APPROVAL]);
   });
 
   it("carries who approved, as the server named them", async () => {
@@ -257,21 +280,43 @@ describe("the person at the TV confirms", () => {
     return link;
   }
 
-  it("is given the session only when they continue", async () => {
+  it("is given the session only by the call to continue, and a second one finds nothing to do", async () => {
     continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
     const link = await linking();
-    await secondsPass(60);
-    expect(approved).toEqual([]);
 
     link.confirm();
     await secondsPass(0);
+    link.confirm();
+    await secondsPass(VETO_MS / 1000 + 1);
 
-    expect(continueTvLink).toHaveBeenCalledWith(
-      "device-code",
-      expect.anything(),
-    );
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
     expect(approved).toEqual([APPROVAL]);
     expect(states.at(-1)).toMatchObject({ kind: "linking", busy: true });
+  });
+
+  it("declining inside the five seconds stops it from going on", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    const link = await linking();
+
+    await secondsPass(3);
+    link.decline();
+    await secondsPass(60);
+
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(approved).toEqual([]);
+    expect(cancelTvLink).toHaveBeenCalledWith("device-code");
+    expect(states.at(-1)).toEqual({ kind: "declined" });
+  });
+
+  it("leaving the screen inside the five seconds cancels the request and does not go on", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    const link = await linking();
+
+    link.stop();
+    await secondsPass(60);
+
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(cancelTvLink).toHaveBeenCalledWith("device-code");
   });
 
   it("is not cancelled at the server once it has its session", async () => {
