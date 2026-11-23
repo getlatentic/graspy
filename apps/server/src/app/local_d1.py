@@ -28,10 +28,13 @@ class Statement:
 
     async def first(self) -> dict | None:
         row = self._connection.execute(self._sql, self._values).fetchone()
+        self._connection.commit()
         return None if row is None else dict(row)
 
     async def all(self) -> dict:
-        return {"results": self.rows()}
+        found = {"results": self.rows()}
+        self._connection.commit()
+        return found
 
     async def run(self) -> SimpleNamespace:
         cursor = self._connection.execute(self._sql, self._values)

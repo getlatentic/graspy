@@ -15,6 +15,7 @@ from .session import (
     account_of,
     learner_of,
     parent_of,
+    tv_of,
     verify,
 )
 
@@ -33,6 +34,9 @@ class Session:
     account: str | None = None
     # Made just after the account's holder signed in again, and no learner's.
     parent: bool = False
+    # A TV's: the id of the credential it was renewed from. It learns as its learner and
+    # manages nothing of the account.
+    tv: str | None = None
 
 
 def checked(authorization: str | None, secret: str) -> Session | dict:
@@ -47,6 +51,7 @@ def checked(authorization: str | None, secret: str) -> Session | dict:
         learner=learner_of(claims),
         account=account_of(claims),
         parent=parent_of(claims),
+        tv=tv_of(claims),
     )
 
 

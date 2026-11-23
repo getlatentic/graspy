@@ -28,6 +28,8 @@ class Budgets:
     generate: Limiter
     agent: Limiter
     api: Limiter
+    # Asking for a TV's code and looking codes up, counted per key the route names.
+    pairing: Limiter | None = None
 
 
 class RateLimitMiddleware:

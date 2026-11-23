@@ -139,7 +139,13 @@ class FakeLessonMakers:
         return Stub()
 
 
-LIMITERS = ("SESSION_LIMITER", "GENERATE_LIMITER", "AGENT_LIMITER", "API_LIMITER")
+LIMITERS = (
+    "SESSION_LIMITER",
+    "GENERATE_LIMITER",
+    "AGENT_LIMITER",
+    "API_LIMITER",
+    "PAIRING_LIMITER",
+)
 VIEW = "<!doctype html><html><head><title>practice</title></head></html>"
 WORKER = "// the views' build's sandbox worker"
 BUILT = {"/views/practice.html": VIEW, "/views/ui-sandbox-sw.js": WORKER}
@@ -253,6 +259,19 @@ def test_each_route_spends_the_budget_of_its_own_binding(method, path, binding):
     assert response.status_code == 429
     assert getattr(env, binding).calls == [{"converted": {"key": "198.51.100.7"}}]
     assert [name for name in LIMITERS if getattr(env, name).calls] == [binding]
+
+
+async def test_asking_for_a_tv_code_spends_the_pairing_binding_by_address():
+    env = fake_env()
+    app = build_worker_app(env, js_object=lambda value: {"converted": value})
+
+    TestClient(app).post(
+        "/api/tv-sign-in", headers={"cf-connecting-ip": "198.51.100.7"}
+    )
+
+    assert env.PAIRING_LIMITER.calls == [
+        {"converted": {"key": "tv-start:198.51.100.7"}}
+    ]
 
 
 async def test_the_tutor_remembers_a_conversation_in_the_durable_object():

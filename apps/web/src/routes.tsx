@@ -28,6 +28,7 @@ export const routes: RouteObject[] = [
           ).default,
         }),
       },
+      { path: "/link", lazy: lazyPage("tvLink") },
       ...chatLinks,
       {
         path: "/app",
@@ -38,6 +39,7 @@ export const routes: RouteObject[] = [
           { path: "onboarding", lazy: lazyPage("onboarding") },
           { path: "learners", lazy: lazyPage("learners") },
           { path: "sign-in", lazy: lazyPage("signIn") },
+          { path: "sign-in/phone", lazy: lazyPage("tvSignIn") },
           {
             path: "learn",
             lazy: lazyPage("learnLayout"),

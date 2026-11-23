@@ -29,6 +29,7 @@
     "firebase": "^12.19.0",
     "katex": "^0.16.11",
     "lucide-react": "^0.546.0",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.68.0",

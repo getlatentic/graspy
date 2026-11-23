@@ -6,6 +6,7 @@ import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/cn";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
+import { TV_SIGN_IN_PAGE } from "../components/sign-in-link";
 
 /** Signing in opens "Who's learning?" once Google answers. One look for every age: the class is not known yet. */
 export default function SignInPage() {
@@ -33,8 +34,12 @@ export default function SignInPage() {
   );
 }
 
+/** Whether the page is on a television, which `markDevice` set on the page. */
+const onTelevision = () => document.documentElement.dataset.device === "tv";
+
 export function SignIn() {
   const { t } = useI18n();
+  const tv = onTelevision();
   return (
     <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-2 text-center lg:gap-3 lg:text-start">
@@ -44,8 +49,19 @@ export function SignIn() {
         <p className="text-pretty lg:text-lg">{t("signIn.explain")}</p>
       </div>
       <div className="flex flex-col gap-3">
+        {tv && (
+          <Link
+            to={TV_SIGN_IN_PAGE}
+            className={cn(
+              buttonStyles("primary", "lg"),
+              "w-full whitespace-nowrap px-3 text-base sm:px-6 lg:text-lg",
+            )}
+          >
+            {t("tvSignIn.title")}
+          </Link>
+        )}
         <GoogleSignInButton
-          variant="primary"
+          variant={tv ? "secondary" : "primary"}
           size="lg"
           problemClassName="text-on-art"
           className="w-full whitespace-nowrap px-3 text-base sm:px-6 lg:text-lg"

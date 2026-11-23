@@ -15,7 +15,8 @@
 
   // Every 15 minutes: deletes the recordings due for it, those kept with a
   // parent's consent past their time and those never settled after a day
-  // (app/voice/recording_retention.py).
+  // (app/voice/recording_retention.py), and the TV sign-in requests and
+  // credentials past their time (app/account/tv_sessions.py).
   "triggers": { "crons": ["*/15 * * * *"] },
 
   // The MCP Apps views, built from ./ui (npm --prefix ui run build). The Worker
@@ -107,7 +108,8 @@
     { "name": "SESSION_LIMITER", "namespace_id": "4101", "simple": { "limit": 20, "period": 60 } },
     { "name": "GENERATE_LIMITER", "namespace_id": "4102", "simple": { "limit": 30, "period": 60 } },
     { "name": "AGENT_LIMITER", "namespace_id": "4103", "simple": { "limit": 30, "period": 60 } },
-    { "name": "API_LIMITER", "namespace_id": "4104", "simple": { "limit": 120, "period": 60 } }
+    { "name": "API_LIMITER", "namespace_id": "4104", "simple": { "limit": 120, "period": 60 } },
+    { "name": "PAIRING_LIMITER", "namespace_id": "4105", "simple": { "limit": 10, "period": 60 } }
   ],
 
   // Staging: its own Worker (graspy-web-api-staging), database, bucket, tutor,
@@ -157,7 +159,8 @@
         { "name": "SESSION_LIMITER", "namespace_id": "4201", "simple": { "limit": 20, "period": 60 } },
         { "name": "GENERATE_LIMITER", "namespace_id": "4202", "simple": { "limit": 30, "period": 60 } },
         { "name": "AGENT_LIMITER", "namespace_id": "4203", "simple": { "limit": 30, "period": 60 } },
-        { "name": "API_LIMITER", "namespace_id": "4204", "simple": { "limit": 120, "period": 60 } }
+        { "name": "API_LIMITER", "namespace_id": "4204", "simple": { "limit": 120, "period": 60 } },
+        { "name": "PAIRING_LIMITER", "namespace_id": "4205", "simple": { "limit": 10, "period": 60 } }
       ]
     }
   }
