@@ -13,22 +13,24 @@ async function stylesheet(): Promise<string> {
     .replace(/\s+/g, " ");
 }
 
-describe("the page gutter", () => {
-  it("is the device's safe area on a small screen and 5% of the viewport from 100rem wide", async () => {
+describe("the overscan margin", () => {
+  it("is 0 on a small screen and 5% of the viewport from 100rem wide", async () => {
     const css = await stylesheet();
-    const wide = css.slice(css.indexOf("@media (min-width: 100rem)"));
+    expect(css).toMatch(/:root \{ --overscan-x: 0px; --overscan-y: 0px; \}/);
     expect(css).toMatch(
-      /--page-gutter: max\( env\(safe-area-inset-left, 0px\)/,
+      /@media \(min-width: 100rem\) \{ :root \{ --overscan-x: 5vw; --overscan-y: 5vh; \} \}/,
     );
-    expect(wide).toMatch(/--page-gutter: max\(.*?, 5vw \)/);
-    expect(wide).toMatch(/--page-gutter-block: max\(.*?, 5vh \)/);
   });
 
-  it("is applied by utilities that keep the background to the edge, and names no device", async () => {
+  it("names no device, and sets no padding of its own on the page or a shell", async () => {
     const css = await stylesheet();
-    expect(css).toMatch(
-      /@utility safe-frame \{ padding-inline: var\(--page-gutter\); padding-block: var\(--page-gutter-block\); \}/,
-    );
-    expect(css).not.toMatch(/data-device[^{]*\{[^}]*page-gutter/);
+    expect(css).not.toMatch(/data-device[^{]*\{[^}]*overscan/);
+    expect(css).not.toMatch(/safe-frame|--page-gutter/);
+  });
+
+  it("keeps scroll padding for pages with a sticky header only", async () => {
+    const css = await stylesheet();
+    expect(css).toMatch(/html:has\(\.sticky-header\) \{ scroll-padding-top:/);
+    expect(css).not.toMatch(/(^|\} )html \{ scroll-padding/);
   });
 });

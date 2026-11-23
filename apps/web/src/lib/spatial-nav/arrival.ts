@@ -1,10 +1,10 @@
 let moving = false;
 
-/** Runs `move`, which puts focus somewhere because of an arrow key; focus handlers called inside it can tell (see `arrivedByArrow`). */
-export function whileArrowMoves(move: () => void): void {
+/** Runs `move`, which puts focus somewhere because of an arrow key, and returns its answer; focus handlers called inside it can tell (see `arrivedByArrow`). */
+export function whileArrowMoves(move: () => boolean): boolean {
   moving = true;
   try {
-    move();
+    return move();
   } finally {
     moving = false;
   }

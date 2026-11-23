@@ -78,7 +78,7 @@ function DashboardLayoutContent() {
           : undefined
       }
       className={cn(
-        "group/shell safe-frame flex flex-col overflow-hidden bg-canvas",
+        "group/shell flex flex-col overflow-hidden bg-canvas",
         chat
           ? "fixed inset-x-0 top-[var(--visible-top,0px)] h-[var(--visible-height,100dvh)]"
           : "h-dvh",
@@ -137,8 +137,8 @@ function PageArea({
         // Not a flex column for other pages: there a page's mx-auto wrapper
         // shrinks to its content and can outgrow the screen.
         chat
-          ? "flex flex-col"
-          : "overflow-y-auto overscroll-contain bg-linear-to-b from-accent-soft to-canvas to-60% p-4 sm:p-6",
+          ? "flex flex-col pe-[var(--overscan-x)] pb-[var(--overscan-y)]"
+          : "overflow-y-auto overscroll-contain bg-linear-to-b from-accent-soft to-canvas to-60% p-4 pe-[max(1rem,var(--overscan-x))] pb-[max(1rem,var(--overscan-y))] sm:p-6 sm:pe-[max(1.5rem,var(--overscan-x))] sm:pb-[max(1.5rem,var(--overscan-y))]",
       )}
     >
       {isLoaded && (redirect ? <Navigate to={redirect} replace /> : <Outlet />)}

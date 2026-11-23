@@ -38,8 +38,8 @@ export default function OnboardingLayout({
         {t("onboarding.skip")}
       </a>
       <div className="@container min-h-dvh">
-        <div className="safe-frame grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
-          <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 @2xl:px-6 split:px-12 split:pt-11 split:@7xl:px-24">
+        <div className="grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
+          <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right),var(--overscan-x))] pt-[max(2rem,var(--overscan-y))] @2xl:px-[max(1.5rem,var(--overscan-x))] split:px-[max(3rem,var(--overscan-x))] split:pt-[max(2.75rem,var(--overscan-y))] split:@7xl:px-[max(6rem,var(--overscan-x))]">
             <Link
               to="/"
               aria-label={t("onboarding.home")}
@@ -53,7 +53,7 @@ export default function OnboardingLayout({
           <main
             id="main"
             tabIndex={-1}
-            className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-6 outline-none @2xl:px-6 split:px-12 split:pt-[12dvh] split:pb-10 split:@7xl:ps-8 split:@7xl:pe-24"
+            className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right),var(--overscan-x))] pt-6 pb-[var(--overscan-y)] outline-none @2xl:px-[max(1.5rem,var(--overscan-x))] split:px-[max(3rem,var(--overscan-x))] split:pt-[12dvh] split:pb-[max(2.5rem,var(--overscan-y))] split:@7xl:ps-8 split:@7xl:pe-[max(6rem,var(--overscan-x))]"
           >
             <div className="mx-auto flex w-full max-w-lg flex-1 flex-col @2xl:my-auto @2xl:flex-none @3xl:max-w-xl split:my-0 split:min-h-0 split:max-w-lg split:flex-initial">
               {header ? <div className="shrink-0">{header}</div> : null}

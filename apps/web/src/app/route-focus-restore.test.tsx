@@ -37,6 +37,9 @@ const List = () => (
 const Detail = () => (
   <main>
     <h1>detail</h1>
+    <button data-focus-key="detail-button" autoFocus>
+      read
+    </button>
   </main>
 );
 function app() {
@@ -58,13 +61,31 @@ function app() {
 }
 
 describe("coming back to a screen", () => {
+  it("is not spoiled by a control that takes focus as the next screen mounts", async () => {
+    const router = app();
+    await act(() => vi.advanceTimersByTimeAsync(100));
+    screen.getByRole("link", { name: "english" }).focus();
+    await act(() => router.navigate("/english"));
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "read" }),
+    );
+    await act(() => vi.advanceTimersByTimeAsync(100));
+    await act(() => router.navigate(-1));
+    await act(() => vi.advanceTimersByTimeAsync(100));
+    expect(document.activeElement).toBe(
+      screen.getByRole("link", { name: "english" }),
+    );
+  });
+
   it("puts focus on the item that had it, found by its link, not on the title", async () => {
     const router = app();
     await act(() => vi.advanceTimersByTimeAsync(100));
     screen.getByRole("link", { name: "english" }).focus();
     await act(() => router.navigate("/english"));
     await act(() => vi.advanceTimersByTimeAsync(100));
-    expect(document.activeElement).toBe(screen.getByRole("heading"));
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "read" }),
+    );
 
     await act(() => router.navigate(-1));
     await act(() => vi.advanceTimersByTimeAsync(100));

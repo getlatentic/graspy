@@ -28,8 +28,10 @@ export function SideNav({ sections, open, onToggle }: SideNavProps) {
     <nav
       aria-label={t("nav.label")}
       className={cn(
-        "hidden shrink-0 flex-col gap-1 border-e border-line bg-surface p-2 lg:flex",
-        open ? "w-56" : "w-16",
+        "hidden shrink-0 flex-col gap-1 border-e border-line bg-surface p-2 ps-[max(0.5rem,var(--overscan-x))] pb-[max(0.5rem,var(--overscan-y))] lg:flex",
+        open
+          ? "w-[calc(14rem+var(--overscan-x))]"
+          : "w-[calc(4rem+var(--overscan-x))]",
       )}
     >
       {sections.map((section) => {

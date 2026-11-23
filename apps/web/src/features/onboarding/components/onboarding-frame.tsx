@@ -8,7 +8,7 @@ export default function OnboardingFrame({ children }: { children: ReactNode }) {
   return (
     // clip, not hidden: an overflow-hidden box can still scroll sideways.
     <div className="relative min-h-dvh overflow-clip art-ground theme-light text-on-art">
-      <div className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-[max(1rem,var(--page-gutter))] py-[max(2rem,var(--page-gutter-block))] sm:px-[max(1.5rem,var(--page-gutter))] lg:px-[max(2rem,var(--page-gutter))]">
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-[max(1rem,var(--overscan-x))] py-[max(2rem,var(--overscan-y))] sm:px-[max(1.5rem,var(--overscan-x))] lg:px-[max(2rem,var(--overscan-x))]">
         <header className="flex items-center py-2">
           <Link to="/" aria-label={t("onboarding.home")}>
             <Logo />

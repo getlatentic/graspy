@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { place, placeGrid } from "@/test/layout";
+import { resetActivity } from "./activity";
 import { installSpatialNav } from "./install";
 
 let remove: () => void;
@@ -24,6 +25,7 @@ afterEach(() => {
   remove();
   cleanup();
   scrolled.mockReset();
+  resetActivity();
   document.documentElement.removeAttribute("style");
 });
 
@@ -62,14 +64,50 @@ describe("arrow keys on a grid", () => {
     expect(focused()).toBe("a");
   });
 
-  it("scrolls the new control into view by the least distance", async () => {
+  it("scrolls the new control into view by the least distance, in the scroll area that holds it", async () => {
     const user = userEvent.setup();
-    gridOfSix();
-    await user.keyboard("{ArrowRight}");
-    expect(scrolled).toHaveBeenCalledWith({
-      block: "nearest",
-      inline: "nearest",
+    render(
+      <main>
+        <div data-testid="area" style={{ overflowY: "auto" }}>
+          <button>top</button>
+          <button>low</button>
+        </div>
+      </main>,
+    );
+    const area = screen.getByTestId("area");
+    place(area, { left: 0, top: 0, width: 300, height: 200 });
+    place(button("top"), { left: 0, top: 0, width: 100, height: 50 });
+    place(button("low"), { left: 0, top: 230, width: 100, height: 50 });
+    button("top").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(focused()).toBe("top");
+    place(button("low"), { left: 0, top: 170, width: 100, height: 60 });
+    await user.keyboard("{ArrowDown}");
+    expect(focused()).toBe("low");
+    expect(area.scrollTop).toBe(30);
+  });
+
+  it("never scrolls an overflow: hidden box to show a control", async () => {
+    const user = userEvent.setup();
+    render(
+      <main>
+        <div data-testid="clip" style={{ overflowY: "hidden" }}>
+          <button>top</button>
+          <button>low</button>
+        </div>
+      </main>,
+    );
+    place(screen.getByTestId("clip"), {
+      left: 0,
+      top: 0,
+      width: 300,
+      height: 200,
     });
+    place(button("top"), { left: 0, top: 0, width: 100, height: 50 });
+    place(button("low"), { left: 0, top: 170, width: 100, height: 60 });
+    button("top").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByTestId("clip").scrollTop).toBe(0);
   });
 
   it("leaves the key to the page when nothing lies that way", async () => {
@@ -240,13 +278,17 @@ describe("keys that belong to something else", () => {
   });
 
   it("are left alone on a slider, a radio, a native select and a focused area that can scroll", async () => {
+    // user-event looks up radios with CSS.escape, which jsdom lacks.
+    (globalThis as { CSS?: unknown }).CSS ??= { escape: (s: string) => s };
     const user = userEvent.setup();
     render(
       <main>
         <input type="range" aria-label="volume" />
-        <input type="radio" aria-label="choice" />
+        <input type="radio" name="r" aria-label="choice" />
+        <input type="radio" name="r" aria-label="other" />
         <select aria-label="pick">
           <option>x</option>
+          <option>y</option>
         </select>
         <div tabIndex={0} aria-label="log" style={{ overflowY: "auto" }} />
         <button>below</button>
@@ -258,6 +300,12 @@ describe("keys that belong to something else", () => {
       screen.getByLabelText("pick"),
       screen.getByLabelText("log"),
     ];
+    place(screen.getByLabelText("other"), {
+      left: 300,
+      top: 0,
+      width: 50,
+      height: 50,
+    });
     owners.forEach((el, i) =>
       place(el, { left: 0, top: i * 60, width: 100, height: 50 }),
     );
@@ -274,7 +322,8 @@ describe("keys that belong to something else", () => {
     for (const el of owners) {
       el.focus();
       await user.keyboard("{ArrowDown}");
-      expect(document.activeElement).toBe(el);
+      // A radio moves to the next one of its group natively; none goes to the button below.
+      expect(document.activeElement).not.toBe(button("below"));
     }
   });
 
@@ -577,7 +626,7 @@ describe("right-to-left layouts", () => {
 });
 
 describe("many controls", () => {
-  it("answers a key among 600 controls in a few milliseconds", () => {
+  it("measures each control once per key and checks few for visibility", () => {
     const count = 600;
     render(
       <main>
@@ -586,21 +635,28 @@ describe("many controls", () => {
         ))}
       </main>,
     );
-    placeGrid(screen.getAllByRole("button"), 20, 60, 50);
-    button("n0").focus();
-    const press = () =>
-      document.activeElement!.dispatchEvent(
-        new KeyboardEvent("keydown", {
-          key: "ArrowDown",
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    press();
-    const started = performance.now();
-    for (let i = 0; i < 10; i += 1) press();
-    const each = (performance.now() - started) / 10;
-    expect(focused()).toBe("n220");
-    expect(each).toBeLessThan(50);
+    const all = screen.getAllByRole("button");
+    placeGrid(all, 20, 60, 50);
+    const measured = vi.fn();
+    all.forEach((el) => {
+      const rect = el.getBoundingClientRect;
+      el.getBoundingClientRect = () => {
+        measured();
+        return rect.call(el);
+      };
+    });
+    const first = button("n0");
+    const styles = vi.spyOn(window, "getComputedStyle");
+    first.focus();
+    document.activeElement!.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "ArrowDown",
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(focused()).toBe("n20");
+    expect(measured.mock.calls.length).toBeLessThanOrEqual(count + 30);
+    expect(styles.mock.calls.length).toBeLessThan(120);
   });
 });

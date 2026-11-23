@@ -41,6 +41,28 @@ describe("score", () => {
   });
 });
 
+describe("a neighbour that is only sideways", () => {
+  it("is not below: Down never goes to a right-hand neighbour whose centre is lower", () => {
+    const here = box(0, 0);
+    const right = box(150, 30);
+    expect(score(here, right, "down")).toBeNull();
+    expect(rank(here, [at("right", right)], "down")).toEqual([]);
+  });
+
+  it("is not to the right: Right never drops to a button below that starts under it", () => {
+    const here = box(0, 0);
+    const below = box(20, 120);
+    expect(score(here, below, "right")).toBeNull();
+    expect(rank(here, [at("below", below)], "right")).toEqual([]);
+  });
+
+  it("still goes to a neighbour that shares part of the span, and to one wholly beyond", () => {
+    const here = box(0, 0);
+    expect(score(here, box(60, 120), "down")).not.toBeNull();
+    expect(score(here, box(300, 40), "right")).not.toBeNull();
+  });
+});
+
 describe("rank", () => {
   const grid = [
     at("a", box(0, 0)),

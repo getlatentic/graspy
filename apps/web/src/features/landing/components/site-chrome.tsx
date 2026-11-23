@@ -7,7 +7,7 @@ import { StartLearning } from "./start-learning";
 
 export function SiteHeader() {
   return (
-    <header className="safe-top sticky top-0 z-10 bg-surface/90 backdrop-blur">
+    <header className="sticky-header sticky top-0 z-10 bg-surface/90 pt-[var(--overscan-y)] backdrop-blur">
       <div className={cn(PAGE, "flex h-16 items-center justify-between gap-4")}>
         <Link to="/" aria-label="graspy home">
           <Logo />
@@ -35,7 +35,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className={cn(PAGE, "pb-[max(2.5rem,var(--page-gutter-block))]")}>
+    <footer className={cn(PAGE, "pb-[max(2.5rem,var(--overscan-y))]")}>
       <div className="flex flex-col gap-3 border-t border-line pt-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
         <span>© {new Date().getFullYear()} graspy</span>
         <div className="flex flex-wrap gap-x-6 gap-y-2">

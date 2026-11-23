@@ -34,52 +34,28 @@ html {
   }
 }
 
-/* The margin controls keep from the screen's edge. A TV may crop the outer few
+/* How far a control keeps from the screen's edge. A TV may crop the outer few
    percent of the picture (overscan), so from 1600px wide up (a TV at 1080p or
-   4K, a large monitor) the page keeps 5% of the width at each side and 5% of
-   the height above and below; below that, only a phone's notch and bars
-   (env()). Viewport units, no device guess. Backgrounds still reach the edge:
-   the gutter pads what sits on them. */
+   4K, a large monitor) it is 5% of the width at the sides and 5% of the height
+   above and below; below that it is 0 (a phone's notch is the body's
+   env() padding). Viewport units, no device guess. It is padding for the
+   content of a layout, in max() with the layout's own padding, so a surface
+   (a header, a side menu, a page background) still reaches the edge. */
 :root {
-  --page-gutter: max(
-    env(safe-area-inset-left, 0px),
-    env(safe-area-inset-right, 0px)
-  );
-  --page-gutter-block: max(
-    env(safe-area-inset-top, 0px),
-    env(safe-area-inset-bottom, 0px)
-  );
+  --overscan-x: 0px;
+  --overscan-y: 0px;
 }
 
 @media (min-width: 100rem) {
   :root {
-    --page-gutter: max(
-      env(safe-area-inset-left, 0px),
-      env(safe-area-inset-right, 0px),
-      5vw
-    );
-    --page-gutter-block: max(
-      env(safe-area-inset-top, 0px),
-      env(safe-area-inset-bottom, 0px),
-      5vh
-    );
+    --overscan-x: 5vw;
+    --overscan-y: 5vh;
   }
 }
 
-/* A control the arrows (or Tab) scroll to is kept clear of the landing page's
-   sticky header (4rem and its safe margin) and of the bottom margin. */
-html {
-  scroll-padding-top: calc(4rem + var(--page-gutter-block));
-  scroll-padding-bottom: var(--page-gutter-block);
-}
-
-@utility safe-frame {
-  padding-inline: var(--page-gutter);
-  padding-block: var(--page-gutter-block);
-}
-
-@utility safe-top {
-  padding-top: var(--page-gutter-block);
+/* A page with a sticky header keeps what the arrows or Tab scroll to clear of it. */
+html:has(.sticky-header) {
+  scroll-padding-top: calc(4rem + var(--overscan-y));
 }
 
 @layer base {

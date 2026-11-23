@@ -1,13 +1,13 @@
-import { firstUsable, boxOf, measureTabbable } from "./focusable";
-import {
-  inReadingOrder,
-  intersects,
-  rank,
-  type Box,
-  type Candidate,
-  type Direction,
-} from "./geometry";
+import { boxOf, firstUsable, measureTabbable } from "./focusable";
+import { inReadingOrder, rank, type Box, type Direction } from "./geometry";
 import { scopeOf } from "./scope";
+
+/** Whether the writing runs right to left where the key was pressed (the focused element's own `dir`, else the page's). */
+function isRtl(from: Element | null, doc: Document): boolean {
+  const dir = from?.closest("[dir]")?.getAttribute("dir");
+  if (dir) return dir === "rtl";
+  return getComputedStyle(doc.documentElement).direction === "rtl";
+}
 
 /** Where the key was pressed from: the focused element's box, or null when nothing meaningful has focus. */
 function originOf(active: Element | null, root: ParentNode): Box | null {
@@ -17,42 +17,29 @@ function originOf(active: Element | null, root: ParentNode): Box | null {
   return boxOf(active);
 }
 
-/** With nothing focused, the first control a person can see in reading order; none off screen, so the page may scroll instead. */
-function firstInView(
-  all: readonly Candidate<HTMLElement>[],
-  win: Window,
-  rtl: boolean,
-): HTMLElement | null {
-  const view = {
-    left: 0,
-    top: 0,
-    right: win.innerWidth,
-    bottom: win.innerHeight,
-  };
-  return firstUsable(
-    inReadingOrder(
-      all.filter((c) => intersects(c.box, view)),
-      rtl,
-    ),
-  );
-}
-
 /**
  * The control that arrow `direction` moves focus to from `active`, or null.
- * Candidates are measured once, from the dialog or list the focus is in (else
- * the page); the focus's own `data-nav-group` is tried before the rest.
+ * Candidates are the controls a person can see now (in the viewport, in the
+ * visible part of their scroll area, not covered), measured once, from the open
+ * modal dialog the focus is in (else the page); the focus's own `data-nav-group`
+ * is tried before the rest. With nothing focused, the first control in view.
  */
 export function findTarget(
   active: Element | null,
   direction: Direction,
   doc: Document,
 ): HTMLElement | null {
-  const scope = scopeOf(active, doc);
-  const all = measureTabbable(scope.root);
   const win = doc.defaultView ?? window;
-  const rtl = getComputedStyle(doc.documentElement).direction === "rtl";
+  const view = {
+    left: 0,
+    top: 0,
+    right: win.innerWidth,
+    bottom: win.innerHeight,
+  };
+  const scope = scopeOf(active, doc);
+  const all = measureTabbable(scope.root, view);
   const from = originOf(active, scope.root);
-  if (!from) return firstInView(all, win, rtl);
+  if (!from) return firstUsable(inReadingOrder(all, isRtl(active, doc)));
 
   const others = all.filter((c) => c.item !== active);
   const group = scope.group;

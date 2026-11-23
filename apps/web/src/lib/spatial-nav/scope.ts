@@ -1,7 +1,7 @@
-/** Where arrow keys may move focus: inside an open dialog or list, otherwise anywhere on the page. */
-const CONTAINING =
-  '[role="dialog"],[role="alertdialog"],dialog[open],[role="listbox"],[role="menu"]';
-const OPEN_MODAL = '[aria-modal="true"],dialog[open]';
+import { isOut, isShown } from "./focusable";
+
+/** Where arrow keys may move focus: inside an open modal dialog, otherwise anywhere on the page. */
+const MODAL = '[aria-modal="true"],dialog[open]';
 
 export interface Scope {
   /** Candidates come from here. */
@@ -10,13 +10,34 @@ export interface Scope {
   group: Element | null;
 }
 
-const isModal = (el: Element) => el.getAttribute("aria-modal") !== "false";
+/** `aria-modal="true"`, or a `dialog` opened with `showModal()`; a `role="dialog"` that says otherwise, and `dialog.show()`, do not trap. */
+function isModal(el: Element): boolean {
+  if (el.getAttribute("aria-modal") === "true") return true;
+  if (!(el instanceof HTMLDialogElement) || !el.open) return false;
+  try {
+    return el.matches(":modal");
+  } catch {
+    return false;
+  }
+}
+
+function modalAround(active: Element): Element | null {
+  let node = active.closest(MODAL);
+  while (node && !isModal(node))
+    node = node.parentElement?.closest(MODAL) ?? null;
+  return node;
+}
+
+/** The newest open modal a person can see (one under `inert` or `aria-hidden`, or hidden, is not it). */
+function topModal(doc: Document): Element | null {
+  const open = [...doc.querySelectorAll(MODAL)].filter(
+    (el) => isModal(el) && !isOut(el) && isShown(el as HTMLElement),
+  );
+  return open.at(-1) ?? null;
+}
 
 export function scopeOf(active: Element | null, doc: Document): Scope {
   const group = active?.closest("[data-nav-group]") ?? null;
-  const inside = active?.closest(CONTAINING);
-  if (inside && isModal(inside)) return { root: inside, group };
-  const open = doc.querySelectorAll(OPEN_MODAL);
-  const top = open.item(open.length - 1);
-  return { root: top ?? doc, group };
+  const inside = active ? modalAround(active) : null;
+  return { root: inside ?? topModal(doc) ?? doc, group };
 }

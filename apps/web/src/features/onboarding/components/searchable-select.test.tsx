@@ -87,7 +87,10 @@ describe("SearchableSelect opening", () => {
 
   it("opens on a focus that an arrow key caused only when OK or a click asks", () => {
     render(<Picker />);
-    whileArrowMoves(() => field().focus());
+    whileArrowMoves(() => {
+      field().focus();
+      return true;
+    });
     expect(isOpen()).toBe(false);
     fireEvent.keyDown(field(), { key: "Enter" });
     expect(isOpen()).toBe(true);

@@ -8,4 +8,4 @@ export function contactHref(subject?: string): string {
 }
 
 export const PAGE =
-  "mx-auto w-full max-w-5xl px-[max(1.25rem,var(--page-gutter))] sm:px-[max(2rem,var(--page-gutter))]";
+  "mx-auto w-full max-w-5xl px-[max(1.25rem,var(--overscan-x))] sm:px-[max(2rem,var(--overscan-x))]";

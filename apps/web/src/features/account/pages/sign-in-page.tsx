@@ -13,8 +13,8 @@ export default function SignInPage() {
   if (!FIREBASE_CONFIG) return <Navigate to="/app" replace />;
   if (account) return <Navigate to="/app/learners" replace />;
   return (
-    <main className="relative isolate flex min-h-dvh flex-col items-center justify-center gap-6 overflow-x-hidden art-ground theme-light px-[max(1.25rem,var(--page-gutter))] py-[max(2rem,var(--page-gutter-block))] text-on-art sm:px-[max(2.5rem,var(--page-gutter))] lg:grid lg:grid-cols-2 lg:grid-rows-[1fr_auto_1fr] lg:gap-x-12 lg:gap-y-0 lg:px-[max(5rem,var(--page-gutter))]">
-      <div className="lg:absolute lg:start-[max(5rem,var(--page-gutter))] lg:top-[max(4rem,var(--page-gutter-block))]">
+    <main className="relative isolate flex min-h-dvh flex-col items-center justify-center gap-6 overflow-x-hidden art-ground theme-light px-[max(1.25rem,var(--overscan-x))] py-[max(2rem,var(--overscan-y))] text-on-art sm:px-[max(2.5rem,var(--overscan-x))] lg:grid lg:grid-cols-2 lg:grid-rows-[1fr_auto_1fr] lg:gap-x-12 lg:gap-y-0 lg:px-[max(5rem,var(--overscan-x))]">
+      <div className="lg:absolute lg:start-[max(5rem,var(--overscan-x))] lg:top-[max(4rem,var(--overscan-y))]">
         <Logo />
       </div>
       <img
