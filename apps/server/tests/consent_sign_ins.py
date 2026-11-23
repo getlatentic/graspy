@@ -3,7 +3,7 @@ another account, or without saying when the person signed in."""
 
 import time
 
-from fresh_sign_in import fresh_auth_time
+from fresh_sign_in import auth_time_at, fresh_auth_time
 from signed_in import UID
 from voice_worker import voice_app
 
@@ -32,7 +32,7 @@ def consent_app(monkeypatch, env):
             return firebase.SignedIn(
                 uid=UID,
                 name="Ada",
-                auth_time=int(time.time()) + int(id_token[3:]),
+                auth_time=auth_time_at(int(id_token[3:])),
                 provider="google.com",
             )
         if id_token == "undated":
