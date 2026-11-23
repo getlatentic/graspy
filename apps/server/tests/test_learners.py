@@ -5,7 +5,16 @@ everything kept for them."""
 import pytest
 from lesson_example import LESSON
 from pydantic import ValidationError
-from signed_in import DEVICE, UID, added, chosen, client, signed_in, signed_in_app
+from signed_in import (
+    DEVICE,
+    UID,
+    added,
+    as_parent,
+    chosen,
+    client,
+    signed_in,
+    signed_in_app,
+)
 
 from app.account.directory import (
     MAX_LEARNERS,
@@ -221,6 +230,7 @@ async def test_deleting_the_account_forgets_every_learner(app):
         await signed_in(http, firebaseIdToken="good")
         ada = await added(http, "Ada")
         await _learnt_and_talked(app, ada)
+        await as_parent(http)
         deleted = await http.delete("/api/account")
         listed = (await http.get("/api/account/learners")).json()
 
