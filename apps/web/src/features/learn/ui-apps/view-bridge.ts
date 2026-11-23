@@ -52,6 +52,16 @@ export function hostContextFor(
   };
 }
 
+/** Tells an open view what changed about its surroundings. A view already torn down is not an error: the send is dropped, not left as a rejected promise. */
+export function tellHostContext(
+  bridge: AppBridge,
+  changed: McpUiHostContext,
+): void {
+  Promise.resolve()
+    .then(() => bridge.sendHostContextChange(changed))
+    .catch(() => undefined);
+}
+
 /** `host` is read as each message arrives, so it can change. */
 export function bridgeTo(
   frame: HTMLIFrameElement,

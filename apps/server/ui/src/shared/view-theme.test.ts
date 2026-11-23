@@ -1,5 +1,10 @@
 import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { InlineMarkdown } from "./markdown";
 
 // The views' colours are content/design/tokens.json: light, and dark once the
 // host's theme says so. These read the files as the build does.
@@ -62,23 +67,35 @@ describe("a view in a dark page", () => {
     }
   });
 
-  it("names no colour of its own in a component: a fixed white or black would stay when the page turns dark", () => {
-    const sources = [
-      "./answer-options.tsx",
-      "./question-card.tsx",
-      "./question-block.tsx",
-      "./markdown.tsx",
-      "../lesson/button-styles.ts",
-      "../lesson/lesson-view.tsx",
-      "../lesson/slide.tsx",
-      "../lesson/check.tsx",
-      "../passage/passage-view.tsx",
-      "../practice/practice-view.tsx",
+  it("names no colour of its own in any component: a fixed colour would stay when the page turns dark", () => {
+    const root = fileURLToPath(here("../"));
+    const files = readdirSync(root, { recursive: true, encoding: "utf-8" })
+      .filter((name) => /\.(?:tsx|ts)$/.test(name) && !/\.test\./.test(name))
+      .map((name) => join(root, name));
+    expect(files.length).toBeGreaterThan(20);
+
+    const fixedColours = [
+      // Tailwind's own white, black and palette steps.
+      /\b(?:bg|text|border|ring|fill|stroke|from|to|via|outline|divide|decoration|shadow|accent|caret)-(?:white|black|(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3})\b/,
+      // A hex or functional colour in a colour property or an arbitrary value, so a link to "#section" is not one.
+      /(?:color|background|fill|stroke|border|shadow|outline)\s*[:=][^;\n]*(?:#[0-9a-f]{3,8}\b|\b(?:rgb|hsl|oklch|oklab)a?\()/i,
+      /-\[(?:#[0-9a-f]{3,8}|(?:rgb|hsl|oklch)a?\([^\]]*\))\]/i,
     ];
-    for (const source of sources) {
-      expect(text(source), source).not.toMatch(
-        /\b(?:bg|text|border|ring|fill|stroke)-(?:white|black)\b|#[0-9a-f]{3,8}\b/i,
-      );
+    for (const file of files) {
+      const source = readFileSync(file, "utf-8");
+      for (const pattern of fixedColours) {
+        expect(source, `${file} ${pattern}`).not.toMatch(pattern);
+      }
     }
+  });
+
+  it("renders a formula KaTeX cannot read in the text's own colour, not KaTeX's red", () => {
+    const html = renderToStaticMarkup(
+      createElement(InlineMarkdown, { source: "a $\\frac{1$ b" }),
+    );
+
+    expect(html).toContain('class="katex-error"');
+    expect(html).toContain("color:inherit");
+    expect(html).not.toMatch(/cc0000/i);
   });
 });

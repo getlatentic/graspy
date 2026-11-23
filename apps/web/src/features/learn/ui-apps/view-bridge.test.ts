@@ -22,7 +22,8 @@ vi.mock("@modelcontextprotocol/ext-apps/app-bridge", () => ({
   PostMessageTransport: class {},
 }));
 
-const { hostContextFor, showView } = await import("./view-bridge");
+const { hostContextFor, showView, tellHostContext } =
+  await import("./view-bridge");
 
 const CARD = {
   resourceUri: "ui://graspy/lesson",
@@ -119,4 +120,34 @@ describe("the context a view is opened in", () => {
       });
     },
   );
+});
+
+describe("telling an open view what changed", () => {
+  it("sends the change", async () => {
+    const sendHostContextChange = vi.fn(async () => undefined);
+
+    tellHostContext({ sendHostContextChange } as unknown as AppBridge, {
+      theme: "dark",
+    });
+
+    await vi.waitFor(() =>
+      expect(sendHostContextChange).toHaveBeenCalledWith({ theme: "dark" }),
+    );
+  });
+
+  it("drops a send that fails because the view is gone, with no unhandled rejection", async () => {
+    const unhandled = vi.fn();
+    process.on("unhandledRejection", unhandled);
+    const sendHostContextChange = vi.fn(async () => {
+      throw new Error("Not connected");
+    });
+
+    tellHostContext({ sendHostContextChange } as unknown as AppBridge, {
+      theme: "light",
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    process.off("unhandledRejection", unhandled);
+
+    expect(unhandled).not.toHaveBeenCalled();
+  });
 });

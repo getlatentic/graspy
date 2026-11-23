@@ -12,7 +12,13 @@ vi.mock("@/lib/mcp/server", () => ({
   uiView: vi.fn(async () => ({ title: "A view" })),
 }));
 vi.mock("./view-bridge", () => ({
-  bridgeTo: vi.fn(() => ({ setHostContext: vi.fn() })),
+  bridgeTo: vi.fn(() => ({
+    sendHostContextChange: vi.fn(async () => undefined),
+  })),
+  tellHostContext: (
+    bridge: { sendHostContextChange: (c: object) => void },
+    changed: object,
+  ) => bridge.sendHostContextChange(changed),
   closeView: vi.fn(async () => undefined),
   hostContextFor: (locale: string, theme: string) => ({ locale, theme }),
   showView: vi.fn(() => new Promise<void>(() => undefined)),
@@ -94,17 +100,17 @@ describe("the view's colours", () => {
     vi.mocked(showView).mockResolvedValue();
     render(<AppFrame card={CARD} host={HOST} />);
     const bridge = vi.mocked(bridgeTo).mock.results[0]!.value;
-    await vi.waitFor(() => expect(bridge.setHostContext).toHaveBeenCalled());
-    bridge.setHostContext.mockClear();
+    await vi.waitFor(() =>
+      expect(bridge.sendHostContextChange).toHaveBeenCalled(),
+    );
+    bridge.sendHostContextChange.mockClear();
 
     change("dark");
-    expect(bridge.setHostContext).toHaveBeenLastCalledWith({
-      locale: "en",
+    expect(bridge.sendHostContextChange).toHaveBeenLastCalledWith({
       theme: "dark",
     });
     change("light");
-    expect(bridge.setHostContext).toHaveBeenLastCalledWith({
-      locale: "en",
+    expect(bridge.sendHostContextChange).toHaveBeenLastCalledWith({
       theme: "light",
     });
     expect(bridgeTo).toHaveBeenCalledTimes(1);
@@ -121,11 +127,10 @@ describe("the view's colours", () => {
     const bridge = vi.mocked(bridgeTo).mock.results[0]!.value;
 
     change("dark");
-    expect(bridge.setHostContext).not.toHaveBeenCalled();
+    expect(bridge.sendHostContextChange).not.toHaveBeenCalled();
 
     await act(async () => shown());
-    expect(bridge.setHostContext).toHaveBeenCalledWith({
-      locale: "en",
+    expect(bridge.sendHostContextChange).toHaveBeenCalledWith({
       theme: "dark",
     });
   });
@@ -143,7 +148,7 @@ describe("the view's colours", () => {
     await act(async () => shown());
     change("dark");
 
-    expect(bridge.setHostContext).not.toHaveBeenCalled();
+    expect(bridge.sendHostContextChange).not.toHaveBeenCalled();
   });
 });
 

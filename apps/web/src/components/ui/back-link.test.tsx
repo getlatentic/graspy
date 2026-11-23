@@ -1,7 +1,5 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BackLink } from "./back-link";
@@ -35,38 +33,48 @@ describe("BackLink", () => {
     expect(back).toHaveBeenCalledTimes(1);
   });
 
-  it("has a 2.75rem target that takes no room, and a visible focus ring", () => {
+  it("takes the room of its text only: no margin or vertical padding of its own to change the page's spacing", () => {
+    render(<BackLink onClick={() => undefined}>Back</BackLink>);
+
+    const classes = [...screen.getByRole("button").classList];
+    expect(classes.filter((name) => /^-?(?:m|p)[ytb]?-/.test(name))).toEqual(
+      [],
+    );
+    expect(classes).not.toContain("min-h-11");
+  });
+
+  it("has a 2.75rem touch target that is a pseudo-element, and a visible focus ring", () => {
     render(<BackLink onClick={() => undefined}>Back</BackLink>);
 
     const { classList } = screen.getByRole("button");
-    expect(classList).toContain("py-3");
-    expect(classList).toContain("-my-3");
+    expect(classList).toContain("relative");
+    expect(classList).toContain("after:absolute");
+    expect(classList).toContain("after:-inset-y-3");
     expect(classList).toContain("focus-visible:outline-2");
     expect(classList).toContain("focus-visible:outline-accent");
   });
 });
 
-// Only the component, the chat bar's round icon button and nothing else draws an
-// ArrowLeft, so every "Back to ..." line looks and aligns the same.
-function sources(directory: string): string[] {
-  return readdirSync(directory).flatMap((name) => {
-    const path = join(directory, name);
-    if (statSync(path).isDirectory()) return sources(path);
-    return /\.tsx$/.test(name) && !/\.test\./.test(name) ? [path] : [];
-  });
-}
+// Every way back is drawn by back-link.tsx, so no page has an arrow of its own
+// to align or turn. The files are read by the bundler's glob, from the source
+// root, wherever the tests run from.
+const sources = import.meta.glob<string>("/src/**/*.tsx", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+const IMPORTS_ARROW_LEFT =
+  /import\s*(?:type\s*)?\{[^}]*\bArrowLeft\b[^}]*\}\s*from\s*["']lucide-react["']/;
 
 describe("the app's back links", () => {
-  it("all come from BackLink", () => {
-    const root = join(process.cwd(), "src");
-    const drawing = sources(root)
-      .filter((path) => /ArrowLeft/.test(readFileSync(path, "utf8")))
-      .map((path) => path.slice(root.length + 1))
-      .sort();
+  it("are all drawn by back-link.tsx: no other file imports the ArrowLeft icon", () => {
+    const files = Object.keys(sources);
+    expect(files).toContain("/src/components/ui/back-link.tsx");
 
-    expect(drawing).toEqual([
-      "components/ui/back-link.tsx",
-      "features/learn/components/chat-context-bar.tsx",
-    ]);
+    const importing = files.filter((file) =>
+      IMPORTS_ARROW_LEFT.test(sources[file]),
+    );
+
+    expect(importing).toEqual(["/src/components/ui/back-link.tsx"]);
   });
 });

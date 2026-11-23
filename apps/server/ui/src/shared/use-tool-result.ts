@@ -43,7 +43,12 @@ export function useToolResult<C>(
     if (app) setContext((current) => ({ ...app.getHostContext(), ...current }));
   }, [app]);
 
-  const { theme } = context;
+  // Only a theme the views know is applied; any other value leaves the
+  // document on both schemes, the device's.
+  const theme =
+    context.theme === "light" || context.theme === "dark"
+      ? context.theme
+      : undefined;
   useEffect(() => {
     if (theme) applyDocumentTheme(theme);
   }, [theme]);

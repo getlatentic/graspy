@@ -21,6 +21,7 @@ const { useToolResult } = await import("./use-tool-result");
 
 afterEach(() => {
   cleanup();
+  app.getHostContext = () => ({ theme: "dark", locale: "en" });
   document.documentElement.removeAttribute("data-theme");
   document.documentElement.style.colorScheme = "";
 });
@@ -52,5 +53,25 @@ describe("a view's theme", () => {
     act(() => app.onhostcontextchanged?.({ locale: "yo" }));
 
     expect(document.documentElement.dataset.theme).toBe("dark");
+  });
+
+  it.each(["sepia", "", 3, null, { mode: "dark" }])(
+    "is left as it was by a theme that is not light or dark: %j",
+    (theme) => {
+      open();
+
+      act(() => app.onhostcontextchanged?.({ theme }));
+
+      expect(document.documentElement.dataset.theme).toBe("dark");
+      expect(document.documentElement.style.colorScheme).toBe("dark");
+    },
+  );
+
+  it("is not set at all when the host sends one that is not light or dark", () => {
+    app.getHostContext = () => ({ theme: "sepia" });
+    open();
+
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(document.documentElement.style.colorScheme).toBe("");
   });
 });

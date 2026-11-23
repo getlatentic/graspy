@@ -10,6 +10,7 @@ import {
   closeView,
   hostContextFor,
   showView,
+  tellHostContext,
   type ViewHost,
 } from "./view-bridge";
 
@@ -70,11 +71,11 @@ function useShownView(
 ): boolean {
   const { locale } = useI18n();
   const theme = useColorScheme();
-  const latest = useRef({ card, host, theme, locale });
+  const latest = useRef({ card, host, theme });
   const open = useRef<AppBridge | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
-    latest.current = { card, host, theme, locale };
+    latest.current = { card, host, theme };
   });
   const { resourceUri } = card;
 
@@ -96,7 +97,7 @@ function useShownView(
         if (leaving.signal.aborted) return;
         open.current = bridge;
         // A change of scheme during the handshake is told now.
-        bridge.setHostContext(hostContextFor(locale, latest.current.theme));
+        tellHostContext(bridge, { theme: latest.current.theme });
       },
       (error: unknown) => {
         if (leaving.signal.aborted) return;
@@ -112,7 +113,7 @@ function useShownView(
   }, [frame, resourceUri, locale]);
 
   useEffect(() => {
-    open.current?.setHostContext(hostContextFor(latest.current.locale, theme));
+    if (open.current) tellHostContext(open.current, { theme });
   }, [theme]);
 
   return failed;
