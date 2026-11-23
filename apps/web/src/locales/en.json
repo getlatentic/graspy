@@ -379,7 +379,8 @@
     "continue": "Continue",
     "approvedBy": "Approved by {account} on {device}.",
     "approvedOn": "Approved on {device}.",
-    "aPhone": "a phone"
+    "aPhone": "a phone",
+    "full": "This account has 10 TVs. Remove one on your phone, then continue."
   },
   "tvLink": {
     "signIn": "Sign in to link your TV",

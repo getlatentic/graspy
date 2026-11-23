@@ -280,7 +280,7 @@ async def test_a_request_is_labelled_with_the_country_cloudflare_names(app, tv):
     await requested(tv, **{"CF-IPCountry": "ng"})
     await requested(tv, **{"CF-IPCountry": "XX"})
 
-    assert [row["country"] for row in rows(app, "tv_links")] == ["NG", None]
+    assert [row["country"] for row in rows(app, "tv_links")] == ["NG", "XX"]
 
 
 # The TV's polling
@@ -1048,6 +1048,17 @@ async def test_a_replaced_credential_after_the_grace_is_a_copy_and_revokes_the_w
     assert rows(app, "tv_sessions")[0]["revoked_at"] is not None
 
 
+def test_the_successor_is_made_with_a_key_derived_from_the_secret_not_the_secret_itself():
+    import base64
+    import hmac
+
+    naive = hmac.new(b"s", b"tv-next:old", "sha256").digest()
+
+    assert successor_of("old", "s") != base64.urlsafe_b64encode(naive).decode().rstrip(
+        "="
+    )
+
+
 def test_the_successor_of_a_credential_is_the_same_each_time_and_needs_the_secret():
     assert successor_of("old", "s") == successor_of("old", "s")
     assert successor_of("old", "s") != successor_of("old", "t")
@@ -1585,9 +1596,15 @@ async def test_no_secret_reaches_the_logs(app, tv, phone, clock, caplog):
 # Who approved, as the TV shows it
 
 
+def test_a_short_address_is_never_shown_whole_in_its_first_part():
+    assert masked_email("a@gmail.com") == "***@gmail.com"
+    assert masked_email("ab@gmail.com") == "***@gmail.com"
+    assert masked_email("abc@gmail.com") == "a***@gmail.com"
+
+
 def test_an_address_is_masked_to_its_first_letter_and_its_domain():
     assert masked_email("tosin@gmail.com") == "t***@gmail.com"
-    assert masked_email("a@b.co") == "a***@b.co"
+    assert masked_email("tom@b.co") == "t***@b.co"
     assert masked_email("a@b@c.example") == "a***@c.example"
     for none in (None, "", "nobody", "@x.com", "x@"):
         assert masked_email(none) is None
@@ -1729,6 +1746,51 @@ async def test_one_country_holds_only_its_share_of_the_open_requests(tv, monkeyp
     assert (other.status_code, unknown.status_code) == (201, 201)
 
 
+async def test_connections_with_no_country_share_one_smaller_bucket_and_cannot_dodge_the_cap(
+    tv, monkeypatch
+):
+    monkeypatch.setattr(tv_links, "MAX_OPEN_UNKNOWN_COUNTRY", 2)
+    for network, header in ((1, {}), (2, {"CF-IPCountry": "T1"})):
+        await requested(tv, **{"CF-Connecting-IP": f"198.51.{network}.1", **header})
+
+    tor = await tv.post(
+        START, headers={"CF-Connecting-IP": "198.51.3.1", "CF-IPCountry": "XX"}
+    )
+    named = await tv.post(
+        START, headers={"CF-Connecting-IP": "198.51.4.1", "CF-IPCountry": "NG"}
+    )
+
+    assert tor.status_code == 503
+    assert named.status_code == 201
+
+
+async def test_the_phone_is_not_shown_a_country_for_an_unplaced_connection(tv, phone):
+    request = await requested(tv, **{"CF-IPCountry": "T1"})
+
+    seen = await looked_up(phone, request)
+
+    assert seen.json()["country"] is None
+
+
+async def test_starting_and_cancelling_in_a_loop_is_bounded_per_network_per_hour(
+    tv, clock, monkeypatch
+):
+    monkeypatch.setattr(tv_links, "MAX_CREATED_PER_PREFIX_HOUR", 3)
+    here = {"CF-Connecting-IP": "198.51.100.7"}
+    for _ in range(3):
+        request = await requested(tv, **here)
+        await tv.post(CANCEL, json={"deviceCode": request["deviceCode"]})
+
+    looping = await tv.post(START, headers={"CF-Connecting-IP": "198.51.100.9"})
+    elsewhere = await tv.post(START, headers={"CF-Connecting-IP": "198.51.200.9"})
+    clock.advance(61 * 60)
+    later = await tv.post(START, headers=here)
+
+    assert looping.status_code == 429
+    assert elsewhere.status_code == 201
+    assert later.status_code == 201
+
+
 async def test_a_tv_behind_a_shared_address_can_hold_several_requests_open(tv):
     here = {"CF-Connecting-IP": "198.51.100.7"}
 
@@ -1769,8 +1831,17 @@ async def test_the_session_is_not_made_for_an_account_that_filled_its_tvs_since_
     two = await continued(tv, second)
 
     assert one["status"] == "approved"
-    assert two == {"status": "expired"}
+    assert two == {"status": "full"}
     assert len(rows(app, "tv_sessions")) == 1
+    assert [row["status"] for row in rows(app, "tv_links")] == ["consumed", "approved"]
+
+    (listed,) = (await phone.get(DEVICES)).json()["devices"]
+    await phone.delete(f"{DEVICES}/{listed['id']}")
+    clock.advance(1)
+    after = await continued(tv, second)
+
+    assert after["status"] == "approved"
+    assert rows(app, "tv_links")[1]["status"] == "consumed"
 
 
 # Every router a TV session could reach
@@ -1813,3 +1884,34 @@ def test_every_route_of_the_app_is_classified_so_a_new_one_is_decided_on(app):
     assert walked | tv_own | {"/api/account/learners"} >= {
         path for path in app.openapi()["paths"] if path.startswith(refused)
     }
+
+
+# The schema, from the migration alone
+
+
+def test_every_statement_the_code_runs_compiles_against_the_schema_of_0025_alone():
+    """Built from 0025_tv_sign_in.sql and nothing else, so a column or an index the code needs
+    and the migration lacks fails here, not in a deployed database. The statements are compiled
+    (EXPLAIN), not run."""
+    import sqlite3
+    from pathlib import Path
+
+    migration = (
+        Path(tv_links.__file__).parents[3] / "migrations" / "0025_tv_sign_in.sql"
+    )
+    database = sqlite3.connect(":memory:")
+    database.executescript(migration.read_text())
+    statements = {
+        f"{module.__name__}.{name}": value
+        for module in (tv_links, tv_sessions)
+        for name, value in vars(module).items()
+        if name.endswith("_SQL") and isinstance(value, str)
+    }
+    assert len(statements) >= 20
+
+    for name, sql in statements.items():
+        slots = max((int(n) for n in re.findall(r"\?(\d+)", sql)), default=0)
+        try:
+            database.execute("EXPLAIN " + sql, (None,) * slots)
+        except sqlite3.Error as error:
+            raise AssertionError(f"{name}: {error}") from error

@@ -21,7 +21,9 @@ from ..account import tv_links, tv_sessions
 from ..account.directory import Learner, LearnerId, account_key, learner_key
 from ..account.learners import NoSuchLearner, learner_of
 from ..account.tv_codes import (
+    UNKNOWN_COUNTRY,
     confirmation_matches,
+    country_bucket,
     country_of,
     device_label,
     normalised_user_code,
@@ -124,7 +126,7 @@ async def request_link(request: Request) -> Requested:
             _database(request),
             request.app.state.session_secret,
             device_label(request.headers.get("user-agent")),
-            country_of(request.headers.get("cf-ipcountry")),
+            country_bucket(request.headers.get("cf-ipcountry")),
             _source(request),
             _prefix(request),
             now_ms(),
@@ -159,7 +161,9 @@ class Approver(Wire):
 
 
 class Polled(Wire):
-    status: Literal["pending", "slow_down", "expired", "denied", "linking", "approved"]
+    status: Literal[
+        "pending", "slow_down", "expired", "denied", "linking", "full", "approved"
+    ]
     interval: int | None = None
     # With `linking`, whom the TV is to be linked to, for the person at the TV to confirm. With
     # `approved` (answering a continue): the TV's session, the credential that renews it, and
@@ -242,6 +246,10 @@ async def continue_link(request: Request, body: Polling) -> Polled:
         return Polled(status=tv_links.DENIED)
     taken = await tv_sessions.take(_database(request), body.device_code, now)
     if taken is None:
+        # Still approved: the account holds the most TVs. It is not used up; the person removes
+        # one on their phone and continues.
+        if await tv_links.approved_for(_database(request), body.device_code, now):
+            return Polled(status="full")
         return Polled(status=tv_links.EXPIRED)
     session = learner_session(request, taken.account_uid, learner, tv=taken.id)
     return Polled(
@@ -380,7 +388,7 @@ async def look_up(request: Request, uid: ParentUid, body: Coded) -> Asked:
         raise await _missed(request, uid)
     return Asked(
         label=link["label"],
-        country=link["country"],
+        country=None if link["country"] == UNKNOWN_COUNTRY else link["country"],
         created_at=link["created_at"],
         expires_at=link["expires_at"],
     )

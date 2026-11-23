@@ -379,7 +379,8 @@
     "continue": "Continue",
     "approvedBy": "{account} approve am for {device}.",
     "approvedOn": "Dem approve am for {device}.",
-    "aPhone": "phone"
+    "aPhone": "phone",
+    "full": "Dis account get 10 TV. Remove one for your phone, then continue."
   },
   "tvLink": {
     "signIn": "Sign in to link your TV",

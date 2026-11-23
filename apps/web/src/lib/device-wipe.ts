@@ -1,7 +1,6 @@
 import { ACCOUNT_KEY } from "@/lib/account/account-store";
 import { isServiceConsentKey } from "@/lib/account/service-consent";
 import { TV_CREDENTIAL_KEY } from "@/lib/account/tv-credential";
-import { TV_KNOWN_ACCOUNTS_KEY } from "@/lib/account/tv-known-accounts";
 import { DEVICE_ID_KEY, newDeviceId } from "@/lib/device-id";
 import { committed, openDB } from "@/lib/idb";
 import { INSTALL_DISMISSED_KEY } from "@/lib/install";
@@ -47,8 +46,7 @@ export async function wipeLearnerData(): Promise<void> {
       key === INSTALL_DISMISSED_KEY ||
       isFirebases(key) ||
       isServiceConsentKey(key) ||
-      key === TV_CREDENTIAL_KEY ||
-      key === TV_KNOWN_ACCOUNTS_KEY,
+      key === TV_CREDENTIAL_KEY,
   );
 }
 

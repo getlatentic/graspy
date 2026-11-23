@@ -45,9 +45,11 @@ TAKE_SQL = (
     "AND (SELECT COUNT(*) FROM tv_sessions WHERE account_uid = tv_links.account_uid "
     "AND revoked_at IS NULL AND expires_at > ?3 AND last_used_at > ?6) < ?7"
 )
+# Only when the session was made: an account at its cap leaves the request approved.
 CONSUME_SQL = (
     "UPDATE tv_links SET status = 'consumed' "
-    "WHERE device_code_hash = ?1 AND status = 'approved' AND expires_at > ?2"
+    "WHERE device_code_hash = ?1 AND status = 'approved' AND expires_at > ?2 "
+    "AND EXISTS (SELECT 1 FROM tv_sessions WHERE id = ?3)"
 )
 TAKEN_SQL = "SELECT account_uid, learner_id, label FROM tv_sessions WHERE id = ?1"
 PEEK_SQL = (
@@ -117,7 +119,8 @@ class Renewed:
 async def take(database: Any, device_code: str, now: int) -> Taken | None:
     """The approved request's session, made once: the request is consumed in the same
     transaction that makes the session, so a second poll, or a replay of the device code, finds
-    nothing to take. Nothing is taken for an account that already holds the most TVs."""
+    nothing to take. For an account that already holds the most TVs nothing is made, and the
+    request stays approved, for the person to remove a TV and continue."""
     code_hash = hash_secret(device_code)
     session_id, refresh_token = secrets.token_urlsafe(9), new_refresh_token()
     await database.batch(
@@ -131,7 +134,7 @@ async def take(database: Any, device_code: str, now: int) -> Taken | None:
                 now - IDLE_LIMIT_MS,
                 MAX_TVS_PER_ACCOUNT,
             ),
-            database.prepare(CONSUME_SQL).bind(code_hash, now),
+            database.prepare(CONSUME_SQL).bind(code_hash, now, session_id),
         ]
     )
     row = row_of(await database.prepare(TAKEN_SQL).bind(session_id).first())

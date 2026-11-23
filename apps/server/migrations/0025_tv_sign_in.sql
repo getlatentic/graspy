@@ -42,6 +42,8 @@ CREATE UNIQUE INDEX tv_links_open_user_code ON tv_links (user_code_hash) WHERE s
 CREATE INDEX tv_links_expiry ON tv_links (expires_at);
 CREATE INDEX tv_links_source ON tv_links (source_hash) WHERE status = 'pending';
 CREATE INDEX tv_links_prefix ON tv_links (prefix_hash) WHERE status = 'pending';
+-- Requests made from a network in the last hour, whatever became of them.
+CREATE INDEX tv_links_prefix_created ON tv_links (prefix_hash, created_at);
 CREATE INDEX tv_links_country ON tv_links (country) WHERE status = 'pending';
 
 -- A TV that signed in: the credential it renews its session with, kept as a hash. It changes at

@@ -140,17 +140,139 @@ describe("a TV signed in from a phone", () => {
     },
   );
 
-  it("is not signed out by a server that is busy: it keeps its credential and tries again later", async () => {
+  it("is not signed out by a server that stays busy: it tries the same credential a few times, then keeps it", async () => {
     vi.useFakeTimers();
     const { startTvSession, getSessionToken } = await loadSession();
     startTvSession(APPROVAL);
     vi.setSystemTime(Date.now() + 3_500_000);
     fetchMock.mockResolvedValue(answer(503, { detail: { code: "later" } }));
 
-    await expect(getSessionToken()).rejects.toMatchObject({ status: 503 });
+    const settled = expect(getSessionToken()).rejects.toMatchObject({
+      status: 503,
+    });
+    await vi.advanceTimersByTimeAsync(30_000);
+    await settled;
 
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    for (const call of fetchMock.mock.calls) {
+      expect(JSON.parse(call[1].body)).toEqual({
+        refreshToken: "tv-credential",
+      });
+    }
     expect(local.get("graspy.tv-credential")).toBe("tv-credential");
     expect(signedIn).not.toBeNull();
+  });
+
+  it("gets through a lost answer by presenting the same credential again within the server's minute", async () => {
+    vi.useFakeTimers();
+    const { startTvSession, getSessionToken } = await loadSession();
+    startTvSession(APPROVAL);
+    vi.setSystemTime(Date.now() + 3_500_000);
+    fetchMock
+      .mockRejectedValueOnce(new TypeError("offline"))
+      .mockResolvedValueOnce(
+        answer(200, {
+          token: "tv-session-2",
+          expiresIn: 3600,
+          signedIn: true,
+          learner: APPROVAL.learner,
+          refreshToken: "tv-credential-2",
+        }),
+      );
+
+    const token = getSessionToken();
+    await vi.advanceTimersByTimeAsync(2_000);
+
+    await expect(token).resolves.toBe("tv-session-2");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      refreshToken: "tv-credential",
+    });
+    expect(local.get("graspy.tv-credential")).toBe("tv-credential-2");
+  });
+
+  it("tries again at 2, 5 and 12 seconds and no later, all inside the minute", async () => {
+    vi.useFakeTimers();
+    const { startTvSession, getSessionToken } = await loadSession();
+    startTvSession(APPROVAL);
+    vi.setSystemTime(Date.now() + 3_500_000);
+    const times: number[] = [];
+    fetchMock.mockImplementation(async () => {
+      times.push(Date.now());
+      throw new TypeError("offline");
+    });
+
+    const settled = expect(getSessionToken()).rejects.toMatchObject({
+      status: 0,
+    });
+    await vi.advanceTimersByTimeAsync(60_000);
+    await settled;
+
+    const gaps = times.slice(1).map((at, index) => at - times[index]);
+    expect(gaps).toEqual([2_000, 5_000, 12_000]);
+  });
+
+  it("does not retry an answer that will not change", async () => {
+    vi.useFakeTimers();
+    const { startTvSession, getSessionToken } = await loadSession();
+    startTvSession(APPROVAL);
+    vi.setSystemTime(Date.now() + 3_500_000);
+    fetchMock.mockResolvedValue(
+      answer(401, { detail: { code: "tv_revoked" } }),
+    );
+
+    await expect(getSessionToken()).rejects.toMatchObject({ status: 401 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("presents the credential another tab of the TV kept, not the one it started with", async () => {
+    vi.useFakeTimers();
+    const { startTvSession, getSessionToken } = await loadSession();
+    startTvSession(APPROVAL);
+    vi.setSystemTime(Date.now() + 3_500_000);
+    fetchMock.mockImplementationOnce(async () => {
+      // Another tab renews while this one waits to try again.
+      local.set("graspy.tv-credential", "credential-from-the-other-tab");
+      throw new TypeError("offline");
+    });
+    fetchMock.mockResolvedValueOnce(
+      answer(200, {
+        token: "tv-session-2",
+        expiresIn: 3600,
+        signedIn: true,
+        learner: APPROVAL.learner,
+        refreshToken: "credential-after",
+      }),
+    );
+
+    const token = getSessionToken();
+    await vi.advanceTimersByTimeAsync(2_000);
+    await token;
+
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      refreshToken: "credential-from-the-other-tab",
+    });
+  });
+
+  it("is signed out, not retried, when another tab signed the TV out in the meantime", async () => {
+    vi.useFakeTimers();
+    const { startTvSession, getSessionToken } = await loadSession();
+    startTvSession(APPROVAL);
+    vi.setSystemTime(Date.now() + 3_500_000);
+    fetchMock.mockImplementationOnce(async () => {
+      local.delete("graspy.tv-credential");
+      throw new TypeError("offline");
+    });
+
+    const settled = expect(getSessionToken()).rejects.toMatchObject({
+      status: 401,
+    });
+    await vi.advanceTimersByTimeAsync(2_000);
+    await settled;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(signedIn).toBeNull();
   });
 
   it("keeps the credential each renewal returns, which replaces the one it spent", async () => {
@@ -188,14 +310,18 @@ describe("a TV signed in from a phone", () => {
     expect(local.get("graspy.tv-credential")).toBe("tv-credential-3");
   });
 
-  it("keeps its credential through a failed attempt to reach the server", async () => {
+  it("keeps its credential through attempts that cannot reach the server", async () => {
     vi.useFakeTimers();
     const { startTvSession, getSessionToken } = await loadSession();
     startTvSession(APPROVAL);
     vi.setSystemTime(Date.now() + 3_500_000);
     fetchMock.mockRejectedValue(new TypeError("offline"));
 
-    await expect(getSessionToken()).rejects.toMatchObject({ status: 0 });
+    const settled = expect(getSessionToken()).rejects.toMatchObject({
+      status: 0,
+    });
+    await vi.advanceTimersByTimeAsync(30_000);
+    await settled;
 
     expect(local.get("graspy.tv-credential")).toBe("tv-credential");
     expect(signedIn).not.toBeNull();

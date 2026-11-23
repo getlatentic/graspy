@@ -42,7 +42,7 @@ export interface TvApprover {
 
 export type TvPoll =
   | {
-      status: "pending" | "slow_down" | "expired" | "denied";
+      status: "pending" | "slow_down" | "expired" | "denied" | "full";
       interval?: number;
     }
   /** The phone approved: the person at the TV is to confirm whom it is linked to. */

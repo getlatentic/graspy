@@ -43,6 +43,12 @@ MAX_OPEN_LINKS = 5000
 MAX_OPEN_PER_SOURCE = 12
 MAX_OPEN_PER_PREFIX = 40
 MAX_OPEN_PER_COUNTRY = 2500
+# Connections Cloudflare cannot place, or that come through Tor, share one smaller bucket.
+MAX_OPEN_UNKNOWN_COUNTRY = 500
+# Requests made from one network in an hour, whatever became of them: a loop of starting and
+# cancelling holds no request open, and is bounded here.
+MAX_CREATED_PER_PREFIX_HOUR = 120
+HOUR_MS = 60 * 60 * 1000
 START_TRIES = 3
 # Requests are kept this long after they expire, so a TV that asks late is told so.
 KEEP_AFTER_EXPIRY_MS = 60 * 60 * 1000
@@ -66,14 +72,16 @@ INSERT_SQL = (
     "AND source_hash = ?5) < ?11 "
     "AND (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?8 "
     "AND prefix_hash = ?6) < ?12 "
-    "AND (?4 IS NULL OR (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' "
-    "AND expires_at > ?8 AND country = ?4) < ?13)"
+    "AND (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' "
+    "AND expires_at > ?8 AND country = ?4) < CASE WHEN ?4 = 'XX' THEN ?14 ELSE ?13 END "
+    "AND (SELECT COUNT(*) FROM tv_links WHERE prefix_hash = ?6 AND created_at > ?8 - ?16) < ?15"
 )
 SHARES_SQL = (
     "SELECT (SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?1 "
     "AND source_hash = ?2) AS by_source, "
     "(SELECT COUNT(*) FROM tv_links WHERE status = 'pending' AND expires_at > ?1 "
-    "AND prefix_hash = ?3) AS by_prefix"
+    "AND prefix_hash = ?3) AS by_prefix, "
+    "(SELECT COUNT(*) FROM tv_links WHERE prefix_hash = ?3 AND created_at > ?1 - ?4) AS by_hour"
 )
 POLL_SQL = (
     "SELECT device_code_hash, status, expires_at, interval_s, last_polled_at, "
@@ -202,6 +210,9 @@ async def start(
                     MAX_OPEN_PER_SOURCE,
                     MAX_OPEN_PER_PREFIX,
                     MAX_OPEN_PER_COUNTRY,
+                    MAX_OPEN_UNKNOWN_COUNTRY,
+                    MAX_CREATED_PER_PREFIX_HOUR,
+                    HOUR_MS,
                 )
                 .run()
             )
@@ -223,11 +234,14 @@ async def _refused(database: Any, source_hash: str, prefix_hash: str, now: int) 
     """Which cap stopped the insert: the source's and its network's first, so one source is told
     to slow down before everyone is told the service is full."""
     held = row_of(
-        await database.prepare(SHARES_SQL).bind(now, source_hash, prefix_hash).first()
+        await database.prepare(SHARES_SQL)
+        .bind(now, source_hash, prefix_hash, HOUR_MS)
+        .first()
     )
     if held and (
         int(held["by_source"]) >= MAX_OPEN_PER_SOURCE
         or int(held["by_prefix"]) >= MAX_OPEN_PER_PREFIX
+        or int(held["by_hour"]) >= MAX_CREATED_PER_PREFIX_HOUR
     ):
         raise TooManyFromSource
     raise TooManyOpenLinks

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { rememberAccount } from "@/lib/account/tv-known-accounts";
 import { startTvSession } from "@/lib/api/session";
 import {
   runTvLink,
@@ -16,17 +15,9 @@ export function useTvLink() {
   const link = useRef<TvLink | null>(null);
 
   useEffect(() => {
-    let approver: string | undefined;
     const running = runTvLink({
-      onState: (next) => {
-        if (next.kind === "linking") approver = next.approver.account;
-        setState(next);
-      },
-      // The account that was named is known to this TV from now on.
-      onApproved: (approval) => {
-        if (approver) rememberAccount(approver);
-        startTvSession(approval);
-      },
+      onState: setState,
+      onApproved: startTvSession,
     });
     link.current = running;
     return running.stop;

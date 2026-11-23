@@ -20,6 +20,9 @@ export type TvLinkState =
       approver: TvApprover;
       busy: boolean;
     }
+  /** The account already has the most TVs: the request is kept, for the person to remove one
+   * on their phone and continue. */
+  | { kind: "full" }
   | { kind: "expired" }
   | { kind: "denied" }
   | { kind: "declined" }
@@ -171,6 +174,7 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
       over = true;
       return run.onApproved(approval);
     }
+    if (given.status === "full") return report({ kind: "full" });
     end({ kind: given.status === "denied" ? "denied" : "expired" });
   }
 

@@ -329,6 +329,23 @@ describe("the person at the TV confirms", () => {
     },
   );
 
+  it("keeps the request when the account is full, and lets the person continue again", async () => {
+    continueTvLink
+      .mockResolvedValueOnce({ status: "full" })
+      .mockResolvedValueOnce({ status: "approved", ...APPROVAL });
+    const link = await linking();
+
+    link.confirm();
+    await secondsPass(0);
+    expect(states.at(-1)).toEqual({ kind: "full" });
+    expect(approved).toEqual([]);
+    expect(cancelTvLink).not.toHaveBeenCalled();
+    link.confirm();
+    await secondsPass(0);
+
+    expect(approved).toEqual([APPROVAL]);
+  });
+
   it("fails when the session cannot be had", async () => {
     continueTvLink.mockRejectedValue(new NetworkError("offline"));
     const link = await linking();

@@ -4,7 +4,6 @@ import { buttonStyles } from "@/components/ui/button-styles";
 import { QrCode } from "@/components/ui/qr-code";
 import { Spinner } from "@/components/ui/spinner";
 import type { TvApprover, TvLinkRequest } from "@/lib/account/tv-link-api";
-import { knownAccount } from "@/lib/account/tv-known-accounts";
 import type { Translate } from "@/lib/i18n-context";
 import { useAccount } from "@/lib/account/use-account";
 import { cn } from "@/lib/cn";
@@ -76,10 +75,8 @@ function TvLink() {
   if (ended.kind === "declined") return <Navigate to={SIGN_IN_PAGE} replace />;
 
   if (ended.kind === "linking") {
-    // Continue is the first choice only for an account this TV has been linked to before: a name
-    // it does not know starts on Cancel.
-    const known =
-      !!ended.approver.account && knownAccount(ended.approver.account);
+    // Cancel is the first choice, always: nothing here tells the person at the TV that the
+    // account is theirs, so a press of Enter on a remote declines.
     return (
       <div className="flex flex-col gap-6">
         <h1 className="text-balance font-display text-3xl font-semibold text-ink sm:text-4xl">
@@ -89,12 +86,7 @@ function TvLink() {
           {approvedBy(t, ended.approver)}
         </p>
         <div className="flex flex-wrap gap-3">
-          <Button
-            size="lg"
-            onClick={confirm}
-            disabled={ended.busy}
-            autoFocus={known}
-          >
+          <Button size="lg" onClick={confirm} disabled={ended.busy}>
             {t("tvSignIn.continue")}
           </Button>
           <Button
@@ -102,8 +94,26 @@ function TvLink() {
             size="lg"
             onClick={decline}
             disabled={ended.busy}
-            autoFocus={!known}
+            autoFocus
           >
+            {t("tvSignIn.cancel")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (ended.kind === "full") {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-balance font-display text-3xl font-semibold text-ink sm:text-4xl">
+          {t("tvSignIn.full")}
+        </h1>
+        <div className="flex flex-wrap gap-3">
+          <Button size="lg" onClick={confirm}>
+            {t("tvSignIn.continue")}
+          </Button>
+          <Button variant="ghost" size="lg" onClick={decline} autoFocus>
             {t("tvSignIn.cancel")}
           </Button>
         </div>

@@ -91,6 +91,17 @@ def device_label(user_agent: str | None) -> str:
     return UNKNOWN_DEVICE
 
 
+# The country of a connection Cloudflare could not place, or that came through Tor: its own
+# bucket, with its own share of the open requests, not no bucket at all.
+UNKNOWN_COUNTRY = "XX"
+
+
+def country_bucket(header: str | None) -> str:
+    """The country a request counts against: Cloudflare's two letters, with "XX", "T1" and a
+    missing or malformed header all in the one unknown bucket."""
+    return country_of(header) or UNKNOWN_COUNTRY
+
+
 def country_of(header: str | None) -> str | None:
     """Cloudflare's two-letter country for the connection; "XX" and "T1" mean it has none."""
     code = (header or "").strip().upper()
@@ -102,23 +113,30 @@ def country_of(header: str | None) -> str | None:
 CONFIRM_LENGTH = 4
 
 
+SUCCESSOR_KEY_LABEL = b"graspy tv credential successor key v1"
+
+
 def successor_of(refresh_token: str, secret: str) -> str:
     """The credential that replaces `refresh_token`, the same every time it is asked for, so a
     renewal whose answer was lost is answered again with the credential already given, and two
     tabs renewing at once end with one. It needs the server's secret, so a copy of a credential
-    does not tell what comes next."""
-    digest = hmac.new(
-        secret.encode(), b"tv-next:" + refresh_token.encode(), "sha256"
-    ).digest()
+    does not tell what comes next. The key is derived from the secret for this one purpose, so the
+    session secret itself is never the key of anything else."""
+    key = hmac.new(secret.encode(), SUCCESSOR_KEY_LABEL, "sha256").digest()
+    digest = hmac.new(key, b"tv-next:" + refresh_token.encode(), "sha256").digest()
     return base64.urlsafe_b64encode(digest).decode().rstrip("=")
 
 
 def masked_email(email: str | None) -> str | None:
-    """ "t***@gmail.com": enough for a person to know whose account it is, not to know the address."""
+    """ "t***@gmail.com", or "***@gmail.com" when the part before the @ is one or two characters,
+    so that a short address is never shown whole. It is a hint, not proof: many addresses share a
+    mask."""
     if not email or "@" not in email:
         return None
     local, _, domain = email.rpartition("@")
-    return f"{local[:1]}***@{domain}" if local and domain else None
+    if not local or not domain:
+        return None
+    return f"{local[:1]}***@{domain}" if len(local) > 2 else f"***@{domain}"
 
 
 def hash_source(source: str, secret: str) -> str:
