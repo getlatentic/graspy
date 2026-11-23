@@ -17,17 +17,20 @@
    shorter axis the browser reports, window chrome included (so a TV browser's
    tab strip and URL bar take their share), and it is where everything in rem
    (type, spacing, widths, hit targets) gets its size: 1rem is 20px at
-   1920x1080, 16.7px at 1440x900, 40px at 3840x2160, and never under 16px, so
-   a phone, a tablet and a 1280x720 laptop keep the default. Held upright, the
-   axes swap. There is no ceiling: a bigger screen must not show a smaller
-   interface. Media queries in rem still measure the browser's own 16px. */
+   1920x1080, 40px at 3840x2160 and 16.3px at 1920x880. The floor is 100%, the
+   size the person chose as the browser's default (16px unless they changed
+   it), so a larger default is kept and a phone, a tablet and a laptop up to
+   about 1536x864 (1440x900 gives 15px by the formula) keep the default. Held
+   upright, the axes swap. There is no ceiling: a bigger screen must not show a
+   smaller interface. Media queries in rem still measure the browser's own
+   default size. */
 html {
-  font-size: max(16px, min(1.0417vw, 1.8519vh));
+  font-size: max(100%, min(1.0417vw, 1.8519vh));
 }
 
 @media (orientation: portrait) {
   html {
-    font-size: max(16px, min(1.0417vh, 1.8519vw));
+    font-size: max(100%, min(1.0417vh, 1.8519vw));
   }
 }
 
@@ -52,26 +55,29 @@ html {
 
   /* The pointer says what can be pressed. Tailwind's preflight leaves buttons
      with the arrow; a TV's pointer remote and a mouse both need the hand. Text
-     is for fields that take text (a select's field is a button until its
-     Search is pressed), and a disabled control says so. Defined once here, so a
-     component never sets its own. */
-  button:not(:disabled),
-  [role="button"],
-  [role="option"],
-  [role="tab"],
-  [role="switch"],
-  [role="menuitem"],
-  [role="menuitemradio"],
-  [role="checkbox"],
-  [role="radio"],
-  a[href],
-  summary,
-  select:not(:disabled),
-  label:has(input[type="checkbox"], input[type="radio"]),
-  input[type="checkbox"]:not(:disabled),
-  input[type="radio"]:not(:disabled),
-  input[type="range"]:not(:disabled),
-  input[role="combobox"]:not(:disabled) {
+     is for fields that take text (on a TV or a touch screen a select's field is
+     a button until its Search is pressed), and a disabled control says so: it
+     is left out of the hand rule, so no rule's specificity can beat it. Defined
+     once here, so a component never sets its own. */
+  :is(
+    button,
+    [role="button"],
+    [role="option"],
+    [role="tab"],
+    [role="switch"],
+    [role="menuitem"],
+    [role="menuitemradio"],
+    [role="checkbox"],
+    [role="radio"],
+    a[href],
+    summary,
+    select,
+    label:has(input[type="checkbox"], input[type="radio"]),
+    input[type="checkbox"],
+    input[type="radio"],
+    input[type="range"],
+    input[role="combobox"]
+  ):not(:disabled, [aria-disabled="true"], label:has(:disabled)) {
     cursor: pointer;
   }
 
@@ -192,12 +198,12 @@ html {
 }
 
 /* A scrollbar that a TV's browser draws, with arrows, is of no use to a remote
-   or a touch screen and takes room from the form. Where the screen is a TV,
-   touch or wide, the fields that must scroll (a window too short to hold them)
-   and the sign-in and onboarding pages scroll with the wheel, the touch, the
-   arrows and the focus, with no bar. The older -webkit form is for Chromium
-   before 121. */
-@media (pointer: coarse), (min-width: 80rem) {
+   or a touch screen and takes room from the form. On a TV or a touch screen
+   the fields that must scroll (a window too short to hold them) and the
+   sign-in and onboarding pages scroll with the touch, the arrows and the
+   focus, with no bar. A mouse keeps its bar. The older -webkit form is for
+   Chromium before 121. */
+@media (pointer: coarse) {
   .quiet-scroll,
   html:has(.art-ground) {
     scrollbar-width: none;

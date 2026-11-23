@@ -24,6 +24,9 @@ const MOVES_IN_LIST = new Set([
   "PageUp",
 ]);
 
+/** Turns a read-only select into a text field that filters, from a keyboard (handled by the field, which must also focus it). */
+export const SEARCH_KEY = "/";
+
 interface ListControls {
   isOpen: boolean;
   matches: SelectOption[];
@@ -37,6 +40,12 @@ interface ListControls {
 
 const clamp = (index: number, count: number) =>
   Math.max(0, Math.min(index, count - 1));
+
+/** Whether the writing runs right to left where the key was pressed. */
+function isRtl(element: Element): boolean {
+  const dir = element.closest("[dir]")?.getAttribute("dir");
+  return dir ? dir === "rtl" : getComputedStyle(element).direction === "rtl";
+}
 
 function keyActions(list: ListControls): Record<string, () => void> {
   const { isOpen, matches, highlighted, setHighlighted } = list;
@@ -60,33 +69,44 @@ function keyActions(list: ListControls): Record<string, () => void> {
 function pickingKeyActions(
   list: ListControls,
   letter: (direction: 1 | -1) => void,
+  rtl: boolean,
 ): Record<string, () => void> {
   const { isOpen, matches, setHighlighted } = list;
   const when = (act: () => void) => () => (isOpen ? act() : list.open());
+  const [forward, back] = rtl
+    ? (["ArrowLeft", "ArrowRight"] as const)
+    : (["ArrowRight", "ArrowLeft"] as const);
   return {
     Home: when(() => setHighlighted(0)),
     End: when(() => setHighlighted(clamp(matches.length - 1, matches.length))),
-    ArrowRight: when(() => letter(1)),
-    ArrowLeft: when(() => letter(-1)),
+    [forward]: when(() => letter(1)),
+    [back]: when(() => letter(-1)),
   };
 }
 
+/**
+ * `buttonMode` is a select for a touch screen or a TV: read-only, with letters
+ * that jump, and a text field that filters only after `startTyping`. Without
+ * it the field is a text field from the start, as on a desktop.
+ */
 export function useCombobox(
   options: SelectOption[],
   value: string,
   onChange: (value: string) => void,
+  buttonMode = false,
 ) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [typing, setTyping] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const typed = useRef({ text: "", at: 0 });
   const matches = matchingOptions(options, searchTerm);
+  const typing = !buttonMode || searching;
 
   const close = useCallback(() => {
     setIsOpen(false);
     setSearchTerm("");
-    setTyping(false);
+    setSearching(false);
   }, []);
   const open = () => {
     if (isOpen) return;
@@ -108,9 +128,9 @@ export function useCombobox(
     setIsOpen(true);
     setHighlighted(0);
   };
-  /** Switches the field to a text field the person types in (and so raises an on-screen keyboard, which is asked for). */
+  /** Makes the field one the person types in (so an on-screen keyboard is asked for). */
   const startTyping = () => {
-    setTyping(true);
+    setSearching(true);
     setIsOpen(true);
   };
   const jumpLetter = (direction: 1 | -1) =>
@@ -119,41 +139,41 @@ export function useCombobox(
   /** A letter typed in the closed field or the open list finds the option that starts with it, without filtering. */
   const typeAhead = (key: string) => {
     const now = Date.now();
-    const text =
-      now - typed.current.at > TYPE_AHEAD_MS ? key : typed.current.text + key;
+    const fresh = now - typed.current.at <= TYPE_AHEAD_MS;
+    const text = fresh ? typed.current.text + key : key;
     typed.current = { text, at: now };
     if (!isOpen) setIsOpen(true);
     const found = typeAheadIndex(matches, text, highlighted);
     if (found >= 0) setHighlighted(found);
   };
+  /** A space continues a word typed a moment ago; on its own it opens the list or picks. */
+  const inWord = () =>
+    typed.current.text !== "" && Date.now() - typed.current.at <= TYPE_AHEAD_MS;
 
   useBackHandler(isOpen, close);
   const list = { isOpen, matches, highlighted, setHighlighted };
   const controls = { ...list, setIsOpen, open, close, select };
   const keys = keyActions(controls);
-  const picking = pickingKeyActions(controls, jumpLetter);
+
+  const onPickingKey = (event: KeyboardEvent<HTMLInputElement>): boolean => {
+    const { key } = event;
+    const plain = !event.ctrlKey && !event.metaKey && !event.altKey;
+    const picking = pickingKeyActions(
+      controls,
+      jumpLetter,
+      isRtl(event.currentTarget),
+    );
+    if (key.length === 1 && plain && (key !== " " || inWord())) typeAhead(key);
+    else if (key === " " && plain) keys.Enter();
+    else if (Object.hasOwn(picking, key)) picking[key]();
+    else return false;
+    event.preventDefault();
+    return true;
+  };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!typing && onPickingKey(event)) return;
     const { key } = event;
-    if (!typing) {
-      const inWord = typed.current.text !== "" && key === " ";
-      const letter = key.length === 1 && (key !== " " || inWord);
-      if (letter && !event.ctrlKey && !event.metaKey && !event.altKey) {
-        event.preventDefault();
-        typeAhead(key);
-        return;
-      }
-      if (key === " ") {
-        event.preventDefault();
-        keys.Enter();
-        return;
-      }
-      if (Object.hasOwn(picking, key)) {
-        event.preventDefault();
-        picking[key]();
-        return;
-      }
-    }
     if (!Object.hasOwn(keys, key)) return;
     if (MOVES_IN_LIST.has(key)) event.preventDefault();
     keys[key]();
@@ -163,6 +183,7 @@ export function useCombobox(
     ...list,
     searchTerm,
     typing,
+    buttonMode,
     /** The highlighted option, while the list is open. */
     active: isOpen ? matches[highlighted] : undefined,
     open,

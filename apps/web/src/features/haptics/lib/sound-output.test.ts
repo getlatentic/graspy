@@ -135,6 +135,38 @@ describe("the sound output", () => {
     expect(audio.sources).toHaveLength(0);
   });
 
+  it("keeps a first tap's select apart from a waiting answer, so neither replaces the other", async () => {
+    const { audio, sound } = setup();
+    sound.unlock();
+    sound.output.play("correct");
+    sound.output.play("select");
+    await settle();
+    expect(audio.sources.map((source) => source.buffer?.file).sort()).toEqual(
+      [SOUND_FILES.correct, SOUND_FILES.select].sort(),
+    );
+  });
+
+  it("keeps a waiting answer when a select comes after it, and the select when an answer does", async () => {
+    const { audio, sound } = setup();
+    sound.unlock();
+    sound.output.play("select");
+    sound.output.play("wrong");
+    await settle();
+    expect(audio.sources.map((source) => source.buffer?.file).sort()).toEqual(
+      [SOUND_FILES.select, SOUND_FILES.wrong].sort(),
+    );
+  });
+
+  it("empties both slots on a stop", async () => {
+    const { audio, sound } = setup();
+    sound.unlock();
+    sound.output.play("correct");
+    sound.output.play("press");
+    sound.output.stop();
+    await settle();
+    expect(audio.sources).toHaveLength(0);
+  });
+
   it("keeps only the latest select, and plays nothing for a recording that is not on its way", async () => {
     const { audio, sound } = setup();
     sound.output.play("select");

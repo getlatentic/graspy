@@ -95,6 +95,8 @@ export function createSound({
   const waitUntil = new Map<Cue, number>();
   const sounding = new Set<AudioBufferSourceNode>();
   let pending: { cue: Cue; at: number } | null = null;
+  /** The first tap's select or press, kept apart so it never replaces a waiting answer. */
+  let pendingTap: { cue: Cue; at: number } | null = null;
 
   const waiting = (cue: Cue) => (waitUntil.get(cue) ?? 0) > now();
 
@@ -118,13 +120,16 @@ export function createSound({
   }
 
   const flush = () => {
-    const waited = pending;
-    if (!waited || !ready(waited.cue)) return;
-    pending = null;
-    const patience = WAITS_FOR_AUDIO.has(waited.cue)
-      ? PENDING_CUE_MS
-      : PENDING_TAP_MS;
-    if (now() - waited.at <= patience) start(waited.cue);
+    const answer = pending;
+    const tap = pendingTap;
+    if (answer && ready(answer.cue)) {
+      pending = null;
+      if (now() - answer.at <= PENDING_CUE_MS) start(answer.cue);
+    }
+    if (tap && ready(tap.cue)) {
+      pendingTap = null;
+      if (now() - tap.at <= PENDING_TAP_MS) start(tap.cue);
+    }
   };
 
   const backOff = (cue: Cue, failed: number) => {
@@ -194,9 +199,8 @@ export function createSound({
 
   const play = (cue: Cue) => {
     if (ready(cue)) start(cue);
-    else if (WAITS_FOR_AUDIO.has(cue) || preparing(cue)) {
-      pending = { cue, at: now() };
-    }
+    else if (WAITS_FOR_AUDIO.has(cue)) pending = { cue, at: now() };
+    else if (preparing(cue)) pendingTap = { cue, at: now() };
   };
 
   const wake = () => {
@@ -240,6 +244,7 @@ export function createSound({
       play,
       stop: () => {
         pending = null;
+        pendingTap = null;
         for (const source of sounding) {
           try {
             source.stop();

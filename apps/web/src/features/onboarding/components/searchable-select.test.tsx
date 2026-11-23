@@ -34,6 +34,9 @@ const isOpen = () => field().getAttribute("aria-expanded") === "true";
 const elsewhere = () => screen.getByText("elsewhere");
 const startSearch = () =>
   fireEvent.click(screen.getByRole("button", { name: /search/i }));
+const asTv = () => {
+  document.documentElement.dataset.device = "tv";
+};
 
 type Where = { clientX: number; clientY: number };
 const at = (x: number, y: number): Where => ({ clientX: x, clientY: y });
@@ -50,6 +53,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  delete document.documentElement.dataset.device;
+  vi.useRealTimers();
   cleanup();
   scrolled.mockClear();
 });
@@ -89,7 +94,6 @@ describe("SearchableSelect opening", () => {
   it("keeps the highlight when a click in the open field only moves the caret", () => {
     render(<Picker />);
     fireEvent.focus(field());
-    startSearch();
     fireEvent.change(field(), { target: { value: "grade" } });
     fireEvent.keyDown(field(), { key: "ArrowDown" });
     fireEvent.keyDown(field(), { key: "ArrowDown" });
@@ -119,7 +123,6 @@ describe("SearchableSelect closing", () => {
   it("stays open for a swipe outside, a scroll that the browser cancels or that moves", () => {
     render(<Picker />);
     fireEvent.focus(field());
-    startSearch();
     fireEvent.change(field(), { target: { value: "gra" } });
 
     press(document.body, "pointerdown");
@@ -188,7 +191,36 @@ describe("SearchableSelect list", () => {
   });
 });
 
+describe("SearchableSelect on a desktop", () => {
+  it("is a text field that filters as it is typed in, with no search button and a list autocomplete", () => {
+    render(<Picker />);
+    expect(field().readOnly).toBe(false);
+    expect(field().hasAttribute("inputmode")).toBe(false);
+    expect(field().getAttribute("aria-autocomplete")).toBe("list");
+    expect(screen.queryByRole("button", { name: /search/i })).toBeNull();
+    fireEvent.focus(field());
+    fireEvent.change(field(), { target: { value: "year" } });
+    expect(screen.getAllByRole("option")).toHaveLength(1);
+  });
+
+  it("leaves Home and End to the text cursor and a letter to the text", () => {
+    render(<Picker />);
+    fireEvent.focus(field());
+    for (const key of ["Home", "End", "g"]) {
+      const event = new KeyboardEvent("keydown", {
+        key,
+        bubbles: true,
+        cancelable: true,
+      });
+      field().dispatchEvent(event);
+      expect(event.defaultPrevented, key).toBe(false);
+    }
+  });
+});
+
 describe("SearchableSelect as a button, not a text field", () => {
+  beforeEach(asTv);
+
   it("is read-only with no text keyboard, so a TV or a phone shows the list at once", () => {
     render(<Picker />);
     expect(field().readOnly).toBe(true);
@@ -197,6 +229,23 @@ describe("SearchableSelect as a button, not a text field", () => {
     expect(isOpen()).toBe(true);
     expect(field().readOnly).toBe(true);
     expect(field().classList.contains("caret-transparent")).toBe(true);
+  });
+
+  it("is a button too on a touch screen and where nothing can hover", () => {
+    delete document.documentElement.dataset.device;
+    const real = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query === "(pointer: coarse)",
+    })) as typeof window.matchMedia;
+    render(<Picker />);
+    window.matchMedia = real;
+    expect(field().readOnly).toBe(true);
+  });
+
+  it("does not claim a filtering list while it cannot filter, and names its key", () => {
+    render(<Picker />);
+    expect(field().getAttribute("aria-autocomplete")).toBe("none");
+    expect(field().getAttribute("aria-keyshortcuts")).toBe("/");
   });
 
   it("keeps the chosen name in the field while its list is open", () => {
@@ -208,15 +257,43 @@ describe("SearchableSelect as a button, not a text field", () => {
     expect(field().value).toBe("Grade 2");
   });
 
-  it("turns into a text field that filters, with the keyboard asked for, when Search is pressed", () => {
+  it("has a Search button that can be tabbed to, since Tab closes the list", () => {
     render(<Picker />);
-    fireEvent.focus(field());
+    const search = screen.getByRole("button", { name: /search/i });
+    expect(search.tabIndex).toBe(0);
+    expect(
+      field().compareDocumentPosition(search) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("turns into a filtering text field when Search is pressed, and is editable before it is focused again so the keyboard rises", () => {
+    render(<Picker />);
+    field().focus();
+    const editableAtFocus: boolean[] = [];
+    field().addEventListener("focus", () =>
+      editableAtFocus.push(!field().readOnly && field().inputMode === "search"),
+    );
     startSearch();
-    expect(field().readOnly).toBe(false);
-    expect(field().getAttribute("inputmode")).toBe("search");
+    expect(editableAtFocus).toEqual([true]);
     expect(document.activeElement).toBe(field());
+    expect(field().getAttribute("aria-autocomplete")).toBe("list");
     fireEvent.change(field(), { target: { value: "year" } });
     expect(screen.getAllByRole("option")).toHaveLength(1);
+  });
+
+  it("turns into the same text field from a keyboard with the / key, which is not typed", () => {
+    render(<Picker />);
+    field().focus();
+    const slash = new KeyboardEvent("keydown", {
+      key: "/",
+      bubbles: true,
+      cancelable: true,
+    });
+    field().dispatchEvent(slash);
+    expect(slash.defaultPrevented).toBe(true);
+    expect(field().readOnly).toBe(false);
+    expect(document.activeElement).toBe(field());
   });
 
   it("goes back to a button when it closes", () => {
@@ -225,40 +302,38 @@ describe("SearchableSelect as a button, not a text field", () => {
     startSearch();
     fireEvent.keyDown(field(), { key: "Escape" });
     expect(field().readOnly).toBe(true);
-  });
-
-  it("keeps the focus on the field when a toolbar button is pressed, so the keys keep working", () => {
-    render(<Picker />);
-    fireEvent.focus(field());
-    const press = fireEvent.mouseDown(
-      screen.getByRole("button", { name: /search/i }),
-    );
-    expect(press).toBe(false);
+    expect(screen.getByRole("button", { name: /search/i })).toBeTruthy();
   });
 });
 
 describe("SearchableSelect jumping", () => {
+  beforeEach(asTv);
+
   const COUNTRIES = ["Albania", "Algeria", "Belgium", "Brazil", "Chad"]
     .concat(["Denmark", "Egypt", "Fiji", "Ghana", "Haiti", "India", "Japan"])
     .concat(["Kenya", "Laos"])
     .map((label) => ({ value: label.toLowerCase(), label }));
 
-  function Countries() {
+  function Countries({ dir }: { dir?: "rtl" }) {
     const [value, setValue] = useState("");
     return (
       <KeysApp>
-        <SearchableSelect
-          id="country"
-          label="Country"
-          value={value}
-          onChange={setValue}
-          options={COUNTRIES}
-          placeholder="Choose"
-        />
+        <div dir={dir}>
+          <SearchableSelect
+            id="country"
+            label="Country"
+            value={value}
+            onChange={setValue}
+            options={COUNTRIES}
+            placeholder="Choose"
+          />
+        </div>
       </KeysApp>
     );
   }
   const active = () => field().getAttribute("aria-activedescendant");
+  const letterButton = (name: RegExp) =>
+    screen.getByRole("button", { name, hidden: true });
 
   it("goes to the option a letter starts, with the whole list still shown", () => {
     render(<Countries />);
@@ -279,19 +354,29 @@ describe("SearchableSelect jumping", () => {
     fireEvent.keyDown(field(), { key: "a" });
     fireEvent.keyDown(field(), { key: "a" });
     expect(active()).toBe("country-option-algeria");
-    vi.useRealTimers();
   });
 
-  it("steps by letter with the left and right arrows and the toolbar's buttons", () => {
+  it("steps by letter with the arrows and the toolbar's buttons, which leave the focus on the field", () => {
     render(<Countries />);
     fireEvent.keyDown(field(), { key: "ArrowDown" });
     fireEvent.keyDown(field(), { key: "ArrowRight" });
     expect(active()).toBe("country-option-belgium");
-    fireEvent.click(screen.getByRole("button", { name: /nextLetter/i }));
+    const next = letterButton(/nextLetter/i);
+    expect(fireEvent.mouseDown(next)).toBe(false);
+    fireEvent.click(next);
     expect(active()).toBe("country-option-chad");
-    fireEvent.click(screen.getByRole("button", { name: /previousLetter/i }));
+    fireEvent.click(letterButton(/previousLetter/i));
     expect(active()).toBe("country-option-belgium");
     fireEvent.keyDown(field(), { key: "ArrowLeft" });
+    expect(active()).toBe("country-option-albania");
+  });
+
+  it("follows the writing direction: in right-to-left, Left is the next letter", () => {
+    render(<Countries dir="rtl" />);
+    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "ArrowLeft" });
+    expect(active()).toBe("country-option-belgium");
+    fireEvent.keyDown(field(), { key: "ArrowRight" });
     expect(active()).toBe("country-option-albania");
   });
 
@@ -327,10 +412,20 @@ describe("SearchableSelect jumping", () => {
     expect(field().value).toBe("Albania");
   });
 
+  it("takes a space as part of a word only just after a letter; later it picks", () => {
+    vi.useFakeTimers();
+    render(<Countries />);
+    fireEvent.keyDown(field(), { key: "j" });
+    expect(active()).toBe("country-option-japan");
+    vi.advanceTimersByTime(2000);
+    fireEvent.keyDown(field(), { key: " " });
+    expect(isOpen()).toBe(false);
+    expect(field().value).toBe("Japan");
+  });
+
   it("offers no letter steps on a short list", () => {
     render(<Picker />);
     fireEvent.focus(field());
     expect(screen.queryByRole("button", { name: /nextLetter/i })).toBeNull();
-    expect(screen.getByRole("button", { name: /search/i })).toBeTruthy();
   });
 });

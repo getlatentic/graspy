@@ -15,17 +15,17 @@ async function read(path: string): Promise<string> {
 }
 
 describe("the root size", () => {
-  it("follows the shorter axis the browser reports, with a 16px floor and no ceiling", async () => {
+  it("follows the shorter axis the browser reports, with the browser's default size as its floor (not a fixed 16px) and no ceiling", async () => {
     const css = await read("./index.css");
     expect(css).toContain(
-      "html { font-size: max(16px, min(1.0417vw, 1.8519vh)); }",
+      "html { font-size: max(100%, min(1.0417vw, 1.8519vh)); }",
     );
   });
 
   it("swaps the axes when the screen is held upright", async () => {
     const css = await read("./index.css");
     expect(css).toContain(
-      "@media (orientation: portrait) { html { font-size: max(16px, min(1.0417vh, 1.8519vw)); } }",
+      "@media (orientation: portrait) { html { font-size: max(100%, min(1.0417vh, 1.8519vw)); } }",
     );
   });
 
@@ -53,11 +53,11 @@ describe("the root size", () => {
 });
 
 describe("the pointer", () => {
-  it("is a hand over what can be pressed, set once in the base layer", async () => {
+  it("is a hand over what can be pressed, set once in the base layer, and never over what is disabled", async () => {
     const css = await read("./index.css");
     const base = css.slice(css.indexOf("@layer base"));
     for (const selector of [
-      "button:not(:disabled)",
+      "button,",
       '[role="button"]',
       '[role="option"]',
       '[role="tab"]',
@@ -65,13 +65,16 @@ describe("the pointer", () => {
       '[role="menuitem"]',
       "a[href]",
       "summary",
-      "select:not(:disabled)",
+      "select,",
       'label:has(input[type="checkbox"], input[type="radio"])',
-      'input[role="combobox"]:not(:disabled)',
+      'input[role="combobox"]',
     ]) {
       expect(base, selector).toContain(selector);
     }
-    expect(base).toMatch(/\{ cursor: pointer; \}/);
+    expect(base).toContain(
+      '):not(:disabled, [aria-disabled="true"], label:has(:disabled)) { cursor: pointer; }',
+    );
+    expect(css.match(/cursor: pointer/g)).toHaveLength(1);
   });
 
   it("is the text cursor only for a field that takes text, and not-allowed for what is disabled", async () => {
@@ -96,9 +99,10 @@ describe("the scrollbars", () => {
     );
   });
 
-  it("hides the bar of the fields and of the onboarding and sign-in pages on a TV, touch and a wide screen", async () => {
+  it("hides the bar of the fields and of the onboarding and sign-in pages on a TV and a touch screen only, not for a mouse", async () => {
     const css = await read("./index.css");
-    expect(css).toContain("@media (pointer: coarse), (min-width: 80rem)");
+    expect(css).toContain("@media (pointer: coarse) {");
+    expect(css).not.toContain("min-width: 80rem");
     expect(css).toContain(
       'html[data-device="tv"] .quiet-scroll::-webkit-scrollbar',
     );

@@ -30,47 +30,49 @@ export default function OnboardingLayout({
   const { t } = useI18n();
   const fields = useFields(resetKey);
   return (
-    <div className="art-ground theme-light @container relative min-h-dvh overflow-clip text-on-art">
+    <div className="art-ground theme-light relative min-h-dvh overflow-clip text-on-art">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-20 focus:rounded-control focus:bg-surface focus:px-4 focus:py-2 focus:font-semibold focus:text-ink"
       >
         {t("onboarding.skip")}
       </a>
-      <div className="grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
-        <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 @2xl:px-6 split:px-12 split:pt-11 split:@7xl:px-24">
-          <Link
-            to="/"
-            aria-label={t("onboarding.home")}
-            className="self-start py-2"
-          >
-            <Logo />
-          </Link>
-          <Headline />
-        </aside>
-
-        <main
-          id="main"
-          tabIndex={-1}
-          className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-6 outline-none @2xl:px-6 split:px-12 split:pt-[12dvh] split:pb-10 split:@7xl:ps-8 split:@7xl:pe-24"
-        >
-          <div className="mx-auto flex w-full max-w-lg flex-1 flex-col @2xl:my-auto @2xl:flex-none @3xl:max-w-xl split:my-0 split:min-h-0 split:max-w-lg split:flex-initial">
-            {header ? <div className="shrink-0">{header}</div> : null}
-            <div
-              ref={fields.ref}
-              tabIndex={fields.scrolls ? 0 : undefined}
-              role={fields.scrolls ? "region" : undefined}
-              aria-labelledby={fields.scrolls ? "page-title" : undefined}
-              className={cn(
-                "quiet-scroll split:-mx-2 split:min-h-32 split:flex-1 split:overflow-y-auto split:px-2 split:py-2",
-                header && "mt-8",
-              )}
+      <div className="@container min-h-dvh">
+        <div className="grid min-h-dvh grid-rows-[auto_1fr] split:h-dvh split:grid-cols-2 split:grid-rows-1">
+          <aside className="flex flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-8 @2xl:px-6 split:px-12 split:pt-11 split:@7xl:px-24">
+            <Link
+              to="/"
+              aria-label={t("onboarding.home")}
+              className="self-start py-2"
             >
-              {children}
+              <Logo />
+            </Link>
+            <Headline />
+          </aside>
+
+          <main
+            id="main"
+            tabIndex={-1}
+            className="flex min-h-0 flex-col px-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] pt-6 outline-none @2xl:px-6 split:px-12 split:pt-[12dvh] split:pb-10 split:@7xl:ps-8 split:@7xl:pe-24"
+          >
+            <div className="mx-auto flex w-full max-w-lg flex-1 flex-col @2xl:my-auto @2xl:flex-none @3xl:max-w-xl split:my-0 split:min-h-0 split:max-w-lg split:flex-initial">
+              {header ? <div className="shrink-0">{header}</div> : null}
+              <div
+                ref={fields.ref}
+                tabIndex={fields.scrolls ? 0 : undefined}
+                role={fields.scrolls ? "region" : undefined}
+                aria-labelledby={fields.scrolls ? "page-title" : undefined}
+                className={cn(
+                  "quiet-scroll split:-mx-2 split:min-h-32 split:flex-1 split:overflow-y-auto split:px-2 split:py-2",
+                  header && "mt-8",
+                )}
+              >
+                {children}
+              </div>
+              {footer}
             </div>
-            {footer}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );
