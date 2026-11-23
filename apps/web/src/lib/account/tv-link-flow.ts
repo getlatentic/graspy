@@ -10,7 +10,7 @@ import {
   type TvLinkRequest,
   type TvPoll,
 } from "./tv-link-api";
-import { lastInputAt } from "./tv-presence";
+import { sinceInput } from "./tv-presence";
 
 export type TvLinkState =
   | { kind: "starting" }
@@ -68,8 +68,9 @@ export interface TvLinkDeps {
   mono: () => number;
   /** Whether the page is being looked at. */
   visible: () => boolean;
-  /** When the TV last saw a key, pointer or touch, or null. */
-  lastInput: () => number | null;
+  /** How long ago the TV last saw input from a person, in milliseconds on the monotonic
+   * clock, or null if it has not (or the clock cannot say). */
+  sinceInput: () => number | null;
   /** Resolves after `ms`, or rejects when the signal aborts. */
   wait: (ms: number, signal: AbortSignal) => Promise<void>;
 }
@@ -109,7 +110,7 @@ const REAL: TvLinkDeps = {
   now: () => Date.now(),
   mono: () => performance.now(),
   visible: () => document.visibilityState === "visible",
-  lastInput: lastInputAt,
+  sinceInput,
   wait,
 };
 
@@ -150,9 +151,21 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
   };
 
   const present = () => {
-    const last = deps.lastInput();
-    return deps.visible() && last !== null && deps.now() - last <= PRESENCE_MS;
+    const since = deps.sinceInput();
+    return (
+      deps.visible() && since !== null && since >= 0 && since <= PRESENCE_MS
+    );
   };
+
+  // A credential made for a screen that was left or declined is signed out, once more if the
+  // first try fails, by its own credential, which needs no session.
+  async function signedOut(refreshToken: string) {
+    try {
+      await deps.signOut(refreshToken);
+    } catch {
+      await deps.signOut(refreshToken).catch(() => undefined);
+    }
+  }
 
   function arm(continuesAt: number) {
     const startedMono = deps.mono();
@@ -242,6 +255,9 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
     try {
       given = await deps.release(asked.deviceCode);
     } catch {
+      // Whether the session was made is not known: the request is ended, so that nothing more can
+      // be made from it.
+      void deps.cancel(asked.deviceCode);
       return end({ kind: abandoned === "declined" ? "declined" : "failed" });
     }
     if (given.status === "approved") {
@@ -249,13 +265,16 @@ export function runTvLink(run: TvLinkRun, deps: TvLinkDeps = REAL): TvLink {
       over = true;
       if (abandoned) {
         // The person left or said no while it was being given: it is signed out, not kept.
-        void deps.signOut(approval.refreshToken).catch(() => undefined);
+        void signedOut(approval.refreshToken);
+        void deps.cancel(asked.deviceCode);
         return report({ kind: "declined" });
       }
       return run.onApproved(approval);
     }
     if (given.status === "full") {
       releasing = false;
+      // It will not go on by itself again: a countdown with no Continue to press would stand at 0.
+      linking = linking && { ...linking, auto: false, continuesAt: null };
       if (abandoned) {
         over = true;
         void deps.cancel(asked.deviceCode);

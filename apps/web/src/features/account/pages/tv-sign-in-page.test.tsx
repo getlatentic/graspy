@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
 import type { TvLinkRequest, TvPoll } from "@/lib/account/tv-link-api";
+import { forgetInput, noteInput } from "@/lib/account/tv-presence";
 
 const {
   startTvLink,
@@ -84,6 +85,9 @@ const secondsPass = (seconds: number) =>
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers();
+  // The press of the sign-in card's link that opened this screen: what gives it presence.
+  forgetInput();
+  noteInput();
   account.current = null;
   startTvLink.mockReset().mockResolvedValue(REQUEST);
   pollTvLink.mockReset().mockResolvedValue({ status: "pending" });
@@ -486,12 +490,14 @@ describe("the TV's sign-in with a phone", () => {
       expect(startTvSession).toHaveBeenCalledTimes(1);
     });
 
-    it("goes on by itself when a key was pressed on the TV within two minutes of the approval, even long after the code was shown", async () => {
+    it("goes on by itself when a person pressed a key on the TV within two minutes of the approval, even long after the code was shown", async () => {
       approvedAfter(190);
       continueTvLink.mockResolvedValue(APPROVED_ADA);
       page();
       await secondsPass(150);
-      fireEvent.keyDown(document.body, { key: "ArrowDown" });
+      // A trusted key press is what the screen's tracker notes; a test cannot make one, so the
+      // note is made as the tracker makes it.
+      noteInput();
 
       await secondsPass(41);
       expect(screen.getByText(/^Continuing in \d+…$/)).toBeTruthy();
@@ -502,18 +508,41 @@ describe("the TV's sign-in with a phone", () => {
     });
 
     it.each([
+      ["a key", () => fireEvent.keyDown(document.body, { key: "ArrowDown" })],
       ["a pointer", () => fireEvent.pointerDown(document.body)],
       ["a touch", () => fireEvent.touchStart(document.body)],
-    ])("counts %s as input too", async (_, press) => {
-      approvedAfter(190);
+      ["a wheel", () => fireEvent.wheel(document.body)],
+    ])(
+      "does not count %s that a script made, so nothing keeps an idle TV present",
+      async (_, press) => {
+        approvedAfter(190);
+        continueTvLink.mockResolvedValue(APPROVED_ADA);
+        page();
+        await secondsPass(150);
+        press();
+
+        await secondsPass(40 + 5 + 5.2);
+
+        expect(continueTvLink).not.toHaveBeenCalled();
+        expect(
+          screen.getByRole("button", { name: en.tvSignIn.continue }),
+        ).toBeTruthy();
+      },
+    );
+
+    it("does not count the screen merely opening: with no press of a person before it, it waits for Continue", async () => {
+      forgetInput();
+      approvedAfter(4);
       continueTvLink.mockResolvedValue(APPROVED_ADA);
       page();
-      await secondsPass(150);
-      press();
 
-      await secondsPass(40 + 5 + 5.2);
+      await secondsPass(30);
 
-      expect(continueTvLink).toHaveBeenCalledTimes(1);
+      expect(continueTvLink).not.toHaveBeenCalled();
+      expect(screen.queryByText(/^Continuing in \d+…$/)).toBeNull();
+      expect(
+        screen.getByRole("button", { name: en.tvSignIn.continue }),
+      ).toBeTruthy();
     });
 
     it("does not go on when the page is hidden as the countdown ends", async () => {
