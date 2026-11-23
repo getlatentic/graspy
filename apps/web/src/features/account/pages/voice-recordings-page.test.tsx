@@ -18,12 +18,7 @@ import type {
 } from "@/lib/account/voice-recordings-api";
 import { KeysApp } from "@/test/keys-app";
 import { parentSession } from "@/test/parent-session";
-import {
-  AGREED,
-  listed,
-  refused,
-  signedInAs,
-} from "@/test/account-session";
+import { AGREED, listed, refused, signedInAs } from "@/test/account-session";
 import { whenOf } from "../lib/recording-format";
 
 const api = vi.hoisted(() => ({

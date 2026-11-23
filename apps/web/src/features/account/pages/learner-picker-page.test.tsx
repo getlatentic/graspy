@@ -11,12 +11,7 @@ import { setAccount } from "@/lib/account/account-store";
 import { SERVICE_NOTICE } from "@/lib/account/consent-notices";
 import { KeysApp } from "@/test/keys-app";
 import { parentSession } from "@/test/parent-session";
-import {
-  AGREED,
-  listed,
-  refused,
-  signedInAs,
-} from "@/test/account-session";
+import { AGREED, listed, refused, signedInAs } from "@/test/account-session";
 
 const {
   listLearners,
