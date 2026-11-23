@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
-import { SubjectBadge } from "@/features/learn/components/subject-icon";
+import { SubjectPicture } from "@/features/learn/components/subject-picture";
+import { useAgeBand } from "@/lib/use-age-band";
 import { ProgressBar } from "@/components/ui/progress";
 import type { CurriculumSubject } from "@/lib/curriculum-record";
 
@@ -44,13 +45,20 @@ interface SubjectRowProps {
 
 function SubjectRow({ row, progressLabel, onSelect }: SubjectRowProps) {
   const { subject, nextTopic, completed, total } = row;
+  const band = useAgeBand();
   return (
     <button
       type="button"
       onClick={onSelect}
       className="flex w-full items-center gap-3 rounded-card border border-line bg-surface px-4 py-4 text-start transition-colors hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-4 sm:px-5"
     >
-      <SubjectBadge name={subject.name} className="size-10 rounded-full" />
+      <SubjectPicture
+        name={subject.name}
+        band={band}
+        frame="small"
+        className="size-12 sm:size-14"
+        iconClassName="size-6"
+      />
 
       <span className="min-w-0 flex-1">
         <span className="block font-semibold text-ink">{subject.name}</span>

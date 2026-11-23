@@ -10,6 +10,13 @@ import type { CurrentTopic } from "@/features/learn/lib/current-topic";
 
 const UP_NEXT = 3;
 
+// A child's picture leads the card; a teen's is a small mark beside the title.
+const PICTURE_SIZE: Record<AgeBand, string> = {
+  child: "size-16 sm:size-24 lg:size-32",
+  tween: "size-16 sm:size-24 lg:size-28",
+  teen: "size-12 sm:size-16 lg:size-20",
+};
+
 interface ResumeCardProps {
   current: CurrentTopic;
   grade: string;
@@ -38,7 +45,8 @@ export function ResumeCard({
           <SubjectPicture
             name={subject.name}
             band={band}
-            className="size-16 shrink-0 rounded-control sm:size-24 lg:size-32"
+            frame={band === "teen" ? "small" : "full"}
+            className={PICTURE_SIZE[band]}
             iconClassName="size-8 sm:size-10 lg:size-14"
           />
           <ResumeProgress

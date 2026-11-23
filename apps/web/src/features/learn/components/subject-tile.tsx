@@ -1,8 +1,6 @@
 import type { AgeBand } from "@/lib/age-band";
 import { cn } from "@/lib/cn";
-import { SubjectIcon } from "@/features/learn/components/subject-icon";
 import { SubjectPicture } from "@/features/learn/components/subject-picture";
-import { subjectTintClasses } from "@/features/learn/lib/subject-icons";
 
 interface SubjectTileProps {
   name: string;
@@ -11,12 +9,20 @@ interface SubjectTileProps {
 }
 
 const TILE =
-  "flex h-full w-full overflow-hidden rounded-card border border-line bg-surface text-start shadow-card transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none";
+  "flex h-full w-full overflow-hidden rounded-card bg-surface text-start shadow-card transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none";
+
+// The tile's outline follows the band, like the picture's own frame.
+const OUTLINE: Record<AgeBand, string> = {
+  child: "border-4 border-accent-line",
+  tween: "border-2 border-line",
+  teen: "border border-line",
+};
 
 /**
  * One tile, three builds: a child sees a tall picture over the name, a tween a
- * wider, shorter one over it, and a teen or university learner a line icon beside
- * it. A name such as "Mathematics" needs the tile's width, so only the icon sits beside.
+ * wider, shorter one over it, and a teen or university learner a small picture
+ * beside it. A name such as "Mathematics" needs the tile's width, so only the
+ * small picture sits beside.
  */
 export function SubjectTile({
   name,
@@ -29,28 +35,28 @@ export function SubjectTile({
       onClick={onSelect}
       className={cn(
         TILE,
+        OUTLINE[band],
         band === "teen" ? "items-center gap-3 p-3" : "flex-col",
       )}
     >
-      {band !== "teen" && (
+      {band === "teen" ? (
         <SubjectPicture
           name={name}
           band={band}
+          frame="small"
+          className="size-12"
+          iconClassName="size-6"
+        />
+      ) : (
+        <SubjectPicture
+          name={name}
+          band={band}
+          frame="none"
           className={cn(
             "w-full",
             band === "child" ? "aspect-4/3" : "aspect-video",
           )}
         />
-      )}
-      {band === "teen" && (
-        <span
-          className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-control",
-            subjectTintClasses(name),
-          )}
-        >
-          <SubjectIcon name={name} className="size-6" />
-        </span>
       )}
       <span
         className={cn(

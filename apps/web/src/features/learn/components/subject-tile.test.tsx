@@ -26,8 +26,21 @@ describe("SubjectTile", () => {
     );
   });
 
-  it("a teen or university learner sees an icon and no cartoon", () => {
+  it("a teen or university learner sees a small teen picture beside the name, not an icon", () => {
     render(<SubjectTile name="Mathematics" band="teen" onSelect={() => {}} />);
+    expect(picture()?.getAttribute("src")).toBe("/brand/art/math-teen.webp");
+    expect(screen.getByRole("button").className).not.toContain("flex-col");
+    expect(screen.getByRole("button").className).toMatch(/(^| )border( |$)/);
+    expect(screen.getByRole("button").querySelector("svg")).toBeNull();
+    expect(screen.getByRole("button").firstElementChild?.className).toContain(
+      "size-12",
+    );
+  });
+
+  it("shows the icon only for a subject with no picture", () => {
+    render(
+      <SubjectTile name="Religious Studies" band="teen" onSelect={() => {}} />,
+    );
     expect(picture()).toBeNull();
     expect(screen.getByRole("button").querySelector("svg")).not.toBeNull();
   });
