@@ -47,7 +47,9 @@ Migrations are applied before the new code goes live. So:
 
 ### The parent PIN
 
-`0026_parent_pin.sql` adds a table and a defaulted column (`consents.gate`), so it works with the code before it and after it. The code needs a new rate-limit binding, `PIN_LIMITER`, in `apps/server/wrangler.jsonc` for each environment: `scripts/deploy.sh` creates it with the Worker, and the Worker refuses to start without it. The PIN's key is derived from `SESSION_SECRET`, so rotating that secret also ends every parent PIN; parents use Forgot PIN ([Parent PIN](PARENT_PIN.md)). Deleting an account now needs the parent's session made from a Google sign-in; the Android app's delete call must be updated before the API reaches production.
+`0026_parent_pin.sql` adds a table and a defaulted column (`consents.gate`), so it works with the code before it and after it. The code needs a new rate-limit binding, `PIN_LIMITER`, in `apps/server/wrangler.jsonc` for each environment: `scripts/deploy.sh` creates it with the Worker, and the Worker refuses to start without it. The PIN's key is derived from `SESSION_SECRET`, so rotating that secret also ends every parent PIN; parents use Forgot PIN ([Parent PIN](PARENT_PIN.md)). Migration 0026 and the `PIN_LIMITER` binding apply on staging automatically (the deploy after each push to `main`) and have to be applied to production by hand (`scripts/deploy.sh production`, which applies migrations first).
+
+**Owner's decision before production:** deleting an account now needs the parent's session made from a Google sign-in, which the Android delete-account call does not make, so that call is refused. Production must not get this API change until Android makes that session first, or the owner accepts that Android's delete breaks.
 
 ## One-time setup
 

@@ -22,7 +22,7 @@ TV                                   API                                  Parent
  |  shows code, link, QR              |                                     |
  |  POST /token  (every `interval`)   |                                     |
  |----------------------------------->| pending / slow_down                 |
-|                                    |   1. scans the QR: /link#code=...
+ |                                    |   1. scans the QR: /link#code=...
  |                                    |   2. "Continue with Google", once, if signed out:
  |                                    |      POST /api/session + POST /account/parent-session, one token
  |                                    |      (a phone signed in without a parent's session types the
@@ -49,6 +49,17 @@ TV                                   API                                  Parent
 Lookup and approve are still two guarded server calls; the page runs them back to back on its one screen. A code typed by hand (a link with no code) is asked for first in eight boxes, and the last four are then typed again on the confirm screen. If the phone is signed in but not as the parent, or the parent's few minutes are over, the same one button signs in again.
 
 The TV keeps two things: the session token (an hour) and a refresh credential (`localStorage`, `graspy.tv-credential`). A TV has no Google sign-in to renew from, so the credential stands where Firebase's does on other devices. `lib/api/session.ts` renews from it in place of Firebase and keeps the credential each renewal returns. A `401`, `403` or `404` from a renewal signs the TV out and wipes the device, as when Google no longer holds a sign-in. A `5xx` or no answer is tried again with the same credential, at 2, 5 and 12 seconds (inside the minute the server answers a replaced credential again), reading the credential from storage before each try, so a tab of the TV that renewed meanwhile is not overwritten; if all four fail the credential is kept and the next request tries again.
+
+### How many actions it takes
+
+| The phone | Actions |
+|---|---|
+| Signed in, parent's session in force (typed the PIN or signed in with Google in the last 15 minutes) | scan, type 4 = 2 |
+| Signed in as a learner (no parent's session) | scan, PIN, type 4 = 3 |
+| Signed out | scan, Google (this one sign-in makes the account and the parent's session, so no PIN), type 4 = 3 |
+| Signed in, no PIN set yet | scan, then the gate's set-a-PIN steps once (choose, again, Google), type 4 |
+
+The PIN pad is one extra screen before the code is looked up, shown only when there is no parent's session.
 
 ## Endpoints
 

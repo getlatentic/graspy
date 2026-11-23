@@ -19,6 +19,8 @@ One component, `ParentGate` (`apps/web/src/features/account/components/parent-ga
 
 `ParentGate` is what the recordings page (including agreeing to keep them), the TV page of a phone (`/link`) and agreeing for a learner (the notice's "I agree", in the learner picker, the manage page and the gate in front of a learner's pages) use. Tapping "I agree" opens the gate in place of the notice; the agreement is sent when the parent's session is in force, so a parent who typed the PIN a minute ago is not asked again. Nothing else in the app asks for the parent.
 
+`/link` keeps the three-step flow ([TV sign-in](TV_SIGN_IN.md)): a Google sign-in on `/link` makes the account and the parent's session from one token, so a signed-out parent is never asked for the PIN there; the PIN pad appears only for a phone signed in without a parent's session.
+
 The pad (`components/ui/pin-pad.tsx`) is ten real buttons and a delete key, which a finger, a pointer, the arrow keys and OK of a remote (spatial navigation), and the number keys of a keyboard or a remote all use. The digits are kept in the component's state and never put in the page: the dots count them, and there is no field, so there is nothing for a password manager, a paste or an autofill to find. It writes nothing to storage, the address or the log (tests check each).
 
 ## The server
