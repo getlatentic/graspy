@@ -12,6 +12,7 @@ function usableIn(node: Element): HTMLElement | null {
     if (
       el instanceof HTMLElement &&
       el.matches(FOCUSABLE) &&
+      !el.closest("[data-destructive]") &&
       isTabbable(el) &&
       !isOut(el) &&
       isShown(el)

@@ -39,9 +39,8 @@ const queryClient = new QueryClient({
 });
 
 markDevice();
-installRemoteInput();
-installSpatialNav();
-installFocusMemory();
+const stops = [installRemoteInput(), installSpatialNav(), installFocusMemory()];
+import.meta.hot?.dispose(() => stops.forEach((stop) => stop()));
 installSelectSound(haptics);
 installFragmentLinks();
 listenForStaleChunks();

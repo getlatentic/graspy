@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigationType } from "react-router";
 import {
   hasRemembered,
@@ -28,10 +28,8 @@ export function RouteFocus() {
   const handled = useRef(pathname);
   const visited = useRef(false);
 
-  // Set while rendering, before the new screen is committed, so a control that
-  // takes focus as it mounts (`autoFocus`, a layout effect) is filed under the
-  // screen it is on, not the one that is leaving.
-  setCurrentRoute(pathname);
+  // Before the new screen's own effects (it comes after this component), and only once the screen is committed.
+  useLayoutEffect(() => setCurrentRoute(pathname), [pathname]);
 
   useEffect(() => {
     if (handled.current === pathname) return;

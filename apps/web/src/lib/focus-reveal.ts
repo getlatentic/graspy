@@ -16,7 +16,7 @@ function shift(lo: number, hi: number, viewLo: number, viewHi: number): number {
 }
 
 /** Scrolls each scroll area around `el` (and the page) just enough to show it; an `overflow: hidden` box is never scrolled. */
-function reveal(el: HTMLElement): void {
+export function reveal(el: HTMLElement): void {
   const own = getComputedStyle(el);
   const rect = el.getBoundingClientRect();
   const want: Edges = {

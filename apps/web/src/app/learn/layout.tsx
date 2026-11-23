@@ -80,7 +80,7 @@ function DashboardLayoutContent() {
       className={cn(
         "group/shell flex flex-col overflow-hidden bg-canvas",
         chat
-          ? "fixed inset-x-0 top-[var(--visible-top,0px)] h-[var(--visible-height,100dvh)]"
+          ? "fixed inset-x-0 top-[var(--visible-top,0px)] h-[var(--visible-height,100dvh)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
           : "h-dvh",
       )}
     >

@@ -3,7 +3,6 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { place, placeGrid } from "@/test/layout";
-import { resetActivity } from "./activity";
 import { installSpatialNav } from "./install";
 
 let remove: () => void;
@@ -25,7 +24,6 @@ afterEach(() => {
   remove();
   cleanup();
   scrolled.mockReset();
-  resetActivity();
   document.documentElement.removeAttribute("style");
 });
 
@@ -206,7 +204,7 @@ describe("arrow keys with nothing focused", () => {
     expect(focused()).toBe("a");
   });
 
-  it("leave the page to scroll when no control is in view", async () => {
+  it("go to a control below the fold, scrolled to, where the browser may not scroll on arrows", async () => {
     render(
       <main>
         <button>far</button>
@@ -219,7 +217,8 @@ describe("arrow keys with nothing focused", () => {
       cancelable: true,
     });
     document.body.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(false);
+    expect(event.defaultPrevented).toBe(true);
+    expect(focused()).toBe("far");
   });
 
   it("start from a focused heading, which is not a control", async () => {
@@ -538,6 +537,7 @@ describe("roving groups (tabs, option lists)", () => {
     button("before").focus();
     await user.keyboard("{ArrowDown}");
     expect(focused()).toBe("first");
+    await new Promise((r) => setTimeout(r, 90));
     await user.keyboard("{ArrowDown}");
     expect(focused()).toBe("after");
   });

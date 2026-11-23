@@ -16,6 +16,7 @@ export function Button({
   return (
     <ButtonPrimitive
       className={cn(buttonStyles(variant, size), className)}
+      data-destructive={variant === "danger" ? "" : undefined}
       {...props}
     />
   );

@@ -60,6 +60,16 @@ export function score(from: Box, to: Box, direction: Direction): number | null {
   );
 }
 
+/** The distance from `from` to `to` along `direction`, negative when they overlap along it. */
+export function alongGap(from: Box, to: Box, direction: Direction): number {
+  return {
+    right: to.left - from.right,
+    left: from.left - to.right,
+    down: to.top - from.bottom,
+    up: from.top - to.bottom,
+  }[direction];
+}
+
 /** The candidates that lie in `direction` from `from`, best first; equal scores keep their order in the page. */
 export function rank<T>(
   from: Box,

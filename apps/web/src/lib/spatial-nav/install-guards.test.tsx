@@ -2,7 +2,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { place } from "@/test/layout";
-import { resetActivity } from "./activity";
 import { installSpatialNav } from "./install";
 
 let remove: () => void;
@@ -18,7 +17,6 @@ beforeEach(() => {
 afterEach(() => {
   remove();
   cleanup();
-  resetActivity();
   document.documentElement.removeAttribute("style");
 });
 

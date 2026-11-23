@@ -1,6 +1,8 @@
 import { isEditable } from "../remote-keys";
 import type { Direction } from "./geometry";
+import { isTabbable } from "./focusable";
 import { isScrollerFor } from "./scroll";
+import type { FocusKind } from "./session";
 
 export const DIRECTION_OF_KEY: Readonly<Record<string, Direction>> = {
   ArrowUp: "up",
@@ -84,4 +86,20 @@ export function keepsArrows(
     active.getAttribute("role") === "combobox" &&
     active.getAttribute("aria-expanded") === "true";
   return open || isScrollerFor(active, direction);
+}
+
+function ringShown(el: HTMLElement): boolean {
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    return false;
+  }
+}
+
+/** What has focus: nothing, only a title or other thing that a program focused, or a control with or without its ring (a keyboard or pad put it there, or a click or a restore did). */
+export function focusKind(active: Element | null): FocusKind {
+  if (!(active instanceof HTMLElement)) return "none";
+  if (active === active.ownerDocument.body) return "none";
+  if (!isTabbable(active)) return "title";
+  return ringShown(active) ? "visible-control" : "hidden-control";
 }

@@ -1,4 +1,4 @@
-import { clip, intersects, type Box, type Candidate } from "./geometry";
+import { clip, type Box, type Candidate } from "./geometry";
 
 /** What a person can put focus on with Tab. */
 export const FOCUSABLE = [
@@ -49,31 +49,46 @@ function boxOfRect(r: DOMRect): Box {
   return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
 }
 
-/** The page position of a control, or null when it has no area a pointer could hit (a skip link kept off screen is 1px). */
+const area = (r: DOMRect) => r.width >= 2 && r.height >= 2;
+
+/**
+ * The page position of a control a person can point at, or null. A control
+ * that is visually hidden (a 1px `sr-only` radio) is stood for by what shows
+ * it: its label, else a parent with an area, so it can be an origin and a
+ * target like any other.
+ */
 export function boxOf(el: HTMLElement): Box | null {
-  const r = el.getBoundingClientRect();
-  return r.width < 2 || r.height < 2 ? null : boxOfRect(r);
-}
-
-/** Every tabbable control under `root` that is at least partly inside `view`, measured once; what costs more is checked later, on the few that win. */
-export function measureTabbable(
-  root: ParentNode,
-  view: Box,
-): Candidate<HTMLElement>[] {
-  const found: Candidate<HTMLElement>[] = [];
-  for (const el of root.querySelectorAll<HTMLElement>(FOCUSABLE)) {
-    if (!isTabbable(el)) continue;
-    const box = boxOf(el);
-    if (box && intersects(box, view)) found.push({ item: el, box });
+  const own = el.getBoundingClientRect();
+  if (area(own)) return boxOfRect(own);
+  const label = (el as HTMLInputElement).labels?.[0] ?? el.closest("label");
+  const stand = [label, el.parentElement, el.parentElement?.parentElement];
+  for (const node of stand) {
+    const r = node?.getBoundingClientRect();
+    if (r && area(r)) return boxOfRect(r);
   }
-  return found;
+  return null;
 }
 
-/** The part of `box` that no scrolling or clipping ancestor cuts off, or null when none is left. */
+/** The measured candidate, or null when it is not tabbable or has no area. */
+export function measureOne(el: HTMLElement): Candidate<HTMLElement> | null {
+  if (!isTabbable(el)) return null;
+  const box = boxOf(el);
+  return box ? { item: el, box } : null;
+}
+
+/**
+ * The part of `box` that no scrolling or clipping ancestor cuts off, or null
+ * when none is left. A fixed control is clipped by none; an absolute one only
+ * by its containing block and what is outside it.
+ */
 export function visibleBox(el: HTMLElement, box: Box): Box | null {
   let seen: Box | null = box;
+  let childPosition = getComputedStyle(el).position;
   for (let a = el.parentElement; a && seen; a = a.parentElement) {
+    if (childPosition === "fixed") break;
     const style = getComputedStyle(a);
+    if (childPosition === "absolute" && style.position === "static") continue;
+    childPosition = style.position;
     if (style.overflowX === "visible" && style.overflowY === "visible") {
       continue;
     }
@@ -90,15 +105,22 @@ function covered(el: HTMLElement, seen: Box): boolean {
     (seen.left + seen.right) / 2,
     (seen.top + seen.bottom) / 2,
   );
-  return hit !== null && !el.contains(hit) && !hit.contains(el);
+  if (!hit || el.contains(hit) || hit.contains(el)) return false;
+  const labels = [...((el as HTMLInputElement).labels ?? [])];
+  return !labels.some((l) => l.contains(hit));
 }
 
-/** The first of `ordered` a person could use now: shown, not under `inert`, `aria-hidden` or `data-nav-skip`, not clipped away, not covered. */
+/**
+ * The first of `ordered` a person could use now: shown, not under `inert`,
+ * `aria-hidden` or `data-nav-skip`, not clipped away, not covered, and accepted
+ * by `accept` (the sticky and fixed rule).
+ */
 export function firstUsable(
   ordered: readonly Candidate<HTMLElement>[],
+  accept: (el: HTMLElement, box: Box) => boolean = () => true,
 ): HTMLElement | null {
   for (const { item, box } of ordered.slice(0, MAX_TRIES)) {
-    if (isOut(item) || !isShown(item)) continue;
+    if (isOut(item) || !isShown(item) || !accept(item, box)) continue;
     const seen = visibleBox(item, box);
     if (seen && !covered(item, seen)) return item;
   }
