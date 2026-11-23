@@ -11,5 +11,5 @@ NOTICE = 1
 
 async def service_agreed(env, learner_id: str, uid: str = UID) -> None:
     await grant_consent(
-        env.DB, learner_key(uid, learner_id), uid, SERVICE, NOTICE, None, 1
+        env.DB, learner_key(uid, learner_id), uid, SERVICE, NOTICE, None, 1, "google"
     )

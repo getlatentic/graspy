@@ -352,6 +352,7 @@
     "deleteButton": "حذف الحساب",
     "deleteConfirm": "حذف كل المتعلّمين وكل تقدّمهم؟ لا يمكن التراجع عن ذلك.",
     "deleteYes": "احذف",
+    "deleteGoogle": "You'll sign in with Google to confirm.",
     "addTile": "أضف متعلّمًا",
     "addTitle": "أضف متعلّمًا",
     "devicePlan": "خطة هذا الجهاز تنتقل إلى من تختاره.",
@@ -407,8 +408,7 @@
     "warn": "تابع فقط إذا كنت تنظر إلى هذا التلفاز.",
     "wrongEnd": "هذه ليست آخر الأحرف على التلفاز.",
     "inUse": "حساب آخر يربط هذا التلفاز بالفعل.",
-    "endLabel": "آخر 4 أحرف على التلفاز",
-    "parent": "سجّل الدخول مرة أخرى لربط تلفاز."
+    "endLabel": "آخر 4 أحرف على التلفاز"
   },
   "voice": {
     "title": "دروس صوتية",
@@ -474,7 +474,7 @@
   "consent": {
     "continue": "متابعة",
     "serviceTitle": "هل يستخدم {name} تطبيق graspy؟",
-    "who": "وافق بصفتك المتعلّم، أو والده أو وليّ أمره. ستسجّل الدخول عبر Google مرة أخرى للتأكد أنك أنت.",
+    "who": "وافق بصفتك المتعلّم، أو والده أو وليّ أمره.",
     "agree": "أوافق",
     "agreeRow": "موافقة",
     "decline": "لا أوافق",
@@ -489,7 +489,6 @@
     "notKept": "لم يُحفظ ذلك. حاول مرة أخرى."
   },
   "voiceRecordings": {
-    "signInAgain": "Sign in again to see these recordings.",
     "title": "التسجيلات الصوتية",
     "off": "يحذف graspy كل تسجيل بمجرد أن يصحّح الإجابة. أما الكلمات التي سمعها فتبقى.",
     "keep": "الاحتفاظ بالتسجيلات",
@@ -512,6 +511,24 @@
     "playAt": "تشغيل تسجيل {when}",
     "stopAt": "إيقاف تسجيل {when}",
     "deleteAt": "حذف تسجيل {when}"
+  },
+  "parentPin": {
+    "title": "Parent PIN",
+    "set": "Set a parent PIN",
+    "again": "Type it again",
+    "save": "Save your PIN",
+    "next": "Next",
+    "forgot": "Forgot PIN?",
+    "cancel": "Cancel",
+    "delete": "Delete last digit",
+    "typed": "{count} digits typed",
+    "wrong": "Wrong PIN.",
+    "mismatch": "Those didn't match.",
+    "easy": "Choose a PIN that isn't a run or a repeat.",
+    "busy": "Too many tries. Wait a minute.",
+    "failed": "That didn't work. Try again.",
+    "lockedMinutes": "Locked. Try again in {count} min.",
+    "lockedHours": "Locked. Try again in {count} h."
   },
   "loading": {
     "opening": "جارٍ الفتح…",

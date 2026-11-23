@@ -170,7 +170,9 @@ async def test_a_device_has_no_parent_session(app):
 
 
 async def test_the_parent_session_is_refused_once_its_minutes_are_up(app):
-    lapsed = issue("s", account=UID, parent=True, now=time.time() - 16 * 60)
+    lapsed = issue(
+        "s", account=UID, parent=True, gate="google", now=time.time() - 16 * 60
+    )
     async with client(app) as http:
         http.headers["Authorization"] = f"Bearer {lapsed.token}"
         refused = await http.get(voice("a1b2c3d4e5f6"))
@@ -245,6 +247,7 @@ async def test_a_parent_who_signed_in_just_now_agrees_and_it_is_kept_as_a_record
             "retention_days": 90,
             "granted_at": body["grantedAt"],
             "revoked_at": None,
+            "gate": "google",
         }
     ]
 

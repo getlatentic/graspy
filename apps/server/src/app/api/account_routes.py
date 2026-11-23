@@ -29,20 +29,17 @@ from ..account.learners import (
     NoSuchLearner,
     TooManyLearners,
     added,
-    closed,
     learner_of,
     removed,
     renamed,
     unadded,
 )
-from ..account.tv_sessions import forget_account as forget_tvs
 from ..caller import Caller, Keeping
 from ..learner.record import DeviceJoined
 from ..learner.time import now_ms
-from ..security.firebase_admin import RemovalFailed
 from ..security.guard import Session, require_session
 from ..wire import Wire
-from .consent_proof import refusal, require_fresh_sign_in, require_known_notice
+from .consent_proof import consent_gate, refusal, require_known_notice
 from .listed_learners import (
     ListedLearner,
     ListedLearners,
@@ -88,10 +85,11 @@ KeepingDep = Annotated[Keeping, Depends(_keeping)]
 
 
 class ServiceConsentGrant(Wire):
-    """The parent's agreement to graspy teaching the learner, with their fresh sign-in."""
+    """The parent's agreement to graspy teaching the learner. The parent's proof is a Google
+    sign-in just made, sent here, or else the parent's session the request is made under."""
 
     notice_version: int
-    firebase_id_token: str = Field(max_length=4096)
+    firebase_id_token: str | None = Field(default=None, max_length=4096)
 
 
 class NewLearner(BaseModel):
@@ -167,6 +165,7 @@ async def grant_for_held_learner(
     scope: str,
     notice_version: int,
     retention_days: int | None,
+    gate: str,
 ) -> dict:
     """Writes the consent, then checks the account still holds the learner. Removing a learner
     takes them out of the directory before it forgets what was kept for them, so a consent written
@@ -177,7 +176,7 @@ async def grant_for_held_learner(
     key = learner_key(uid, learner_id)
     try:
         granted = await grant_consent(
-            database, key, uid, scope, notice_version, retention_days, now_ms()
+            database, key, uid, scope, notice_version, retention_days, now_ms(), gate
         )
     except Exception:
         logger.exception("Consent for a learner was not kept")
@@ -213,20 +212,28 @@ async def learners(
     return await listed_with_consents(request.app.state.voice, uid, directory)
 
 
-async def _proved(request: Request, uid: Uid, consent: ServiceConsentGrant) -> None:
-    """A consent is checked before it is recorded, and before a new learner is added."""
+async def _proved(
+    request: Request, session: Session, uid: str, consent: ServiceConsentGrant
+) -> str:
+    """A consent is checked before it is recorded, and before a new learner is added. Says how
+    the parent proved themselves."""
     require_known_notice(NOTICE_VERSIONS[SERVICE], consent.notice_version)
     if request.app.state.voice is None:
         raise refusal(503, "consent_unavailable", "Consent cannot be kept here")
-    await require_fresh_sign_in(request, uid, consent.firebase_id_token)
+    return await consent_gate(request, session, uid, consent.firebase_id_token)
 
 
 @account_router.post("/learners", response_model=ListedLearner, status_code=201)
 async def add_learner(
-    request: Request, uid: Uid, keeping: KeepingDep, body: NewLearner
+    request: Request,
+    session: Annotated[Session, Depends(require_session)],
+    uid: Uid,
+    keeping: KeepingDep,
+    body: NewLearner,
 ) -> ListedLearner:
+    gate = None
     if body.consent is not None:
-        await _proved(request, uid, body.consent)
+        gate = await _proved(request, session, uid, body.consent)
     try:
         learner = await added(keeping, uid, body.name, now_ms())
     except TooManyLearners:
@@ -248,6 +255,7 @@ async def add_learner(
             SERVICE,
             body.consent.notice_version,
             None,
+            gate,
         )
     except ConsentNotKept:
         await _undo_added(keeping, uid, learner.id)
@@ -268,6 +276,7 @@ async def _undo_added(keeping: Keeping, uid: str, learner_id: str) -> None:
 @account_router.put("/learners/{learner_id}/consent", response_model=ServiceConsent)
 async def agree_to_service(
     request: Request,
+    session: Annotated[Session, Depends(require_session)],
     uid: Uid,
     keeping: KeepingDep,
     learner_id: LearnerId,
@@ -275,7 +284,7 @@ async def agree_to_service(
 ) -> ServiceConsent:
     """The parent of a learner added without consent agrees to graspy teaching them."""
     await require_learner(keeping, uid, learner_id)
-    await _proved(request, uid, body)
+    gate = await _proved(request, session, uid, body)
     granted = await grant_for_held_learner(
         keeping,
         request.app.state.voice.DB,
@@ -284,6 +293,7 @@ async def agree_to_service(
         SERVICE,
         body.notice_version,
         None,
+        gate,
     )
     return ServiceConsent.model_validate(granted)
 
@@ -331,26 +341,3 @@ async def choose_learner(
             )
         )
     return learner_session(request, uid, learner)
-
-
-@account_router.delete("", status_code=204)
-async def delete_account(request: Request, uid: Uid, keeping: KeepingDep) -> None:
-    """Every learner and everything kept for them, then graspy's Firebase record of the
-    account (its email and name); the Google account itself is Google's. What is kept goes
-    first: a Firebase failure leaves nothing but that record, and asking again removes it,
-    where the other order could leave the data with no one able to sign in to ask."""
-    await closed(keeping, uid)
-    await forget_tvs(request.app.state.tv_db, uid)
-    admin = request.app.state.firebase_admin
-    if admin is None:
-        return
-    try:
-        await admin.remove_user(uid)
-    except RemovalFailed as failed:
-        logger.error("The Firebase user of an account was not removed: %s", failed)
-        raise refusal(
-            503,
-            "account_record_not_removed",
-            "Everything kept for the learners is deleted, but the sign-in record is not yet. "
-            "Try again.",
-        ) from failed

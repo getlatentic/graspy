@@ -12,6 +12,19 @@
     }
   }
 
+  /* A PIN that was not accepted. */
+  --animate-shake: shake 360ms ease-in-out;
+  @keyframes shake {
+    20%,
+    60% {
+      transform: translateX(-0.5rem);
+    }
+    40%,
+    80% {
+      transform: translateX(0.5rem);
+    }
+  }
+
   /* The progress line of a screen waiting for the app; index.html's first paint draws the same. */
   --animate-sweep: sweep 1.4s ease-in-out infinite;
   @keyframes sweep {

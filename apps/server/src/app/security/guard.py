@@ -13,9 +13,11 @@ from fastapi import HTTPException, Request
 from .session import (
     InvalidSessionToken,
     account_of,
+    gate_of,
     hint_of,
     learner_of,
     parent_of,
+    parent_started_at,
     tv_of,
     verify,
 )
@@ -33,8 +35,12 @@ class Session:
     learner: str | None
     # The signed-in account's uid; its learners are managed only with it.
     account: str | None = None
-    # Made just after the account's holder signed in again, and no learner's.
+    # Made just after the account's holder proved themselves, and no learner's.
     parent: bool = False
+    # How: "pin" or "google" (a parent's session only).
+    gate: str | None = None
+    # When it was made, in epoch seconds (a parent's session only).
+    started_at: int | None = None
     # A TV's: the id of the credential it was renewed from. It learns as its learner and
     # manages nothing of the account.
     tv: str | None = None
@@ -54,6 +60,8 @@ def checked(authorization: str | None, secret: str) -> Session | dict:
         learner=learner_of(claims),
         account=account_of(claims),
         parent=parent_of(claims),
+        gate=gate_of(claims),
+        started_at=parent_started_at(claims),
         tv=tv_of(claims),
         hint=hint_of(claims),
     )

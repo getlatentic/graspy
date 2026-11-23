@@ -174,4 +174,84 @@ describe("the parent's session", () => {
 
     expect(hasParentSession()).toBe(false);
   });
+
+  it("is made from a call that carries a proof, under the session in use, and kept for the account", async () => {
+    fetchMock.mockResolvedValueOnce(minted("learner-token"));
+    fetchMock.mockResolvedValueOnce(
+      answer(200, { token: "pin-token", expiresIn: 900 }),
+    );
+    const session = await load();
+
+    await session.askForParentSession("/account/parent-pin/verify", "POST", {
+      pin: "4827",
+    });
+
+    expect(fetchMock.mock.calls[1][0]).toContain("/account/parent-pin/verify");
+    expect(fetchMock.mock.calls[1][1].method).toBe("POST");
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      pin: "4827",
+    });
+    expect(sentWith(1)).toBe("Bearer learner-token");
+    expect(session.hasParentSession()).toBe(true);
+  });
+
+  it("is not made by a PIN the server refused, and the refusal is thrown as it came", async () => {
+    fetchMock.mockResolvedValueOnce(minted("learner-token"));
+    fetchMock.mockResolvedValueOnce(
+      answer(403, { detail: { code: "pin_wrong", attemptsLeft: 4 } }),
+    );
+    const session = await load();
+
+    const failure = await session
+      .askForParentSession("/account/parent-pin/verify", "POST", {
+        pin: "1357",
+      })
+      .catch((error: unknown) => error);
+
+    expect((failure as { data: object }).data).toEqual({
+      detail: { code: "pin_wrong", attemptsLeft: 4 },
+    });
+    expect(session.hasParentSession()).toBe(false);
+  });
+
+  it("tells what listens when it is made, refused by the server, and ended with the account", async () => {
+    const session = await load();
+    const heard = vi.fn();
+    const stop = session.subscribeParentSession(heard);
+
+    fetchMock.mockResolvedValueOnce(minted("learner-token"));
+    fetchMock.mockResolvedValueOnce(
+      answer(200, { token: "p", expiresIn: 900 }),
+    );
+    await session.startParentSession("fresh-id-token");
+    expect(heard).toHaveBeenCalledTimes(1);
+
+    fetchMock.mockResolvedValueOnce(
+      answer(401, { detail: { code: "session_invalid" } }),
+    );
+    await session.fetchAsParent("/a").catch(() => undefined);
+    expect(heard).toHaveBeenCalledTimes(2);
+
+    stop();
+    session.endAccountSession();
+    expect(heard).toHaveBeenCalledTimes(2);
+  });
+
+  it("is ended for the listeners when the account signs out", async () => {
+    const session = await started();
+    const heard = vi.fn();
+    session.subscribeParentSession(heard);
+
+    session.endAccountSession();
+
+    expect(heard).toHaveBeenCalledTimes(1);
+    expect(session.hasParentSession()).toBe(false);
+  });
+
+  it("is told, by parentRefused, from any other failure", async () => {
+    const { parentRefused, ParentSignInNeeded } = await load();
+
+    expect(parentRefused(new ParentSignInNeeded())).toBe(true);
+    expect(parentRefused(new Error("x"))).toBe(false);
+  });
 });

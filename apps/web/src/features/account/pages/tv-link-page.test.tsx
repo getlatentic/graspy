@@ -5,20 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
 import { I18nContext } from "@/lib/i18n-context";
 import en from "@/locales/en.json";
+import { parentSession } from "@/test/parent-session";
 
 const api = vi.hoisted(() => {
-  class ParentSignInNeeded extends Error {}
   return {
-    ParentSignInNeeded,
     lookUpTv: vi.fn(),
     approveTv: vi.fn(),
     denyTv: vi.fn(),
     listTvs: vi.fn(),
     removeTv: vi.fn(),
     listLearners: vi.fn(),
-    startParentSession: vi.fn(),
+    getPinStatus: vi.fn(),
+    verifyPin: vi.fn(),
     signInAgain: vi.fn(),
-    parent: { held: true },
     account: { current: null as object | null },
   };
 });
@@ -35,11 +34,13 @@ vi.mock("@/lib/account/learners-api", () => ({
 vi.mock("@/lib/account/use-account", () => ({
   useAccount: () => api.account.current,
 }));
-vi.mock("@/lib/api/session", () => ({
-  ParentSignInNeeded: api.ParentSignInNeeded,
-  hasParentSession: () => api.parent.held,
-  parentSessionEnds: () => null,
-  startParentSession: api.startParentSession,
+vi.mock("@/lib/api/session", async (original) =>
+  (await import("@/test/parent-session")).withParentSession(await original()),
+);
+vi.mock("@/lib/account/parent-pin-api", async (original) => ({
+  ...(await original<typeof import("@/lib/account/parent-pin-api")>()),
+  getPinStatus: api.getPinStatus,
+  verifyPin: api.verifyPin,
 }));
 vi.mock("@/lib/account/sign-in", () => ({
   prepareSignIn: () => undefined,
@@ -54,6 +55,8 @@ vi.mock("../hooks/use-google-sign-in", () => ({
 }));
 
 import TvLinkPage from "./tv-link-page";
+
+const { ParentSignInNeeded } = await import("@/lib/api/session");
 
 const ADA = {
   id: "a1b2c3d4e5f6",
@@ -113,16 +116,20 @@ const approveButton = () =>
 beforeEach(() => {
   window.location.hash = "";
   api.account.current = signedIn;
-  api.parent.held = true;
+  parentSession.reset();
+  parentSession.grant();
+  api.getPinStatus
+    .mockReset()
+    .mockResolvedValue({ hasPin: true, length: 4, lockedUntil: null });
+  api.verifyPin
+    .mockReset()
+    .mockImplementation(async () => parentSession.grant());
   api.lookUpTv.mockReset().mockResolvedValue(ASKED);
   api.approveTv.mockReset().mockResolvedValue(undefined);
   api.denyTv.mockReset().mockResolvedValue(undefined);
   api.listTvs.mockReset().mockResolvedValue([]);
   api.removeTv.mockReset().mockResolvedValue(undefined);
   api.listLearners.mockReset().mockResolvedValue([ADA]);
-  api.startParentSession.mockReset().mockImplementation(async () => {
-    api.parent.held = true;
-  });
   api.signInAgain.mockReset().mockResolvedValue("fresh-token");
 });
 
@@ -141,27 +148,63 @@ describe("signing in first", () => {
     expect(api.lookUpTv).not.toHaveBeenCalled();
   });
 
-  it("asks a signed-in phone to sign in again as the parent before anything of the TV is asked or shown", async () => {
-    api.parent.held = false;
+  it("asks a signed-in phone for the parent PIN before anything of the TV is asked or shown", async () => {
+    parentSession.end();
     page();
 
-    expect(screen.getByText(en.tvLink.parent)).toBeTruthy();
+    await screen.findByRole("group", { name: en.parentPin.title });
     expect(screen.queryByRole("textbox")).toBeNull();
     expect(api.listTvs).not.toHaveBeenCalled();
     expect(api.lookUpTv).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: en.you.signIn }));
+    for (const digit of "4827") {
+      fireEvent.click(screen.getByRole("button", { name: digit }));
+    }
 
     expect(await screen.findByLabelText(en.tvLink.code)).toBeTruthy();
-    expect(api.startParentSession).toHaveBeenCalledWith("fresh-token");
+    expect(api.verifyPin).toHaveBeenCalledWith("4827");
     expect(api.listTvs).toHaveBeenCalled();
   });
 
-  it("asks again when the parent's session is gone in the middle", async () => {
-    api.lookUpTv.mockRejectedValue(new api.ParentSignInNeeded());
+  it("asks for nothing more than the code when the parent's session is already in force", async () => {
+    page();
+
+    expect(await screen.findByLabelText(en.tvLink.code)).toBeTruthy();
+    expect(api.getPinStatus).not.toHaveBeenCalled();
+  });
+
+  it("asks for the PIN only once while the parent's session lasts, however many TVs are linked", async () => {
+    parentSession.end();
+    page();
+    await screen.findByRole("group", { name: en.parentPin.title });
+    for (const digit of "4827") {
+      fireEvent.click(screen.getByRole("button", { name: digit }));
+    }
+    await enterCode("ABCD2345");
+    await endField();
+    fireEvent.click(screen.getByRole("button", { name: en.tvLink.deny }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: en.tvLink.another }),
+    );
+    await enterCode("EFGH6789");
+
+    expect(await endField()).toBeTruthy();
+    expect(api.verifyPin).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole("group", { name: en.parentPin.title }),
+    ).toBeNull();
+  });
+
+  it("asks for the PIN again when the parent's session is gone in the middle", async () => {
+    api.lookUpTv.mockImplementation(async () => {
+      parentSession.end();
+      throw new ParentSignInNeeded();
+    });
     page();
     await enterCode("ABCD2345");
 
-    expect(await screen.findByText(en.tvLink.parent)).toBeTruthy();
+    expect(
+      await screen.findByRole("group", { name: en.parentPin.title }),
+    ).toBeTruthy();
   });
 });
 

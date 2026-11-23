@@ -20,6 +20,7 @@ from ..account.consents import (
 from ..account.directory import LearnerId, learner_key
 from ..learner.time import now_ms
 from ..local_d1 import MAX_BOUND_INTEGER
+from ..security.guard import Session, require_session
 from ..voice.parent_recordings import (
     delete_kept,
     heard_recording,
@@ -34,7 +35,7 @@ from .account_routes import (
     grant_for_held_learner,
     require_learner,
 )
-from .consent_proof import refusal, require_fresh_sign_in, require_known_notice
+from .consent_proof import consent_gate, refusal, require_known_notice
 from .listed_learners import VoiceConsent
 from .voice_routes import EnvDep
 
@@ -76,7 +77,8 @@ class VoiceOverview(Wire):
 class ConsentGrant(Wire):
     notice_version: int
     retention_days: Literal[30, 90, 365]
-    firebase_id_token: str = Field(max_length=4096)
+    # Without one, the parent's session the request is made under is the proof.
+    firebase_id_token: str | None = Field(default=None, max_length=4096)
 
 
 class Deleted(Wire):
@@ -111,6 +113,7 @@ async def voice_overview(
 @account_voice_router.put("/consent", response_model=ConsentState)
 async def agree_to_keep(
     request: Request,
+    session: Annotated[Session, Depends(require_session)],
     uid: Uid,
     keeping: KeepingDep,
     env: EnvDep,
@@ -118,9 +121,10 @@ async def agree_to_keep(
     learner: LearnerKey,
     body: ConsentGrant,
 ) -> ConsentState:
-    """The parent signed in again just now, with the account this session belongs to."""
+    """The parent typed their PIN or signed in again just now, as the account this session
+    belongs to; which, is kept with the consent."""
     require_known_notice(NOTICE_VERSIONS[RECORDINGS], body.notice_version)
-    await require_fresh_sign_in(request, uid, body.firebase_id_token)
+    gate = await consent_gate(request, session, uid, body.firebase_id_token)
     granted = await grant_for_held_learner(
         keeping,
         env.DB,
@@ -129,6 +133,7 @@ async def agree_to_keep(
         RECORDINGS,
         body.notice_version,
         body.retention_days,
+        gate,
     )
     return ConsentState(**granted)
 

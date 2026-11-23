@@ -1,12 +1,12 @@
-import type { Issued } from "@/lib/api/session";
+import { fetchAsParent, type Issued } from "@/lib/api/session";
 import { ACCOUNT_URL, call } from "./account-call";
 
 // The account's learners (app/api/account_routes.py). Any signed-in session manages them.
 
-/** The parent's agreement to a notice, with the fresh Google sign-in that shows it was them. */
-export interface ConsentProof {
+/** The parent's agreement to a notice. It is sent under the parent's session (the PIN, or a
+ * Google sign-in just made), which is what shows it was them. */
+export interface Agreement {
   noticeVersion: number;
-  firebaseIdToken: string;
 }
 
 export interface ServiceConsent {
@@ -45,17 +45,22 @@ export async function listLearners(): Promise<AccountLearner[]> {
 /** Whoever adds a learner is that learner, or their parent or guardian, and agrees for them. */
 export function addLearner(
   name: string,
-  consent: ConsentProof,
+  consent: Agreement,
 ): Promise<AccountLearner> {
-  return call(LEARNERS_URL, "POST", { name, guardian: true, consent });
+  return call(
+    LEARNERS_URL,
+    "POST",
+    { name, guardian: true, consent },
+    fetchAsParent,
+  );
 }
 
 /** For a learner who was added without the parent's agreement. */
 export function agreeToService(
   id: string,
-  consent: ConsentProof,
+  consent: Agreement,
 ): Promise<ServiceConsent> {
-  return call(`${LEARNERS_URL}/${id}/consent`, "PUT", consent);
+  return call(`${LEARNERS_URL}/${id}/consent`, "PUT", consent, fetchAsParent);
 }
 
 export function renameLearner(
@@ -76,7 +81,8 @@ export function learnerSession(id: string, device?: string): Promise<Issued> {
   return call(`${LEARNERS_URL}/${id}/session`, "POST", body);
 }
 
-/** Every learner and everything kept for them. The Google account stays Google's. */
+/** Every learner and everything kept for them. The Google account stays Google's. Only a parent's
+ * session made from a Google sign-in just now may: not the PIN's. */
 export function deleteAccount(): Promise<void> {
-  return call(ACCOUNT_URL, "DELETE");
+  return call(ACCOUNT_URL, "DELETE", undefined, fetchAsParent);
 }

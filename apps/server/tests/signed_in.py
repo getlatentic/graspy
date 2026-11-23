@@ -1,6 +1,8 @@
 """A server whose Google sign-in vouches for one account, and the steps a
 device takes through it."""
 
+import time
+
 import httpx2
 
 from app.factory import create_app
@@ -16,6 +18,13 @@ def signed_in_app(monkeypatch, name: str = "Ada Lovelace"):
     async def verified(id_token, _api_key, **_):
         if id_token == "unchecked":
             raise firebase.SignInUnchecked("Sign-in could not be checked. Try again.")
+        if id_token == "fresh":
+            return firebase.SignedIn(
+                uid=UID,
+                name=name,
+                auth_time=int(time.time()) - 30,
+                provider="google.com",
+            )
         if id_token != "good":
             raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
         return firebase.SignedIn(uid=UID, name=name)

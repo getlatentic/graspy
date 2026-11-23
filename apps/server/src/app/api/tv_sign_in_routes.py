@@ -30,14 +30,10 @@ from ..account.tv_codes import (
 )
 from ..learner.time import now_ms
 from ..security.guard import Session, require_session
-from ..security.rate_limit import (
-    RETRY_AFTER_SECONDS,
-    client_key,
-    prefix_of,
-    source_of,
-)
+from ..security.rate_limit import client_key, prefix_of, source_of
 from ..wire import Wire
 from .account_parent_routes import ParentUid
+from .budget import spend, too_many
 from .consent_proof import refusal
 from .routes import SessionResponse, learner_session
 from .service_consent import service_consent_refusal
@@ -74,20 +70,9 @@ def _prefix(request: Request) -> str:
     return prefix_of(client_key(request.scope))
 
 
-def _too_many() -> HTTPException:
-    return HTTPException(
-        status_code=429,
-        detail={"error": "Too many requests", "code": "rate_limited"},
-        headers={"Retry-After": str(RETRY_AFTER_SECONDS)},
-    )
-
-
 async def _spend(request: Request, key: str) -> None:
-    """One of the pairing budget, kept per key. Where no budget is bound (local runs) nothing
-    is counted."""
-    limiter = request.app.state.pairing_limiter
-    if limiter is not None and not await limiter.allow(key):
-        raise _too_many()
+    """One of the pairing budget, kept per key."""
+    await spend(request.app.state.pairing_limiter, key)
 
 
 def _web_origin(request: Request) -> str:
@@ -132,7 +117,7 @@ async def request_link(request: Request) -> Requested:
             now_ms(),
         )
     except tv_links.TooManyFromSource:
-        raise _too_many() from None
+        raise too_many() from None
     except tv_links.TooManyOpenLinks:
         raise refusal(
             503, "tv_sign_in_busy", "Signing in a TV is busy. Try again in a minute"

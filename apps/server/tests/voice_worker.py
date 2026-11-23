@@ -5,6 +5,7 @@ behind a service binding. Checked against `npm run worker:dev`."""
 
 import json
 import sqlite3
+import time
 from types import SimpleNamespace
 from urllib.parse import unquote, urlsplit
 
@@ -138,6 +139,13 @@ def voice_app(monkeypatch, env=None):
     """The app over these bindings, with Google's sign-in vouching for UID."""
 
     async def verified(id_token, _api_key, **_):
+        if id_token == "fresh":
+            return firebase.SignedIn(
+                uid=UID,
+                name="Ada",
+                auth_time=int(time.time()) - 30,
+                provider="google.com",
+            )
         if id_token != "good":
             raise firebase.InvalidSignIn("The sign-in is not valid. Sign in again.")
         return firebase.SignedIn(uid=UID, name="Ada")

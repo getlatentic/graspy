@@ -13,7 +13,7 @@ import {
 import {
   addLearner,
   type AccountLearner,
-  type ConsentProof,
+  type Agreement,
   type ServiceConsent,
 } from "@/lib/account/learners-api";
 import { keepServiceConsent } from "@/lib/account/service-consent";
@@ -66,7 +66,7 @@ export function useLearnerChoice() {
     [run],
   );
   const addAndChoose = useCallback(
-    (name: string, consent: ConsentProof) =>
+    (name: string, consent: Agreement) =>
       run(async () => {
         if (addedRef.current) return addedRef.current;
         const learner = await addLearner(name, consent);

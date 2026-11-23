@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { refusalCode } from "@/lib/account/account-call";
-import {
-  hasParentSession,
-  parentSessionEnds,
-  ParentSignInNeeded,
-  startParentSession,
-} from "@/lib/api/session";
+import { parentRefused } from "@/lib/api/session";
 import {
   NOTICE_VERSION,
   type RetentionDays,
@@ -40,16 +35,10 @@ export function useVoiceRecordings(learner: string) {
   } | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  // Until the parent signs in again, the server refuses the recordings to a session that is
-  // only the learner's.
-  const [needsParent, setNeedsParent] = useState(() => !hasParentSession());
   const current = useRef(learner);
 
-  const refused = useCallback((error: unknown) => {
-    if (!(error instanceof ParentSignInNeeded)) return false;
-    setNeedsParent(true);
-    return true;
-  }, []);
+  // A parent's session that is gone is for the parent gate to answer, by asking for the PIN again.
+  const refused = parentRefused;
 
   const settle = useCallback(
     (voice: VoiceOverview) => {
@@ -77,23 +66,8 @@ export function useVoiceRecordings(learner: string) {
   useEffect(() => {
     current.current = learner;
     setFailed(false);
-    if (!needsParent) load();
-  }, [learner, load, needsParent]);
-
-  // The server ends the parent's session after minutes: the page asks again then, where a
-  // call made after would only fail.
-  useEffect(() => {
-    const ends = parentSessionEnds();
-    if (needsParent || ends === null) return;
-    const timer = setTimeout(() => setNeedsParent(true), ends - Date.now());
-    return () => clearTimeout(timer);
-  }, [needsParent]);
-
-  /** Takes the parent's session from a Google sign-in made just now. */
-  const startAsParent = useCallback(async (firebaseIdToken: string) => {
-    await startParentSession(firebaseIdToken);
-    setNeedsParent(false);
-  }, []);
+    load();
+  }, [learner, load]);
 
   const change = useCallback(
     (update: (voice: VoiceOverview) => VoiceOverview) =>
@@ -128,7 +102,7 @@ export function useVoiceRecordings(learner: string) {
     [learner, settle, refused],
   );
 
-  const voice = !needsParent && held?.learner === learner ? held.voice : null;
+  const voice = held?.learner === learner ? held.voice : null;
   const loadProblem = problem?.learner === learner ? problem.problem : null;
 
   const more = useCallback(
@@ -155,13 +129,8 @@ export function useVoiceRecordings(learner: string) {
 
   /** Throws when the agreement does not hold, for the parent to be told why. */
   const keep = useCallback(
-    async (days: RetentionDays, firebaseIdToken: string) => {
-      const consent = await keepRecordings(
-        learner,
-        NOTICE_VERSION,
-        days,
-        firebaseIdToken,
-      );
+    async (days: RetentionDays) => {
+      const consent = await keepRecordings(learner, NOTICE_VERSION, days);
       change((shown) => ({ ...shown, consent }));
     },
     [change, learner],
@@ -213,8 +182,6 @@ export function useVoiceRecordings(learner: string) {
 
   return {
     voice,
-    needsParent,
-    startAsParent,
     loadProblem,
     busy,
     failed,

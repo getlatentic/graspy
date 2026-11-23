@@ -1423,7 +1423,14 @@ def test_the_pairing_budget_cannot_be_left_out_of_the_budgets():
     one = Budget()
 
     with pytest.raises(TypeError):
-        Budgets(session=one, generate=one, agent=one, api=one)
+        Budgets(session=one, generate=one, agent=one, api=one, pin=one)
+
+
+def test_the_pin_budget_cannot_be_left_out_of_the_budgets():
+    one = Budget()
+
+    with pytest.raises(TypeError):
+        Budgets(session=one, generate=one, agent=one, api=one, pairing=one)
 
 
 # Lookups: limits

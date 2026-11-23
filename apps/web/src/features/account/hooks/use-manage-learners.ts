@@ -2,7 +2,9 @@ import { useCallback, useState } from "react";
 import { currentAccount, setLearner } from "@/lib/account/account-store";
 import { forgetLearner } from "@/lib/account/learner-choice";
 import { renameLearner, type ServiceConsent } from "@/lib/account/learners-api";
-import { deleteAccountAndSignOut } from "@/lib/account/sign-in";
+import { consentProblemOf } from "@/lib/account/consent-problem";
+import { deleteAccountAndSignOut, signInAgain } from "@/lib/account/sign-in";
+import { startParentSession } from "@/lib/api/session";
 import { useLearners } from "./use-learners";
 
 /** Renames and removes the account's learners, and deletes the account. */
@@ -62,14 +64,24 @@ export function useManageLearners() {
     [attempt, reload],
   );
 
-  const deleteAccount = useCallback(
-    () =>
-      attempt(async () => {
-        await deleteAccountAndSignOut();
-        window.location.assign("/");
-      }),
-    [attempt],
-  );
+  // Firebase's user is deleted only for a Google sign-in just made, not for the parent PIN: the
+  // sign-in is the tap's own, so its window opens, and a window closed is no failure.
+  const deleteAccount = useCallback(async () => {
+    setBusy(true);
+    setFailed(false);
+    try {
+      await startParentSession(await signInAgain());
+      await deleteAccountAndSignOut();
+      window.location.assign("/");
+    } catch (error) {
+      if (consentProblemOf(error) !== null) {
+        console.warn("Deleting the account failed:", error);
+        setFailed(true);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }, []);
 
   return { ...listed, busy, failed, rename, agreed, remove, deleteAccount };
 }

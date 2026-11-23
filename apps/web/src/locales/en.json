@@ -352,6 +352,7 @@
     "deleteButton": "Delete account",
     "deleteConfirm": "Delete every learner and all their progress? This can't be undone.",
     "deleteYes": "Delete",
+    "deleteGoogle": "You'll sign in with Google to confirm.",
     "addTile": "Add learner",
     "addTitle": "Add a learner",
     "devicePlan": "This device's plan goes to who you choose.",
@@ -407,8 +408,7 @@
     "warn": "Only continue if you are looking at this TV.",
     "wrongEnd": "Those are not the last characters on the TV.",
     "inUse": "Another account is already linking this TV.",
-    "endLabel": "Last 4 characters on the TV",
-    "parent": "Sign in again to link a TV."
+    "endLabel": "Last 4 characters on the TV"
   },
   "voice": {
     "title": "Voice lessons",
@@ -474,7 +474,7 @@
   "consent": {
     "continue": "Continue",
     "serviceTitle": "Let {name} use graspy?",
-    "who": "Agree as the learner, or their parent or guardian. You'll sign in with Google again to confirm it's you.",
+    "who": "Agree as the learner, or their parent or guardian.",
     "agree": "I agree",
     "agreeRow": "Agree",
     "decline": "Don't agree",
@@ -508,10 +508,27 @@
     "gone": "That recording is gone.",
     "playFailed": "That recording didn't play. Try again.",
     "notFound": "This learner is not on your account.",
-    "signInAgain": "Sign in again to see these recordings.",
     "playAt": "Play the recording of {when}",
     "stopAt": "Stop the recording of {when}",
     "deleteAt": "Delete the recording of {when}"
+  },
+  "parentPin": {
+    "title": "Parent PIN",
+    "set": "Set a parent PIN",
+    "again": "Type it again",
+    "save": "Save your PIN",
+    "next": "Next",
+    "forgot": "Forgot PIN?",
+    "cancel": "Cancel",
+    "delete": "Delete last digit",
+    "typed": "{count} digits typed",
+    "wrong": "Wrong PIN.",
+    "mismatch": "Those didn't match.",
+    "easy": "Choose a PIN that isn't a run or a repeat.",
+    "busy": "Too many tries. Wait a minute.",
+    "failed": "That didn't work. Try again.",
+    "lockedMinutes": "Locked. Try again in {count} min.",
+    "lockedHours": "Locked. Try again in {count} h."
   },
   "loading": {
     "opening": "Opening…",

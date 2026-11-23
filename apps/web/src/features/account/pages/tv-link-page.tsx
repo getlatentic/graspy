@@ -5,15 +5,15 @@ import { buttonStyles } from "@/components/ui/button-styles";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useAccount } from "@/lib/account/use-account";
+import { parentRefused } from "@/lib/api/session";
 import { useI18n } from "@/lib/i18n-context";
 import { AccountFrame } from "../components/account-frame";
 import { GoogleSignInButton } from "../components/google-sign-in-button";
-import { ParentSignIn } from "../components/parent-sign-in";
+import { ParentGate } from "../components/parent-gate";
 import { ProblemNote } from "../components/problem-note";
 import { TvConfirm } from "../components/tv-confirm";
 import { TvList } from "../components/tv-list";
 import { useLearners } from "../hooks/use-learners";
-import { useParentGate } from "../hooks/use-parent-gate";
 import { useTvApproval, type ApprovalProblem } from "../hooks/use-tv-approval";
 import { useTvs } from "../hooks/use-tvs";
 
@@ -35,11 +35,21 @@ function codeInAddress(hash: string): string {
 /** What the server compares: case, spaces and dashes are not part of a code. */
 const normalised = (typed: string) => typed.replace(/[\s-]/g, "").toUpperCase();
 
-/** Where a TV's code is entered, on a phone: sign in if needed, and again as the parent, give the
- * code, and approve or deny the TV it names. */
+/** Where a TV's code is entered, on a phone: sign in if needed, type the parent PIN (once in the
+ * minutes the parent's session lasts), give the code, and approve or deny the TV it names. */
 export default function TvLinkPage() {
   const account = useAccount();
-  return <AccountFrame>{account ? <Parent /> : <SignInFirst />}</AccountFrame>;
+  return (
+    <AccountFrame>
+      {account ? (
+        <ParentGate heading="h1">
+          <Linking refused={parentRefused} />
+        </ParentGate>
+      ) : (
+        <SignInFirst />
+      )}
+    </AccountFrame>
+  );
 }
 
 function SignInFirst() {
@@ -52,19 +62,6 @@ function SignInFirst() {
       <GoogleSignInButton variant="primary" size="lg" className="w-full" />
     </div>
   );
-}
-
-/** A TV's long-lived sign-in is the parent's to give: a session left open, or a child's, is not
- * enough. */
-function Parent() {
-  const { t } = useI18n();
-  const gate = useParentGate();
-  if (gate.needsParent) {
-    return (
-      <ParentSignIn start={gate.startAsParent} message={t("tvLink.parent")} />
-    );
-  }
-  return <Linking refused={gate.refused} />;
 }
 
 function Linking({ refused }: { refused: (error: unknown) => boolean }) {

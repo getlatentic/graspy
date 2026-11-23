@@ -33,6 +33,9 @@ TV_TOKEN_TTL_SECONDS = 60 * 60
 
 _SIGNATURE_ALGORITHM = sha256
 
+# How a parent proved themselves: by the parent PIN, or by signing in with Google again.
+PARENT_GATES = ("pin", "google")
+
 
 class InvalidSessionToken(Exception):
     """The message is sent to the client."""
@@ -62,13 +65,15 @@ def issue(
     learner: str | None = None,
     account: str | None = None,
     parent: bool = False,
+    gate: str | None = None,
     tv: str | None = None,
     hint: str | None = None,
     now: float | None = None,
 ) -> IssuedToken:
     """``learner`` is whose record the session reads and writes; ``account``
     is the signed-in account whose learners it may manage. ``parent`` marks a session
-    made just after the account's holder signed in again: it carries no learner. ``tv`` is the
+    made just after the account's holder proved themselves: it carries no learner, and ``gate``
+    says how they did, by the parent PIN or by signing in with Google again. ``tv`` is the
     id of the TV credential (account/tv_sessions.py) a TV's session was renewed from."""
     issued_at = int(time.time() if now is None else now)
     if parent:
@@ -82,7 +87,10 @@ def issue(
         "exp": issued_at + ttl,
     }
     if parent:
+        if gate not in PARENT_GATES:
+            raise ValueError("A parent's session says how the parent proved themselves")
         claims["par"] = True
+        claims["gate"] = gate
     if learner:
         claims["sub"] = learner
     if account:
@@ -142,6 +150,23 @@ def learner_of(claims: dict) -> str | None:
 
 def parent_of(claims: dict) -> bool:
     return claims.get("par") is True
+
+
+def gate_of(claims: dict) -> str | None:
+    """How a parent's session was earned. A parent's session made before the claim existed was
+    made with Google."""
+    if not parent_of(claims):
+        return None
+    gate = claims.get("gate")
+    return gate if gate in PARENT_GATES else "google"
+
+
+def parent_started_at(claims: dict) -> int | None:
+    """When a parent's session was made, in epoch seconds: it lasts a fixed time from then."""
+    expires_at = claims.get("exp")
+    if not parent_of(claims) or not isinstance(expires_at, (int, float)):
+        return None
+    return int(expires_at) - PARENT_TOKEN_TTL_SECONDS
 
 
 def hint_of(claims: dict) -> str | None:

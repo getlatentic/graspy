@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BackLink } from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { prepareSignIn } from "@/lib/account/sign-in";
 import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { ConfirmCard } from "../components/confirm-card";
@@ -70,6 +71,7 @@ function LearnerList({ manage }: { manage: Manage }) {
 function DeleteAccount({ manage }: { manage: Manage }) {
   const { t } = useI18n();
   const [asking, setAsking] = useState(false);
+  useEffect(prepareSignIn, []);
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="font-semibold text-ink">{t("learners.deleteTitle")}</h2>
@@ -78,7 +80,7 @@ function DeleteAccount({ manage }: { manage: Manage }) {
       </p>
       {asking ? (
         <ConfirmCard
-          question={t("learners.deleteConfirm")}
+          question={`${t("learners.deleteConfirm")} ${t("learners.deleteGoogle")}`}
           confirm={t("learners.deleteYes")}
           busy={manage.busy}
           onConfirm={() => void manage.deleteAccount()}
