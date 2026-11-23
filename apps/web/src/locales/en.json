@@ -381,7 +381,8 @@
     "approvedOn": "Approved on {device}.",
     "aPhone": "a phone",
     "full": "This account has 10 TVs. Remove one on your phone, then continue.",
-    "goesOn": "Continuing in {seconds}…"
+    "goesOn": "Continuing in {seconds}…",
+    "goesOnAnnounce": "Continuing in 5 seconds unless you press Cancel."
   },
   "tvLink": {
     "title": "Link your TV",
@@ -406,7 +407,11 @@
     "inUse": "Another account is already linking this TV.",
     "endLabel": "Type the last 4 characters shown on the TV",
     "endBox": "Character on the TV",
-    "codeBox": "Character of the code"
+    "codeBox": "Character of the code",
+    "warn": "Only continue if you are looking at this TV.",
+    "timedOut": "This code timed out. Scan the QR again.",
+    "approving": "Approving…",
+    "checking": "Checking…"
   },
   "voice": {
     "title": "Voice lessons",

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { refusalCode } from "@/lib/account/account-call";
 import {
   approveTv,
@@ -8,11 +8,19 @@ import {
 } from "@/lib/account/tv-link-api";
 
 export type ApprovalProblem =
-  "invalid" | "inUse" | "wrongEnd" | "busy" | "full" | "consent" | "failed";
+  | "invalid"
+  | "inUse"
+  | "wrongEnd"
+  | "busy"
+  | "full"
+  | "consent"
+  | "timedOut"
+  | "failed";
 
 export type ApprovalStep =
   | { kind: "code" }
-  | { kind: "checking" }
+  /** Waiting for the server: `approve` says the person is told "Approving…". */
+  | { kind: "checking"; approving?: boolean }
   | { kind: "confirm"; code: string; asked: TvAsked }
   | { kind: "done" }
   | { kind: "denied" };
@@ -43,6 +51,8 @@ export function useTvApproval(
 ) {
   const [step, setStep] = useState<ApprovalStep>({ kind: "code" });
   const [problem, setProblem] = useState<ApprovalProblem | null>(null);
+  // One call at a time: characters typed while one is on its way are not another attempt.
+  const inFlight = useRef(false);
 
   const failed = useCallback(
     (error: unknown, back: ApprovalStep) => {
@@ -56,11 +66,16 @@ export function useTvApproval(
 
   const lookUp = useCallback(
     (code: string) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
       setProblem(null);
       setStep({ kind: "checking" });
       lookUpTv(code)
         .then((asked) => setStep({ kind: "confirm", code, asked }))
-        .catch((error: unknown) => failed(error, { kind: "code" }));
+        .catch((error: unknown) => failed(error, { kind: "code" }))
+        .finally(() => {
+          inFlight.current = false;
+        });
     },
     [failed],
   );
@@ -71,32 +86,46 @@ export function useTvApproval(
       learnerId: string,
       end: string,
     ) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
       setProblem(null);
-      setStep({ kind: "checking" });
+      setStep({ kind: "checking", approving: true });
       approveTv(confirming.code, learnerId, end)
         .then(() => {
           setStep({ kind: "done" });
           onChanged();
         })
-        .catch((error: unknown) =>
+        .catch((error: unknown) => {
+          // The code was found a moment ago, so a code that is not found now has timed out: the
+          // request is held for two minutes, and ends after ten.
+          const timedOut = refusalCode(error) === "code_not_found";
           // Typing the end wrong is tried again where it was typed; anything else starts over.
           failed(
             error,
             refusalCode(error) === "confirm_mismatch"
               ? confirming
               : { kind: "code" },
-          ),
-        );
+          );
+          if (timedOut) setProblem("timedOut");
+        })
+        .finally(() => {
+          inFlight.current = false;
+        });
     },
     [failed, onChanged],
   );
 
   const deny = useCallback(
     (code: string) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
       setStep({ kind: "checking" });
       denyTv(code)
         .then(() => setStep({ kind: "denied" }))
-        .catch((error: unknown) => failed(error, { kind: "code" }));
+        .catch((error: unknown) => failed(error, { kind: "code" }))
+        .finally(() => {
+          inFlight.current = false;
+        });
     },
     [failed],
   );

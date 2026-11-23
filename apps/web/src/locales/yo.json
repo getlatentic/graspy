@@ -381,7 +381,8 @@
     "approvedOn": "A fọwọ́ sí i lórí {device}.",
     "aPhone": "fóònù kan",
     "full": "Àkọọ́lẹ̀ yìí ní tẹlifíṣọ̀n mẹ́wàá. Yọ ọ̀kan kúrò lórí fóònù rẹ, lẹ́yìn náà tẹ̀síwájú.",
-    "goesOn": "Ń tẹ̀síwájú ní {seconds}…"
+    "goesOn": "Ń tẹ̀síwájú ní {seconds}…",
+    "goesOnAnnounce": "Yóò tẹ̀síwájú ní ìṣẹ́jú-àáyá 5 àfi tí o bá tẹ Fagilé."
   },
   "tvLink": {
     "title": "So tẹlifíṣọ̀n rẹ pọ̀",
@@ -406,7 +407,11 @@
     "inUse": "Àkọọ́lẹ̀ mìíràn ń so tẹlifíṣọ̀n yìí pọ̀ tẹ́lẹ̀.",
     "endLabel": "Tẹ ọ̀rọ̀ mẹ́rin tó kẹ́yìn tí ó hàn lórí tẹlifíṣọ̀n",
     "endBox": "Ọ̀rọ̀ lórí tẹlifíṣọ̀n",
-    "codeBox": "Ọ̀rọ̀ kóòdù"
+    "codeBox": "Ọ̀rọ̀ kóòdù",
+    "warn": "Tẹ̀síwájú nìkan tí o bá ń wo tẹlifíṣọ̀n yìí.",
+    "timedOut": "Kóòdù yìí ti parí àkókò. Ya QR náà lẹ́ẹ̀kan sí i.",
+    "approving": "Ń fọwọ́ sí i…",
+    "checking": "Ń ṣàyẹ̀wò…"
   },
   "voice": {
     "title": "Ẹ̀kọ́ ohùn",

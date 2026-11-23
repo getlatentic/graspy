@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { noteInput, trackInput } from "@/lib/account/tv-presence";
 import { startTvSession } from "@/lib/api/session";
 import {
   runTvLink,
@@ -15,12 +16,19 @@ export function useTvLink() {
   const link = useRef<TvLink | null>(null);
 
   useEffect(() => {
+    // The press that opened this screen, or asked for a new code, is the TV's proof that someone
+    // is there; each key, pointer or touch after it is too.
+    noteInput();
+    const stopTracking = trackInput();
     const running = runTvLink({
       onState: setState,
       onApproved: startTvSession,
     });
     link.current = running;
-    return running.stop;
+    return () => {
+      stopTracking();
+      running.stop();
+    };
   }, [round]);
 
   const again = useCallback(() => setRound((n) => n + 1), []);

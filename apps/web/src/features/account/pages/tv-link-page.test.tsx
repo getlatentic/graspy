@@ -238,6 +238,67 @@ describe("typing the last four characters", () => {
 
     expect(document.body.textContent).not.toContain("2345");
     expect(document.body.textContent).not.toContain("ABCD");
+    const held = screen
+      .getAllByRole("textbox")
+      .map((box) => (box as HTMLInputElement).value);
+    expect(held).toEqual(["", "", "", ""]);
+    expect(
+      [...document.querySelectorAll("*")].some((node) =>
+        [...node.attributes].some((attribute) =>
+          /2345|ABCD/.test(attribute.value),
+        ),
+      ),
+    ).toBe(false);
+  });
+
+  it("says, above the boxes, to continue only when looking at the TV, and the boxes are described by it", async () => {
+    const fields = await confirming();
+
+    const warning = screen.getByText(en.tvLink.warn);
+    expect(en.tvLink.warn).toBe("Only continue if you are looking at this TV.");
+    expect(
+      warning.compareDocumentPosition(fields[0]) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const described = screen
+      .getByRole("group", { name: en.tvLink.endBox })
+      .getAttribute("aria-describedby")!
+      .split(" ");
+    expect(described).toContain(warning.id);
+    expect(described).toContain(screen.getByText(en.tvLink.endLabel).id);
+  });
+
+  it("takes the last four of a whole code pasted into the boxes, not the first four", async () => {
+    const fields = await confirming();
+
+    fireEvent.paste(fields[0], {
+      clipboardData: { getData: () => "ZHGK-5H9W" },
+    });
+
+    await waitFor(() =>
+      expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", ADA.id, "5H9W"),
+    );
+    expect(api.approveTv).toHaveBeenCalledTimes(1);
+  });
+
+  it("tells a screen reader it is approving while it waits", async () => {
+    api.approveTv.mockReturnValue(new Promise(() => undefined));
+    const fields = await confirming();
+    typeInto(fields, "5H9W");
+
+    const said = await screen.findByText(en.tvLink.approving);
+    expect(said.closest("[role=status]")).toBeTruthy();
+  });
+
+  it("says the code timed out, and to scan again, when approving finds no code after the lookup did", async () => {
+    api.approveTv.mockRejectedValue(refused(404, "code_not_found"));
+    const fields = await confirming();
+    typeInto(fields, "5H9W");
+
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      en.tvLink.timedOut,
+    );
+    expect(en.tvLink.timedOut).toBe("This code timed out. Scan the QR again.");
   });
 
   it("approves by itself on the fourth character, upper case, for the learner, and not before", async () => {
@@ -329,17 +390,60 @@ describe("typing the last four characters", () => {
     expect(api.approveTv).not.toHaveBeenCalled();
   });
 
-  it("lets the person choose among the account's learners before typing", async () => {
-    api.listLearners.mockResolvedValue([ADA, BEN]);
-    const fields = await confirming();
+  describe("with more than one learner", () => {
+    beforeEach(() => {
+      api.listLearners.mockResolvedValue([ADA, BEN]);
+      api.account.current = {
+        uid: "uid-1",
+        learner: { id: ADA.id, name: "Ada" },
+      };
+    });
 
-    expect(screen.getAllByRole("radio")).toHaveLength(2);
-    fireEvent.click(screen.getByLabelText("Ben"));
-    typeInto(fields, "5H9W");
+    it("shows the choice and no boxes until a learner is chosen, even the learner this phone is using", async () => {
+      page();
 
-    await waitFor(() =>
-      expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", BEN.id, "5H9W"),
-    );
+      expect(await screen.findAllByRole("radio")).toHaveLength(2);
+      expect((screen.getByLabelText("Ada") as HTMLInputElement).checked).toBe(
+        false,
+      );
+      expect(screen.queryByRole("textbox")).toBeNull();
+      expect(api.approveTv).not.toHaveBeenCalled();
+    });
+
+    it("shows the boxes, focused, once a learner is chosen, and approves for that learner", async () => {
+      page();
+      await screen.findAllByRole("radio");
+
+      fireEvent.click(screen.getByLabelText("Ben"));
+      const fields = await boxes();
+
+      expect(document.activeElement).toBe(fields[0]);
+      typeInto(fields, "5H9W");
+      await waitFor(() =>
+        expect(api.approveTv).toHaveBeenCalledWith("ABCD2345", BEN.id, "5H9W"),
+      );
+    });
+
+    it("never approves for a learner nobody chose, whatever is typed or pasted", async () => {
+      page();
+      await screen.findAllByRole("radio");
+
+      fireEvent.paste(document.body, {
+        clipboardData: { getData: () => "5H9W" },
+      });
+      fireEvent.keyDown(document.body, { key: "5" });
+
+      expect(api.approveTv).not.toHaveBeenCalled();
+    });
+  });
+
+  it("has the one learner chosen already, and boxes at once", async () => {
+    page();
+
+    const fields = await boxes();
+
+    expect(screen.queryByRole("radio")).toBeNull();
+    expect(document.activeElement).toBe(fields[0]);
   });
 
   it("offers to add a learner when the account has none, and has no boxes", async () => {
@@ -441,5 +545,70 @@ describe("the account's TVs", () => {
     fireEvent.click(screen.getByRole("button", { name: "Remove Samsung TV" }));
 
     expect(api.removeTv).toHaveBeenCalledWith("tv1");
+  });
+});
+
+describe("Link another TV", () => {
+  async function approvedFromTheLink() {
+    page();
+    const fields = await boxes();
+    typeInto(fields, "5H9W");
+    await screen.findByRole("heading", { name: en.tvLink.done });
+  }
+
+  it("asks for the next code by hand after one opened from a QR code, with no spinner and no second lookup", async () => {
+    await approvedFromTheLink();
+    api.lookUpTv.mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: en.tvLink.another }));
+
+    expect(await screen.findAllByRole("textbox")).toHaveLength(8);
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(api.lookUpTv).not.toHaveBeenCalled();
+  });
+
+  it("takes the spent code out of the address", async () => {
+    await approvedFromTheLink();
+
+    fireEvent.click(screen.getByRole("button", { name: en.tvLink.another }));
+
+    await screen.findAllByRole("textbox");
+    expect(window.location.hash).toBe("");
+  });
+
+  it("asks for the next code by hand after 'Not my TV' too", async () => {
+    page();
+    await boxes();
+    fireEvent.click(screen.getByRole("button", { name: en.tvLink.deny }));
+    await screen.findByRole("heading", { name: en.tvLink.denied });
+    api.lookUpTv.mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: en.tvLink.another }));
+
+    expect(await screen.findAllByRole("textbox")).toHaveLength(8);
+    expect(api.lookUpTv).not.toHaveBeenCalled();
+  });
+
+  it("then looks the typed code up and goes on as before", async () => {
+    await approvedFromTheLink();
+    fireEvent.click(screen.getByRole("button", { name: en.tvLink.another }));
+    const eight = await screen.findAllByRole("textbox");
+
+    typeInto(eight, "WXYZ6789");
+
+    expect(await screen.findAllByRole("textbox")).toHaveLength(4);
+    expect(api.lookUpTv).toHaveBeenCalledWith("WXYZ6789");
+  });
+});
+
+describe("where the code travels", () => {
+  it("is read from the fragment of the address and from nowhere else", async () => {
+    window.location.hash = "";
+    window.history.replaceState(null, "", "/link?code=ABCD2345");
+    page();
+
+    expect(await screen.findAllByRole("textbox")).toHaveLength(8);
+    expect(api.lookUpTv).not.toHaveBeenCalled();
+    window.history.replaceState(null, "", "/");
   });
 });

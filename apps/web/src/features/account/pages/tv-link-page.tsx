@@ -22,6 +22,7 @@ const PROBLEMS: Record<ApprovalProblem, string> = {
   inUse: "tvLink.inUse",
   wrongEnd: "tvLink.wrongEnd",
   busy: "tvLink.busy",
+  timedOut: "tvLink.timedOut",
   full: "tvLink.full",
   consent: "tvLink.consent",
   failed: "tvLink.failed",
@@ -30,7 +31,12 @@ const PROBLEMS: Record<ApprovalProblem, string> = {
 /** The characters in a whole code. */
 const CODE_LENGTH = 8;
 
-/** The code a TV's QR code carries, in the address after the #, which no server is sent. */
+/**
+ * The code a TV's QR code carries, in the address after the #. It is in the fragment and never in
+ * a query string (`?code=`): a fragment is not sent to any server, so the code stays out of the
+ * hosting's logs, proxies and the Referer of whatever the page loads, and a link that reaches a
+ * log or a screenshot does not take a live code with it. Nothing here reads `location.search`.
+ */
 function codeInAddress(hash: string): string {
   return new URLSearchParams(hash.replace(/^#/, "")).get("code") ?? "";
 }
@@ -91,13 +97,10 @@ function SignInOnce({ signedIn }: { signedIn: () => void }) {
 
 function Linking({ refused }: { refused: (error: unknown) => boolean }) {
   const { t } = useI18n();
-  const account = useAccount();
   const { learners, failed } = useLearners();
   const { tvs, reload, remove } = useTvs(true, refused);
-  const { step, problem, lookUp, approve, deny, reset } = useTvApproval(
-    reload,
-    refused,
-  );
+  const approval = useTvApproval(reload, refused);
+  const { step, problem, lookUp, approve, deny } = approval;
   const linkCode = useRef(codeInAddress(window.location.hash)).current;
   // The code from the QR code is looked up at once; one typed by hand is asked for first.
   const [fromLink, setFromLink] = useState(linkCode !== "");
@@ -114,19 +117,42 @@ function Linking({ refused }: { refused: (error: unknown) => boolean }) {
     if (problem && fromLink) setFromLink(false);
   }, [problem, fromLink]);
 
+  // "Link another TV", after the code in the link was used: that code is spent and no longer in
+  // the address, and the next is asked for by hand, not looked up again from where it was.
+  const another = () => {
+    looked.current = true;
+    setFromLink(false);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + window.location.search,
+    );
+    approval.reset();
+  };
+
   if (
     step.kind === "checking" ||
     (!learners && !failed) ||
     (fromLink && step.kind === "code")
   ) {
-    return <Spinner className="mx-auto size-6 text-accent-ink" />;
+    return (
+      <div role="status" className="flex justify-center">
+        <Spinner className="size-6 text-accent-ink" />
+        <span className="sr-only">
+          {t(
+            step.kind === "checking" && step.approving
+              ? "tvLink.approving"
+              : "tvLink.checking",
+          )}
+        </span>
+      </div>
+    );
   }
   if (step.kind === "confirm") {
     return (
       <TvConfirm
         asked={step.asked}
         learners={learners ?? []}
-        chosen={account?.learner?.id ?? null}
         problem={problem === "wrongEnd" ? t(PROBLEMS.wrongEnd) : null}
         onApprove={(learnerId, end) => approve(step, learnerId, end)}
         onDeny={() => deny(step.code)}
@@ -143,7 +169,7 @@ function Linking({ refused }: { refused: (error: unknown) => boolean }) {
           <Link to="/app" className={buttonStyles("primary", "lg")}>
             {t("tvLink.finish")}
           </Link>
-          <Button variant="ghost" size="lg" onClick={reset}>
+          <Button variant="ghost" size="lg" onClick={another}>
             {t("tvLink.another")}
           </Button>
         </div>

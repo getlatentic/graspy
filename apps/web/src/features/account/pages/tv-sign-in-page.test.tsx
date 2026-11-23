@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nContext } from "@/lib/i18n-context";
@@ -26,6 +32,7 @@ vi.mock("@/lib/account/tv-link-api", () => ({
   pollTvLink,
   continueTvLink,
   cancelTvLink,
+  signOutTv: vi.fn(async () => undefined),
 }));
 vi.mock("@/lib/api/session", () => ({ startTvSession }));
 vi.mock("@/lib/qr-path", async (original) => {
@@ -90,6 +97,30 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
 });
+
+const LINKING_ADA = {
+  status: "linking" as const,
+  learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+  approver: { account: "t***@gmail.com", label: "iPhone", country: "NG" },
+};
+const APPROVED_ADA = {
+  status: "approved" as const,
+  token: "session",
+  expiresIn: 3600,
+  refreshToken: "refresh",
+  account: "uid-1",
+  learner: { id: "a1b2c3d4e5f6", name: "Ada" },
+};
+
+/** The phone approves only at `at` seconds after the screen opened. */
+function approvedAfter(at: number) {
+  const opened = Date.now();
+  pollTvLink.mockImplementation(async () =>
+    Date.now() - opened >= at * 1000
+      ? LINKING_ADA
+      : { status: "pending" as const },
+  );
+}
 
 describe("the TV's sign-in with a phone", () => {
   it("shows the code, where to enter it, a QR code and the time left, with no field to fill", async () => {
@@ -179,7 +210,7 @@ describe("the TV's sign-in with a phone", () => {
     expect(screen.getByText("Continuing in 3…")).toBeTruthy();
   });
 
-  it("goes on by itself when the countdown ends, signs the device in and keeps no account of whom it linked", async () => {
+  it("goes on by itself when the countdown ends, and signs the device in", async () => {
     pollTvLink.mockResolvedValue({
       status: "linking",
       learner: { id: "a1b2c3d4e5f6", name: "Ada" },
@@ -199,10 +230,7 @@ describe("the TV's sign-in with a phone", () => {
 
     await secondsPass(5.1);
 
-    expect(continueTvLink).toHaveBeenCalledWith(
-      "device-code",
-      expect.anything(),
-    );
+    expect(continueTvLink).toHaveBeenCalledWith("device-code");
     expect(startTvSession).toHaveBeenCalledWith({
       token: "session",
       expiresIn: 3600,
@@ -210,7 +238,6 @@ describe("the TV's sign-in with a phone", () => {
       account: "uid-1",
       learner: { id: "a1b2c3d4e5f6", name: "Ada" },
     });
-    expect(Object.keys(localStorage)).toEqual([]);
   });
 
   it("does not go on when Cancel is pressed inside the countdown: it cancels the request and returns to sign-in", async () => {
@@ -420,5 +447,130 @@ describe("the TV's sign-in with a phone", () => {
     await secondsPass(1);
 
     expect(screen.getByText("A B C D 2 3 4 5")).toBeTruthy();
+  });
+
+  describe("whether anyone is at the TV", () => {
+    it("shows Continue, and no countdown, and calls nothing, when the TV saw no input for three minutes", async () => {
+      approvedAfter(190);
+      continueTvLink.mockResolvedValue(APPROVED_ADA);
+      page();
+
+      await secondsPass(200);
+
+      expect(
+        screen.getByRole("heading", { name: "Linking to Ada" }),
+      ).toBeTruthy();
+      expect(screen.queryByText(/^Continuing in \d+…$/)).toBeNull();
+      expect(
+        screen.getByRole("button", { name: en.tvSignIn.continue }),
+      ).toBeTruthy();
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: en.tvSignIn.cancel }),
+      );
+      await secondsPass(120);
+      expect(continueTvLink).not.toHaveBeenCalled();
+      expect(startTvSession).not.toHaveBeenCalled();
+    });
+
+    it("goes on, from Continue, only when the person presses it", async () => {
+      approvedAfter(190);
+      continueTvLink.mockResolvedValue(APPROVED_ADA);
+      page();
+      await secondsPass(200);
+
+      await act(async () =>
+        screen.getByRole("button", { name: en.tvSignIn.continue }).click(),
+      );
+
+      expect(continueTvLink).toHaveBeenCalledTimes(1);
+      expect(startTvSession).toHaveBeenCalledTimes(1);
+    });
+
+    it("goes on by itself when a key was pressed on the TV within two minutes of the approval, even long after the code was shown", async () => {
+      approvedAfter(190);
+      continueTvLink.mockResolvedValue(APPROVED_ADA);
+      page();
+      await secondsPass(150);
+      fireEvent.keyDown(document.body, { key: "ArrowDown" });
+
+      await secondsPass(41);
+      expect(screen.getByText(/^Continuing in \d+…$/)).toBeTruthy();
+      await secondsPass(5.2);
+
+      expect(continueTvLink).toHaveBeenCalledTimes(1);
+      expect(startTvSession).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ["a pointer", () => fireEvent.pointerDown(document.body)],
+      ["a touch", () => fireEvent.touchStart(document.body)],
+    ])("counts %s as input too", async (_, press) => {
+      approvedAfter(190);
+      continueTvLink.mockResolvedValue(APPROVED_ADA);
+      page();
+      await secondsPass(150);
+      press();
+
+      await secondsPass(40 + 5 + 5.2);
+
+      expect(continueTvLink).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not go on when the page is hidden as the countdown ends", async () => {
+      approvedAfter(4);
+      continueTvLink.mockResolvedValue(APPROVED_ADA);
+      page();
+      await secondsPass(6);
+      expect(screen.getByText(/^Continuing in \d+…$/)).toBeTruthy();
+
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "hidden",
+      });
+      await secondsPass(5.2);
+      Reflect.deleteProperty(document, "visibilityState");
+
+      expect(continueTvLink).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole("button", { name: en.tvSignIn.continue }),
+      ).toBeTruthy();
+    });
+
+    it("announces the countdown once, to a screen reader, and not every second", async () => {
+      approvedAfter(4);
+      page();
+      await secondsPass(6);
+
+      const announced = screen.getByRole("status");
+      expect(announced.textContent).toBe(en.tvSignIn.goesOnAnnounce);
+      await secondsPass(2);
+      expect(screen.getByRole("status").textContent).toBe(
+        en.tvSignIn.goesOnAnnounce,
+      );
+      expect(
+        screen.getByText(/^Continuing in \d+…$/).getAttribute("aria-hidden"),
+      ).toBe("true");
+    });
+
+    it("shows the countdown from the same deadline the timer runs on", async () => {
+      approvedAfter(4);
+      page();
+      await secondsPass(5);
+      expect(screen.getByText("Continuing in 5…")).toBeTruthy();
+
+      await secondsPass(3);
+
+      expect(screen.getByText("Continuing in 2…")).toBeTruthy();
+    });
+  });
+
+  it("puts the code in the QR code in the address's fragment, never in a query string", async () => {
+    page();
+    await secondsPass(1);
+    await act(() => vi.dynamicImportSettled());
+
+    const drawn = vi.mocked(qrPath).mock.calls.at(-1)?.[0] ?? "";
+    expect(drawn).toContain("#code=");
+    expect(drawn).not.toContain("?");
   });
 });

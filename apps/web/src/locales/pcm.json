@@ -381,7 +381,8 @@
     "approvedOn": "Dem approve am for {device}.",
     "aPhone": "phone",
     "full": "Dis account get 10 TV. Remove one for your phone, then continue.",
-    "goesOn": "E go continue in {seconds}…"
+    "goesOn": "E go continue in {seconds}…",
+    "goesOnAnnounce": "E go continue in 5 seconds if you no press Cancel."
   },
   "tvLink": {
     "title": "Link your TV",
@@ -406,7 +407,11 @@
     "inUse": "Another account dey link dis TV already.",
     "endLabel": "Type di last 4 characters wey dey show for di TV",
     "endBox": "Character for di TV",
-    "codeBox": "Character of di code"
+    "codeBox": "Character of di code",
+    "warn": "Only continue if you dey look dis TV.",
+    "timedOut": "Dis code don timeout. Scan di QR again.",
+    "approving": "We dey approve am…",
+    "checking": "We dey check am…"
   },
   "voice": {
     "title": "Voice lessons",

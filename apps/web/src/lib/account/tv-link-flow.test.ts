@@ -1,23 +1,31 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, NetworkError } from "@/lib/api/errors";
-import { runTvLink, VETO_MS, type TvLinkState } from "./tv-link-flow";
+import {
+  OVERSHOOT_MS,
+  PRESENCE_MS,
+  runTvLink,
+  VETO_MS,
+  type TvLinkDeps,
+  type TvLinkState,
+} from "./tv-link-flow";
 import type { TvApproval, TvLinkRequest, TvPoll } from "./tv-link-api";
 
-const { startTvLink, pollTvLink, continueTvLink, cancelTvLink } = vi.hoisted(
-  () => ({
+const { startTvLink, pollTvLink, continueTvLink, cancelTvLink, signOutTv } =
+  vi.hoisted(() => ({
     startTvLink: vi.fn<(signal?: AbortSignal) => Promise<TvLinkRequest>>(),
     pollTvLink:
       vi.fn<(code: string, signal?: AbortSignal) => Promise<TvPoll>>(),
     continueTvLink:
       vi.fn<(code: string, signal?: AbortSignal) => Promise<TvPoll>>(),
     cancelTvLink: vi.fn<(code: string) => Promise<void>>(),
-  }),
-);
+    signOutTv: vi.fn<(token: string) => Promise<void>>(),
+  }));
 vi.mock("./tv-link-api", () => ({
   startTvLink,
   pollTvLink,
   continueTvLink,
   cancelTvLink,
+  signOutTv,
 }));
 
 const REQUEST: TvLinkRequest = {
@@ -39,11 +47,47 @@ const APPROVAL: TvApproval = {
 let states: TvLinkState[];
 let approved: TvApproval[];
 
-function run() {
-  return runTvLink({
-    onState: (state) => states.push(state),
-    onApproved: (approval) => approved.push(approval),
+// What the TV knows of itself, which a test sets: whether the page is looked at, when it last
+// saw input, and how far its clocks have jumped (a page that was frozen and then resumed).
+let visible: boolean;
+let inputAt: number | null;
+let skew: number;
+
+function wait(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) return reject(signal.reason);
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        reject(signal.reason);
+      },
+      { once: true },
+    );
   });
+}
+
+function run(overrides: Partial<TvLinkDeps> = {}) {
+  return runTvLink(
+    {
+      onState: (state) => states.push(state),
+      onApproved: (approval) => approved.push(approval),
+    },
+    {
+      start: startTvLink,
+      poll: pollTvLink,
+      release: continueTvLink,
+      cancel: cancelTvLink,
+      signOut: signOutTv,
+      now: () => Date.now() + skew,
+      mono: () => Date.now() + skew,
+      visible: () => visible,
+      lastInput: () => inputAt,
+      wait,
+      ...overrides,
+    },
+  );
 }
 
 const kinds = () => states.map((state) => state.kind);
@@ -58,6 +102,10 @@ beforeEach(() => {
   pollTvLink.mockReset().mockResolvedValue({ status: "pending" });
   continueTvLink.mockReset();
   cancelTvLink.mockReset().mockResolvedValue(undefined);
+  signOutTv.mockReset().mockResolvedValue(undefined);
+  visible = true;
+  inputAt = Date.now();
+  skew = 0;
 });
 
 afterEach(() => {
@@ -128,6 +176,7 @@ describe("polling", () => {
       kind: "linking",
       learnerName: "Ada",
       approver: {},
+      auto: true,
       continuesAt: Date.now() - 4_900 + VETO_MS,
       busy: false,
     });
@@ -148,10 +197,7 @@ describe("polling", () => {
     await secondsPass(0.2);
 
     expect(continueTvLink).toHaveBeenCalledTimes(1);
-    expect(continueTvLink).toHaveBeenCalledWith(
-      "device-code",
-      expect.anything(),
-    );
+    expect(continueTvLink).toHaveBeenCalledWith("device-code");
     expect(approved).toEqual([APPROVAL]);
   });
 
@@ -441,6 +487,344 @@ describe("a request that is left", () => {
 
     link.stop();
 
+    expect(cancelTvLink).not.toHaveBeenCalled();
+  });
+});
+
+describe("going on by itself only when someone is at the TV", () => {
+  const approvedBy = () =>
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: APPROVAL.learner,
+    });
+
+  it("goes on when the TV saw input just before the approval and is visible", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    approvedBy();
+    inputAt = Date.now() + 4_000;
+    run();
+
+    await secondsPass(5 + 5.1);
+
+    expect(states.find((state) => state.kind === "linking")).toMatchObject({
+      auto: true,
+    });
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("does not call the server when the TV saw no input for three minutes: it shows Continue and waits", async () => {
+    approvedBy();
+    inputAt = Date.now() - 3 * 60_000;
+    const link = run();
+
+    await secondsPass(5 + 60);
+
+    expect(states.at(-1)).toMatchObject({
+      kind: "linking",
+      auto: false,
+      continuesAt: null,
+      busy: false,
+    });
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(approved).toEqual([]);
+
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    link.confirm();
+    await secondsPass(0);
+
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("does not go on when the input was just over two minutes before the approval", async () => {
+    approvedBy();
+    inputAt = Date.now() - PRESENCE_MS + 4_000;
+    run();
+
+    await secondsPass(5 + 10);
+
+    expect(states.at(-1)).toMatchObject({ auto: false });
+    expect(continueTvLink).not.toHaveBeenCalled();
+  });
+
+  it("goes on for input just under two minutes old", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    approvedBy();
+    inputAt = Date.now() - PRESENCE_MS + 10_000;
+    run();
+
+    await secondsPass(5 + 5.1);
+
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("does not go on for a TV that has seen no input at all", async () => {
+    approvedBy();
+    inputAt = null;
+    run();
+
+    await secondsPass(5 + 30);
+
+    expect(states.at(-1)).toMatchObject({ auto: false });
+    expect(continueTvLink).not.toHaveBeenCalled();
+  });
+
+  it("does not go on when the page is hidden at the approval", async () => {
+    approvedBy();
+    visible = false;
+    run();
+
+    await secondsPass(5 + 30);
+
+    expect(states.at(-1)).toMatchObject({ auto: false });
+    expect(continueTvLink).not.toHaveBeenCalled();
+  });
+
+  it("does not go on when the page is hidden as the timer fires, and shows Continue", async () => {
+    approvedBy();
+    run();
+    await secondsPass(5);
+    expect(states.at(-1)).toMatchObject({ auto: true });
+
+    visible = false;
+    await secondsPass(VETO_MS / 1000 + 0.1);
+
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(states.at(-1)).toMatchObject({
+      kind: "linking",
+      auto: false,
+      continuesAt: null,
+    });
+  });
+
+  it("does not go on when the timer fires far later than it was set for: the page was not running", async () => {
+    approvedBy();
+    run();
+    await secondsPass(5);
+
+    // Frozen for ten seconds and resumed: the clocks jumped, the timer fires late.
+    skew = VETO_MS + OVERSHOOT_MS + 1_000;
+    await secondsPass(VETO_MS / 1000 + 0.1);
+
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(states.at(-1)).toMatchObject({ auto: false, continuesAt: null });
+  });
+
+  it("goes on when the timer is a little late, within what a busy TV does", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    approvedBy();
+    run();
+    await secondsPass(5);
+
+    skew = OVERSHOOT_MS - 500;
+    await secondsPass(VETO_MS / 1000 + 0.1);
+
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("checks the monotonic clock too, which a changed wall clock cannot hide", async () => {
+    approvedBy();
+    let mono = 0;
+    run({ mono: () => mono });
+    await secondsPass(5);
+
+    mono = VETO_MS + OVERSHOOT_MS + 1_000;
+    await secondsPass(VETO_MS / 1000 + 0.1);
+
+    expect(continueTvLink).not.toHaveBeenCalled();
+    expect(states.at(-1)).toMatchObject({ auto: false });
+  });
+
+  it("shows no countdown deadline when it waits for the person, and the request still expires as before", async () => {
+    approvedBy();
+    inputAt = null;
+    run();
+
+    await secondsPass(10 * 60 + 5);
+
+    expect(states.at(-1)).toMatchObject({ kind: "linking", auto: false });
+    expect(continueTvLink).not.toHaveBeenCalled();
+  });
+});
+
+describe("the session being given", () => {
+  function approvedAndLinking() {
+    pollTvLink.mockResolvedValue({
+      status: "linking",
+      learner: APPROVAL.learner,
+    });
+    const link = run();
+    return link;
+  }
+
+  /** A release that is answered when the test says so. */
+  function pendingRelease() {
+    let answer: (poll: TvPoll) => void = () => undefined;
+    continueTvLink.mockReturnValue(
+      new Promise((resolve) => (answer = resolve)),
+    );
+    return (poll: TvPoll) => answer(poll);
+  }
+
+  it("is asked for once when confirm is called twice without waiting", async () => {
+    const answer = pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5);
+
+    link.confirm();
+    link.confirm();
+    link.confirm();
+    answer({ status: "approved", ...APPROVAL });
+    await secondsPass(0);
+
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("is asked for once when the timer and a press come together", async () => {
+    const answer = pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.confirm();
+    answer({ status: "approved", ...APPROVAL });
+    await secondsPass(0);
+
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("never ends as expired after the first succeeded, however often it is asked", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    const link = approvedAndLinking();
+    await secondsPass(5);
+
+    link.confirm();
+    await secondsPass(0);
+    link.confirm();
+    link.confirm();
+    await secondsPass(0);
+
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
+    expect(states.some((state) => state.kind === "expired")).toBe(false);
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("declined after the timer fired waits for the result, and signs the credential out instead of cancelling", async () => {
+    const answer = pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
+
+    link.decline();
+    expect(states.at(-1)).toMatchObject({ kind: "linking", busy: true });
+    expect(cancelTvLink).not.toHaveBeenCalled();
+    answer({ status: "approved", ...APPROVAL });
+    await secondsPass(0);
+
+    expect(signOutTv).toHaveBeenCalledWith("refresh");
+    expect(cancelTvLink).not.toHaveBeenCalled();
+    expect(approved).toEqual([]);
+    expect(states.at(-1)).toEqual({ kind: "declined" });
+  });
+
+  it("does not show the screen as declined while the session is still being given", async () => {
+    pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.decline();
+    await secondsPass(30);
+
+    expect(states.some((state) => state.kind === "declined")).toBe(false);
+  });
+
+  it("leaves nothing made when it is declined while being given and the answer is that it is not", async () => {
+    const answer = pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.decline();
+    answer({ status: "denied" });
+    await secondsPass(0);
+
+    expect(signOutTv).not.toHaveBeenCalled();
+    expect(states.at(-1)).toEqual({ kind: "declined" });
+  });
+
+  it("cancels the request when it is declined while being given and the account was full", async () => {
+    const answer = pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.decline();
+    answer({ status: "full" });
+    await secondsPass(0);
+
+    expect(cancelTvLink).toHaveBeenCalledWith("device-code");
+    expect(states.at(-1)).toEqual({ kind: "declined" });
+  });
+
+  it("is a no-op to decline after it succeeded", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.decline();
+    await secondsPass(0);
+
+    expect(signOutTv).not.toHaveBeenCalled();
+    expect(cancelTvLink).not.toHaveBeenCalled();
+    expect(states.at(-1)).not.toEqual({ kind: "declined" });
+    expect(approved).toEqual([APPROVAL]);
+  });
+
+  it("leaving the screen (Back) while it is being given signs the credential out and does not orphan it", async () => {
+    const answer = pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.stop();
+    answer({ status: "approved", ...APPROVAL });
+    await secondsPass(0);
+
+    expect(signOutTv).toHaveBeenCalledWith("refresh");
+    expect(approved).toEqual([]);
+    expect(cancelTvLink).not.toHaveBeenCalled();
+  });
+
+  it("does not abort the request for the session when the screen is left", async () => {
+    pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.stop();
+
+    expect(continueTvLink).toHaveBeenCalledTimes(1);
+    expect(continueTvLink.mock.calls[0]).toEqual(["device-code"]);
+  });
+
+  it("signs nothing out when the screen is left and the session was not given", async () => {
+    const answer = pendingRelease();
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.stop();
+    answer({ status: "expired" });
+    await secondsPass(0);
+
+    expect(signOutTv).not.toHaveBeenCalled();
+  });
+
+  it("is not signed out when it was given and the screen is left only afterwards", async () => {
+    continueTvLink.mockResolvedValue({ status: "approved", ...APPROVAL });
+    const link = approvedAndLinking();
+    await secondsPass(5 + VETO_MS / 1000 + 0.1);
+
+    link.stop();
+    await secondsPass(0);
+
+    expect(signOutTv).not.toHaveBeenCalled();
     expect(cancelTvLink).not.toHaveBeenCalled();
   });
 });
