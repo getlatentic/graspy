@@ -37,6 +37,8 @@ interface Session {
   account?: string;
   // The account's learner it reads and writes for; without one it manages learners only.
   learner?: string;
+  // Named no device and no account: the visit of someone who has not signed in (/try).
+  anonymous?: boolean;
 }
 
 export interface Issued {
@@ -54,7 +56,24 @@ const RENEW_MARGIN_MS = 5 * 60 * 1000;
 const PARENT_MARGIN_MS = 30 * 1000;
 
 let cached: Session | null = readStored();
-let pending: Promise<string> | null = null;
+let pending: { anonymous: boolean; token: Promise<string> } | null = null;
+
+// While a page that keeps nothing of its visitor is open (/try), and nobody is signed in, the
+// session names no device: the server then has no record to keep anything under.
+let anonymousHolds = 0;
+
+/** Whether the requests now being made are those of a visit that names no device. */
+export const isAnonymousSession = (): boolean =>
+  anonymousHolds > 0 && currentAccount() === null;
+
+/** Makes the device's requests carry a session that names no device, until the returned
+ * function is called. Not in force once someone signs in. */
+export function holdAnonymousSession(): () => void {
+  anonymousHolds += 1;
+  return () => {
+    anonymousHolds -= 1;
+  };
+}
 
 // The parent's own session, made just after they typed their PIN or signed in again: what a
 // learner's recordings are managed under, as a learner's session is refused them. Held in memory
@@ -108,9 +127,11 @@ function keep(session: Session | null): void {
 // one naming the device before it took a new id on signing out.
 function usable(session: Session | null): session is Session {
   const account = currentAccount();
+  const anonymous = isAnonymousSession();
   return (
-    !!session?.device &&
-    session.device === deviceId() &&
+    !!session &&
+    !!session.anonymous === anonymous &&
+    (anonymous || (!!session.device && session.device === deviceId())) &&
     session.account === account?.uid &&
     session.learner === account?.learner?.id &&
     session.expiresAt - RENEW_MARGIN_MS > Date.now()
@@ -295,7 +316,16 @@ function followLearner(sent: Learner | null, { learner }: Issued): void {
   setLearner(learner ? { id: learner.id, name: learner.name } : null);
 }
 
+async function mintAnonymous(): Promise<string> {
+  const { token, expiresIn } = await issued(await post({}));
+  if (isAnonymousSession()) {
+    keep({ token, expiresAt: Date.now() + expiresIn * 1000, anonymous: true });
+  }
+  return token;
+}
+
 async function mint(): Promise<string> {
+  if (isAnonymousSession()) return mintAnonymous();
   const device = deviceId();
   const signedIn = currentAccount();
   const { response, account } = signedIn
@@ -315,13 +345,16 @@ async function mint(): Promise<string> {
 export function getSessionToken(): Promise<string> {
   if (usable(cached)) return Promise.resolve(cached.token);
 
-  if (!pending) {
-    const minting: Promise<string> = mint().finally(() => {
+  const anonymous = isAnonymousSession();
+  if (pending?.anonymous === anonymous) return pending.token;
+  const minting = {
+    anonymous,
+    token: mint().finally(() => {
       if (pending === minting) pending = null;
-    });
-    pending = minting;
-  }
-  return pending;
+    }),
+  };
+  pending = minting;
+  return minting.token;
 }
 
 export async function refreshSessionToken(): Promise<string> {

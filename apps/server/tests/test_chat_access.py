@@ -1,6 +1,6 @@
-"""The tutor chat is for a signed-in account's learner: a device's own session is refused with
-`403 account_required`, an account that has chosen no learner with `409 learner_required`, and
-what is not the chat (the record, lessons, views, voice) stays open to a device."""
+"""Who reaches the tutor chat: a signed-in account's learner, and a visitor with no account (the web's
+/try). An account that has chosen no learner is refused with `409 learner_required`. What is not the
+chat (the record, lessons, views, voice) stays open to a device."""
 
 import pytest
 from consent_sign_ins import consent_app
@@ -51,12 +51,21 @@ def code_of(response) -> tuple[int, str]:
 
 
 @pytest.mark.parametrize(("method", "url"), CHAT_ROUTES)
-async def test_a_device_with_no_account_is_refused_the_chat(app, method, url):
+async def test_a_visitor_with_no_account_gets_to_the_chat(app, method, url):
     async with client(app) as http:
         await on_a_device(http)
-        refused = await sent(http, method, url)
+        reached = await sent(http, method, url)
 
-    assert code_of(refused) == (403, "account_required")
+    assert reached.status_code not in (401, 403, 409, 429, 503), reached.text
+
+
+@pytest.mark.parametrize(("method", "url"), CHAT_ROUTES)
+async def test_a_session_that_names_no_device_gets_to_the_chat(app, method, url):
+    async with client(app) as http:
+        use(http, (await http.post("/api/session", json={})).json())
+        reached = await sent(http, method, url)
+
+    assert reached.status_code not in (401, 403, 409, 429, 503), reached.text
 
 
 @pytest.mark.parametrize(("method", "url"), CHAT_ROUTES)
@@ -108,22 +117,30 @@ class Upgrade:
         self.headers = {"Sec-WebSocket-Protocol": f"{PROTOCOL}, {token}"}
 
 
-@pytest.mark.parametrize(
-    ("claims", "refused"),
-    [
-        ({"learner": "device-0001"}, (403, "account_required")),
-        ({"account": UID}, (409, "learner_required")),
-    ],
-)
-async def test_the_turn_socket_is_refused_like_the_chat(
-    app, env, monkeypatch, claims, refused
+async def test_the_turn_socket_of_an_account_with_no_learner_is_refused_like_the_chat(
+    app, env, monkeypatch
 ):
     monkeypatch.setattr(
         "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
     )
-    token = issue(app.state.session_secret, **claims).token
+    token = issue(app.state.session_secret, account=UID).token
 
-    assert await connect(env, app, Upgrade(token), (CHAT, TURN, 0)) == refused
+    refused = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert refused == (409, "learner_required")
+
+
+async def test_the_turn_socket_of_a_visitor_with_no_account_gets_as_far_as_the_chat(
+    app, env, monkeypatch
+):
+    monkeypatch.setattr(
+        "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
+    )
+    token = issue(app.state.session_secret, learner="device-0001").token
+
+    reached = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert reached == (404, "chat_not_found")
 
 
 async def test_the_turn_socket_of_a_learner_the_account_holds_gets_as_far_as_the_chat(

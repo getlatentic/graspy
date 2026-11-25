@@ -1,4 +1,4 @@
-import { ASK_HUB } from "@/features/learn/lib/chat-targets";
+import { ASK_HUB, TRY_CHAT } from "@/features/learn/lib/chat-targets";
 
 // The chat a visitor asked for before signing in, kept for this tab until they arrive. It
 // outlives the sign-in popup and the "Who's learning?" step, and it is short-lived so that a
@@ -9,7 +9,10 @@ const KEPT_MS = 30 * 60_000;
 /** The path itself when it is a chat, else null: nothing but a chat may be returned to. */
 export function chatPathOf(path: string): string | null {
   const [pathOnly] = path.split(/[?#]/);
-  const inChat = pathOnly === ASK_HUB || pathOnly.startsWith(`${ASK_HUB}/`);
+  const inChat =
+    pathOnly === TRY_CHAT ||
+    pathOnly === ASK_HUB ||
+    pathOnly.startsWith(`${ASK_HUB}/`);
   return inChat && !pathOnly.includes("//") && !pathOnly.includes("..")
     ? path
     : null;

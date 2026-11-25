@@ -133,7 +133,8 @@ async def turn(
     data: dict | None = None,
     device: str | None = None,
 ) -> dict:
-    token = issue(SECRET, learner=device).token
+    # A turn is kept under a learner only for a signed-in account's session.
+    token = issue(SECRET, learner=device, account=device and "uid123").token
     http = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url=BASE,

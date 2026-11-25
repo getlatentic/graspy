@@ -7,7 +7,7 @@ import {
 import { askTurn } from "@/lib/chat-turn/ask";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { AppCallRequest } from "@/lib/a2a/request-data";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, TRY_LIMIT } from "@/lib/api/errors";
 import {
   saveChatMessage,
   type ChatMessage,
@@ -168,6 +168,9 @@ async function failed(
 }
 
 function failureText(error: unknown, t: Translate): string {
+  if (error instanceof ApiError && error.code === TRY_LIMIT) {
+    return t("chat.tryLimit");
+  }
   return error instanceof ApiError && error.retryable
     ? t("chat.temporaryProblem")
     : t("chat.tutorError");

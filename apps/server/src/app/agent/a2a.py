@@ -30,7 +30,7 @@ from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
 from ..settings import Settings
-from ..turns.access import may_start
+from ..turns.access import chat_learner, may_start
 from ..turns.durable import DurableTurns
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
@@ -181,7 +181,7 @@ async def _relay(updater: TaskUpdater, turn: AsyncIterator) -> TutorReply:
 
 def learner_of(context: RequestContext) -> str | None:
     session = context.call_context.state.get("auth")
-    return getattr(session, "learner", None)
+    return chat_learner(session) if session is not None else None
 
 
 def message_parts(context: RequestContext) -> list[dict]:

@@ -45,6 +45,10 @@ Migrations are applied before the new code goes live. So:
 - New code that needs a new table or column ships in the same deploy as the migration that adds it, since the migration is already applied when it goes up.
 - A migration that must follow its code (a data fix that relies on it) waits for the deploy after the code and says so in its header.
 
+### The anonymous chat limits
+
+`0027_anonymous_chat_use.sql` adds a table (`anonymous_chat_use`), so it works with the code before it and after it. The code needs no new binding: the counts are in D1 ([Anonymous chat limits](SECURITY.md#anonymous-chat-limits)). **The migration has to be applied to production by hand before the code that counts goes there** (`scripts/deploy.sh production` applies migrations first); until it is, a turn from a visitor with no account is refused `503 try_unavailable`, and a signed-in learner's turns are not affected. It applies on staging with the deploy after each push to `main`.
+
 ### The parent PIN
 
 `0026_parent_pin.sql` adds a table and a defaulted column (`consents.gate`), so it works with the code before it and after it. The code needs a new rate-limit binding, `PIN_LIMITER`, in `apps/server/wrangler.jsonc` for each environment: `scripts/deploy.sh` creates it with the Worker, and the Worker refuses to start without it. The PIN's key is derived from `SESSION_SECRET`, so rotating that secret also ends every parent PIN; parents use Forgot PIN ([Parent PIN](PARENT_PIN.md)). Migration 0026 and the `PIN_LIMITER` binding apply on staging automatically (the deploy after each push to `main`) and have to be applied to production by hand (`scripts/deploy.sh production`, which applies migrations first).

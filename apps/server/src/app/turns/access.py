@@ -7,6 +7,14 @@ from __future__ import annotations
 
 from ..chatlog import kinds
 from ..chatlog.log import ChatLog
+from ..security.guard import Session
+
+
+def chat_learner(session: Session) -> str | None:
+    """Whose record a turn is kept under, and who owns its chat: the account's learner, and no one
+    for a visitor with no account, whatever device the session names. A chat of no one is held by
+    its id alone, which the page makes at random."""
+    return session.learner if session.account else None
 
 
 async def _first_learner(log: ChatLog, chat: str) -> tuple[bool, str | None]:

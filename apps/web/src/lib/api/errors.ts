@@ -7,6 +7,10 @@ const RETRYABLE_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504]);
 export const isRetryableStatus = (status: number): boolean =>
   RETRYABLE_STATUSES.has(status);
 
+/** What the server answers (429) a visitor with no account whose turns are past their limits:
+ * trying again at once cannot pass, so it is not retried. */
+export const TRY_LIMIT = "try_limit";
+
 /** An answer the app cannot read: no body, or not what the protocol promises. Taken as a
  * gateway's bad answer, which a later try may not repeat. */
 export const UNREADABLE_ANSWER = 502;
@@ -22,8 +26,13 @@ export class ApiError extends Error {
     this.data = data;
   }
 
+  /** The server's code for the refusal, when it sent one. */
+  get code(): unknown {
+    return codeIn(this.data as Record<string, unknown> | undefined);
+  }
+
   get retryable(): boolean {
-    return isRetryableStatus(this.status);
+    return isRetryableStatus(this.status) && this.code !== TRY_LIMIT;
   }
 }
 

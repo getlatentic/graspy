@@ -20,11 +20,11 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from ..security.guard import Session, require_session
-from ..turns.access import may_follow, may_start
+from ..turns.access import chat_learner, may_follow, may_start
 from ..turns.durable import DurableTurns
 from ..turns.frames import read
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
-from .chat_access import ChatSession
+from .chat_access import ChatSession, StartingSession
 from .sse import SSE_HEADERS
 
 # A window of reading, after which the client asks again from its cursor: a request that reads the
@@ -94,16 +94,17 @@ def _message(parts: list[dict[str, Any]]) -> str:
 async def start_turn(
     chat: ChatId,
     body: StartTurn,
-    session: ChatSession,
+    session: StartingSession,
     request: Request,
 ) -> StartedTurn:
     turns = _turns(request)
-    if not await may_start(turns.log, chat, session.learner):
+    learner = chat_learner(session)
+    if not await may_start(turns.log, chat, learner):
         raise _not_found()
     job = TurnJob(
         chat=chat,
         turn=body.turn,
-        learner=session.learner,
+        learner=learner,
         message=_message(body.parts),
         parts=body.parts,
         metadata=body.metadata,
@@ -145,7 +146,7 @@ async def turn_events(
 ) -> StreamingResponse:
     """The frames after the cursor: `Last-Event-ID`, which a reconnecting client sends, or `after`."""
     turns = _turns(request)
-    if not await may_follow(turns.log, chat, session.learner):
+    if not await may_follow(turns.log, chat, chat_learner(session)):
         raise _not_found()
     cursor = last_event_id if last_event_id is not None else after or 0
     return StreamingResponse(
@@ -164,6 +165,6 @@ async def stop_turn(
     request: Request,
 ) -> None:
     turns = _turns(request)
-    if not await may_follow(turns.log, chat, session.learner):
+    if not await may_follow(turns.log, chat, chat_learner(session)):
         raise _not_found()
     await turns.host.stop(chat, turn)

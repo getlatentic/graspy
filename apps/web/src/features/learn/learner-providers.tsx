@@ -27,12 +27,29 @@ function ChatProvider({ children }: { children: ReactNode }) {
   return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;
 }
 
-export function LearnerProviders({ children }: { children: ReactNode }) {
+function PlanProvider({ children }: { children: ReactNode }) {
   return (
     <PlanContext.Provider value={useLearnerPlan()}>
+      {children}
+    </PlanContext.Provider>
+  );
+}
+
+export function LearnerProviders({ children }: { children: ReactNode }) {
+  return (
+    <PlanProvider>
       <ProgressProvider>
         <ChatProvider>{children}</ChatProvider>
       </ProgressProvider>
-    </PlanContext.Provider>
+    </PlanProvider>
+  );
+}
+
+/** The plan and the chat alone, for a page that reads no learner's progress from the server. */
+export function ChatOnlyProviders({ children }: { children: ReactNode }) {
+  return (
+    <PlanProvider>
+      <ChatProvider>{children}</ChatProvider>
+    </PlanProvider>
   );
 }

@@ -1,6 +1,6 @@
 # Security
 
-Signing in is optional, except for the tutor chat, and goes through Google by Firebase, so graspy keeps no passwords. The assets are the model budget, the service itself and the learner's record. Everything a learner types reaches a model, and the model can repeat it, so all model output is untrusted.
+Signing in is optional, and goes through Google by Firebase, so graspy keeps no passwords. The tutor chat under `/app/learn/ask` is for a signed-in account's learner; the public `/try` chat is for anyone: it is text only, keeps what a visitor says about themselves on their device, and is rate limited. The assets are the model budget, the service itself and the learner's record. Everything a learner types reaches a model, and the model can repeat it, so all model output is untrusted.
 
 ## Controls (OWASP Top 10, 2021)
 
@@ -54,6 +54,19 @@ A model writes its expressions, so they are hostile.
 | `PAIRING_LIMITER` | 10 a minute | Asking for a TV's sign-in code (per address) and looking one up (per account and per address), on top of `API_LIMITER` ([TV sign-in](TV_SIGN_IN.md)) |
 
 A refusal is `429` with `Retry-After: 60` and CORS headers, so the browser can read it.
+
+### Anonymous chat limits
+
+`/try` lets a visitor with no account chat with the tutor, which spends model credits, so each turn a session with no account starts (`POST /api/chats/{chat}/turns`, and `POST /a2a` when the server keeps no turns) is counted in D1 (`anonymous_chat_use`, migration 0027; the Workers rate-limit bindings count a minute at most). A turn is refused with `429 try_limit` ("Try again later, or sign in to keep going") once any count passes its limit; a signed-in account's turns are never counted. `AGENT_LIMITER` (30 a minute per address) stands in front as before.
+
+| Count | Limit | Window |
+|---|---|---|
+| One session (its token's id) | 30 turns | the token's 12 hours |
+| One network (an IPv4 address, an IPv6 /64) | 60 turns | the clock hour (UTC) |
+| One network | 200 turns | the day (UTC) |
+| All anonymous visitors | 3000 turns | the day (UTC) |
+
+The narrowest count is made first and a turn over it is not added to the wider ones, so one visitor cannot spend everyone's day. A session is cheap to mint (`SESSION_LIMITER` bounds that), so the network and day counts are the ones that hold; the session count stops a page that loops. A school or a home on one address shares its network counts. A count that cannot be made (D1 down or slow) refuses with `503 try_unavailable`: a chat that cannot be counted is an open bill. The limits are constants in `apps/server/src/app/api/anonymous_chat.py`. The provider account's spend cap is still the only absolute ceiling.
 
 ## Open risks
 
