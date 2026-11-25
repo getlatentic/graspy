@@ -24,6 +24,20 @@ const topicScope = {
 } as const;
 
 describe("scopeContext", () => {
+  it("sends the country's code, which finds its classes, and no subjects for a plan with none", () => {
+    const starting = {
+      ...curriculum,
+      countryCode: "NG",
+      subjects: [],
+      topics: {},
+    };
+
+    const sent = scopeContext(starting, { kind: "general", planId: "plan-1" });
+
+    expect(sent).toMatchObject({ countryCode: "NG", planId: "plan-1" });
+    expect(sent.subjects).toBeUndefined();
+  });
+
   it("names the learner's place, subjects and the conversation's topic", () => {
     expect(scopeContext(curriculum, topicScope)).toEqual({
       country: "Nigeria",

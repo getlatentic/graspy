@@ -43,13 +43,27 @@ class RebuildPlan(Wire):
     type: Literal["rebuild_plan"] = "rebuild_plan"
 
 
+class SetDetails(Wire):
+    type: Literal["set_details"] = "set_details"
+    # What the learner said, empty when they did not say it.
+    class_name: str
+    country: str
+    course: str
+
+
 class ProposePath(Wire):
     type: Literal["propose_path"] = "propose_path"
     goal: str
 
 
 Action = Annotated[
-    OpenTopic | OpenSubject | AddTopic | ChangeSubjects | RebuildPlan | ProposePath,
+    OpenTopic
+    | OpenSubject
+    | AddTopic
+    | ChangeSubjects
+    | RebuildPlan
+    | ProposePath
+    | SetDetails,
     Field(discriminator="type"),
 ]
 

@@ -15,6 +15,7 @@
   "chat": {
     "aiTutorTitle": "Olùkọ́ graspy",
     "aiTutorWelcome": "Ẹ káàbọ̀! Béèrè ohunkóhun lọ́wọ́ mi nípa ẹ̀kọ́ rẹ.",
+    "startWelcome": "Hi! What would you like to learn about?",
     "quickQuestions": "Ìbéèrè kíákíá",
     "quickActionExplain": "Ṣàlàyé kókó yìí",
     "quickActionExplainPrompt": "Ṣé o lè ṣàlàyé \"{topic}\" ní irọlẹ̀? Tú u sílẹ̀ ní ìgbésẹ̀ díẹ̀.",
@@ -40,6 +41,7 @@
     "confirmRemove": "Ṣé kí a yọ {subjects} kúrò? Ìlọsíwájú wọn yóò parẹ́.",
     "confirmYes": "Bẹ́ẹ̀ni, ṣe é",
     "confirmNo": "Fi ètò mi sílẹ̀ bí ó ṣe wà",
+    "detailsNotKept": "Your details were not saved. Try again.",
     "subjectsChanged": "A ti ṣàtúnṣe àwọn kókó-ẹ̀kọ́ rẹ.",
     "topicAdded": "A ti fi “{topic}” kún {subject}.",
     "pathAdded": "A ti fi ọ̀nà “{subject}” kún ètò rẹ.",
@@ -69,6 +71,9 @@
       "rebuild_plan": "À ń múra láti tún ètò rẹ ṣe...",
       "give_practice": "Mò ń kọ ìbéèrè fún ọ...",
       "give_passage": "Ń kọ àyọkà kan fún ọ...",
+      "give_choice": "Asking you a question...",
+      "ask_class": "Finding your classes...",
+      "set_details": "Saving your details...",
       "load_skill": "Mò ń yan ọ̀nà tí màá fi kọ́ ọ..."
     },
     "openLesson": "Ṣí ẹ̀kọ́",

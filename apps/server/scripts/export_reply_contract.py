@@ -25,6 +25,7 @@ from typing import get_args
 
 from app.agent.app_tools import PART_KEY, TOOLS_CALL
 from app.agent.cards import Card, ResultMeta
+from app.agent.choice import give_choice
 from app.agent.memory import InMemoryConversationStore
 from app.agent.passage import PassageQuestion, give_passage
 from app.agent.practice import PracticeQuestion, give_practice
@@ -37,6 +38,7 @@ from app.agent.reply import (
     ProposePath,
     RebuildPlan,
     ReplyData,
+    SetDetails,
 )
 from app.agent.toolkit import TOOLS
 from app.agent.unanswered import PART_KEY as UNANSWERED_KEY
@@ -140,6 +142,10 @@ PASSAGE = give_passage(
     ],
 ).card
 
+CHOICE = give_choice(
+    question="Which class are you in?", options=["JSS 1", "JSS 2", "JSS 3"]
+).card
+
 EXAMPLE = ReplyData(
     follow_ups=["What is 1/2 as a decimal?"],
     actions=[
@@ -155,10 +161,12 @@ EXAMPLE = ReplyData(
         ChangeSubjects(add=["Physics"], remove=["Basic Science"]),
         RebuildPlan(),
         ProposePath(goal="real analysis"),
+        SetDetails(class_name="JSS 2", country="Nigeria", course=""),
     ],
     cards=[
         pinned(PRACTICE, PRACTICE_VIEW),
         pinned(PASSAGE, "9b0c1e2d7f6a5b8e3c4d0a9e7b2c1f4a"),
+        pinned(CHOICE, "c2d4e6f8a0b1c3d5e7f9a1b2c4d6e8f0"),
     ],
 )
 

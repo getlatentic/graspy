@@ -30,6 +30,16 @@
       "ui": "ui://graspy/passage"
     },
     {
+      "name": "give_choice",
+      "ui": "ui://graspy/choice"
+    },
+    {
+      "name": "ask_class"
+    },
+    {
+      "name": "set_details"
+    },
+    {
       "name": "load_skill"
     }
   ],
@@ -70,6 +80,12 @@
       {
         "type": "propose_path",
         "goal": "real analysis"
+      },
+      {
+        "type": "set_details",
+        "className": "JSS 2",
+        "country": "Nigeria",
+        "course": ""
       }
     ],
     "cards": [
@@ -204,6 +220,42 @@
           },
           "_meta": {
             "viewUUID": "9b0c1e2d7f6a5b8e3c4d0a9e7b2c1f4a",
+            "where": {
+              "planId": "plan-1",
+              "subjectSlug": "mathematics",
+              "topic": "Fractions"
+            }
+          }
+        }
+      },
+      {
+        "resourceUri": "ui://graspy/choice",
+        "toolName": "give_choice",
+        "toolInput": {
+          "question": "Which class are you in?",
+          "options": [
+            "JSS 1",
+            "JSS 2",
+            "JSS 3"
+          ]
+        },
+        "toolResult": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Which class are you in?\n1. JSS 1\n2. JSS 2\n3. JSS 3"
+            }
+          ],
+          "structuredContent": {
+            "question": "Which class are you in?",
+            "options": [
+              "JSS 1",
+              "JSS 2",
+              "JSS 3"
+            ]
+          },
+          "_meta": {
+            "viewUUID": "c2d4e6f8a0b1c3d5e7f9a1b2c4d6e8f0",
             "where": {
               "planId": "plan-1",
               "subjectSlug": "mathematics",

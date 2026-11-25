@@ -47,6 +47,14 @@
         }
       ]
     },
+    "ui://graspy/choice": {
+      "question": "Which class are you in?",
+      "options": [
+        "JSS 1",
+        "JSS 2",
+        "JSS 3"
+      ]
+    },
     "ui://graspy/lesson": {
       "status": "ready",
       "lesson": {

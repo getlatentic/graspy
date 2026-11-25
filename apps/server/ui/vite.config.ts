@@ -62,7 +62,12 @@ export default defineConfig({
     emptyOutDir: true,
     assetsDir: ASSETS_DIR,
     rollupOptions: {
-      input: ["views/practice.html", "views/passage.html", "views/lesson.html"],
+      input: [
+        "views/practice.html",
+        "views/passage.html",
+        "views/choice.html",
+        "views/lesson.html",
+      ],
     },
   },
 });

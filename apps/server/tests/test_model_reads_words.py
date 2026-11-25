@@ -71,6 +71,10 @@ CARD_CALLS = {
             "questions": [asked()],
         },
     ),
+    "ui://graspy/choice": (
+        "give_choice",
+        {"question": "Which class are you in?", "options": ["JSS 1", "JSS 2"]},
+    ),
 }
 
 
@@ -150,6 +154,9 @@ REFUSALS = [
     ("change_subjects", {"remove": ["Mathematics"]}, PLAN, True),
     ("change_subjects", {"add": ["Physics"]}, MANY, True),
     ("rebuild_plan", {}, NOTHING_SENT, True),
+    ("give_choice", {"question": "Which?", "options": ["A"]}, PLAN, True),
+    ("ask_class", {"question": "Which class?"}, NOTHING_SENT, True),
+    ("set_details", {}, PLAN, True),
     ("give_practice", {"instruction": "x", "questions": []}, PLAN, True),
     (
         "give_practice",

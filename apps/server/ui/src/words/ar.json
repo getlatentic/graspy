@@ -23,6 +23,12 @@
     "another": "نص آخر",
     "askAnother": "أجبت عن {right} من {total} بشكل صحيح في النص. أعطني نصًا آخر لأقرأه."
   },
+  "choice": {
+    "label": "Question",
+    "other": "Something else",
+    "typeBelow": "Type your answer below.",
+    "busy": "Wait for graspy to finish its answer, then tap again."
+  },
   "lesson": {
     "label": "درس",
     "loading": "نحضّر درسك",

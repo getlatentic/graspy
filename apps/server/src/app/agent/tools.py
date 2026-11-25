@@ -204,7 +204,8 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
             add: New subjects to study, named in the learner's language, e.g. ["Physics"].
             remove: Subjects of theirs to drop, as the learner named them.
         """
-        if not context.subjects:
+        # A plan the app sent with no subjects is a learner with none yet.
+        if not (context.subjects or context.plan_id):
             return refusal(
                 "The learner's subjects were not sent, so none can be changed."
             )

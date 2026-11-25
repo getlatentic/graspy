@@ -23,6 +23,12 @@
     "another": "Àyọkà mìíràn",
     "askAnother": "Mo gba {right} nínú {total} tọ̀nà lórí àyọkà náà. Fún mi ní òmíràn láti kà."
   },
+  "choice": {
+    "label": "Question",
+    "other": "Something else",
+    "typeBelow": "Type your answer below.",
+    "busy": "Wait for graspy to finish its answer, then tap again."
+  },
   "lesson": {
     "label": "Ẹ̀kọ́",
     "loading": "À ń múra ẹ̀kọ́ rẹ sílẹ̀",

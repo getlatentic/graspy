@@ -100,6 +100,8 @@ function getClient(): Promise<Client> {
 /** Sent as message metadata so the message text stays the learner's own words. */
 export interface LearnerContext {
   country?: string;
+  /** The ISO code, which finds the country's classes. */
+  countryCode?: string;
   language?: string;
   gradeLevel?: string;
   subject?: string;

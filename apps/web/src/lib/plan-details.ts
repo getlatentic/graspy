@@ -51,6 +51,16 @@ function codeOf(
   return codes.find((code) => nameOf(code) === value);
 }
 
+/** The country as a learner or the tutor names it, in English or by code, in any case. */
+export function countryCodeNamed(name: string): string | undefined {
+  const wanted = name.trim().toLowerCase();
+  return COUNTRIES.find(
+    (code) =>
+      code.toLowerCase() === wanted ||
+      getCountryName(code).toLowerCase() === wanted,
+  );
+}
+
 export const countryCodeOf = (plan: CurriculumData): string | undefined =>
   plan.countryCode ?? codeOf(plan.country, COUNTRIES, getCountryName);
 

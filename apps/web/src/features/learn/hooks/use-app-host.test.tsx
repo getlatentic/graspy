@@ -53,3 +53,28 @@ describe("a chat card's answers", () => {
     expect(trigger).not.toHaveBeenCalled();
   });
 });
+
+describe("a choice card's tap", () => {
+  const hostWith = (busy: boolean, ask = vi.fn()) => {
+    const { result } = renderHook(() =>
+      useAppHost({ busy, ask, keepViewCalls: vi.fn() }),
+    );
+    return result.current({} as ChatMessage);
+  };
+
+  it("is the learner's message, as they would have typed it", () => {
+    const ask = vi.fn();
+
+    expect(hostWith(false, ask).message("JSS 2")).toBe(true);
+
+    expect(ask).toHaveBeenCalledWith("JSS 2", []);
+  });
+
+  it("is refused while the tutor is still answering, so the card says to wait", () => {
+    const ask = vi.fn();
+
+    expect(hostWith(true, ask).message("JSS 2")).toBe(false);
+
+    expect(ask).not.toHaveBeenCalled();
+  });
+});

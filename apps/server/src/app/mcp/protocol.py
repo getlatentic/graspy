@@ -19,7 +19,8 @@ UI_EXTENSION = "io.modelcontextprotocol/ui"
 INSTRUCTIONS = (
     "graspy's tutor tools. give_practice sets the learner multiple-choice "
     "questions as a card they answer with a tap; give_passage sets a passage "
-    "to read with questions on it."
+    "to read with questions on it; give_choice asks a short question with a few "
+    "answers to tap."
 )
 
 SPOKEN_INSTRUCTIONS = (

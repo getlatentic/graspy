@@ -4,6 +4,7 @@ import AppEntry from "@/app/entry";
 import { requireAccount } from "@/app/chat-gate";
 import { chatLinks } from "@/app/chat-link";
 import { lazyPage } from "@/app/page-chunks";
+import { tryChat, tryLink } from "@/app/try-link";
 import { RootLayout } from "@/app/route-focus";
 import { AppShell, PageLoading, RouteError } from "@/app/shell";
 
@@ -37,7 +38,7 @@ export const routes: RouteObject[] = [
         }),
       },
       { path: "/link", lazy: lazyPage("tvLink") },
-      { path: "/try", Component: AppEntry },
+      tryLink,
       ...chatLinks,
       {
         path: "/app",
@@ -66,6 +67,7 @@ export const routes: RouteObject[] = [
                 loader: requireAccount,
                 children: [
                   { path: "ask", lazy: lazyPage("ask") },
+                  tryChat,
                   { path: "ask/:subject", lazy: lazyPage("chat") },
                   { path: "ask/subject/:subjectSlug", lazy: lazyPage("chat") },
                   { path: "ask/:subject/:topicIndex", lazy: lazyPage("chat") },

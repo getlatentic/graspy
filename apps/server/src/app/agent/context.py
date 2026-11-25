@@ -29,6 +29,10 @@ METADATA_KEY = "learner"
 GENERAL_CONVERSATION = (
     "This conversation is not about one topic: the learner may ask about anything."
 )
+NO_SUBJECTS_CONVERSATION = (
+    "The learner has no subjects yet. The app asks a new learner what they would "
+    "like to learn; if they have not said, ask."
+)
 WHOLE_SUBJECT_CONVERSATION = (
     "This conversation is about the subject as a whole, not one of its topics."
 )
@@ -112,6 +116,10 @@ class LearnerContext(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore", frozen=True)
 
     country: Short | None = None
+    # The country's ISO code, which finds its school classes.
+    country_code: Annotated[str, StringConstraints(pattern=r"^[A-Z]{2}$")] | None = (
+        Field(default=None, alias="countryCode")
+    )
     language: Short | None = None
     grade_level: Short | None = Field(default=None, alias="gradeLevel")
     # The plan the learner's record files this conversation under.
@@ -171,7 +179,11 @@ class LearnerContext(BaseModel):
             else []
         )
         if not self.subject:
-            return "\n".join([*lines, GENERAL_CONVERSATION])
+            return "\n".join(
+                [*lines, GENERAL_CONVERSATION]
+                if self.subjects or not self.plan_id
+                else [NO_SUBJECTS_CONVERSATION, GENERAL_CONVERSATION]
+            )
         lines.append(f"Subject: {self.subject}")
         lines.append(
             f"This conversation is about: {self.topic}"

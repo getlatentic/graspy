@@ -15,6 +15,7 @@
   "chat": {
     "aiTutorTitle": "graspy المعلم الذكي",
     "aiTutorWelcome": "مرحبًا! اسألني عن أي شيء في درسك.",
+    "startWelcome": "Hi! What would you like to learn about?",
     "quickQuestions": "أسئلة سريعة",
     "quickActionExplain": "اشرح هذا المفهوم",
     "quickActionExplainPrompt": "هل يمكنك شرح \"{topic}\" بطريقة بسيطة خطوة بخطوة؟",
@@ -40,6 +41,7 @@
     "confirmRemove": "هل تحذف {subjects}؟ سيُمحى تقدّمها.",
     "confirmYes": "نعم، تابع",
     "confirmNo": "أبقِ خطتي",
+    "detailsNotKept": "Your details were not saved. Try again.",
     "subjectsChanged": "تم تحديث موادك.",
     "topicAdded": "أُضيف «{topic}» إلى {subject}.",
     "pathAdded": "أُضيف المسار «{subject}» إلى خطتك.",
@@ -69,6 +71,9 @@
       "rebuild_plan": "نستعد لإعادة بناء خطتك...",
       "give_practice": "أكتب لك سؤالًا...",
       "give_passage": "أكتب لك نصًا للقراءة...",
+      "give_choice": "Asking you a question...",
+      "ask_class": "Finding your classes...",
+      "set_details": "Saving your details...",
       "load_skill": "أختار طريقة الشرح..."
     },
     "openLesson": "افتح الدرس",

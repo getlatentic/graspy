@@ -44,6 +44,10 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
     keepViewCalls: chat.keepViewCalls,
   });
 
+  // A learner with no subjects yet is asked what they would like to learn, and the question
+  // stays in view while they answer it.
+  const starting =
+    scope.kind === "general" && curriculum?.subjects.length === 0;
   const awaitingAnswer = state.answering && lastMessage?.sender === "user";
 
   return (
@@ -54,10 +58,13 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
         ready={ready}
         turns={turns}
         welcome={t(
-          scope.kind === "general"
-            ? "ask.anythingWelcome"
-            : "chat.aiTutorWelcome",
+          starting
+            ? "chat.startWelcome"
+            : scope.kind === "general"
+              ? "ask.anythingWelcome"
+              : "chat.aiTutorWelcome",
         )}
+        welcomeStays={starting}
         hostFor={hostFor}
         activity={
           state.answering && chat.reconnecting

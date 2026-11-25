@@ -9,9 +9,11 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from ..learner.record import Where
-from .cards import PASSAGE_UI, PRACTICE_UI, Card, placed
+from .cards import CHOICE_UI, PASSAGE_UI, PRACTICE_UI, Card, placed
+from .choice import give_choice
 from .context import LearnerContext
 from .courses import propose_path_tool
+from .details import ask_class_tool, set_details
 from .passage import give_passage
 from .practice import give_practice
 from .reply import MAX_PATH_GOALS, Action, Outcome
@@ -72,6 +74,9 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("rebuild_plan", _for_context(rebuild_plan_tool)),
     ToolSpec("give_practice", _as_is(give_practice), ui=PRACTICE_UI),
     ToolSpec("give_passage", _as_is(give_passage), ui=PASSAGE_UI),
+    ToolSpec("give_choice", _as_is(give_choice), ui=CHOICE_UI),
+    ToolSpec("ask_class", _for_context(ask_class_tool)),
+    ToolSpec("set_details", _as_is(set_details)),
     ToolSpec("load_skill", lambda turn: load_skill_for_turn(turn.active_skills)),
 )
 

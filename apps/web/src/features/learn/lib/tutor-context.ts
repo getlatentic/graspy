@@ -9,6 +9,7 @@ function planContext(curriculum: CurriculumData | null): LearnerContext {
   const { subjects } = curriculum;
   return {
     country: curriculum.countryName || curriculum.country || undefined,
+    countryCode: curriculum.countryCode || undefined,
     language: curriculum.languageName || curriculum.language || undefined,
     gradeLevel: curriculum.gradeLevel || undefined,
     planId: curriculum.planId || undefined,

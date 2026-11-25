@@ -17,6 +17,8 @@ interface ChatLogProps {
   ready: boolean;
   turns: Turn[];
   welcome: string;
+  /** Kept above the messages once there are some. */
+  welcomeStays?: boolean;
   hostFor: (message: ChatMessage) => ViewHost;
   /** The tool in use before the answer starts; undefined while nothing is awaited. */
   activity: string | null | undefined;
@@ -28,6 +30,7 @@ export function ChatLog({
   ready,
   turns,
   welcome,
+  welcomeStays = false,
   hostFor,
   activity,
   changingPlan,
@@ -46,7 +49,7 @@ export function ChatLog({
         className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
       >
         <div ref={scroll.contentRef} className="mx-auto max-w-3xl space-y-6">
-          {ready && turns.length === 0 && (
+          {ready && (turns.length === 0 || welcomeStays) && (
             <p className="rounded-card bg-accent-soft p-4 text-sm text-ink">
               {welcome}
             </p>
