@@ -37,6 +37,7 @@ export const routes: RouteObject[] = [
         }),
       },
       { path: "/link", lazy: lazyPage("tvLink") },
+      { path: "/try", Component: AppEntry },
       ...chatLinks,
       {
         path: "/app",
