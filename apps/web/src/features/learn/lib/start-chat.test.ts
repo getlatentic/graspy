@@ -23,6 +23,7 @@ async function device() {
 
 beforeEach(() => {
   localStorage.clear();
+  sync.mockReset();
   sync.mockResolvedValue(null);
 });
 afterEach(() => {
@@ -96,5 +97,75 @@ describe("a learner ready to chat with no onboarding", () => {
     const plan = await getCurriculum();
     expect(plan?.countryCode).toBe("GH");
     expect(plan?.gradeLevel).toBe("Primary 4, Ghana, age 9");
+  });
+
+  it("marks a profile made here, which is made no plan from until a subject is added", async () => {
+    const { readyToChat, getUserProfile } = await device();
+
+    await readyToChat();
+
+    expect(getUserProfile()?.startedInChat).toBe(true);
+  });
+
+  it("makes one plan for two opens of the link at once", async () => {
+    const { readyToChat, getCurriculum } = await device();
+    const keep = vi.spyOn(
+      await import("@/lib/curriculum-db"),
+      "saveCurriculum",
+    );
+
+    const [first, second] = await Promise.all([readyToChat(), readyToChat()]);
+
+    expect([first, second]).toEqual([true, true]);
+    expect(sync).toHaveBeenCalledOnce();
+    expect(keep).toHaveBeenCalledOnce();
+    expect(await getCurriculum()).not.toBeNull();
+  });
+
+  it("keeps the plan it made when the link is opened again", async () => {
+    const { readyToChat, getCurriculum } = await device();
+
+    await readyToChat();
+    const made = await getCurriculum();
+    await readyToChat();
+
+    expect((await getCurriculum())?.planId).toBe(made?.planId);
+  });
+
+  it("leaves a plan and profile the device holds as they are", async () => {
+    const {
+      readyToChat,
+      getCurriculum,
+      getUserProfile,
+      saveCurriculum,
+      saveUserProfile,
+    } = await device();
+    const held = await saveCurriculum({
+      country: "Ghana",
+      countryCode: "GH",
+      language: "English",
+      gradeLevel: "Primary 4, Ghana, age 9",
+      subjects: [{ name: "Mathematics", slug: "mathematics" }],
+      topics: {},
+      assessment: { nextSubject: null },
+    });
+    saveUserProfile({
+      country: "GH",
+      language: "en",
+      gradeLevel: "Primary 4, Ghana, age 9",
+      preferredSubjects: ["Mathematics"],
+    });
+    const profile = getUserProfile();
+
+    expect(await readyToChat()).toBe(true);
+
+    expect(await getCurriculum()).toEqual(held);
+    expect(sync).not.toHaveBeenCalled();
+    expect(getUserProfile()).toMatchObject({
+      country: "GH",
+      gradeLevel: profile?.gradeLevel,
+      onboardingCompleted: true,
+    });
+    expect(getUserProfile()?.startedInChat).toBeUndefined();
   });
 });

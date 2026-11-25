@@ -5,8 +5,13 @@ import { appCall, type AppCallRequest } from "@/lib/a2a/request-data";
 import type { ChatMessage } from "@/lib/chat-db";
 import type { ViewHost } from "../ui-apps/view-bridge";
 
+/** A question to answer by a tap, which only the latest message may still be answered. */
+const CHOICE_UI = "ui://graspy/choice";
+
 interface AppHostDeps {
   busy: boolean;
+  /** The last message of the conversation. */
+  lastMessageId?: string;
   ask: (text: string, calls: AppCallRequest[]) => void;
   keepViewCalls: (messageId: string, calls: AppCallRequest[]) => void;
 }
@@ -21,7 +26,12 @@ const withCall = (calls: AppCallRequest[], call: AppCallRequest) =>
 const feltOnce = onceForAnswers();
 
 /** A view's tool calls wait, deduplicated, for the next message, which carries them to the tutor. */
-export function useAppHost({ busy, ask, keepViewCalls }: AppHostDeps) {
+export function useAppHost({
+  busy,
+  lastMessageId,
+  ask,
+  keepViewCalls,
+}: AppHostDeps) {
   const pending = useRef<AppCallRequest[]>([]);
 
   return useCallback(
@@ -45,12 +55,15 @@ export function useAppHost({ busy, ask, keepViewCalls }: AppHostDeps) {
         keepViewCalls(message.id, withCall(kept, call));
       },
       message: (text) => {
-        if (busy) return false;
+        const answered =
+          message.metadata?.card?.resourceUri === CHOICE_UI &&
+          message.id !== lastMessageId;
+        if (busy || answered) return false;
         ask(text, pending.current);
         pending.current = [];
         return true;
       },
     }),
-    [ask, busy, keepViewCalls],
+    [ask, busy, keepViewCalls, lastMessageId],
   );
 }

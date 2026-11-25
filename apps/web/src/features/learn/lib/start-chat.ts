@@ -26,7 +26,7 @@ function startingDetails(): LearnerDetails {
  * a plan with no subjects and the starting details, to which the chat adds what the learner
  * asks for. False when the account could not be reached: a plan made then might replace the
  * learner's own. */
-export async function readyToChat(): Promise<boolean> {
+async function makeReady(): Promise<boolean> {
   if (!(await getCurriculum())) {
     try {
       await syncPlan();
@@ -39,9 +39,26 @@ export async function readyToChat(): Promise<boolean> {
     // A learner who did onboarding, whose plan failed, keeps what they said.
     const kept = getUserProfile();
     const learner = kept ?? startingDetails();
-    if (!kept) saveUserProfile({ ...learner, preferredSubjects: [] });
+    if (!kept) {
+      saveUserProfile({
+        ...learner,
+        preferredSubjects: [],
+        startedInChat: true,
+      });
+    }
     await keepVoiceOnlyPlan(learner);
   }
   saveUserProfile({ onboardingCompleted: true });
   return true;
+}
+
+let making: Promise<boolean> | null = null;
+
+/** One at a time: two opens of the link share the plan one of them makes, as each would
+ * otherwise find none and make its own. */
+export function readyToChat(): Promise<boolean> {
+  making ??= makeReady().finally(() => {
+    making = null;
+  });
+  return making;
 }

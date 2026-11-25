@@ -115,6 +115,7 @@ describe("what a learner says of their school", () => {
       systemsOf,
     );
 
+    expect(result?.voiceOnly).toBe(false);
     expect(result?.details).toMatchObject({
       system: "",
       level: "undergraduate",
@@ -133,6 +134,9 @@ describe("what a learner says of their school", () => {
 
     expect((await detailsSaid(said("", "Nigeria"), withClass))?.details).toBe(
       withClass,
+    );
+    expect((await detailsSaid(said("", "Ghana"), withClass))?.voiceOnly).toBe(
+      false,
     );
     expect(
       (await detailsSaid(said("", "Ghana"), withClass))?.details,

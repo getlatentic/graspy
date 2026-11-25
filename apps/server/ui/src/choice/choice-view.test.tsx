@@ -106,6 +106,41 @@ describe("a choice card", () => {
     expect(app.sendMessage).not.toHaveBeenCalled();
   });
 
+  it("sends one message for a double tap, in the same frame or after", async () => {
+    open();
+    const jss1 = screen.getByRole("button", { name: "JSS 1" });
+    const jss2 = screen.getByRole("button", { name: "JSS 2" });
+
+    await act(async () => {
+      fireEvent.click(jss1);
+      fireEvent.click(jss1);
+      fireEvent.click(jss2);
+    });
+    await act(async () => {
+      fireEvent.click(jss2);
+    });
+
+    expect(app.sendMessage).toHaveBeenCalledOnce();
+    expect(pressed("JSS 1")).toBe("true");
+  });
+
+  it("stays answered, showing the option chosen, and cannot be tapped again", async () => {
+    open();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "JSS 2" }));
+    });
+    cleanup();
+
+    open();
+
+    expect(pressed("JSS 2")).toBe("true");
+    for (const button of screen.getAllByRole("button")) {
+      expect((button as HTMLButtonElement).disabled).toBe(true);
+    }
+    fireEvent.click(screen.getByRole("button", { name: "JSS 3" }));
+    expect(app.sendMessage).not.toHaveBeenCalledTimes(2);
+  });
+
   it("is told to wait while graspy is still answering, and can be tapped again", async () => {
     app.sendMessage = vi.fn().mockResolvedValue({ isError: true });
     open();
@@ -114,7 +149,7 @@ describe("a choice card", () => {
       fireEvent.click(screen.getByRole("button", { name: "JSS 1" }));
     });
 
-    expect(screen.getByRole("status").textContent).toContain("Wait");
+    expect(screen.getByRole("status").textContent).toContain("Not now");
     expect(pressed("JSS 1")).toBe("false");
   });
 });

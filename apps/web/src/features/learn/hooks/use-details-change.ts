@@ -11,7 +11,8 @@ interface DetailsChangeDeps extends Pick<LearnerPlan, "applyCurriculum"> {
 }
 
 /** What the learner tells the tutor of their school is kept as the details page keeps it, so
- * the subjects added after it are written for their class. */
+ * the subjects added after it are written for their class. It fills in a class not yet kept,
+ * and never changes one that is. */
 export function useDetailsChange({
   applyCurriculum,
   onFailure,
@@ -21,6 +22,9 @@ export function useDetailsChange({
   return useCallback(
     async (said: ActionOf<"set_details">) => {
       const profile = getUserProfile();
+      // The server refuses to say what a learner whose class is kept may change; what the
+      // model sends is not trusted to: only a class not yet kept is filled in.
+      if (profile?.gradeLevel) return;
       const kept = await detailsSaid(said, profile).catch(() => null);
       const result = kept
         ? await saveDetails(kept.details, kept.voiceOnly, applyCurriculum)

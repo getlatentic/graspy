@@ -33,11 +33,11 @@ export function useLearnerStart(): UserProfile | null {
   }, [navigate, loadSaved]);
 
   const voiceOnly = useVoiceOnly();
-  // A learner who has not yet said their class, as in the try link's chat, has a plan made
-  // when a subject is added to it, not before.
+  // A learner the try link's chat made ready has their plan made by adding a subject there:
+  // a plan made from a profile with no class would replace the chat's, and its learner's.
   const wanted =
     profile !== null &&
-    profile.gradeLevel !== "" &&
+    !profile.startedInChat &&
     planWanted(curriculum, voiceOnly);
   useEffect(() => {
     if (!profile || !loaded || !wanted || isGenerating) return;

@@ -40,6 +40,7 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   };
   const hostFor = useAppHost({
     busy: state.blocked,
+    lastMessageId: lastMessage?.id,
     ask,
     keepViewCalls: chat.keepViewCalls,
   });

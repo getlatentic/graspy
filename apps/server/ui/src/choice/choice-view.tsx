@@ -4,12 +4,12 @@ import { useToolResult, type Shown } from "@/shared/use-tool-result";
 import { useChoosing, type Picked } from "./use-choosing";
 
 const OPTION =
-  "rounded-full border-2 px-4 py-2 text-start text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  "disabled:cursor-default rounded-full border-2 px-4 py-2 text-start text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 const styleOf = (picked: Picked, index: number) =>
   picked === index
     ? "border-accent bg-accent text-on-accent"
-    : "border-line bg-surface text-ink hover:border-accent";
+    : "border-line bg-surface text-ink hover:border-accent disabled:opacity-50 disabled:hover:border-line";
 
 export function ChoiceView() {
   const shown = useToolResult("graspy choice", (value) =>
@@ -21,7 +21,7 @@ export function ChoiceView() {
 function Choice({ shown }: { shown: Shown<ChoiceSet> }) {
   const { app, result, words } = shown;
   const { question, options } = result.structuredContent;
-  const { picked, busy, choose, other } = useChoosing(
+  const { picked, answered, refused, choose, other } = useChoosing(
     app,
     result._meta.viewUUID,
     options,
@@ -43,6 +43,7 @@ function Choice({ shown }: { shown: Shown<ChoiceSet> }) {
             type="button"
             dir="auto"
             onClick={() => void choose(index)}
+            disabled={answered}
             aria-pressed={picked === index}
             className={cn(OPTION, styleOf(picked, index))}
           >
@@ -52,6 +53,7 @@ function Choice({ shown }: { shown: Shown<ChoiceSet> }) {
         <button
           type="button"
           onClick={other}
+          disabled={answered}
           aria-pressed={picked === "other"}
           className={cn(
             OPTION,
@@ -68,7 +70,7 @@ function Choice({ shown }: { shown: Shown<ChoiceSet> }) {
           {words.choice.typeBelow}
         </p>
       )}
-      {busy && (
+      {refused && (
         <p role="status" className="text-sm text-muted">
           {words.choice.busy}
         </p>

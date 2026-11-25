@@ -204,10 +204,14 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
             add: New subjects to study, named in the learner's language, e.g. ["Physics"].
             remove: Subjects of theirs to drop, as the learner named them.
         """
-        # A plan the app sent with no subjects is a learner with none yet.
-        if not (context.subjects or context.plan_id):
+        if not (context.subjects or context.empty_plan):
             return refusal(
                 "The learner's subjects were not sent, so none can be changed."
+            )
+        if context.empty_plan and not context.grade_level:
+            return refusal(
+                "The learner's class is not known, and a subject is written for it. "
+                "Ask for it with ask_class, save it with set_details, then add the subject"
             )
         names = [s.name for s in context.held_subjects()]
         dropped = _subjects_named((remove or [])[:MAX_ASKED], names)

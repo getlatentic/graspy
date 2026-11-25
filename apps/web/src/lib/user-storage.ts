@@ -13,6 +13,9 @@ export interface UserProfile extends LearnerLevel {
   createdAt: string;
   updatedAt: string;
   onboardingCompleted: boolean;
+  /** Made ready by the try link's chat, with no class yet: the plan is made by adding a
+   * subject there, not from the profile. */
+  startedInChat?: boolean;
 }
 
 /** What the learner said about themselves: their plan is written for these. */
@@ -91,6 +94,7 @@ function withDefaults(
     createdAt: profile.createdAt ?? now,
     updatedAt: profile.updatedAt ?? now,
     onboardingCompleted: profile.onboardingCompleted ?? false,
+    ...(profile.startedInChat ? { startedInChat: true } : {}),
   };
 }
 

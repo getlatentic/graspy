@@ -5,6 +5,7 @@ field is optional and capped: a turn without context still gets an answer."""
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Mapping
 from typing import Annotated, Any
 
@@ -44,6 +45,15 @@ MAX_SLIDES = 20
 Short = Annotated[str, StringConstraints(strip_whitespace=True, max_length=80)]
 Title = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
 MAX_POINT = 300
+
+
+COUNTRY_CODE = re.compile(r"[A-Za-z]{2}")
+
+
+def _country_code(value: Any) -> str | None:
+    if isinstance(value, str) and COUNTRY_CODE.fullmatch(value.strip()):
+        return value.strip().upper()
+    return None
 
 
 def _clipped(max_items: int, max_chars: int):
@@ -116,12 +126,15 @@ class LearnerContext(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore", frozen=True)
 
     country: Short | None = None
-    # The country's ISO code, which finds its school classes.
-    country_code: Annotated[str, StringConstraints(pattern=r"^[A-Z]{2}$")] | None = (
-        Field(default=None, alias="countryCode")
+    # The country's ISO code, which finds its school classes; one that is not a
+    # code is left out, not the whole context.
+    country_code: Annotated[str | None, BeforeValidator(_country_code)] = Field(
+        default=None, alias="countryCode"
     )
     language: Short | None = None
     grade_level: Short | None = Field(default=None, alias="gradeLevel")
+    # Sent by an app whose learner's plan has no subjects yet.
+    empty_plan: bool = Field(default=False, alias="emptyPlan")
     # The plan the learner's record files this conversation under.
     plan_id: Short | None = Field(default=None, alias="planId")
     subject: Title | None = None
@@ -181,7 +194,7 @@ class LearnerContext(BaseModel):
         if not self.subject:
             return "\n".join(
                 [*lines, GENERAL_CONVERSATION]
-                if self.subjects or not self.plan_id
+                if self.subjects or not self.empty_plan
                 else [NO_SUBJECTS_CONVERSATION, GENERAL_CONVERSATION]
             )
         lines.append(f"Subject: {self.subject}")

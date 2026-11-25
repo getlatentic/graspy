@@ -102,6 +102,8 @@ export interface LearnerContext {
   country?: string;
   /** The ISO code, which finds the country's classes. */
   countryCode?: string;
+  /** The learner's plan has no subjects yet, as one made for the try link's chat. */
+  emptyPlan?: boolean;
   language?: string;
   gradeLevel?: string;
   subject?: string;
