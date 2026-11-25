@@ -87,7 +87,7 @@ export function useTutorActions(deps: TutorActionDeps) {
     confirmDrop: replaceCard,
   });
   const { askToChange, setSubjects } = subjects;
-  const keepDetails = useDetailsChange({ ...deps, applyCurriculum });
+  const keepDetails = useDetailsChange({ ...deps, read, applyCurriculum });
 
   const carryOut = useCallback(
     async (actions: readonly TutorAction[]) => {

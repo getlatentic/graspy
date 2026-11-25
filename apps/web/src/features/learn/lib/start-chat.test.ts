@@ -84,27 +84,39 @@ describe("a learner ready to chat with no onboarding", () => {
     expect(getUserProfile()).toBeNull();
   });
 
-  it("keeps what a learner who did onboarding told it, when their plan failed", async () => {
-    const { readyToChat, getCurriculum, saveUserProfile } = await device();
+  it("makes nothing for a learner who said their class and has no plan: the app's own plan loading makes theirs", async () => {
+    const { readyToChat, getCurriculum, getUserProfile, saveUserProfile } =
+      await device();
     saveUserProfile({
       country: "GH",
       language: "en",
       gradeLevel: "Primary 4, Ghana, age 9",
+      onboardingCompleted: true,
     });
+
+    expect(await readyToChat()).toBe(false);
+
+    expect(await getCurriculum()).toBeNull();
+    expect(getUserProfile()?.gradeLevel).toBe("Primary 4, Ghana, age 9");
+  });
+
+  it("starts again for a profile an earlier open of the link made, which has no class", async () => {
+    const { readyToChat, getCurriculum, saveUserProfile } = await device();
+    saveUserProfile({ country: "GH", language: "en", gradeLevel: "" });
 
     expect(await readyToChat()).toBe(true);
 
     const plan = await getCurriculum();
     expect(plan?.countryCode).toBe("GH");
-    expect(plan?.gradeLevel).toBe("Primary 4, Ghana, age 9");
+    expect(plan?.startedInChat).toBe(true);
   });
 
-  it("marks a profile made here, which is made no plan from until a subject is added", async () => {
-    const { readyToChat, getUserProfile } = await device();
+  it("marks the plan it makes, so that no other is made from the profile until a subject is added", async () => {
+    const { readyToChat, getCurriculum } = await device();
 
     await readyToChat();
 
-    expect(getUserProfile()?.startedInChat).toBe(true);
+    expect((await getCurriculum())?.startedInChat).toBe(true);
   });
 
   it("makes one plan for two opens of the link at once", async () => {
@@ -166,6 +178,6 @@ describe("a learner ready to chat with no onboarding", () => {
       gradeLevel: profile?.gradeLevel,
       onboardingCompleted: true,
     });
-    expect(getUserProfile()?.startedInChat).toBeUndefined();
+    expect((await getCurriculum())?.startedInChat).toBeUndefined();
   });
 });

@@ -20,11 +20,17 @@ MAX_QUESTION = 160
 AFTER_SCHOOL = ("Undergraduate", "Graduate")
 
 
-CLASS_KEPT = (
-    "The learner's class is already kept, and what they say in a message never "
-    "changes it. If they want it changed, tell them to open the You page and "
+DETAILS_KEPT = (
+    "The learner's details are already kept, and what they say in a message never "
+    "changes them. If they want them changed, tell them to open the You page and "
     "change their details there"
 )
+
+
+def kept(context: LearnerContext) -> bool:
+    """A class and country are asked for only while the learner has neither a class nor
+    a subject: the plan of a learner who has them is written for what they said before."""
+    return bool(context.grade_level) or not context.empty_plan
 
 
 def classes_of(country_code: str) -> list[str]:
@@ -44,8 +50,8 @@ def ask_class_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
         Args:
             question: One short question, e.g. "Which class are you in?".
         """
-        if context.grade_level:
-            return refusal(CLASS_KEPT)
+        if kept(context):
+            return refusal(DETAILS_KEPT)
         asked = clean(question, MAX_QUESTION)
         if not asked:
             return refusal("The question is empty.")
@@ -74,8 +80,8 @@ def set_details_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
             country: Their country, in English, e.g. "Nigeria".
             course: What an undergraduate or graduate studies, e.g. "Accounting".
         """
-        if context.grade_level:
-            return refusal(CLASS_KEPT)
+        if kept(context):
+            return refusal(DETAILS_KEPT)
         return _details(class_name, country, course)
 
     return set_details

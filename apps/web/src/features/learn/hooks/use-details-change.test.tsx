@@ -24,11 +24,17 @@ const said = {
 };
 const details = { country: "GH", gradeLevel: "Grade 5" };
 
-function change() {
+const withSubjects = {
+  subjects: [{ name: "Mathematics", slug: "mathematics" }],
+};
+const withNone = { subjects: [] };
+
+function change(plan: { subjects: unknown[] } = withNone) {
   const onFailure = vi.fn();
   const applyCurriculum = vi.fn();
+  const read = () => plan as never;
   const { result } = renderHook(() =>
-    useDetailsChange({ applyCurriculum, onFailure }),
+    useDetailsChange({ read, applyCurriculum, onFailure }),
   );
   return { run: () => result.current(said), onFailure, applyCurriculum };
 }
@@ -54,6 +60,17 @@ describe("what the tutor is told to save of a learner's school", () => {
   it("never changes a class that is kept, whatever the model sent", async () => {
     profile = { country: "NG", gradeLevel: "JSS 2" };
     const { run, onFailure } = change();
+
+    await run();
+
+    expect(detailsSaid).not.toHaveBeenCalled();
+    expect(saveDetails).not.toHaveBeenCalled();
+    expect(onFailure).not.toHaveBeenCalled();
+  });
+
+  it("never fills in a learner who has subjects but no class, as an older profile may", async () => {
+    profile = { country: "NG", gradeLevel: "" };
+    const { run, onFailure } = change(withSubjects);
 
     await run();
 

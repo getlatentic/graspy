@@ -1,6 +1,6 @@
-import { keepVoiceOnlyPlan } from "@/features/onboarding/lib/generate-plan";
-import { getCurriculum } from "@/lib/curriculum-db";
+import { getCurriculum, saveCurriculum } from "@/lib/curriculum-db";
 import { detectLocale } from "@/lib/locale-detector";
+import { planDetails } from "@/lib/plan-details";
 import { syncPlan } from "@/lib/plan-sync";
 import {
   getUserProfile,
@@ -24,8 +24,9 @@ function startingDetails(): LearnerDetails {
 
 /** Makes the learner ready to chat with no onboarding: the plan the account already holds, or
  * a plan with no subjects and the starting details, to which the chat adds what the learner
- * asks for. False when the account could not be reached: a plan made then might replace the
- * learner's own. */
+ * asks for. False, making nothing, when the account could not be reached (a plan made then
+ * might replace the learner's own), and for a learner who has said their class but has no
+ * plan: the app's own plan loading makes theirs. */
 async function makeReady(): Promise<boolean> {
   if (!(await getCurriculum())) {
     try {
@@ -36,17 +37,17 @@ async function makeReady(): Promise<boolean> {
     }
   }
   if (!(await getCurriculum())) {
-    // A learner who did onboarding, whose plan failed, keeps what they said.
     const kept = getUserProfile();
+    if (kept?.gradeLevel) return false;
     const learner = kept ?? startingDetails();
-    if (!kept) {
-      saveUserProfile({
-        ...learner,
-        preferredSubjects: [],
-        startedInChat: true,
-      });
-    }
-    await keepVoiceOnlyPlan(learner);
+    if (!kept) saveUserProfile({ ...learner, preferredSubjects: [] });
+    await saveCurriculum({
+      ...planDetails(learner),
+      subjects: [],
+      topics: {},
+      assessment: { nextSubject: null },
+      startedInChat: true,
+    });
   }
   saveUserProfile({ onboardingCompleted: true });
   return true;

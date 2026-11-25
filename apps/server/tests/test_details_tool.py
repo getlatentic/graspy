@@ -3,13 +3,13 @@ catalogue, and the details the app is told to save."""
 
 import dspy
 
-from app.agent.context import LearnerContext
+from app.agent.context import LearnerContext, SubjectRef
 from app.agent.details import classes_of
 from app.agent.reply import SetDetails
 from app.agent.toolkit import Turn, TurnOutputs, tools_for
 from app.education.catalogue import of_country
 
-NIGERIA = LearnerContext(country="Nigeria", countryCode="NG")
+NIGERIA = LearnerContext(country="Nigeria", countryCode="NG", emptyPlan=True)
 
 
 def run(name: str, context: LearnerContext = NIGERIA, **arguments):
@@ -45,7 +45,7 @@ def test_the_class_card_never_asks_the_age_or_offers_not_in_school():
 def test_a_country_the_catalogue_does_not_cover_gets_numbered_grades():
     _, outputs = run(
         "ask_class",
-        LearnerContext(countryCode="AQ"),
+        LearnerContext(countryCode="AQ", emptyPlan=True),
         question="Which class are you in?",
     )
 
@@ -55,7 +55,9 @@ def test_a_country_the_catalogue_does_not_cover_gets_numbered_grades():
 
 
 def test_without_a_country_the_class_card_is_refused_and_asks_for_it_in_words():
-    told, outputs = run("ask_class", LearnerContext(), question="Which class?")
+    told, outputs = run(
+        "ask_class", LearnerContext(emptyPlan=True), question="Which class?"
+    )
 
     assert "Nothing was done." in told["error"]
     assert "set_details" in told["error"]
@@ -119,7 +121,14 @@ def test_a_plan_is_not_taken_for_empty_because_no_subjects_were_sent():
     assert "not sent" in told["error"]
 
 
-KEPT = LearnerContext(country="Nigeria", countryCode="NG", gradeLevel="JSS 2")
+KEPT = LearnerContext(
+    country="Nigeria", countryCode="NG", gradeLevel="JSS 2", emptyPlan=True
+)
+WITH_SUBJECTS = LearnerContext(
+    country="Nigeria",
+    countryCode="NG",
+    subjects=[SubjectRef(name="Mathematics", slug="mathematics")],
+)
 
 
 def test_a_class_already_kept_is_never_changed_by_what_the_learner_says():
@@ -147,7 +156,7 @@ def test_a_class_already_kept_is_not_asked_for_again():
 def test_a_country_not_yet_confirmed_can_be_corrected_while_there_is_no_class():
     _, outputs = run(
         "set_details",
-        LearnerContext(country="Nigeria", countryCode="NG"),
+        NIGERIA,
         country="Ghana",
     )
 
@@ -183,3 +192,13 @@ def test_a_country_code_is_read_in_capitals():
 
 def test_an_unknown_country_still_gets_numbered_grades():
     assert classes_of("ZZ")[0] == "Grade 1"
+
+
+def test_a_learner_with_subjects_and_no_class_is_refused_like_one_with_a_class():
+    told, outputs = run("set_details", WITH_SUBJECTS, class_name="Grade 5")
+    asked, cards = run("ask_class", WITH_SUBJECTS, question="Which class?")
+
+    assert "You page" in told["error"]
+    assert "You page" in asked["error"]
+    assert outputs.actions == []
+    assert cards.cards == []

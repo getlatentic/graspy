@@ -12,6 +12,9 @@ export interface CurriculumData {
   // The learner's details as their profile keeps them; plans from earlier versions lack them.
   countryCode?: string;
   languageCode?: string;
+  /** Made by the try link's chat, for a learner with no class or subject yet. It travels with
+   * the plan to the learner's other devices, and is no longer in force once a subject is. */
+  startedInChat?: boolean;
   system?: string;
   level?: string;
   levelNames?: Names | null;
