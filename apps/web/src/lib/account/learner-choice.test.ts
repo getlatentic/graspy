@@ -103,6 +103,14 @@ describe("the first learner chosen after signing in", () => {
     expect(takeChat).toHaveBeenCalledOnce();
   });
 
+  it("starts in the try link's chat for a learner with no plan, which makes the plan itself", async () => {
+    plan = null;
+    takeChat.mockReturnValueOnce("/app/learn/ask/try");
+
+    await expect(chooseLearner(ADA)).resolves.toBe("/app/learn/ask/try");
+    expect(saveUserProfile).not.toHaveBeenCalled();
+  });
+
   it("is chosen even when the plan joins later, offline", async () => {
     syncPlan.mockRejectedValueOnce(new TypeError("Failed to fetch"));
 

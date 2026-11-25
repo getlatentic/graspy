@@ -24,6 +24,48 @@ const topicScope = {
 } as const;
 
 describe("scopeContext", () => {
+  it("sends the country's code, which finds its classes, and no subjects for a plan with none", () => {
+    const starting = {
+      ...curriculum,
+      countryCode: "NG",
+      subjects: [],
+      topics: {},
+    };
+
+    const sent = scopeContext(starting, { kind: "general", planId: "plan-1" });
+
+    expect(sent).toMatchObject({
+      countryCode: "NG",
+      planId: "plan-1",
+      emptyPlan: true,
+    });
+    expect(sent.subjects).toBeUndefined();
+  });
+
+  it("says a plan is empty only when it has no subjects", () => {
+    const sent = scopeContext(curriculum, {
+      kind: "general",
+      planId: "plan-1",
+    });
+
+    expect(sent.emptyPlan).toBeUndefined();
+  });
+
+  it.each([
+    ["ng", "NG"],
+    [" gh ", "GH"],
+    ["NGA", undefined],
+    ["N1", undefined],
+    ["", undefined],
+  ])("sends the country code %j as %j", (code, sent) => {
+    const context = scopeContext(
+      { ...curriculum, countryCode: code },
+      { kind: "general", planId: "plan-1" },
+    );
+
+    expect(context.countryCode).toBe(sent);
+  });
+
   it("names the learner's place, subjects and the conversation's topic", () => {
     expect(scopeContext(curriculum, topicScope)).toEqual({
       country: "Nigeria",

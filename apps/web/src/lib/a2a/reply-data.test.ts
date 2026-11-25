@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import contract from "@/lib/a2a/reply-contract.json";
-import { agentData, ROLE_AGENT, TUTOR_TOOLS } from "@/lib/a2a/reply-data";
+import {
+  agentData,
+  replyDataOf,
+  ROLE_AGENT,
+  TUTOR_TOOLS,
+} from "@/lib/a2a/reply-data";
 import { appCall, messageParts } from "@/lib/a2a/request-data";
 import ar from "@/locales/ar.json";
 import en from "@/locales/en.json";
@@ -69,6 +74,20 @@ describe("the server's reply contract", () => {
     expect(
       agentData(replyOf({ cards: [{ ...card, ...change }] })).cards,
     ).toEqual([]);
+  });
+
+  it("drops a set_details that names neither a class nor a country", () => {
+    const empty = {
+      type: "set_details",
+      className: " ",
+      country: "",
+      course: "",
+    };
+    const said = { ...empty, className: "JSS 2" };
+
+    const { actions } = replyDataOf({ actions: [empty, said] });
+
+    expect(actions).toEqual([said]);
   });
 
   it("keeps the answer when the data part is malformed", () => {

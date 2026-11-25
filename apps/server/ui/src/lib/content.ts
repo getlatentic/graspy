@@ -41,6 +41,11 @@ export interface PassageSet {
   questions: PracticeQuestion[];
 }
 
+export interface ChoiceSet {
+  question: string;
+  options: string[];
+}
+
 const MAX_QUESTIONS = 5;
 
 export const isText = (value: unknown): value is string =>
@@ -94,6 +99,17 @@ export function isPassageSet(value: unknown): value is PassageSet {
     isText(set.passage) &&
     set.passage.trim().length > 0 &&
     isQuestions(set.questions)
+  );
+}
+
+export function isChoiceSet(value: unknown): value is ChoiceSet {
+  const set = value as Partial<ChoiceSet> | null;
+  return (
+    isText(set?.question) &&
+    set.question.trim().length > 0 &&
+    Array.isArray(set.options) &&
+    set.options.length >= 2 &&
+    set.options.every((option) => isText(option) && option.trim().length > 0)
   );
 }
 

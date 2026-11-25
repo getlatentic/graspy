@@ -16,7 +16,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError, create_model
 
 from ..agent.app_tools import APP_TOOLS
-from ..agent.cards import PASSAGE_UI, PRACTICE_UI
+from ..agent.cards import CHOICE_UI, PASSAGE_UI, PRACTICE_UI
 from ..agent.context import LearnerContext
 from ..agent.reply import Outcome
 from ..agent.toolkit import TOOLS, Turn
@@ -225,6 +225,13 @@ RESOURCES: dict[str, UiResource] = {
             title="Reading",
             description="A passage to read, with questions on it the learner answers with a tap.",
             view="passage.html",
+        ),
+        UiResource(
+            uri=CHOICE_UI,
+            name="choice",
+            title="Choice",
+            description="A short question with a few answers to tap, or a way back to typing.",
+            view="choice.html",
         ),
         UiResource(
             uri=LESSON_UI,

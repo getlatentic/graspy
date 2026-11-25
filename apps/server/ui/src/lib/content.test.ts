@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import contract from "./card-contract.json";
 import {
   helpOf,
+  isChoiceSet,
   isPassageSet,
   isPracticeSet,
   practiceAnswer,
@@ -10,11 +11,18 @@ import {
 
 const PRACTICE = "ui://graspy/practice";
 const PASSAGE = "ui://graspy/passage";
+const CHOICE = "ui://graspy/choice";
 
 describe("the server's cards", () => {
   it("are what each view shows", () => {
     expect(isPracticeSet(contract.content[PRACTICE])).toBe(true);
     expect(isPassageSet(contract.content[PASSAGE])).toBe(true);
+    expect(isChoiceSet(contract.content[CHOICE])).toBe(true);
+  });
+
+  it("are refused as a choice when they have fewer than two answers", () => {
+    expect(isChoiceSet({ question: "Which?", options: ["A"] })).toBe(false);
+    expect(isChoiceSet({ question: " ", options: ["A", "B"] })).toBe(false);
   });
 
   it("are answered with the arguments the server reads", () => {
@@ -86,9 +94,9 @@ describe("the help a wrong answer to a check is given", () => {
   });
 
   it("keeps only the options it names by number", () => {
-    expect(helpOf({ help: { kind: "narrow", keep: [0, "1", 2.5, 3] } })).toEqual(
-      { kind: "narrow", keep: [0, 3] },
-    );
+    expect(
+      helpOf({ help: { kind: "narrow", keep: [0, "1", 2.5, 3] } }),
+    ).toEqual({ kind: "narrow", keep: [0, 3] });
   });
 
   it("is none for a right answer, a kept call, or help it does not know", () => {

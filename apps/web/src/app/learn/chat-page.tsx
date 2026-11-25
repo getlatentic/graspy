@@ -15,7 +15,7 @@ export default function ChatPage() {
   const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { curriculum } = usePlan();
+  const { curriculum, isLoaded } = usePlan();
 
   const target = targetFromParams(params);
   const scope = target ? scopeOf(target, curriculum) : null;
@@ -27,8 +27,9 @@ export default function ChatPage() {
     [draft, location.key],
   );
 
-  // Before the plan has loaded there is nothing to name a topic by.
-  if (!curriculum?.planId || !curriculum.subjects.length) return null;
+  // Before the plan has loaded there is nothing to name a topic by. A plan with no subjects
+  // yet, as the try link's, still holds the general conversation.
+  if (!isLoaded || !curriculum?.planId) return null;
   if (!scope) return <Navigate to={ASK_HUB} replace />;
 
   return (

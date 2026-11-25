@@ -108,6 +108,7 @@ async def test_the_tools_are_listed_with_their_ui_and_who_may_call_them(app):
     assert set(tools) == {
         "give_practice",
         "give_passage",
+        "give_choice",
         "answer_practice",
         "give_lesson",
         "lesson_progress",
@@ -245,6 +246,7 @@ async def test_the_view_is_read_with_the_origin_and_sandbox_it_loads_in(app):
     assert {(resource.uri, resource.title) for resource in listed} == {
         ("ui://graspy/practice", "Practice"),
         ("ui://graspy/passage", "Reading"),
+        ("ui://graspy/choice", "Choice"),
         ("ui://graspy/lesson", "Lesson"),
     }
     assert {resource.mime_type for resource in listed} == {content.mime_type}

@@ -15,6 +15,9 @@ export const TUTOR_TOOLS = [
   "rebuild_plan",
   "give_practice",
   "give_passage",
+  "give_choice",
+  "ask_class",
+  "set_details",
   "load_skill",
 ] as const;
 
@@ -51,6 +54,14 @@ interface RebuildPlanAction {
   type: "rebuild_plan";
 }
 
+interface SetDetailsAction {
+  type: "set_details";
+  /** What the learner said; empty when they did not say it. */
+  className: string;
+  country: string;
+  course: string;
+}
+
 interface OpenSubjectAction {
   type: "open_subject";
   subjectSlug: string;
@@ -76,7 +87,8 @@ export type TutorAction =
   | AddTopicAction
   | ChangeSubjectsAction
   | RebuildPlanAction
-  | ProposePathAction;
+  | ProposePathAction
+  | SetDetailsAction;
 
 export interface ReplyData {
   followUps: string[];
@@ -141,6 +153,17 @@ function isProposePath(value: unknown): value is ProposePathAction {
   );
 }
 
+function isSetDetails(value: unknown): value is SetDetailsAction {
+  const action = value as Partial<SetDetailsAction> | null;
+  return (
+    action?.type === "set_details" &&
+    typeof action.className === "string" &&
+    typeof action.country === "string" &&
+    typeof action.course === "string" &&
+    (action.className.trim() !== "" || action.country.trim() !== "")
+  );
+}
+
 type ActionOf<K extends TutorAction["type"]> = Extract<
   TutorAction,
   { type: K }
@@ -155,6 +178,7 @@ const ACTION_CHECKS: {
   change_subjects: isChangeSubjects,
   rebuild_plan: isRebuildPlan,
   propose_path: isProposePath,
+  set_details: isSetDetails,
 };
 
 function isTutorAction(value: unknown): value is TutorAction {

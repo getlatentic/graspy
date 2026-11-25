@@ -53,3 +53,62 @@ describe("a chat card's answers", () => {
     expect(trigger).not.toHaveBeenCalled();
   });
 });
+
+describe("a choice card's tap", () => {
+  const hostWith = (
+    busy: boolean,
+    ask = vi.fn(),
+    message: Partial<ChatMessage> = {},
+    lastMessageId?: string,
+  ) => {
+    const { result } = renderHook(() =>
+      useAppHost({ busy, lastMessageId, ask, keepViewCalls: vi.fn() }),
+    );
+    return result.current(message as ChatMessage);
+  };
+  const choice = (id: string) =>
+    ({
+      id,
+      metadata: { card: { resourceUri: "ui://graspy/choice" } },
+    }) as Partial<ChatMessage>;
+
+  it("is the learner's message, as they would have typed it", () => {
+    const ask = vi.fn();
+
+    expect(hostWith(false, ask).message("JSS 2")).toBe(true);
+
+    expect(ask).toHaveBeenCalledWith("JSS 2", []);
+  });
+
+  it("is refused while the tutor is still answering, so the card says to wait", () => {
+    const ask = vi.fn();
+
+    expect(hostWith(true, ask).message("JSS 2")).toBe(false);
+
+    expect(ask).not.toHaveBeenCalled();
+  });
+
+  it("is refused once the conversation has gone on past its card, so an old card cannot answer", () => {
+    const ask = vi.fn();
+
+    expect(hostWith(false, ask, choice("m1"), "m3").message("JSS 3")).toBe(
+      false,
+    );
+    expect(hostWith(false, ask, choice("m3"), "m3").message("JSS 3")).toBe(
+      true,
+    );
+
+    expect(ask).toHaveBeenCalledOnce();
+  });
+
+  it("leaves another kind of card as it was", () => {
+    const practice = {
+      id: "m1",
+      metadata: { card: { resourceUri: "ui://graspy/practice" } },
+    } as Partial<ChatMessage>;
+
+    expect(hostWith(false, vi.fn(), practice, "m3").message("Another")).toBe(
+      true,
+    );
+  });
+});

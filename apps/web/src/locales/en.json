@@ -15,6 +15,7 @@
   "chat": {
     "aiTutorTitle": "graspy tutor",
     "aiTutorWelcome": "Hi! Ask me anything about your lesson.",
+    "startWelcome": "Hi! What would you like to learn about?",
     "quickQuestions": "Quick questions",
     "quickActionExplain": "Explain this concept",
     "quickActionExplainPrompt": "Can you explain \"{topic}\" in simple terms? Break it down step by step.",
@@ -40,6 +41,7 @@
     "confirmRemove": "Remove {subjects}? Their progress is cleared.",
     "confirmYes": "Yes, go ahead",
     "confirmNo": "Keep my plan",
+    "detailsNotKept": "Your details were not saved. Try again.",
     "subjectsChanged": "Your subjects are updated.",
     "topicAdded": "Added “{topic}” to {subject}.",
     "pathAdded": "Added the path “{subject}” to your plan.",
@@ -69,6 +71,9 @@
       "rebuild_plan": "Getting ready to rebuild your plan...",
       "give_practice": "Writing a question for you...",
       "give_passage": "Writing a passage for you...",
+      "give_choice": "Asking you a question...",
+      "ask_class": "Finding your classes...",
+      "set_details": "Saving your details...",
       "load_skill": "Choosing how to teach this..."
     },
     "openLesson": "Open lesson",

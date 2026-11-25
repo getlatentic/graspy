@@ -6,6 +6,7 @@ import type { CurriculumData } from "@/lib/curriculum-record";
 import { useChatPlanEdits, type ActionOf } from "./use-chat-plan-edits";
 import type { LearnerPlan } from "./use-learner-plan";
 import { usePathProposal, type PathProposals } from "./use-path-proposal";
+import { useDetailsChange } from "./use-details-change";
 import { useSubjectChange } from "./use-subject-change";
 
 export type PendingPlanChange =
@@ -86,6 +87,7 @@ export function useTutorActions(deps: TutorActionDeps) {
     confirmDrop: replaceCard,
   });
   const { askToChange, setSubjects } = subjects;
+  const keepDetails = useDetailsChange({ ...deps, read, applyCurriculum });
 
   const carryOut = useCallback(
     async (actions: readonly TutorAction[]) => {
@@ -95,6 +97,7 @@ export function useTutorActions(deps: TutorActionDeps) {
         add_topic: edits.addTopic,
         change_subjects: askToChange,
         rebuild_plan: () => replaceCard({ type: "rebuild_plan" }),
+        set_details: keepDetails,
       };
       const goals: string[] = [];
       for (const action of actions) {
@@ -111,7 +114,7 @@ export function useTutorActions(deps: TutorActionDeps) {
         await propose(goals);
       }
     },
-    [askToChange, edits, propose, replaceCard],
+    [askToChange, edits, keepDetails, propose, replaceCard],
   );
 
   const confirmPlanChange = useCallback(async () => {

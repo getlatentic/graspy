@@ -12,6 +12,7 @@ from ..wire import Wire
 
 PRACTICE_UI = "ui://graspy/practice"
 PASSAGE_UI = "ui://graspy/passage"
+CHOICE_UI = "ui://graspy/choice"
 DESCRIBED_PASSAGE = 600
 
 
@@ -65,6 +66,18 @@ class Passage(Wire):
         ).strip()
 
 
+class Choice(Wire):
+    """One short question and the few answers worth tapping; the view adds the
+    way back to typing."""
+
+    question: str
+    options: list[str]
+
+    def describe(self) -> str:
+        options = (f"{i + 1}. {option}" for i, option in enumerate(self.options))
+        return "\n".join([self.question, *options])
+
+
 class TextContent(Wire):
     type: Literal["text"] = "text"
     text: str
@@ -92,6 +105,12 @@ class PassageResult(Wire):
     meta: ResultMeta = Field(alias="_meta")
 
 
+class ChoiceResult(Wire):
+    content: list[TextContent]
+    structured_content: Choice
+    meta: ResultMeta = Field(alias="_meta")
+
+
 class PracticeCard(Wire):
     """Rendered as an MCP Apps host renders a tool result: the resource in a
     sandboxed frame, sent the tool's input and then its result."""
@@ -115,7 +134,19 @@ class PassageCard(Wire):
         return self.tool_result.structured_content.describe()
 
 
-Card = Annotated[PracticeCard | PassageCard, Field(discriminator="resource_uri")]
+class ChoiceCard(Wire):
+    resource_uri: Literal["ui://graspy/choice"] = CHOICE_UI
+    tool_name: Literal["give_choice"] = "give_choice"
+    tool_input: dict[str, Any]
+    tool_result: ChoiceResult
+
+    def describe(self) -> str:
+        return self.tool_result.structured_content.describe()
+
+
+Card = Annotated[
+    PracticeCard | PassageCard | ChoiceCard, Field(discriminator="resource_uri")
+]
 
 
 def placed(card: Card, where: Where) -> Card:

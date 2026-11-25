@@ -13,6 +13,9 @@ export type ChatTarget =
 
 export const ASK_HUB = "/app/learn/ask";
 
+/** The chat the public try link leads to, which makes the learner ready before it opens. */
+export const TRY_CHAT = `${ASK_HUB}/try`;
+
 export function chatPath(target: ChatTarget): string {
   if (target.kind === "topic") {
     return `${ASK_HUB}/${encodeURIComponent(target.subjectSlug)}/${target.topicIndex}`;

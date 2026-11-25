@@ -23,6 +23,12 @@
     "another": "Another passage",
     "askAnother": "I got {right} of {total} right on the passage. Give me another one to read."
   },
+  "choice": {
+    "label": "Question",
+    "other": "Something else",
+    "typeBelow": "Type your answer below.",
+    "busy": "Not now. Type your answer below."
+  },
   "lesson": {
     "label": "Lesson",
     "loading": "Preparing your lesson",

@@ -8,6 +8,7 @@ import {
   leaveLearnerSession,
   type Issued,
 } from "@/lib/api/session";
+import { TRY_CHAT } from "@/features/learn/lib/chat-targets";
 import { takeChat } from "@/lib/account/chat-return";
 import { getCurriculum } from "@/lib/curriculum-db";
 import { deviceId } from "@/lib/device-id";
@@ -83,10 +84,12 @@ export async function leaveLearner(): Promise<void> {
 }
 
 /** Where the learner starts: the chat they asked for before signing in, else their plan, or
- * onboarding to make one. */
+ * onboarding to make one; the try link's chat makes its own plan. */
 async function startPage(): Promise<string> {
   const chat = takeChat();
-  if (!(await getCurriculum())) return "/app/onboarding";
+  if (!(await getCurriculum())) {
+    return chat === TRY_CHAT ? TRY_CHAT : "/app/onboarding";
+  }
   saveUserProfile({ onboardingCompleted: true });
   return chat ?? "/app/learn";
 }

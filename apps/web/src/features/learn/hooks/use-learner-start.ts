@@ -33,7 +33,12 @@ export function useLearnerStart(): UserProfile | null {
   }, [navigate, loadSaved]);
 
   const voiceOnly = useVoiceOnly();
-  const wanted = profile !== null && planWanted(curriculum, voiceOnly);
+  // The plan the try link's chat made has no subject or class yet: the chat adds them, and a
+  // plan made from the profile now would replace it. Once a subject is there this is moot.
+  const wanted =
+    profile !== null &&
+    !curriculum?.startedInChat &&
+    planWanted(curriculum, voiceOnly);
   useEffect(() => {
     if (!profile || !loaded || !wanted || isGenerating) return;
     if (generated.current) return;
