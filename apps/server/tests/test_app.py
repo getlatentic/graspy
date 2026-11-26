@@ -21,6 +21,7 @@ def settings(**overrides) -> Settings:
     values = {
         "aws_bearer_token_bedrock": "bedrock-test",
         "session_secret": "s",
+        "turnstile_secret": "a-widget-secret",
         "cors_origins": f"{ORIGIN},https://*.graspy.pages.dev",
         "_env_file": None,
         **overrides,

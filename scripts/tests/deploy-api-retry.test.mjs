@@ -26,7 +26,7 @@ function deploy({ fails, refusal }) {
   chmodSync(bin, 0o755);
   const run = spawnSync(
     "bash",
-    ["-c", `set -euo pipefail; wrangler_env=""; mkdir -p apps/server; ${FUNCTION}\ndeploy_api_worker`],
+    ["-c", `set -euo pipefail; wrangler_env="--env="; build_id=abc; mkdir -p apps/server; ${FUNCTION}\ndeploy_api_worker`],
     {
       cwd: dir,
       encoding: "utf8",

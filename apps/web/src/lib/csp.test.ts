@@ -36,6 +36,21 @@ describe("Content-Security-Policy", () => {
     expect(connectSrc).toContain("wss://graspy-api.getlatentic.com");
   });
 
+  it("lets Turnstile's script and frame load, and nothing else of Cloudflare's", () => {
+    const policy = headers.match(/Content-Security-Policy:.*/)?.[0] ?? "";
+    const directive = (name: string) =>
+      policy.match(new RegExp(`${name}[^;]*`))?.[0] ?? "";
+
+    expect(directive("script-src")).toContain(
+      "https://challenges.cloudflare.com",
+    );
+    expect(directive("frame-src")).toContain(
+      "https://challenges.cloudflare.com",
+    );
+    expect(directive("default-src")).not.toContain("challenges.cloudflare.com");
+    expect(directive("connect-src")).not.toContain("challenges.cloudflare.com");
+  });
+
   it("does not weaken script-src with 'unsafe-inline'", () => {
     const policy = headers.match(/Content-Security-Policy:.*/)?.[0] ?? "";
     const scriptSrc = policy.match(/script-src[^;]*/)?.[0] ?? "";

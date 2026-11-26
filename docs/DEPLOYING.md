@@ -24,7 +24,7 @@ Both sign in with the Firebase project `graspy-f482e`. `APP_ENV=staging` behaves
 
 `scripts/deploy.sh` is the only way to deploy; the apps have no `npm run deploy`. It deploys nothing until all of these pass:
 
-1. The tree is clean, and the web build has its Firebase config (in the environment or `apps/web/.env.<environment>.local`). For production, `HEAD` is on `origin/main` (a merge while the run waits for approval does not fail it; a commit that is not on main does), and the deploy is confirmed.
+1. The tree is clean, the web build has its Firebase config (in the environment or `apps/web/.env.<environment>.local`) and the Turnstile site key (`VITE_TURNSTILE_SITE_KEY`; production refuses a test key), and the API Worker has the secret `TURNSTILE_SECRET`. After the deploy the script reads `challenge` from `/api/health`: production must say `live`. For production, `HEAD` is on `origin/main` (a merge while the run waits for approval does not fail it; a commit that is not on main does), and the deploy is confirmed.
 2. `npm ci` with the npm that `package.json`'s `packageManager` names, run through `npx`. Another npm can skip a workspace's packages without an error. Then every package that the tutor, the admin UI and the web declare must be installed, and `uv sync --locked` for the API.
 3. The admin UI and the web app are built. The web build must call the API in the committed `apps/web/.env.<environment>` and not the other environment's; a `VITE_API_URL` in the shell is ignored. `public/_headers` allows production's API in `connect-src` (as `https://` and as `wss://`, for the chat's WebSocket) and `frame-src`; a staging build puts staging's API in its place.
 
@@ -85,6 +85,44 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
    ```
 
    **A deletion asked for by email** (the page `/delete-account` promises one to someone who cannot sign in): reply to the sign-in address, and once the person confirms from it, run `scripts/delete-account-by-request.sh <email> production` with `KEY_FILE` set to a temporary key of the same service account (made and removed as above). It signs in as that uid and calls `DELETE /api/account`, so the learners, what is kept for them and the Firebase user go through the route the app uses. What a phone or browser learned before anyone signed in belongs to no account, and this does not remove it.
+
+   **The `/try` bot check (Cloudflare Turnstile).** A visitor's session on `/try` is signed only after a Turnstile challenge ([Security](SECURITY.md#visitor-challenge-cloudflare-turnstile)). Each environment needs two things, and **the API Worker refuses to start, and `scripts/deploy.sh` refuses to deploy, without them**:
+
+   - the secret `TURNSTILE_SECRET` on the API Worker (`npx wrangler secret put TURNSTILE_SECRET --env staging`, `--env=""` for production, from `apps/server`);
+   - the widget's public site key `VITE_TURNSTILE_SITE_KEY` in the web build: in the GitHub environment's secrets for the Deploy workflow (`gh secret set VITE_TURNSTILE_SITE_KEY --env production --repo "$repo"`), or in `apps/web/.env.<environment>.local` for a deploy from a machine.
+
+   **Production (the owner, in the Cloudflare dashboard):**
+
+   1. Cloudflare dashboard, Turnstile, Add widget. Name it `graspy`.
+   2. Hostnames: `graspy.getlatentic.com` (add `graspy.tosinamuda.com` and `graspy.pages.dev` only if they serve the app). Do not add `localhost`.
+   3. Widget mode: Managed. Pre-clearance: No.
+   4. Create. Copy the **site key** (public) into `VITE_TURNSTILE_SITE_KEY` as above, and the **secret key** with `npx wrangler secret put TURNSTILE_SECRET --env=""`, pasted at the hidden prompt (never into chat, a file or the shell history).
+   5. Deploy, and check `curl -s https://graspy-api.getlatentic.com/api/health` shows `"challenge":"live"`. `scripts/deploy.sh production` makes this check itself.
+
+   The server accepts a token only from a site the web app is served from (the hostnames of `CORS_ORIGINS`), so a hostname added to the widget must also be in `CORS_ORIGINS`, and the reverse.
+
+   **Staging runs Cloudflare's test keys until the owner makes a staging widget, and so has NO bot check.** `apps/web/.env.staging` carries the test site key `1x00000000000000000000AA`; put the matching test secret on the staging Worker so it starts:
+
+   ```bash
+   printf '%s' '1x0000000000000000000000000000000AA' | npx wrangler secret put TURNSTILE_SECRET --env staging
+   ```
+
+   Staging warns at start, `/api/health` shows `"challenge":"test-always-passes"`, and every staging deploy prints a warning. Production refuses both test keys: the Worker will not start with a test secret, and `scripts/deploy.sh production` stops on a test site key. To give staging real protection, make a second widget for `graspy-staging.getlatentic.com` as above, put its secret on the staging Worker, and its site key in the GitHub `staging` environment (which then wins over the committed test key).
+
+   **The order that keeps a bad secret from taking production down.** The script cannot read a secret's value, and a Worker with a test secret refuses to start, so a wrong `TURNSTILE_SECRET` is found only after the upload. The order, which `scripts/deploy.sh` follows and checks:
+
+   1. Put the secret, and read back that it is named: `npx wrangler secret list --env=""` shows `"TURNSTILE_SECRET"` (the script stops before the upload if it does not).
+   2. Deploy staging first (it runs on every merge to `main`) and check `curl -s https://graspy-api-staging.getlatentic.com/api/health` says `"challenge"`: staging with its test secret says `test-always-passes`; a staging widget says `live`.
+   3. Deploy production. The script records the version that is serving (`wrangler deployments status`), uploads the API Worker with the commit as a var (`--var BUILD_ID:<sha>`, which `/api/health` reports as `details.build`), and then asks `/api/health` for up to 90 seconds **until it reports that sha**: a new version takes a moment to reach every location, and until it does the old one answers (an old Worker has no `build` or `challenge` field at all, which means "keep waiting", never "failed"). Only the new version's answer is judged: production must say `"challenge":"live"`.
+      - The new version answers and the check is not live (`off`, or a test secret), or nothing answers at all (a Worker that refused to start): the script **rolls the API Worker back to the recorded version by its id** (`wrangler rollback <id> --yes`; the previous *deployment* is not used, since a `secret put` makes a deployment of its own, with the same bad secret), does not deploy the web app, and fails. To put it right, put the real secret and deploy again.
+      - Only the old version ever answers within 90 seconds: nothing is rolled back (the site is as it was), the web app is not deployed, and the script fails; look at the Worker's logs and `/api/health`, and deploy again.
+      - If the recorded version cannot be read, the rollback goes to the previous deployment and the script says so; check `/api/health` afterwards. A secret put with the wrong value, a version before the deploy, is rolled back *to*: put the right secret.
+
+   **API and tutor changes must stay backward compatible with the previous API version.** The order of a deploy is migrations, tutor Worker, API Worker, web app, so a rollback of the API Worker runs the previous API against the new tutor and the new schema. A migration must work with the code before it (the rule already followed for `0026`), and the tutor's interface must keep answering what the previous API asks.
+
+   A page cached from before this deploy cannot run the check: its `/try` shows its generic error until it is reloaded, and the service worker fetches the new page on the next visit.
+
+   Merging the change that adds this makes the next staging deploy stop at `TURNSTILE_SECRET` until the staging secret is put, and a production deploy stop until both production values are set; the running Workers keep serving meanwhile.
 
 2. **Custom domains.** The first deploy attaches `graspy-api-staging.getlatentic.com` and `graspy-staging.getlatentic.com`. Neither may have a DNS record of its own (code 100117). Check that nothing answers:
 

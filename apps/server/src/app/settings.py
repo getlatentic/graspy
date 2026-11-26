@@ -9,8 +9,13 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .llm.profiles import profile_named
+from .security.turnstile import TEST_SECRETS, ChallengeMode, mode_of
 
 logger = logging.getLogger(__name__)
+
+# The only environments that may run on Cloudflare's test Turnstile secrets, which protect nothing:
+# an allow-list, so an environment named anything else is refused them.
+TEST_SECRET_ENVS = frozenset({"development", "dev", "test", "local", "staging"})
 _warned_of_region = False
 
 # A Worker receives these as bindings on `env`, not in the process
@@ -33,6 +38,8 @@ DEPLOYMENT_KEYS = (
     "CLOUDFLARE_API_TOKEN",
     "FIREBASE_API_KEY",
     "FIREBASE_SERVICE_ACCOUNT",
+    "TURNSTILE_SECRET",
+    "BUILD_ID",
 )
 
 
@@ -99,6 +106,14 @@ class Settings(BaseSettings):
     firebase_auth_emulator_host: str | None = Field(
         default=None, alias="FIREBASE_AUTH_EMULATOR_HOST"
     )
+
+    # The commit the Worker was uploaded from (scripts/deploy.sh passes it as a var), which
+    # /api/health reports so that a deploy can tell the new version from the old one.
+    build_id: str | None = Field(default=None, alias="BUILD_ID", max_length=64)
+
+    # The secret of the Turnstile widget that gates a visitor's session (security/turnstile.py). A
+    # Worker secret. Unset turns the challenge off, which only development may do.
+    turnstile_secret: str | None = Field(default=None, alias="TURNSTILE_SECRET")
 
     @field_validator("llm_native_tools", mode="before")
     @classmethod
@@ -180,6 +195,37 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"FIREBASE_AUTH_EMULATOR_HOST is set in {self.app_env}, where it "
                 "would accept a sign-in nobody made."
+            )
+        return self
+
+    @property
+    def challenge_mode(self) -> ChallengeMode:
+        return mode_of(self.turnstile_secret)
+
+    @model_validator(mode="after")
+    def challenge_on_when_deployed(self) -> Settings:
+        """Without the challenge, one script closes /try for everybody; and Cloudflare's always-pass
+        test secret is the challenge off in all but name, so production refuses it."""
+        name = self.app_env.lower()
+        if self.turnstile_secret in TEST_SECRETS and name not in TEST_SECRET_ENVS:
+            raise ValueError(
+                "TURNSTILE_SECRET is one of Cloudflare's published test secrets, which "
+                f"protect nothing: {self.app_env} may not use it, only development, test and "
+                "staging may (docs/DEPLOYING.md)."
+            )
+        if not self.is_deployed:
+            return self
+        if self.challenge_mode is ChallengeMode.OFF:
+            raise ValueError(
+                f"TURNSTILE_SECRET is required in {self.app_env}: without it a visitor's "
+                "session is minted unchallenged (docs/DEPLOYING.md)."
+            )
+        if self.challenge_mode is not ChallengeMode.LIVE:
+            logger.warning(
+                "TURNSTILE_SECRET is a Cloudflare test secret (%s): the visitor "
+                "challenge gives no protection in %s.",
+                self.challenge_mode.value,
+                self.app_env,
             )
         return self
 

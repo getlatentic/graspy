@@ -12,6 +12,7 @@ import {
   chatViewportStyle,
 } from "@/features/learn/lib/chat-viewport";
 import { readyToChat } from "@/features/learn/lib/start-chat";
+import { TryChallenge } from "@/app/try-challenge";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { holdAnonymousSession } from "@/lib/api/session";
 import { rememberChat } from "@/lib/account/chat-return";
@@ -55,16 +56,18 @@ function TryChat() {
         <SignInLink onClick={() => rememberChat(TRY_CHAT)} />
       </header>
       <main className="flex min-h-0 flex-1 flex-col pe-[var(--overscan-x)] pb-[var(--overscan-y)]">
-        {isLoaded && scope ? (
-          <ChatView scope={scope} />
-        ) : (
-          <div
-            role="status"
-            className="flex h-full items-center justify-center"
-          >
-            <Spinner />
-          </div>
-        )}
+        <TryChallenge>
+          {isLoaded && scope ? (
+            <ChatView scope={scope} />
+          ) : (
+            <div
+              role="status"
+              className="flex h-full items-center justify-center"
+            >
+              <Spinner />
+            </div>
+          )}
+        </TryChallenge>
       </main>
     </div>
   );

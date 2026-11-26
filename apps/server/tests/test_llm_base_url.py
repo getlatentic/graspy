@@ -232,7 +232,9 @@ def test_http_to_localhost_is_for_development_only(raw):
     assert checked_base_url(settings(llm_base_url=raw), ()) == raw.rstrip("/")
 
     with pytest.raises(RuntimeError, match="not when deployed"):
-        checked_base_url(settings(llm_base_url=raw, app_env="staging"), ())
+        checked_base_url(
+            settings(llm_base_url=raw, app_env="staging", turnstile_secret="w"), ()
+        )
 
 
 def test_another_host_needs_its_exact_name_in_the_allow_setting(caplog):

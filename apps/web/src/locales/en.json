@@ -550,6 +550,13 @@
     "noticeResetTvs": "{count} TVs linked with the old PIN were signed out.",
     "noticeDismiss": "Got it"
   },
+  "try": {
+    "checkLabel": "Checking this is a person",
+    "checkFailed": "We couldn't check your browser. Try again.",
+    "needsAnotherDevice": "Open graspy on a phone or computer to try it.",
+    "reload": "Reload the page to try graspy.",
+    "reloadButton": "Reload"
+  },
   "loading": {
     "opening": "Opening…",
     "tryAgain": "Try again"

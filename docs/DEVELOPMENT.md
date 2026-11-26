@@ -47,6 +47,7 @@ The server's environment holds only what changes between deployments or is secre
 | `INTRON_API_KEY` | Intron's speech recognition, which hears the learner in voice lessons. Worker only: `.dev.vars` locally, a secret in production |
 | `YARNGPT_API_KEY` | YarnGPT's speech, used only by `scripts/voice/publish_teacher_audio.py` to record the English lines in Idera. In `apps/server/.dev.vars` or the environment of whoever publishes; never a Worker secret, since the Worker does not call YarnGPT |
 | `SPITCH_API_KEY` | Spitch's speech synthesis, the teacher's voice in voice lessons. Worker only: `.dev.vars` locally, a secret in production |
+| `TURNSTILE_SECRET` | The secret of the Turnstile widget that gates a visitor's session on `/try`. A Worker secret; required in staging and production (production refuses Cloudflare's test secrets). Unset in development: a visitor's session is minted unchallenged, and the web, with no `VITE_TURNSTILE_SITE_KEY`, sends no token. To try the widget locally, set it to `1x0000000000000000000000000000000AA` and `VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA` in `apps/web/.env.local` (always passes; `2x…AB` and `2x…AA` always fail) |
 | `SESSION_SECRET` | Signs session tokens. Required in production; in development a temporary key is made |
 | `CORS_ORIGINS` | Allowed origins, comma-separated or JSON. One wildcard label is allowed; `*` is refused |
 | `PUBLIC_BASE_URL` / `A2A_PATH_PREFIX` | The origin the agent card advertises, and the tutor's path (default `/a2a`) |

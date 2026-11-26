@@ -8,6 +8,7 @@ import {
 } from "@/lib/account/account-store";
 import { deviceId, fingerprint } from "@/lib/device-id";
 import { tryVisitor } from "@/lib/try-visitor";
+import { challengeConfigured, solveChallenge } from "@/lib/challenge/challenge";
 import {
   forgetTvCredential,
   keepTvCredential,
@@ -21,6 +22,7 @@ import { API_BASE_URL } from "@/lib/env";
 import { readJson } from "./body";
 import {
   ApiError,
+  CHALLENGE_REQUIRED,
   SignInUnchecked,
   toApiError,
   toNetworkError,
@@ -317,10 +319,28 @@ function followLearner(sent: Learner | null, { learner }: Issued): void {
   setLearner(learner ? { id: learner.id, name: learner.name } : null);
 }
 
+// A visitor's session is renewed by presenting the one it replaces, which carries the proof that
+// their browser passed the check. Only a visit with no such session, or one the server will not
+// renew (too old), runs the check, and the check's token is single use.
+async function anonymousIssued(previous: string | undefined): Promise<Issued> {
+  const visitor = tryVisitor();
+  if (previous || !challengeConfigured()) {
+    try {
+      return await issued(
+        await post(previous ? { visitor, renewal: previous } : { visitor }),
+      );
+    } catch (refused) {
+      const askedForCheck =
+        refused instanceof ApiError && refused.code === CHALLENGE_REQUIRED;
+      if (!askedForCheck || !challengeConfigured()) throw refused;
+    }
+  }
+  return issued(await post({ visitor, challenge: await solveChallenge() }));
+}
+
 async function mintAnonymous(): Promise<string> {
-  const { token, expiresIn } = await issued(
-    await post({ visitor: tryVisitor() }),
-  );
+  const previous = cached?.anonymous ? cached.token : undefined;
+  const { token, expiresIn } = await anonymousIssued(previous);
   // Released, or signed in, while the handshake ran: this token is not the one now wanted.
   if (!isAnonymousSession()) return getSessionToken();
   keep({ token, expiresAt: Date.now() + expiresIn * 1000, anonymous: true });

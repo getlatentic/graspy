@@ -120,6 +120,54 @@ async def test_a_learner_the_account_holds_gets_to_the_chat(app, env, method, ur
     assert reached.status_code not in (401, 403, 409, 503), reached.text
 
 
+@pytest.mark.parametrize("body", [{}, None], ids=["empty body", "no body"])
+@pytest.mark.parametrize(("method", "url"), CHAT_ROUTES)
+async def test_a_session_minted_with_no_device_and_no_visitor_is_refused_the_chat(
+    app, method, url, body
+):
+    """The visitor challenge gates only the visitor mint, so a session that names nobody must not
+    be a way around it: it cannot chat, which is the one route that spends the visitor's limits."""
+    async with client(app) as http:
+        use(http, (await http.post("/api/session", json=body)).json())
+        refused = await sent(http, method, url)
+
+    assert code_of(refused) == (403, "account_required")
+
+
+@pytest.mark.parametrize(("method", "url"), CHAT_ROUTES)
+async def test_a_parent_session_is_refused_the_chat(app, method, url):
+    token = issue(app.state.session_secret, account=UID, parent=True, gate="pin")
+    async with client(app) as http:
+        use(http, {"token": token.token, "expiresIn": token.expires_in})
+        refused = await sent(http, method, url)
+
+    assert code_of(refused) == (409, "learner_required")
+
+
+async def test_the_turn_socket_of_a_session_that_names_nobody_is_refused(
+    app, env, monkeypatch
+):
+    monkeypatch.setattr(
+        "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
+    )
+    token = issue(app.state.session_secret).token
+
+    refused = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert refused == (403, "account_required")
+
+
+async def test_the_turn_socket_of_a_parent_session_is_refused(app, env, monkeypatch):
+    monkeypatch.setattr(
+        "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
+    )
+    token = issue(app.state.session_secret, account=UID, parent=True, gate="pin").token
+
+    refused = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert refused == (409, "learner_required")
+
+
 @pytest.mark.parametrize(("method", "url"), NOT_THE_CHAT)
 async def test_a_device_keeps_what_is_not_the_chat(app, method, url):
     async with client(app) as http:

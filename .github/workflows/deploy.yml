@@ -58,6 +58,7 @@ jobs:
           REPOSITORY_SECRET_VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN != '' }}
           REPOSITORY_SECRET_VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID != '' }}
           REPOSITORY_SECRET_VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID != '' }}
+          REPOSITORY_SECRET_VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY != '' }}
           ENVIRONMENT: ${{ inputs.environment || 'staging' }}
           REF: ${{ github.ref }}
         run: scripts/check-deploy-environment.sh "$ENVIRONMENT" "$REF"
@@ -68,6 +69,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'staging' }}
     steps:
+      # VITE_TURNSTILE_SITE_KEY is not required here: staging falls back to the test key committed
+      # in apps/web/.env.staging, and scripts/deploy.sh refuses a production build with no real key.
       - name: Environment secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -107,4 +110,5 @@ jobs:
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
         run: scripts/deploy.sh "$ENVIRONMENT" --confirm "$CONFIRM"
