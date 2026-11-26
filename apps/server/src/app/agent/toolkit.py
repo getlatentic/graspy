@@ -9,11 +9,16 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from ..learner.record import Where
-from .cards import CHOICE_UI, PASSAGE_UI, PRACTICE_UI, Card, placed
+from .cards import CHOICE_UI, PASSAGE_UI, PRACTICE_UI, Card, ChoiceCard, placed
 from .choice import give_choice
 from .context import LearnerContext
 from .courses import propose_path_tool
-from .details import ask_class_tool, set_details_tool
+from .decision import (
+    WITHDRAWN,
+    refused_beside_choice,
+    withdraw_offers,
+)
+from .details import ask_class_tool, class_first, set_details_tool
 from .passage import give_passage
 from .practice import give_practice
 from .reply import MAX_PATH_GOALS, Action, Outcome
@@ -54,6 +59,8 @@ class ToolSpec:
     build: Callable[[Turn], Tool]
     # The ui:// resource that shows the tool's result, in MCP Apps' terms.
     ui: str | None = None
+    # What the tool offers once the learner's class is known, for tools that need it.
+    after_class: str | None = None
 
 
 def _as_is(tool: Tool) -> Callable[[Turn], Tool]:
@@ -69,8 +76,16 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("open_subject", _for_context(open_subject_tool)),
     ToolSpec("open_topic", lambda turn: open_topic_tool(turn.context, turn.message)),
     ToolSpec("add_topic", _for_context(add_topic_tool)),
-    ToolSpec("propose_path", _for_context(propose_path_tool)),
-    ToolSpec("change_subjects", _for_context(change_subjects_tool)),
+    ToolSpec(
+        "propose_path",
+        _for_context(propose_path_tool),
+        after_class="propose the course",
+    ),
+    ToolSpec(
+        "change_subjects",
+        _for_context(change_subjects_tool),
+        after_class="add the subject",
+    ),
     ToolSpec("rebuild_plan", _for_context(rebuild_plan_tool)),
     ToolSpec("give_practice", _as_is(give_practice), ui=PRACTICE_UI),
     ToolSpec("give_passage", _as_is(give_passage), ui=PASSAGE_UI),
@@ -86,23 +101,48 @@ class TurnOutputs:
     actions: list[Action] = field(default_factory=list)
     cards: list[Card] = field(default_factory=list)
     skills: list[str] = field(default_factory=list)
+    # Cards a question took the place of: never shown, but their answers stay unsaid.
+    withheld: list[Card] = field(default_factory=list)
+
+
+def _keep(outputs: TurnOutputs, result: Outcome, where: Where, room: int) -> dict:
+    """Puts what the call did for the app among the turn's, and returns what the
+    model reads. A question the learner must answer takes the place of every
+    other offer in the turn, whichever call came first."""
+    if waiting := refused_beside_choice(outputs.cards, result):
+        if result.card is not None:
+            outputs.withheld.append(result.card)
+        return waiting
+    told = admit(outputs.actions, result, room)
+    if result.card is not None:
+        outputs.cards.append(placed(result.card, where))
+    if isinstance(result.card, ChoiceCard):
+        withdrew, taken = withdraw_offers(outputs.actions, outputs.cards)
+        outputs.withheld.extend(taken)
+        if withdrew:
+            told = {**told, "withdrawn": WITHDRAWN}
+    if result.skill is not None and result.skill not in outputs.skills:
+        outputs.skills.append(result.skill)
+    return told
 
 
 def _for_model(
-    tool: Tool, outputs: TurnOutputs, where: Where, room: int
+    tool: Tool,
+    outputs: TurnOutputs,
+    where: Where,
+    room: int,
+    refused: Callable[[], dict | None],
 ) -> Callable[..., dict]:
     """The tool as the model sees it: announced as it starts, and returning
-    only its words, with what it did for the app kept in ``outputs``."""
+    only its words, with what it did for the app kept in ``outputs``.
+    ``refused`` is the reason the call is not made now, if there is one."""
 
     def kept(result: dict | Outcome) -> dict:
-        if not isinstance(result, Outcome):
-            return result
-        told = admit(outputs.actions, result, room)
-        if result.card is not None:
-            outputs.cards.append(placed(result.card, where))
-        if result.skill is not None and result.skill not in outputs.skills:
-            outputs.skills.append(result.skill)
-        return told
+        return (
+            _keep(outputs, result, where, room)
+            if isinstance(result, Outcome)
+            else result
+        )
 
     if inspect.iscoroutinefunction(tool):
 
@@ -110,7 +150,7 @@ def _for_model(
         async def run_async(*args, **kwargs) -> dict:
             announce(tool.__name__)
             try:
-                return kept(await tool(*args, **kwargs))
+                return refused() or kept(await tool(*args, **kwargs))
             finally:
                 announce_done(tool.__name__)
 
@@ -120,7 +160,7 @@ def _for_model(
     def run(*args, **kwargs) -> dict:
         announce(tool.__name__)
         try:
-            return kept(tool(*args, **kwargs))
+            return refused() or kept(tool(*args, **kwargs))
         finally:
             announce_done(tool.__name__)
 
@@ -135,4 +175,18 @@ def tools_for(turn: Turn, outputs: TurnOutputs) -> list[Callable[..., dict]]:
         if turn.context.subjects
         else MAX_PATH_GOALS
     )
-    return [_for_model(spec.build(turn), outputs, where, room) for spec in TOOLS]
+    return [
+        _for_model(
+            spec.build(turn), outputs, where, room, _class_gate(turn, outputs, spec)
+        )
+        for spec in TOOLS
+    ]
+
+
+def _class_gate(
+    turn: Turn, outputs: TurnOutputs, spec: ToolSpec
+) -> Callable[[], dict | None]:
+    then = spec.after_class
+    if then is None:
+        return lambda: None
+    return lambda: class_first(turn.context, outputs.actions, then)

@@ -23,10 +23,12 @@ const sameGoal = (a: string, b: string) => nameKey(a) === nameKey(b);
 /**
  * Rounds are numbered: whatever replaces, dismisses or accepts the proposals, or the screen
  * closing, ends the round, and a plan that arrives after it is ignored. Each plan has its own
- * time limit, so one slow course never holds the others.
+ * time limit, so one slow course never holds the others. A course is planned for the plan as
+ * `read` gives it when planning starts, so a course proposed in the reply that saved the
+ * learner's class is planned for that class.
  */
 export function usePathProposal(
-  curriculum: CurriculumData | null,
+  read: () => CurriculumData | null,
   show: (proposals: PathProposals) => void,
 ) {
   const round = useRef(0);
@@ -46,6 +48,7 @@ export function usePathProposal(
 
   const plan = useCallback(
     async (goal: string, mine: number) => {
+      const curriculum = read();
       if (!curriculum) return;
       const key = nameKey(goal);
       requests.current.get(key)?.abort();
@@ -79,12 +82,12 @@ export function usePathProposal(
       );
       publish();
     },
-    [curriculum, publish],
+    [read, publish],
   );
 
   const propose = useCallback(
     async (asked: string[]) => {
-      if (!curriculum) return;
+      if (!read()) return;
       const goals = asked.filter(
         (goal, at) => asked.findIndex((other) => sameGoal(other, goal)) === at,
       );
@@ -98,7 +101,7 @@ export function usePathProposal(
       publish();
       await Promise.all(goals.map((goal) => plan(goal, mine)));
     },
-    [curriculum, endRound, plan, publish],
+    [read, endRound, plan, publish],
   );
 
   const retry = useCallback(

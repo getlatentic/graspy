@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n-context";
 import {
   composerPlaceholder,
   followUpsFor,
+  planChangeFor,
   type ThreadState,
 } from "@/features/learn/lib/chat-view-state";
 import {
@@ -40,6 +41,7 @@ export function ChatFooter({
   const { stopTutor, confirmPlanChange, dismissPlanChange, retryPath } =
     useChat();
   const followUps = followUpsFor(lastMessage, state);
+  const planChange = planChangeFor(lastMessage, state);
 
   if (scope.kind === "earlier") return <EarlierNote />;
 
@@ -54,9 +56,9 @@ export function ChatFooter({
             onAsk={ask}
           />
         )}
-        {state.planChange && (
+        {planChange && (
           <PlanChangeCard
-            change={state.planChange}
+            change={planChange}
             onConfirm={() => void confirmPlanChange()}
             onDismiss={dismissPlanChange}
             onRetry={(goal) => void retryPath(goal)}

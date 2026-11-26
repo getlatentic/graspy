@@ -628,7 +628,7 @@ describe("usePathProposal", () => {
     mocks.planLearningPath.mockReturnValue(slow.promise);
     const show = vi.fn<(change: PathProposals) => void>();
     const { result, unmount } = renderHook(() =>
-      usePathProposal(CURRICULUM, show),
+      usePathProposal(() => CURRICULUM, show),
     );
     let asked!: Promise<void>;
     act(() => {

@@ -208,11 +208,6 @@ def change_subjects_tool(context: LearnerContext) -> Callable[..., dict | Outcom
             return refusal(
                 "The learner's subjects were not sent, so none can be changed."
             )
-        if context.empty_plan and not context.grade_level:
-            return refusal(
-                "The learner's class is not known, and a subject is written for it. "
-                "Ask for it with ask_class, save it with set_details, then add the subject"
-            )
         names = [s.name for s in context.held_subjects()]
         dropped = _subjects_named((remove or [])[:MAX_ASKED], names)
         if isinstance(dropped, dict):

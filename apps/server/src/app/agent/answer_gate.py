@@ -99,11 +99,13 @@ class AnswerGate:
         # Of two cards of questions in one turn the last counts, as in the reply;
         # a choice has no answer to leak.
         cards = [c for c in self._outputs.cards if not isinstance(c, ChoiceCard)][-1:]
+        # A card a question took the place of is not shown, so its answers stay unsaid too.
+        unshown = [c for c in self._outputs.withheld if not isinstance(c, ChoiceCard)]
         return Facts(
             verdicts=self._verdicts,
             questions=tuple(
                 question
-                for card in cards
+                for card in [*unshown, *cards]
                 for question in card.tool_result.structured_content.questions
             ),
             acted=bool(self._outputs.actions),

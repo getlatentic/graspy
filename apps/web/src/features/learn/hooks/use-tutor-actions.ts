@@ -69,7 +69,7 @@ export function useTutorActions(deps: TutorActionDeps) {
   );
   const edits = useChatPlanEdits({ ...deps, read, applyCurriculum });
   const { propose, retry, takeReady, putBack, forget } = usePathProposal(
-    deps.curriculum,
+    read,
     setPending,
   );
   // Whatever takes the card's place ends the round of plans still arriving for it.

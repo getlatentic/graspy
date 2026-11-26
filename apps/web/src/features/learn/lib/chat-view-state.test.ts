@@ -4,6 +4,7 @@ import type { TutorCard } from "@/lib/a2a/reply-data";
 import { appCall } from "@/lib/a2a/request-data";
 import {
   followUpsFor,
+  planChangeFor,
   threadState,
   type ThreadState,
 } from "@/features/learn/lib/chat-view-state";
@@ -114,5 +115,32 @@ describe("followUpsFor", () => {
   it("ignores follow-ups that are not a list", () => {
     const odd = answer({ followUps: "Why?" as unknown as string[] });
     expect(followUpsFor(odd, IDLE)).toEqual([]);
+  });
+});
+
+describe("planChangeFor", () => {
+  const REBUILD = { type: "rebuild_plan" } as const;
+  const waiting = { ...IDLE, planChange: REBUILD };
+  const CHOICE: TutorCard = { ...CARD, resourceUri: "ui://graspy/choice" };
+
+  it("shows the plan change that waits", () => {
+    expect(planChangeFor(answer({}), waiting)).toBe(REBUILD);
+    expect(planChangeFor(undefined, waiting)).toBe(REBUILD);
+  });
+
+  it("shows none while a question waits for its answer", () => {
+    expect(planChangeFor(answer({ card: CHOICE }), waiting)).toBeNull();
+  });
+
+  it("shows it below a card of questions, which is not a decision to make", () => {
+    expect(planChangeFor(answer({ card: CARD }), waiting)).toBe(REBUILD);
+  });
+
+  it("shows it again when the learner's own message is the last", () => {
+    const typed = {
+      ...answer({ card: CHOICE }),
+      sender: "user",
+    } as ChatMessage;
+    expect(planChangeFor(typed, waiting)).toBe(REBUILD);
   });
 });
