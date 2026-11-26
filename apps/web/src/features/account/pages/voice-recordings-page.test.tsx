@@ -859,15 +859,27 @@ describe("the voice recordings page, for a learner's session", () => {
 });
 
 describe("the voice recordings page, as the parent's session runs out", () => {
+  const MINUTES = 10 * 60 * 1000;
+
+  afterEach(() => vi.useRealTimers());
+
   it("asks for the PIN when the minutes are up, and hides the recordings", async () => {
-    parentSession.endsAt(Date.now() + 80);
+    // The clock is faked and the test moves it; it still ticks on its own so the queries'
+    // polling runs, which at ten minutes' distance cannot reach the end of the session.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    parentSession.endsAt(Date.now() + MINUTES);
     open(keeping(30, KEPT));
+
     expect(await keepSwitch()).toBeTruthy();
+    expect(await screen.findByText(/Counting to ten/)).toBeTruthy();
+    expect(screen.queryByRole("group", { name: "parentPin.title" })).toBeNull();
+
+    await act(() => vi.advanceTimersByTimeAsync(MINUTES + 1));
 
     expect(
       await screen.findByRole("group", { name: "parentPin.title" }),
     ).toBeTruthy();
     expect(screen.queryByRole("switch")).toBeNull();
-    expect(screen.queryByText("Counting to ten")).toBeNull();
+    expect(screen.queryByText(/Counting to ten/)).toBeNull();
   });
 });
