@@ -49,6 +49,9 @@ class SetDetails(Wire):
     class_name: str
     country: str
     course: str
+    # The catalogue's code for the country, when the server could place it: the app saves by it,
+    # and by the name only when this is empty.
+    country_code: str = ""
 
 
 class ProposePath(Wire):

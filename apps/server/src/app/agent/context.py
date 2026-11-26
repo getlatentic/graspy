@@ -167,12 +167,21 @@ class LearnerContext(BaseModel):
         raw = (metadata or {}).get(METADATA_KEY)
         if not isinstance(raw, Mapping):
             return cls()
-        sent = {key: value for key, value in raw.items() if key != "lesson"}
+        # The lesson is the server's to read, and so is the edge's country: never an app's word.
+        sent = {
+            key: value
+            for key, value in raw.items()
+            if key not in {"lesson", "edgeCountry"}
+        }
         try:
             return cls.model_validate(sent)
         except ValidationError:
             logger.warning("Dropped malformed learner context", exc_info=True)
             return cls()
+
+    def with_edge_country(self, code: str | None) -> LearnerContext:
+        """The learner with the country the edge placed the connection in, if the catalogue has it."""
+        return self.model_copy(update={"edge_country": _catalogued(code)})
 
     def needs_class(self) -> bool:
         """A new learner whose class is not given: what is written for them

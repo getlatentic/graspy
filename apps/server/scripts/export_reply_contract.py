@@ -157,6 +157,7 @@ CHOICE = give_choice(
 ABOUT_YOU = AboutYou(
     country="NG",
     countries=["NG", "SK"],
+    names={"NG": "Nigeria", "SK": "Slovakia"},
     class_lists=[
         ["JSS 1", "JSS 2", "Undergraduate", "Graduate"],
         ["Grade 1", "Grade 2", "Undergraduate", "Graduate"],
@@ -188,7 +189,7 @@ EXAMPLE = ReplyData(
         ChangeSubjects(add=["Physics"], remove=["Basic Science"]),
         RebuildPlan(),
         ProposePath(goal="real analysis"),
-        SetDetails(class_name="JSS 2", country="Nigeria", course=""),
+        SetDetails(class_name="JSS 2", country="Nigeria", course="", country_code="NG"),
     ],
     cards=[
         pinned(PRACTICE, PRACTICE_VIEW),

@@ -50,9 +50,9 @@ export interface ChoiceSet {
 export interface AboutYou {
   /** The country code the form starts on; the learner confirms or changes it. */
   country: string | null;
-  /** False when the learner has said their country already. */
-  askCountry: boolean;
   countries: string[];
+  /** Each country's English name, as the catalogue writes it. */
+  names: Record<string, string>;
   classLists: string[][];
   /** Which of `classLists` each country has. */
   classListOf: Record<string, number>;
@@ -176,9 +176,11 @@ export function isAboutYou(value: unknown): value is AboutYou {
   const form = value as Partial<AboutYou> | null;
   const lists = form?.classLists;
   const listOf = form?.classListOf;
+  const names = form?.names;
   return (
     (form?.country === null || isText(form?.country)) &&
-    typeof form?.askCountry === "boolean" &&
+    typeof names === "object" &&
+    names !== null &&
     isTexts(form.countries) &&
     form.countries.length > 0 &&
     Array.isArray(lists) &&
@@ -187,7 +189,7 @@ export function isAboutYou(value: unknown): value is AboutYou {
     listOf !== null &&
     form.countries.every((code) => {
       const list = lists[listOf[code]];
-      return list !== undefined && list.length > 0;
+      return isText(names[code]) && list !== undefined && list.length > 0;
     }) &&
     isTexts(form.afterSchool)
   );

@@ -99,9 +99,18 @@ class LogConversationStore:
         summary = compaction.data["summary"] if compaction else ""
         return summary, covered, _pairs(events)[-MAX_STORED:]
 
-    async def load(self, conversation_id: str) -> Conversation:
+    async def load(
+        self, conversation_id: str, excluding_turn: str | None = None
+    ) -> Conversation:
         summary, _, pairs = await self._held(conversation_id)
-        return Conversation(summary, tuple(_exchange(*pair) for pair in pairs))
+        return Conversation(
+            summary,
+            tuple(
+                _exchange(*pair)
+                for pair in pairs
+                if excluding_turn is None or pair[0].data.get("turn") != excluding_turn
+            ),
+        )
 
     async def append(
         self, conversation_id: str, exchange: Exchange, turn: str | None = None

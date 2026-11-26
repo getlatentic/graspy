@@ -2,17 +2,19 @@ import { useRef, useState } from "react";
 import type { App } from "@modelcontextprotocol/ext-apps";
 import type { AboutYou } from "@/lib/content";
 import { readViewState, writeViewState } from "@/shared/view-state";
-import { countryName } from "./country-names";
 
 interface Answers {
   country: string;
   className: string;
   course: string;
+}
+
+interface Kept extends Answers {
   sent: boolean;
 }
 
-const isAnswers = (value: unknown): value is Answers => {
-  const kept = value as Partial<Answers> | null;
+const isKept = (value: unknown): value is Kept => {
+  const kept = value as Partial<Kept> | null;
   return (
     typeof kept?.country === "string" &&
     typeof kept.className === "string" &&
@@ -22,9 +24,9 @@ const isAnswers = (value: unknown): value is Answers => {
 };
 
 /** The message the form sends, in the words the server reads back (agent/about_you.py), whatever
- * language the learner reads the form in. */
-export function answerText(answers: Omit<Answers, "sent">): string {
-  const where = `Country: ${countryName(answers.country, "en")} (${answers.country}). Class: ${answers.className}`;
+ * language the learner reads the form in. The server finds the country by its code. */
+export function answerText(form: AboutYou, answers: Answers): string {
+  const where = `Country: ${form.names[answers.country]} (${answers.country}). Class: ${answers.className}`;
   return answers.course ? `${where}. Course: ${answers.course}.` : `${where}.`;
 }
 
@@ -32,13 +34,19 @@ export function answerText(answers: Omit<Answers, "sent">): string {
 export const classesOf = (form: AboutYou, country: string): string[] =>
   form.classLists[form.classListOf[country]] ?? [];
 
-/** The form's answers. They are sent to the chat once, as the learner's next message, and a form
- * answered stays answered, showing what was chosen; one the host refuses is not. */
+/** The form's answers. They are sent to the chat once, as the learner's next message, and kept as
+ * sent only once the host has taken the message: a form closed while it was being sent opens again
+ * for another try. A form answered stays answered, showing what was chosen; one the host refuses
+ * is not. */
 export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
   const stateKey = `graspy.details.${viewUUID}`;
-  const [answers, setAnswers] = useState<Answers>(() =>
-    readViewState(stateKey, isAnswers, {
-      country: form.country ?? "",
+  const [answers, setAnswers] = useState<Kept>(() =>
+    readViewState(stateKey, isKept, {
+      // A country the form does not list is no country: the select starts on its placeholder.
+      country:
+        form.country && form.countries.includes(form.country)
+          ? form.country
+          : "",
       className: "",
       course: "",
       sent: false,
@@ -46,9 +54,10 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
   );
   // Not the state: a second press in the same frame reads the state before it changes.
   const sending = useRef(false);
+  const [pending, setPending] = useState(false);
   const [refused, setRefused] = useState(false);
 
-  const keep = (next: Answers) => {
+  const keep = (next: Kept) => {
     setAnswers(next);
     writeViewState(stateKey, next);
   };
@@ -58,42 +67,45 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
   const ready =
     classes.includes(answers.className) &&
     (!needsCourse || answers.course.trim() !== "");
+  const locked = answers.sent || pending;
 
   const chooseCountry = (country: string) => {
-    if (answers.sent) return;
+    if (locked) return;
     const stays = classesOf(form, country).includes(answers.className);
     keep({ ...answers, country, className: stays ? answers.className : "" });
   };
   const chooseClass = (className: string) =>
-    answers.sent || keep({ ...answers, className });
+    locked || keep({ ...answers, className });
   const writeCourse = (course: string) =>
-    answers.sent || keep({ ...answers, course });
+    locked || keep({ ...answers, course });
 
   const submit = async () => {
-    if (sending.current || answers.sent || !ready) return;
+    if (sending.current || locked || !ready) return;
     sending.current = true;
+    setPending(true);
     const answered = {
-      ...answers,
+      country: answers.country,
+      className: answers.className,
       course: needsCourse ? answers.course.trim() : "",
     };
-    keep({ ...answered, sent: true });
     try {
       const { isError } = await app.sendMessage({
         role: "user",
-        content: [{ type: "text", text: answerText(answered) }],
+        content: [{ type: "text", text: answerText(form, answered) }],
       });
       setRefused(Boolean(isError));
-      if (isError) keep({ ...answered, sent: false });
+      if (!isError) keep({ ...answered, sent: true });
     } catch (error) {
       console.error("Sending the details failed:", error);
-      keep({ ...answered, sent: false });
     } finally {
       sending.current = false;
+      setPending(false);
     }
   };
 
   return {
     ...answers,
+    sent: locked,
     classes,
     needsCourse,
     ready,

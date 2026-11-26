@@ -29,13 +29,19 @@ const { DetailsView } = await import("./details-view");
 
 const FORM = {
   country: "SK",
-  askCountry: true,
-  countries: ["NG", "SK", "GB"],
+  countries: ["NG", "SK", "GB", "CZ", "MM"],
+  names: {
+    NG: "Nigeria",
+    SK: "Slovakia",
+    GB: "United Kingdom",
+    CZ: "Czechia",
+    MM: "Myanmar",
+  },
   classLists: [
     ["JSS 1", "JSS 2", "Undergraduate", "Graduate"],
     ["Grade 1", "Grade 7", "Secondary Year 4", "Undergraduate", "Graduate"],
   ],
-  classListOf: { NG: 0, SK: 1, GB: 1 },
+  classListOf: { NG: 0, SK: 1, GB: 1, CZ: 1, MM: 1 },
   afterSchool: ["Undergraduate", "Graduate"],
 };
 
@@ -88,6 +94,8 @@ describe("the About you form", () => {
     expect(country().value).toBe("SK");
     expect(country().selectedOptions[0].textContent).toBe("Slovakia");
     expect(Array.from(country().options).map((o) => o.textContent)).toEqual([
+      "Czechia",
+      "Myanmar",
       "Nigeria",
       "Slovakia",
       "United Kingdom",
@@ -290,19 +298,64 @@ describe("the About you form", () => {
     expect(country().disabled).toBe(false);
   });
 
-  it("does not ask the country again when the learner has said it", () => {
-    open(
-      card({ ...FORM, askCountry: false, countries: ["SK"], country: "SK" }),
-    );
+  it("shows the catalogue's name of a country, whatever the runtime would call it", async () => {
+    open();
+    fireEvent.change(country(), { target: { value: "CZ" } });
+    choose("Grade 7");
 
-    expect(screen.queryByRole("combobox")).toBeNull();
-    expect(buttonNames()).toContain("Grade 7");
+    await act(async () => {
+      fireEvent.click(cont());
+    });
+
+    expect(app.sendMessage.mock.calls[0][0].content[0].text).toBe(
+      "Country: Czechia (CZ). Class: Grade 7.",
+    );
   });
 
-  it("names the countries in the host's language", () => {
+  it("opens again for another try when it was closed while the message was being sent", async () => {
+    let finish: (value: object) => void = () => undefined;
+    app.sendMessage = vi.fn().mockReturnValue(new Promise((r) => (finish = r)));
+    open();
+    choose("Grade 7");
+    await act(async () => {
+      fireEvent.click(cont());
+    });
+    expect(cont().disabled).toBe(true);
+    cleanup();
+
+    open();
+
+    expect(cont().disabled).toBe(false);
+    expect(country().disabled).toBe(false);
+    finish({});
+  });
+
+  it("is kept as sent only once the message was taken", async () => {
+    open();
+    choose("Grade 7");
+
+    await act(async () => {
+      fireEvent.click(cont());
+    });
+    cleanup();
+    open();
+
+    expect(cont().disabled).toBe(true);
+    expect(country().disabled).toBe(true);
+  });
+
+  it("starts with a placeholder and no classes for a country the form does not know", () => {
+    open(card({ ...FORM, country: "AQ" }));
+
+    expect(country().value).toBe("");
+    expect(screen.getByText("Choose your country")).toBeTruthy();
+    expect(buttonNames()).toEqual([]);
+  });
+
+  it("orders the countries as the host's language does", () => {
     open();
     act(() => app.onhostcontextchanged?.({ locale: "sk" }));
 
-    expect(country().selectedOptions[0].textContent).toBe("Slovensko");
+    expect(country().selectedOptions[0].textContent).toBe("Slovakia");
   });
 });

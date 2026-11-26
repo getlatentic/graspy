@@ -5,7 +5,7 @@ import {
   AFTER_SCHOOL,
   schoolDescriptor,
 } from "@/lib/learner-level";
-import { countryCodeNamed } from "@/lib/plan-details";
+import { countryCodeNamed, isKnownCountry } from "@/lib/plan-details";
 import type { LearnerDetails } from "@/lib/user-storage";
 
 type SetDetails = Extract<TutorAction, { type: "set_details" }>;
@@ -38,6 +38,13 @@ function isNamed(level: SchoolLevel, said: string): boolean {
   return names.some((name) => plain(name) === said);
 }
 
+/** The server's code for the country when the app has it, else what the name says. */
+function countryOf(said: SetDetails): string | undefined {
+  const code = said.countryCode?.trim().toUpperCase();
+  if (code && isKnownCountry(code)) return code;
+  return said.country ? countryCodeNamed(said.country) : undefined;
+}
+
 /** The details a learner's words make, or null when they name a country or class the
  * catalogue does not hold. A class is the country's main system's, as onboarding offers it. */
 export async function detailsSaid(
@@ -45,7 +52,8 @@ export async function detailsSaid(
   kept: LearnerDetails | null,
   systemsOf: typeof schoolSystems = schoolSystems,
 ): Promise<SaidDetails | null> {
-  const country = said.country ? countryCodeNamed(said.country) : kept?.country;
+  const country =
+    said.country || said.countryCode ? countryOf(said) : kept?.country;
   if (!country) return null;
   const language = kept?.language || "en";
   const place = { country, language };

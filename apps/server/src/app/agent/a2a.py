@@ -44,7 +44,7 @@ from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
 from .context import LearnerContext, with_kept_lesson
 from .durable_relay import TurnFailed, payload_parts, relay_events
-from .edge_country import with_edge_country
+from .edge_country import edge_country_of
 from .reply import ReplyData
 from .streaming import AnswerDelta, AnswerRestart, ToolActivity, ToolFinished
 from .tutor import Tutor, TutorReply
@@ -167,6 +167,7 @@ class TutorExecutor(AgentExecutor):
             message=message,
             parts=message_parts(context),
             metadata=learner_metadata(context),
+            edge_country=edge_country_of_call(context),
         )
         events = self._turns.run(job)
         return payload_parts(await relay_events(updater, events))
@@ -183,7 +184,9 @@ class TutorExecutor(AgentExecutor):
         if caller.learner and conversation_id not in record.conversations:
             await caller.change(Conversed(conversation_id=conversation_id))
         learner = await with_kept_lesson(
-            LearnerContext.from_metadata(learner_metadata(context)),
+            LearnerContext.from_metadata(learner_metadata(context)).with_edge_country(
+                edge_country_of_call(context)
+            ),
             record,
             self._keeping.lessons,
         )
@@ -264,12 +267,16 @@ def message_parts(context: RequestContext) -> list[dict]:
 
 def learner_metadata(context: RequestContext) -> dict:
     message = context.message
-    sent = (
+    return (
         MessageToDict(message.metadata)
         if message is not None and message.HasField("metadata")
         else {}
     )
-    return with_edge_country(sent, context.call_context.state.get("headers", {}))
+
+
+def edge_country_of_call(context: RequestContext) -> str | None:
+    """Where the edge placed the call, from the headers the session middleware kept."""
+    return edge_country_of(context.call_context.state.get("headers", {}))
 
 
 def reply_parts(reply: TutorReply) -> list:

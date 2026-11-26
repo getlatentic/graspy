@@ -88,17 +88,16 @@ class AboutYou(Wire):
 
     # The country's ISO code the form starts on; the learner confirms or changes it.
     country: str | None = None
-    # False when the learner has said their country already: the form then asks the class only.
-    ask_country: bool = True
     countries: list[str]
+    # Each country's English name, as the catalogue writes it: what the form shows and what is saved.
+    names: dict[str, str]
     class_lists: list[list[str]]
     class_list_of: dict[str, int]
     # The classes in a list that are levels after school, which ask for a course.
     after_school: list[str]
 
     def describe(self) -> str:
-        fields = "country and class" if self.ask_country else "class"
-        return f"{FORM_DESCRIPTION} {fields}."
+        return f"{FORM_DESCRIPTION} country and class."
 
 
 class TextContent(Wire):

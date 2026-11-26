@@ -57,11 +57,14 @@
     },
     "ui://graspy/details": {
       "country": "NG",
-      "askCountry": true,
       "countries": [
         "NG",
         "SK"
       ],
+      "names": {
+        "NG": "Nigeria",
+        "SK": "Slovakia"
+      },
       "classLists": [
         [
           "JSS 1",

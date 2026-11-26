@@ -143,3 +143,47 @@ describe("what a learner says of their school", () => {
     ).toMatchObject({ country: "GH", system: "", level: "", gradeLevel: "" });
   });
 });
+
+describe("the country the server names", () => {
+  const nameless = said("Grade 7", "Not a name the app knows");
+
+  it.each(["CZ", "TR", "MM", "HK", "CI", "GB", "PS", "CD", "SK"])(
+    "is saved by its code %s, whatever name goes with it",
+    async (code) => {
+      const systems = vi.fn(async () => [NIGERIA]);
+
+      await detailsSaid({ ...nameless, countryCode: code }, KEPT, systems);
+
+      expect(systems).toHaveBeenCalledWith(code);
+    },
+  );
+
+  it.each([
+    ["Czechia", "CZ"],
+    ["Türkiye", "TR"],
+    ["United Kingdom", "GB"],
+  ])(
+    "is found by the catalogue's name %s when no code comes",
+    async (name, code) => {
+      const systems = vi.fn(async () => [NIGERIA]);
+
+      await detailsSaid(said("Grade 7", name), KEPT, systems);
+
+      expect(systems).toHaveBeenCalledWith(code);
+    },
+  );
+
+  it("falls back to the name for a code the app does not have, and to the kept country for none", async () => {
+    const systems = vi.fn(async () => [NIGERIA]);
+
+    await detailsSaid(
+      { ...said("Grade 7", "Czechia"), countryCode: "ZZ" },
+      KEPT,
+      systems,
+    );
+    expect(systems).toHaveBeenLastCalledWith("CZ");
+
+    await detailsSaid(said("Grade 7"), KEPT, systems);
+    expect(systems).toHaveBeenLastCalledWith("NG");
+  });
+});

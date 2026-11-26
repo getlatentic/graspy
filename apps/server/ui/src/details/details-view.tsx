@@ -25,8 +25,8 @@ function Details({ shown }: { shown: Shown<AboutYou> }) {
   const form = result.structuredContent;
   const about = useAboutYou(app, result._meta.viewUUID, form);
   const countries = useMemo(
-    () => countryOptions(form.countries, locale),
-    [form.countries, locale],
+    () => countryOptions(form.names, form.countries, locale),
+    [form.names, form.countries, locale],
   );
 
   return (
@@ -38,15 +38,13 @@ function Details({ shown }: { shown: Shown<AboutYou> }) {
       }}
       className="space-y-4 rounded-card border border-line bg-surface p-4"
     >
-      {form.askCountry && (
-        <CountryField
-          words={words}
-          options={countries}
-          value={about.country}
-          disabled={about.sent}
-          onChange={about.chooseCountry}
-        />
-      )}
+      <CountryField
+        words={words}
+        options={countries}
+        value={about.country}
+        disabled={about.sent}
+        onChange={about.chooseCountry}
+      />
       <ClassField
         words={words}
         classes={about.classes}

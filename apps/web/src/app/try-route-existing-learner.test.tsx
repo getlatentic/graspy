@@ -22,10 +22,14 @@ vi.setConfig({ testTimeout: 30_000 });
 async function opened(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   router.initialize();
-  await vi.waitFor(() => {
-    expect(router.state.initialized).toBe(true);
-    expect(router.state.navigation.state).toBe("idle");
-  });
+  // The page is imported on this first visit: as long as the test may take, not waitFor's second.
+  await vi.waitFor(
+    () => {
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.navigation.state).toBe("idle");
+    },
+    { timeout: 25_000 },
+  );
   return router.state.location.pathname;
 }
 

@@ -38,7 +38,12 @@ class Conversation:
 
 
 class ConversationStore(Protocol):
-    async def load(self, conversation_id: str) -> Conversation: ...
+    async def load(
+        self, conversation_id: str, excluding_turn: str | None = None
+    ) -> Conversation:
+        """`excluding_turn` leaves out the exchange that turn kept, in a store that knows its turns
+        (the others ignore it): a turn run again is not made to read its own earlier run."""
+        ...
 
     async def append(
         self, conversation_id: str, exchange: Exchange, turn: str | None = None
@@ -59,7 +64,9 @@ class InMemoryConversationStore:
     def __init__(self) -> None:
         self._stored: dict[str, str] = {}
 
-    async def load(self, conversation_id: str) -> Conversation:
+    async def load(
+        self, conversation_id: str, excluding_turn: str | None = None
+    ) -> Conversation:
         return parsed(self._stored.get(conversation_id))
 
     async def append(
@@ -85,7 +92,9 @@ class DurableObjectConversationStore:
     def __init__(self, namespace: Any) -> None:
         self._namespace = namespace
 
-    async def load(self, conversation_id: str) -> Conversation:
+    async def load(
+        self, conversation_id: str, excluding_turn: str | None = None
+    ) -> Conversation:
         return parsed(await self._namespace.getByName(conversation_id).load())
 
     async def append(

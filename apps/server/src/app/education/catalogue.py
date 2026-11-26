@@ -86,6 +86,28 @@ def countries() -> frozenset[str]:
     return frozenset(system.country for system in systems().values())
 
 
+# Where the main system's own name is a part of the country.
+COUNTRY_NAMES = {"GB": "United Kingdom"}
+
+
+def country_name(code: str) -> str:
+    """The country's English name as the catalogue writes it, or its code where it has none."""
+    return COUNTRY_NAMES.get(code) or of_country(code)[0].name.en
+
+
+@cache
+def _codes_by_name() -> dict[str, str]:
+    return {country_name(code).casefold(): code for code in sorted(countries())}
+
+
+def code_named(name: str) -> str | None:
+    """The catalogue country a name or code says, in any case."""
+    wanted = " ".join(name.split()).casefold()
+    if wanted.upper() in countries():
+        return wanted.upper()
+    return _codes_by_name().get(wanted)
+
+
 def of_country(country: str) -> list[System]:
     """Its main one first; numbered grades for a country the catalogue does
     not cover."""

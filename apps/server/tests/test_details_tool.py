@@ -23,7 +23,7 @@ def test_what_the_learner_said_becomes_an_action_for_the_app():
     _, outputs = run("set_details", class_name=" JSS  2 ", country="Nigeria")
 
     assert outputs.actions == [
-        SetDetails(class_name="JSS 2", country="Nigeria", course="")
+        SetDetails(class_name="JSS 2", country="Nigeria", course="", country_code="NG")
     ]
 
 

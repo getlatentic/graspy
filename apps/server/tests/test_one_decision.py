@@ -155,7 +155,12 @@ def test_a_course_is_offered_in_the_message_that_saves_the_class():
 
     assert "error" not in told
     assert built.outputs.actions == [
-        SetDetails(class_name="Secondary Year 2", country="Nigeria", course=""),
+        SetDetails(
+            class_name="Secondary Year 2",
+            country="Nigeria",
+            course="",
+            country_code="NG",
+        ),
         ProposePath(goal="Machine learning"),
     ]
 

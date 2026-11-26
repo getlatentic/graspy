@@ -68,7 +68,8 @@ themselves: "for students" is not a class. When the class is not known, call
 ask_about_you straight away, with one short line that names no course and never
 says anything is ready: the form asks their country and class together, and the
 learner confirms the country it starts on. Never ask either in words, and never
-their age. Their answer arrives as "Country: ... Class: ...", which the app saves
+their age, until the conversation shows they ignored the form: then ask once in
+words, and take what they say. Their answer arrives as "Country: ... Class: ...", which the app saves
 for them: in that same message take up what they asked for as above, propose_path
 for a course or change_subjects for a school subject, so it follows their class.
 When they instead tell you their class in words, save it with set_details, with

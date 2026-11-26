@@ -5,14 +5,19 @@ class then picks the plan's curriculum, and the tutor's stage."""
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 
-from ..education.catalogue import of_country
+from ..education.catalogue import code_named, country_name, of_country
+from .choices import clean
 from .context import LearnerContext
 from .refusal import refusal
 from .reply import Action, Outcome, SetDetails
 
 MAX_DETAIL = 60
+COURSE_CHARS = re.compile(r"[^\W_][\w .,'’&()/+:-]*")
+MAX_COURSE_WORDS = 6
+MAX_COURSE_WORD = 25
 # After school the class is a level, and its course says what is studied.
 AFTER_SCHOOL = ("Undergraduate", "Graduate")
 
@@ -76,11 +81,31 @@ def set_details_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
     return set_details
 
 
+def clean_course(text: str) -> str | None:
+    """What a learner studies, cleaned as everything they say of themselves is: one line, cut to
+    length, and only letters, digits, spaces and a little punctuation, in a few short words. None
+    for text that is not one, and an empty course for none."""
+    course = clean(text, MAX_DETAIL)
+    words = course.split()
+    if course and not (
+        COURSE_CHARS.fullmatch(course)
+        and len(words) <= MAX_COURSE_WORDS
+        and all(len(word) <= MAX_COURSE_WORD for word in words)
+    ):
+        return None
+    return course
+
+
 def _details(class_name: str, country: str, course: str) -> dict | Outcome:
+    studies = clean_course(course)
+    if studies is None:
+        return refusal("The course is what they study, in a few words")
+    code = code_named(country)
     saved = SetDetails(
         class_name=" ".join(class_name.split())[:MAX_DETAIL],
-        country=" ".join(country.split())[:MAX_DETAIL],
-        course=" ".join(course.split())[:MAX_DETAIL],
+        country=country_name(code) if code else " ".join(country.split())[:MAX_DETAIL],
+        course=studies,
+        country_code=code or "",
     )
     if not (saved.class_name or saved.country):
         return refusal("Say which class or country the learner told you.")
