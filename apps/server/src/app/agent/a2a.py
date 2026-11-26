@@ -32,7 +32,13 @@ from ..learner.notes import notes_for
 from ..learner.record import Conversed
 from ..security.guard import Session
 from ..settings import Settings
-from ..turns.access import VISITOR_PREFIX, chat_learner, chat_owner, may_start
+from ..turns.access import (
+    VISITOR_PREFIX,
+    chat_learner,
+    chat_owner,
+    conversation_key,
+    may_start,
+)
 from ..turns.durable import DurableTurns
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
@@ -48,7 +54,8 @@ logger = logging.getLogger(__name__)
 # Whether a session may start the turn of a chat, given the request's headers: the refusal, or None.
 # A session that is none is refused.
 Admit = Callable[
-    [Session | None, Mapping[str, str], str, str], Awaitable[HTTPException | None]
+    [Session | None, Mapping[str, str], str, str | None],
+    Awaitable[HTTPException | None],
 ]
 
 FAILED_TURN = "Sorry, I couldn't answer that just now. Please try again."
@@ -116,10 +123,14 @@ class TutorExecutor(AgentExecutor):
             return
         await updater.complete(updater.new_agent_message(parts))
 
-    async def _admit_turn(self, context: RequestContext, chat: str) -> None:
+    async def _admit_turn(
+        self, context: RequestContext, chat: str, turn: str | None
+    ) -> None:
         """Raises TurnRefused when a visitor with no account is past a limit. Only a message that
         begins a turn reaches the executor, so only turns are counted. A call with no
-        session is refused, and one with no edge address is limited as REST is: by what it does have."""
+        session is refused, and one with no edge address is limited as REST is: by what it does have.
+        `turn` is the turn's id where the chat log keeps a turn once, and None where it does not, so
+        that every run is counted and a repeated id buys nothing."""
         if self._admit is None:
             return
         headers = context.call_context.state.get("headers", {})
@@ -127,7 +138,7 @@ class TutorExecutor(AgentExecutor):
             context.call_context.state.get("auth"),
             headers,
             chat,
-            context.message.message_id,
+            turn,
         )
         if refused is not None:
             raise TurnRefused(refused.detail["error"])
@@ -141,12 +152,12 @@ class TutorExecutor(AgentExecutor):
     ) -> list:
         if self._turns is None:
             memory = memory_key(context, conversation_id)
-            await self._admit_turn(context, memory)
+            await self._admit_turn(context, memory, None)
             turn = await self._turn(context, conversation_id, memory, message)
             return reply_parts(await _relay(updater, turn))
         if not await may_start(self._turns.log, conversation_id, owner_of(context)):
             raise TurnFailed("not_yours")
-        await self._admit_turn(context, conversation_id)
+        await self._admit_turn(context, conversation_id, context.message.message_id)
         job = TurnJob(
             chat=conversation_id,
             turn=context.message.message_id,
@@ -236,7 +247,7 @@ def memory_key(context: RequestContext, conversation_id: str) -> str:
     nothing of it."""
     owner = owner_of(context)
     if owner is not None and owner.startswith(VISITOR_PREFIX):
-        return f"{owner}/{conversation_id}"
+        return conversation_key(owner, conversation_id)
     return conversation_id
 
 

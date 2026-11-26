@@ -23,7 +23,8 @@ from app.chatlog.log import ChatLog
 from app.factory import _admit
 from app.local_d1 import LocalD1
 from app.security.guard import Session, SessionMiddleware
-from app.turns.access import chat_owner, may_follow, may_start
+from app.security.session import visitor_of
+from app.turns.access import chat_owner, conversation_key, may_follow, may_start
 from app.turns.durable import DurableTurns
 from app.turns.host import TaskTurnHost, TutorTurnSource, begin_turn
 from app.turns.job import TurnJob
@@ -108,8 +109,8 @@ async def test_two_visitors_who_send_one_context_id_do_not_share_a_conversation(
 
     keys = [conversation for conversation, _ in tutor.calls]
     assert keys == [
-        f"visitor:{ADA}/{first['context']}",
-        f"visitor:{BOB}/{first['context']}",
+        conversation_key(f"visitor:{ADA}", first["context"]),
+        conversation_key(f"visitor:{BOB}", first["context"]),
     ]
 
 
@@ -122,7 +123,7 @@ async def test_a_visitor_cannot_reach_a_learners_conversation_by_its_context_id(
 
     learners_key, visitors_key = (conversation for conversation, _ in tutor.calls)
     assert learners_key == learners["context"]
-    assert visitors_key == f"visitor:{ADA}/{learners['context']}"
+    assert visitors_key == conversation_key(f"visitor:{ADA}", learners["context"])
 
 
 # C: a count that turns racing for it cannot pass
@@ -212,12 +213,14 @@ def test_the_edge_address_is_found_whatever_the_case_of_the_header():
     assert edge_address({}) is None
 
 
-def limited_a2a(database, turns: DurableTurns | None = None) -> FastAPI:
+def limited_a2a(
+    database, turns: DurableTurns | None = None, tutor: FakeTutor | None = None
+) -> FastAPI:
     """The A2A routes behind the session guard, admitting turns as the app does."""
     state = SimpleNamespace(state=SimpleNamespace(tv_db=database))
     app = FastAPI()
     app.routes.extend(
-        a2a_routes(settings(), FakeTutor(), KEEPING, turns, _admit(state))
+        a2a_routes(settings(), tutor or FakeTutor(), KEEPING, turns, _admit(state))
     )
     app.add_middleware(
         SessionMiddleware, prefixes=(settings().a2a_path_prefix,), secret=A2A_SECRET
@@ -255,9 +258,12 @@ async def test_over_a2a_with_no_edge_address_a_visitor_is_counted_by_session_and
     again = await turn(app, "Hi", visitor=ADA)
 
     assert [r["states"][-1] for r in first] == ["COMPLETED"] * 3
-    assert all(not b.startswith("network") for b in await counts(database))
-    # Each call is a session of its own here, so the session count never refuses; the day's does.
+    held = await counts(database)
+    assert not any(b.startswith("network") for b in held)
+    # Each call is a session of its own (a new token), so the session count never refuses.
     assert again["states"][-1] == "COMPLETED"
+    assert sum(b.startswith("session:") for b in held) == 4
+    assert held[next(b for b in held if b.startswith("all-day"))] == 4
 
 
 async def test_a_call_with_no_session_is_refused_not_admitted():
@@ -350,3 +356,128 @@ async def test_a_renewed_visitor_session_keeps_the_visitor_and_the_chat(visit):
     assert claims(first["token"])["jti"] != claims(renewed["token"])["jti"]
     assert await visit.take_turn(chat) == 200
     assert await visit.take_turn(after, 1) == 200
+
+
+# Where the server keeps no chat log, nothing dedupes a turn, so every run is counted
+
+
+async def test_with_no_chat_log_a_repeated_turn_id_is_counted_and_refused_not_run_free(
+    monkeypatch,
+):
+    monkeypatch.setattr(anonymous_chat, "TURNS_PER_DAY", 2)
+    database, tutor = LocalD1(), FakeTutor()
+    app = limited_a2a(database, tutor=tutor)
+
+    results = [
+        await turn(app, "Hi", context_id="ctx-0001", message_id="fixed-id-0001")
+        for _ in range(5)
+    ]
+
+    assert [r["states"][-1] for r in results] == ["COMPLETED"] * 2 + ["REJECTED"] * 3
+    assert len(tutor.calls) == 2
+
+
+async def test_with_no_chat_log_turns_racing_with_one_id_are_each_counted_and_run():
+    database, tutor = Interleaving(), FakeTutor()
+    app = limited_a2a(database, tutor=tutor)
+
+    results = await asyncio.gather(
+        *(
+            turn(app, "Hi", context_id="ctx-0001", message_id="fixed-id-0001")
+            for _ in range(4)
+        )
+    )
+
+    assert [r["states"][-1] for r in results] == ["COMPLETED"] * 4
+    held = await counts(database)
+    assert held[next(b for b in held if b.startswith("all-day"))] == len(tutor.calls)
+
+
+async def test_with_a_chat_log_a_repeated_turn_id_runs_and_is_counted_once():
+    log = ChatLog(LocalD1())
+    database, tutor = LocalD1(), FakeTutor()
+    host = TaskTurnHost(log, TutorTurnSource(tutor, KEEPING), sleep=no_wait)
+    app = limited_a2a(database, DurableTurns(host, log), tutor)
+
+    for _ in range(3):
+        await turn(app, "Hi", context_id="ctx-0001", message_id="fixed-id-0001")
+        await host.idle()
+
+    assert len(tutor.calls) == 1
+    held = await counts(database)
+    assert held[next(b for b in held if b.startswith("all-day"))] == 1
+
+
+async def test_two_owners_who_send_one_chat_and_turn_id_are_each_counted():
+    database = LocalD1()
+
+    first = await anonymous_turn_refusal(
+        database, visitor_session(1, ADA), None, "chat-0001-xx", "turn-0001-xx"
+    )
+    second = await anonymous_turn_refusal(
+        database, visitor_session(2, BOB), None, "chat-0001-xx", "turn-0001-xx"
+    )
+
+    assert (first, second) == (None, None)
+    held = await counts(database)
+    assert held[next(b for b in held if b.startswith("all-day"))] == 2
+
+
+# What a count's answer is believed for
+
+
+class AlwaysOneChange(LocalD1):
+    """A D1 whose `meta.changes` says one row changed whatever the statement did."""
+
+    async def batch(self, statements):
+        results = await super().batch(statements)
+        for result in results:
+            result["meta"]["changes"] = 1
+        return results
+
+
+class Unreadable(LocalD1):
+    """A D1 that commits a batch of counts and then answers with something unreadable."""
+
+    async def batch(self, statements):
+        results = await super().batch(statements)
+        return [{} for _ in results]
+
+
+async def test_a_refused_count_never_reads_as_added_whatever_meta_changes_says(
+    monkeypatch,
+):
+    monkeypatch.setattr(anonymous_chat, "TURNS_PER_DAY", 1)
+    database = AlwaysOneChange()
+
+    first = await attempt(database, 1)
+    second = await attempt(database, 2)
+
+    assert first is None
+    assert second is not None and second.status_code == 429
+    held = await counts(database)
+    assert held[next(b for b in held if b.startswith("all-day"))] == 1
+
+
+async def test_counts_added_by_a_batch_whose_answer_cannot_be_read_are_given_back():
+    database = Unreadable()
+
+    refused = await attempt(database, 1)
+
+    assert refused is not None and refused.status_code == 503
+    assert await counts(database) == {}
+
+
+# A conversation's key, and the ids it is made of
+
+
+def test_two_pairs_of_ids_that_join_to_one_string_make_two_keys():
+    assert conversation_key("visitor:a", "b/c") != conversation_key("visitor:a/b", "c")
+    assert conversation_key("visitor:a", "b/c") == conversation_key("visitor:a", "b/c")
+    assert conversation_key("visitor:a", "x") != conversation_key("account:a", "x")
+
+
+def test_only_an_id_the_session_endpoint_accepts_is_a_visitor():
+    assert visitor_of({"vis": ADA}) == ADA
+    for bad in ("a/b" * 8, "short", "x" * 65, "a b" * 8, "visitor:" + "a" * 16):
+        assert visitor_of({"vis": bad}) is None

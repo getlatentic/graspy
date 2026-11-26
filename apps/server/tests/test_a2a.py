@@ -39,6 +39,7 @@ from app.security.guard import SessionMiddleware
 from app.security.session import issue
 from app.settings import Settings
 from app.threads.store import ThreadStore
+from app.turns.access import conversation_key
 
 BASE = "http://test"
 LEAKY = "upstream https://internal.example/v1 rejected key sk-or-v1-abc"
@@ -57,7 +58,7 @@ SESSION = {"Authorization": f"Bearer {issue(SECRET, visitor=VISITOR).token}"}
 
 def visitors_memory(context_id: str) -> str:
     """Where a visitor's conversation is remembered when the server keeps no chat log."""
-    return f"visitor:{VISITOR}/{context_id}"
+    return conversation_key(f"visitor:{VISITOR}", context_id)
 
 
 async def never_run(_job, _save):
@@ -140,6 +141,7 @@ async def turn(
     device: str | None = None,
     visitor: str = VISITOR,
     headers: dict | None = None,
+    message_id: str | None = None,
 ) -> dict:
     # A turn is kept under a learner only for a signed-in account's session; without one it is a
     # visitor's.
@@ -156,7 +158,7 @@ async def turn(
     )
     client = await create_client(BASE, client_config=ClientConfig(httpx_client=http))
     message = Message(
-        message_id=str(uuid.uuid4()),
+        message_id=message_id or str(uuid.uuid4()),
         role=Role.ROLE_USER,
         parts=[new_text_part(text), *([new_data_part(data)] if data else [])],
     )
