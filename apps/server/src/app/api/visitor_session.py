@@ -14,9 +14,11 @@ from fastapi import HTTPException, Request
 
 from ..security.session import (
     VISITOR_CHALLENGE_MAX_AGE_SECONDS,
+    VISITOR_MAX_RENEWALS,
     InvalidSessionToken,
     challenged_at_of,
     issue,
+    renewals_of,
     verify,
     visitor_of,
 )
@@ -40,9 +42,10 @@ def _refusal(status: int, code: str, message: str) -> HTTPException:
 
 def _carried_challenge(
     renewal: str | None, visitor: str, secret: str, now: float
-) -> int | None:
-    """When the challenge of the session being renewed was passed, if it was this visitor's, is
-    still a valid session, and is recent enough to carry on."""
+) -> tuple[int, int] | None:
+    """When the challenge of the session being renewed was passed, and how many sessions now
+    descend from it, if the session is this visitor's, still valid, recent enough and not renewed
+    too often to carry on."""
     if not renewal:
         return None
     try:
@@ -54,14 +57,13 @@ def _carried_challenge(
         return None
     if not 0 <= now - passed <= VISITOR_CHALLENGE_MAX_AGE_SECONDS:
         return None
-    return passed
+    renewals = renewals_of(claims) + 1
+    return (passed, renewals) if renewals <= VISITOR_MAX_RENEWALS else None
 
 
 async def _passed_challenge(request: Request, token: str | None) -> None:
     if not token:
-        raise _refusal(
-            403, CHALLENGE_REQUIRED, "Prove you are a person to start. Try again."
-        )
+        raise _refusal(403, CHALLENGE_REQUIRED, "Reload the page to start.")
     settings = request.app.state.settings
     try:
         await verify_challenge(
@@ -93,9 +95,17 @@ async def visitor_session(
     secret = request.app.state.session_secret
     now = time.time()
     challenged_at: int | None = None
+    renewals = 0
     if request.app.state.settings.turnstile_secret:
-        challenged_at = _carried_challenge(renewal, visitor, secret, now)
-        if challenged_at is None:
+        carried = _carried_challenge(renewal, visitor, secret, now)
+        if carried is None:
             await _passed_challenge(request, challenge)
-            challenged_at = int(now)
-    return issue(secret, visitor=visitor, challenged_at=challenged_at, now=now)
+            carried = (int(now), 0)
+        challenged_at, renewals = carried
+    return issue(
+        secret,
+        visitor=visitor,
+        challenged_at=challenged_at,
+        renewals=renewals,
+        now=now,
+    )

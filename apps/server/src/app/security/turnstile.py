@@ -24,10 +24,12 @@ MAX_TOKEN_LENGTH = 2048
 SITEVERIFY_TIMEOUT_SECONDS = 5.0
 
 # Cloudflare's published test secrets (developers.cloudflare.com/turnstile/troubleshooting/testing).
-# They give no protection: the first passes every token, the second fails every one.
+# They give no protection: the first passes every token, the others fail every one (the third
+# with a token-already-spent error).
 ALWAYS_PASSES = "1x0000000000000000000000000000000AA"
 ALWAYS_FAILS = "2x0000000000000000000000000000000AA"
-TEST_SECRETS = frozenset({ALWAYS_PASSES, ALWAYS_FAILS})
+ALWAYS_FAILS_SPENT = "3x0000000000000000000000000000000AA"
+TEST_SECRETS = frozenset({ALWAYS_PASSES, ALWAYS_FAILS, ALWAYS_FAILS_SPENT})
 
 # Errors that say the secret or the request is wrong on our side, not that the visitor failed.
 _OUR_FAULT = frozenset(
@@ -47,7 +49,7 @@ def mode_of(secret: str | None) -> ChallengeMode:
         return ChallengeMode.OFF
     if secret == ALWAYS_PASSES:
         return ChallengeMode.TEST_PASSES
-    if secret == ALWAYS_FAILS:
+    if secret in (ALWAYS_FAILS, ALWAYS_FAILS_SPENT):
         return ChallengeMode.TEST_FAILS
     return ChallengeMode.LIVE
 

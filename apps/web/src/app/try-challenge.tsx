@@ -11,16 +11,21 @@ import { ChallengeError } from "@/lib/challenge/challenge";
 import { useChallengeHost } from "@/lib/challenge/use-challenge-host";
 import { useI18n } from "@/lib/i18n-context";
 
-type Phase = "checking" | "ready" | "failed" | "unsupported" | "unavailable";
+type Phase =
+  "checking" | "ready" | "failed" | "unsupported" | "unavailable" | "reload";
 
 function refusal(error: unknown): Phase {
   if (error instanceof ChallengeError) {
     return error.kind === "unsupported" ? "unsupported" : "failed";
   }
-  const refused =
-    error instanceof ApiError &&
-    (error.code === CHALLENGE_FAILED || error.code === CHALLENGE_REQUIRED);
-  return refused ? "failed" : "unavailable";
+  if (error instanceof ApiError && error.code === CHALLENGE_FAILED) {
+    return "failed";
+  }
+  // Asked for a check this page does not know how to run: a build older than the server.
+  if (error instanceof ApiError && error.code === CHALLENGE_REQUIRED) {
+    return "reload";
+  }
+  return "unavailable";
 }
 
 /** Shows the page only once the visitor's session is minted, which is when the Turnstile check, if
@@ -70,6 +75,11 @@ export function TryChallenge({ children }: { children: ReactNode }) {
           {phase === "failed" || phase === "unavailable" ? (
             <Button onClick={retry}>{t("loading.tryAgain")}</Button>
           ) : null}
+          {phase === "reload" ? (
+            <Button onClick={() => window.location.reload()}>
+              {t("try.reloadButton")}
+            </Button>
+          ) : null}
         </div>
       )}
     </>
@@ -82,6 +92,7 @@ function Message({ phase }: { phase: Exclude<Phase, "checking" | "ready"> }) {
     failed: t("try.checkFailed"),
     unsupported: t("try.needsAnotherDevice"),
     unavailable: t("chat.temporaryProblem"),
+    reload: t("try.reload"),
   }[phase];
   return <p className="text-ink">{text}</p>;
 }

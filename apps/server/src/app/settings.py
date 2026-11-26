@@ -12,6 +12,10 @@ from .llm.profiles import profile_named
 from .security.turnstile import TEST_SECRETS, ChallengeMode, mode_of
 
 logger = logging.getLogger(__name__)
+
+# The only environments that may run on Cloudflare's test Turnstile secrets, which protect nothing:
+# an allow-list, so an environment named anything else is refused them.
+TEST_SECRET_ENVS = frozenset({"development", "dev", "test", "local", "staging"})
 _warned_of_region = False
 
 # A Worker receives these as bindings on `env`, not in the process
@@ -197,18 +201,19 @@ class Settings(BaseSettings):
     def challenge_on_when_deployed(self) -> Settings:
         """Without the challenge, one script closes /try for everybody; and Cloudflare's always-pass
         test secret is the challenge off in all but name, so production refuses it."""
+        name = self.app_env.lower()
+        if self.turnstile_secret in TEST_SECRETS and name not in TEST_SECRET_ENVS:
+            raise ValueError(
+                "TURNSTILE_SECRET is one of Cloudflare's published test secrets, which "
+                f"protect nothing: {self.app_env} may not use it, only development, test and "
+                "staging may (docs/DEPLOYING.md)."
+            )
         if not self.is_deployed:
             return self
         if self.challenge_mode is ChallengeMode.OFF:
             raise ValueError(
                 f"TURNSTILE_SECRET is required in {self.app_env}: without it a visitor's "
                 "session is minted unchallenged (docs/DEPLOYING.md)."
-            )
-        production = self.app_env.lower() in {"production", "prod"}
-        if production and self.turnstile_secret in TEST_SECRETS:
-            raise ValueError(
-                "TURNSTILE_SECRET is one of Cloudflare's published test secrets, which "
-                "protect nothing: production needs its own widget's secret (docs/DEPLOYING.md)."
             )
         if self.challenge_mode is not ChallengeMode.LIVE:
             logger.warning(

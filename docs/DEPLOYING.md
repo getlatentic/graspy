@@ -109,6 +109,14 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
 
    Staging warns at start, `/api/health` shows `"challenge":"test-always-passes"`, and every staging deploy prints a warning. Production refuses both test keys: the Worker will not start with a test secret, and `scripts/deploy.sh production` stops on a test site key. To give staging real protection, make a second widget for `graspy-staging.getlatentic.com` as above, put its secret on the staging Worker, and its site key in the GitHub `staging` environment (which then wins over the committed test key).
 
+   **The order that keeps a bad secret from taking production down.** The script cannot read a secret's value, and a Worker with a test secret refuses to start, so a wrong `TURNSTILE_SECRET` is found only after the upload. The order, which `scripts/deploy.sh` follows and checks:
+
+   1. Put the secret, and read back that it is named: `npx wrangler secret list --env=""` shows `"TURNSTILE_SECRET"` (the script stops before the upload if it does not).
+   2. Deploy staging first (it runs on every merge to `main`) and check `curl -s https://graspy-api-staging.getlatentic.com/api/health` says `"challenge"`: staging with its test secret says `test-always-passes`; a staging widget says `live`.
+   3. Deploy production. Right after the API Worker is uploaded the script asks `/api/health` for up to a minute (a new version takes a moment to reach every location). Production must answer `"challenge":"live"`. If it does not answer, or says `off` or a test secret, the script **rolls the API Worker back** with `wrangler rollback --yes` to its previous version, deploys nothing more (the web app, which would ask for the check, stays as it was) and fails. A test secret takes production down for those moments, not until someone notices; to put it right, put the real secret and deploy again.
+
+   A page cached from before this deploy cannot run the check: its `/try` shows its generic error until it is reloaded, and the service worker fetches the new page on the next visit.
+
    Merging the change that adds this makes the next staging deploy stop at `TURNSTILE_SECRET` until the staging secret is put, and a production deploy stop until both production values are set; the running Workers keep serving meanwhile.
 
 2. **Custom domains.** The first deploy attaches `graspy-api-staging.getlatentic.com` and `graspy-staging.getlatentic.com`. Neither may have a DNS record of its own (code 100117). Check that nothing answers:

@@ -103,15 +103,16 @@ require_service_account_secret() {
 }
 
 # The widget's public key, from the environment, apps/web/.env.<environment>.local or the committed
-# apps/web/.env.<environment>, in the order Vite reads them. Cloudflare's published test keys (1x, 2x,
-# 3x) pass or fail every visitor: production refuses them, staging is told it has no bot check.
+# apps/web/.env.<environment>, in the order Vite reads them. Cloudflare's published test keys
+# (1x00000000000000000000AA, 2x00000000000000000000AB, 3x00000000000000000000FF) pass or fail every
+# visitor; a real site key starts 0x4. Production refuses a test key, staging is told it has no bot check.
 require_turnstile_site_key() {
   local key="${VITE_TURNSTILE_SITE_KEY:-}" file
   for file in "apps/web/.env.$environment.local" "apps/web/.env.$environment"; do
     [[ -n "$key" ]] || key="$(grep -E '^VITE_TURNSTILE_SITE_KEY=' "$file" 2>/dev/null | cut -d= -f2- || true)"
   done
   [[ -n "$key" ]] || die "the web build needs VITE_TURNSTILE_SITE_KEY (the Turnstile widget's site key), in the environment or in apps/web/.env.$environment.local; see docs/DEPLOYING.md."
-  if [[ "$key" =~ ^[0-9]x ]]; then
+  if [[ "$key" =~ ^[1-3]x00000000000000000000 ]]; then
     [[ "$environment" != "production" ]] ||
       die "VITE_TURNSTILE_SITE_KEY is one of Cloudflare's test keys, which give no bot check: production needs its own widget's key (docs/DEPLOYING.md)."
     echo "deploy: WARNING: $environment is built with a Cloudflare test site key: the /try bot check gives NO protection here." >&2
@@ -124,21 +125,54 @@ require_turnstile_secret() {
     die "the API Worker needs the secret TURNSTILE_SECRET ($wrangler_env); see docs/DEPLOYING.md."
 }
 
-# The API says whether its challenge is live. Production serving a test secret would be a bot check in
-# name only, so it is an error there; staging is only warned. The Worker itself refuses to start in
-# production with a test secret, so a health check that fails here is that refusal.
-report_challenge() {
-  local health challenge
-  health="$(curl -fsS --max-time 30 "$(api_origin "$environment")/api/health")" ||
-    die "$(api_origin "$environment")/api/health did not answer after the deploy; check the Worker's logs."
-  challenge="$(printf '%s' "$health" | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["details"].get("challenge", ""))')"
-  case "$challenge" in
+# What the API's /api/health says its visitor challenge is, or nothing when it did not answer.
+challenge_state() {
+  curl -fsS --max-time 10 "$(api_origin "$environment")/api/health" 2>/dev/null |
+    python3 -I -c 'import json,sys; print(json.load(sys.stdin)["details"].get("challenge", "unknown"))' 2>/dev/null
+}
+
+# A new version takes a moment to reach every location, so the health check is asked for up to a
+# minute before it counts as unanswered.
+wait_for_challenge_state() {
+  local attempt state
+  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    state="$(challenge_state || true)"
+    if [[ -n "$state" ]]; then echo "$state"; return 0; fi
+    sleep 5
+  done
+  return 1
+}
+
+# Production serving a test secret would be a bot check in name only, and the Worker refuses to start
+# with one, so a health check that never answers is that refusal too. Staging is only warned.
+# Returns non-zero when the new version must not stay.
+check_challenge() {
+  local state
+  state="$(wait_for_challenge_state)" || {
+    echo "deploy: the API did not answer /api/health within a minute of the deploy." >&2
+    return 1
+  }
+  case "$state" in
     live) echo "deploy: the /try bot check is live." ;;
     test-*)
-      [[ "$environment" != "production" ]] || die "production's TURNSTILE_SECRET is a Cloudflare test secret ($challenge)."
-      echo "deploy: WARNING: $environment runs the /try bot check with a Cloudflare test secret ($challenge): it gives NO protection." >&2 ;;
-    *) die "$environment reports the bot check as '$challenge', not live." ;;
+      if [[ "$environment" == "production" ]]; then
+        echo "deploy: production's TURNSTILE_SECRET is a Cloudflare test secret ($state)." >&2
+        return 1
+      fi
+      echo "deploy: WARNING: $environment runs the /try bot check with a Cloudflare test secret ($state): it gives NO protection." >&2 ;;
+    *)
+      echo "deploy: $environment reports the bot check as '$state', not live." >&2
+      return 1 ;;
   esac
+}
+
+# The Worker that failed its check goes back to the version before it, before the web app, which
+# would ask for the check, is deployed.
+roll_back_api_worker() {
+  echo "deploy: rolling the API Worker back to its previous version." >&2
+  (cd apps/server && npx wrangler rollback "$wrangler_env" --yes --message "deploy.sh: the bot check was not live") ||
+    echo "deploy: the rollback failed; roll back by hand: cd apps/server && npx wrangler rollback $wrangler_env" >&2
+  die "the API Worker did not pass its bot check; the web app was not deployed."
 }
 
 require_confirmation() {
@@ -292,10 +326,10 @@ step "Tutor Worker"
 step "API Worker"
 deploy_api_worker
 
+step "Bot check"
+check_challenge || roll_back_api_worker
+
 step "Web app"
 deploy_web
-
-step "Bot check"
-report_challenge
 
 step "Deployed $(git rev-parse --short HEAD) to $environment"

@@ -140,6 +140,36 @@ test("fails when the workflow does not say whether a repository secret exists", 
   assertFails(result, /pass REPOSITORY_SECRET_VITE_FIREBASE_PROJECT_ID/);
 });
 
+// The Turnstile site key is optional in staging's GitHub environment (the committed test key is the
+// fallback), so the environment check never asks for it there: it only refuses a repository-level
+// secret of that name, which would stand in for the environment's.
+test("staging is ready with no VITE_TURNSTILE_SITE_KEY secret anywhere", () => {
+  const result = run({
+    environment: "staging",
+    answers: { [environmentPath("staging")]: [200, {}] },
+    repositorySecrets: { VITE_TURNSTILE_SITE_KEY: false },
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.equal(result.ready, "ready=true\n");
+});
+
+test("a repository secret named VITE_TURNSTILE_SITE_KEY is refused, as it would stand in for the environment's", () => {
+  const result = run({
+    environment: "staging",
+    answers: { [environmentPath("staging")]: [200, {}] },
+    repositorySecrets: { VITE_TURNSTILE_SITE_KEY: true },
+  });
+  assertFails(result, /secrets VITE_TURNSTILE_SITE_KEY stand in/);
+});
+
+test("the Deploy workflow requires no Turnstile secret in the environment, and passes it on when set", () => {
+  const workflow = readFileSync(path.resolve(import.meta.dirname, "..", "..", ".github", "workflows", "deploy.yml"), "utf8");
+  const required = workflow.match(/for name in ([^;]*?); do/s)?.[1] ?? "";
+  assert.match(required, /VITE_FIREBASE_APP_ID/);
+  assert.doesNotMatch(required, /VITE_TURNSTILE_SITE_KEY/);
+  assert.match(workflow, /VITE_TURNSTILE_SITE_KEY: \${{ secrets\.VITE_TURNSTILE_SITE_KEY }}/);
+});
+
 test("production with a reviewer and the branch main only is ready", () => {
   const result = run({
     environment: "production",

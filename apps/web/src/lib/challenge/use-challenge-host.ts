@@ -7,6 +7,7 @@ import { loadTurnstile } from "./turnstile-script";
 export const CHALLENGE_ACTION = "try";
 
 interface Settlement {
+  token: Promise<string>;
   resolve: (token: string) => void;
   reject: (error: ChallengeError) => void;
 }
@@ -33,12 +34,17 @@ export function useChallengeHost() {
       if (waiter) outcome(waiter);
     };
     return {
-      solve: () =>
-        new Promise<string>((resolve, reject) => {
-          waiting.current?.reject(new ChallengeError("failed"));
-          waiting.current = { resolve, reject };
-          setRunning(true);
-        }),
+      // One check at a time: a second ask shares the one running.
+      solve: () => {
+        if (waiting.current) return waiting.current.token;
+        let settlement!: Omit<Settlement, "token">;
+        const token = new Promise<string>((resolve, reject) => {
+          settlement = { resolve, reject };
+        });
+        waiting.current = { ...settlement, token };
+        setRunning(true);
+        return token;
+      },
       done: (token: string) => settle((waiter) => waiter.resolve(token)),
       fail: (kind: ChallengeError["kind"]) =>
         settle((waiter) => waiter.reject(new ChallengeError(kind))),

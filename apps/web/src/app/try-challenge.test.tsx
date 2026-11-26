@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { StrictMode } from "react";
+import { StrictMode, useLayoutEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
 import type { WidgetOptions } from "@/lib/challenge/turnstile-script";
@@ -25,7 +25,7 @@ const mint = async () => {
   return "session";
 };
 vi.mock("@/lib/api/session", () => ({
-  getSessionToken: () => mint(),
+  getSessionToken: vi.fn(() => mint()),
   refreshSessionToken: () => mint(),
 }));
 
@@ -175,6 +175,69 @@ describe("the check before a visitor's chat", () => {
     widget()["unsupported-callback"]();
 
     expect(await screen.findByText(t("try.needsAnotherDevice"))).toBeTruthy();
+  });
+
+  it("tells a page built before the check to reload, with a button that does", async () => {
+    sessionFailure = new ApiError("Reload the page to start.", 403, {
+      detail: { code: "challenge_required" },
+    });
+    const reload = vi.fn();
+    vi.stubGlobal("location", { ...window.location, reload });
+
+    visit();
+
+    expect(await screen.findByText(t("try.reload"))).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Reload" }));
+    expect(reload).toHaveBeenCalledOnce();
+    vi.unstubAllGlobals();
+  });
+
+  it("gives a second ask for the check the one already running, not a stranded one", async () => {
+    visit();
+    await waitFor(() => expect(rendered).toHaveLength(1));
+    const { solveChallenge } = await import("@/lib/challenge/challenge");
+
+    const second = solveChallenge();
+    widget().callback("token");
+
+    await expect(second).resolves.toBe("token");
+    expect(rendered).toHaveLength(1);
+    expect(await screen.findByText("the chat")).toBeTruthy();
+  });
+
+  it("asks for the session only after the page has made its requests anonymous", async () => {
+    // TryPage holds the anonymous session in a layout effect; the check's own request is made
+    // from a passive effect of its child, which React runs after every layout effect.
+    needsCheck = false;
+    let held = false;
+    const asked: boolean[] = [];
+    const { getSessionToken } = await import("@/lib/api/session");
+    vi.mocked(getSessionToken).mockImplementationOnce(async () => {
+      asked.push(held);
+      return "session";
+    });
+    function Page() {
+      useLayoutEffect(() => {
+        held = true;
+        return () => void (held = false);
+      }, []);
+      return (
+        <TryChallenge>
+          <p>the chat</p>
+        </TryChallenge>
+      );
+    }
+
+    render(
+      <I18nContext.Provider
+        value={{ t, locale: "en", setLocale: () => {} } as never}
+      >
+        <Page />
+      </I18nContext.Provider>,
+    );
+
+    expect(await screen.findByText("the chat")).toBeTruthy();
+    expect(asked).toEqual([true]);
   });
 
   it("fails, with a retry, when the script cannot load", async () => {

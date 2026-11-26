@@ -29,6 +29,10 @@ TOKEN_TTL_SECONDS = 12 * 60 * 60
 # 12 hours, so this is two of them; then the browser is challenged again.
 VISITOR_CHALLENGE_MAX_AGE_SECONDS = 24 * 60 * 60
 
+# Sessions a passed challenge may be renewed into: a visit renews once at 12 hours and once at 24.
+# More is a script renewing for new sessions, each with its own turns.
+VISITOR_MAX_RENEWALS = 2
+
 # A parent's session is for the minutes after they signed in again, not for the day.
 PARENT_TOKEN_TTL_SECONDS = 15 * 60
 
@@ -78,6 +82,7 @@ def issue(
     tv: str | None = None,
     visitor: str | None = None,
     challenged_at: int | None = None,
+    renewals: int = 0,
     hint: str | None = None,
     auth_time: int | None = None,
     now: float | None = None,
@@ -92,7 +97,8 @@ def issue(
     session keeps the one it was minted from, so a sign-in is not taken as the proof for a session
     it did not make, and is taken for one only once. ``challenged_at`` is when a visitor's browser
     passed the Turnstile challenge (`cha`): renewing the session keeps it, up to
-    VISITOR_CHALLENGE_MAX_AGE_SECONDS."""
+    VISITOR_CHALLENGE_MAX_AGE_SECONDS, and at most VISITOR_MAX_RENEWALS times (`ren`, how many
+    sessions in a row descend from the challenge)."""
     issued_at = int(time.time() if now is None else now)
     if parent:
         ttl = PARENT_TOKEN_TTL_SECONDS
@@ -122,6 +128,7 @@ def issue(
         claims["vis"] = visitor
         if challenged_at is not None:
             claims["cha"] = challenged_at
+            claims["ren"] = renewals
     if hint:
         claims["hint"] = hint
     payload = json.dumps(claims, separators=(",", ":")).encode()
@@ -227,6 +234,14 @@ def challenged_at_of(claims: dict) -> int | None:
     if isinstance(passed, int) and not isinstance(passed, bool):
         return passed
     return None
+
+
+def renewals_of(claims: dict) -> int:
+    """How many times the session's challenge has been renewed into a new session."""
+    count = claims.get("ren")
+    if isinstance(count, int) and not isinstance(count, bool) and count >= 0:
+        return count
+    return 0
 
 
 def account_of(claims: dict) -> str | None:
