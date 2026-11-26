@@ -91,6 +91,6 @@ async def _stream(tutor: Tutor, keeping: Keeping, job: TurnJob) -> AsyncIterator
         notes_for(record, learner.plan_id, learner.subject_slug),
         turn=job.turn,
         caller=caller,
-        budget=GenerationBudget(keeping.generate, job.source or job.owner or job.chat),
+        budget=GenerationBudget(keeping.generate, job.learner or job.source),
     ):
         yield item

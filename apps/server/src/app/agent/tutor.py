@@ -37,9 +37,9 @@ from .courses import earlier_path_in
 from .labels import DATA_ONLY
 from .memory import ConversationStore, Exchange
 from .native_react import NativeReAct
-from .path_answer import path_answer
+from .path_answer import confirmed, path_answer
 from .persona import WITHOUT_STAGE, persona
-from .reply import Action
+from .reply import Action, AddPaths
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
 from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
@@ -147,10 +147,12 @@ class Tutor:
         form_answer = answer_in(message, context)
         if form_answer:
             context = learner_with(context, form_answer)
-        added = path_answer(message, context)
         # Without this turn's own exchange from a run before it was run again: the model and the
         # form's count read the conversation as it was when the turn began.
         earlier = await recalled(self._memory, conversation_id, turn)
+        shown = [e.get("card", "") for e in earlier.exchanges]
+        added = confirmed(path_answer(message, context), shown)
+        missed_add = _missed_add(unanswered or [], context, shown, added)
         context = context.model_copy(
             update={"forms_due": form_due(list(earlier.exchanges))}
         )
@@ -172,7 +174,8 @@ class Tutor:
         }
         verdicts = verdicts_of(calls, earlier.exchanges)
         said = said_by_learner(context, inputs, earlier.exchanges, missed)
-        saved = [action for action in (form_answer, added) if action]
+        # What the learner chose in a message whose turn failed is added now: it never reached them.
+        saved = [a for a in (form_answer, missed_add, added) if a]
         this_turn = Turn(
             context,
             message,
@@ -335,6 +338,24 @@ def _log_stopped(gate: AnswerGate, screen: SafetyScreen) -> None:
         )
     if screen.reason:
         logger.warning("The answer was ended by the safety check: %s", screen.reason)
+
+
+def _missed_add(
+    unanswered: list[str],
+    context: LearnerContext,
+    shown: list[str],
+    added: AddPaths | None,
+) -> AddPaths | None:
+    """The courses chosen in the latest message whose turn failed, less any this message chooses
+    again: the choice is the learner's and is kept."""
+    for text in reversed(unanswered):
+        missed = confirmed(path_answer(text, context), shown)
+        if missed is None:
+            continue
+        again = {p.subject.casefold() for p in added.paths} if added else set()
+        paths = [p for p in missed.paths if p.subject.casefold() not in again]
+        return AddPaths(paths=paths) if paths else None
+    return None
 
 
 def said_by_learner(

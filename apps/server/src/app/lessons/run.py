@@ -97,6 +97,7 @@ class LessonRunner:
         if not finished.success:
             return at("ready", lesson)
         lesson_id = uuid.uuid4().hex
+        lesson = lesson.model_copy(update={"target_key": job.target.key(None)})
         await self.lessons.keep(lesson_id, lesson)
         if job.learner:
             await self.learners.change(

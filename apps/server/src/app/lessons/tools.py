@@ -77,7 +77,8 @@ async def _offered(ask: LessonAsk, caller: Caller) -> Making | None:
     """The lesson the ask names, filed on the learner's record under this topic."""
     lesson_id = ask.lesson_id
     lesson = await caller.keeping.lessons.find(lesson_id) if lesson_id else None
-    if lesson_id is None or lesson is None:
+    # Only the lesson made for this very topic: an id alone opens nothing else.
+    if lesson_id is None or lesson is None or lesson.target_key != ask.target.key(None):
         return None
     await caller.change(LessonKept(topic=ask.target.ref(), lesson_id=lesson_id))
     return Making(

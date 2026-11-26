@@ -124,7 +124,9 @@ async def test_an_alarm_for_an_object_that_was_never_told_of_a_chat_does_nothing
 def test_every_tool_the_tutor_has_is_known_to_be_read_only():
     """A resumed turn calls its tools again, so a tool that changes anything outside the turn must
     write `tool.started` before it leaves and be left out of this set (apps/server/src/app/turns/rules.py)."""
-    assert {spec.name for spec in TOOLS} == READ_ONLY_TOOLS
+    # Planning a path and making a lesson spend the generation budget, so a resumed turn does not
+    # call them again.
+    assert {spec.name for spec in TOOLS if not spec.makes} == READ_ONLY_TOOLS
 
 
 async def test_an_alarm_that_cannot_advance_rings_again_soon():

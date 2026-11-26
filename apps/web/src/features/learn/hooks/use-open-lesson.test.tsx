@@ -2,8 +2,19 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter, useLocation } from "react-router";
-import { afterEach, describe, expect, it } from "vitest";
-import { useOpenLesson } from "./use-open-lesson";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const plan = vi.hoisted(() => ({
+  curriculum: {
+    subjects: [
+      { name: "Real analysis", slug: "real-analysis" },
+      { name: "Maths", slug: "maths" },
+    ],
+  },
+}));
+vi.mock("../learner-context", () => ({ usePlan: () => plan }));
+
+const { useOpenLesson } = await import("./use-open-lesson");
 
 function at(path: string) {
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -48,6 +59,17 @@ describe("opening a lesson from a card in the chat", () => {
 
     expect(result.current.location.pathname).toBe("/app/learn/maths/lesson/3");
     expect(result.current.location.state).toEqual({});
+  });
+
+  it("takes the learner to their subjects, not to a page that is not there, when the plan has no such course", () => {
+    const { result } = at("/try");
+
+    act(() =>
+      result.current.open("/app/learn/not-in-the-plan/lesson/0?lesson=abc"),
+    );
+
+    expect(result.current.location.pathname).toBe("/app/learn/subjects");
+    expect(result.current.location.state).toEqual({ backToChat: "/try" });
   });
 
   it.each([

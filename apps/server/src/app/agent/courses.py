@@ -65,8 +65,10 @@ def propose_path_tool(
             return refusal(FULL)
         if workshop is None:
             return refusal(NOT_HERE)
-        offered, left_out = new[:room], new[room:]
         revision = _revision(changes, earlier_path)
+        if revision == UNAVAILABLE:
+            return refusal(CHANGE_LOST)
+        offered, left_out = new[:room], new[room:]
         planned = await plan_courses(workshop, context, offered, revision)
         if not planned.paths:
             return _unplanned(planned.failed)
@@ -98,9 +100,21 @@ def _asked(asked: object) -> list[str] | dict:
     return wanted
 
 
+UNAVAILABLE = Revision("", "")
+CHANGE_LOST = (
+    "The path you showed is no longer in this conversation, so what the learner said could not "
+    "be applied to it. Tell them so, and ask them to say in full what the path should be. The "
+    "card they have is still there"
+)
+
+
 def _revision(changes: str, earlier_path: str) -> Revision | None:
+    """How to change the path last shown; UNAVAILABLE when the learner asked for a change and there
+    is no path to change, which is never planned afresh as if it had been applied."""
     said = clean_changes(changes)
-    return Revision(earlier_path, said) if said and earlier_path else None
+    if not said:
+        return None
+    return Revision(earlier_path, said) if earlier_path else UNAVAILABLE
 
 
 def _unplanned(failed: list[str]) -> dict:

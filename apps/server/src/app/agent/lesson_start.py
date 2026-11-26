@@ -103,15 +103,20 @@ def target_for(
         return None
 
 
+def _may_wait(waited: float, workshop: Workshop) -> bool:
+    """Whether to look again: within the wait, and with the turn's time left for its answer."""
+    return waited < WAIT_SECONDS and workshop.seconds_left() > TICK_SECONDS
+
+
 async def _made(target: LessonTarget, workshop: Workshop, pause: Pause) -> dict:
     """The lesson's state once it is made, failed, or the wait is over."""
     ask = LessonAsk(target=target)
     try:
         state = (await give_lesson(ask, workshop.caller))["structuredContent"]
-        for _ in range(int(WAIT_SECONDS / TICK_SECONDS)):
-            if state["status"] != "making":
-                break
+        waited = 0.0
+        while state["status"] == "making" and _may_wait(waited, workshop):
             await pause(TICK_SECONDS)
+            waited += TICK_SECONDS
             state = (await lesson_progress(ask, workshop.caller))["structuredContent"]
     except Exception:
         logger.exception("Making the lesson on %s failed", target.topic)

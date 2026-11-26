@@ -180,8 +180,30 @@ describe("the path card", () => {
 
     expect(app.sendMessage).toHaveBeenCalledOnce();
     expect(sent()).toBe("Please change the path: Black holes");
-    expect(field.disabled).toBe(true);
-    expect(add().disabled).toBe(true);
+    // The card stays the learner's until a new one comes of it: if the tutor makes none, it is
+    // still there to use, and nothing of it is kept as answered.
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(add().disabled).toBe(false);
+    expect(row("Limits").disabled).toBe(false);
+    expect(
+      localStorage.getItem(`graspy.path.${"c".repeat(32)}`) ?? "",
+    ).not.toContain('"sent":true');
+  });
+
+  it("can still be added after what was missing was said and no new card came", async () => {
+    open(card(TWO_COURSES));
+    fireEvent.click(screen.getByRole("button", { name: "Something missing?" }));
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "more" },
+    });
+    await press(screen.getByRole("button", { name: "Send" }));
+
+    await press(add());
+
+    expect(app.sendMessage).toHaveBeenCalledTimes(2);
+    expect(app.sendMessage.mock.calls[1][0].content[0].text).toMatch(
+      /^Add to my plan:/,
+    );
   });
 
   it("limits what can be said to a sentence or two", () => {

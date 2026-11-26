@@ -72,7 +72,7 @@ def workshop_for(
     """What the turn can plan and make, for the learner it is for; none for a turn with no one."""
     if caller is None:
         return None
-    return Workshop(paths, caller, budget or GenerationBudget(None, ""))
+    return Workshop(paths, caller, budget or GenerationBudget(None, None))
 
 
 def app_told(calls: list[AppCall] | None, added: AddPaths | None) -> str:

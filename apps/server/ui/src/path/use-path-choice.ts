@@ -65,7 +65,9 @@ export function usePathChoice(
     });
   };
 
-  const send = async (text: string) => {
+  /** `answer` keeps the card as answered; what the learner says is missing does not, so that
+   * the card is still theirs to use if no new one comes of it. */
+  const send = async (text: string, answer: boolean) => {
     if (sending.current || locked) return;
     sending.current = true;
     setPending(true);
@@ -75,7 +77,11 @@ export function usePathChoice(
         content: [{ type: "text", text }],
       });
       setRefused(Boolean(isError));
-      if (!isError) keep({ ...kept, sent: true });
+      if (!isError && answer) keep({ ...kept, sent: true });
+      if (!isError && !answer) {
+        setNote("");
+        setSaying(false);
+      }
     } catch (error) {
       console.error("Sending the path's answer failed:", error);
       setRefused(true);
@@ -98,7 +104,7 @@ export function usePathChoice(
     toggle,
     write: (text: string) => setNote(text.slice(0, MAX_CHANGES)),
     openNote: () => setSaying(true),
-    add: () => send(answerText(choice.paths, off)),
-    say: () => send(fill(words.ask, { text: said })),
+    add: () => send(answerText(choice.paths, off), true),
+    say: () => send(fill(words.ask, { text: said }), false),
   };
 }

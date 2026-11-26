@@ -195,7 +195,8 @@
             "licenceUrl": "https://creativecommons.org/licenses/by/3.0/",
             "attribution": "Siyavula Mathematics JSS 1, from https://ng.siyavula.com/read, licensed under CC BY 3.0."
           }
-        }
+        },
+        "targetKey": null
       },
       "whole": true,
       "attempt": 0,

@@ -33,6 +33,7 @@ const { openUrl } = await import("./use-start");
 
 const START = contract.content["ui://graspy/start"];
 const WATCH_MS = 2500;
+const WATCH_LIMIT_MS = 5 * 60 * 1000;
 
 const card = (content: object) => ({
   content: [{ type: "text", text: "A button to open the lesson" }],
@@ -51,6 +52,7 @@ async function open(content: object) {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   vi.useFakeTimers();
   app.callServerTool = vi.fn();
   app.openLink = vi.fn().mockResolvedValue({});
@@ -158,6 +160,36 @@ describe("the card that opens a lesson", () => {
     expect(
       screen.getByRole("button", { name: new RegExp(`Open ${START.topic}`) }),
     ).toBeTruthy();
+  });
+});
+
+describe("a lesson that is never made", () => {
+  const KEY = `graspy.start.${"d".repeat(32)}`;
+
+  it("is watched for a few minutes at most, then said to have failed with its button to try again", async () => {
+    app.callServerTool.mockResolvedValue(lesson("making"));
+    await open({ ...START, status: "making", lessonId: null });
+
+    await act(() => vi.advanceTimersByTimeAsync(WATCH_LIMIT_MS + 3 * WATCH_MS));
+
+    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+    const looked = app.callServerTool.mock.calls.length;
+    await act(() => vi.advanceTimersByTimeAsync(10 * WATCH_MS));
+    expect(app.callServerTool).toHaveBeenCalledTimes(looked);
+  });
+
+  it("is not watched at all when its card is opened again long after", async () => {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ since: Date.now() - WATCH_LIMIT_MS - 1000 }),
+    );
+
+    await open({ ...START, status: "making", lessonId: null });
+    await act(() => vi.advanceTimersByTimeAsync(5 * WATCH_MS));
+
+    expect(app.callServerTool).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toBeTruthy();
   });
 });
 

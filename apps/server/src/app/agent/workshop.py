@@ -3,12 +3,18 @@ and the lessons it has made, for the learner the turn is for."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from ..caller import Caller
 from ..domains.path.service import Revision
 from ..security.rate_limit import Limiter
+
+# The runner's deadline for a turn, and what the tutor keeps back of it to write its answer.
+TURN_SECONDS = 120
+ANSWER_SECONDS = 30
 
 
 class PathPlanner(Protocol):
@@ -29,12 +35,16 @@ class GenerationBudget:
     lessons are spent from it as the same work asked of a route would be."""
 
     limiter: Limiter | None
-    key: str
+    # The learner, or the network address of a visitor; None when the request names neither, and
+    # nothing is then made: a key a client chose would be a fresh budget each time.
+    key: str | None
 
     async def spend(self) -> bool:
-        """False when the source has made too much in the minute. With no limiter bound, as in a
-        local run, there is no limit."""
-        return self.limiter is None or await self.limiter.allow(self.key)
+        """False when the source has made too much in the minute, or is not known. With no limiter
+        bound, as in a local run, there is no limit."""
+        if self.limiter is None:
+            return True
+        return self.key is not None and await self.limiter.allow(self.key)
 
 
 @dataclass(frozen=True)
@@ -43,3 +53,11 @@ class Workshop:
     # Who the lessons are made for; a visitor with no record has none kept.
     caller: Caller
     budget: GenerationBudget
+    # When the turn began, by `now`: the turn has TURN_SECONDS in all (turns/runner.py), and what it
+    # makes may not use the time its answer still needs.
+    started: float = field(default_factory=time.monotonic)
+    now: Callable[[], float] = time.monotonic
+
+    def seconds_left(self) -> float:
+        """How long the turn may still wait for what it makes."""
+        return TURN_SECONDS - ANSWER_SECONDS - (self.now() - self.started)

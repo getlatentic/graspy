@@ -10,8 +10,10 @@ Nothing is saved before this message: the app adds what it names to the learner'
 
 from __future__ import annotations
 
+import re
+
 from ..utils.slug import slugify
-from .cards import PathStep, PlannedPath
+from .cards import PATH_DESCRIPTION, PathStep, PlannedPath
 from .context import LearnerContext
 from .reply import MAX_PATH_GOALS, AddedPath, AddPaths
 from .subject_match import candidates
@@ -120,6 +122,42 @@ def fit_to_answer(paths: list[PlannedPath]) -> list[PlannedPath]:
         if answer_size(paths[:count]) <= ANSWER_CHARS:
             return paths[:count]
     return paths[:1]
+
+
+SHOWN_STEP = re.compile(r"^\d+\. (?P<title>.+) \([^()]*\)$")
+
+
+def _shown_topics(cards: list[str]) -> dict[str, set[str]]:
+    """The topics of each course the path cards among these cards showed, as they were described
+    to the tutor (cards.py's PathChoice.describe), by course."""
+    shown: dict[str, set[str]] = {}
+    for card in cards:
+        if not card.startswith(PATH_DESCRIPTION):
+            continue
+        course = ""
+        for line in card.splitlines()[1:]:
+            step = SHOWN_STEP.match(line)
+            if step and course:
+                shown[course].add(step["title"].casefold())
+            elif line.endswith(":"):
+                course = line[:-1].casefold()
+                shown.setdefault(course, set())
+    return shown
+
+
+def confirmed(added: AddPaths | None, cards: list[str]) -> AddPaths | None:
+    """What of a learner's answer a path card this conversation showed offered: a message that
+    only looks like the answer, typed by hand, names nothing shown and adds nothing."""
+    if added is None:
+        return None
+    shown = _shown_topics(cards)
+    kept = []
+    for path in added.paths:
+        offered = shown.get(path.subject.casefold(), set())
+        steps = [s for s in path.steps if s.title.casefold() in offered]
+        if steps:
+            kept.append(path.model_copy(update={"steps": steps}))
+    return AddPaths(paths=kept) if kept else None
 
 
 def describe_added(added: AddPaths) -> str:

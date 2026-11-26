@@ -388,6 +388,7 @@ async def test_the_finished_lesson_is_everything_the_client_shows():
             "practice": _practice(),
             "progress": {"current": 0, "total": 4},
             "grounding": None,
+            "targetKey": None,
         },
     }
 

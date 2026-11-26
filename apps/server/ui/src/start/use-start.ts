@@ -1,11 +1,29 @@
 import { useEffect, useState } from "react";
 import type { App } from "@modelcontextprotocol/ext-apps";
 import { isText, type StartLesson } from "@/lib/content";
+import { readViewState, writeViewState } from "@/shared/view-state";
 
 // The same pace the lesson's own view watches at: a slide takes the model seconds to write.
 const WATCH_MS = 2500;
+// A lesson is made in well under a minute: one still "making" after this has been lost, and a card
+// opened again long after is never watched.
+export const WATCH_LIMIT_MS = 5 * 60 * 1000;
 
 type Status = StartLesson["status"];
+
+const isSince = (value: unknown): value is { since: number } =>
+  typeof (value as { since?: unknown } | null)?.since === "number";
+
+/** Whether the lesson has been watched for longer than it can take. The time the watch began is
+ * kept with the card, so a chat opened again later does not begin watching afresh. */
+function watchedTooLong(key: string): boolean {
+  const kept = readViewState(key, isSince, null);
+  if (kept === null) {
+    writeViewState(key, { since: Date.now() });
+    return false;
+  }
+  return Date.now() - kept.since > WATCH_LIMIT_MS;
+}
 
 interface Made {
   status: Status;
@@ -49,18 +67,26 @@ export function openUrl(start: StartLesson, lessonId: string | null): string {
 
 /** A lesson still being made is watched until it is made or has failed, and one that failed is
  * asked for again. Opening it is the learner's to do. */
-export function useStart(app: App, start: StartLesson) {
-  const [made, setMade] = useState<Made>({
-    status: start.status,
+export function useStart(app: App, start: StartLesson, viewUUID: string) {
+  const sinceKey = `graspy.start.${viewUUID}`;
+  const [made, setMade] = useState<Made>(() => ({
+    status:
+      start.status === "making" && watchedTooLong(sinceKey)
+        ? "failed"
+        : start.status,
     lessonId: start.lessonId,
     attempt: 0,
-  });
+  }));
   // A look that found nothing re-arms the watch through this count.
   const [misses, setMisses] = useState(0);
   const [asking, setAsking] = useState(false);
 
   useEffect(() => {
     if (made.status !== "making" || asking) return;
+    if (watchedTooLong(sinceKey)) {
+      setMade((now) => ({ ...now, status: "failed" }));
+      return;
+    }
     let current = true;
     const timer = setTimeout(() => {
       ask(app, "lesson_progress", { target: start.target })
@@ -78,9 +104,10 @@ export function useStart(app: App, start: StartLesson) {
       current = false;
       clearTimeout(timer);
     };
-  }, [app, start.target, made, misses, asking]);
+  }, [app, start.target, made, misses, asking, sinceKey]);
 
   const tryAgain = async () => {
+    writeViewState(sinceKey, { since: Date.now() });
     setAsking(true);
     setMade((now) => ({ ...now, status: "making" }));
     const reopened = await ask(app, "give_lesson", {

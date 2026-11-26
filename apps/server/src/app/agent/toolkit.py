@@ -65,6 +65,9 @@ class Turn:
     earlier_path: str = ""
     # The courses the learner's own message just chose on a path card.
     added: AddPaths | None = None
+    # What the turn's tools that make things have made, by call, so that the turn run again after
+    # a failed attempt reuses it and neither spends the budget nor waits a second time.
+    made: dict = field(default_factory=dict)
 
     def where(self) -> Where:
         return Where(
@@ -204,11 +207,32 @@ def _for_model(
     return run
 
 
+def _once(tool: Tool, made: dict, name: str) -> Tool:
+    """The tool, which keeps what it made for a call so that the same call is answered from it."""
+
+    @functools.wraps(tool)
+    async def once(*args, **kwargs):
+        key = (name, repr(args), repr(sorted(kwargs.items())))
+        if key not in made:
+            result = await tool(*args, **kwargs)
+            if not isinstance(result, Outcome):
+                return result
+            made[key] = result
+        return made[key]
+
+    return once
+
+
+def _built(spec: ToolSpec, turn: Turn) -> Tool:
+    tool = spec.build(turn)
+    return _once(tool, turn.made, spec.name) if spec.makes else tool
+
+
 def tools_for(turn: Turn, outputs: TurnOutputs) -> list[Callable[..., dict]]:
     where = turn.where()
     return [
         _for_model(
-            spec.build(turn), outputs, where, _refusal_before(turn, outputs, spec)
+            _built(spec, turn), outputs, where, _refusal_before(turn, outputs, spec)
         )
         for spec in TOOLS
     ]

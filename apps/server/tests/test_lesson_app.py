@@ -15,6 +15,7 @@ from app.factory import create_app
 from app.learner.record import Answer, Answered, LessonKept, TopicRef
 from app.learner.store import InMemoryLearnerStore
 from app.lessons.makers import TaskLessonMaking
+from app.lessons.making import LessonTarget
 from app.lessons.run import LessonRunner
 from app.lessons.store import InMemoryLessonStore
 from app.settings import Settings
@@ -129,7 +130,10 @@ async def test_the_lesson_goes_on_after_the_view_stops_asking_and_is_filed(serve
         reopened = await client.call_tool("give_lesson", {"target": TARGET})
 
     assert reopened.structured_content["status"] == "ready"
-    assert reopened.structured_content["lesson"] == wire(LESSON)
+    made = LESSON.model_copy(
+        update={"target_key": LessonTarget.model_validate(TARGET).key(None)}
+    )
+    assert reopened.structured_content["lesson"] == wire(made)
     assert len(server.state.service.requests) == 1
     [mark] = (await record_of(server))["topics"]
     assert mark["lessonId"]

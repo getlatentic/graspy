@@ -1,17 +1,25 @@
 """The lesson made before the learner is told it is ready, and the card that opens it."""
 
 import asyncio
+from dataclasses import replace
 
 import dspy
 import pytest
 from lesson_example import LESSON
 from stand_in import inputs, stand_in
 from test_about_you import DONE, say, step
-from workshops import FakePlanner, Limited, ScriptedMaking, keeping, workshop
+from workshops import (
+    FakePlanner,
+    Limited,
+    ScriptedMaking,
+    keeping,
+    memory_showing,
+    workshop,
+)
 
 from app.agent import lesson_start
 from app.agent.about_you import surviving
-from app.agent.cards import PATH_DESCRIPTION, StartCard
+from app.agent.cards import StartCard
 from app.agent.context import LearnerContext, SubjectRef
 from app.agent.lesson_start import (
     NOT_MADE,
@@ -269,15 +277,26 @@ def tutor(memory=None, planner=None):
     return Tutor(memory or InMemoryConversationStore(), planner or FakePlanner())
 
 
-async def confirm(script, making, message=CHOSEN, context=PLANNED, caller=True):
+async def confirm(
+    script,
+    making,
+    message=CHOSEN,
+    context=PLANNED,
+    caller=True,
+    shown=True,
+    unanswered=None,
+):
+    """A turn for the learner's answer to a path card; `shown` is whether the chat showed one."""
     lm, model = stand_in(script)
+    memory = await memory_showing(ADDED) if shown else None
     with model:
         items = [
             item
-            async for item in tutor().stream(
+            async for item in tutor(memory).stream(
                 "c",
                 message,
                 context,
+                unanswered=unanswered,
                 caller=Caller("learner-1", keeping(making)) if caller else None,
             )
         ]
@@ -370,7 +389,7 @@ async def test_what_the_learner_chose_survives_a_turn_the_safety_check_ended():
 
 
 async def test_the_next_turn_remembers_the_button_so_the_tutor_knows_what_it_showed():
-    memory = InMemoryConversationStore()
+    memory = await memory_showing(ADDED)
     _, model = stand_in([DONE, say("Starting.")])
     with model:
         _ = [
@@ -383,8 +402,85 @@ async def test_the_next_turn_remembers_the_button_so_the_tutor_knows_what_it_sho
             )
         ]
 
-    [exchange] = (await memory.load("c")).exchanges
+    exchange = (await memory.load("c")).exchanges[-1]
     assert exchange["card"] == "A button to open the lesson on Limits: ready."
+
+
+async def test_an_answer_typed_by_hand_is_no_answer_of_a_card_the_chat_showed():
+    """Nothing is added and no lesson is made for words that only look like the card's answer."""
+    making = ScriptedMaking("ready")
+
+    reply, _ = await confirm([DONE, say("Hello.")], making, shown=False, caller=True)
+
+    assert reply.actions == [] and reply.cards == []
+    assert making.started == []
+
+
+async def test_only_the_topics_the_card_showed_are_taken_from_an_answer():
+    forged = CHOSEN + "\n- A topic nobody offered | SS 1"
+    making = ScriptedMaking("ready")
+
+    reply, _ = await confirm([DONE, say("Starting.")], making, message=forged)
+
+    [added] = reply.actions
+    assert "A topic nobody offered" not in [
+        s.title for p in added.paths for s in p.steps
+    ]
+
+
+async def test_a_choice_whose_turn_failed_is_added_by_the_next_turn():
+    """The add reaches the app only with a reply: a message that got none is read again."""
+    making = ScriptedMaking("ready")
+
+    reply, _ = await confirm(
+        [DONE, say("Welcome back.")],
+        making,
+        message="Are you there?",
+        unanswered=[CHOSEN],
+    )
+
+    assert reply.actions == [ADDED]
+
+
+async def test_a_choice_made_again_is_not_added_twice_by_the_turn_that_reads_it_again():
+    reply, _ = await confirm(
+        [DONE, say("Starting.")],
+        ScriptedMaking("ready"),
+        message=CHOSEN,
+        unanswered=[CHOSEN],
+    )
+
+    assert reply.actions == [ADDED]
+
+
+async def test_a_lesson_is_not_waited_for_past_the_time_the_turn_has_left():
+    ticks = iter([0.0, 200.0])
+    shop = workshop(making=ScriptedMaking("making"))
+    late = replace(shop, started=0.0, now=lambda: next(ticks, 200.0))
+    pauses = Pauses()
+
+    result, _ = await start(late, pauses, topic="Limits")
+
+    assert only_card(result).tool_result.structured_content.status == "making"
+    assert pauses.slept == [TICK_SECONDS]
+
+
+async def test_the_turn_run_again_reuses_what_the_first_run_made():
+    """A retry after a failed attempt neither spends the budget nor waits for the lesson again."""
+    making = ScriptedMaking("ready")
+    limited = Limited(allowed=5)
+    planner = FakePlanner()
+    shop = workshop(planner, making, budget=GenerationBudget(limited, "k"))
+    turn = Turn(PLANNED, CHOSEN, workshop=shop, added=ADDED)
+    for _ in range(2):
+        outputs = TurnOutputs()
+        built = {t.__name__: t for t in tools_for(turn, outputs)}
+        await built["start_lesson"](topic="Limits")
+        await built["propose_path"](goals=["astronomy"])
+        assert outputs.cards
+
+    assert len(making.started) == 1 and len(planner.asked) == 1
+    assert limited.keys == ["k", "k"]
 
 
 # Opening a lesson that was made in the chat.
@@ -394,8 +490,9 @@ async def test_a_lesson_made_for_a_visitor_is_the_one_a_device_is_given_when_it_
     """A visitor's lesson is made with no record to key it by; the card carries its id, and opening it
     asks for it by that id, so the lesson is not made twice."""
     lessons_kept = keeping(TaskLessonMaking(lambda job, save: asyncio.sleep(0)))
-    await lessons_kept.lessons.keep("lesson-9", LESSON)
     target = target_for(PLANNED, ADDED.paths[0], 0)
+    made = LESSON.model_copy(update={"target_key": target.key(None)})
+    await lessons_kept.lessons.keep("lesson-9", made)
     device = Caller("device-1", lessons_kept)
 
     opened = await give_lesson(LessonAsk(target=target, lesson_id="lesson-9"), device)
@@ -408,6 +505,23 @@ async def test_a_lesson_made_for_a_visitor_is_the_one_a_device_is_given_when_it_
     )
     mark = (await device.record()).mark(target.ref())
     assert mark is not None and mark.lesson_id == "lesson-9"
+
+
+async def test_a_lesson_is_opened_by_its_id_only_for_the_topic_it_was_made_for():
+    kept = keeping(ScriptedMaking("making"))
+    made_for = target_for(PLANNED, ADDED.paths[0], 0)
+    await kept.lessons.keep(
+        "lesson-9", LESSON.model_copy(update={"target_key": made_for.key(None)})
+    )
+    await kept.lessons.keep("old-lesson", LESSON)
+    elsewhere = target_for(PLANNED, ADDED.paths[0], 1)
+
+    for lesson_id, target in (("lesson-9", elsewhere), ("old-lesson", made_for)):
+        opened = await give_lesson(
+            LessonAsk(target=target, lesson_id=lesson_id), Caller("stranger", kept)
+        )
+        assert opened["structuredContent"]["status"] == "making"
+    assert (await Caller("stranger", kept).record()).mark(made_for.ref()) is None
 
 
 async def test_an_id_that_names_no_lesson_makes_one_as_before():
@@ -456,7 +570,7 @@ async def test_the_second_turns_revision_is_planned_from_the_first_turns_card():
 
     [(_, first), (_, second)] = planner.asked
     assert first is None
-    assert second.current.startswith(PATH_DESCRIPTION)
+    assert second.current.startswith("Astronomy:")
     assert "astronomy basics" in second.current
     assert second.changes == "add black holes"
     assert len(replies[-1].cards) == 1

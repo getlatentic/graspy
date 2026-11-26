@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from app.agent.cards import PathCard
-from app.agent.memory import InMemoryConversationStore
+from app.agent.cards import PathCard, PathChoice, PlannedPath
+from app.agent.memory import Exchange, InMemoryConversationStore
+from app.agent.reply import AddPaths
 from app.agent.toolkit import TurnOutputs
 from app.agent.workshop import GenerationBudget, Workshop
 from app.caller import Caller, Keeping
@@ -82,6 +83,21 @@ def workshop(
         Caller(learner, keeping(making)),
         budget or GenerationBudget(None, "source"),
     )
+
+
+async def memory_showing(added: AddPaths, chat: str = "c") -> InMemoryConversationStore:
+    """A conversation whose last card was the path card these courses were chosen from."""
+    memory = InMemoryConversationStore()
+    choice = PathChoice(
+        paths=[
+            PlannedPath(subject=p.subject, goal=p.goal, steps=p.steps)
+            for p in added.paths
+        ]
+    )
+    await memory.append(
+        chat, Exchange(message="real analysis", answer="Here.", card=choice.describe())
+    )
+    return memory
 
 
 def paths_shown(outputs: TurnOutputs) -> list[PathCard]:

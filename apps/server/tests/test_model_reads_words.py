@@ -9,7 +9,13 @@ import pytest
 from stand_in import stand_in
 from test_passage_tool import PASSAGE, asked
 from test_practice_tool import written
-from workshops import FakePlanner, ScriptedMaking, keeping, workshop
+from workshops import (
+    FakePlanner,
+    ScriptedMaking,
+    keeping,
+    memory_showing,
+    workshop,
+)
 
 from app.agent.cards import Card
 from app.agent.context import LearnerContext, SubjectRef
@@ -112,11 +118,15 @@ async def test_the_model_reads_none_of_the_data_of_a_card(kind):
         {"reasoning": "r", "answer": "Here you go.", "follow_ups": []},
     ]
     lm, context = stand_in(script)
+    chosen = path_answer(MESSAGE_OF.get(kind, ""), PLANNED)
+    memory = (
+        await memory_showing(chosen, "c1") if chosen else InMemoryConversationStore()
+    )
 
     with context:
         items = [
             item
-            async for item in Tutor(InMemoryConversationStore(), FakePlanner()).stream(
+            async for item in Tutor(memory, FakePlanner()).stream(
                 "c1",
                 MESSAGE_OF.get(kind, "Give me something to try"),
                 LEARNER_OF.get(kind),

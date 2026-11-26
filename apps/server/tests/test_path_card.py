@@ -95,14 +95,14 @@ async def test_a_revision_is_planned_from_the_card_shown_and_what_the_learner_sa
 
     [(goal, revision)] = planner.asked
     assert goal == "astronomy"
-    assert revision.current == earlier
+    assert revision.current == "Astronomy:\n1. Stars (SS 1)"
     assert revision.changes == "add black holes and drop stars"
 
 
 @pytest.mark.parametrize(
     ("earlier", "changes"),
-    [("", "add black holes"), ("A path", ""), ("A path", "   ")],
-    ids=["no-earlier-path", "no-changes", "blank-changes"],
+    [("A path", ""), ("A path", "   ")],
+    ids=["no-changes", "blank-changes"],
 )
 async def test_without_both_a_path_shown_and_a_change_asked_the_path_is_planned_anew(
     earlier, changes
@@ -114,10 +114,68 @@ async def test_without_both_a_path_shown_and_a_change_asked_the_path_is_planned_
     assert planner.asked == [("astronomy", None)]
 
 
+EARLIER = f"{PATH_DESCRIPTION}, nothing added yet:\nAstronomy:\n1. Stars (SS 1)"
+
+
+async def test_a_change_with_no_path_to_change_is_not_planned_as_if_it_were_applied():
+    planner = FakePlanner()
+
+    told, outputs = await propose(
+        planner, earlier="", goals=["astronomy"], changes="add black holes"
+    )
+
+    assert "no longer in this conversation" in told["error"]
+    assert planner.asked == [] and outputs.cards == []
+
+
+async def test_each_course_is_revised_from_its_own_part_of_the_card_shown():
+    planner = FakePlanner()
+    earlier = (
+        f"{PATH_DESCRIPTION}, nothing added yet:\n"
+        "Astronomy:\n1. Stars (SS 1)\nChess:\n1. Openings (SS 2)\n2. Endings (SS 3)"
+    )
+
+    await propose(
+        planner, earlier=earlier, goals=["astronomy", "chess"], changes="more"
+    )
+
+    sent = {goal: revision.current for goal, revision in planner.asked}
+    assert sent == {
+        "astronomy": "Astronomy:\n1. Stars (SS 1)",
+        "chess": "Chess:\n1. Openings (SS 2)\n2. Endings (SS 3)",
+    }
+
+
+async def test_a_course_the_card_shown_does_not_name_is_planned_afresh_not_from_another():
+    planner = FakePlanner()
+    earlier = (
+        f"{PATH_DESCRIPTION}, nothing added yet:\n"
+        "Astronomy:\n1. Stars (SS 1)\nChess:\n1. Openings (SS 2)"
+    )
+
+    await propose(planner, earlier=earlier, goals=["ballet"], changes="more")
+
+    assert planner.asked == [("ballet", None)]
+
+
+async def test_a_course_whose_plan_is_malformed_fails_alone():
+    class Odd(FakePlanner):
+        async def plan_path(self, country, language, grade_level, goal, revision=None):
+            if goal == "chess":
+                return {"subject": "Chess", "steps": [None]}
+            return await super().plan_path(country, language, grade_level, goal)
+
+    told, outputs = await propose(Odd(), goals=["astronomy", "chess"])
+
+    [card] = paths_shown(outputs)
+    assert [p.goal for p in card.tool_result.structured_content.paths] == ["astronomy"]
+    assert "chess" in told["not_planned"]
+
+
 async def test_what_the_learner_said_is_cut_to_a_sentence_or_two():
     planner = FakePlanner()
 
-    await propose(planner, earlier="A path", goals=["astronomy"], changes="x" * 5000)
+    await propose(planner, earlier=EARLIER, goals=["astronomy"], changes="x" * 5000)
 
     assert len(planner.asked[0][1].changes) == path_card.MAX_CHANGES
 

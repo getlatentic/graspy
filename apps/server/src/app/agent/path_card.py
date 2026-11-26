@@ -19,6 +19,7 @@ from .cards import (
 )
 from .context import LearnerContext
 from .path_answer import fit_to_answer
+from .subject_match import normalise
 from .title import MAX_GOAL, MAX_LEVEL, MAX_TITLE, clean_title
 from .workshop import Workshop
 
@@ -59,12 +60,35 @@ def clean_changes(text: object) -> str:
     return clean_title(text, MAX_CHANGES)
 
 
+def course_block(earlier: str, goal: str) -> str:
+    """The part of the path card last shown that is this goal's course: the only course there, else
+    the one whose name and the goal contain one another; none when it cannot be told."""
+    blocks: list[tuple[str, list[str]]] = []
+    for line in earlier.splitlines()[1:]:
+        if line.endswith(":") and not line[:1].isdigit():
+            blocks.append((line[:-1], [line]))
+        elif blocks:
+            blocks[-1][1].append(line)
+    if len(blocks) == 1:
+        return "\n".join(blocks[0][1])
+    wanted = normalise(goal)
+    for subject, lines in blocks:
+        name = normalise(subject)
+        if wanted and name and (wanted in name or name in wanted):
+            return "\n".join(lines)
+    return ""
+
+
 async def _plan_one(
     workshop: Workshop,
     context: LearnerContext,
     goal: str,
     revision: Revision | None,
 ) -> PlannedPath | None:
+    # Each course is revised from its own part of the card shown, never the whole of it.
+    if revision is not None:
+        block = course_block(revision.current, goal)
+        revision = Revision(block, revision.changes) if block else None
     try:
         raw = await asyncio.wait_for(
             workshop.planner.plan_path(
@@ -76,10 +100,10 @@ async def _plan_one(
             ),
             PLAN_SECONDS,
         )
+        return planned_path(raw, goal)
     except Exception:
         logger.exception("Planning a path failed")
         return None
-    return planned_path(raw, goal)
 
 
 async def plan_courses(

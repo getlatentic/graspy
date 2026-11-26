@@ -204,7 +204,7 @@ class TutorExecutor(AgentExecutor):
             caller=caller,
             budget=GenerationBudget(
                 self._keeping.generate,
-                edge_address(call_headers(context)) or conversation_id,
+                caller.learner or edge_address(call_headers(context)),
             ),
         )
 

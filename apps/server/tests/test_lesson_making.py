@@ -124,10 +124,12 @@ async def test_a_lesson_arrives_slide_by_slide_and_is_kept_and_filed_once_whole(
     assert joined.lesson.slides == [SLIDE]
     assert joined.lesson.key_points == ["k"]
     assert joined.lesson.objectives == ["o"]
-    assert (done.status, done.whole, done.lesson) == ("ready", True, LESSON)
+    # Kept with the topic it was made for, which is what opening it by its id checks.
+    made = LESSON.model_copy(update={"target_key": TARGET.key(None)})
+    assert (done.status, done.whole, done.lesson) == ("ready", True, made)
     assert len(service.requests) == 1
     assert service.requests[0].learner_notes == notes
-    assert await lessons.find(done.lesson_id) == LESSON
+    assert await lessons.find(done.lesson_id) == made
     record = await learners.load(DEVICE)
     assert record.lesson_on("plan-1", "mathematics", "Fractions") == done.lesson_id
 

@@ -32,19 +32,26 @@ async def test_the_budget_is_that_of_the_address_the_edge_saw():
     assert limiter.keys == ["203.0.113.7"]
 
 
-@pytest.mark.parametrize(
-    ("fields", "key"),
-    [
-        ({"owner": "visitor:v1"}, "visitor:v1"),
-        ({"learner": "learner-1"}, "learner-1"),
-        ({}, "chat-1"),
-    ],
-    ids=["visitor", "learner", "neither"],
-)
-async def test_without_an_address_it_is_counted_for_who_the_chat_is_of(fields, key):
-    budget = await budget_of(job(**fields))
+async def test_a_signed_in_learner_is_counted_for_themselves_not_their_network():
+    budget = await budget_of(job(learner="learner-1", source="203.0.113.7"))
 
-    assert budget.key == key
+    assert budget.key == "learner-1"
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [{"owner": "visitor:v1"}, {}],
+    ids=["a-visitor-id-is-not-an-address", "nobody"],
+)
+async def test_with_no_address_and_no_learner_nothing_is_made(fields):
+    """A key the client chose would be a fresh budget each time."""
+    limiter = Limited(allowed=5)
+
+    budget = await budget_of(job(**fields), limiter)
+
+    assert budget.key is None
+    assert not await budget.spend()
+    assert limiter.keys == []
 
 
 async def test_where_no_budget_is_bound_there_is_no_limit():

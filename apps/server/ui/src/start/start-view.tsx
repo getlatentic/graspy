@@ -15,7 +15,7 @@ export function StartView() {
 function Start({ shown }: { shown: Shown<StartLesson> }) {
   const { app, result, words } = shown;
   const start = result.structuredContent;
-  const { made, tryAgain, open } = useStart(app, start);
+  const { made, tryAgain, open } = useStart(app, start, result._meta.viewUUID);
 
   return (
     <section
