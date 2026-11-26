@@ -57,6 +57,7 @@ The routes under `/app/learn/ask` sit behind `requireAccount` (`web/app/chat-gat
 **How `/try` differs.**
 
 - No sign-in. A signed-in learner who opens `/try` is sent to their own chat; an account with no learner chosen is asked to choose one.
+- The visitor's session is minted once, before the chat opens, after a Cloudflare Turnstile check (`web/app/try-challenge.tsx`, `web/lib/challenge/`; [Security](SECURITY.md#visitor-challenge-cloudflare-turnstile)); a renewal presents the session it replaces instead of a new check.
 - The page holds an anonymous session (`holdAnonymousSession`), so every request carries a session that names a random **visitor id** and no device or learner (`web/lib/api/session.ts`, `web/lib/try-visitor.ts`).
 - Text only. The page is a header with the logo and a sign-in link around the same `ChatView`. It has no navigation, and the chat components have no voice input.
 - The device makes its own plan with no subjects (`readyToChat`, `web/features/learn/lib/start-chat.ts`). What the visitor says about themselves stays in the browser.

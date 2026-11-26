@@ -18,6 +18,8 @@ DEPLOYED_WORKSPACES=(apps/tutor apps/server/ui apps/web)
 
 # The committed apps/web/.env.<environment> names the API a web build calls, not the shell.
 unset VITE_API_URL VITE_A2A_BASE
+# An unset GitHub secret arrives as an empty value, which would override the committed key.
+if [[ -z "${VITE_TURNSTILE_SITE_KEY:-}" ]]; then unset VITE_TURNSTILE_SITE_KEY; fi
 
 die() {
   echo "deploy: $*" >&2
@@ -98,6 +100,45 @@ require_firebase_config() {
 require_service_account_secret() {
   (cd apps/server && npx wrangler secret list "$wrangler_env" 2>/dev/null) | grep -q '"FIREBASE_SERVICE_ACCOUNT"' ||
     die "the API Worker needs the secret FIREBASE_SERVICE_ACCOUNT ($wrangler_env); see docs/DEPLOYING.md."
+}
+
+# The widget's public key, from the environment, apps/web/.env.<environment>.local or the committed
+# apps/web/.env.<environment>, in the order Vite reads them. Cloudflare's published test keys (1x, 2x,
+# 3x) pass or fail every visitor: production refuses them, staging is told it has no bot check.
+require_turnstile_site_key() {
+  local key="${VITE_TURNSTILE_SITE_KEY:-}" file
+  for file in "apps/web/.env.$environment.local" "apps/web/.env.$environment"; do
+    [[ -n "$key" ]] || key="$(grep -E '^VITE_TURNSTILE_SITE_KEY=' "$file" 2>/dev/null | cut -d= -f2- || true)"
+  done
+  [[ -n "$key" ]] || die "the web build needs VITE_TURNSTILE_SITE_KEY (the Turnstile widget's site key), in the environment or in apps/web/.env.$environment.local; see docs/DEPLOYING.md."
+  if [[ "$key" =~ ^[0-9]x ]]; then
+    [[ "$environment" != "production" ]] ||
+      die "VITE_TURNSTILE_SITE_KEY is one of Cloudflare's test keys, which give no bot check: production needs its own widget's key (docs/DEPLOYING.md)."
+    echo "deploy: WARNING: $environment is built with a Cloudflare test site key: the /try bot check gives NO protection here." >&2
+  fi
+}
+
+# The API Worker refuses to start without it, so a deploy that lacks it is stopped here.
+require_turnstile_secret() {
+  (cd apps/server && npx wrangler secret list "$wrangler_env" 2>/dev/null) | grep -q '"TURNSTILE_SECRET"' ||
+    die "the API Worker needs the secret TURNSTILE_SECRET ($wrangler_env); see docs/DEPLOYING.md."
+}
+
+# The API says whether its challenge is live. Production serving a test secret would be a bot check in
+# name only, so it is an error there; staging is only warned. The Worker itself refuses to start in
+# production with a test secret, so a health check that fails here is that refusal.
+report_challenge() {
+  local health challenge
+  health="$(curl -fsS --max-time 30 "$(api_origin "$environment")/api/health")" ||
+    die "$(api_origin "$environment")/api/health did not answer after the deploy; check the Worker's logs."
+  challenge="$(printf '%s' "$health" | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["details"].get("challenge", ""))')"
+  case "$challenge" in
+    live) echo "deploy: the /try bot check is live." ;;
+    test-*)
+      [[ "$environment" != "production" ]] || die "production's TURNSTILE_SECRET is a Cloudflare test secret ($challenge)."
+      echo "deploy: WARNING: $environment runs the /try bot check with a Cloudflare test secret ($challenge): it gives NO protection." >&2 ;;
+    *) die "$environment reports the bot check as '$challenge', not live." ;;
+  esac
 }
 
 require_confirmation() {
@@ -222,11 +263,12 @@ deploy_api_worker() {
 step "Checking $(git rev-parse --short HEAD) for $environment"
 require_clean_tree
 require_firebase_config
+require_turnstile_site_key
 if [[ "$environment" == "production" ]]; then
   require_head_on_main
   if [[ -z "$dry_run" ]]; then require_confirmation; fi
 fi
-if [[ -z "$dry_run" ]]; then require_service_account_secret; fi
+if [[ -z "$dry_run" ]]; then require_service_account_secret; require_turnstile_secret; fi
 
 install_dependencies
 
@@ -252,5 +294,8 @@ deploy_api_worker
 
 step "Web app"
 deploy_web
+
+step "Bot check"
+report_challenge
 
 step "Deployed $(git rev-parse --short HEAD) to $environment"

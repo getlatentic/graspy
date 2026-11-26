@@ -25,6 +25,10 @@ logger = logging.getLogger(__name__)
 # leaked token is not a standing grant.
 TOKEN_TTL_SECONDS = 12 * 60 * 60
 
+# How long a visitor's passed challenge carries across renewals of their session. A session lasts
+# 12 hours, so this is two of them; then the browser is challenged again.
+VISITOR_CHALLENGE_MAX_AGE_SECONDS = 24 * 60 * 60
+
 # A parent's session is for the minutes after they signed in again, not for the day.
 PARENT_TOKEN_TTL_SECONDS = 15 * 60
 
@@ -73,6 +77,7 @@ def issue(
     gate: str | None = None,
     tv: str | None = None,
     visitor: str | None = None,
+    challenged_at: int | None = None,
     hint: str | None = None,
     auth_time: int | None = None,
     now: float | None = None,
@@ -85,7 +90,9 @@ def issue(
     says when it was made (`iat`). ``auth_time`` is when the Google sign-in it was made from was
     done (`at`): a parent's session from Google keeps it as the time of its proof, and an account
     session keeps the one it was minted from, so a sign-in is not taken as the proof for a session
-    it did not make, and is taken for one only once."""
+    it did not make, and is taken for one only once. ``challenged_at`` is when a visitor's browser
+    passed the Turnstile challenge (`cha`): renewing the session keeps it, up to
+    VISITOR_CHALLENGE_MAX_AGE_SECONDS."""
     issued_at = int(time.time() if now is None else now)
     if parent:
         ttl = PARENT_TOKEN_TTL_SECONDS
@@ -113,6 +120,8 @@ def issue(
         claims["tv"] = tv
     if visitor:
         claims["vis"] = visitor
+        if challenged_at is not None:
+            claims["cha"] = challenged_at
     if hint:
         claims["hint"] = hint
     payload = json.dumps(claims, separators=(",", ":")).encode()
@@ -210,6 +219,14 @@ def visitor_of(claims: dict) -> str | None:
     (the same characters and length) is an id."""
     found = _text_claim(claims, "vis")
     return found if found and VISITOR_ID.fullmatch(found) else None
+
+
+def challenged_at_of(claims: dict) -> int | None:
+    """When the visitor's browser passed the challenge this session descends from, in epoch seconds."""
+    passed = claims.get("cha")
+    if isinstance(passed, int) and not isinstance(passed, bool):
+        return passed
+    return None
 
 
 def account_of(claims: dict) -> str | None:

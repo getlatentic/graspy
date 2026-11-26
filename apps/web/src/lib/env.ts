@@ -9,6 +9,7 @@ interface Env {
   readonly VITE_FIREBASE_PROJECT_ID?: string;
   readonly VITE_FIREBASE_APP_ID?: string;
   readonly VITE_FIREBASE_AUTH_EMULATOR?: string;
+  readonly VITE_TURNSTILE_SITE_KEY?: string;
 }
 
 export interface FirebaseConfig {
@@ -23,6 +24,10 @@ const env = import.meta.env as unknown as Env;
 export const API_BASE_URL = env.VITE_API_URL;
 
 export const A2A_BASE_URL = env.VITE_A2A_BASE;
+
+/** The public key of the Turnstile widget that gates a visitor's session on /try. Unset (development,
+ * the unit tests) means no check is asked for; a server that needs one then refuses the visitor. */
+export const TURNSTILE_SITE_KEY = env.VITE_TURNSTILE_SITE_KEY?.trim() || null;
 
 /** Sign-in is offered only when every value is set. */
 export function firebaseConfigOf(values: Partial<Env>): FirebaseConfig | null {

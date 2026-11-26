@@ -23,6 +23,7 @@ from ..security.firebase import (
 from ..security.guard import require_session
 from ..security.session import issue
 from .sse import sse_response
+from .visitor_session import visitor_session
 
 # Every string here reaches a model prompt, so its length bounds the bill.
 # FastAPI ignores StringConstraints on a Query, so query parameters take these
@@ -84,6 +85,10 @@ class LearningPathResponse(BaseModel):
     steps: list[LearningPathStep]
 
 
+MAX_CHALLENGE_TOKEN = 2048
+MAX_SESSION_TOKEN = 2048
+
+
 class SessionRequest(BaseModel):
     device_id: str | None = Field(
         default=None, alias="deviceId", pattern=r"^[A-Za-z0-9_-]{8,64}$"
@@ -99,6 +104,10 @@ class SessionRequest(BaseModel):
     # A visitor with no account and no device record (the web's /try): a random id their browser
     # holds, which their chats are bound to. Ignored with a deviceId or a sign-in.
     visitor: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{16,64}$")
+    # A visitor's proof that their browser is a person's: a Turnstile token (single use), or the
+    # session they are renewing, which carries the proof of the visit (api/visitor_session.py).
+    challenge: str | None = Field(default=None, max_length=MAX_CHALLENGE_TOKEN)
+    renewal: str | None = Field(default=None, max_length=MAX_SESSION_TOKEN)
 
 
 class SessionResponse(BaseModel):
@@ -117,7 +126,13 @@ api_router = APIRouter()
 @api_router.get("/health", response_model=HealthResponse, tags=["meta"])
 async def health(request: Request) -> HealthResponse:
     return HealthResponse(
-        status="ok", details={"environment": request.app.state.settings.app_env}
+        status="ok",
+        details={
+            "environment": request.app.state.settings.app_env,
+            # Whether a visitor's session is challenged, and by a live widget or a test one that
+            # passes (or fails) everyone: a test secret is no protection.
+            "challenge": request.app.state.settings.challenge_mode.value,
+        },
     )
 
 
@@ -137,11 +152,12 @@ async def create_session(
         await Caller(learner, request.app.state.keeping).change(
             Seen(fingerprint=body.fingerprint)
         )
-    issued = issue(
-        request.app.state.session_secret,
-        learner=learner,
-        visitor=None if learner else body.visitor,
-    )
+    if body.visitor and not learner:
+        issued = await visitor_session(
+            request, body.visitor, challenge=body.challenge, renewal=body.renewal
+        )
+    else:
+        issued = issue(request.app.state.session_secret, learner=learner)
     return SessionResponse(token=issued.token, expires_in=issued.expires_in)
 
 

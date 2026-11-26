@@ -164,12 +164,19 @@ def test_there_is_nothing_to_remove_from_where_firebase_is_not_configured():
 
 
 def test_a_deployed_server_with_sign_in_needs_the_service_account():
-    deployed = {"app_env": "staging", "session_secret": "s", "firebase_api_key": "k"}
+    deployed = {
+        "app_env": "staging",
+        "session_secret": "s",
+        "turnstile_secret": "w",
+        "firebase_api_key": "k",
+    }
 
     with pytest.raises(ValueError, match="FIREBASE_SERVICE_ACCOUNT"):
         Settings(_env_file=None, **deployed)
     assert Settings(_env_file=None, firebase_service_account=KEY, **deployed)
-    assert Settings(_env_file=None, app_env="staging", session_secret="s")
+    assert Settings(
+        _env_file=None, app_env="staging", session_secret="s", turnstile_secret="w"
+    )
 
 
 async def test_a_token_google_no_longer_accepts_is_made_again_once():

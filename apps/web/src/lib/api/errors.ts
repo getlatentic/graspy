@@ -11,6 +11,12 @@ export const isRetryableStatus = (status: number): boolean =>
  * trying again at once cannot pass, so it is not retried. */
 export const TRY_LIMIT = "try_limit";
 
+/** What the server answers (403) a visitor whose browser has not passed the Turnstile check, or
+ * whose token it refused. The check passes only in a browser that can run it, so a later try with a
+ * new token is the retry, not the same request. */
+export const CHALLENGE_REQUIRED = "challenge_required";
+export const CHALLENGE_FAILED = "challenge_failed";
+
 /** An answer the app cannot read: no body, or not what the protocol promises. Taken as a
  * gateway's bad answer, which a later try may not repeat. */
 export const UNREADABLE_ANSWER = 502;
