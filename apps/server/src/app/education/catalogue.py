@@ -80,6 +80,39 @@ def systems() -> dict[str, System]:
     return {system.id: system for system in read if system is not None}
 
 
+@cache
+def countries() -> frozenset[str]:
+    """The ISO codes of the countries the catalogue has a school system for."""
+    return frozenset(system.country for system in systems().values())
+
+
+# Where the main system's own name is a part of the country.
+COUNTRY_NAMES = {"GB": "United Kingdom"}
+
+
+def country_name(code: str) -> str:
+    """The country's English name as the catalogue writes it, or its code where it has none."""
+    return COUNTRY_NAMES.get(code) or of_country(code)[0].name.en
+
+
+@cache
+def _codes_by_name() -> dict[str, str]:
+    """By name, in any case. Two countries with one name: the first code, in order, wins."""
+    named: dict[str, str] = {}
+    for code in sorted(countries()):
+        named.setdefault(country_name(code).casefold(), code)
+    return named
+
+
+def code_named(name: str) -> str | None:
+    """The catalogue country a name says, in any case, or its code as the catalogue writes it, in
+    capitals ("SK"; "in" and "no" are words, not countries)."""
+    said = " ".join(name.split())
+    if said in countries():
+        return said
+    return _codes_by_name().get(said.casefold())
+
+
 def of_country(country: str) -> list[System]:
     """Its main one first; numbered grades for a country the catalogue does
     not cover."""

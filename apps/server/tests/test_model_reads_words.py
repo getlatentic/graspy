@@ -75,7 +75,13 @@ CARD_CALLS = {
         "give_choice",
         {"question": "Which class are you in?", "options": ["JSS 1", "JSS 2"]},
     ),
+    "ui://graspy/details": ("ask_about_you", {}),
 }
+
+
+# The form is asked only of a learner with no class.
+NEW_LEARNER = LearnerContext(emptyPlan=True)
+LEARNER_OF = {"ui://graspy/details": NEW_LEARNER}
 
 
 def test_every_kind_of_card_has_a_scripted_call():
@@ -96,7 +102,7 @@ async def test_the_model_reads_none_of_the_data_of_a_card(kind):
         items = [
             item
             async for item in Tutor(InMemoryConversationStore()).stream(
-                "c1", "Give me something to try"
+                "c1", "Give me something to try", LEARNER_OF.get(kind)
             )
         ]
 
@@ -115,9 +121,8 @@ async def test_the_model_reads_none_of_the_data_of_a_card(kind):
 async def test_a_tool_that_makes_a_card_returns_the_model_only_a_done_sentence(kind):
     name, arguments = CARD_CALLS[kind]
     outputs = TurnOutputs()
-    tool = next(
-        t for t in tools_for(Turn(LearnerContext(), ""), outputs) if t.__name__ == name
-    )
+    learner = LEARNER_OF.get(kind, LearnerContext())
+    tool = next(t for t in tools_for(Turn(learner, ""), outputs) if t.__name__ == name)
 
     told = await dspy.Tool(tool).acall(**arguments)
 
@@ -155,7 +160,7 @@ REFUSALS = [
     ("change_subjects", {"add": ["Physics"]}, MANY, True),
     ("rebuild_plan", {}, NOTHING_SENT, True),
     ("give_choice", {"question": "Which?", "options": ["A"]}, PLAN, True),
-    ("ask_class", {"question": "Which class?"}, NOTHING_SENT, True),
+    ("ask_about_you", {}, PLAN, True),
     ("set_details", {}, PLAN, True),
     ("give_practice", {"instruction": "x", "questions": []}, PLAN, True),
     (

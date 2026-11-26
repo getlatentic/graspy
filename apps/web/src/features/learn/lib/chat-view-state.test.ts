@@ -132,6 +132,12 @@ describe("planChangeFor", () => {
     expect(planChangeFor(answer({ card: CHOICE }), waiting)).toBeNull();
   });
 
+  it("shows none while the About you form waits for its answer", () => {
+    const form: TutorCard = { ...CARD, resourceUri: "ui://graspy/details" };
+
+    expect(planChangeFor(answer({ card: form }), waiting)).toBeNull();
+  });
+
   it("shows it below a card of questions, which is not a decision to make", () => {
     expect(planChangeFor(answer({ card: CARD }), waiting)).toBe(REBUILD);
   });

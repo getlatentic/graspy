@@ -13,7 +13,10 @@ from ..wire import Wire
 PRACTICE_UI = "ui://graspy/practice"
 PASSAGE_UI = "ui://graspy/passage"
 CHOICE_UI = "ui://graspy/choice"
+DETAILS_UI = "ui://graspy/details"
 DESCRIBED_PASSAGE = 600
+# How the model's history names the form, so a turn can tell the learner was asked.
+FORM_DESCRIPTION = "A form asking the learner their"
 
 
 class Question(Wire):
@@ -78,6 +81,25 @@ class Choice(Wire):
         return "\n".join([self.question, *options])
 
 
+class AboutYou(Wire):
+    """The form that asks where a learner goes to school. Every country's classes ship with it,
+    so choosing another country re-lists them without a call to the server: the lists a country
+    can have are few (``class_lists``), and ``class_list_of`` says which one each country has."""
+
+    # The country's ISO code the form starts on; the learner confirms or changes it.
+    country: str | None = None
+    countries: list[str]
+    # Each country's English name, as the catalogue writes it: what the form shows and what is saved.
+    names: dict[str, str]
+    class_lists: list[list[str]]
+    class_list_of: dict[str, int]
+    # The classes in a list that are levels after school, which ask for a course.
+    after_school: list[str]
+
+    def describe(self) -> str:
+        return f"{FORM_DESCRIPTION} country and class."
+
+
 class TextContent(Wire):
     type: Literal["text"] = "text"
     text: str
@@ -108,6 +130,12 @@ class PassageResult(Wire):
 class ChoiceResult(Wire):
     content: list[TextContent]
     structured_content: Choice
+    meta: ResultMeta = Field(alias="_meta")
+
+
+class DetailsResult(Wire):
+    content: list[TextContent]
+    structured_content: AboutYou
     meta: ResultMeta = Field(alias="_meta")
 
 
@@ -144,9 +172,23 @@ class ChoiceCard(Wire):
         return self.tool_result.structured_content.describe()
 
 
+class DetailsCard(Wire):
+    resource_uri: Literal["ui://graspy/details"] = DETAILS_UI
+    tool_name: Literal["ask_about_you"] = "ask_about_you"
+    tool_input: dict[str, Any]
+    tool_result: DetailsResult
+
+    def describe(self) -> str:
+        return self.tool_result.structured_content.describe()
+
+
 Card = Annotated[
-    PracticeCard | PassageCard | ChoiceCard, Field(discriminator="resource_uri")
+    PracticeCard | PassageCard | ChoiceCard | DetailsCard,
+    Field(discriminator="resource_uri"),
 ]
+
+# Cards that ask the learner something to answer, and are never shown beside an offer.
+ASKING = (ChoiceCard, DetailsCard)
 
 
 def placed(card: Card, where: Where) -> Card:

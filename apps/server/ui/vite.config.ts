@@ -66,6 +66,7 @@ export default defineConfig({
         "views/practice.html",
         "views/passage.html",
         "views/choice.html",
+        "views/details.html",
         "views/lesson.html",
       ],
     },

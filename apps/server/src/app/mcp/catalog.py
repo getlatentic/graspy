@@ -16,7 +16,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError, create_model
 
 from ..agent.app_tools import APP_TOOLS
-from ..agent.cards import CHOICE_UI, PASSAGE_UI, PRACTICE_UI
+from ..agent.cards import CHOICE_UI, DETAILS_UI, PASSAGE_UI, PRACTICE_UI
 from ..agent.context import LearnerContext
 from ..agent.reply import Outcome
 from ..agent.toolkit import TOOLS, Turn
@@ -193,7 +193,7 @@ def tools() -> dict[str, McpTool]:
     offered = [
         _model_tool(spec.name, spec.build(Turn(LearnerContext(), "")), spec.ui)
         for spec in TOOLS
-        if spec.ui is not None
+        if spec.ui is not None and spec.listed
     ]
     offered += [
         _app_tool(tool) for tool in (*APP_TOOLS.values(), *LESSON_TOOLS, *LEARNER_TOOLS)
@@ -232,6 +232,13 @@ RESOURCES: dict[str, UiResource] = {
             title="Choice",
             description="A short question with a few answers to tap, or a way back to typing.",
             view="choice.html",
+        ),
+        UiResource(
+            uri=DETAILS_UI,
+            name="details",
+            title="About you",
+            description="A short form asking a learner their country and class.",
+            view="details.html",
         ),
         UiResource(
             uri=LESSON_UI,

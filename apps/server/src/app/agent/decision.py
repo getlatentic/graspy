@@ -6,7 +6,7 @@ could not be shown is told, so the model asks again in its next turn."""
 
 from __future__ import annotations
 
-from .cards import Card, ChoiceCard
+from .cards import ASKING, Card, DetailsCard
 from .refusal import refusal
 from .reply import Action, OpenSubject, OpenTopic, Outcome, ProposePath, RebuildPlan
 
@@ -25,7 +25,11 @@ WITHDRAWN = (
 
 
 def asks_choice(cards: list[Card]) -> bool:
-    return any(isinstance(card, ChoiceCard) for card in cards)
+    return any(isinstance(card, ASKING) for card in cards)
+
+
+def _asks_form(cards: list[Card]) -> bool:
+    return any(isinstance(card, DetailsCard) for card in cards)
 
 
 def offers(result: Outcome) -> bool:
@@ -36,24 +40,24 @@ def offers(result: Outcome) -> bool:
 
 
 def refused_beside_choice(cards: list[Card], result: Outcome) -> dict | None:
-    """The refusal for an offer made after a question was asked."""
-    if (
-        asks_choice(cards)
-        and offers(result)
-        and not isinstance(result.card, ChoiceCard)
-    ):
-        return refusal(WAITING)
-    return None
+    """The refusal for an offer made after a question was asked. The form is the
+    whole of its turn: not even a second question joins it."""
+    if not (asks_choice(cards) and offers(result)):
+        return None
+    joins = isinstance(result.card, ASKING) and not _asks_form(cards)
+    return None if joins else refusal(WAITING)
 
 
 def withdraw_offers(
     actions: list[Action], cards: list[Card]
 ) -> tuple[bool, list[Card]]:
     """Takes the offers out of the turn's actions and cards, in place, once a
-    question is asked. Returns whether any was taken, and the cards among them."""
-    taken = [card for card in cards if not isinstance(card, ChoiceCard)]
+    question is asked. Returns whether any was taken, and the cards among them.
+    A form takes the place of every other question too."""
+    stay = DetailsCard if _asks_form(cards) else ASKING
+    taken = [card for card in cards if not isinstance(card, stay)]
     kept = [action for action in actions if not isinstance(action, OFFERS)]
     withdrew = bool(taken) or len(kept) != len(actions)
-    cards[:] = [card for card in cards if isinstance(card, ChoiceCard)]
+    cards[:] = [card for card in cards if isinstance(card, stay)]
     actions[:] = kept
     return withdrew, taken

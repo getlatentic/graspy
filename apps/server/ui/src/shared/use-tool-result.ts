@@ -12,6 +12,7 @@ export interface Shown<C> {
   app: App;
   result: ToolResult<C>;
   words: Words;
+  locale: string;
 }
 
 export function useToolResult<C>(
@@ -63,5 +64,7 @@ export function useToolResult<C>(
     if (error) console.error(`${name} could not reach its host:`, error);
   }, [error, name]);
 
-  return app && result ? { app, result, words: wordsFor(locale) } : null;
+  return app && result
+    ? { app, result, words: wordsFor(locale), locale }
+    : null;
 }

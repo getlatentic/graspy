@@ -1,5 +1,4 @@
 import { getCurriculum, saveCurriculum } from "@/lib/curriculum-db";
-import { detectLocale } from "@/lib/locale-detector";
 import { planDetails } from "@/lib/plan-details";
 import { syncPlan } from "@/lib/plan-sync";
 import {
@@ -8,11 +7,12 @@ import {
   type LearnerDetails,
 } from "@/lib/user-storage";
 
-/** Where the device guesses the learner is, and English, the language lessons are in; the
- * class is asked for in the chat, when a subject needs it. */
+/** English, the language lessons are in, and no country or class: the chat asks both on one
+ * form, and keeps them once the learner has answered. A country the device guessed is only
+ * where the form starts (tutor-context.ts), never kept as if the learner had said it. */
 function startingDetails(): LearnerDetails {
   return {
-    country: detectLocale().country ?? "",
+    country: "",
     language: "en",
     system: "",
     level: "",
@@ -39,8 +39,10 @@ async function makeReady(): Promise<boolean> {
   if (!(await getCurriculum())) {
     const kept = getUserProfile();
     if (kept?.gradeLevel) return false;
-    const learner = kept ?? startingDetails();
-    if (!kept) saveUserProfile({ ...learner, preferredSubjects: [] });
+    // A profile with no class was made here, and its country is a guess an earlier open kept.
+    const learner = { ...(kept ?? startingDetails()), country: "" };
+    if (!kept || kept.country)
+      saveUserProfile({ ...learner, preferredSubjects: [] });
     await saveCurriculum({
       ...planDetails(learner),
       subjects: [],

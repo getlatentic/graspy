@@ -14,10 +14,21 @@ from ..domains.lesson.maths import reply_text
 from ..education.stage import stage_of
 from ..learner.answers import PracticeAnswer
 from ..learner.notes import NOTHING_YET
+from .about_you import (
+    DEFAULT_LINE,
+    answer_in,
+    form_card,
+    form_due,
+    forms_shown,
+    lacks_class,
+    learner_with,
+    surviving,
+)
 from .answer_gate import AnswerGate, verdicts_in
 from .app_tools import AppCall, describe_calls
-from .cards import Card
+from .cards import Card, DetailsCard
 from .context import LearnerContext
+from .decision import withdraw_offers
 from .labels import DATA_ONLY
 from .memory import ConversationStore, Exchange
 from .native_react import NativeReAct
@@ -103,7 +114,7 @@ before anything that clears progress, and shows a path before adding it.
 When the app is asking the learner, tell them to look below.
 
 One decision at a time. When a message asks the learner something with a
-card (ask_class or give_choice), the card is the whole of it: write one short
+card (ask_about_you or give_choice), the card is the whole of it: write one short
 line, offer nothing else with it (no course, subject, lesson or practice) and
 never say anything is ready. The app shows the card alone and refuses what you
 offered with it. Offer it in your next message, once they have answered, and
@@ -113,14 +124,20 @@ A learner with no subjects yet is asked by the app what they would like to
 learn. What they name is their goal. Lessons are in English, so never offer
 another language. Every course and subject is written for the learner's
 class, so nothing is offered before the class is saved, however they describe
-themselves: "for students" is not a class, so ask it all the same. Find it one step per message and never their age. If their country is
-known, confirm it with give_choice (its name, and "Another country"); when it
-is not, ask in words. Then ask_class for their class, with one short line that
-names no course. When they tell you, save the country and class with
-set_details, with the course for Undergraduate or Graduate, and in that same
-message take up what they asked for as above: propose_path for a course,
-change_subjects for a school subject, so it follows their class. Skip whatever
-the learner line already gives. When they must pick between a few clear
+themselves: "for students" is not a class. When the class is not known, call
+ask_about_you straight away, with one short line that names no course and never
+says anything is ready: the form asks their country and class together, and the
+learner confirms the country it starts on. Never ask either in words, and never
+their age, until the conversation shows they ignored the form: then ask once in
+words, and take what they say. Their answer arrives as "Country: ... Class: ...", which the app saves
+for them: in that same message take up what they asked for as above, propose_path
+for a course or change_subjects for a school subject, so it follows their class.
+When they answer Undergraduate or Graduate with no course the app could read,
+it saves their country only: ask what they study in words, then save it with
+set_details. When they instead tell you their class in words, save it with
+set_details, with the country and, for Undergraduate or Graduate, the course;
+it is refused for a country or class the app does not have, and then you ask
+which in words. When they must pick between a few clear
 alternatives, ask with give_choice rather than listing them in your answer, and
 wait for their tap.
 
@@ -192,6 +209,8 @@ class _Answered:
     prediction: dspy.Prediction
     outputs: TurnOutputs
     answer: str
+    # Ended by the safety check, which nothing else of the turn is added to.
+    stopped: bool = False
 
 
 class Tutor:
@@ -220,7 +239,15 @@ class Tutor:
         failed, kept as exchanges with no answer. ``turn`` names the turn: a store that keeps an exchange
         once per turn is not made to keep it twice by a turn run again."""
         context = context or LearnerContext()
-        earlier = await recalled(self._memory, conversation_id)
+        form_answer = answer_in(message, context)
+        if form_answer:
+            context = learner_with(context, form_answer)
+        # Without this turn's own exchange from a run before it was run again: the model and the
+        # form's count read the conversation as it was when the turn began.
+        earlier = await recalled(self._memory, conversation_id, turn)
+        context = context.model_copy(
+            update={"forms_due": form_due(list(earlier.exchanges))}
+        )
         history = list(earlier.exchanges)
         for text in unanswered or []:
             missed_one = Exchange(message=text, answer=NO_ANSWER)
@@ -246,7 +273,8 @@ class Tutor:
             earlier.exchanges[-1].get("app", "") if earlier.exchanges else ""
         )
         said = said_by_learner(context, inputs, earlier.exchanges, missed)
-        async for item in _answered(context, inputs, verdicts, said, active):
+        saved = [form_answer] if form_answer else []
+        async for item in _answered(context, inputs, verdicts, said, active, saved):
             if isinstance(item, _Answered):
                 answered = item
             else:
@@ -254,10 +282,25 @@ class Tutor:
         answer = answered.answer
         # Of two opens, or two cards, in one turn, the last counts.
         cards = answered.outputs.cards[-1:]
+        if (
+            not answered.stopped
+            and context.forms_due
+            and lacks_class(context, cards, answered.outputs.actions)
+        ):
+            cards = [form_card(context)]
+            # The form is the whole of its turn: whatever else was accepted is withdrawn.
+            withdraw_offers(answered.outputs.actions, cards)
+            answer = answer.strip() or DEFAULT_LINE
+        forms = (
+            forms_shown(list(earlier.exchanges))
+            + any(isinstance(card, DetailsCard) for card in cards)
+            if context.needs_class()
+            else 0
+        )
         exchanges = [
             *missed,
             stamped(
-                remembered(message, answer, calls, cards),
+                remembered(message, answer, calls, cards, forms),
                 history,
                 context.topic,
                 answered.outputs.skills,
@@ -288,6 +331,7 @@ async def _answered(
     verdicts: tuple[bool, ...],
     said: Said,
     active: tuple[str, ...],
+    saved: list[Action],
 ) -> AsyncIterator[
     AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | SkillLoaded | _Answered
 ]:
@@ -295,7 +339,9 @@ async def _answered(
     some sampling."""
     for again in (False, True):
         try:
-            async for item in _attempt(context, inputs, verdicts, said, active, again):
+            async for item in _attempt(
+                context, inputs, verdicts, said, active, saved, again
+            ):
                 yield item
             return
         except (Runaway, AdapterParseError) as error:
@@ -311,10 +357,11 @@ async def _attempt(
     verdicts: tuple[bool, ...],
     said: Said,
     active: tuple[str, ...],
+    saved: list[Action],
     again: bool,
 ) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | SkillLoaded | _Answered]:
-    """Closing it stops the model."""
-    outputs = TurnOutputs()
+    """Closing it stops the model. ``saved`` are the actions the learner's own answer has made."""
+    outputs = TurnOutputs(actions=list(saved))
     agent = _streamed_agent(Turn(context, inputs["message"], active), outputs, again)
     watch = RunawayWatch()
     gate = AnswerGate(outputs, verdicts)
@@ -337,7 +384,7 @@ async def _attempt(
                     yield AnswerDelta(await screen.finish())
                     _log_stopped(gate, screen)
                     # What the model goes on to write, call or suggest is not used.
-                    yield _stopped_answer(screen)
+                    yield _stopped_answer(screen, saved)
                     return
             elif isinstance(item, (ToolActivity, ToolFinished)):
                 yield item
@@ -349,7 +396,7 @@ async def _attempt(
                     yield AnswerDelta(sent)
                 _log_stopped(gate, screen)
                 yield (
-                    _stopped_answer(screen)
+                    _stopped_answer(screen, saved)
                     if screen.reason
                     else _Answered(item, outputs, screen.answer())
                 )
@@ -366,10 +413,14 @@ async def _attempt(
         raise RuntimeError("The tutor turn ended without an answer")
 
 
-def _stopped_answer(screen: SafetyScreen) -> _Answered:
-    """What the model goes on to write, call or suggest is not used."""
+def _stopped_answer(screen: SafetyScreen, saved: list[Action]) -> _Answered:
+    """What the model goes on to write, call or suggest is not used; what the learner's own answer
+    saved is, so far as it is safe to keep."""
     return _Answered(
-        dspy.Prediction(answer="", follow_ups=[]), TurnOutputs(), screen.answer()
+        dspy.Prediction(answer="", follow_ups=[]),
+        TurnOutputs(actions=surviving(saved)),
+        screen.answer(),
+        stopped=True,
     )
 
 
@@ -458,8 +509,11 @@ def remembered(
     answer: str,
     calls: list[AppCall] | None,
     cards: list[Card],
+    forms: int = 0,
 ) -> Exchange:
     exchange = Exchange(message=message, answer=answer)
+    if forms:
+        exchange["forms"] = forms
     if calls:
         exchange["app"] = describe_calls(calls)
     if cards:

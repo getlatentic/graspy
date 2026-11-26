@@ -29,6 +29,10 @@ class Exchange(TypedDict):
     # loaded, and the topic they are for: the next turn carries them on.
     skills: NotRequired[dict[str, int]]
     topic: NotRequired[str]
+    # How many About you forms the learner has been shown and left unanswered, counted up to this
+    # exchange. It rides on every exchange from the first form, so it survives the oldest being
+    # trimmed or folded away.
+    forms: NotRequired[int]
 
 
 @dataclass(frozen=True)
@@ -38,7 +42,12 @@ class Conversation:
 
 
 class ConversationStore(Protocol):
-    async def load(self, conversation_id: str) -> Conversation: ...
+    async def load(
+        self, conversation_id: str, excluding_turn: str | None = None
+    ) -> Conversation:
+        """`excluding_turn` leaves out the exchange that turn kept, in a store that knows its turns
+        (the others ignore it): a turn run again is not made to read its own earlier run."""
+        ...
 
     async def append(
         self, conversation_id: str, exchange: Exchange, turn: str | None = None
@@ -59,14 +68,16 @@ class InMemoryConversationStore:
     def __init__(self) -> None:
         self._stored: dict[str, str] = {}
 
-    async def load(self, conversation_id: str) -> Conversation:
-        return parsed(self._stored.get(conversation_id))
+    async def load(
+        self, conversation_id: str, excluding_turn: str | None = None
+    ) -> Conversation:
+        return parsed(self._stored.get(conversation_id), excluding_turn)
 
     async def append(
         self, conversation_id: str, exchange: Exchange, turn: str | None = None
     ) -> None:
         self._stored[conversation_id] = appended(
-            self._stored.get(conversation_id), json.dumps(exchange)
+            self._stored.get(conversation_id), json.dumps(_with_turn(exchange, turn))
         )
 
     async def fold(self, conversation_id: str, summary: str, dropped: int) -> None:
@@ -85,13 +96,19 @@ class DurableObjectConversationStore:
     def __init__(self, namespace: Any) -> None:
         self._namespace = namespace
 
-    async def load(self, conversation_id: str) -> Conversation:
-        return parsed(await self._namespace.getByName(conversation_id).load())
+    async def load(
+        self, conversation_id: str, excluding_turn: str | None = None
+    ) -> Conversation:
+        return parsed(
+            await self._namespace.getByName(conversation_id).load(), excluding_turn
+        )
 
     async def append(
         self, conversation_id: str, exchange: Exchange, turn: str | None = None
     ) -> None:
-        await self._namespace.getByName(conversation_id).append(json.dumps(exchange))
+        await self._namespace.getByName(conversation_id).append(
+            json.dumps(_with_turn(exchange, turn))
+        )
 
     async def fold(self, conversation_id: str, summary: str, dropped: int) -> None:
         await self._namespace.getByName(conversation_id).fold(summary, dropped)
@@ -108,14 +125,33 @@ def _stored(stored: str | None) -> dict:
     return value
 
 
-def parsed(stored: str | None) -> Conversation:
+def _with_turn(exchange: Exchange, turn: str | None) -> dict:
+    """What a store that keeps turn ids writes: the exchange with its turn, which `parsed` takes
+    out again."""
+    return {**exchange, "turn": turn} if turn else dict(exchange)
+
+
+def parsed(stored: str | None, excluding_turn: str | None = None) -> Conversation:
+    """The conversation as stored. Each exchange's turn id is not part of it; the one of
+    `excluding_turn` is left out, so a turn run again does not read its own earlier run."""
     value = _stored(stored)
-    return Conversation(value["summary"], tuple(value["exchanges"]))
+    kept = [
+        {k: v for k, v in exchange.items() if k != "turn"}
+        for exchange in value["exchanges"]
+        if excluding_turn is None or exchange.get("turn") != excluding_turn
+    ]
+    return Conversation(value["summary"], tuple(kept))
 
 
 def appended(stored: str | None, exchange_json: str) -> str:
+    """The exchange added, unless one of its turn is there already: a turn run again does not
+    keep its exchange twice."""
     value = _stored(stored)
-    exchanges = [*value["exchanges"], json.loads(exchange_json)][-MAX_STORED:]
+    exchange = json.loads(exchange_json)
+    turn = exchange.get("turn")
+    if turn and any(kept.get("turn") == turn for kept in value["exchanges"]):
+        return json.dumps(value)
+    exchanges = [*value["exchanges"], exchange][-MAX_STORED:]
     return json.dumps({"summary": value["summary"], "exchanges": exchanges})
 
 

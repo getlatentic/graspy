@@ -102,6 +102,9 @@ export interface LearnerContext {
   country?: string;
   /** The ISO code, which finds the country's classes. */
   countryCode?: string;
+  /** Where the device guesses the learner is, sent while they have not said their country: the
+   * server starts its form on its own idea of it, and on this only when it has none. */
+  deviceCountry?: string;
   /** The learner's plan has no subjects yet, as one made for the try link's chat. */
   emptyPlan?: boolean;
   language?: string;

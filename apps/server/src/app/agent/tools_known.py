@@ -13,7 +13,7 @@ READ_ONLY_TOOLS = frozenset(
         "give_practice",
         "give_passage",
         "give_choice",
-        "ask_class",
+        "ask_about_you",
         "set_details",
         "load_skill",
     }

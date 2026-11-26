@@ -24,7 +24,14 @@ from pathlib import Path
 from typing import get_args
 
 from app.agent.app_tools import PART_KEY, TOOLS_CALL
-from app.agent.cards import Card, ResultMeta
+from app.agent.cards import (
+    AboutYou,
+    Card,
+    DetailsCard,
+    DetailsResult,
+    ResultMeta,
+    TextContent,
+)
 from app.agent.choice import give_choice
 from app.agent.memory import InMemoryConversationStore
 from app.agent.passage import PassageQuestion, give_passage
@@ -146,6 +153,27 @@ CHOICE = give_choice(
     question="Which class are you in?", options=["JSS 1", "JSS 2", "JSS 3"]
 ).card
 
+# The form for two countries, so the file stays small: the real one carries every country's classes.
+ABOUT_YOU = AboutYou(
+    country="NG",
+    countries=["NG", "SK"],
+    names={"NG": "Nigeria", "SK": "Slovakia"},
+    class_lists=[
+        ["JSS 1", "JSS 2", "Undergraduate", "Graduate"],
+        ["Grade 1", "Grade 2", "Undergraduate", "Graduate"],
+    ],
+    class_list_of={"NG": 0, "SK": 1},
+    after_school=["Undergraduate", "Graduate"],
+)
+DETAILS = DetailsCard(
+    tool_input={},
+    tool_result=DetailsResult(
+        content=[TextContent(text=ABOUT_YOU.describe())],
+        structured_content=ABOUT_YOU,
+        meta=ResultMeta(view_uuid="d1f3a5b7c9e0d2f4a6b8c0e1f3a5b7c9"),
+    ),
+)
+
 EXAMPLE = ReplyData(
     follow_ups=["What is 1/2 as a decimal?"],
     actions=[
@@ -161,12 +189,13 @@ EXAMPLE = ReplyData(
         ChangeSubjects(add=["Physics"], remove=["Basic Science"]),
         RebuildPlan(),
         ProposePath(goal="real analysis"),
-        SetDetails(class_name="JSS 2", country="Nigeria", course=""),
+        SetDetails(class_name="JSS 2", country="Nigeria", course="", country_code="NG"),
     ],
     cards=[
         pinned(PRACTICE, PRACTICE_VIEW),
         pinned(PASSAGE, "9b0c1e2d7f6a5b8e3c4d0a9e7b2c1f4a"),
         pinned(CHOICE, "c2d4e6f8a0b1c3d5e7f9a1b2c4d6e8f0"),
+        pinned(DETAILS, "d1f3a5b7c9e0d2f4a6b8c0e1f3a5b7c9"),
     ],
 )
 
