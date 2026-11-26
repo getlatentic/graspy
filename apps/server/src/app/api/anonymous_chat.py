@@ -5,13 +5,16 @@ hour and by the day, and for all such visitors by the day. Past a limit the chat
 
 The counts are in D1 (migration 0027): the Workers rate-limit binding counts a minute at most, and
 the existing per-minute budget (`AGENT_LIMITER`) already stands in front of the turn. A session is
-cheap to mint (`SESSION_LIMITER` bounds that), so the network and day limits are the ones that hold;
-the session limit stops one page that loops. A network's limits are those of a school or a home
-sharing an address, not of one child."""
+cheap to mint, so its limit is soft: it stops a page that loops, and the network and day limits are
+the ones that hold. A network's limits are those of a school or a home sharing an address, not of
+one child. The network is the address Cloudflare's edge puts in `CF-Connecting-IP`, and nothing a
+client can set: without it a turn is counted for its session and in all only, so one visitor with no
+address is never taken for all of them."""
 
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -20,7 +23,7 @@ from fastapi import HTTPException
 
 from ..learner.time import now_ms
 from ..security.guard import Session
-from ..security.rate_limit import client_key, source_of
+from ..security.rate_limit import source_of
 from ..security.session import TOKEN_TTL_SECONDS
 
 logger = logging.getLogger(__name__)
@@ -38,11 +41,12 @@ DAY_MS = 24 * HOUR_MS
 # A slow store must not hold the turn it is counting.
 COUNT_TIMEOUT_SECONDS = 3
 
-COUNT_SQL = (
-    "INSERT INTO anonymous_chat_use (bucket, turns, expires_at) VALUES (?1, 1, ?2) "
-    "ON CONFLICT (bucket) DO UPDATE SET turns = turns + 1 RETURNING turns"
-)
+COUNTS_SQL = "SELECT bucket, turns FROM anonymous_chat_use WHERE bucket IN ({marks})"
 PRUNE_SQL = "DELETE FROM anonymous_chat_use WHERE expires_at <= ?1"
+ADD_SQL = (
+    "INSERT INTO anonymous_chat_use (bucket, turns, expires_at) VALUES (?1, 1, ?2) "
+    "ON CONFLICT (bucket) DO UPDATE SET turns = turns + 1"
+)
 
 
 @dataclass(frozen=True)
@@ -52,9 +56,20 @@ class Counter:
     expires_at: int
 
 
-def counters(session: Session, source: str, now: int) -> list[Counter]:
-    """The counts one turn adds to, the narrowest first: a turn over a narrow limit is not added to
-    the wider counts, so one visitor cannot spend everyone's day."""
+def edge_network(address: str | None) -> str | None:
+    """The network of the address the edge reported (an IPv4 address, an IPv6 /64), or None when
+    there is none or it is not an address."""
+    if not address:
+        return None
+    try:
+        ipaddress.ip_address(address)
+    except ValueError:
+        return None
+    return source_of(address)
+
+
+def counters(session: Session, network: str | None, now: int) -> list[Counter]:
+    """The counts one turn adds to."""
     hour, day = now // HOUR_MS, now // DAY_MS
     found = []
     if session.jti:
@@ -63,17 +78,20 @@ def counters(session: Session, source: str, now: int) -> list[Counter]:
                 f"session:{session.jti}", SESSION_TURNS, now + TOKEN_TTL_SECONDS * 1000
             )
         )
-    found += [
-        Counter(
-            f"network-hour:{source}:{hour}",
-            NETWORK_TURNS_PER_HOUR,
-            (hour + 1) * HOUR_MS,
-        ),
-        Counter(
-            f"network-day:{source}:{day}", NETWORK_TURNS_PER_DAY, (day + 1) * DAY_MS
-        ),
-        Counter(f"all-day:{day}", TURNS_PER_DAY, (day + 1) * DAY_MS),
-    ]
+    if network:
+        found += [
+            Counter(
+                f"network-hour:{network}:{hour}",
+                NETWORK_TURNS_PER_HOUR,
+                (hour + 1) * HOUR_MS,
+            ),
+            Counter(
+                f"network-day:{network}:{day}",
+                NETWORK_TURNS_PER_DAY,
+                (day + 1) * DAY_MS,
+            ),
+        ]
+    found.append(Counter(f"all-day:{day}", TURNS_PER_DAY, (day + 1) * DAY_MS))
     return found
 
 
@@ -81,35 +99,46 @@ def _refusal(status: int, code: str, error: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"error": error, "code": code})
 
 
-async def _turns_of(database: Any, counter: Counter) -> int:
-    statement = database.prepare(COUNT_SQL).bind(counter.bucket, counter.expires_at)
-    row = await statement.first()
-    row = row.to_py() if hasattr(row, "to_py") else row
-    return int(row["turns"])
+def _rows(result: Any) -> list[dict]:
+    result = result.to_py() if hasattr(result, "to_py") else result
+    return [dict(row) for row in result["results"]]
 
 
-async def _within_limits(
-    database: Any, session: Session, source: str, now: int
-) -> bool:
-    await database.prepare(PRUNE_SQL).bind(now).run()
-    for counter in counters(session, source, now):
-        if await _turns_of(database, counter) > counter.limit:
-            return False
+async def _count(database: Any, found: list[Counter], now: int) -> bool:
+    """Adds the turn to every count, or to none when any is at its limit: a turn refused by a wide
+    count does not spend a narrow one. The counts are read in one batch and added to in another, so
+    turns that race may pass a limit by a few."""
+    marks = ", ".join(f"?{n + 1}" for n in range(len(found)))
+    read = database.prepare(COUNTS_SQL.format(marks=marks)).bind(
+        *(counter.bucket for counter in found)
+    )
+    results = await database.batch([database.prepare(PRUNE_SQL).bind(now), read])
+    held = {row["bucket"]: row["turns"] for row in _rows(results[1])}
+    if any(held.get(counter.bucket, 0) >= counter.limit for counter in found):
+        return False
+    await database.batch(
+        [
+            database.prepare(ADD_SQL).bind(counter.bucket, counter.expires_at)
+            for counter in found
+        ]
+    )
     return True
 
 
 async def anonymous_turn_refusal(
-    app: Any, session: Session, scope: Any
+    database: Any, session: Session, address: str | None
 ) -> HTTPException | None:
     """None for a signed-in account's session, which these limits are not for, and for an
-    anonymous one still within them; else the refusal to send. A count that cannot be made
-    refuses: an open chat that cannot be counted is an open bill."""
+    anonymous one still within them (the turn is then counted); else the refusal to send. A count
+    that cannot be made refuses: an open chat that cannot be counted is an open bill."""
     if session.account:
         return None
-    source = source_of(client_key(scope))
+    now = now_ms()
     try:
         async with asyncio.timeout(COUNT_TIMEOUT_SECONDS):
-            within = await _within_limits(app.state.tv_db, session, source, now_ms())
+            within = await _count(
+                database, counters(session, edge_network(address), now), now
+            )
     except Exception:
         logger.exception("The anonymous chat's turns could not be counted")
         return _refusal(503, TRY_UNAVAILABLE, "Try again in a moment")

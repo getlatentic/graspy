@@ -125,20 +125,33 @@ def create_app(
     app.routes.append(
         LazyA2ARoutes(
             settings.a2a_path_prefix,
-            lambda: _a2a_routes(settings, tutor, keeping, turns),
+            lambda: _a2a_routes(settings, tutor, keeping, turns, _admit(app)),
         )
     )
     app.routes.extend(mcp_routes())
     return app
 
 
+def _admit(app: FastAPI):
+    """What the A2A tutor asks before it begins a turn: a visitor with no account is limited."""
+
+    def admit(session, address):
+        return anonymous_turn_refusal(app.state.tv_db, session, address)
+
+    return admit
+
+
 def _a2a_routes(
-    settings: Settings, tutor: Tutor, keeping: Keeping, turns: DurableTurns | None
+    settings: Settings,
+    tutor: Tutor,
+    keeping: Keeping,
+    turns: DurableTurns | None,
+    admit,
 ) -> list:
     """The A2A routes, built, and the SDK imported, by the first A2A request."""
     from .agent.a2a import a2a_routes
 
-    return a2a_routes(settings, tutor, keeping, turns)
+    return a2a_routes(settings, tutor, keeping, turns, admit)
 
 
 def _bare_app(settings: Settings) -> FastAPI:
@@ -224,21 +237,14 @@ def _origins(settings: Settings) -> list[str]:
     return origins
 
 
-async def _session_refusal(app: FastAPI, session, scope, settings: Settings):
-    """The tutor chat (A2A) is for an account's learner or a visitor with no account, whose turns
-    are limited; MCP, which carries the lessons' cards, needs only the consent a learner's session
-    already implies."""
+async def _session_refusal(app: FastAPI, session, path: str, settings: Settings):
+    """The tutor chat (A2A) is for an account's learner or a visitor with a visitor session, whose
+    turns are limited where the turn starts; MCP, which carries the lessons' cards, needs only the
+    consent a learner's session already implies."""
     prefix = "/" + settings.a2a_path_prefix.strip("/")
-    path = scope["path"]
     if path == prefix or path.startswith(f"{prefix}/"):
-        return await chat_refusal(app, session) or await _a2a_limit(app, session, scope)
+        return await chat_refusal(app, session)
     return await session_consent_refusal(app, session)
-
-
-async def _a2a_limit(app: FastAPI, session, scope):
-    if scope["method"] != "POST":
-        return None
-    return await anonymous_turn_refusal(app, session, scope)
 
 
 def _add_middleware(
@@ -258,7 +264,7 @@ def _add_middleware(
         prefixes=(settings.a2a_path_prefix, MCP_PATH),
         secret=session_secret,
         open_paths=(PUBLIC_MCP_PATH,),
-        check=lambda session, scope: _session_refusal(app, session, scope, settings),
+        check=lambda session, path: _session_refusal(app, session, path, settings),
     )
     if budgets is not None:
         app.add_middleware(

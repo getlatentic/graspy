@@ -24,8 +24,6 @@ vi.mock("@/lib/device-id", () => ({
   deviceId: () => "0a1b2c3d4e5f60718293a4b5c6d7e8f9",
   fingerprint: async () => null,
 }));
-const syncPlan = vi.fn();
-vi.mock("@/lib/plan-sync", () => ({ syncPlan }));
 vi.mock("@/lib/env", async (original) => ({
   ...(await original<typeof import("@/lib/env")>()),
   FIREBASE_CONFIG: { apiKey: "key" },
@@ -82,8 +80,6 @@ beforeEach(async () => {
   setAccount(null);
   await deleteCurriculum();
   googleIdToken.mockReset();
-  syncPlan.mockReset();
-  syncPlan.mockResolvedValue(null);
 });
 afterEach(() => {
   cleanup();
@@ -193,6 +189,15 @@ describe("/try with no account and no Google sign-in", () => {
     }));
     expect(asked.filter(({ url }) => url.includes("/learner"))).toEqual([]);
     expect(asked.filter(({ body }) => body.includes("deviceId"))).toEqual([]);
+    expect(asked.filter(({ url }) => url.includes("/account"))).toEqual([]);
+    // Anything it does ask is a session for the visitor's id and nothing else.
+    expect(
+      asked.every(
+        ({ url, body }) =>
+          url.endsWith("/session") &&
+          Object.keys(JSON.parse(body)).join() === "visitor",
+      ),
+    ).toBe(true);
   });
 
   it("offers no voice and no recording", async () => {
@@ -205,6 +210,18 @@ describe("/try with no account and no Google sign-in", () => {
 });
 
 describe("/try once someone is signed in", () => {
+  beforeEach(async () => {
+    await saveCurriculum({
+      country: "Nigeria",
+      countryCode: "NG",
+      language: "English",
+      gradeLevel: "JSS 1 (Junior Secondary School), Nigeria, age 12",
+      subjects: [{ name: "Mathematics", slug: "mathematics" }],
+      topics: {},
+      assessment: { nextSubject: null },
+    });
+  });
+
   it("goes to their own chat when it is opened signed in", async () => {
     signedInAs({ id: "ada000000001", name: "Ada" });
 

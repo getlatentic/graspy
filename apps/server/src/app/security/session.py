@@ -67,6 +67,7 @@ def issue(
     parent: bool = False,
     gate: str | None = None,
     tv: str | None = None,
+    visitor: str | None = None,
     hint: str | None = None,
     auth_time: int | None = None,
     now: float | None = None,
@@ -105,6 +106,8 @@ def issue(
         claims["acct"] = account
     if tv:
         claims["tv"] = tv
+    if visitor:
+        claims["vis"] = visitor
     if hint:
         claims["hint"] = hint
     payload = json.dumps(claims, separators=(",", ":")).encode()
@@ -194,6 +197,12 @@ def hint_of(claims: dict) -> str | None:
 
 def tv_of(claims: dict) -> str | None:
     return _text_claim(claims, "tv")
+
+
+def visitor_of(claims: dict) -> str | None:
+    """The random id a visitor with no account holds in their browser (the web's /try): what their
+    chats are bound to, since the session itself is renewed."""
+    return _text_claim(claims, "vis")
 
 
 def account_of(claims: dict) -> str | None:

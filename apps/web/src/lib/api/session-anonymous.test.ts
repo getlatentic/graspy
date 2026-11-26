@@ -46,11 +46,16 @@ beforeEach(() => {
   vi.unstubAllGlobals();
   signedIn = null;
   const store = new Map<string, string>();
+  const local = new Map<string, string>();
   vi.stubGlobal("window", {
     sessionStorage: {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => void store.set(k, v),
       removeItem: (k: string) => void store.delete(k),
+    },
+    localStorage: {
+      getItem: (k: string) => local.get(k) ?? null,
+      setItem: (k: string, v: string) => void local.set(k, v),
     },
     location: { assign: vi.fn() },
   });
@@ -67,7 +72,9 @@ describe("a session held anonymous, as on /try", () => {
     await expect(getSessionToken()).resolves.toBe("nobody");
     await expect(getSessionToken()).resolves.toBe("nobody");
 
-    expect(sentBodies(fetchMock)).toEqual([{}]);
+    expect(sentBodies(fetchMock)).toEqual([
+      { visitor: expect.stringMatching(/^[0-9a-f-]{36}$/) },
+    ]);
   });
 
   it("is not served by the device's own token, which names the device", async () => {
@@ -111,9 +118,61 @@ describe("a session held anonymous, as on /try", () => {
     expect(sentBodies(fetchMock)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ deviceId: DEVICE }),
-        {},
+        { visitor: expect.any(String) },
       ]),
     );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("names the same visitor each time, so their chats are theirs across sessions", async () => {
+    fetchMock.mockResolvedValue(minted("nobody"));
+    const first = await loadSession();
+    first.holdAnonymousSession();
+    await first.getSessionToken();
+    const second = await loadSession();
+    second.holdAnonymousSession();
+    await second.refreshSessionToken();
+
+    const [one, two] = sentBodies(fetchMock);
+    expect(one.visitor).toBe(two.visitor);
+  });
+
+  it("is not kept, nor handed on, when the page is left while the handshake runs", async () => {
+    fetchMock.mockImplementation(
+      async (_url: string, init: { body: string }) => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        return minted(JSON.parse(init.body).visitor ? "nobody" : "device");
+      },
+    );
+    const { getSessionToken, holdAnonymousSession } = await loadSession();
+    const release = holdAnonymousSession();
+    const asked = getSessionToken();
+    release();
+
+    await expect(asked).resolves.toBe("device");
+    await expect(getSessionToken()).resolves.toBe("device");
+  });
+
+  it("does not let a device handshake that ends during a hold replace the anonymous token", async () => {
+    let finishDevice: (value: unknown) => void = () => {};
+    fetchMock.mockImplementation(
+      async (_url: string, init: { body: string }) => {
+        if (JSON.parse(init.body).visitor) return minted("nobody");
+        return new Promise((resolve) => {
+          finishDevice = resolve;
+        });
+      },
+    );
+    const { getSessionToken, holdAnonymousSession } = await loadSession();
+    const device = getSessionToken();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    holdAnonymousSession();
+    await getSessionToken();
+
+    finishDevice(minted("device"));
+    await device;
+
+    await expect(getSessionToken()).resolves.toBe("nobody");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 

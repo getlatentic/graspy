@@ -28,3 +28,9 @@ export const tryRoute: RouteObject = {
     Component: (await import("@/app/try-page")).default,
   }),
 };
+
+/** Where the link was before /try was a page of its own: a chat remembered from then still lands. */
+export const tryMoved: RouteObject = {
+  path: "ask/try",
+  loader: () => redirect(TRY_CHAT),
+};

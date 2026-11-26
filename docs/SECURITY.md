@@ -57,7 +57,7 @@ A refusal is `429` with `Retry-After: 60` and CORS headers, so the browser can r
 
 ### Anonymous chat limits
 
-`/try` lets a visitor with no account chat with the tutor, which spends model credits, so each turn a session with no account starts (`POST /api/chats/{chat}/turns`, and `POST /a2a` when the server keeps no turns) is counted in D1 (`anonymous_chat_use`, migration 0027; the Workers rate-limit bindings count a minute at most). A turn is refused with `429 try_limit` ("Try again later, or sign in to keep going") once any count passes its limit; a signed-in account's turns are never counted. `AGENT_LIMITER` (30 a minute per address) stands in front as before.
+`/try` lets a visitor with no account chat with the tutor, which spends model credits, so each turn a session with no account starts (`POST /api/chats/{chat}/turns`, and `POST /a2a` when the server keeps no turns) is counted in D1 (`anonymous_chat_use`, migration 0027; the Workers rate-limit bindings count a minute at most). A turn is refused with `429 try_limit` ("Try again later, or sign in to keep going") once any count is at its limit; a signed-in account's turns are never counted. A turn is counted once it is valid and its sender may start it (a malformed or empty message, a chat that is not theirs, and a start sent again for the same turn id cost nothing), and over A2A only a message that begins a turn is a turn. Reading, following and stopping are not counted. `AGENT_LIMITER` (30 a minute per address) stands in front as before.
 
 | Count | Limit | Window |
 |---|---|---|
@@ -66,7 +66,11 @@ A refusal is `429` with `Retry-After: 60` and CORS headers, so the browser can r
 | One network | 200 turns | the day (UTC) |
 | All anonymous visitors | 3000 turns | the day (UTC) |
 
-The narrowest count is made first and a turn over it is not added to the wider ones, so one visitor cannot spend everyone's day. A session is cheap to mint (`SESSION_LIMITER` bounds that), so the network and day counts are the ones that hold; the session count stops a page that loops. A school or a home on one address shares its network counts. A count that cannot be made (D1 down or slow) refuses with `503 try_unavailable`: a chat that cannot be counted is an open bill. The limits are constants in `apps/server/src/app/api/anonymous_chat.py`. The provider account's spend cap is still the only absolute ceiling.
+The counts are read in one D1 batch and a turn is added to all of them in a second, or to none when any is at its limit, so a turn refused by the day's count does not spend a visitor's own. Turns that race may pass a limit by a few. Expired counts are deleted by each count, and only admitted turns add rows (at most the day's 3000), so the table does not grow without bound. A session is cheap to mint (`POST /api/session` is bounded by `SESSION_LIMITER`, 20 a minute per address, with or without a body), so **the session count is soft**: it stops a page that loops, and the network and day counts are the ones that hold. A school or a home on one address shares its network counts.
+
+The network is the address in `CF-Connecting-IP`, which Cloudflare's edge sets; `X-Forwarded-For` and every other header are ignored. An IPv6 address counts as its /64. Without a usable `CF-Connecting-IP` (not through the edge, as in local runs) a turn is counted for its session and in all only: fail-closed per session, never as one shared address that would lock everyone out or leave them unlimited.
+
+A visitor's chats are bound to the random id their browser holds (`visitor` in the session, kept in `localStorage`), not to the session, which is renewed. Two visitors who send the same chat id cannot share a chat, and a visitor cannot reach a learner's chat or one with no owner recorded. A device's own session, which holds no visitor id, is refused the chat. A count that cannot be made (D1 down or slow) refuses with `503 try_unavailable`: a chat that cannot be counted is an open bill. The limits are constants in `apps/server/src/app/api/anonymous_chat.py`. The provider account's spend cap is still the only absolute ceiling.
 
 ## Open risks
 

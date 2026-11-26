@@ -19,12 +19,14 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query, Requ
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from ..chatlog import kinds
 from ..security.guard import Session, require_session
-from ..turns.access import chat_learner, may_follow, may_start
+from ..turns.access import chat_learner, chat_owner, may_follow, may_start
 from ..turns.durable import DurableTurns
 from ..turns.frames import read
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
-from .chat_access import ChatSession, StartingSession
+from .anonymous_chat import anonymous_turn_refusal
+from .chat_access import ChatSession
 from .sse import SSE_HEADERS
 
 # A window of reading, after which the client asks again from its cursor: a request that reads the
@@ -94,21 +96,23 @@ def _message(parts: list[dict[str, Any]]) -> str:
 async def start_turn(
     chat: ChatId,
     body: StartTurn,
-    session: StartingSession,
+    session: ChatSession,
     request: Request,
 ) -> StartedTurn:
     turns = _turns(request)
-    learner = chat_learner(session)
-    if not await may_start(turns.log, chat, learner):
+    owner = chat_owner(session)
+    if not await may_start(turns.log, chat, owner):
         raise _not_found()
     job = TurnJob(
         chat=chat,
         turn=body.turn,
-        learner=learner,
+        learner=chat_learner(session),
+        owner=owner,
         message=_message(body.parts),
         parts=body.parts,
         metadata=body.metadata,
     )
+    await _count_if_new(request, session, turns, job)
     try:
         return StartedTurn(turn=body.turn, cursor=await turns.host.start(job))
     except ValueError:
@@ -116,6 +120,20 @@ async def start_turn(
             status_code=422,
             detail={"error": "That message is too large", "code": "turn_too_large"},
         ) from None
+
+
+async def _count_if_new(
+    request: Request, session: Session, turns: DurableTurns, job: TurnJob
+) -> None:
+    """A visitor's turn is counted once it is valid and theirs to start; a start sent again for a
+    turn the chat holds is not a new turn."""
+    if await turns.log.once_seq(job.chat, kinds.TURN_STARTED, job.turn) is not None:
+        return
+    refusal = await anonymous_turn_refusal(
+        request.app.state.tv_db, session, request.headers.get("cf-connecting-ip")
+    )
+    if refusal is not None:
+        raise refusal
 
 
 def _event(frame: dict[str, Any]) -> str:
@@ -146,7 +164,7 @@ async def turn_events(
 ) -> StreamingResponse:
     """The frames after the cursor: `Last-Event-ID`, which a reconnecting client sends, or `after`."""
     turns = _turns(request)
-    if not await may_follow(turns.log, chat, chat_learner(session)):
+    if not await may_follow(turns.log, chat, chat_owner(session)):
         raise _not_found()
     cursor = last_event_id if last_event_id is not None else after or 0
     return StreamingResponse(
@@ -165,6 +183,6 @@ async def stop_turn(
     request: Request,
 ) -> None:
     turns = _turns(request)
-    if not await may_follow(turns.log, chat, chat_learner(session)):
+    if not await may_follow(turns.log, chat, chat_owner(session)):
         raise _not_found()
     await turns.host.stop(chat, turn)

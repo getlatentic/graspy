@@ -51,7 +51,8 @@ SECRET = "a2a-test-secret"
 DEVICE = "a2a0device0000000000000000000001"
 
 
-SESSION = {"Authorization": f"Bearer {issue(SECRET).token}"}
+VISITOR = "a2a-visitor-0000000001"
+SESSION = {"Authorization": f"Bearer {issue(SECRET, visitor=VISITOR).token}"}
 
 
 async def never_run(_job, _save):
@@ -133,8 +134,14 @@ async def turn(
     data: dict | None = None,
     device: str | None = None,
 ) -> dict:
-    # A turn is kept under a learner only for a signed-in account's session.
-    token = issue(SECRET, learner=device, account=device and "uid123").token
+    # A turn is kept under a learner only for a signed-in account's session; without one it is a
+    # visitor's.
+    token = issue(
+        SECRET,
+        learner=device,
+        account=device and "uid123",
+        visitor=None if device else VISITOR,
+    ).token
     http = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url=BASE,

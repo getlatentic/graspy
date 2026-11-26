@@ -48,6 +48,10 @@ describe("/try", () => {
     expect(takeChat()).toBeNull();
   });
 
+  it("leads a chat remembered at the old address, /app/learn/ask/try, to /try, signed in or not", async () => {
+    expect(await opened("/app/learn/ask/try")).toBe("/try");
+  });
+
   it("opens the chat of a learner signed in, ready with no onboarding", async () => {
     signedInAs({ id: "ada000000001", name: "Ada" });
 

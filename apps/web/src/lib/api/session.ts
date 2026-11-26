@@ -7,6 +7,7 @@ import {
   type Learner,
 } from "@/lib/account/account-store";
 import { deviceId, fingerprint } from "@/lib/device-id";
+import { tryVisitor } from "@/lib/try-visitor";
 import {
   forgetTvCredential,
   keepTvCredential,
@@ -317,10 +318,12 @@ function followLearner(sent: Learner | null, { learner }: Issued): void {
 }
 
 async function mintAnonymous(): Promise<string> {
-  const { token, expiresIn } = await issued(await post({}));
-  if (isAnonymousSession()) {
-    keep({ token, expiresAt: Date.now() + expiresIn * 1000, anonymous: true });
-  }
+  const { token, expiresIn } = await issued(
+    await post({ visitor: tryVisitor() }),
+  );
+  // Released, or signed in, while the handshake ran: this token is not the one now wanted.
+  if (!isAnonymousSession()) return getSessionToken();
+  keep({ token, expiresAt: Date.now() + expiresIn * 1000, anonymous: true });
   return token;
 }
 
@@ -333,7 +336,8 @@ async function mint(): Promise<string> {
     : { response: await deviceSession(device), account: undefined };
   const answered = await issued(response);
   followLearner(signedIn?.learner ?? null, answered);
-  if (currentAccount()?.uid === account) {
+  // Not over the anonymous session a page now holds, which is the one in use.
+  if (currentAccount()?.uid === account && !isAnonymousSession()) {
     const learner = answered.learner?.id;
     const expiresAt = Date.now() + answered.expiresIn * 1000;
     keep({ token: answered.token, expiresAt, device, account, learner });

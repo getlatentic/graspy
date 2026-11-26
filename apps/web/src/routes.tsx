@@ -4,7 +4,7 @@ import AppEntry from "@/app/entry";
 import { requireAccount } from "@/app/chat-gate";
 import { chatLinks } from "@/app/chat-link";
 import { lazyPage } from "@/app/page-chunks";
-import { tryRoute } from "@/app/try-link";
+import { tryMoved, tryRoute } from "@/app/try-link";
 import { RootLayout } from "@/app/route-focus";
 import { AppShell, PageLoading, RouteError } from "@/app/shell";
 
@@ -63,6 +63,7 @@ export const routes: RouteObject[] = [
                 path: "you/learners/:learnerId/voice",
                 lazy: lazyPage("learnerVoice"),
               },
+              tryMoved,
               {
                 loader: requireAccount,
                 children: [

@@ -77,11 +77,11 @@ A reply is the answer as text plus a data part:
 
 ## Which endpoints need an account
 
-A device's own session, which names no account, reaches the learner's record and plan, lessons, voice lessons, `/mcp` and `/mcp/public`, and the tutor chat the web's public `/try` uses. A signed-in account's learner has the chat once a parent has agreed. A visitor with no account has it without that: the page is text only, and the server keeps no learner record of the turns (the turn is run for no learner, whatever device the session names) and counts them, answering `429 try_limit` past a limit ([Anonymous chat limits](SECURITY.md#anonymous-chat-limits)):
+A device's own session, which names no account, reaches the learner's record and plan, lessons, voice lessons, `/mcp` and `/mcp/public`, and the learner's chat is not among them. A signed-in account's learner has the chat once a parent has agreed. A visitor with no account has it too, without that, on a **visitor session** (`POST /api/session` with `{"visitor": <random id of 16 to 64 letters, digits, `-` or `_`>}` and no `deviceId` or sign-in): the page is text only, the server keeps no learner record of the turns, and it counts them, answering `429 try_limit` past a limit. A chat belongs to who began it, a learner or a visitor id: no other session can start, read, follow or stop it, and a chat made before owners were recorded belongs to its learner only ([Anonymous chat limits](SECURITY.md#anonymous-chat-limits)):
 
 | Endpoints | Device's own session | Account session with no learner | Account session with a learner |
 |---|---|---|---|
-| `POST /a2a`, `POST /api/chats/{chat}/turns`, `GET /api/chats/{chat}/turns/{turn}/events`, the turn socket | served, no learner record kept; starting a turn is counted and limited (`429 try_limit`) | `409 learner_required` | served, once the learner has an active `service` consent |
+| `POST /a2a`, `POST /api/chats/{chat}/turns`, `GET /api/chats/{chat}/turns/{turn}/events`, the turn socket | `403 account_required`; a visitor session is served, no learner record kept, and starting a turn is counted and limited (`429 try_limit`) | `409 learner_required` | served, once the learner has an active `service` consent |
 | `/api/learner/threads` | `403 account_required` | `409 learner_required` | served |
 | `/api/account/...`, except the routes that start a session | `403 account_required` | served | served |
 | the rest of `/api/learner` | served | `409 learner_required` | served |
@@ -170,7 +170,7 @@ A client turns `consent_required` into the agreement step: the learner's pages s
 | Status | Meaning |
 |---|---|
 | 401 | No token (`session_required`), or a malformed, forged or expired one (`session_invalid`). The body is the same on `/api`, `/a2a` and `/mcp`. A sign-in Google refused is `sign_in_invalid`, and one for a consent that is older than 5 minutes, or does not say when it was, is `sign_in_stale` |
-| 403 | A device's session asked for the account's learners, or a session that is not the parent's for a learner's voice recordings (`account_required`), or a consent came with a sign-in that is another account's (`sign_in_other_account`) or was not with Google (`sign_in_not_google`), or the learner has no active service consent (`consent_required`) |
+| 403 | A device's session asked for the tutor chat or for the account's learners, or a session that is not the parent's for a learner's voice recordings (`account_required`), or a consent came with a sign-in that is another account's (`sign_in_other_account`) or was not with Google (`sign_in_not_google`), or the learner has no active service consent (`consent_required`) |
 | 409 | An account session asked for a learner's record or the tutor chat (`learner_required`), or the account holds 8 learners (`too_many_learners`) |
 | 422 | Invalid request. `detail` names the field, never the value. Among others: `retentionDays` other than 30, 90 or 365 for a consent, and a `before`, `since` or `upTo` above 2^52 |
 | 503 | Voice lessons outside the Worker (`voice_unavailable`), consent that cannot be kept outside the Worker, or cannot be read to decide whether a learner is served (`consent_unavailable`), a consent that could not be written, which is safe to send again (`consent_not_kept`), sign-in not set up (`sign_in_off`), or Google could not check a sign-in and a later try may pass (`sign_in_unchecked`) |
