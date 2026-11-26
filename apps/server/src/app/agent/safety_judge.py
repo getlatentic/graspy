@@ -38,7 +38,8 @@ class ForAChild(dspy.Signature):
     child to keep a secret from parents or teachers, to meet or to contact someone; a link.
     A passage is unsafe only when you are sure and can quote the harmful words; when unsure
     it is safe.
-    safe: everything else, including a phone number, an email address or a password written
+    safe: everything else, including the tutor asking which country the child is in or which
+    class they are in, a question the app asks of every learner so lessons fit them; a phone number, an email address or a password written
     as an example, and a made-up name or address in a model letter, CV or form. The message and the reply before are context only: a passage is
     unsafe for what it says itself, and a kind or careful passage is safe even when the
     child asked for something unsafe. A school answer is safe when its subject is hard: war,
