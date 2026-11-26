@@ -28,12 +28,17 @@ def test_what_the_learner_said_becomes_an_action_for_the_app():
 
 
 def test_a_level_after_school_needs_its_course():
-    told, outputs = run("set_details", class_name="Undergraduate")
+    told, outputs = run("set_details", class_name="Undergraduate", country="Nigeria")
 
     assert "Nothing was done." in told["error"]
     assert outputs.actions == []
 
-    _, outputs = run("set_details", class_name="undergraduate", course="Accounting")
+    _, outputs = run(
+        "set_details",
+        class_name="undergraduate",
+        country="Nigeria",
+        course="Accounting",
+    )
     assert outputs.actions[0].course == "Accounting"
 
 

@@ -56,6 +56,7 @@ function Details({ shown }: { shown: Shown<AboutYou> }) {
         <CourseField
           words={words}
           value={about.course}
+          clipped={about.clipped}
           disabled={about.sent}
           onChange={about.writeCourse}
         />
@@ -180,11 +181,18 @@ function ClassField({
 interface CourseFieldProps {
   words: Words;
   value: string;
+  clipped: boolean;
   disabled: boolean;
   onChange: (course: string) => void;
 }
 
-function CourseField({ words, value, disabled, onChange }: CourseFieldProps) {
+function CourseField({
+  words,
+  value,
+  clipped,
+  disabled,
+  onChange,
+}: CourseFieldProps) {
   const id = useId();
   return (
     <div className="space-y-1">
@@ -202,6 +210,11 @@ function CourseField({ words, value, disabled, onChange }: CourseFieldProps) {
         onChange={(event) => onChange(event.target.value)}
         className={cn(FIELD, "placeholder:font-normal placeholder:text-muted")}
       />
+      {clipped && (
+        <p role="alert" className="text-sm text-muted">
+          {words.details.courseClipped}
+        </p>
+      )}
     </div>
   );
 }

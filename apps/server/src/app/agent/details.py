@@ -5,19 +5,14 @@ class then picks the plan's curriculum, and the tutor's stage."""
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 
 from ..education.catalogue import code_named, country_name, of_country
-from .choices import clean
 from .context import LearnerContext
+from .course import clean_course
 from .refusal import refusal
 from .reply import Action, Outcome, SetDetails
 
-MAX_DETAIL = 60
-COURSE_CHARS = re.compile(r"[^\W_][\w .,'’&()/+:-]*")
-MAX_COURSE_WORDS = 6
-MAX_COURSE_WORD = 25
 # After school the class is a level, and its course says what is studied.
 AFTER_SCHOOL = ("Undergraduate", "Graduate")
 
@@ -40,8 +35,7 @@ def class_first(
 ) -> dict | None:
     """The refusal for a subject or course offered to a learner whose class is not
     known, unless this turn already saves it."""
-    saved = any(isinstance(a, SetDetails) and a.class_name for a in actions)
-    if context.needs_class() and not saved:
+    if context.needs_class() and not saves_class(actions):
         return refusal(CLASS_FIRST.format(then=then))
     return None
 
@@ -81,37 +75,51 @@ def set_details_tool(context: LearnerContext) -> Callable[..., dict | Outcome]:
     return set_details
 
 
-def clean_course(text: str) -> str | None:
-    """What a learner studies, cleaned as everything they say of themselves is: one line, cut to
-    length, and only letters, digits, spaces and a little punctuation, in a few short words. None
-    for text that is not one, and an empty course for none."""
-    course = clean(text, MAX_DETAIL)
-    words = course.split()
-    if course and not (
-        COURSE_CHARS.fullmatch(course)
-        and len(words) <= MAX_COURSE_WORDS
-        and all(len(word) <= MAX_COURSE_WORD for word in words)
-    ):
-        return None
-    return course
+def class_named(country_code: str, name: str) -> str | None:
+    """The name of the class the country's catalogue has for what the learner said (its name or an
+    alias, in any case), or a level after school; None for anything else."""
+    wanted = " ".join(name.split()).casefold()
+    for after in AFTER_SCHOOL:
+        if after.casefold() == wanted:
+            return after
+    for level in of_country(country_code)[0].levels:
+        if wanted in {level.name.en.casefold(), *(a.casefold() for a in level.aliases)}:
+            return level.name.en
+    return None
+
+
+def saves_class(actions: list[Action]) -> bool:
+    """Whether the turn's actions save a class the app can keep: one with the country's code,
+    which is what the app saves by."""
+    return any(
+        isinstance(a, SetDetails) and a.class_name and a.country_code for a in actions
+    )
 
 
 def _details(class_name: str, country: str, course: str) -> dict | Outcome:
-    studies = clean_course(course)
-    if studies is None:
-        return refusal("The course is what they study, in a few words")
     code = code_named(country)
-    saved = SetDetails(
-        class_name=" ".join(class_name.split())[:MAX_DETAIL],
-        country=country_name(code) if code else " ".join(country.split())[:MAX_DETAIL],
-        course=studies,
-        country_code=code or "",
-    )
-    if not (saved.class_name or saved.country):
+    if not (class_name.strip() or country.strip()):
         return refusal("Say which class or country the learner told you.")
-    after_school = saved.class_name.casefold() in {n.casefold() for n in AFTER_SCHOOL}
-    if after_school and not saved.course:
+    if code is None:
+        return refusal(
+            "That country is not one the app has. Ask the learner which country they are in, "
+            "in words, and save it with their class"
+        )
+    named = class_named(code, class_name) if class_name.strip() else ""
+    if named is None:
+        return refusal(
+            f"That is not a class of {country_name(code)}: ask the learner which class "
+            "they are in, in words"
+        )
+    studies = clean_course(course)
+    if named in AFTER_SCHOOL and not studies:
         return refusal("Ask what they study, in words, and save it as the course.")
+    saved = SetDetails(
+        class_name=named,
+        country=country_name(code),
+        course=studies if named in AFTER_SCHOOL else "",
+        country_code=code,
+    )
     return Outcome(
         told={
             "done": "The app is saving it. Thank them in a few words and carry on "

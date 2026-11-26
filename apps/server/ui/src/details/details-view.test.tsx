@@ -352,10 +352,86 @@ describe("the About you form", () => {
     expect(buttonNames()).toEqual([]);
   });
 
-  it("orders the countries as the host's language does", () => {
-    open();
-    act(() => app.onhostcontextchanged?.({ locale: "sk" }));
+  it("orders the countries as the host's language does, which differs by language", () => {
+    const names = { AL: "Albania", ZM: "Zambia", AX: "Åland Islands" };
+    const ordered = () =>
+      Array.from(country().options).map((option) => option.textContent);
+    open(
+      card({
+        ...FORM,
+        country: null,
+        countries: ["AL", "ZM", "AX"],
+        names,
+        classListOf: { AL: 0, ZM: 0, AX: 0 },
+      }),
+    );
 
-    expect(country().selectedOptions[0].textContent).toBe("Slovakia");
+    expect(ordered().filter(Boolean)).toContain("Albania");
+    act(() => app.onhostcontextchanged?.({ locale: "en" }));
+    expect(ordered().slice(-3)).toEqual(["Åland Islands", "Albania", "Zambia"]);
+    act(() => app.onhostcontextchanged?.({ locale: "sv" }));
+    expect(ordered().slice(-3)).toEqual(["Albania", "Zambia", "Åland Islands"]);
+  });
+
+  it("sends a long course whole, and cleans what cannot stay, saying so", async () => {
+    open();
+    choose("Graduate");
+    const course = screen.getByLabelText("What do you study?");
+    fireEvent.change(course, {
+      target: {
+        value: "Bachelor of Science in Electrical and Electronic Engineering",
+      },
+    });
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    fireEvent.change(course, { target: { value: "Law; Economics!" } });
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Some characters were removed.",
+    );
+    expect((course as HTMLInputElement).value).toBe("Law Economics");
+    fireEvent.change(course, {
+      target: {
+        value: "Bachelor of Science in Electrical and Electronic Engineering",
+      },
+    });
+    await act(async () => {
+      fireEvent.click(cont());
+    });
+
+    expect(app.sendMessage.mock.calls[0][0].content[0].text).toBe(
+      "Country: Slovakia (SK). Class: Graduate. Course: Bachelor of Science in Electrical and Electronic Engineering.",
+    );
+  });
+
+  it("limits a course to twelve words and normalises lookalike letters", () => {
+    open();
+    choose("Graduate");
+    const course = screen.getByLabelText(
+      "What do you study?",
+    ) as HTMLInputElement;
+
+    fireEvent.change(course, {
+      target: {
+        value: Array.from({ length: 20 }, (_, n) => `w${n}`).join(" "),
+      },
+    });
+    expect(course.value.split(" ")).toHaveLength(12);
+
+    fireEvent.change(course, { target: { value: "Ｌａｗ" } });
+    expect(course.value).toBe("Law");
+  });
+
+  it("is told to type instead when sending throws, and can be pressed again", async () => {
+    app.sendMessage = vi.fn().mockRejectedValue(new Error("gone"));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    open();
+    choose("Grade 7");
+
+    await act(async () => {
+      fireEvent.click(cont());
+    });
+
+    expect(screen.getByRole("status").textContent).toContain("Not now");
+    expect(cont().disabled).toBe(false);
   });
 });

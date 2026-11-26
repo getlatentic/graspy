@@ -145,16 +145,22 @@ describe("what a learner says of their school", () => {
 });
 
 describe("the country the server names", () => {
-  const nameless = said("Grade 7", "Not a name the app knows");
+  // A catalogue with one system per country asked for, so the class is found only in the right one.
+  const systemsFor = vi.fn(async (code: string) => [
+    { ...NIGERIA, id: code, country: code, name: { en: code } },
+  ]);
+  const nameless = said("JSS 1", "Not a name the app knows");
 
   it.each(["CZ", "TR", "MM", "HK", "CI", "GB", "PS", "CD", "SK"])(
     "is saved by its code %s, whatever name goes with it",
     async (code) => {
-      const systems = vi.fn(async () => [NIGERIA]);
+      const result = await detailsSaid(
+        { ...nameless, countryCode: code },
+        KEPT,
+        systemsFor,
+      );
 
-      await detailsSaid({ ...nameless, countryCode: code }, KEPT, systems);
-
-      expect(systems).toHaveBeenCalledWith(code);
+      expect(result?.details).toMatchObject({ country: code, system: code });
     },
   );
 
@@ -165,25 +171,27 @@ describe("the country the server names", () => {
   ])(
     "is found by the catalogue's name %s when no code comes",
     async (name, code) => {
-      const systems = vi.fn(async () => [NIGERIA]);
+      const result = await detailsSaid(said("JSS 1", name), KEPT, systemsFor);
 
-      await detailsSaid(said("Grade 7", name), KEPT, systems);
-
-      expect(systems).toHaveBeenCalledWith(code);
+      expect(result?.details.country).toBe(code);
     },
   );
 
   it("falls back to the name for a code the app does not have, and to the kept country for none", async () => {
-    const systems = vi.fn(async () => [NIGERIA]);
-
-    await detailsSaid(
-      { ...said("Grade 7", "Czechia"), countryCode: "ZZ" },
+    const byName = await detailsSaid(
+      { ...said("JSS 1", "Czechia"), countryCode: "ZZ" },
       KEPT,
-      systems,
+      systemsFor,
     );
-    expect(systems).toHaveBeenLastCalledWith("CZ");
+    expect(byName?.details.country).toBe("CZ");
 
-    await detailsSaid(said("Grade 7"), KEPT, systems);
-    expect(systems).toHaveBeenLastCalledWith("NG");
+    const kept = await detailsSaid(said("JSS 1"), KEPT, systemsFor);
+    expect(kept?.details.country).toBe("NG");
+  });
+
+  it("saves nothing for a name and a code the app has neither of", async () => {
+    expect(
+      await detailsSaid({ ...nameless, countryCode: "ZZ" }, KEPT, systemsFor),
+    ).toBeNull();
   });
 });

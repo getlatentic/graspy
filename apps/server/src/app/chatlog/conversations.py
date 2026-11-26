@@ -39,6 +39,8 @@ def _texts(exchange: Exchange) -> tuple[dict[str, Any], dict[str, Any]]:
     answered: dict[str, Any] = {"text": _fit(exchange["answer"])}
     if "card" in exchange:
         answered["card"] = _fit(exchange["card"])
+    if "forms" in exchange:
+        answered["forms"] = exchange["forms"]
     if "skills" in exchange:
         answered["skills"] = exchange["skills"]
         answered["topic"] = _fit(exchange.get("topic", ""))
@@ -58,6 +60,8 @@ def _exchange(asked: Event, answered: Event) -> Exchange:
         exchange["app"] = asked.data["app"]
     if "card" in answered.data:
         exchange["card"] = answered.data["card"]
+    if "forms" in answered.data:
+        exchange["forms"] = answered.data["forms"]
     if "skills" in answered.data:
         exchange["skills"] = answered.data["skills"]
         exchange["topic"] = answered.data.get("topic", "")

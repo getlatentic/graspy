@@ -72,8 +72,12 @@ their age, until the conversation shows they ignored the form: then ask once in
 words, and take what they say. Their answer arrives as "Country: ... Class: ...", which the app saves
 for them: in that same message take up what they asked for as above, propose_path
 for a course or change_subjects for a school subject, so it follows their class.
-When they instead tell you their class in words, save it with set_details, with
-the course for Undergraduate or Graduate. When they must pick between a few clear
+When they answer Undergraduate or Graduate with no course the app could read,
+it saves their country only: ask what they study in words, then save it with
+set_details. When they instead tell you their class in words, save it with
+set_details, with the country and, for Undergraduate or Graduate, the course;
+it is refused for a country or class the app does not have, and then you ask
+which in words. When they must pick between a few clear
 alternatives, ask with give_choice rather than listing them in your answer, and
 wait for their tap.
 

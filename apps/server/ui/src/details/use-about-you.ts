@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { App } from "@modelcontextprotocol/ext-apps";
 import type { AboutYou } from "@/lib/content";
 import { readViewState, writeViewState } from "@/shared/view-state";
+import { finalCourse, limitCourse } from "./limit-course";
 
 interface Answers {
   country: string;
@@ -56,6 +57,7 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
   const sending = useRef(false);
   const [pending, setPending] = useState(false);
   const [refused, setRefused] = useState(false);
+  const [clipped, setClipped] = useState(false);
 
   const keep = (next: Kept) => {
     setAnswers(next);
@@ -66,7 +68,7 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
   const needsCourse = form.afterSchool.includes(answers.className);
   const ready =
     classes.includes(answers.className) &&
-    (!needsCourse || answers.course.trim() !== "");
+    (!needsCourse || finalCourse(answers.course) !== "");
   const locked = answers.sent || pending;
 
   const chooseCountry = (country: string) => {
@@ -76,8 +78,12 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
   };
   const chooseClass = (className: string) =>
     locked || keep({ ...answers, className });
-  const writeCourse = (course: string) =>
-    locked || keep({ ...answers, course });
+  const writeCourse = (typed: string) => {
+    if (locked) return;
+    const { text, changed } = limitCourse(typed);
+    setClipped(changed);
+    keep({ ...answers, course: text });
+  };
 
   const submit = async () => {
     if (sending.current || locked || !ready) return;
@@ -86,7 +92,7 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
     const answered = {
       country: answers.country,
       className: answers.className,
-      course: needsCourse ? answers.course.trim() : "",
+      course: needsCourse ? finalCourse(answers.course) : "",
     };
     try {
       const { isError } = await app.sendMessage({
@@ -97,6 +103,7 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
       if (!isError) keep({ ...answered, sent: true });
     } catch (error) {
       console.error("Sending the details failed:", error);
+      setRefused(true);
     } finally {
       sending.current = false;
       setPending(false);
@@ -110,6 +117,7 @@ export function useAboutYou(app: App, viewUUID: string, form: AboutYou) {
     needsCourse,
     ready,
     refused,
+    clipped,
     chooseCountry,
     chooseClass,
     writeCourse,

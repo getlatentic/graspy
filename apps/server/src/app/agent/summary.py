@@ -50,10 +50,12 @@ async def summarised(summary: str, exchanges: str) -> str:
     return " ".join(words[: MAX_SUMMARY_WORDS * 2])
 
 
-async def recalled(memory: ConversationStore, conversation_id: str) -> Conversation:
+async def recalled(
+    memory: ConversationStore, conversation_id: str, excluding_turn: str | None = None
+) -> Conversation:
     """Past MAX_EXCHANGES, the oldest are folded into the summary first. A
     fold that fails costs the summary its update, not the learner a turn."""
-    conversation = await memory.load(conversation_id)
+    conversation = await memory.load(conversation_id, excluding_turn=excluding_turn)
     if len(conversation.exchanges) <= MAX_EXCHANGES:
         return conversation
     dropped = len(conversation.exchanges) - KEPT_AFTER_FOLD

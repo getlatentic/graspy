@@ -150,13 +150,13 @@ def test_a_subject_is_not_added_before_the_class_is_known():
 def test_a_course_is_offered_in_the_message_that_saves_the_class():
     built = Built(NEW)
 
-    built("set_details", class_name="Secondary Year 2", country="Nigeria")
+    built("set_details", class_name="SS 2", country="Nigeria")
     told = built("propose_path", goals=["Machine learning"])
 
     assert "error" not in told
     assert built.outputs.actions == [
         SetDetails(
-            class_name="Secondary Year 2",
+            class_name="SS 2",
             country="Nigeria",
             course="",
             country_code="NG",
@@ -246,7 +246,7 @@ async def test_the_tap_on_the_class_saves_it_and_offers_the_course_in_one_reply(
     reply = await reply_to(
         NEW,
         [
-            step("set_details", class_name="Secondary Year 2", country="Nigeria"),
+            step("set_details", class_name="SS 2", country="Nigeria"),
             step("propose_path", goals=["Machine learning"]),
             DONE,
             say("Thanks. Here is the path to machine learning."),

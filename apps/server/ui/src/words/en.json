@@ -36,6 +36,7 @@
     "class": "Class",
     "course": "What do you study?",
     "coursePlaceholder": "For example, Accounting",
+    "courseClipped": "Some characters were removed.",
     "continue": "Continue",
     "busy": "Not now. Type your answer below."
   },

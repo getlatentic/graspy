@@ -19,13 +19,14 @@ from .about_you import (
     answer_in,
     form_card,
     form_due,
+    forms_shown,
     lacks_class,
     learner_with,
     surviving,
 )
 from .answer_gate import AnswerGate, verdicts_in
 from .app_tools import AppCall, describe_calls
-from .cards import Card
+from .cards import Card, DetailsCard
 from .context import LearnerContext
 from .decision import withdraw_offers
 from .labels import DATA_ONLY
@@ -131,8 +132,12 @@ their age, until the conversation shows they ignored the form: then ask once in
 words, and take what they say. Their answer arrives as "Country: ... Class: ...", which the app saves
 for them: in that same message take up what they asked for as above, propose_path
 for a course or change_subjects for a school subject, so it follows their class.
-When they instead tell you their class in words, save it with set_details, with
-the course for Undergraduate or Graduate. When they must pick between a few clear
+When they answer Undergraduate or Graduate with no course the app could read,
+it saves their country only: ask what they study in words, then save it with
+set_details. When they instead tell you their class in words, save it with
+set_details, with the country and, for Undergraduate or Graduate, the course;
+it is refused for a country or class the app does not have, and then you ask
+which in words. When they must pick between a few clear
 alternatives, ask with give_choice rather than listing them in your answer, and
 wait for their tap.
 
@@ -212,15 +217,6 @@ class Tutor:
     def __init__(self, memory: ConversationStore) -> None:
         self._memory = memory
 
-    async def _before(
-        self, conversation_id: str, turn: str | None, earlier: tuple[Exchange, ...]
-    ) -> list[Exchange]:
-        """The exchanges before this turn: not its own, kept by a run before it was run again."""
-        if turn is None:
-            return list(earlier)
-        kept = await self._memory.load(conversation_id, excluding_turn=turn)
-        return list(kept.exchanges)
-
     async def stream(
         self,
         conversation_id: str,
@@ -246,7 +242,12 @@ class Tutor:
         form_answer = answer_in(message, context)
         if form_answer:
             context = learner_with(context, form_answer)
-        earlier = await recalled(self._memory, conversation_id)
+        # Without this turn's own exchange from a run before it was run again: the model and the
+        # form's count read the conversation as it was when the turn began.
+        earlier = await recalled(self._memory, conversation_id, turn)
+        context = context.model_copy(
+            update={"forms_due": form_due(list(earlier.exchanges))}
+        )
         history = list(earlier.exchanges)
         for text in unanswered or []:
             missed_one = Exchange(message=text, answer=NO_ANSWER)
@@ -283,17 +284,23 @@ class Tutor:
         cards = answered.outputs.cards[-1:]
         if (
             not answered.stopped
+            and context.forms_due
             and lacks_class(context, cards, answered.outputs.actions)
-            and form_due(await self._before(conversation_id, turn, earlier.exchanges))
         ):
             cards = [form_card(context)]
             # The form is the whole of its turn: whatever else was accepted is withdrawn.
             withdraw_offers(answered.outputs.actions, cards)
             answer = answer.strip() or DEFAULT_LINE
+        forms = (
+            forms_shown(list(earlier.exchanges))
+            + any(isinstance(card, DetailsCard) for card in cards)
+            if context.needs_class()
+            else 0
+        )
         exchanges = [
             *missed,
             stamped(
-                remembered(message, answer, calls, cards),
+                remembered(message, answer, calls, cards, forms),
                 history,
                 context.topic,
                 answered.outputs.skills,
@@ -502,8 +509,11 @@ def remembered(
     answer: str,
     calls: list[AppCall] | None,
     cards: list[Card],
+    forms: int = 0,
 ) -> Exchange:
     exchange = Exchange(message=message, answer=answer)
+    if forms:
+        exchange["forms"] = forms
     if calls:
         exchange["app"] = describe_calls(calls)
     if cards:

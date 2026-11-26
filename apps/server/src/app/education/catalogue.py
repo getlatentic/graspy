@@ -97,15 +97,20 @@ def country_name(code: str) -> str:
 
 @cache
 def _codes_by_name() -> dict[str, str]:
-    return {country_name(code).casefold(): code for code in sorted(countries())}
+    """By name, in any case. Two countries with one name: the first code, in order, wins."""
+    named: dict[str, str] = {}
+    for code in sorted(countries()):
+        named.setdefault(country_name(code).casefold(), code)
+    return named
 
 
 def code_named(name: str) -> str | None:
-    """The catalogue country a name or code says, in any case."""
-    wanted = " ".join(name.split()).casefold()
-    if wanted.upper() in countries():
-        return wanted.upper()
-    return _codes_by_name().get(wanted)
+    """The catalogue country a name says, in any case, or its code as the catalogue writes it, in
+    capitals ("SK"; "in" and "no" are words, not countries)."""
+    said = " ".join(name.split())
+    if said in countries():
+        return said
+    return _codes_by_name().get(said.casefold())
 
 
 def of_country(country: str) -> list[System]:
