@@ -72,8 +72,8 @@ The `contextId` names the conversation. Send the learner's situation as message 
 A reply is the answer as text plus a data part:
 
 - `followUps`: the question the learner is most likely to ask next.
-- `actions`: what the app should do. One of `open_topic`, `open_subject`, `add_topic`, `change_subjects`, `rebuild_plan` or `propose_path`.
-- `cards`: practice or reading cards, each an MCP Apps tool result for the app to show.
+- `actions`: what the app should do. One of `open_topic`, `open_subject`, `add_topic`, `change_subjects`, `rebuild_plan`, `propose_path` or `set_details`.
+- `cards`: practice, reading or choice cards, each an MCP Apps tool result for the app to show.
 
 ## Which endpoints need an account
 

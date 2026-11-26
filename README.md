@@ -15,6 +15,6 @@ An AI tutor that writes a curriculum for the learner's country and class, and te
 3. Run `npm run dev`. The app is at <http://localhost:5173>, the API at <http://localhost:8081>.
 4. Run `npm test` and `npm run lint`.
 
-Docs: [Development](docs/DEVELOPMENT.md) · [Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Security](docs/SECURITY.md)
+Docs: [Development](docs/DEVELOPMENT.md) · [Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Security](docs/SECURITY.md) · [Chat](docs/CHAT.md)
 
 Licence: [AGPL-3.0](LICENSE).
