@@ -3,9 +3,10 @@ import { SIGN_IN_PAGE } from "@/features/account/components/sign-in-link";
 import { currentAccount } from "@/lib/account/account-store";
 import { rememberChat } from "@/lib/account/chat-return";
 
-/** The chat is for a signed-in account's learner. A visitor who is not signed in is sent to
- * sign in, and one with no learner chosen to choose (the learner pages do that); either way
- * the chat asked for is kept, and is where they arrive. */
+/** The chat under /app/learn/ask is for a signed-in account's learner. A visitor who is not
+ * signed in is sent to sign in, and one with no learner chosen to choose (the learner pages do
+ * that); either way the chat asked for is kept, and is where they arrive. The public /try chat
+ * is not behind this: it is text only, kept on the device, and limited (try-link.ts). */
 export function requireAccount({ request }: LoaderFunctionArgs): null {
   const { pathname, search } = new URL(request.url);
   const account = currentAccount();

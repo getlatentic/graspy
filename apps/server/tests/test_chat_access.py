@@ -1,6 +1,6 @@
-"""The tutor chat is for a signed-in account's learner: a device's own session is refused with
-`403 account_required`, an account that has chosen no learner with `409 learner_required`, and
-what is not the chat (the record, lessons, views, voice) stays open to a device."""
+"""Who reaches the tutor chat: a signed-in account's learner, and a visitor with no account (the web's
+/try). An account that has chosen no learner is refused with `409 learner_required`. What is not the
+chat (the record, lessons, views, voice) stays open to a device."""
 
 import pytest
 from consent_sign_ins import consent_app
@@ -12,6 +12,7 @@ from app.cloudflare_sockets import PROTOCOL, connect
 from app.security.session import issue
 
 CHAT = "c" * 12
+VISITOR = "v" * 20
 TURN = "t" * 8
 CHAT_ROUTES = [
     ("POST", "/a2a"),
@@ -50,13 +51,46 @@ def code_of(response) -> tuple[int, str]:
     return response.status_code, response.json()["detail"]["code"]
 
 
+async def as_a_visitor(http) -> None:
+    use(
+        http,
+        (await http.post("/api/session", json={"visitor": VISITOR})).json(),
+    )
+
+
 @pytest.mark.parametrize(("method", "url"), CHAT_ROUTES)
-async def test_a_device_with_no_account_is_refused_the_chat(app, method, url):
+async def test_a_device_session_with_no_account_or_visitor_is_refused_the_chat(
+    app, method, url
+):
     async with client(app) as http:
         await on_a_device(http)
         refused = await sent(http, method, url)
 
     assert code_of(refused) == (403, "account_required")
+
+
+@pytest.mark.parametrize(
+    ("method", "url", "status"),
+    [
+        ("GET", f"/api/chats/{CHAT}/turns/{TURN}/events", 404),
+        ("POST", f"/api/chats/{CHAT}/turns", 422),
+    ],
+)
+async def test_a_visitor_gets_to_the_chat_routes(app, method, url, status):
+    async with client(app) as http:
+        await as_a_visitor(http)
+        reached = await sent(http, method, url)
+
+    assert reached.status_code == status
+
+
+async def test_a_visitor_gets_to_the_a2a_chat(app):
+    async with client(app) as http:
+        await as_a_visitor(http)
+        reached = await sent(http, "POST", "/a2a")
+
+    # Past the session guard, the SDK answers the empty body as a malformed JSON-RPC request.
+    assert reached.json()["error"]["code"] == -32600
 
 
 @pytest.mark.parametrize(("method", "url"), CHAT_ROUTES)
@@ -108,22 +142,41 @@ class Upgrade:
         self.headers = {"Sec-WebSocket-Protocol": f"{PROTOCOL}, {token}"}
 
 
-@pytest.mark.parametrize(
-    ("claims", "refused"),
-    [
-        ({"learner": "device-0001"}, (403, "account_required")),
-        ({"account": UID}, (409, "learner_required")),
-    ],
-)
-async def test_the_turn_socket_is_refused_like_the_chat(
-    app, env, monkeypatch, claims, refused
+async def test_the_turn_socket_of_an_account_with_no_learner_is_refused_like_the_chat(
+    app, env, monkeypatch
 ):
     monkeypatch.setattr(
         "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
     )
-    token = issue(app.state.session_secret, **claims).token
+    token = issue(app.state.session_secret, account=UID).token
 
-    assert await connect(env, app, Upgrade(token), (CHAT, TURN, 0)) == refused
+    refused = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert refused == (409, "learner_required")
+
+
+async def test_the_turn_socket_of_a_visitor_with_no_account_gets_as_far_as_the_chat(
+    app, env, monkeypatch
+):
+    monkeypatch.setattr(
+        "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
+    )
+    token = issue(app.state.session_secret, visitor=VISITOR).token
+
+    reached = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert reached == (404, "chat_not_found")
+
+
+async def test_the_turn_socket_of_a_device_session_is_refused(app, env, monkeypatch):
+    monkeypatch.setattr(
+        "app.cloudflare_sockets.refusal", lambda status, code: (status, code)
+    )
+    token = issue(app.state.session_secret, learner="device-0001").token
+
+    refused = await connect(env, app, Upgrade(token), (CHAT, TURN, 0))
+
+    assert refused == (403, "account_required")
 
 
 async def test_the_turn_socket_of_a_learner_the_account_holds_gets_as_far_as_the_chat(

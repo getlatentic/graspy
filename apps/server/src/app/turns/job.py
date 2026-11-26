@@ -27,6 +27,9 @@ class TurnJob(BaseModel):
     turn: str
     # The learner's key, or None for a session that keeps no record.
     learner: str | None = None
+    # Who the chat belongs to: the learner, or a visitor with no account (turns/access.py). Kept in
+    # the chat's first event, which a chat made before owners existed lacks: its learner is its owner.
+    owner: str | None = None
     message: str
     # The parts of the A2A message, as dicts: app calls and the messages whose turns failed.
     parts: list[dict[str, Any]] = Field(default_factory=list)

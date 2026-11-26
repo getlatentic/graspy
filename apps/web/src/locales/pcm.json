@@ -30,6 +30,7 @@
     "errorMessage": "Problem: {error}",
     "send": "Send",
     "temporaryProblem": "E no go. Try again.",
+    "tryLimit": "Try again later, or sign in to keep going.",
     "openTutor": "Ask graspy",
     "signInToAsk": "Sign in to ask graspy",
     "newTutorMessage": "New message from graspy",

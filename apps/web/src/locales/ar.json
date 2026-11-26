@@ -30,6 +30,7 @@
     "errorMessage": "خطأ: {error}",
     "send": "إرسال",
     "temporaryProblem": "لم يُرسَل. حاول مرة أخرى.",
+    "tryLimit": "Try again later, or sign in to keep going.",
     "openTutor": "اسأل graspy",
     "signInToAsk": "سجّل الدخول لتسأل graspy",
     "newTutorMessage": "رسالة جديدة من graspy",

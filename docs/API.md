@@ -4,7 +4,7 @@ Local base: `http://localhost:8081`. Interactive docs are at `/api/docs`, except
 
 ## Session
 
-Generation, the learner's record, `/a2a` and `/mcp` need a session token. It names the device, or, when someone signs in, their account and the learner the device learns as. Send `firebaseIdToken` with `deviceId`, and `learnerId` once the device has chosen a learner: Google verifies the token. Without a learner, or with one the account no longer holds, the token manages the account's learners only, and the learner's endpoints answer `409 learner_required`. The tutor chat needs an account (see Which endpoints need an account). Tokens are signed with HMAC-SHA256 and expire after 12 hours. The app gets a new one when a request returns `401`.
+Generation, the learner's record, `/a2a` and `/mcp` need a session token. It names the device, or, when someone signs in, their account and the learner the device learns as. Send `firebaseIdToken` with `deviceId`, and `learnerId` once the device has chosen a learner: Google verifies the token. Without a learner, or with one the account no longer holds, the token manages the account's learners only, and the learner's endpoints answer `409 learner_required`. The tutor chat is for an account's learner, and for a visitor with no account, whose turns are limited and keep no record (see Which endpoints need an account). Tokens are signed with HMAC-SHA256 and expire after 12 hours. The app gets a new one when a request returns `401`.
 
 ```bash
 TOKEN=$(curl -sX POST localhost:8081/api/session -H 'content-type: application/json' \
@@ -77,11 +77,11 @@ A reply is the answer as text plus a data part:
 
 ## Which endpoints need an account
 
-A device's own session, which names no account, reaches everything except the tutor chat: the learner's record and plan, lessons, voice lessons, `/mcp` and `/mcp/public`. The chat is for a signed-in account's learner, so a parent has agreed before any conversation:
+A device's own session, which names no account, reaches the learner's record and plan, lessons, voice lessons, `/mcp` and `/mcp/public`, and the learner's chat is not among them. A signed-in account's learner has the chat once a parent has agreed. A visitor with no account has it too, without that, on a **visitor session** (`POST /api/session` with `{"visitor": <random id of 16 to 64 letters, digits, `-` or `_`>}` and no `deviceId` or sign-in): the page is text only, the server keeps no learner record of the turns, and it counts them, answering `429 try_limit` past a limit. A chat belongs to who began it, a learner or a visitor id: no other session can start, read, follow or stop it, and a chat made before owners were recorded belongs to its learner only ([Anonymous chat limits](SECURITY.md#anonymous-chat-limits)):
 
 | Endpoints | Device's own session | Account session with no learner | Account session with a learner |
 |---|---|---|---|
-| `POST /a2a`, `POST /api/chats/{chat}/turns`, `GET /api/chats/{chat}/turns/{turn}/events`, the turn socket | `403 account_required` | `409 learner_required` | served, once the learner has an active `service` consent |
+| `POST /a2a`, `POST /api/chats/{chat}/turns`, `GET /api/chats/{chat}/turns/{turn}/events`, the turn socket | `403 account_required`; a visitor session is served, no learner record kept, and starting a turn is counted and limited (`429 try_limit`) | `409 learner_required` | served, once the learner has an active `service` consent |
 | `/api/learner/threads` | `403 account_required` | `409 learner_required` | served |
 | `/api/account/...`, except the routes that start a session | `403 account_required` | served | served |
 | the rest of `/api/learner` | served | `409 learner_required` | served |

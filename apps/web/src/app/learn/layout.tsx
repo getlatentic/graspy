@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useAccount } from "@/lib/account/use-account";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -32,6 +32,10 @@ import {
   type Section,
 } from "@/features/learn/lib/app-sections";
 import { scopeOf, type ChatTarget } from "@/features/learn/lib/chat-targets";
+import {
+  CHAT_VIEWPORT_CLASS,
+  chatViewportStyle,
+} from "@/features/learn/lib/chat-viewport";
 import { ServiceConsentGate } from "@/features/account/components/service-consent-gate";
 import { LearnerProviders } from "@/features/learn/learner-providers";
 import { useChat, usePlan } from "@/features/learn/learner-context";
@@ -70,19 +74,10 @@ function DashboardLayoutContent() {
 
   return (
     <div
-      style={
-        visible
-          ? ({
-              "--visible-top": `${visible.top}px`,
-              "--visible-height": `${visible.height}px`,
-            } as CSSProperties)
-          : undefined
-      }
+      style={chatViewportStyle(visible)}
       className={cn(
         "group/shell flex flex-col overflow-hidden bg-canvas",
-        chat
-          ? "fixed inset-x-0 top-[var(--visible-top,0px)] h-[var(--visible-height,100dvh)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
-          : "h-dvh",
+        chat ? CHAT_VIEWPORT_CLASS : "h-dvh",
       )}
     >
       <TopMenu />

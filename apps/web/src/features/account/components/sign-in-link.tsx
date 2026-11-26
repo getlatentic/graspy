@@ -13,12 +13,19 @@ function useSignInOffered(): boolean {
   return FIREBASE_CONFIG !== null && account === null;
 }
 
-export function SignInLink({ className }: { className?: string }) {
+export function SignInLink({
+  className,
+  onClick,
+}: {
+  className?: string;
+  onClick?: () => void;
+}) {
   const { t } = useI18n();
   if (!useSignInOffered()) return null;
   return (
     <Link
       to={SIGN_IN_PAGE}
+      onClick={onClick}
       className={cn(
         "text-sm font-semibold text-accent-ink transition hover:text-ink",
         className,

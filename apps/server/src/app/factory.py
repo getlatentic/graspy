@@ -27,6 +27,7 @@ from .api.account_parent_routes import parent_session_router
 from .api.account_pin_routes import parent_pin_router
 from .api.account_routes import account_router
 from .api.account_voice_routes import account_voice_router
+from .api.anonymous_chat import anonymous_turn_refusal
 from .api.chat_access import chat_refusal
 from .api.chat_routes import chat_router
 from .api.education_routes import education_router
@@ -124,20 +125,33 @@ def create_app(
     app.routes.append(
         LazyA2ARoutes(
             settings.a2a_path_prefix,
-            lambda: _a2a_routes(settings, tutor, keeping, turns),
+            lambda: _a2a_routes(settings, tutor, keeping, turns, _admit(app)),
         )
     )
     app.routes.extend(mcp_routes())
     return app
 
 
+def _admit(app: FastAPI):
+    """What the A2A tutor asks before it begins a turn: a visitor with no account is limited."""
+
+    def admit(session, address):
+        return anonymous_turn_refusal(app.state.tv_db, session, address)
+
+    return admit
+
+
 def _a2a_routes(
-    settings: Settings, tutor: Tutor, keeping: Keeping, turns: DurableTurns | None
+    settings: Settings,
+    tutor: Tutor,
+    keeping: Keeping,
+    turns: DurableTurns | None,
+    admit,
 ) -> list:
     """The A2A routes, built, and the SDK imported, by the first A2A request."""
     from .agent.a2a import a2a_routes
 
-    return a2a_routes(settings, tutor, keeping, turns)
+    return a2a_routes(settings, tutor, keeping, turns, admit)
 
 
 def _bare_app(settings: Settings) -> FastAPI:
@@ -224,8 +238,9 @@ def _origins(settings: Settings) -> list[str]:
 
 
 async def _session_refusal(app: FastAPI, session, path: str, settings: Settings):
-    """The tutor chat (A2A) needs an account's learner; MCP, which carries the lessons' cards,
-    needs only the consent a learner's session already implies."""
+    """The tutor chat (A2A) is for an account's learner or a visitor with a visitor session, whose
+    turns are limited where the turn starts; MCP, which carries the lessons' cards, needs only the
+    consent a learner's session already implies."""
     prefix = "/" + settings.a2a_path_prefix.strip("/")
     if path == prefix or path.startswith(f"{prefix}/"):
         return await chat_refusal(app, session)

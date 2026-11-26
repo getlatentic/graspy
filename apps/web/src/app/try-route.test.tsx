@@ -19,7 +19,6 @@ vi.setConfig({ testTimeout: 30_000 });
 /** Where the loaders leave the router, as the browser router holds the routes. */
 async function opened(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
-  router.initialize();
   await new Promise<void>((resolve) => {
     const settled = () =>
       router.state.initialized && router.state.navigation.state === "idle";
@@ -43,11 +42,14 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("/try", () => {
-  it("sends a visitor who is not signed in to sign in, to come back to the chat", async () => {
-    expect(await opened("/try")).toBe("/app/sign-in");
+  it("keeps a visitor who is not signed in on the page, with no sign-in", async () => {
+    expect(await opened("/try")).toBe("/try");
 
-    expect(takeChat()).toBe(TRY_CHAT);
-    expect(readyToChat).not.toHaveBeenCalled();
+    expect(takeChat()).toBeNull();
+  });
+
+  it("leads a chat remembered at the old address, /app/learn/ask/try, to /try, signed in or not", async () => {
+    expect(await opened("/app/learn/ask/try")).toBe("/try");
   });
 
   it("opens the chat of a learner signed in, ready with no onboarding", async () => {
@@ -57,12 +59,6 @@ describe("/try", () => {
 
     expect(readyToChat).toHaveBeenCalledOnce();
     expect(takeChat()).toBeNull();
-  });
-
-  it("is the same address the sign-in returns to", async () => {
-    signedInAs({ id: "ada000000001", name: "Ada" });
-
-    expect(await opened(TRY_CHAT)).toBe("/app/learn/ask/general");
   });
 
   it("asks an account with no learner who is learning, and keeps the chat for after", async () => {

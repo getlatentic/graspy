@@ -96,6 +96,9 @@ class SessionRequest(BaseModel):
     )
     # The account's learner this device learns as, once one was chosen.
     learner_id: LearnerId | None = Field(default=None, alias="learnerId")
+    # A visitor with no account and no device record (the web's /try): a random id their browser
+    # holds, which their chats are bound to. Ignored with a deviceId or a sign-in.
+    visitor: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{16,64}$")
 
 
 class SessionResponse(BaseModel):
@@ -134,7 +137,11 @@ async def create_session(
         await Caller(learner, request.app.state.keeping).change(
             Seen(fingerprint=body.fingerprint)
         )
-    issued = issue(request.app.state.session_secret, learner=learner)
+    issued = issue(
+        request.app.state.session_secret,
+        learner=learner,
+        visitor=None if learner else body.visitor,
+    )
     return SessionResponse(token=issued.token, expires_in=issued.expires_in)
 
 

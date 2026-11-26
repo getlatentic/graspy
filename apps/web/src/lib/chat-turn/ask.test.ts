@@ -100,6 +100,30 @@ describe("askTurn", () => {
     expect(listener.onReconnecting).toHaveBeenCalledWith(true);
   });
 
+  it("makes a new chat at random, never one named by its scope, so no two visitors share one", async () => {
+    await askTurn({ text: "Hi" });
+    await askTurn({ text: "Hi" });
+
+    const [first, second] = startTurn.mock.calls.map(([chat]) => chat);
+    expect(first).toMatch(/^[0-9a-f-]{36}$/);
+    expect(second).toMatch(/^[0-9a-f-]{36}$/);
+    expect(first).not.toBe(second);
+  });
+
+  it("does not fall back to A2A, or ask again, when a visitor is past the limits", async () => {
+    startTurn.mockRejectedValue(
+      new ApiError("limit", 429, { detail: { code: "try_limit" } }),
+    );
+
+    await expect(askTurn({ text: "Hi" })).rejects.toMatchObject({
+      status: 429,
+      retryable: false,
+    });
+
+    expect(startTurn).toHaveBeenCalledOnce();
+    expect(askAgent).not.toHaveBeenCalled();
+  });
+
   it("asks over A2A, from then on, when the server keeps no turns", async () => {
     startTurn.mockRejectedValue(new TurnsUnavailable());
     askAgent.mockResolvedValue({ text: "Old way" });

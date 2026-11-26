@@ -16,7 +16,7 @@ from .api.chat_access import chat_refusal
 from .chatlog import kinds
 from .chatlog.log import ChatLog
 from .security.guard import Session, checked
-from .turns.access import may_follow
+from .turns.access import chat_owner, may_follow
 from .turns.sockets import ChatSockets, Socket
 
 PROTOCOL = "graspy.v1"
@@ -97,7 +97,7 @@ async def connect(
     if unconsented is not None:
         return refusal(unconsented.status_code, unconsented.detail["code"])
     log = ChatLog(env.DB)
-    if not await may_follow(log, chat, session.learner):
+    if not await may_follow(log, chat, chat_owner(session)):
         return refusal(404, "chat_not_found")
     if await log.once_seq(chat, kinds.TURN_STARTED, turn) is None:
         return refusal(404, "turn_not_found")

@@ -9,6 +9,7 @@ describe("the chat a visitor asked for", () => {
     "/app/learn/ask",
     "/app/learn/ask/mathematics/2",
     "/app/learn/ask/subject/mathematics?draft=1",
+    "/try",
   ])("is kept for %s and given back once", (path) => {
     rememberChat(path);
 
@@ -20,6 +21,8 @@ describe("the chat a visitor asked for", () => {
     "/app/learn",
     "/app/learn/voice",
     "/app/learn/asked",
+    "/trying",
+    "/try/../app",
     "https://elsewhere.example/app/learn/ask",
     "//elsewhere.example",
     "/app/learn/ask//elsewhere.example",

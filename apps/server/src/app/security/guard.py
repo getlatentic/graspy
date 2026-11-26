@@ -21,6 +21,7 @@ from .session import (
     started_at,
     tv_of,
     verify,
+    visitor_of,
 )
 
 BEARER_PREFIX = "Bearer "
@@ -52,6 +53,8 @@ class Session:
     tv: str | None = None
     # A parent's session: the account's address with most of it hidden.
     hint: str | None = None
+    # A visitor with no account: the id their browser holds, which names no device and no record.
+    visitor: str | None = None
 
 
 def checked(authorization: str | None, secret: str) -> Session | dict:
@@ -71,6 +74,7 @@ def checked(authorization: str | None, secret: str) -> Session | dict:
         auth_time=auth_time_of(claims),
         tv=tv_of(claims),
         hint=hint_of(claims),
+        visitor=visitor_of(claims),
         jti=claims.get("jti") if isinstance(claims.get("jti"), str) else None,
     )
 

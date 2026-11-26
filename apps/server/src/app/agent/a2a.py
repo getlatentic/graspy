@@ -4,7 +4,7 @@ again under the prefix), JSON-RPC at the prefix."""
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 
 from a2a.helpers.proto_helpers import (
     new_data_part,
@@ -24,13 +24,15 @@ from a2a.types import (
     TaskState,
 )
 from a2a.utils.errors import UnsupportedOperationError
+from fastapi import HTTPException
 from google.protobuf.json_format import MessageToDict
 
 from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
+from ..security.guard import Session
 from ..settings import Settings
-from ..turns.access import may_start
+from ..turns.access import chat_learner, chat_owner, may_start
 from ..turns.durable import DurableTurns
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
@@ -42,6 +44,9 @@ from .tutor import Tutor, TutorReply
 from .unanswered import unanswered
 
 logger = logging.getLogger(__name__)
+
+# Whether a session may start a turn, given the address the edge reported: the refusal, or None.
+Admit = Callable[[Session, str | None], Awaitable[HTTPException | None]]
 
 FAILED_TURN = "Sorry, I couldn't answer that just now. Please try again."
 TOO_LONG = "That message is too long for me to read. Please send a shorter question."
@@ -58,11 +63,16 @@ class TutorExecutor(AgentExecutor):
     names."""
 
     def __init__(
-        self, tutor: Tutor, keeping: Keeping, turns: DurableTurns | None = None
+        self,
+        tutor: Tutor,
+        keeping: Keeping,
+        turns: DurableTurns | None = None,
+        admit: Admit | None = None,
     ) -> None:
         self._tutor = tutor
         self._keeping = keeping
         self._turns = turns
+        self._admit = admit
 
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
         task = context.current_task or new_task_from_user_message(context.message)
@@ -73,6 +83,11 @@ class TutorExecutor(AgentExecutor):
         message = context.get_user_input()
         if len(message) > MAX_MESSAGE_CHARS:
             await updater.reject(updater.new_agent_message([new_text_part(TOO_LONG)]))
+            return
+
+        refusal = await self._refusal(context)
+        if refusal is not None:
+            await updater.reject(updater.new_agent_message([new_text_part(refusal)]))
             return
 
         await updater.start_work()
@@ -94,6 +109,16 @@ class TutorExecutor(AgentExecutor):
             return
         await updater.complete(updater.new_agent_message(parts))
 
+    async def _refusal(self, context: RequestContext) -> str | None:
+        """Why this turn may not start, in words for the learner: a visitor with no account is
+        limited. Only a message that begins a turn reaches the executor, so only turns are counted."""
+        session = context.call_context.state.get("auth")
+        if self._admit is None or session is None:
+            return None
+        headers = context.call_context.state.get("headers", {})
+        refused = await self._admit(session, headers.get("cf-connecting-ip"))
+        return None if refused is None else refused.detail["error"]
+
     async def _answer(
         self,
         context: RequestContext,
@@ -104,12 +129,13 @@ class TutorExecutor(AgentExecutor):
         if self._turns is None:
             turn = await self._turn(context, conversation_id, message)
             return reply_parts(await _relay(updater, turn))
-        if not await may_start(self._turns.log, conversation_id, learner_of(context)):
+        if not await may_start(self._turns.log, conversation_id, owner_of(context)):
             raise TurnFailed("not_yours")
         job = TurnJob(
             chat=conversation_id,
             turn=context.message.message_id,
             learner=learner_of(context),
+            owner=owner_of(context),
             message=message,
             parts=message_parts(context),
             metadata=learner_metadata(context),
@@ -181,7 +207,12 @@ async def _relay(updater: TaskUpdater, turn: AsyncIterator) -> TutorReply:
 
 def learner_of(context: RequestContext) -> str | None:
     session = context.call_context.state.get("auth")
-    return getattr(session, "learner", None)
+    return chat_learner(session) if session is not None else None
+
+
+def owner_of(context: RequestContext) -> str | None:
+    session = context.call_context.state.get("auth")
+    return chat_owner(session) if session is not None else None
 
 
 def message_parts(context: RequestContext) -> list[dict]:
@@ -252,10 +283,11 @@ def a2a_routes(
     tutor: Tutor,
     keeping: Keeping,
     turns: DurableTurns | None = None,
+    admit: Admit | None = None,
 ) -> list:
     card = build_agent_card(settings)
     handler = DefaultRequestHandler(
-        agent_executor=TutorExecutor(tutor, keeping, turns),
+        agent_executor=TutorExecutor(tutor, keeping, turns, admit),
         # A task lives only as long as the request that streams it.
         task_store=InMemoryTaskStore(),
         agent_card=card,
