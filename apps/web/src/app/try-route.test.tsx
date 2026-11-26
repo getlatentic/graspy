@@ -83,8 +83,10 @@ describe("/app", () => {
     const router = createMemoryRouter(routes, { initialEntries: ["/app"] });
     render(<RouterProvider router={router} />);
 
-    await waitFor(() =>
-      expect(router.state.location.pathname).toBe("/app/onboarding"),
+    // The lazy page's first import is slow on a busy machine; waitFor's default is one second.
+    await waitFor(
+      () => expect(router.state.location.pathname).toBe("/app/onboarding"),
+      { timeout: 20_000 },
     );
     expect(readyToChat).not.toHaveBeenCalled();
   });

@@ -132,6 +132,7 @@ async def health(request: Request) -> HealthResponse:
             # Whether a visitor's session is challenged, and by a live widget or a test one that
             # passes (or fails) everyone: a test secret is no protection.
             "challenge": request.app.state.settings.challenge_mode.value,
+            "build": request.app.state.settings.build_id,
         },
     )
 

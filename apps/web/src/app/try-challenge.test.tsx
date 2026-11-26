@@ -71,7 +71,10 @@ beforeEach(() => {
   loadTurnstile.mockClear();
   delete document.documentElement.dataset.device;
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("the check before a visitor's chat", () => {
   it("shows the chat only once the widget has given its token", async () => {
@@ -189,7 +192,6 @@ describe("the check before a visitor's chat", () => {
     expect(await screen.findByText(t("try.reload"))).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Reload" }));
     expect(reload).toHaveBeenCalledOnce();
-    vi.unstubAllGlobals();
   });
 
   it("gives a second ask for the check the one already running, not a stranded one", async () => {

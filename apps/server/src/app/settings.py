@@ -39,6 +39,7 @@ DEPLOYMENT_KEYS = (
     "FIREBASE_API_KEY",
     "FIREBASE_SERVICE_ACCOUNT",
     "TURNSTILE_SECRET",
+    "BUILD_ID",
 )
 
 
@@ -105,6 +106,10 @@ class Settings(BaseSettings):
     firebase_auth_emulator_host: str | None = Field(
         default=None, alias="FIREBASE_AUTH_EMULATOR_HOST"
     )
+
+    # The commit the Worker was uploaded from (scripts/deploy.sh passes it as a var), which
+    # /api/health reports so that a deploy can tell the new version from the old one.
+    build_id: str | None = Field(default=None, alias="BUILD_ID", max_length=64)
 
     # The secret of the Turnstile widget that gates a visitor's session (security/turnstile.py). A
     # Worker secret. Unset turns the challenge off, which only development may do.

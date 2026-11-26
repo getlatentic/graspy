@@ -12,6 +12,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# The commit being deployed: the API Worker is uploaded with it (BUILD_ID) and /api/health reports it, so
+# the check after the upload knows which version it is talking to.
+build_id="$(git rev-parse HEAD)"
+
 PRODUCTION_API_ORIGIN="https://graspy-api.getlatentic.com"
 FIREBASE_KEYS=(VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_APP_ID)
 DEPLOYED_WORKSPACES=(apps/tutor apps/server/ui apps/web)
@@ -125,33 +129,60 @@ require_turnstile_secret() {
     die "the API Worker needs the secret TURNSTILE_SECRET ($wrangler_env); see docs/DEPLOYING.md."
 }
 
-# What the API's /api/health says its visitor challenge is, or nothing when it did not answer.
-challenge_state() {
-  curl -fsS --max-time 10 "$(api_origin "$environment")/api/health" 2>/dev/null |
-    python3 -I -c 'import json,sys; print(json.load(sys.stdin)["details"].get("challenge", "unknown"))' 2>/dev/null
+# What /api/health answers, as "<build> <challenge>": the build id the Worker was uploaded with (BUILD_ID,
+# the commit) and how its visitor challenge is set. A Worker from before either existed answers "old
+# old", and "none" is no answer at all.
+health_of() {
+  local body
+  body="$(curl -fsS --max-time 10 "$(api_origin "$environment")/api/health" 2>/dev/null)" || { echo none; return 0; }
+  printf '%s' "$body" | python3 -I -c '
+import json, sys
+try:
+    details = json.load(sys.stdin)["details"]
+except Exception:
+    print("none")
+else:
+    print(details.get("build") or "old", details.get("challenge") or "old")
+' 2>/dev/null || echo none
 }
 
-# A new version takes a moment to reach every location, so the health check is asked for up to a
-# minute before it counts as unanswered.
-wait_for_challenge_state() {
-  local attempt state
-  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
-    state="$(challenge_state || true)"
-    if [[ -n "$state" ]]; then echo "$state"; return 0; fi
+# A new version takes a moment to reach every location, and until it does the old one answers. So the
+# check waits (90 seconds) for the answer of the version just uploaded, the one that reports this
+# commit, and prints its challenge state. Returns 2 when only the old version ever answered, and 3
+# when the last answer was none (nothing serving).
+wait_for_new_version() {
+  local attempt answer seen last=none
+  for attempt in $(seq 1 18); do
+    answer="$(health_of)"
+    if [[ "$answer" == none ]]; then
+      last=none
+    else
+      seen="${answer%% *}"
+      if [[ "$seen" == "$build_id" ]]; then echo "${answer#* }"; return 0; fi
+      last=old
+    fi
     sleep 5
   done
-  return 1
+  [[ "$last" == old ]] && return 2
+  return 3
 }
 
-# Production serving a test secret would be a bot check in name only, and the Worker refuses to start
-# with one, so a health check that never answers is that refusal too. Staging is only warned.
-# Returns non-zero when the new version must not stay.
+# Judges the version just uploaded. 0: it is fine. 1: it answered and its bot check is not live, or
+# nothing answers at all (a Worker that refused to start): it must go. 2: only the old version ever
+# answered, so the upload is not seen yet and the site is as it was: nothing to roll back.
+# Production serving a test secret would be a bot check in name only; staging is only warned.
 check_challenge() {
-  local state
-  state="$(wait_for_challenge_state)" || {
-    echo "deploy: the API did not answer /api/health within a minute of the deploy." >&2
-    return 1
-  }
+  local state status=0
+  state="$(wait_for_new_version)" || status=$?
+  case "$status" in
+    0) ;;
+    2)
+      echo "deploy: the new version ($build_id) was not seen within 90 seconds; the previous one is still answering." >&2
+      return 2 ;;
+    *)
+      echo "deploy: nothing answered /api/health for the new version ($build_id)." >&2
+      return 1 ;;
+  esac
   case "$state" in
     live) echo "deploy: the /try bot check is live." ;;
     test-*)
@@ -166,13 +197,41 @@ check_challenge() {
   esac
 }
 
-# The Worker that failed its check goes back to the version before it, before the web app, which
-# would ask for the check, is deployed.
+# The version serving all traffic now, from wrangler, or nothing when it cannot be read.
+serving_version() {
+  (cd apps/server && npx wrangler deployments status "$wrangler_env" --json 2>/dev/null) |
+    python3 -I -c '
+import json, sys
+try:
+    versions = json.load(sys.stdin).get("versions") or []
+    top = max(versions, key=lambda v: v.get("percentage", 0))
+    print(top.get("version_id") or top.get("versionId") or top["id"])
+except Exception:
+    pass
+' 2>/dev/null || true
+}
+
+# The Worker that failed its check goes back to the version that was serving before the upload, by
+# its id: "the previous deployment" may be the version a secret put made, which has the same bad
+# secret. The web app, which would ask for the check, is not deployed.
 roll_back_api_worker() {
-  echo "deploy: rolling the API Worker back to its previous version." >&2
-  (cd apps/server && npx wrangler rollback "$wrangler_env" --yes --message "deploy.sh: the bot check was not live") ||
-    echo "deploy: the rollback failed; roll back by hand: cd apps/server && npx wrangler rollback $wrangler_env" >&2
+  local target=()
+  [[ -z "${previous_version:-}" ]] || target=("$previous_version")
+  echo "deploy: rolling the API Worker back to ${previous_version:-its previous deployment}." >&2
+  (cd apps/server && npx wrangler rollback ${target[@]+"${target[@]}"} "$wrangler_env" --yes --message "deploy.sh: $build_id failed its bot check") ||
+    echo "deploy: the rollback failed; roll back by hand (docs/DEPLOYING.md)." >&2
   die "the API Worker did not pass its bot check; the web app was not deployed."
+}
+
+# What the deploy does with check_challenge's verdict.
+settle_bot_check() {
+  local status=0
+  check_challenge || status=$?
+  case "$status" in
+    0) ;;
+    2) die "the API Worker was uploaded but its new version never answered; nothing was rolled back and the web app was not deployed. Check the Worker's logs and /api/health, then deploy again." ;;
+    *) roll_back_api_worker ;;
+  esac
 }
 
 require_confirmation() {
@@ -285,7 +344,7 @@ deploy_api_worker() {
   for attempt in 1 2 3 4; do
     status=0
     # pipefail (set above) makes the pipeline's status the upload's, not tee's.
-    (cd apps/server && uv run pywrangler deploy "$wrangler_env") 2>&1 | tee "$log" || status=$?
+    (cd apps/server && uv run pywrangler deploy "$wrangler_env" --var "BUILD_ID:$build_id") 2>&1 | tee "$log" || status=$?
     [[ "$status" -eq 0 ]] && { rm -f "$log"; return 0; }
     if ! grep -q "code: 10013" "$log"; then rm -f "$log"; return "$status"; fi
     echo "deploy: Cloudflare refused the upload with 10013 (attempt $attempt of 4)" >&2
@@ -324,10 +383,11 @@ step "Tutor Worker"
 (cd apps/tutor && npx wrangler deploy "$wrangler_env")
 
 step "API Worker"
+previous_version="$(serving_version)"
 deploy_api_worker
 
 step "Bot check"
-check_challenge || roll_back_api_worker
+settle_bot_check
 
 step "Web app"
 deploy_web
