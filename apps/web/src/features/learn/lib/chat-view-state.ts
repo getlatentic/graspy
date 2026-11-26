@@ -2,6 +2,7 @@ import type { ChatMessage, ThreadScope } from "@/lib/chat-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import type { PendingPlanChange } from "../hooks/use-tutor-actions";
 import { subjectOf } from "./chat-targets";
+import { awaitsChoice } from "./choice-card";
 import type { Translate } from "@/lib/i18n-context";
 
 /** Shown in place of the tutor's activity while the connection to the turn is down. */
@@ -38,6 +39,15 @@ export function threadState(
     blocked:
       isGenerating || tutor.busyThreadId !== null || tutor.isChangingPlan,
   };
+}
+
+/** The plan change to show under the composer: none while a question waits for its answer,
+ * since two cards each asking the learner to decide are one too many. */
+export function planChangeFor(
+  last: ChatMessage | undefined,
+  state: ThreadState,
+): PendingPlanChange | null {
+  return awaitsChoice(last) ? null : state.planChange;
 }
 
 // Only a complete answer offers follow-ups: mid-stream they make the page jump,

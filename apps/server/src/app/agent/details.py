@@ -12,7 +12,7 @@ from .choice import shown_card
 from .choices import clean
 from .context import LearnerContext
 from .refusal import refusal
-from .reply import Outcome, SetDetails
+from .reply import Action, Outcome, SetDetails
 
 MAX_DETAIL = 60
 MAX_QUESTION = 160
@@ -25,6 +25,23 @@ DETAILS_KEPT = (
     "changes them. If they want them changed, tell them to open the You page and "
     "change their details there"
 )
+
+
+CLASS_FIRST = (
+    "The learner's class is not known, and what you offer is written for it. Ask for "
+    "it with ask_class, save it with set_details, and only then {then}"
+)
+
+
+def class_first(
+    context: LearnerContext, actions: list[Action], then: str
+) -> dict | None:
+    """The refusal for a subject or course offered to a learner whose class is not
+    known, unless this turn already saves it."""
+    saved = any(isinstance(a, SetDetails) and a.class_name for a in actions)
+    if context.needs_class() and not saved:
+        return refusal(CLASS_FIRST.format(then=then))
+    return None
 
 
 def kept(context: LearnerContext) -> bool:

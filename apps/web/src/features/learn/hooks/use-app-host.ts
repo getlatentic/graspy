@@ -3,10 +3,8 @@ import { onceForAnswers } from "@/features/haptics/lib/answer-cue";
 import { haptics } from "@/features/haptics/lib/haptics";
 import { appCall, type AppCallRequest } from "@/lib/a2a/request-data";
 import type { ChatMessage } from "@/lib/chat-db";
+import { CHOICE_UI } from "../lib/choice-card";
 import type { ViewHost } from "../ui-apps/view-bridge";
-
-/** A question to answer by a tap, which only the latest message may still be answered. */
-const CHOICE_UI = "ui://graspy/choice";
 
 interface AppHostDeps {
   busy: boolean;

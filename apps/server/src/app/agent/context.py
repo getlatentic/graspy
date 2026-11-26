@@ -158,6 +158,11 @@ class LearnerContext(BaseModel):
             logger.warning("Dropped malformed learner context", exc_info=True)
             return cls()
 
+    def needs_class(self) -> bool:
+        """A new learner whose class is not given: what is written for them
+        follows their class, so nothing is offered before it."""
+        return self.empty_plan and not self.grade_level
+
     def held_subjects(self) -> list[SubjectRef]:
         """Their subjects, with the open one even when the app did not list it."""
         subjects = list(self.subjects)
