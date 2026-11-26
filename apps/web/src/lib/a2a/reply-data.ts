@@ -16,7 +16,7 @@ export const TUTOR_TOOLS = [
   "give_practice",
   "give_passage",
   "give_choice",
-  "ask_class",
+  "ask_about_you",
   "set_details",
   "load_skill",
 ] as const;
@@ -60,6 +60,9 @@ interface SetDetailsAction {
   className: string;
   country: string;
   course: string;
+  /** The catalogue's code for the country, empty when the server could not place it: the app
+   * saves by it, and by the name only without it. */
+  countryCode?: string;
 }
 
 interface OpenSubjectAction {

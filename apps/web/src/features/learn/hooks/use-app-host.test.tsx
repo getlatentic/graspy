@@ -101,6 +101,22 @@ describe("a choice card's tap", () => {
     expect(ask).toHaveBeenCalledOnce();
   });
 
+  it("is refused for the About you form too once the conversation has gone on past it", () => {
+    const form = {
+      id: "m1",
+      metadata: { card: { resourceUri: "ui://graspy/details" } },
+    } as Partial<ChatMessage>;
+
+    expect(hostWith(false, vi.fn(), form, "m3").message("Country: x")).toBe(
+      false,
+    );
+    expect(
+      hostWith(false, vi.fn(), { ...form, id: "m3" }, "m3").message(
+        "Country: x",
+      ),
+    ).toBe(true);
+  });
+
   it("leaves another kind of card as it was", () => {
     const practice = {
       id: "m1",

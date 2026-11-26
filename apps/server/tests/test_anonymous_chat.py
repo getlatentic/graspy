@@ -264,7 +264,12 @@ def test_the_tutors_tools_only_return_what_the_app_does_and_touch_no_record():
     assert [action.type for action in outputs.actions] == ["set_details"]
     assert len(outputs.cards) == 1
     # None of them is given a store or a key: the tools take the context and nothing else.
-    assert set(tools) >= {"set_details", "ask_class", "give_choice", "change_subjects"}
+    assert set(tools) >= {
+        "set_details",
+        "ask_about_you",
+        "give_choice",
+        "change_subjects",
+    }
 
 
 # Whose chat it is

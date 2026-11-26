@@ -34,7 +34,8 @@
       "ui": "ui://graspy/choice"
     },
     {
-      "name": "ask_class"
+      "name": "ask_about_you",
+      "ui": "ui://graspy/details"
     },
     {
       "name": "set_details"
@@ -85,7 +86,8 @@
         "type": "set_details",
         "className": "JSS 2",
         "country": "Nigeria",
-        "course": ""
+        "course": "",
+        "countryCode": "NG"
       }
     ],
     "cards": [
@@ -256,6 +258,60 @@
           },
           "_meta": {
             "viewUUID": "c2d4e6f8a0b1c3d5e7f9a1b2c4d6e8f0",
+            "where": {
+              "planId": "plan-1",
+              "subjectSlug": "mathematics",
+              "topic": "Fractions"
+            }
+          }
+        }
+      },
+      {
+        "resourceUri": "ui://graspy/details",
+        "toolName": "ask_about_you",
+        "toolInput": {},
+        "toolResult": {
+          "content": [
+            {
+              "type": "text",
+              "text": "A form asking the learner their country and class."
+            }
+          ],
+          "structuredContent": {
+            "country": "NG",
+            "countries": [
+              "NG",
+              "SK"
+            ],
+            "names": {
+              "NG": "Nigeria",
+              "SK": "Slovakia"
+            },
+            "classLists": [
+              [
+                "JSS 1",
+                "JSS 2",
+                "Undergraduate",
+                "Graduate"
+              ],
+              [
+                "Grade 1",
+                "Grade 2",
+                "Undergraduate",
+                "Graduate"
+              ]
+            ],
+            "classListOf": {
+              "NG": 0,
+              "SK": 1
+            },
+            "afterSchool": [
+              "Undergraduate",
+              "Graduate"
+            ]
+          },
+          "_meta": {
+            "viewUUID": "d1f3a5b7c9e0d2f4a6b8c0e1f3a5b7c9",
             "where": {
               "planId": "plan-1",
               "subjectSlug": "mathematics",

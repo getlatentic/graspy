@@ -51,6 +51,10 @@ function codeOf(
   return codes.find((code) => nameOf(code) === value);
 }
 
+/** Whether the app has a country of this code. */
+export const isKnownCountry = (code: string): boolean =>
+  COUNTRIES.includes(code);
+
 /** The country as a learner or the tutor names it, in English or by code, in any case. */
 export function countryCodeNamed(name: string): string | undefined {
   const wanted = name.trim().toLowerCase();

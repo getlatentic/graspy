@@ -255,3 +255,31 @@ async def test_a_turn_too_large_to_keep_is_refused_not_a_server_error(log):
 
     assert response.status_code == 422
     assert response.json()["detail"]["code"] == "turn_too_large"
+
+
+async def contexts_after(log, headers: dict, learner: dict, chat: str = CHAT) -> list:
+    tutor = FakeTutor()
+    http, host = client_for(log, tutor)
+    body = {**start_body(), "metadata": {"learner": learner}}
+    await http.post(
+        f"/api/chats/{chat}/turns", json=body, headers={**bearer(), **headers}
+    )
+    await host.idle()
+    return tutor.contexts
+
+
+async def test_the_edge_country_reaches_the_tutor_from_the_request(log):
+    [context] = await contexts_after(log, {"CF-IPCountry": "SK"}, {"emptyPlan": True})
+
+    assert context.edge_country == "SK"
+
+
+async def test_an_edge_country_the_app_claims_is_not_the_edge_country(log):
+    claimed = {"emptyPlan": True, "edgeCountry": "NG"}
+
+    [context] = await contexts_after(log, {"CF-IPCountry": "SK"}, claimed)
+    assert context.edge_country == "SK"
+
+    other = "6c4a4b63-2d2f-4f1f-8a1f-3a6e7d0b8c22"
+    [context] = await contexts_after(log, {"CF-IPCountry": "XX"}, claimed, other)
+    assert context.edge_country is None

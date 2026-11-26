@@ -3,16 +3,20 @@ import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CurriculumData } from "@/lib/curriculum-record";
 
-const sync = vi.fn<() => Promise<CurriculumData | null>>();
+const sync = vi.hoisted(() => vi.fn<() => Promise<CurriculumData | null>>());
+
+// Mocked once, for the file. A doMock and doUnmock per test are queued and settled by whichever
+// import comes first; the imports below run together, and a second settling of the queue can
+// unmock what the first has just mocked, so that the real syncPlan is loaded.
+vi.mock("@/lib/plan-sync", () => ({ syncPlan: sync }));
+vi.mock("@/lib/locale-detector", () => ({
+  detectLocale: () => ({ language: "en", country: "NG" }),
+}));
 
 async function device() {
   vi.resetModules();
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("IDBKeyRange", IDBKeyRange);
-  vi.doMock("@/lib/plan-sync", () => ({ syncPlan: sync }));
-  vi.doMock("@/lib/locale-detector", () => ({
-    detectLocale: () => ({ language: "en", country: "NG" }),
-  }));
   const [{ readyToChat }, db, storage] = await Promise.all([
     import("./start-chat"),
     import("@/lib/curriculum-db"),
@@ -28,23 +32,21 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllGlobals();
-  vi.doUnmock("@/lib/plan-sync");
-  vi.doUnmock("@/lib/locale-detector");
 });
 
 describe("a learner ready to chat with no onboarding", () => {
-  it("has a plan with no subjects, English and the country the device suggests", async () => {
+  it("has a plan with no subjects and English, and no country: the device's guess is not kept", async () => {
     const { readyToChat, getCurriculum, getUserProfile } = await device();
 
     expect(await readyToChat()).toBe(true);
 
     const plan = await getCurriculum();
     expect(plan?.subjects).toEqual([]);
-    expect(plan?.countryCode).toBe("NG");
+    expect(plan?.countryCode).toBe("");
     expect(plan?.languageCode).toBe("en");
     expect(plan?.gradeLevel).toBe("");
     expect(getUserProfile()).toMatchObject({
-      country: "NG",
+      country: "",
       language: "en",
       gradeLevel: "",
       onboardingCompleted: true,
@@ -100,14 +102,16 @@ describe("a learner ready to chat with no onboarding", () => {
     expect(getUserProfile()?.gradeLevel).toBe("Primary 4, Ghana, age 9");
   });
 
-  it("starts again for a profile an earlier open of the link made, which has no class", async () => {
-    const { readyToChat, getCurriculum, saveUserProfile } = await device();
+  it("starts again for a profile an earlier open of the link made, which has no class, without the country it guessed", async () => {
+    const { readyToChat, getCurriculum, getUserProfile, saveUserProfile } =
+      await device();
     saveUserProfile({ country: "GH", language: "en", gradeLevel: "" });
 
     expect(await readyToChat()).toBe(true);
 
     const plan = await getCurriculum();
-    expect(plan?.countryCode).toBe("GH");
+    expect(plan?.countryCode).toBe("");
+    expect(getUserProfile()?.country).toBe("");
     expect(plan?.startedInChat).toBe(true);
   });
 

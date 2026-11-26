@@ -143,3 +143,55 @@ describe("what a learner says of their school", () => {
     ).toMatchObject({ country: "GH", system: "", level: "", gradeLevel: "" });
   });
 });
+
+describe("the country the server names", () => {
+  // A catalogue with one system per country asked for, so the class is found only in the right one.
+  const systemsFor = vi.fn(async (code: string) => [
+    { ...NIGERIA, id: code, country: code, name: { en: code } },
+  ]);
+  const nameless = said("JSS 1", "Not a name the app knows");
+
+  it.each(["CZ", "TR", "MM", "HK", "CI", "GB", "PS", "CD", "SK"])(
+    "is saved by its code %s, whatever name goes with it",
+    async (code) => {
+      const result = await detailsSaid(
+        { ...nameless, countryCode: code },
+        KEPT,
+        systemsFor,
+      );
+
+      expect(result?.details).toMatchObject({ country: code, system: code });
+    },
+  );
+
+  it.each([
+    ["Czechia", "CZ"],
+    ["Türkiye", "TR"],
+    ["United Kingdom", "GB"],
+  ])(
+    "is found by the catalogue's name %s when no code comes",
+    async (name, code) => {
+      const result = await detailsSaid(said("JSS 1", name), KEPT, systemsFor);
+
+      expect(result?.details.country).toBe(code);
+    },
+  );
+
+  it("falls back to the name for a code the app does not have, and to the kept country for none", async () => {
+    const byName = await detailsSaid(
+      { ...said("JSS 1", "Czechia"), countryCode: "ZZ" },
+      KEPT,
+      systemsFor,
+    );
+    expect(byName?.details.country).toBe("CZ");
+
+    const kept = await detailsSaid(said("JSS 1"), KEPT, systemsFor);
+    expect(kept?.details.country).toBe("NG");
+  });
+
+  it("saves nothing for a name and a code the app has neither of", async () => {
+    expect(
+      await detailsSaid({ ...nameless, countryCode: "ZZ" }, KEPT, systemsFor),
+    ).toBeNull();
+  });
+});

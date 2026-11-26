@@ -7,7 +7,7 @@ from stand_in import stand_in
 from test_tutor import CARD_ANSWERS, finish
 
 from app.agent.answer_gate import AnswerGate
-from app.agent.cards import ChoiceCard, PracticeCard
+from app.agent.cards import ChoiceCard, DetailsCard, PracticeCard
 from app.agent.context import LearnerContext, SubjectRef
 from app.agent.decision import WAITING, WITHDRAWN
 from app.agent.memory import InMemoryConversationStore
@@ -22,7 +22,6 @@ PLANNED = LearnerContext(
 )
 # The start of /try: nothing yet, not even a class.
 NEW = LearnerContext(country="Nigeria", countryCode="NG", emptyPlan=True)
-CLASS = {"question": "Which class are you in?"}
 WHICH = {"question": "Which do you mean?", "options": ["Python", "Rust"]}
 PRACTICE = CARD_ANSWERS[0]["next_tool_args"]
 
@@ -134,7 +133,7 @@ def test_a_course_is_not_offered_before_the_class_is_known():
 
     told = built("propose_path", goals=["Machine learning"])
 
-    assert "ask_class" in told["error"]
+    assert "ask_about_you" in told["error"]
     assert "propose the course" in told["error"]
     assert built.outputs.actions == []
 
@@ -144,19 +143,24 @@ def test_a_subject_is_not_added_before_the_class_is_known():
 
     told = built("change_subjects", add=["Physics"])
 
-    assert "ask_class" in told["error"]
+    assert "ask_about_you" in told["error"]
     assert built.outputs.actions == []
 
 
 def test_a_course_is_offered_in_the_message_that_saves_the_class():
     built = Built(NEW)
 
-    built("set_details", class_name="Secondary Year 2", country="Nigeria")
+    built("set_details", class_name="SS 2", country="Nigeria")
     told = built("propose_path", goals=["Machine learning"])
 
     assert "error" not in told
     assert built.outputs.actions == [
-        SetDetails(class_name="Secondary Year 2", country="Nigeria", course=""),
+        SetDetails(
+            class_name="SS 2",
+            country="Nigeria",
+            course="",
+            country_code="NG",
+        ),
         ProposePath(goal="Machine learning"),
     ]
 
@@ -167,7 +171,7 @@ def test_saving_only_the_country_does_not_open_the_way_to_a_course():
     built("set_details", country="Nigeria")
     told = built("propose_path", goals=["Machine learning"])
 
-    assert "ask_class" in told["error"]
+    assert "ask_about_you" in told["error"]
 
 
 def test_saving_the_class_and_adding_the_subject_are_one_message():
@@ -213,14 +217,13 @@ async def test_a_new_learner_naming_a_goal_is_asked_the_class_and_nothing_else()
         NEW,
         [
             step("propose_path", goals=["Machine learning"]),
-            step("ask_class", **CLASS),
+            step("ask_about_you"),
             DONE,
             say("Good choice. One thing first."),
         ],
     )
 
-    assert [type(card) for card in reply.cards] == [ChoiceCard]
-    assert reply.cards[0].tool_result.structured_content.question == CLASS["question"]
+    assert [type(card) for card in reply.cards] == [DetailsCard]
     assert reply.actions == []
 
 
@@ -243,7 +246,7 @@ async def test_the_tap_on_the_class_saves_it_and_offers_the_course_in_one_reply(
     reply = await reply_to(
         NEW,
         [
-            step("set_details", class_name="Secondary Year 2", country="Nigeria"),
+            step("set_details", class_name="SS 2", country="Nigeria"),
             step("propose_path", goals=["Machine learning"]),
             DONE,
             say("Thanks. Here is the path to machine learning."),

@@ -60,7 +60,7 @@ The routes under `/app/learn/ask` sit behind `requireAccount` (`web/app/chat-gat
 - The visitor's session is minted once, before the chat opens, after a Cloudflare Turnstile check (`web/app/try-challenge.tsx`, `web/lib/challenge/`; [Security](SECURITY.md#visitor-challenge-cloudflare-turnstile)); a renewal presents the session it replaces instead of a new check.
 - The page holds an anonymous session (`holdAnonymousSession`), so every request carries a session that names a random **visitor id** and no device or learner (`web/lib/api/session.ts`, `web/lib/try-visitor.ts`).
 - Text only. The page is a header with the logo and a sign-in link around the same `ChatView`. It has no navigation, and the chat components have no voice input.
-- The device makes its own plan with no subjects (`readyToChat`, `web/features/learn/lib/start-chat.ts`). What the visitor says about themselves stays in the browser.
+- The device makes its own plan with no subjects and no country (`readyToChat`, `web/features/learn/lib/start-chat.ts`). What the visitor says about themselves stays in the browser, and a country the device guessed is never kept as theirs: the form confirms it.
 - The server counts the visitor's turns and answers `429 try_limit` past its limits (section 6). No thread sync runs for a visitor, so conversations stay on the device.
 
 ### Modules
@@ -96,7 +96,8 @@ The routes under `/app/learn/ask` sit behind `requireAccount` (`web/app/chat-gat
 
 | Field | Meaning |
 |---|---|
-| `country`, `countryCode` | The name the model reads, and the two-letter code that finds the country's classes |
+| `country`, `countryCode` | The name the model reads, and the two-letter code that finds the country's classes. Sent only once the learner has a class or a subject: before that the plan's country is a guess |
+| `deviceCountry` | The device's guess (`web/lib/locale-detector.ts`), sent while the learner has not said their country. It is only where the About you form starts when the edge placed the connection nowhere |
 | `language`, `gradeLevel` | From the plan |
 | `emptyPlan` | True when the plan has no subjects, as for a `/try` start. The tutor is then told to ask what the learner would like to learn |
 | `planId` | Files the conversation under the plan in the learner's record |
@@ -107,7 +108,7 @@ The server caps and validates every field (`LearnerContext.from_metadata`, `serv
 
 ### Cards
 
-A reply may carry a card: an MCP Apps tool result with a `ui://graspy/...` resource. The server sends at most one per turn, the last, and the page keeps it on the message. `AppFrame` shows it in an iframe on the sandbox page of the server's origin, `/ui-sandbox/<build>/`, one per build of the views, and `AppBridge` passes messages (`web/lib/mcp/sandbox.ts`, `server/mcp/sandbox_routes.py`). A tap in a view is a tool call. It goes to `/mcp`, and is kept in the outbox while offline. `use-app-host.ts` also keeps it for the next message so the tutor is told. A choice card (`ui://graspy/choice`) can be answered only while it is the last message. [MCP Apps compliance](MCP_APPS_COMPLIANCE.md) lists where the host departs from the standard.
+A reply may carry a card: an MCP Apps tool result with a `ui://graspy/...` resource. The server sends at most one per turn, the last, and the page keeps it on the message. `AppFrame` shows it in an iframe on the sandbox page of the server's origin, `/ui-sandbox/<build>/`, one per build of the views, and `AppBridge` passes messages (`web/lib/mcp/sandbox.ts`, `server/mcp/sandbox_routes.py`). A tap in a view is a tool call. It goes to `/mcp`, and is kept in the outbox while offline. `use-app-host.ts` also keeps it for the next message so the tutor is told. A choice card (`ui://graspy/choice`) and the About you form (`ui://graspy/details`, section 4) can be answered only while they are the last message. [MCP Apps compliance](MCP_APPS_COMPLIANCE.md) lists where the host departs from the standard.
 
 ### Storing conversations
 
@@ -228,7 +229,7 @@ The agent card is at `/.well-known/agent-card.json` on the origin root, and agai
 | `learner_route` | app only | Whether the learner learns by voice alone or by slides and voice |
 | `next_question`, `check_answer`, `hint`, `show_working` | model only | The spoken maths tools, for assistants |
 
-The `ui://graspy/practice`, `passage`, `choice` and `lesson` resources are served from the views built in `apps/server/ui` (`server/mcp/catalog.py`, `server/mcp/views.py`). Each read adds a `<base href>` for the server's origin, a CSP and the path of the build's sandbox.
+The `ui://graspy/practice`, `passage`, `choice`, `details` and `lesson` resources are served from the views built in `apps/server/ui` (`server/mcp/catalog.py`, `server/mcp/views.py`). Each read adds a `<base href>` for the server's origin, a CSP and the path of the build's sandbox.
 
 **Cards in a reply.** When the tutor calls `give_practice`, `give_passage` or `give_choice`, the tool returns an `Outcome` whose card goes to `TurnOutputs`, not to the model: the model reads only words ([Tool results](TOOL_RESULTS.md)). The last card of the turn goes into `ReplyData.cards` in the finished reply, which the page shows as described in section 2.
 
@@ -270,13 +271,15 @@ Every input but the message is marked as data, not instructions (`DATA_ONLY`, `s
 | `give_practice` | One to five multiple-choice questions as a card; the key and the notes are checked first | Server work, then a card |
 | `give_passage` | A passage with questions as a card | Server work, then a card |
 | `give_choice` | A question with two to four answers to tap | A card |
-| `ask_class` | A card of the country's classes, plus Undergraduate and Graduate | A card |
+| `ask_about_you` | The About you form: country and class on one card, for a learner whose class is not known | A card |
 | `load_skill` | Loads a teaching method for this turn and the next few | Server work |
 
 ### Rules the server holds
 
 - **One change to the plan a turn.** `admit` (`server/agent/turn_policy.py`) refuses a second change and tells the model. Going to a subject or a lesson comes with a change. The courses of `propose_path` count as one change, at most five.
-- **One step per message** is in `TUTOR_RULES` for a learner with no subjects: find the country, then the class, then save them, then add the subject. I found no separate "one decision at a time" mechanism on `main`. This rule and `give_choice` are what exist.
+- **One decision at a time** (`server/agent/decision.py`). A card that asks the learner something (`ASKING` in `cards.py`: a choice, or the form) takes the place of every offer in its turn, and the form takes the place of every other question too. The call that could not be shown is told, so the model asks again next turn.
+- **The About you form** (`server/agent/about_you.py`, view `apps/server/ui/src/details`). A learner whose class is not known is asked their country and class on one card. The form starts on the country the Cloudflare edge placed the connection in (`CF-IPCountry`, read from the request by `server/agent/edge_country.py` and put in the learner context; whatever an app sends under that name is dropped), else the device's guess, and the learner confirms or changes it, whatever the plan holds (only a country saved with a class is fixed, and then the form is not asked). The edge's country travels beside the turn (`TurnJob.edge_country`), never in the app's metadata. Every catalogue country, its name and its classes ship in the card (about 25 KB: each distinct list once, and each country names its own), so changing the country lists its classes with no call to the server. The answer is the learner's next message, `Country: Slovakia (SK). Class: Grade 7.`, which the server reads back (`answer_in`): only the code is read, and the country is the catalogue's own name for it; a course must be a few words of letters, digits and light punctuation. It is saved as a `set_details` action that carries the code (the app saves by it) and used for the rest of the turn, so the tutor can propose the course for that class in the same reply. A turn ended by the safety check keeps the class and country, never a course, and the form comes again. The course is cleaned best-effort (`agent/course.py`: normalised, letters, digits and a few marks, 12 words, 80 characters), never refused, and reaches the prompt only in its own labelled slot of the learner line. The server never writes a learner's details: `set_details` is an action the app applies to the plan on its own device (and syncs for a signed-in learner), and the app refuses it for a learner who has a class or a subject, so a crafted message can change only the sender's own record.
+- **A reply is never a dead end.** A turn that ends with no card and no saved class, for a learner whose class is not known, gets the form from the server (`lacks_class`, `form_due`), whatever the model did, withdrawing any offer the turn accepted. It is owed until the class is saved, never twice in a row and at most twice in all (then the tutor asks in words once); a turn run again does not count its own first run. A turn ended by the safety screen is not given one.
 - **Skills** are `SKILL.md` files in `server/agent/skills/`: `checking-understanding`, `explaining-a-mistake` and `worked-example`. The registry reads them on first use.
 - **Runaway guard** (`server/agent/runaway.py`). An answer that repeats itself is withdrawn (`AnswerRestart`, `round.aborted` with reason `rewritten`) and written again once at temperature 0.7.
 - **Answer gate** (`server/agent/answer_gate.py`, `answer_rules.py`). Each sentence is read before it is sent: an answer is called right or wrong only as the app marked it. [Tutor guards](TUTOR_GUARDS.md) has the table. [Answer gate](ANSWER_GATE.md) is the separate gate on lesson questions.

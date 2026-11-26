@@ -3,7 +3,7 @@ import { onceForAnswers } from "@/features/haptics/lib/answer-cue";
 import { haptics } from "@/features/haptics/lib/haptics";
 import { appCall, type AppCallRequest } from "@/lib/a2a/request-data";
 import type { ChatMessage } from "@/lib/chat-db";
-import { CHOICE_UI } from "../lib/choice-card";
+import { asksLearner } from "../lib/choice-card";
 import type { ViewHost } from "../ui-apps/view-bridge";
 
 interface AppHostDeps {
@@ -54,7 +54,7 @@ export function useAppHost({
       },
       message: (text) => {
         const answered =
-          message.metadata?.card?.resourceUri === CHOICE_UI &&
+          asksLearner(message.metadata?.card?.resourceUri) &&
           message.id !== lastMessageId;
         if (busy || answered) return false;
         ask(text, pending.current);

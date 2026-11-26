@@ -35,6 +35,9 @@ class TurnJob(BaseModel):
     parts: list[dict[str, Any]] = Field(default_factory=list)
     # The message's metadata: the learner's situation under "learner".
     metadata: dict[str, Any] = Field(default_factory=dict)
+    # The country Cloudflare's edge placed the request in, set by the server from the request:
+    # never part of the metadata, which an app writes.
+    edge_country: str | None = None
 
     @model_validator(mode="after")
     def _learner_owns_its_chat(self) -> TurnJob:
@@ -71,7 +74,9 @@ async def _stream(tutor: Tutor, keeping: Keeping, job: TurnJob) -> AsyncIterator
     if caller.learner and job.chat not in record.conversations:
         await caller.change(Conversed(conversation_id=job.chat))
     learner = await with_kept_lesson(
-        LearnerContext.from_metadata(job.metadata), record, keeping.lessons
+        LearnerContext.from_metadata(job.metadata).with_edge_country(job.edge_country),
+        record,
+        keeping.lessons,
     )
     async for item in tutor.stream(
         job.chat,

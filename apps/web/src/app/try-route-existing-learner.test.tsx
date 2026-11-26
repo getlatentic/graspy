@@ -22,14 +22,13 @@ vi.setConfig({ testTimeout: 30_000 });
 async function opened(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   router.initialize();
-  // Initialised once the route's lazy page has been imported, which is the slow first visit the
-  // test timeout allows for; waitFor's own default of one second is not.
+  // The page is imported on this first visit: as long as the test may take, not waitFor's second.
   await vi.waitFor(
     () => {
       expect(router.state.initialized).toBe(true);
       expect(router.state.navigation.state).toBe("idle");
     },
-    { timeout: 20_000 },
+    { timeout: 25_000 },
   );
   return router.state.location.pathname;
 }
