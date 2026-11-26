@@ -2,6 +2,8 @@
 // lessons/tools.py shape it. It reaches a view from its host, so it is
 // checked before it is shown.
 
+import type { LessonTarget } from "./lesson";
+
 export interface Where {
   planId?: string | null;
   subjectSlug?: string | null;
@@ -58,6 +60,34 @@ export interface AboutYou {
   classListOf: Record<string, number>;
   /** The classes that ask for a course. */
   afterSchool: string[];
+}
+
+/** One topic of a path, and the level it is taught at (cards.py's PathStep). */
+export interface PathStep {
+  title: string;
+  level: string;
+}
+
+export interface PlannedPath {
+  subject: string;
+  goal: string;
+  steps: PathStep[];
+}
+
+/** The courses the tutor proposes, each topic one the learner can leave out (cards.py's PathChoice). */
+export interface PathChoice {
+  paths: PlannedPath[];
+}
+
+/** A lesson made for a topic the learner added, and where it opens (cards.py's StartLesson). */
+export interface StartLesson {
+  topic: string;
+  subject: string;
+  status: "ready" | "making" | "failed";
+  /** What give_lesson and lesson_progress are asked with: the lesson's own view reads it back. */
+  target: LessonTarget;
+  lessonId: string | null;
+  openPath: string;
 }
 
 const MAX_QUESTIONS = 5;
@@ -192,5 +222,48 @@ export function isAboutYou(value: unknown): value is AboutYou {
       return isText(names[code]) && list !== undefined && list.length > 0;
     }) &&
     isTexts(form.afterSchool)
+  );
+}
+
+function isStep(value: unknown): value is PathStep {
+  const step = value as Partial<PathStep> | null;
+  return isText(step?.title) && step.title.trim() !== "" && isText(step.level);
+}
+
+function isPlannedPath(value: unknown): value is PlannedPath {
+  const path = value as Partial<PlannedPath> | null;
+  return (
+    isText(path?.subject) &&
+    isText(path.goal) &&
+    Array.isArray(path.steps) &&
+    path.steps.length > 0 &&
+    path.steps.every(isStep)
+  );
+}
+
+export function isPathChoice(value: unknown): value is PathChoice {
+  const choice = value as Partial<PathChoice> | null;
+  return (
+    Array.isArray(choice?.paths) &&
+    choice.paths.length > 0 &&
+    choice.paths.every(isPlannedPath)
+  );
+}
+
+const LESSON_STATUSES = new Set<string>(["ready", "making", "failed"]);
+
+export function isStartLesson(value: unknown): value is StartLesson {
+  const start = value as Partial<StartLesson> | null;
+  const target = start?.target as Partial<LessonTarget> | undefined;
+  return (
+    isText(start?.topic) &&
+    isText(start.subject) &&
+    isText(start.status) &&
+    LESSON_STATUSES.has(start.status) &&
+    isText(start.openPath) &&
+    start.openPath.startsWith("/app/learn/") &&
+    typeof target === "object" &&
+    target !== null &&
+    isText(target.topic)
   );
 }

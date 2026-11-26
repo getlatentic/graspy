@@ -55,11 +55,13 @@
     "pathAccept": "Fi ọ̀nà yìí kún un",
     "pathAcceptAll": "Fi gbogbo wọn kún un",
     "pathAcceptReady": "Add ready ({ready} of {total})",
+    "pathRetry": "Try again",
+    "pathNotNow": "Kì í ṣe báyìí",
     "pathUnnamed": "A course had no name, so it was not added.",
     "pathExists": "“{subject}” is already in your plan.",
     "pathsFull": "A plan holds at most {count} subjects.",
-    "pathRetry": "Try again",
-    "pathNotNow": "Kì í ṣe báyìí",
+    "pathReplaced": "Ọ̀nà tuntun ti rọ́pò èyí.",
+    "pathAnswer": "Fi kún ètò mi: {subjects} ({count})",
     "stop": "Dúró",
     "jumpToLatest": "Lọ sí ìfiránṣẹ́ tuntun",
     "activity": {
@@ -75,6 +77,7 @@
       "give_choice": "Asking you a question...",
       "ask_about_you": "Getting to know you...",
       "set_details": "Saving your details...",
+      "start_lesson": "À ń ṣe ẹ̀kọ́ rẹ...",
       "load_skill": "Mò ń yan ọ̀nà tí màá fi kọ́ ọ..."
     },
     "openLesson": "Ṣí ẹ̀kọ́",
@@ -106,6 +109,7 @@
   },
   "lesson": {
     "backTo": "Padà sí {subject}",
+    "backToChat": "Padà sí ìjíròrò",
     "loading": "À ń múra ẹ̀kọ́ rẹ sílẹ̀",
     "loadFailed": "Ẹ̀kọ́ náà kò ṣí",
     "notFound": "Ẹ̀kọ́ yìí kò sí lórí ẹ̀rọ yìí. Tún un ṣí láti inú kókó-ẹ̀kọ́ náà.",

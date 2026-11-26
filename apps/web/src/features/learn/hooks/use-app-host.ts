@@ -12,6 +12,8 @@ interface AppHostDeps {
   lastMessageId?: string;
   ask: (text: string, calls: AppCallRequest[]) => void;
   keepViewCalls: (messageId: string, calls: AppCallRequest[]) => void;
+  /** Where a card's button takes the learner, when it names a place in the app. */
+  open?: (url: string) => void;
 }
 
 const sameCall = (a: AppCallRequest, b: AppCallRequest) =>
@@ -29,6 +31,7 @@ export function useAppHost({
   lastMessageId,
   ask,
   keepViewCalls,
+  open,
 }: AppHostDeps) {
   const pending = useRef<AppCallRequest[]>([]);
 
@@ -61,7 +64,8 @@ export function useAppHost({
         pending.current = [];
         return true;
       },
+      open,
     }),
-    [ask, busy, keepViewCalls, lastMessageId],
+    [ask, busy, keepViewCalls, lastMessageId, open],
   );
 }

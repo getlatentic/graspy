@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import type { ChatMessage } from "@/lib/chat-db";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
 import { Spinner } from "@/components/ui/spinner";
 import type { Turn } from "@/features/learn/lib/chat-turns";
+import { replacedPathCards } from "@/features/learn/lib/path-card";
 import type { ConversationScroll } from "@/features/learn/hooks/use-conversation-scroll";
 import { ChatMessageItem } from "@/features/learn/components/chat-message";
 import { AppFrame } from "@/features/learn/ui-apps/app-frame";
@@ -38,6 +39,10 @@ export function ChatLog({
   const { t } = useI18n();
   const lastTurn = turns[turns.length - 1];
   const arriving = useArriving(ready, turns);
+  const replaced = useMemo(
+    () => replacedPathCards(turns.flatMap((turn) => turn.messages)),
+    [turns],
+  );
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -62,6 +67,7 @@ export function ChatLog({
               hostFor={hostFor}
               activity={turn === lastTurn ? activity : undefined}
               arriving={arriving}
+              replaced={replaced}
             />
           ))}
           {changingPlan && (
@@ -93,6 +99,8 @@ interface TurnSectionProps {
   reserve: number | null;
   hostFor: (message: ChatMessage) => ViewHost;
   activity: string | null | undefined;
+  /** The messages whose path card a newer one has replaced. */
+  replaced: ReadonlySet<string>;
 }
 
 function TurnSection({
@@ -101,7 +109,9 @@ function TurnSection({
   hostFor,
   activity,
   arriving,
+  replaced,
 }: TurnSectionProps) {
+  const { t } = useI18n();
   return (
     <section
       data-turn={turn.id}
@@ -117,9 +127,12 @@ function TurnSection({
           )}
         >
           <ChatMessageItem message={message} />
-          {message.metadata?.card && (
-            <AppFrame card={message.metadata.card} host={hostFor(message)} />
-          )}
+          {message.metadata?.card &&
+            (replaced.has(message.id) ? (
+              <p className="text-sm text-muted">{t("chat.pathReplaced")}</p>
+            ) : (
+              <AppFrame card={message.metadata.card} host={hostFor(message)} />
+            ))}
         </div>
       ))}
       {activity !== undefined && <TutorActivity tool={activity} />}

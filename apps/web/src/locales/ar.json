@@ -55,11 +55,13 @@
     "pathAccept": "أضف هذا المسار",
     "pathAcceptAll": "أضف الكل",
     "pathAcceptReady": "Add ready ({ready} of {total})",
+    "pathRetry": "Try again",
+    "pathNotNow": "ليس الآن",
     "pathUnnamed": "A course had no name, so it was not added.",
     "pathExists": "“{subject}” is already in your plan.",
     "pathsFull": "A plan holds at most {count} subjects.",
-    "pathRetry": "Try again",
-    "pathNotNow": "ليس الآن",
+    "pathReplaced": "حلّ محلّه المسار المحدَّث.",
+    "pathAnswer": "أضف إلى خطتي: {subjects} ({count})",
     "stop": "إيقاف",
     "jumpToLatest": "انتقل إلى أحدث رسالة",
     "activity": {
@@ -75,6 +77,7 @@
       "give_choice": "Asking you a question...",
       "ask_about_you": "Getting to know you...",
       "set_details": "Saving your details...",
+      "start_lesson": "نُعدّ درسك...",
       "load_skill": "أختار طريقة الشرح..."
     },
     "openLesson": "افتح الدرس",
@@ -106,6 +109,7 @@
   },
   "lesson": {
     "backTo": "العودة إلى {subject}",
+    "backToChat": "العودة إلى المحادثة",
     "loading": "نحضّر درسك",
     "loadFailed": "تعذّر تحميل الدرس",
     "notFound": "هذا الدرس ليس على هذا الجهاز. افتحه مجددًا من المادة.",

@@ -283,3 +283,17 @@ async def test_an_edge_country_the_app_claims_is_not_the_edge_country(log):
     other = "6c4a4b63-2d2f-4f1f-8a1f-3a6e7d0b8c22"
     [context] = await contexts_after(log, {"CF-IPCountry": "XX"}, claimed, other)
     assert context.edge_country is None
+
+
+async def test_a_signed_in_learners_generation_budget_is_theirs_not_their_networks(log):
+    tutor = FakeTutor()
+    http, host = client_for(log, tutor)
+
+    await http.post(
+        f"/api/chats/{CHAT}/turns",
+        json=start_body(),
+        headers={**bearer(), "CF-Connecting-IP": "203.0.113.7"},
+    )
+    await host.idle()
+
+    assert [budget.key for budget in tutor.budgets] == ["account:uid123/dev100000000"]

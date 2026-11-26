@@ -89,12 +89,18 @@ export function nextLesson(
   };
 }
 
-/** `attempt` goes up only when the learner retries after a failure. */
+/** `attempt` goes up only when the learner retries after a failure. `lessonId` names a lesson
+ * the chat already made for this topic, which is then the one opened. */
 export function openLesson(
   target: LessonTarget,
   attempt = 0,
+  lessonId?: string,
 ): Promise<TutorCard> {
-  return openToolView(GIVE_LESSON, { target, attempt });
+  return openToolView(GIVE_LESSON, {
+    target,
+    attempt,
+    ...(lessonId ? { lessonId } : {}),
+  });
 }
 
 /**

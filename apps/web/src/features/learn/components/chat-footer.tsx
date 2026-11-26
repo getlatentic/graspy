@@ -38,8 +38,7 @@ export function ChatFooter({
   seed,
 }: ChatFooterProps) {
   const { t } = useI18n();
-  const { stopTutor, confirmPlanChange, dismissPlanChange, retryPath } =
-    useChat();
+  const { stopTutor, confirmPlanChange, dismissPlanChange } = useChat();
   const followUps = followUpsFor(lastMessage, state);
   const planChange = planChangeFor(lastMessage, state);
 
@@ -61,7 +60,6 @@ export function ChatFooter({
             change={planChange}
             onConfirm={() => void confirmPlanChange()}
             onDismiss={dismissPlanChange}
-            onRetry={(goal) => void retryPath(goal)}
           />
         )}
         {followUps.length > 0 && (

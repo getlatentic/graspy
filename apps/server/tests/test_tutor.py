@@ -5,8 +5,10 @@ from pathlib import Path
 import pytest
 from dspy.utils.exceptions import AdapterParseError
 from stand_in import inputs, stand_in
+from workshops import FakePlanner, keeping
 
 from app.agent.app_tools import app_calls
+from app.agent.closing import NO_APP_CALLS
 from app.agent.context import (
     GENERAL_CONVERSATION,
     WHOLE_SUBJECT_CONVERSATION,
@@ -17,7 +19,6 @@ from app.agent.skills.registry import catalogue
 from app.agent.streaming import ToolActivity
 from app.agent.transcript import render
 from app.agent.tutor import (
-    NO_APP_CALLS,
     Tutor,
     TutorReply,
     TutorTurn,
@@ -25,11 +26,12 @@ from app.agent.tutor import (
     signature_for,
 )
 from app.agent.unanswered import NO_ANSWER
+from app.caller import Caller
 
 
-async def finished(tutor: Tutor, *args) -> TutorReply:
+async def finished(tutor: Tutor, *args, **kwargs) -> TutorReply:
     """The finished reply at the end of a turn's stream."""
-    items = [item async for item in tutor.stream(*args)]
+    items = [item async for item in tutor.stream(*args, **kwargs)]
     assert isinstance(items[-1], TutorReply)
     return items[-1]
 
@@ -274,7 +276,7 @@ async def test_asking_to_go_to_a_topic_returns_an_action_for_the_app():
     ]
 
 
-async def test_three_courses_asked_for_reach_the_app_as_three_proposals():
+async def test_three_courses_asked_for_reach_the_app_as_one_card_of_three_paths():
     """Not only the last of them: each course is a subject the learner may add."""
     goals = ["machine learning", "maths of machine learning", "quantum computing"]
     _, context = stand_in(
@@ -291,15 +293,17 @@ async def test_three_courses_asked_for_reach_the_app_as_three_proposals():
 
     with context:
         reply = await finished(
-            Tutor(InMemoryConversationStore()),
+            Tutor(InMemoryConversationStore(), FakePlanner()),
             "c1",
             "Courses on ML, the maths of ML and quantum computing, please.",
             MATHS,
+            caller=Caller(None, keeping()),
         )
 
-    assert [action.model_dump(by_alias=True) for action in reply.actions] == [
-        {"type": "propose_path", "goal": goal} for goal in goals
-    ]
+    [card] = reply.cards
+    assert card.tool_input == {"goals": goals}
+    assert [p.goal for p in card.tool_result.structured_content.paths] == goals
+    assert reply.actions == []
 
 
 async def test_asking_to_be_taught_a_topic_is_answered_without_its_lesson():

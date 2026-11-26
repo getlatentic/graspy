@@ -9,6 +9,7 @@ import pytest
 from stand_in import inputs, stand_in
 from test_a2a import FakeTutor, agent_app, turn
 from test_tutor import finish
+from workshops import FakePlanner, keeping
 
 from app.agent.about_you import (
     DEFAULT_LINE,
@@ -18,7 +19,7 @@ from app.agent.about_you import (
     lacks_class,
     learner_with,
 )
-from app.agent.cards import ChoiceCard, DetailsCard
+from app.agent.cards import ChoiceCard, DetailsCard, PathCard
 from app.agent.context import LearnerContext, SubjectRef
 from app.agent.course import clean_course
 from app.agent.details import classes_of
@@ -30,9 +31,10 @@ from app.agent.memory import (
     appended,
     folded,
 )
-from app.agent.reply import ProposePath, SetDetails
+from app.agent.reply import SetDetails
 from app.agent.toolkit import Turn, TurnOutputs, tools_for
 from app.agent.tutor import Tutor, TutorReply
+from app.caller import Caller
 from app.chatlog.conversations import LogConversationStore
 from app.education.catalogue import code_named, countries, country_name
 from app.local_d1 import LocalD1
@@ -62,9 +64,9 @@ async def reply_to(
     with model:
         items = [
             item
-            async for item in Tutor(memory or InMemoryConversationStore()).stream(
-                "c", message, context, turn=turn
-            )
+            async for item in Tutor(
+                memory or InMemoryConversationStore(), FakePlanner()
+            ).stream("c", message, context, turn=turn, caller=Caller(None, keeping()))
         ]
     assert isinstance(items[-1], TutorReply)
     return items[-1]
@@ -473,12 +475,11 @@ async def test_the_answer_is_saved_by_the_server_and_the_course_follows_in_the_s
         message=SLOVAK_ANSWER,
     )
 
-    assert reply.cards == []
+    assert [type(card) for card in reply.cards] == [PathCard]
     assert reply.actions == [
         SetDetails(
             class_name="Grade 7", country="Slovakia", course="", country_code="SK"
         ),
-        ProposePath(goal="Machine learning"),
     ]
 
 

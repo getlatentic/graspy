@@ -134,6 +134,9 @@ class Lesson(Wire):
     progress: LessonProgress | None = None
     # None for a lesson a model planned, and for one kept before lessons cited their sources.
     grounding: LessonGrounding | None = None
+    # The topic the lesson was made for, by LessonTarget.key(None) (lessons/making.py): a lesson is
+    # opened by its id only for that topic. None for one kept before lessons named it.
+    target_key: str | None = None
 
     @field_validator("slides", mode="before")
     @classmethod

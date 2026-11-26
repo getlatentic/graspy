@@ -7,8 +7,9 @@ model and settings from the environment and DSPy's cache off.
 
 A request that names several courses should make one new subject each, a
 request for one course one subject, and a request for one more topic of the
-open subject a topic. "Subjects made" counts a propose_path goal or a
-change_subjects add as one subject each; "topics added" counts add_topic calls.
+open subject a topic. "Subjects made" counts a course of the path card
+propose_path shows or a change_subjects add as one subject each; "topics added"
+counts add_topic calls.
 """
 
 from __future__ import annotations
@@ -25,10 +26,17 @@ import dspy
 from measure_stage_writing import add_profile_option, model, settings_from
 from wire_record import RecordingTransport
 
+from app.agent.cards import PathCard
 from app.agent.context import LearnerContext
 from app.agent.memory import InMemoryConversationStore
 from app.agent.streaming import ToolActivity
 from app.agent.tutor import Tutor, TutorReply
+from app.caller import Caller, Keeping
+from app.learner.store import InMemoryLearnerStore
+from app.lessons.makers import TaskLessonMaking
+from app.lessons.store import InMemoryLessonStore
+from app.local_d1 import LocalD1
+from app.threads.store import ThreadStore
 
 CONCURRENT_DRAWS = 6
 SUBJECTS = [
@@ -97,14 +105,35 @@ GROUPS = [
 ]
 
 
-def subjects_made(actions: list[dict]) -> list[str]:
-    made = []
+def subjects_made(actions: list[dict], cards: list) -> list[str]:
+    made = [
+        path.goal
+        for card in cards
+        if isinstance(card, PathCard)
+        for path in card.tool_result.structured_content.paths
+    ]
     for action in actions:
-        if action["type"] == "propose_path":
-            made.append(action["goal"])
-        elif action["type"] == "change_subjects":
+        if action["type"] == "change_subjects":
             made.extend(action["add"])
     return made
+
+
+async def _no_lessons(_job, _save) -> None:
+    raise SystemExit("A course measure makes no lessons")
+
+
+def caller() -> Caller:
+    """Who a turn is for: nobody, with stores kept in memory."""
+    return Caller(
+        None,
+        Keeping(
+            learners=InMemoryLearnerStore(),
+            lessons=InMemoryLessonStore(),
+            making=TaskLessonMaking(_no_lessons),
+            conversations=InMemoryConversationStore(),
+            threads=ThreadStore(LocalD1()),
+        ),
+    )
 
 
 SECRET = re.compile(
@@ -121,16 +150,20 @@ def described(error: BaseException) -> str:
 async def draw(case: tuple, lm: dspy.LM) -> dict:
     group, context_name, message = case
     tools: list[str] = []
-    answer, actions = "", []
+    answer, actions, cards = "", [], []
     started = time.perf_counter()
     with dspy.context(lm=lm.copy()):
         async for item in Tutor(InMemoryConversationStore()).stream(
-            "c", message, LearnerContext.model_validate(CONTEXTS[context_name])
+            "c",
+            message,
+            LearnerContext.model_validate(CONTEXTS[context_name]),
+            caller=caller(),
         ):
             if isinstance(item, ToolActivity):
                 tools.append(item.tool)
             if isinstance(item, TutorReply):
                 answer = item.answer
+                cards = item.cards
                 actions = [
                     a.model_dump(mode="json", by_alias=True) for a in item.actions
                 ]
@@ -140,7 +173,7 @@ async def draw(case: tuple, lm: dspy.LM) -> dict:
         "message": message,
         "tools": tools,
         "actions": actions,
-        "subjects_made": subjects_made(actions),
+        "subjects_made": subjects_made(actions, cards),
         "topics_added": [a["topic"] for a in actions if a["type"] == "add_topic"],
         "answer": answer,
         "seconds": round(time.perf_counter() - started, 1),

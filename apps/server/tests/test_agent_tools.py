@@ -5,6 +5,7 @@ import inspect
 
 import dspy
 import pytest
+from workshops import paths_shown, workshop
 
 from app.agent import tools
 from app.agent.context import LearnerContext
@@ -30,7 +31,7 @@ def use(
     """Call a tool as the model does in a turn: what it reads, and what the
     turn gathered for the app."""
     outputs = TurnOutputs()
-    built = tools_for(Turn(context, message), outputs)
+    built = tools_for(Turn(context, message, workshop=workshop()), outputs)
     tool = next(tool for tool in built if tool.__name__ == name)
     result = tool(*args, **kwargs)
     return (asyncio.run(result) if inspect.iscoroutine(result) else result), outputs
@@ -38,6 +39,19 @@ def use(
 
 def wire(outputs: TurnOutputs) -> list[dict]:
     return [action.model_dump(by_alias=True) for action in outputs.actions]
+
+
+def goals_shown(outputs: TurnOutputs) -> list[str]:
+    """The courses of the path card the turn shows, as the tool was asked for them."""
+    return [goal for card in paths_shown(outputs) for goal in card.tool_input["goals"]]
+
+
+def subjects_shown(outputs: TurnOutputs) -> list[str]:
+    return [
+        path.subject
+        for card in paths_shown(outputs)
+        for path in card.tool_result.structured_content.paths
+    ]
 
 
 TOPICS = [
@@ -338,12 +352,13 @@ def test_a_topic_for_a_subject_the_learner_lacks_points_to_a_path():
     assert wire(outputs) == []
 
 
-def test_a_path_is_proposed_for_the_app_to_plan_and_show():
+def test_a_path_is_planned_and_shown_as_a_card_with_nothing_added():
     result, outputs = use("propose_path", maths(), ["  real   analysis "])
 
-    assert "real analysis" in result["shown"]
-    assert "do not offer to show it" in result["shown"]
-    assert wire(outputs) == [{"type": "propose_path", "goal": "real analysis"}]
+    assert "path to Real Analysis" in result["done"]
+    assert "Nothing is added yet" in result["done"]
+    assert subjects_shown(outputs) == ["Real Analysis"]
+    assert wire(outputs) == []
 
 
 def test_each_course_asked_for_is_its_own_path_even_with_a_subject_open():
@@ -352,10 +367,10 @@ def test_each_course_asked_for_is_its_own_path_even_with_a_subject_open():
 
     result, outputs = use("propose_path", maths(), goals)
 
-    assert wire(outputs) == [{"type": "propose_path", "goal": goal} for goal in goals]
+    assert goals_shown(outputs) == goals
     assert (
-        "machine learning, maths of machine learning and quantum computing"
-        in (result["shown"])
+        "Machine Learning, Maths Of Machine Learning and Quantum Computing"
+        in (result["done"])
     )
 
 
@@ -364,7 +379,7 @@ def test_a_course_named_twice_is_proposed_once():
         "propose_path", maths(), ["Quantum computing", " quantum  COMPUTING", "", "ML"]
     )
 
-    assert [a["goal"] for a in wire(outputs)] == ["Quantum computing", "ML"]
+    assert goals_shown(outputs) == ["Quantum computing", "ML"]
 
 
 def test_a_new_course_is_not_added_as_a_topic_of_the_open_subject():
@@ -462,11 +477,10 @@ def test_one_course_is_told_as_one_path_and_several_as_courses_to_add():
     one, _ = use("propose_path", maths(), ["quantum computing"])
     several, _ = use("propose_path", maths(), ["machine learning", "astronomy"])
 
-    assert one["shown"].startswith("The app now shows the learner a path to quantum")
-    assert "each its own" not in one["shown"]
-    assert "offering the learner these courses to add" in several["shown"]
-    assert "machine learning and astronomy" in several["shown"]
-    assert "shows the learner" not in several["shown"]
+    assert one["done"].startswith("The app now shows the learner a path to Quantum")
+    assert "each its own" not in one["done"]
+    assert "these courses, each its own subject" in several["done"]
+    assert "Machine Learning and Astronomy" in several["done"]
 
 
 @pytest.mark.parametrize(
@@ -479,23 +493,23 @@ def test_one_course_is_told_as_one_path_and_several_as_courses_to_add():
     ],
     ids=["string", "json-text", "old-key", "list"],
 )
-def test_the_courses_are_read_from_each_shape_a_model_sends(arguments):
+async def test_the_courses_are_read_from_each_shape_a_model_sends(arguments):
     """Through the tool as DSPy hands it to the model and calls it for the model."""
     outputs = TurnOutputs()
-    built = tools_for(Turn(maths(), "x"), outputs)
+    built = tools_for(Turn(maths(), "x", workshop=workshop()), outputs)
     tool = dspy.Tool(next(t for t in built if t.__name__ == "propose_path"))
 
     assert "goals" in tool.args
-    result = tool(**arguments)
+    result = await tool.acall(**arguments)
 
-    assert "quantum computing" in result["shown"]
-    assert wire(outputs) == [{"type": "propose_path", "goal": "quantum computing"}]
+    assert "Quantum Computing" in result["done"]
+    assert goals_shown(outputs) == ["quantum computing"]
 
 
 def test_json_text_with_several_courses_is_several_proposals():
     _, outputs = use("propose_path", maths(), '["ML", "Astronomy"]')
 
-    assert [a["goal"] for a in wire(outputs)] == ["ML", "Astronomy"]
+    assert goals_shown(outputs) == ["ML", "Astronomy"]
 
 
 SEVERAL_ENGLISH = LearnerContext(
@@ -550,7 +564,7 @@ def test_a_course_they_already_hold_is_not_proposed_and_the_model_is_told():
 def test_a_held_course_among_new_ones_is_left_out_and_said():
     result, outputs = use("propose_path", SEVERAL_ENGLISH, ["Maths", "Astronomy"])
 
-    assert [a["goal"] for a in wire(outputs)] == ["Astronomy"]
+    assert goals_shown(outputs) == ["Astronomy"]
     assert "Maths" in result["not_proposed"]
 
 
@@ -572,7 +586,6 @@ def test_a_second_change_in_a_turn_is_refused_whichever_tools_make_them():
         built["change_subjects"](add=["Chess"]),
         built["add_topic"]("Surds", subject="Mathematics"),
         built["rebuild_plan"](),
-        built["propose_path"](["Chess"]),
     ]
 
     assert "error" not in done
@@ -604,16 +617,6 @@ def test_the_same_call_twice_is_answered_as_already_done():
     assert len(wire(outputs)) == 1
 
 
-def test_the_courses_of_several_calls_are_one_change():
-    outputs = TurnOutputs()
-    built = {t.__name__: t for t in tools_for(Turn(SEVERAL_ENGLISH, "x"), outputs)}
-
-    built["propose_path"](["Astronomy"])
-    built["propose_path"](["Chess"])
-
-    assert [a["goal"] for a in wire(outputs)] == ["Astronomy", "Chess"]
-
-
 def test_the_courses_a_plan_has_no_room_for_are_not_offered():
     many = LearnerContext(
         subjects=[{"name": f"Subject {n}", "slug": f"s{n}"} for n in range(14)]
@@ -621,8 +624,8 @@ def test_the_courses_a_plan_has_no_room_for_are_not_offered():
 
     result, outputs = use("propose_path", many, ["Astronomy", "Chess"])
 
-    assert [a["goal"] for a in wire(outputs)] == ["Astronomy"]
-    assert "at most 1 course" in result["not_offered"]
+    assert goals_shown(outputs) == ["Astronomy"]
+    assert "room for 1 more" in result["not_offered"]
 
 
 def test_the_names_skipped_as_already_held_are_told():
@@ -666,14 +669,17 @@ def test_subjects_are_not_changed_when_the_list_was_not_sent():
     assert wire(outputs) == []
 
 
-def test_the_room_for_courses_is_not_overstated_when_the_list_was_not_sent():
+async def test_the_room_for_courses_is_not_overstated_when_the_list_was_not_sent():
     """Only the open subject is known, so the plan is not taken to have 14 free places."""
     outputs = TurnOutputs()
-    built = {t.__name__: t for t in tools_for(Turn(OPEN_ONLY, "x"), outputs)}
+    built = {
+        t.__name__: t
+        for t in tools_for(Turn(OPEN_ONLY, "x", workshop=workshop()), outputs)
+    }
 
-    built["propose_path"]([f"Course {n}" for n in range(5)])
+    await built["propose_path"]([f"Course {n}" for n in range(5)])
 
-    assert len(wire(outputs)) == 5
+    assert len(subjects_shown(outputs)) == 5
 
 
 def test_the_open_subject_is_not_held_twice_under_another_slug_or_case():
@@ -703,11 +709,11 @@ def test_odd_courses_are_refused_in_words_not_with_an_error(goals):
 def test_a_comma_separated_string_is_one_course():
     _, outputs = use("propose_path", maths(), "machine learning, quantum computing")
 
-    assert [a["goal"] for a in wire(outputs)] == ["machine learning, quantum computing"]
+    assert goals_shown(outputs) == ["machine learning, quantum computing"]
 
 
 @pytest.mark.parametrize("text", ["[machine learning]", " [ machine learning ] "])
 def test_brackets_around_a_course_are_dropped(text):
     _, outputs = use("propose_path", maths(), text)
 
-    assert [a["goal"] for a in wire(outputs)] == ["machine learning"]
+    assert goals_shown(outputs) == ["machine learning"]

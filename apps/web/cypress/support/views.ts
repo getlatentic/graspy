@@ -16,7 +16,7 @@ export function view(
     .its("0.contentDocument.body", MODEL)
     .should("not.be.empty")
     .then(cy.wrap)
-    .find(`section[aria-label="${title}"]`, MODEL);
+    .find(`:is(section, form)[aria-label="${title}"]`, MODEL);
 }
 
 export const lessonView = () => view("Lesson");

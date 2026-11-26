@@ -15,7 +15,9 @@ from .cards import (
     CHOICE_UI,
     DETAILS_UI,
     PASSAGE_UI,
+    PATH_UI,
     PRACTICE_UI,
+    START_UI,
     Card,
     placed,
 )
@@ -23,18 +25,21 @@ from .choice import give_choice
 from .context import LearnerContext
 from .courses import propose_path_tool
 from .decision import (
+    WAITING,
     WITHDRAWN,
+    asks_choice,
     refused_beside_choice,
     withdraw_offers,
 )
 from .details import class_first, set_details_tool
+from .lesson_start import start_lesson_tool
 from .passage import give_passage
 from .practice import give_practice
-from .reply import MAX_PATH_GOALS, Action, Outcome
+from .refusal import refusal
+from .reply import Action, AddPaths, Outcome
 from .skills.load import load_skill_for_turn
 from .streaming import announce, announce_done
 from .tools import (
-    MAX_CHOSEN_SUBJECTS,
     add_topic_tool,
     calculate,
     change_subjects_tool,
@@ -43,6 +48,7 @@ from .tools import (
     rebuild_plan_tool,
 )
 from .turn_policy import admit
+from .workshop import Workshop
 
 Tool = Callable[..., "dict | Outcome"]
 
@@ -53,6 +59,15 @@ class Turn:
     message: str
     # Skills already in effect: loading one again is told to use what it has.
     active_skills: tuple[str, ...] = ()
+    # What the turn can plan and make; none where nothing is made, as for a host's own tools.
+    workshop: Workshop | None = None
+    # The path card the conversation last showed, as the tutor read it, for a path to be revised.
+    earlier_path: str = ""
+    # The courses the learner's own message just chose on a path card.
+    added: AddPaths | None = None
+    # What the turn's tools that make things have made, by call, so that the turn run again after
+    # a failed attempt reuses it and neither spends the budget nor waits a second time.
+    made: dict = field(default_factory=dict)
 
     def where(self) -> Where:
         return Where(
@@ -73,6 +88,9 @@ class ToolSpec:
     listed: bool = True
     # What the tool offers once the learner's class is known, for tools that need it.
     after_class: str | None = None
+    # Whether the tool spends the generation budget making something: it is not run for a turn
+    # whose question is waiting for the learner's answer.
+    makes: bool = False
 
 
 def _as_is(tool: Tool) -> Callable[[Turn], Tool]:
@@ -90,8 +108,11 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("add_topic", _for_context(add_topic_tool)),
     ToolSpec(
         "propose_path",
-        _for_context(propose_path_tool),
+        lambda turn: propose_path_tool(turn.context, turn.workshop, turn.earlier_path),
+        ui=PATH_UI,
+        listed=False,
         after_class="propose the course",
+        makes=True,
     ),
     ToolSpec(
         "change_subjects",
@@ -109,6 +130,13 @@ TOOLS: tuple[ToolSpec, ...] = (
         listed=False,
     ),
     ToolSpec("set_details", _for_context(set_details_tool)),
+    ToolSpec(
+        "start_lesson",
+        lambda turn: start_lesson_tool(turn.context, turn.added, turn.workshop),
+        ui=START_UI,
+        listed=False,
+        makes=True,
+    ),
     ToolSpec("load_skill", lambda turn: load_skill_for_turn(turn.active_skills)),
 )
 
@@ -122,7 +150,7 @@ class TurnOutputs:
     withheld: list[Card] = field(default_factory=list)
 
 
-def _keep(outputs: TurnOutputs, result: Outcome, where: Where, room: int) -> dict:
+def _keep(outputs: TurnOutputs, result: Outcome, where: Where) -> dict:
     """Puts what the call did for the app among the turn's, and returns what the
     model reads. A question the learner must answer takes the place of every
     other offer in the turn, whichever call came first."""
@@ -130,7 +158,7 @@ def _keep(outputs: TurnOutputs, result: Outcome, where: Where, room: int) -> dic
         if result.card is not None:
             outputs.withheld.append(result.card)
         return waiting
-    told = admit(outputs.actions, result, room)
+    told = admit(outputs.actions, result)
     if result.card is not None:
         outputs.cards.append(placed(result.card, where))
     if isinstance(result.card, ASKING):
@@ -147,7 +175,6 @@ def _for_model(
     tool: Tool,
     outputs: TurnOutputs,
     where: Where,
-    room: int,
     refused: Callable[[], dict | None],
 ) -> Callable[..., dict]:
     """The tool as the model sees it: announced as it starts, and returning
@@ -155,11 +182,7 @@ def _for_model(
     ``refused`` is the reason the call is not made now, if there is one."""
 
     def kept(result: dict | Outcome) -> dict:
-        return (
-            _keep(outputs, result, where, room)
-            if isinstance(result, Outcome)
-            else result
-        )
+        return _keep(outputs, result, where) if isinstance(result, Outcome) else result
 
     if inspect.iscoroutinefunction(tool):
 
@@ -184,26 +207,49 @@ def _for_model(
     return run
 
 
+def _once(tool: Tool, made: dict, name: str) -> Tool:
+    """The tool, which keeps what it made for a call so that the same call is answered from it."""
+
+    @functools.wraps(tool)
+    async def once(*args, **kwargs):
+        key = (name, repr(args), repr(sorted(kwargs.items())))
+        if key not in made:
+            result = await tool(*args, **kwargs)
+            if not isinstance(result, Outcome):
+                return result
+            made[key] = result
+        return made[key]
+
+    return once
+
+
+def _built(spec: ToolSpec, turn: Turn) -> Tool:
+    tool = spec.build(turn)
+    return _once(tool, turn.made, spec.name) if spec.makes else tool
+
+
 def tools_for(turn: Turn, outputs: TurnOutputs) -> list[Callable[..., dict]]:
     where = turn.where()
-    # With the list not sent the room is not known: the app keeps to the most itself.
-    room = (
-        MAX_CHOSEN_SUBJECTS - len(turn.context.held_subjects())
-        if turn.context.subjects
-        else MAX_PATH_GOALS
-    )
     return [
         _for_model(
-            spec.build(turn), outputs, where, room, _class_gate(turn, outputs, spec)
+            _built(spec, turn), outputs, where, _refusal_before(turn, outputs, spec)
         )
         for spec in TOOLS
     ]
 
 
-def _class_gate(
+def _refusal_before(
     turn: Turn, outputs: TurnOutputs, spec: ToolSpec
 ) -> Callable[[], dict | None]:
+    """Why the call is not made at all: a question waits for its answer, so nothing is made beside
+    it, or the learner's class is not known and what it makes is written for it."""
     then = spec.after_class
-    if then is None:
-        return lambda: None
-    return lambda: class_first(turn.context, outputs.actions, then)
+
+    def refused() -> dict | None:
+        if spec.makes and asks_choice(outputs.cards):
+            return refusal(WAITING)
+        if then is not None:
+            return class_first(turn.context, outputs.actions, then)
+        return None
+
+    return refused

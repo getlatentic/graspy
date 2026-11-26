@@ -337,14 +337,22 @@ it("adds a topic the learner asks for to their plan", () => {
   cy.get("main ol > li").should("have.length", 4);
 });
 
-it("plans a path to a goal beyond the plan, and adds it when accepted", () => {
+it("plans a path in the chat, adds the topics the learner keeps, and makes the lesson before offering it", () => {
   cy.visit(TOPIC_CHAT);
 
   ask("I want to learn real analysis at university level. Plan me a path.");
-  cy.get('[role="group"][aria-label="A learning path"]', MODEL)
-    .contains("button", "Add this path", MODEL)
-    .click();
+  view("Learning path")
+    .find('input[type="checkbox"]', MODEL)
+    .should("have.length.greaterThan", 1)
+    .first()
+    .uncheck();
+  answerTo(() =>
+    view("Learning path").contains("button", /^Add to my plan/).click(),
+  );
   cy.contains(/Added the path “.+” to your plan\./);
+  // The lesson is made first; the button to open it comes only then, and the chat stays put.
+  view("Start a lesson").contains("button", /^Open /, MODEL);
+  cy.location("pathname").should("eq", TOPIC_CHAT);
 
   eventually((device) => {
     const subjects = device.plan.subjects as { name: string }[];

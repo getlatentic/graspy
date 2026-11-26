@@ -24,6 +24,9 @@ export interface ViewHost {
   ) => void;
   /** The view's ui/message; false while another turn runs. */
   message: (text: string) => boolean;
+  /** The view's ui/open-link to a place in the app, which the host follows only if it is one it
+   * knows: the learner leaves the chat by pressing the view's button, never otherwise. */
+  open?: (url: string) => void;
 }
 
 export const VIEW_MAX_HEIGHT = 2000;
@@ -86,6 +89,7 @@ export function bridgeTo(
   bridge.onopenlink = async ({ url }) => {
     if (/^https?:\/\//.test(url))
       window.open(url, "_blank", "noopener,noreferrer");
+    else host().open?.(url);
     return {};
   };
   bridge.onsizechange = ({ height }) => {

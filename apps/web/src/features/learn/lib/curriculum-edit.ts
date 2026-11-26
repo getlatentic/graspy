@@ -50,10 +50,14 @@ export type PathOutcome =
   | { status: "added" | "existing"; subject: CurriculumSubject }
   | { status: "full" | "unnamed" };
 
+/** A path to add, with the slug the tutor made its lessons under when it named one: the subject
+ * keeps it unless the plan has taken it since, so the lesson made for a topic is found again. */
+export type PathToAdd = LearningPath & { slug?: string };
+
 /** The path as a subject of its own. A subject of the same name, whatever its case, accents or spacing, is not added twice. */
 export function withPath(
   curriculum: CurriculumData,
-  path: LearningPath,
+  path: PathToAdd,
 ): { curriculum: CurriculumData; outcome: PathOutcome } {
   const name = path.subject.trim() || path.goal.trim();
   if (!name) return { curriculum, outcome: { status: "unnamed" } };
@@ -68,7 +72,10 @@ export function withPath(
     return { curriculum, outcome: { status: "full" } };
   }
 
-  const { subjects } = normalizeSubjectList([...curriculum.subjects, name]);
+  const { subjects } = normalizeSubjectList([
+    ...curriculum.subjects,
+    path.slug ? { name, slug: path.slug } : name,
+  ]);
   const taken = new Set(curriculum.subjects.map((subject) => subject.slug));
   const subject = subjects.find(({ slug }) => !taken.has(slug));
   if (!subject) return { curriculum, outcome: { status: "unnamed" } };
@@ -106,7 +113,7 @@ export function withPath(
 /** Each path in turn, so a duplicate among them is "existing" the second time and the cap holds across them. */
 export function withPaths(
   curriculum: CurriculumData,
-  paths: readonly LearningPath[],
+  paths: readonly PathToAdd[],
 ): { curriculum: CurriculumData; outcomes: PathOutcome[] } {
   let next = curriculum;
   const outcomes = paths.map((path) => {

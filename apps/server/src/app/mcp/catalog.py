@@ -16,7 +16,14 @@ from typing import Any
 from pydantic import BaseModel, ValidationError, create_model
 
 from ..agent.app_tools import APP_TOOLS
-from ..agent.cards import CHOICE_UI, DETAILS_UI, PASSAGE_UI, PRACTICE_UI
+from ..agent.cards import (
+    CHOICE_UI,
+    DETAILS_UI,
+    PASSAGE_UI,
+    PATH_UI,
+    PRACTICE_UI,
+    START_UI,
+)
 from ..agent.context import LearnerContext
 from ..agent.reply import Outcome
 from ..agent.toolkit import TOOLS, Turn
@@ -239,6 +246,21 @@ RESOURCES: dict[str, UiResource] = {
             title="About you",
             description="A short form asking a learner their country and class.",
             view="details.html",
+        ),
+        UiResource(
+            uri=PATH_UI,
+            name="path",
+            title="Learning path",
+            description="A path to a course, with each topic a row to keep or leave out, and a "
+            "way to say what is missing.",
+            view="path.html",
+        ),
+        UiResource(
+            uri=START_UI,
+            name="start",
+            title="Start a lesson",
+            description="A lesson made for a topic the learner added, and the button that opens it.",
+            view="start.html",
         ),
         UiResource(
             uri=LESSON_UI,

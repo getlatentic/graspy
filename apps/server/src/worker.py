@@ -358,7 +358,7 @@ class ChatTurn(DurableObject):
     def _turns(self):
         if getattr(self, "_alarm", None) is None:
             self._alarm = build_turn_alarm(
-                self.env, self.ctx.storage, self._sockets().announce
+                self.env, self.ctx.storage, self._sockets().announce, _js_object
             )
         return self._alarm
 

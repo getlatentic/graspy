@@ -10,7 +10,7 @@ from typing import Annotated, Literal
 from pydantic import Field
 
 from ..wire import Wire
-from .cards import Card
+from .cards import Card, PlannedPath
 
 
 class OpenTopic(Wire):
@@ -54,9 +54,19 @@ class SetDetails(Wire):
     country_code: str = ""
 
 
-class ProposePath(Wire):
-    type: Literal["propose_path"] = "propose_path"
-    goal: str
+class AddedPath(PlannedPath):
+    """A course the learner chose topics of. The slug is the subject's place in their plan, which
+    the app keeps when it is free: the lesson made for a topic is found by it."""
+
+    slug: str
+
+
+class AddPaths(Wire):
+    """What the learner chose to add from a path card: new subjects, each with the topics they
+    kept."""
+
+    type: Literal["add_paths"] = "add_paths"
+    paths: list[AddedPath]
 
 
 Action = Annotated[
@@ -65,7 +75,7 @@ Action = Annotated[
     | AddTopic
     | ChangeSubjects
     | RebuildPlan
-    | ProposePath
+    | AddPaths
     | SetDetails,
     Field(discriminator="type"),
 ]

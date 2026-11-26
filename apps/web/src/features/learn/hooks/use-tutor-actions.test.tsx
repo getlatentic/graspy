@@ -1,25 +1,14 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { TutorAction } from "@/lib/a2a/reply-data";
-import type { LearningPath } from "@/lib/curriculum-api";
+import type { AddedPath, TutorAction } from "@/lib/a2a/reply-data";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { I18nContext } from "@/lib/i18n-context";
 import { buildCurriculum } from "../lib/curriculum-accumulator";
-import { MAX_SUBJECTS } from "../lib/curriculum-edit";
-import {
-  PATH_PLAN_TIMEOUT_MS,
-  usePathProposal,
-  type PathProposals,
-} from "./use-path-proposal";
+import { MAX_SUBJECTS, topicLevel } from "../lib/curriculum-edit";
 import { useTutorActions } from "./use-tutor-actions";
-
-const mocks = vi.hoisted(() => ({ planLearningPath: vi.fn() }));
-vi.mock("@/lib/curriculum-api", () => ({
-  planLearningPath: mocks.planLearningPath,
-}));
 
 const MATHS = { name: "Mathematics", slug: "mathematics" };
 const CURRICULUM = buildCurriculum({
@@ -30,33 +19,29 @@ const CURRICULUM = buildCurriculum({
   topics: { mathematics: ["Quadratic Equations"] },
   nextSubjectSlug: "mathematics",
 });
-const GOALS = [
-  "machine learning",
-  "maths of machine learning",
-  "quantum computing",
-];
 
-function pathTo(goal: string, steps = 2): LearningPath {
-  return {
-    subject: goal,
-    goal,
-    steps: Array.from({ length: steps }, (_, n) => ({
-      title: n === steps - 1 ? goal : `${goal}: step ${n + 1}`,
-      level: "SS 2",
-    })),
-  };
-}
+const REAL_ANALYSIS: AddedPath = {
+  subject: "Real analysis",
+  goal: "Real analysis",
+  slug: "real-analysis",
+  steps: [
+    { title: "Limits", level: "SS 3" },
+    { title: "Sequences", level: "Undergraduate" },
+  ],
+};
+const QUANTUM: AddedPath = {
+  subject: "Quantum computing",
+  goal: "Quantum computing",
+  slug: "quantum-computing",
+  steps: [{ title: "Qubits", level: "Undergraduate" }],
+};
 
-const proposals = (goals: string[]): TutorAction[] =>
-  goals.map((goal) => ({ type: "propose_path", goal }));
+const adding = (...paths: AddedPath[]): TutorAction => ({
+  type: "add_paths",
+  paths,
+});
 
-function planAll() {
-  mocks.planLearningPath.mockImplementation(({ goal }) =>
-    Promise.resolve(pathTo(goal)),
-  );
-}
-
-/** A plan that settles when the test says so. */
+/** A write that settles when the test says so. */
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason: unknown) => void;
@@ -88,355 +73,191 @@ function mount(curriculum: CurriculumData = CURRICULUM) {
   const onDone = vi.fn();
   const onFailure = vi.fn();
   const hook = renderHook(
-    () =>
-      useTutorActions({
+    () => ({
+      actions: useTutorActions({
         curriculum,
         applyCurriculum,
         regenerate,
         onDone,
         onFailure,
       }),
+      location: useLocation(),
+    }),
     { wrapper },
   );
-  const shown = () => {
-    const change = hook.result.current.pendingPlanChange;
-    return change?.type === "propose_path" ? change.proposals : null;
-  };
-  return { hook, applyCurriculum, onDone, onFailure, shown };
+  const actions = () => hook.result.current.actions;
+  return { hook, actions, applyCurriculum, onDone, onFailure };
 }
 
-afterEach(() => {
-  cleanup();
-  vi.useRealTimers();
-  mocks.planLearningPath.mockReset();
-});
+afterEach(cleanup);
 
-describe("a reply that asks for several courses", () => {
-  it("plans each course and shows them together", async () => {
-    planAll();
-    const { hook, shown } = mount();
+describe("the courses the learner chose topics of on a path card", () => {
+  it("adds each as its own subject with only the topics chosen, in order, with their levels", async () => {
+    const { actions, applyCurriculum } = mount();
 
-    await act(() => hook.result.current.carryOut(proposals(GOALS)));
-
-    expect(shown()?.map((p) => p.goal)).toEqual(GOALS);
-    expect(mocks.planLearningPath).toHaveBeenCalledTimes(3);
-  });
-
-  it("adds every planned course as its own subject, each with a link", async () => {
-    planAll();
-    const { hook, applyCurriculum, onDone } = mount();
-    await act(() => hook.result.current.carryOut(proposals(GOALS)));
-
-    await act(() => hook.result.current.confirmPlanChange());
+    await act(() => actions().carryOut([adding(REAL_ANALYSIS, QUANTUM)]));
 
     expect(applyCurriculum).toHaveBeenCalledOnce();
-    const kept = applyCurriculum.mock.calls[0][0];
-    expect(kept.subjects.map((s: { name: string }) => s.name)).toEqual([
+    const plan: CurriculumData = applyCurriculum.mock.calls[0][0];
+    expect(plan.subjects.map((s) => s.name)).toEqual([
       "Mathematics",
-      ...GOALS,
+      "Real analysis",
+      "Quantum computing",
     ]);
-    expect(kept.topics.mathematics).toEqual(["Quadratic Equations"]);
-    expect(kept.topics["quantum-computing"]).toEqual([
-      "quantum computing: step 1",
-      "quantum computing",
-    ]);
-    expect(onDone).toHaveBeenCalledTimes(3);
-    expect(hook.result.current.pendingPlanChange).toBeNull();
+    expect(plan.topics?.["real-analysis"]).toEqual(["Limits", "Sequences"]);
+    expect(plan.topics?.["quantum-computing"]).toEqual(["Qubits"]);
+    const analysis = plan.subjects[1];
+    expect(topicLevel(plan, analysis, "Sequences")).toBe("Undergraduate");
+    expect(plan.goals?.["real-analysis"]).toBe("Sequences");
   });
 
-  it("adds the courses that were planned when one could not be", async () => {
-    mocks.planLearningPath.mockImplementation(({ goal }) =>
-      goal === "quantum computing"
-        ? Promise.reject(new Error("no plan"))
-        : Promise.resolve(pathTo(goal)),
-    );
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    const { hook, applyCurriculum, shown } = mount();
-    await act(() => hook.result.current.carryOut(proposals(GOALS)));
-    expect(shown()?.map((p) => p.failed)).toEqual([false, false, true]);
-
-    await act(() => hook.result.current.confirmPlanChange());
-
-    const names = applyCurriculum.mock.calls[0][0].subjects.map(
-      (s: { name: string }) => s.name,
-    );
-    expect(names).toEqual(["Mathematics", ...GOALS.slice(0, 2)]);
-  });
-
-  it("repeats a course the learner named twice once, whatever its case", async () => {
-    planAll();
-    const { hook, shown } = mount();
+  it("keeps the slug the tutor made the lesson under, so the lesson is found again", async () => {
+    const { actions, applyCurriculum } = mount();
 
     await act(() =>
-      hook.result.current.carryOut(
-        proposals(["Quantum computing", "quantum computing"]),
-      ),
+      actions().carryOut([adding({ ...REAL_ANALYSIS, slug: "analysis-9" })]),
     );
 
-    expect(shown()).toHaveLength(1);
-  });
-});
-
-describe("a plan that arrives late", () => {
-  it("does not overwrite the proposals of the reply that replaced them", async () => {
-    const slow = deferred<LearningPath>();
-    const fast = deferred<LearningPath>();
-    mocks.planLearningPath
-      .mockReturnValueOnce(slow.promise)
-      .mockReturnValueOnce(fast.promise);
-    const { hook, shown } = mount();
-    let first!: Promise<void>;
-    act(() => {
-      first = hook.result.current.carryOut(proposals(["quantum computing"]));
-    });
-    let second!: Promise<void>;
-    act(() => {
-      second = hook.result.current.carryOut(proposals(["quantum computing"]));
-    });
-
-    await act(async () => {
-      fast.resolve(pathTo("quantum computing", 3));
-      await second;
-    });
-    await act(async () => {
-      slow.resolve(pathTo("quantum computing", 2));
-      await first;
-    });
-
-    expect(shown()?.[0].path?.steps).toHaveLength(3);
-  });
-
-  it("does not bring back a card the learner dismissed", async () => {
-    const slow = deferred<LearningPath>();
-    mocks.planLearningPath.mockReturnValue(slow.promise);
-    const { hook } = mount();
-    let asked!: Promise<void>;
-    act(() => {
-      asked = hook.result.current.carryOut(proposals(["astronomy"]));
-    });
-
-    act(() => hook.result.current.dismissPlanChange());
-    await act(async () => {
-      slow.resolve(pathTo("astronomy"));
-      await asked;
-    });
-
-    expect(hook.result.current.pendingPlanChange).toBeNull();
-  });
-
-  it("does not take the place of a confirmation that replaced the card", async () => {
-    const slow = deferred<LearningPath>();
-    mocks.planLearningPath.mockReturnValue(slow.promise);
-    const { hook } = mount();
-    let asked!: Promise<void>;
-    act(() => {
-      asked = hook.result.current.carryOut(proposals(["astronomy"]));
-    });
-
-    await act(() => hook.result.current.carryOut([{ type: "rebuild_plan" }]));
-    await act(async () => {
-      slow.resolve(pathTo("astronomy"));
-      await asked;
-    });
-
-    expect(hook.result.current.pendingPlanChange).toEqual({
-      type: "rebuild_plan",
+    const plan: CurriculumData = applyCurriculum.mock.calls[0][0];
+    expect(plan.subjects.at(-1)).toEqual({
+      name: "Real analysis",
+      slug: "analysis-9",
     });
   });
-});
 
-describe("courses asked for in the same reply as a confirmation", () => {
-  it("shows the confirmation of a rebuild and proposes nothing", async () => {
-    planAll();
-    const { hook } = mount();
+  it("takes another slug when the plan has taken the one named", async () => {
+    const { actions, applyCurriculum } = mount();
 
     await act(() =>
-      hook.result.current.carryOut([
-        ...proposals(GOALS),
-        { type: "rebuild_plan" },
+      actions().carryOut([adding({ ...REAL_ANALYSIS, slug: "mathematics" })]),
+    );
+
+    const plan: CurriculumData = applyCurriculum.mock.calls[0][0];
+    expect(plan.subjects.at(-1)?.slug).toBe("real-analysis");
+  });
+
+  it("tells the chat what was added in the app's words, with no link and nowhere to go", async () => {
+    const { hook, actions, onDone } = mount();
+
+    await act(() => actions().carryOut([adding(REAL_ANALYSIS, QUANTUM)]));
+
+    expect(onDone.mock.calls).toEqual([
+      ["chat.pathAdded Real analysis"],
+      ["chat.pathAdded Quantum computing"],
+    ]);
+    expect(hook.result.current.location.pathname).toBe("/");
+  });
+
+  it("does not show a card of its own: the learner's choice was the confirmation", async () => {
+    const { actions } = mount();
+
+    await act(() => actions().carryOut([adding(REAL_ANALYSIS)]));
+
+    expect(actions().pendingPlanChange).toBeNull();
+  });
+
+  it("says a course is already there instead of saying it was added", async () => {
+    const { actions, applyCurriculum, onDone } = mount();
+
+    await act(() =>
+      actions().carryOut([
+        adding({ ...REAL_ANALYSIS, subject: "MATHEMATICS" }),
       ]),
     );
 
-    expect(hook.result.current.pendingPlanChange).toEqual({
-      type: "rebuild_plan",
-    });
-    expect(mocks.planLearningPath).not.toHaveBeenCalled();
+    expect(applyCurriculum).not.toHaveBeenCalled();
+    expect(onDone.mock.calls.map(([message]) => message)).toEqual([
+      "chat.pathExists Mathematics",
+    ]);
   });
 
-  it("shows the confirmation of a dropped subject and proposes nothing", async () => {
-    planAll();
-    const { hook } = mount();
+  it("says a course with no name was not added", async () => {
+    const { actions, applyCurriculum, onFailure } = mount();
 
     await act(() =>
-      hook.result.current.carryOut([
-        { type: "change_subjects", add: [], remove: ["Mathematics"] },
-        ...proposals(GOALS),
+      actions().carryOut([
+        adding({ ...REAL_ANALYSIS, subject: " ", goal: " " }),
       ]),
     );
 
-    expect(hook.result.current.pendingPlanChange).toMatchObject({
-      type: "change_subjects",
-      removed: ["Mathematics"],
-    });
-    expect(mocks.planLearningPath).not.toHaveBeenCalled();
-  });
-});
-
-describe("a course that is slow to plan", () => {
-  it("does not hold the others, and can be tried again", async () => {
-    vi.useFakeTimers();
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    const signals: AbortSignal[] = [];
-    mocks.planLearningPath.mockImplementation(
-      ({ goal }, signal: AbortSignal) => {
-        if (goal !== "quantum computing") return Promise.resolve(pathTo(goal));
-        signals.push(signal);
-        return new Promise<LearningPath>((_, reject) =>
-          signal.addEventListener("abort", () => reject(new Error("aborted"))),
-        );
-      },
-    );
-    const { hook, applyCurriculum, shown } = mount();
-    let asked!: Promise<void>;
-    act(() => {
-      asked = hook.result.current.carryOut(proposals(GOALS));
-    });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1);
-    });
-    expect(shown()?.map((p) => Boolean(p.path))).toEqual([true, true, false]);
-
-    // The two that are ready can be added while the third is still planning.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(PATH_PLAN_TIMEOUT_MS);
-      await asked;
-    });
-    expect(shown()?.map((p) => p.failed)).toEqual([false, false, true]);
-    expect(signals[0].aborted).toBe(true);
-
-    mocks.planLearningPath.mockImplementation(({ goal }) =>
-      Promise.resolve(pathTo(goal)),
-    );
-    await act(() => hook.result.current.retryPath("quantum computing"));
-    expect(shown()?.map((p) => Boolean(p.path))).toEqual([true, true, true]);
-
-    await act(() => hook.result.current.confirmPlanChange());
-    expect(applyCurriculum.mock.calls[0][0].subjects).toHaveLength(4);
+    expect(applyCurriculum).not.toHaveBeenCalled();
+    expect(onFailure).toHaveBeenCalledWith("chat.pathUnnamed");
   });
 
-  it("adds the ready courses before the slow one answers, and keeps the slow one on the card", async () => {
-    const never = new Promise<LearningPath>(() => {});
-    mocks.planLearningPath.mockImplementation(({ goal }) =>
-      goal === "quantum computing" ? never : Promise.resolve(pathTo(goal)),
-    );
-    const { hook, applyCurriculum, shown } = mount();
-    await act(async () => {
-      void hook.result.current.carryOut(proposals(GOALS));
-    });
+  it("adds none beyond the most a plan holds, and says so", async () => {
+    const full = {
+      ...CURRICULUM,
+      subjects: Array.from({ length: MAX_SUBJECTS }, (_, n) => ({
+        name: `Subject ${n}`,
+        slug: `subject-${n}`,
+      })),
+    };
+    const { actions, applyCurriculum, onDone, onFailure } = mount(full);
 
-    await act(() => hook.result.current.confirmPlanChange());
+    await act(() => actions().carryOut([adding(REAL_ANALYSIS, QUANTUM)]));
 
-    const names = applyCurriculum.mock.calls[0][0].subjects.map(
-      (s: { name: string }) => s.name,
-    );
-    expect(names).toEqual(["Mathematics", ...GOALS.slice(0, 2)]);
-    expect(shown()?.map((p) => p.goal)).toEqual(["quantum computing"]);
+    expect(applyCurriculum).not.toHaveBeenCalled();
+    expect(onDone).not.toHaveBeenCalled();
+    expect(onFailure).toHaveBeenCalledWith(`chat.pathsFull ${MAX_SUBJECTS}`);
   });
 
-  it("adds the two ready courses of three, and keeps the failed one to try again", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    mocks.planLearningPath.mockImplementation(({ goal }) =>
-      goal === "quantum computing"
-        ? Promise.reject(new Error("no plan"))
-        : Promise.resolve(pathTo(goal)),
+  it("builds on the plan an earlier action of the reply left", async () => {
+    const { actions, applyCurriculum } = mount();
+
+    await act(() =>
+      actions().carryOut([
+        {
+          type: "add_topic",
+          subjectSlug: "mathematics",
+          subject: "Mathematics",
+          topic: "Surds",
+        },
+        adding(REAL_ANALYSIS),
+      ]),
     );
-    const { hook, applyCurriculum, shown } = mount();
-    await act(() => hook.result.current.carryOut(proposals(GOALS)));
-    expect(shown()?.map((p) => p.failed)).toEqual([false, false, true]);
 
-    await act(() => hook.result.current.confirmPlanChange());
-
-    const names = applyCurriculum.mock.calls[0][0].subjects.map(
-      (s: { name: string }) => s.name,
-    );
-    expect(names).toEqual(["Mathematics", ...GOALS.slice(0, 2)]);
-    expect(shown()).toEqual([
-      { goal: "quantum computing", path: null, failed: true },
-    ]);
-
-    planAll();
-    await act(() => hook.result.current.retryPath("quantum computing"));
-    await act(() => hook.result.current.confirmPlanChange());
-    expect(hook.result.current.pendingPlanChange).toBeNull();
-  });
-});
-
-describe("a tap on Add twice", () => {
-  it("adds each course once", async () => {
-    planAll();
-    const { hook, applyCurriculum, onDone } = mount();
-    await act(() => hook.result.current.carryOut(proposals(GOALS)));
-
-    await act(async () => {
-      await Promise.all([
-        hook.result.current.confirmPlanChange(),
-        hook.result.current.confirmPlanChange(),
-      ]);
-    });
-
-    expect(applyCurriculum).toHaveBeenCalledOnce();
-    expect(onDone).toHaveBeenCalledTimes(3);
-    expect(hook.result.current.pendingPlanChange).toBeNull();
-  });
-
-  it("puts the courses back when the plan could not be kept", async () => {
-    planAll();
-    const { hook, applyCurriculum, shown } = mount();
-    await act(() => hook.result.current.carryOut(proposals(GOALS)));
-    applyCurriculum.mockRejectedValueOnce(new Error("no room on this device"));
-
-    await expect(
-      act(() => hook.result.current.confirmPlanChange()),
-    ).rejects.toThrow("no room");
-
-    expect(shown()?.map((p) => p.goal)).toEqual(GOALS);
-  });
-});
-
-describe("a path with no step", () => {
-  it("is a course that failed, not one that is ready", async () => {
-    mocks.planLearningPath.mockResolvedValue({
-      subject: "Astronomy",
-      goal: "astronomy",
-      steps: [],
-    });
-    const { hook, shown } = mount();
-
-    await act(() => hook.result.current.carryOut(proposals(["astronomy"])));
-
-    expect(shown()).toEqual([{ goal: "astronomy", path: null, failed: true }]);
+    const plan: CurriculumData = applyCurriculum.mock.calls[1][0];
+    expect(plan.topics?.mathematics).toEqual(["Quadratic Equations", "Surds"]);
+    expect(plan.subjects.map((s) => s.name)).toContain("Real analysis");
   });
 });
 
 describe("a plan that could not be kept", () => {
+  const surds = (topic: string): TutorAction => ({
+    type: "add_topic",
+    subjectSlug: "mathematics",
+    subject: "Mathematics",
+    topic,
+  });
+
   it("is not what the next action builds on", async () => {
-    const { hook, applyCurriculum } = mount();
+    const { actions, applyCurriculum } = mount();
     applyCurriculum.mockRejectedValueOnce(new Error("no room on this device"));
-    const adding = (topic: string): TutorAction => ({
-      type: "add_topic",
-      subjectSlug: "mathematics",
-      subject: "Mathematics",
-      topic,
-    });
 
     await expect(
-      act(() => hook.result.current.carryOut([adding("Surds")])),
+      act(() => actions().carryOut([surds("Surds")])),
     ).rejects.toThrow("no room");
-    await act(() => hook.result.current.carryOut([adding("Indices")]));
+    await act(() => actions().carryOut([surds("Indices")]));
 
     expect(applyCurriculum.mock.calls[1][0].topics.mathematics).toEqual([
       "Quadratic Equations",
       "Indices",
+    ]);
+  });
+
+  it("does not leave the learner's choice half added: the next try builds on what was kept", async () => {
+    const { actions, applyCurriculum } = mount();
+    applyCurriculum.mockRejectedValueOnce(new Error("no room on this device"));
+
+    await expect(
+      act(() => actions().carryOut([adding(REAL_ANALYSIS)])),
+    ).rejects.toThrow("no room");
+    await act(() => actions().carryOut([adding(REAL_ANALYSIS)]));
+
+    const plan: CurriculumData = applyCurriculum.mock.calls[1][0];
+    expect(plan.subjects.map((s) => s.name)).toEqual([
+      "Mathematics",
+      "Real analysis",
     ]);
   });
 });
@@ -446,24 +267,24 @@ describe("two writes that overlap", () => {
     first: "rejects" | "resolves",
     second: "rejects" | "resolves",
   ) {
-    const { hook, applyCurriculum } = mount();
+    const { actions, applyCurriculum } = mount();
     const writes = [deferred<void>(), deferred<void>()];
     applyCurriculum
       .mockReturnValueOnce(writes[0].promise)
       .mockReturnValueOnce(writes[1].promise);
-    const adding = (topic: string): TutorAction => ({
+    const topic = (title: string): TutorAction => ({
       type: "add_topic",
       subjectSlug: "mathematics",
       subject: "Mathematics",
-      topic,
+      topic: title,
     });
     const settle = async () => {
       await act(async () => {
-        const a = hook.result.current
-          .carryOut([adding("Surds")])
+        const a = actions()
+          .carryOut([topic("Surds")])
           .catch(() => {});
-        const b = hook.result.current
-          .carryOut([adding("Indices")])
+        const b = actions()
+          .carryOut([topic("Indices")])
           .catch(() => {});
         for (const [at, how] of [first, second].entries()) {
           if (how === "rejects") writes[at].reject(new Error("no room"));
@@ -472,17 +293,17 @@ describe("two writes that overlap", () => {
         await Promise.all([a, b]);
       });
     };
-    return { hook, applyCurriculum, settle, adding };
+    return { actions, applyCurriculum, settle, topic };
   }
 
   it("builds on the later write when the earlier one failed", async () => {
-    const { hook, applyCurriculum, settle, adding } = overlapping(
+    const { actions, applyCurriculum, settle, topic } = overlapping(
       "rejects",
       "resolves",
     );
     await settle();
 
-    await act(() => hook.result.current.carryOut([adding("Cubes")]));
+    await act(() => actions().carryOut([topic("Cubes")]));
 
     expect(applyCurriculum.mock.calls[2][0].topics.mathematics).toContain(
       "Indices",
@@ -490,13 +311,13 @@ describe("two writes that overlap", () => {
   });
 
   it("builds on the plan that was kept when both failed", async () => {
-    const { hook, applyCurriculum, settle, adding } = overlapping(
+    const { actions, applyCurriculum, settle, topic } = overlapping(
       "rejects",
       "rejects",
     );
     await settle();
 
-    await act(() => hook.result.current.carryOut([adding("Cubes")]));
+    await act(() => actions().carryOut([topic("Cubes")]));
 
     expect(applyCurriculum.mock.calls[2][0].topics.mathematics).toEqual([
       "Quadratic Equations",
@@ -507,10 +328,10 @@ describe("two writes that overlap", () => {
 
 describe("two writing actions in one reply", () => {
   it("builds the second on the plan the first left", async () => {
-    const { hook, applyCurriculum } = mount();
+    const { actions, applyCurriculum } = mount();
 
     await act(() =>
-      hook.result.current.carryOut([
+      actions().carryOut([
         {
           type: "add_topic",
           subjectSlug: "mathematics",
@@ -535,111 +356,12 @@ describe("two writing actions in one reply", () => {
   });
 });
 
-describe("a course tried again", () => {
-  it("ends the request it replaces, so two are not running", async () => {
-    const signals: AbortSignal[] = [];
-    mocks.planLearningPath.mockImplementation((_, signal: AbortSignal) => {
-      signals.push(signal);
-      return new Promise<LearningPath>(() => {});
-    });
-    const { hook } = mount();
-    await act(async () => {
-      void hook.result.current.carryOut(proposals(["astronomy"]));
-    });
+describe("a change that clears progress", () => {
+  it("waits for the learner's yes before a rebuild", async () => {
+    const { actions } = mount();
 
-    await act(async () => {
-      void hook.result.current.retryPath("Astronomy");
-    });
+    await act(() => actions().carryOut([{ type: "rebuild_plan" }]));
 
-    expect(signals.map((signal) => signal.aborted)).toEqual([true, false]);
-  });
-
-  it("ends every request when the learner dismisses the card", async () => {
-    const signals: AbortSignal[] = [];
-    mocks.planLearningPath.mockImplementation((_, signal: AbortSignal) => {
-      signals.push(signal);
-      return new Promise<LearningPath>(() => {});
-    });
-    const { hook } = mount();
-    await act(async () => {
-      void hook.result.current.carryOut(proposals(GOALS));
-    });
-
-    act(() => hook.result.current.dismissPlanChange());
-
-    expect(signals.every((signal) => signal.aborted)).toBe(true);
-  });
-});
-
-describe("adding the courses", () => {
-  it("says a course is already there instead of saying it was added", async () => {
-    planAll();
-    const { hook, applyCurriculum, onDone } = mount();
-    await act(() => hook.result.current.carryOut(proposals(["MATHEMATICS"])));
-
-    await act(() => hook.result.current.confirmPlanChange());
-
-    expect(applyCurriculum).not.toHaveBeenCalled();
-    expect(onDone.mock.calls.map(([message]) => message)).toEqual([
-      "chat.pathExists Mathematics",
-    ]);
-  });
-
-  it("says a course with no name was not added", async () => {
-    mocks.planLearningPath.mockResolvedValue({
-      subject: " ",
-      goal: " ",
-      steps: [{ title: "First", level: "SS 2" }],
-    });
-    const { hook, applyCurriculum, onFailure } = mount();
-    await act(() => hook.result.current.carryOut(proposals(["astronomy"])));
-
-    await act(() => hook.result.current.confirmPlanChange());
-
-    expect(applyCurriculum).not.toHaveBeenCalled();
-    expect(onFailure).toHaveBeenCalledWith("chat.pathUnnamed");
-  });
-
-  it("adds none beyond the most a plan holds, and says so", async () => {
-    planAll();
-    const full = {
-      ...CURRICULUM,
-      subjects: Array.from({ length: MAX_SUBJECTS }, (_, n) => ({
-        name: `Subject ${n}`,
-        slug: `subject-${n}`,
-      })),
-    };
-    const { hook, applyCurriculum, onDone, onFailure, shown } = mount(full);
-    await act(() => hook.result.current.carryOut(proposals(GOALS)));
-
-    await act(() => hook.result.current.confirmPlanChange());
-
-    expect(applyCurriculum).not.toHaveBeenCalled();
-    expect(onDone).not.toHaveBeenCalled();
-    expect(onFailure).toHaveBeenCalledWith(`chat.pathsFull ${MAX_SUBJECTS}`);
-    // They stay on the card, to be added once the learner has dropped a subject.
-    expect(shown()?.map((p) => p.goal)).toEqual(GOALS);
-  });
-});
-
-describe("usePathProposal", () => {
-  it("ignores a plan that arrives after its screen closed", async () => {
-    const slow = deferred<LearningPath>();
-    mocks.planLearningPath.mockReturnValue(slow.promise);
-    const show = vi.fn<(change: PathProposals) => void>();
-    const { result, unmount } = renderHook(() =>
-      usePathProposal(() => CURRICULUM, show),
-    );
-    let asked!: Promise<void>;
-    act(() => {
-      asked = result.current.propose(["astronomy"]);
-    });
-    expect(show).toHaveBeenCalledTimes(1);
-
-    unmount();
-    slow.resolve(pathTo("astronomy"));
-    await asked;
-
-    expect(show).toHaveBeenCalledTimes(1);
+    expect(actions().pendingPlanChange).toEqual({ type: "rebuild_plan" });
   });
 });

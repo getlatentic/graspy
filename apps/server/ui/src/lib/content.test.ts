@@ -5,16 +5,22 @@ import {
   isAboutYou,
   isChoiceSet,
   isPassageSet,
+  isPathChoice,
   isPracticeSet,
+  isStartLesson,
   practiceAnswer,
   type AboutYou,
+  type PathChoice,
   type PracticeSet,
+  type StartLesson,
 } from "./content";
 
 const PRACTICE = "ui://graspy/practice";
 const PASSAGE = "ui://graspy/passage";
 const CHOICE = "ui://graspy/choice";
 const DETAILS = "ui://graspy/details";
+const PATH = "ui://graspy/path";
+const START = "ui://graspy/start";
 
 describe("the server's cards", () => {
   it("are what each view shows", () => {
@@ -22,6 +28,30 @@ describe("the server's cards", () => {
     expect(isPassageSet(contract.content[PASSAGE])).toBe(true);
     expect(isChoiceSet(contract.content[CHOICE])).toBe(true);
     expect(isAboutYou(contract.content[DETAILS])).toBe(true);
+    expect(isPathChoice(contract.content[PATH])).toBe(true);
+    expect(isStartLesson(contract.content[START])).toBe(true);
+  });
+
+  it("are refused as a path with no topic, or a topic with no title", () => {
+    const path = contract.content[PATH] as PathChoice;
+    expect(isPathChoice({ paths: [] })).toBe(false);
+    expect(isPathChoice({ paths: [{ ...path.paths[0], steps: [] }] })).toBe(
+      false,
+    );
+    expect(
+      isPathChoice({
+        paths: [{ ...path.paths[0], steps: [{ title: " ", level: "SS 1" }] }],
+      }),
+    ).toBe(false);
+  });
+
+  it("are refused as a lesson to open unless it is one of the app's own", () => {
+    const start = contract.content[START] as StartLesson;
+    expect(isStartLesson({ ...start, openPath: "https://evil.example" })).toBe(
+      false,
+    );
+    expect(isStartLesson({ ...start, status: "done" })).toBe(false);
+    expect(isStartLesson({ ...start, target: null })).toBe(false);
   });
 
   it("are refused as a form when a country has no classes", () => {

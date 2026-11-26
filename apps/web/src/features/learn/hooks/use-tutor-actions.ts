@@ -1,24 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TutorAction } from "@/lib/a2a/reply-data";
 import type { ChatLink } from "@/lib/chat-db";
-import type { LearningPath } from "@/lib/curriculum-api";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { useChatPlanEdits, type ActionOf } from "./use-chat-plan-edits";
 import type { LearnerPlan } from "./use-learner-plan";
-import { usePathProposal, type PathProposals } from "./use-path-proposal";
 import { useDetailsChange } from "./use-details-change";
 import { useSubjectChange } from "./use-subject-change";
 
 export type PendingPlanChange =
   | { type: "change_subjects"; names: string[]; removed: string[] }
-  | { type: "rebuild_plan" }
-  | PathProposals;
+  | { type: "rebuild_plan" };
 
-// A new kind of action cannot go unhandled. The courses of one reply are proposed together.
+// A new kind of action cannot go unhandled.
 type ActionHandlers = {
-  [K in Exclude<TutorAction["type"], "propose_path">]: (
-    action: ActionOf<K>,
-  ) => void | Promise<void>;
+  [K in TutorAction["type"]]: (action: ActionOf<K>) => void | Promise<void>;
 };
 
 export type TutorActionDeps = Pick<
@@ -29,14 +24,6 @@ export type TutorActionDeps = Pick<
   onDone: (message: string, link?: ChatLink) => void;
   onFailure: (message: string) => void;
 };
-
-/** A change that clears progress waits for the learner, and is shown before any proposed course. */
-function asksForConfirmation(action: TutorAction): boolean {
-  return (
-    action.type === "rebuild_plan" ||
-    (action.type === "change_subjects" && action.remove.length > 0)
-  );
-}
 
 /** Destructive changes wait for the learner: the model saying they agreed is not agreement. */
 export function useTutorActions(deps: TutorActionDeps) {
@@ -68,23 +55,11 @@ export function useTutorActions(deps: TutorActionDeps) {
     [applyToPlan],
   );
   const edits = useChatPlanEdits({ ...deps, read, applyCurriculum });
-  const { propose, retry, takeReady, putBack, forget } = usePathProposal(
-    read,
-    setPending,
-  );
-  // Whatever takes the card's place ends the round of plans still arriving for it.
-  const replaceCard = useCallback(
-    (change: Exclude<PendingPlanChange, PathProposals>) => {
-      forget();
-      setPending(change);
-    },
-    [forget],
-  );
   const subjects = useSubjectChange({
     ...deps,
     read,
     applyCurriculum,
-    confirmDrop: replaceCard,
+    confirmDrop: setPending,
   });
   const { askToChange, setSubjects } = subjects;
   const keepDetails = useDetailsChange({ ...deps, read, applyCurriculum });
@@ -95,68 +70,36 @@ export function useTutorActions(deps: TutorActionDeps) {
         open_topic: edits.openTopic,
         open_subject: edits.openSubject,
         add_topic: edits.addTopic,
+        add_paths: edits.addPaths,
         change_subjects: askToChange,
-        rebuild_plan: () => replaceCard({ type: "rebuild_plan" }),
+        rebuild_plan: () => setPending({ type: "rebuild_plan" }),
         set_details: keepDetails,
       };
-      const goals: string[] = [];
       for (const action of actions) {
-        if (action.type === "propose_path") {
-          goals.push(action.goal);
-          continue;
-        }
         const handle = handlers[action.type] as (
           action: TutorAction,
         ) => void | Promise<void>;
         await handle(action);
       }
-      if (goals.length > 0 && !actions.some(asksForConfirmation)) {
-        await propose(goals);
-      }
     },
-    [askToChange, edits, keepDetails, propose, replaceCard],
+    [askToChange, edits, keepDetails],
   );
 
   const confirmPlanChange = useCallback(async () => {
     const change = pending;
     if (!change) return;
-    if (change.type === "propose_path") {
-      // The courses not ready stay on the card, and so do those the plan had no room for.
-      const { taken, remaining, round } = takeReady();
-      if (taken.length === 0) return;
-      if (remaining === 0) setPending(null);
-      let unfit: LearningPath[];
-      try {
-        unfit = await edits.acceptPaths(
-          taken.flatMap(({ path }) => path ?? []),
-        );
-      } catch (error) {
-        putBack(taken, round);
-        throw error;
-      }
-      putBack(
-        taken.filter(({ path }) => path && unfit.includes(path)),
-        round,
-      );
-      return;
-    }
-    forget();
     setPending(null);
     if (change.type === "change_subjects") await setSubjects(change.names);
     else await edits.rebuild();
-  }, [edits, forget, pending, putBack, setSubjects, takeReady]);
+  }, [edits, pending, setSubjects]);
 
-  const dismissPlanChange = useCallback(() => {
-    forget();
-    setPending(null);
-  }, [forget]);
+  const dismissPlanChange = useCallback(() => setPending(null), []);
 
   return {
     carryOut,
     pendingPlanChange: pending,
     confirmPlanChange,
     dismissPlanChange,
-    retryPath: retry,
     isChangingPlan: subjects.changing,
   };
 }

@@ -7,7 +7,6 @@ READ_ONLY_TOOLS = frozenset(
         "open_subject",
         "open_topic",
         "add_topic",
-        "propose_path",
         "change_subjects",
         "rebuild_plan",
         "give_practice",

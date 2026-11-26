@@ -55,11 +55,13 @@
     "pathAccept": "Add this path",
     "pathAcceptAll": "Add all",
     "pathAcceptReady": "Add ready ({ready} of {total})",
+    "pathRetry": "Try again",
+    "pathNotNow": "No be now",
     "pathUnnamed": "A course had no name, so it was not added.",
     "pathExists": "“{subject}” is already in your plan.",
     "pathsFull": "A plan holds at most {count} subjects.",
-    "pathRetry": "Try again",
-    "pathNotNow": "No be now",
+    "pathReplaced": "Another path don replace this one.",
+    "pathAnswer": "Add am to my plan: {subjects} ({count})",
     "stop": "Stop",
     "jumpToLatest": "Go to the latest message",
     "activity": {
@@ -75,6 +77,7 @@
       "give_choice": "Asking you a question...",
       "ask_about_you": "Getting to know you...",
       "set_details": "Saving your details...",
+      "start_lesson": "I dey make your lesson...",
       "load_skill": "I dey choose how I go teach am..."
     },
     "openLesson": "Open lesson",
@@ -106,6 +109,7 @@
   },
   "lesson": {
     "backTo": "Go back to {subject}",
+    "backToChat": "Go back to the chat",
     "loading": "We dey prepare your lesson",
     "loadFailed": "The lesson no load",
     "notFound": "This lesson no dey this device. Open am again from the subject.",

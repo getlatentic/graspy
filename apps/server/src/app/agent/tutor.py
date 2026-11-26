@@ -10,30 +10,36 @@ import dspy
 from dspy.streaming import StreamListener, StreamResponse
 from dspy.utils.exceptions import AdapterParseError
 
+from ..caller import Caller
 from ..domains.lesson.maths import reply_text
+from ..domains.path.service import LearningPathService
 from ..education.stage import stage_of
-from ..learner.answers import PracticeAnswer
 from ..learner.notes import NOTHING_YET
 from .about_you import (
-    DEFAULT_LINE,
     answer_in,
-    form_card,
     form_due,
     forms_shown,
-    lacks_class,
     learner_with,
     surviving,
 )
-from .answer_gate import AnswerGate, verdicts_in
+from .answer_gate import AnswerGate
 from .app_tools import AppCall, describe_calls
 from .cards import Card, DetailsCard
+from .closing import (
+    Answered,
+    app_told,
+    owed,
+    verdicts_of,
+    workshop_for,
+)
 from .context import LearnerContext
-from .decision import withdraw_offers
+from .courses import earlier_path_in
 from .labels import DATA_ONLY
 from .memory import ConversationStore, Exchange
 from .native_react import NativeReAct
+from .path_answer import confirmed, path_answer
 from .persona import WITHOUT_STAGE, persona
-from .reply import Action
+from .reply import Action, AddPaths
 from .runaway import RETRY_TEMPERATURE, Runaway, RunawayWatch
 from .safety_screen import SafetyScreen, safe_ones
 from .said import Said, said_by
@@ -50,7 +56,9 @@ from .streaming import (
 from .summary import recalled
 from .toolkit import Turn, TurnOutputs, tools_for
 from .transcript import render
+from .tutor_rules import TUTOR_RULES
 from .unanswered import NO_ANSWER
+from .workshop import GenerationBudget, PathPlanner
 
 logger = logging.getLogger(__name__)
 
@@ -58,106 +66,6 @@ logger = logging.getLogger(__name__)
 # tutoring.
 MAX_TOOL_STEPS = 6
 MAX_FOLLOW_UPS = 1
-NO_APP_CALLS = "None: the learner did nothing in the app with this message."
-
-
-TUTOR_RULES = r"""Reply in the learner's language, matching the language of their message,
-and never switch to English unprompted.
-
-Draw examples from the learner's own country: its money, places, names,
-food and markets, rather than unfamiliar foreign ones.
-
-Be encouraging and patient. Explain rather than lecture, and prefer a
-worked example to a definition. Keep to this conversation's topic unless
-the learner takes it elsewhere. When their lesson on the topic is given,
-they have read it: explain in line with it, and point them back to the
-slide that covers what they ask. A big ambition is a good one:
-never apologise for the learner's level or call something too hard for
-them.
-
-Use calculate for arithmetic instead of working sums out yourself, and show
-the learner the result. Write mathematics in LaTeX between \( and \), or
-between \[ and \] on a line of its own; never with dollar signs, which
-mean money.
-
-The learner's plan changes only through tools, and only when they ask:
-- to switch to, go to or open a subject they have: open_subject. It never
-  changes their plan.
-- to go to, open or start the lesson of a topic they have: open_topic.
-  Only words that name the lesson count, such as "take me to
-  fractions", "open the fractions lesson", "start the lesson". Wanting
-  to learn a topic is not asking for its lesson: "teach me", "explain",
-  "how does ... work" and "what is" are questions for you, about this
-  topic or another of theirs alike. Answer them here, and do not offer
-  the lesson.
-- to learn one lesson-sized topic that suits their grade and sits in one
-  of their subjects: answer, then add_topic.
-- to study a school subject taught at their grade that they do not have,
-  or to drop one: change_subjects. Switching to a subject they do not
-  have means adding it, never dropping another.
-- to take up any other new course, such as a university subject or a field
-  like quantum computing: propose_path, whether or not a subject is open.
-  A course is its own subject and never a topic of the open one, so a
-  request for several courses is one propose_path call with one goal for
-  each. Then answer with a short taste of the first that they can follow
-  now, such as one question it answers, and tell them the path to it is
-  below. Never before their class is known, and never in the same message
-  as a question for them to tap.
-- to start their whole plan again: rebuild_plan.
-A message gets one change to their plan; every new course they name goes in
-one propose_path call.
-Opening a topic or subject never leaves this conversation: the app shows
-the learner a button to open it. Say it is ready below.
-
-Call these straight away without asking whether they are sure: the app asks
-before anything that clears progress, and shows a path before adding it.
-When the app is asking the learner, tell them to look below.
-
-One decision at a time. When a message asks the learner something with a
-card (ask_about_you or give_choice), the card is the whole of it: write one short
-line, offer nothing else with it (no course, subject, lesson or practice) and
-never say anything is ready. The app shows the card alone and refuses what you
-offered with it. Offer it in your next message, once they have answered, and
-keep that message short, moving forward rather than asking again.
-
-A learner with no subjects yet is asked by the app what they would like to
-learn. What they name is their goal. Lessons are in English, so never offer
-another language. Every course and subject is written for the learner's
-class, so nothing is offered before the class is saved, however they describe
-themselves: "for students" is not a class. When the class is not known, call
-ask_about_you straight away, with one short line that names no course and never
-says anything is ready: the form asks their country and class together, and the
-learner confirms the country it starts on. Never ask either in words, and never
-their age, until the conversation shows they ignored the form: then ask once in
-words, and take what they say. Their answer arrives as "Country: ... Class: ...", which the app saves
-for them: in that same message take up what they asked for as above, propose_path
-for a course or change_subjects for a school subject, so it follows their class.
-When they answer Undergraduate or Graduate with no course the app could read,
-it saves their country only: ask what they study in words, then save it with
-set_details. When they instead tell you their class in words, save it with
-set_details, with the country and, for Undergraduate or Graduate, the course;
-it is refused for a country or class the app does not have, and then you ask
-which in words. When they must pick between a few clear
-alternatives, ask with give_choice rather than listing them in your answer, and
-wait for their tap.
-
-When the learner asks to practise, to be tested or for questions to try,
-use give_practice: multiple-choice questions on this conversation's
-topic, at their level, as many as they ask for and one when they do not
-say, all in one call. For reading or comprehension practice, or when
-they ask for a passage with questions, use give_passage. The app shows
-these as a card: your answer only introduces it. When a tool refuses
-them, fix what it says and call it again, and never write the questions
-in your answer meanwhile. When they tell you how they
-did, build on it:
-explain a mistake, or make the next questions a little harder. Their
-record shows the mistakes they made before: aim explanations and
-questions at the ones on this topic.
-
-If a tool fails, say plainly what you could not do. The learner reads the
-answer exactly as you write it: open with the answer itself, and never
-describe your own reasoning or the tools you used.
-"""
 
 
 class TutorTurn(dspy.Signature):
@@ -204,18 +112,12 @@ class TutorReply:
     cards: list[Card] = field(default_factory=list)
 
 
-@dataclass(frozen=True)
-class _Answered:
-    prediction: dspy.Prediction
-    outputs: TurnOutputs
-    answer: str
-    # Ended by the safety check, which nothing else of the turn is added to.
-    stopped: bool = False
-
-
 class Tutor:
-    def __init__(self, memory: ConversationStore) -> None:
+    def __init__(
+        self, memory: ConversationStore, paths: PathPlanner | None = None
+    ) -> None:
         self._memory = memory
+        self._paths = paths or LearningPathService()
 
     async def stream(
         self,
@@ -226,6 +128,8 @@ class Tutor:
         unanswered: list[str] | None = None,
         record: str = NOTHING_YET,
         turn: str | None = None,
+        caller: Caller | None = None,
+        budget: GenerationBudget | None = None,
     ) -> AsyncIterator[
         AnswerDelta
         | AnswerRestart
@@ -237,7 +141,8 @@ class Tutor:
         """Tools as they start, the answer as it is written, and last the
         finished reply. ``unanswered`` are the learner's messages whose turns
         failed, kept as exchanges with no answer. ``turn`` names the turn: a store that keeps an exchange
-        once per turn is not made to keep it twice by a turn run again."""
+        once per turn is not made to keep it twice by a turn run again. ``caller`` is who lessons are
+        made for, and ``budget`` what the turn may spend making them and planning paths."""
         context = context or LearnerContext()
         form_answer = answer_in(message, context)
         if form_answer:
@@ -245,6 +150,9 @@ class Tutor:
         # Without this turn's own exchange from a run before it was run again: the model and the
         # form's count read the conversation as it was when the turn began.
         earlier = await recalled(self._memory, conversation_id, turn)
+        shown = [e.get("card", "") for e in earlier.exchanges]
+        added = confirmed(path_answer(message, context), shown)
+        missed_add = _missed_add(unanswered or [], context, shown, added)
         context = context.model_copy(
             update={"forms_due": form_due(list(earlier.exchanges))}
         )
@@ -260,37 +168,28 @@ class Tutor:
             "studying": context.describe_studying(),
             "record": record,
             "conversation": render([*earlier.exchanges, *missed], earlier.summary),
-            "app": describe_calls(calls) if calls else NO_APP_CALLS,
+            "app": app_told(calls, added),
             "skills_in_effect": rendered(ages),
             "message": message,
         }
-        # A tap marked in this turn; or the last one, when the learner asks about it next.
-        verdicts = tuple(
-            call.arguments.correct
-            for call in calls or []
-            if isinstance(call.arguments, PracticeAnswer)
-        ) or verdicts_in(
-            earlier.exchanges[-1].get("app", "") if earlier.exchanges else ""
-        )
+        verdicts = verdicts_of(calls, earlier.exchanges)
         said = said_by_learner(context, inputs, earlier.exchanges, missed)
-        saved = [form_answer] if form_answer else []
-        async for item in _answered(context, inputs, verdicts, said, active, saved):
-            if isinstance(item, _Answered):
+        # What the learner chose in a message whose turn failed is added now: it never reached them.
+        saved = [a for a in (form_answer, missed_add, added) if a]
+        this_turn = Turn(
+            context,
+            message,
+            active,
+            workshop_for(self._paths, caller, budget),
+            earlier_path_in([e.get("card", "") for e in earlier.exchanges]),
+            added,
+        )
+        async for item in _answered(this_turn, inputs, verdicts, said, saved):
+            if isinstance(item, Answered):
                 answered = item
             else:
                 yield item
-        answer = answered.answer
-        # Of two opens, or two cards, in one turn, the last counts.
-        cards = answered.outputs.cards[-1:]
-        if (
-            not answered.stopped
-            and context.forms_due
-            and lacks_class(context, cards, answered.outputs.actions)
-        ):
-            cards = [form_card(context)]
-            # The form is the whole of its turn: whatever else was accepted is withdrawn.
-            withdraw_offers(answered.outputs.actions, cards)
-            answer = answer.strip() or DEFAULT_LINE
+        answer, cards = await owed(answered, this_turn)
         forms = (
             forms_shown(list(earlier.exchanges))
             + any(isinstance(card, DetailsCard) for card in cards)
@@ -306,14 +205,7 @@ class Tutor:
                 answered.outputs.skills,
             ),
         ]
-        for n, exchange in enumerate(exchanges):
-            # The learner's own message is the turn; the ones that failed before are its first.
-            named = (
-                None
-                if turn is None
-                else (turn if n == len(missed) else f"{turn}:missed:{n}")
-            )
-            await self._memory.append(conversation_id, exchange, turn=named)
+        await self._keep(conversation_id, exchanges, len(missed), turn)
         yield TutorReply(
             # Remembered as written, so the model's own history stays its words.
             answer=reply_text(answer),
@@ -324,24 +216,38 @@ class Tutor:
             cards=cards,
         )
 
+    async def _keep(
+        self,
+        conversation_id: str,
+        exchanges: list[Exchange],
+        missed: int,
+        turn: str | None,
+    ) -> None:
+        """The turn's exchanges, the learner's own message being the turn and the ones that failed
+        before it its first."""
+        for n, exchange in enumerate(exchanges):
+            named = (
+                None
+                if turn is None
+                else (turn if n == missed else f"{turn}:missed:{n}")
+            )
+            await self._memory.append(conversation_id, exchange, turn=named)
+
 
 async def _answered(
-    context: LearnerContext,
+    turn: Turn,
     inputs: dict,
     verdicts: tuple[bool, ...],
     said: Said,
-    active: tuple[str, ...],
     saved: list[Action],
 ) -> AsyncIterator[
-    AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | SkillLoaded | _Answered
+    AnswerDelta | AnswerRestart | ToolActivity | ToolFinished | SkillLoaded | Answered
 ]:
     """An answer that runs away is withdrawn and written again, once, with
     some sampling."""
     for again in (False, True):
         try:
-            async for item in _attempt(
-                context, inputs, verdicts, said, active, saved, again
-            ):
+            async for item in _attempt(turn, inputs, verdicts, said, saved, again):
                 yield item
             return
         except (Runaway, AdapterParseError) as error:
@@ -352,17 +258,16 @@ async def _answered(
 
 
 async def _attempt(
-    context: LearnerContext,
+    turn: Turn,
     inputs: dict,
     verdicts: tuple[bool, ...],
     said: Said,
-    active: tuple[str, ...],
     saved: list[Action],
     again: bool,
-) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | SkillLoaded | _Answered]:
+) -> AsyncIterator[AnswerDelta | ToolActivity | ToolFinished | SkillLoaded | Answered]:
     """Closing it stops the model. ``saved`` are the actions the learner's own answer has made."""
     outputs = TurnOutputs(actions=list(saved))
-    agent = _streamed_agent(Turn(context, inputs["message"], active), outputs, again)
+    agent = _streamed_agent(turn, outputs, again)
     watch = RunawayWatch()
     gate = AnswerGate(outputs, verdicts)
     screen = SafetyScreen(said)
@@ -398,7 +303,7 @@ async def _attempt(
                 yield (
                     _stopped_answer(screen, saved)
                     if screen.reason
-                    else _Answered(item, outputs, screen.answer())
+                    else Answered(item, outputs, screen.answer())
                 )
     except BaseExceptionGroup as group:
         # streamify runs the turn in a task group; the caller wants the
@@ -413,10 +318,10 @@ async def _attempt(
         raise RuntimeError("The tutor turn ended without an answer")
 
 
-def _stopped_answer(screen: SafetyScreen, saved: list[Action]) -> _Answered:
+def _stopped_answer(screen: SafetyScreen, saved: list[Action]) -> Answered:
     """What the model goes on to write, call or suggest is not used; what the learner's own answer
     saved is, so far as it is safe to keep."""
-    return _Answered(
+    return Answered(
         dspy.Prediction(answer="", follow_ups=[]),
         TurnOutputs(actions=surviving(saved)),
         screen.answer(),
@@ -433,6 +338,24 @@ def _log_stopped(gate: AnswerGate, screen: SafetyScreen) -> None:
         )
     if screen.reason:
         logger.warning("The answer was ended by the safety check: %s", screen.reason)
+
+
+def _missed_add(
+    unanswered: list[str],
+    context: LearnerContext,
+    shown: list[str],
+    added: AddPaths | None,
+) -> AddPaths | None:
+    """The courses chosen in the latest message whose turn failed, less any this message chooses
+    again: the choice is the learner's and is kept."""
+    for text in reversed(unanswered):
+        missed = confirmed(path_answer(text, context), shown)
+        if missed is None:
+            continue
+        again = {p.subject.casefold() for p in added.paths} if added else set()
+        paths = [p for p in missed.paths if p.subject.casefold() not in again]
+        return AddPaths(paths=paths) if paths else None
+    return None
 
 
 def said_by_learner(

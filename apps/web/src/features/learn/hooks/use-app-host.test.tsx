@@ -54,6 +54,23 @@ describe("a chat card's answers", () => {
   });
 });
 
+describe("a card's button to open a lesson", () => {
+  it("is handed to the host's own way of going there, and to nothing else", () => {
+    const open = vi.fn();
+    const { result } = renderHook(() =>
+      useAppHost({ busy: false, ask: vi.fn(), keepViewCalls: vi.fn(), open }),
+    );
+
+    result.current({} as ChatMessage).open?.("/app/learn/maths/lesson/0");
+
+    expect(open).toHaveBeenCalledWith("/app/learn/maths/lesson/0");
+  });
+
+  it("goes nowhere in a chat that has no place to open it", () => {
+    expect(host({}).open).toBeUndefined();
+  });
+});
+
 describe("a choice card's tap", () => {
   const hostWith = (
     busy: boolean,

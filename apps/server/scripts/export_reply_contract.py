@@ -29,20 +29,26 @@ from app.agent.cards import (
     Card,
     DetailsCard,
     DetailsResult,
+    PathStep,
+    PlannedPath,
     ResultMeta,
     TextContent,
 )
 from app.agent.choice import give_choice
+from app.agent.context import LearnerContext
+from app.agent.lesson_start import start_card, target_for
 from app.agent.memory import InMemoryConversationStore
 from app.agent.passage import PassageQuestion, give_passage
+from app.agent.path_card import path_card
 from app.agent.practice import PracticeQuestion, give_practice
 from app.agent.reply import (
     Action,
+    AddedPath,
+    AddPaths,
     AddTopic,
     ChangeSubjects,
     OpenSubject,
     OpenTopic,
-    ProposePath,
     RebuildPlan,
     ReplyData,
     SetDetails,
@@ -174,6 +180,27 @@ DETAILS = DetailsCard(
     ),
 )
 
+# A course the learner chose topics of, and the lesson made for its first topic: the app names the
+# same lesson once the course is in its plan.
+CHOSEN = AddedPath(
+    subject="Real analysis",
+    goal="Real analysis",
+    slug="real-analysis",
+    steps=[
+        PathStep(title="Limits", level="SS 3"),
+        PathStep(title="Sequences", level="Undergraduate"),
+    ],
+)
+PLAN_CONTEXT = LearnerContext(
+    planId="plan-1", country="Nigeria", language="English", gradeLevel="JSS 1"
+)
+CHOSEN_TARGET = target_for(PLAN_CONTEXT, CHOSEN, len(CHOSEN.steps) - 1)
+PATH = path_card(
+    [PlannedPath(subject=CHOSEN.subject, goal=CHOSEN.goal, steps=CHOSEN.steps)],
+    ["real analysis"],
+)
+START = start_card(CHOSEN_TARGET, {"status": "ready", "lessonId": "lesson-9"})
+
 EXAMPLE = ReplyData(
     follow_ups=["What is 1/2 as a decimal?"],
     actions=[
@@ -188,7 +215,7 @@ EXAMPLE = ReplyData(
         ),
         ChangeSubjects(add=["Physics"], remove=["Basic Science"]),
         RebuildPlan(),
-        ProposePath(goal="real analysis"),
+        AddPaths(paths=[CHOSEN]),
         SetDetails(class_name="JSS 2", country="Nigeria", course="", country_code="NG"),
     ],
     cards=[
@@ -196,6 +223,8 @@ EXAMPLE = ReplyData(
         pinned(PASSAGE, "9b0c1e2d7f6a5b8e3c4d0a9e7b2c1f4a"),
         pinned(CHOICE, "c2d4e6f8a0b1c3d5e7f9a1b2c4d6e8f0"),
         pinned(DETAILS, "d1f3a5b7c9e0d2f4a6b8c0e1f3a5b7c9"),
+        pinned(PATH, "e3a5c7d9f1b2d4f6a8c0e2b4d6f8a1c3"),
+        pinned(START, "f4b6d8e0a2c3e5a7b9d1f3c5e7a9b2d4"),
     ],
 )
 

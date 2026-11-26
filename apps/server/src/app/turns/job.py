@@ -13,6 +13,7 @@ from ..agent.context import LearnerContext, with_kept_lesson
 from ..agent.reply import ReplyData
 from ..agent.tutor import Tutor, TutorReply
 from ..agent.unanswered import unanswered
+from ..agent.workshop import GenerationBudget
 from ..caller import Caller, Keeping
 from ..domains.lesson.maths import reply_text
 from ..learner.notes import notes_for
@@ -38,6 +39,9 @@ class TurnJob(BaseModel):
     # The country Cloudflare's edge placed the request in, set by the server from the request:
     # never part of the metadata, which an app writes.
     edge_country: str | None = None
+    # The address the edge saw the request from, set by the server like the country: what the turn's
+    # generation budget is counted against.
+    source: str | None = None
 
     @model_validator(mode="after")
     def _learner_owns_its_chat(self) -> TurnJob:
@@ -86,5 +90,7 @@ async def _stream(tutor: Tutor, keeping: Keeping, job: TurnJob) -> AsyncIterator
         unanswered(job.parts),
         notes_for(record, learner.plan_id, learner.subject_slug),
         turn=job.turn,
+        caller=caller,
+        budget=GenerationBudget(keeping.generate, job.learner or job.source),
     ):
         yield item

@@ -1,0 +1,110 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ChatMessage } from "@/lib/chat-db";
+import { I18nContext } from "@/lib/i18n-context";
+import type { Turn } from "../lib/chat-turns";
+import { PATH_UI } from "../lib/path-card";
+
+vi.mock("../ui-apps/app-frame", () => ({
+  AppFrame: ({ card }: { card: { resourceUri: string } }) => (
+    <div data-testid="card">{card.resourceUri}</div>
+  ),
+}));
+vi.mock("./chat-message", () => ({
+  ChatMessageItem: ({ message }: { message: { content: string } }) => (
+    <p>{message.content}</p>
+  ),
+}));
+vi.mock("./tutor-activity", () => ({
+  TutorActivity: ({ tool }: { tool: string | null }) => (
+    <p role="status">{tool}</p>
+  ),
+}));
+
+const { ChatLog } = await import("./chat-log");
+
+let n = 0;
+const message = (
+  sender: "ai" | "user",
+  content: string,
+  resourceUri?: string,
+): ChatMessage => ({
+  id: `m${n++}`,
+  threadId: "t",
+  type: sender === "user" ? "user" : "system",
+  content,
+  timestamp: n,
+  sender,
+  ...(resourceUri
+    ? {
+        metadata: {
+          card: {
+            resourceUri,
+            toolName: "x",
+            toolInput: {},
+            toolResult: { content: [] },
+          },
+        },
+      }
+    : {}),
+});
+
+function shown(messages: ChatMessage[]) {
+  const turns: Turn[] = [{ id: "turn", messages }];
+  const scroll = {
+    listRef: { current: null },
+    contentRef: { current: null },
+    atEnd: true,
+    liveTurn: null,
+    reserve: 0,
+    jumpToEnd: vi.fn(),
+  };
+  render(
+    <I18nContext.Provider
+      value={
+        {
+          t: (key: string) => key,
+        } as unknown as React.ContextType<typeof I18nContext>
+      }
+    >
+      <ChatLog
+        scroll={scroll as never}
+        ready
+        turns={turns}
+        welcome="Welcome"
+        hostFor={() => ({ toolCalled: vi.fn(), message: () => false })}
+        activity={undefined}
+        changingPlan={false}
+      />
+    </I18nContext.Provider>,
+  );
+}
+
+afterEach(cleanup);
+
+describe("the path cards in the chat", () => {
+  it("shows a card the learner asked to change as replaced by the new one, and only the new one live", () => {
+    shown([
+      message("user", "real analysis"),
+      message("ai", "Here is a path.", PATH_UI),
+      message("user", "black holes are missing"),
+      message("ai", "Here is the new path.", PATH_UI),
+    ]);
+
+    expect(screen.getAllByTestId("card")).toHaveLength(1);
+    expect(screen.getByText("chat.pathReplaced")).toBeTruthy();
+  });
+
+  it("keeps every card of other kinds, and a path the learner answered", () => {
+    shown([
+      message("ai", "A path.", PATH_UI),
+      message("user", "Add to my plan:\nCourse: X\n- Y | Z"),
+      message("ai", "A lesson.", "ui://graspy/start"),
+      message("ai", "Another path.", PATH_UI),
+    ]);
+
+    expect(screen.getAllByTestId("card")).toHaveLength(3);
+    expect(screen.queryByText("chat.pathReplaced")).toBeNull();
+  });
+});
