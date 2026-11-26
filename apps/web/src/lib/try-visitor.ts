@@ -2,18 +2,28 @@
 // to. It names no device and no learner, and nothing else is kept under it.
 const KEY = "graspy.try-visitor";
 
-let inMemory: string | null = null;
+let held: string | null = null;
 
-export function tryVisitor(): string {
+function keptIn(storage: () => Storage): string | null {
   try {
-    const kept = window.localStorage.getItem(KEY);
+    const open = storage();
+    const kept = open.getItem(KEY);
     if (kept) return kept;
     const made = crypto.randomUUID();
-    window.localStorage.setItem(KEY, made);
+    open.setItem(KEY, made);
     return made;
   } catch {
-    // Storage refused: the visitor is the same until the tab closes.
-    inMemory ??= crypto.randomUUID();
-    return inMemory;
+    return null;
   }
+}
+
+// Where the id lives, in order: for good, for this tab (a reload keeps it), for this page. Each is
+// tried only when the one before refuses, so a browser that blocks storage still has the same
+// visitor from one load of the tab to the next, and the chats they began stay theirs.
+export function tryVisitor(): string {
+  held ??=
+    keptIn(() => window.localStorage) ??
+    keptIn(() => window.sessionStorage) ??
+    crypto.randomUUID();
+  return held;
 }

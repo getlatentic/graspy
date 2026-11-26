@@ -9,16 +9,22 @@ from test_chat_routes import CHAT, SECRET, bearer, start_body
 from test_durable_turn import durable_app, no_wait
 from voice_worker import worker_env
 
+from app.account.directory import learner_key
 from app.agent.a2a import FAILED_TURN, a2a_routes
 from app.agent.context import LearnerContext
 from app.agent.toolkit import Turn, TurnOutputs, tools_for
 from app.api import anonymous_chat
-from app.api.anonymous_chat import anonymous_turn_refusal, edge_network
+from app.api.anonymous_chat import (
+    anonymous_turn_refusal,
+    edge_address,
+    edge_network,
+)
 from app.caller import Keeping
 from app.chatlog import kinds
 from app.chatlog.log import ChatLog
 from app.cloudflare_sockets import PROTOCOL, connect
 from app.factory import create_app
+from app.learner.notes import NOTHING_YET
 from app.learner.store import InMemoryLearnerStore
 from app.local_d1 import LocalD1
 from app.security.guard import Session
@@ -84,11 +90,19 @@ class Visit:
             f"/api/chats/{chat}/turns/{turn}/stop", headers=headers
         )
 
-    async def rows(self) -> dict[str, int]:
+    async def all_rows(self) -> dict[str, int]:
         found = await self.app.state.tv_db.prepare(
             "SELECT bucket, turns FROM anonymous_chat_use"
         ).all()
         return {row["bucket"]: row["turns"] for row in found["results"]}
+
+    async def rows(self) -> dict[str, int]:
+        """The counts, without the markers of the turns counted."""
+        return {
+            bucket: turns
+            for bucket, turns in (await self.all_rows()).items()
+            if not bucket.startswith("turn:")
+        }
 
 
 @pytest.fixture
@@ -189,7 +203,29 @@ async def test_a_visitors_turn_reads_and_writes_no_record_whatever_the_page_name
         message="hello",
         parts=[
             {"text": "hello"},
-            {"data": {"name": "answer", "arguments": {"planId": "someone-elses"}}},
+            {
+                "data": {
+                    "appCalls": [
+                        {
+                            "method": "tools/call",
+                            "params": {
+                                "name": "answer_practice",
+                                "arguments": {
+                                    "question": "2 + 2?",
+                                    "options": ["3", "4"],
+                                    "answerIndex": 1,
+                                    "chosenIndex": 1,
+                                    "where": {
+                                        "planId": "someone-elses",
+                                        "subjectSlug": "mathematics",
+                                        "topic": "Fractions",
+                                    },
+                                },
+                            },
+                        }
+                    ]
+                }
+            },
         ],
         metadata={
             "learner": {
@@ -204,7 +240,13 @@ async def test_a_visitors_turn_reads_and_writes_no_record_whatever_the_page_name
     async for _ in tutor_stream(tutor, keeping, job):
         pass
 
-    assert len(tutor.seen) == 1
+    # The turn ran once, and the store, which raises on any read or write, was never asked: what the
+    # page names is read as its claim, and the record, lesson and notes the tutor is given are empty.
+    [(context, calls, notes)] = tutor.seen
+    assert context.plan_id == "someone-elses"
+    assert context.lesson is None
+    assert [call.name for call in calls] == ["answer_practice"]
+    assert notes == NOTHING_YET
 
 
 def test_the_tutors_tools_only_return_what_the_app_does_and_touch_no_record():
@@ -263,11 +305,27 @@ async def test_a_visitor_keeps_their_chat_across_sessions_renewed(visit):
     assert await visit.take_turn(renewed, 1) == 200
 
 
-@pytest.mark.parametrize("job", [{"learner": None}, {}])
-async def test_a_visitor_cannot_use_a_chat_with_no_owner_recorded(visit, job):
-    stale = TurnJob(chat=CHAT, turn="turn-0000-xx", message="hi", **job)
-    data = {"turn": stale.turn, "job": stale.model_dump(mode="json", exclude={"owner"})}
-    await visit.log.append_once(CHAT, kinds.TURN_STARTED, data, 1)
+def _ownerless_job_events() -> dict[str, dict]:
+    """The first events of chats no visitor may use: one with no owner, whatever the job's shape
+    (the real jobs, dumped as the server keeps them, and a chat made before jobs had owners)."""
+    ownerless = TurnJob(chat=CHAT, turn="turn-0000-xx", message="hi")
+    return {
+        "a job with no learner and no owner": ownerless.model_dump(mode="json"),
+        "a job from before owners, with a null learner": ownerless.model_dump(
+            mode="json", exclude={"owner"}
+        ),
+        "a job from before owners, with no learner key": ownerless.model_dump(
+            mode="json", exclude={"owner", "learner"}
+        ),
+    }
+
+
+@pytest.mark.parametrize("shape", list(_ownerless_job_events()))
+async def test_a_visitor_cannot_use_a_chat_with_no_owner_recorded(visit, shape):
+    job = _ownerless_job_events()[shape]
+    await visit.log.append_once(
+        CHAT, kinds.TURN_STARTED, {"turn": "turn-0000-xx", "job": job}, 1
+    )
 
     codes = [
         await visit.take_turn(visit.visitor(), 1),
@@ -279,12 +337,8 @@ async def test_a_visitor_cannot_use_a_chat_with_no_owner_recorded(visit, job):
 
 
 async def test_a_learner_keeps_a_chat_made_before_chats_had_owners(visit):
-    bearer()
-    old = TurnJob(chat=CHAT, turn="turn-0000-xx", message="hi", learner=None)
-    from app.account.directory import learner_key
-
     held = learner_key("uid123", "dev1".ljust(12, "0"))
-    old = old.model_copy(update={"learner": held})
+    old = TurnJob(chat=CHAT, turn="turn-0000-xx", message="hi", learner=held)
     data = {"turn": old.turn, "job": old.model_dump(mode="json", exclude={"owner"})}
     await visit.log.append_once(CHAT, kinds.TURN_STARTED, data, 1)
 
@@ -318,18 +372,11 @@ async def test_two_visitors_cannot_share_a_chat_over_a2a():
 
 
 async def _a2a(app, text, context_id=None, device=None, visitor=None):
-    from test_a2a import turn
+    from test_a2a import VISITOR, turn
 
-    if visitor is None:
-        return await turn(app, text, context_id=context_id, device=device)
-    import test_a2a
-
-    saved = test_a2a.VISITOR
-    test_a2a.VISITOR = visitor
-    try:
-        return await turn(app, text, context_id=context_id, device=device)
-    finally:
-        test_a2a.VISITOR = saved
+    return await turn(
+        app, text, context_id=context_id, device=device, visitor=visitor or VISITOR
+    )
 
 
 class Upgrade:
@@ -628,8 +675,10 @@ async def test_over_a2a_only_a_turn_is_counted_and_a_visitor_is_limited(monkeypa
 
     from app.security.guard import SessionMiddleware
 
-    async def admit(session, address):
-        return await anonymous_turn_refusal(database, session, address)
+    async def admit(session, headers, chat, turn):
+        return await anonymous_turn_refusal(
+            database, session, edge_address(headers), chat, turn
+        )
 
     app = FastAPI()
     app.routes.extend(

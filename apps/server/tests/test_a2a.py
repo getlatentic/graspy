@@ -39,6 +39,7 @@ from app.security.guard import SessionMiddleware
 from app.security.session import issue
 from app.settings import Settings
 from app.threads.store import ThreadStore
+from app.turns.access import conversation_key
 
 BASE = "http://test"
 LEAKY = "upstream https://internal.example/v1 rejected key sk-or-v1-abc"
@@ -53,6 +54,11 @@ DEVICE = "a2a0device0000000000000000000001"
 
 VISITOR = "a2a-visitor-0000000001"
 SESSION = {"Authorization": f"Bearer {issue(SECRET, visitor=VISITOR).token}"}
+
+
+def visitors_memory(context_id: str) -> str:
+    """Where a visitor's conversation is remembered when the server keeps no chat log."""
+    return conversation_key(f"visitor:{VISITOR}", context_id)
 
 
 async def never_run(_job, _save):
@@ -133,6 +139,9 @@ async def turn(
     metadata: dict | None = None,
     data: dict | None = None,
     device: str | None = None,
+    visitor: str = VISITOR,
+    headers: dict | None = None,
+    message_id: str | None = None,
 ) -> dict:
     # A turn is kept under a learner only for a signed-in account's session; without one it is a
     # visitor's.
@@ -140,16 +149,16 @@ async def turn(
         SECRET,
         learner=device,
         account=device and "uid123",
-        visitor=None if device else VISITOR,
+        visitor=None if device else visitor,
     ).token
     http = httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url=BASE,
-        headers={"Authorization": f"Bearer {token}"},
+        headers={"Authorization": f"Bearer {token}", **(headers or {})},
     )
     client = await create_client(BASE, client_config=ClientConfig(httpx_client=http))
     message = Message(
-        message_id=str(uuid.uuid4()),
+        message_id=message_id or str(uuid.uuid4()),
         role=Role.ROLE_USER,
         parts=[new_text_part(text), *([new_data_part(data)] if data else [])],
     )
@@ -210,7 +219,7 @@ async def test_a_turn_emits_what_the_browser_reads():
     assert result["answer"] == "Forty-two"
     assert result["context"]
     assert result["update_contexts"] == [result["context"]] * 2
-    assert tutor.calls == [(result["context"], "What is 6 times 7?")]
+    assert tutor.calls == [(visitors_memory(result["context"]), "What is 6 times 7?")]
 
 
 async def test_the_learners_situation_travels_as_metadata():
@@ -333,8 +342,8 @@ async def test_one_conversation_keeps_one_id_across_turns():
     await turn(app, "second", context_id=first["context"])
 
     assert [conversation for conversation, _ in tutor.calls] == [
-        first["context"],
-        first["context"],
+        visitors_memory(first["context"]),
+        visitors_memory(first["context"]),
     ]
 
 
@@ -403,7 +412,7 @@ def test_a_client_on_the_earlier_protocol_is_still_answered():
         {"kind": "text", "text": "Forty-two"},
         {"kind": "data", "data": {"followUps": [], "actions": [], "cards": []}},
     ]
-    assert tutor.calls == [(result["contextId"], "hi")]
+    assert tutor.calls == [(visitors_memory(result["contextId"]), "hi")]
 
 
 def test_the_agent_endpoint_requires_a_session_in_the_real_app():

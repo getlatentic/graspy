@@ -7,6 +7,9 @@ an oracle."""
 
 from __future__ import annotations
 
+import hashlib
+import json
+
 from ..chatlog import kinds
 from ..chatlog.log import ChatLog
 from ..security.guard import Session
@@ -27,12 +30,20 @@ def chat_owner(session: Session) -> str | None:
     return f"{VISITOR_PREFIX}{session.visitor}" if session.visitor else None
 
 
+def conversation_key(owner: str, conversation_id: str) -> str:
+    """Where one owner's conversation is remembered when the server keeps no chat log to say whose
+    it is: a key of both ids, hashed as a list so that no two pairs of ids make one key."""
+    pair = json.dumps([owner, conversation_id]).encode()
+    return f"{owner.split(':')[0]}:{hashlib.sha256(pair).hexdigest()}"
+
+
 async def _first_owner(log: ChatLog, chat: str) -> tuple[bool, str | None]:
     first = await log.since(chat, 0, 1, (kinds.TURN_STARTED,))
     if not first:
         return False, None
     job = first[0].data.get("job", {})
-    return True, job.get("owner", job.get("learner"))
+    # A chat begun before jobs named an owner has only its learner.
+    return True, job.get("owner") or job.get("learner")
 
 
 async def may_start(log: ChatLog, chat: str, owner: str | None) -> bool:

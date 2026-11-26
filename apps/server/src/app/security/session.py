@@ -13,6 +13,7 @@ import hmac
 import json
 import logging
 import math
+import re
 import secrets
 import time
 from dataclasses import dataclass
@@ -39,6 +40,10 @@ PARENT_GATES = ("pin", "google")
 
 class InvalidSessionToken(Exception):
     """The message is sent to the client."""
+
+
+# Also the pattern of `SessionRequest.visitor` (api/routes.py).
+VISITOR_ID = re.compile(r"[A-Za-z0-9_-]{16,64}")
 
 
 @dataclass(frozen=True)
@@ -201,8 +206,10 @@ def tv_of(claims: dict) -> str | None:
 
 def visitor_of(claims: dict) -> str | None:
     """The random id a visitor with no account holds in their browser (the web's /try): what their
-    chats are bound to, since the session itself is renewed."""
-    return _text_claim(claims, "vis")
+    chats are bound to, since the session itself is renewed. Only what the session endpoint accepts
+    (the same characters and length) is an id."""
+    found = _text_claim(claims, "vis")
+    return found if found and VISITOR_ID.fullmatch(found) else None
 
 
 def account_of(claims: dict) -> str | None:

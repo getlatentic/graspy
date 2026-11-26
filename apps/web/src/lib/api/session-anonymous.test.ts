@@ -77,6 +77,22 @@ describe("a session held anonymous, as on /try", () => {
     ]);
   });
 
+  it("asks for each renewal under the same visitor, so the chats begun stay the visitor's", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    fetchMock.mockResolvedValueOnce(minted("first"));
+    fetchMock.mockResolvedValueOnce(minted("renewed"));
+    const { getSessionToken, holdAnonymousSession } = await loadSession();
+    holdAnonymousSession();
+    await getSessionToken();
+
+    vi.setSystemTime(Date.now() + 2 * 3600 * 1000);
+
+    await expect(getSessionToken()).resolves.toBe("renewed");
+    const [first, renewed] = sentBodies(fetchMock);
+    expect(renewed.visitor).toBe(first.visitor);
+    vi.useRealTimers();
+  });
+
   it("is not served by the device's own token, which names the device", async () => {
     fetchMock.mockResolvedValueOnce(minted("device"));
     fetchMock.mockResolvedValueOnce(minted("nobody"));
