@@ -7,9 +7,9 @@ export const TURNSTILE_SCRIPT_URL =
 export interface WidgetOptions {
   sitekey: string;
   action: string;
-  // Hidden unless the visitor has something to do: managed mode decides, `interactive-only` shows
+  // Hidden unless the visitor has something to do: managed mode decides, `interaction-only` shows
   // the widget only for a challenge that needs them.
-  appearance: "interactive-only";
+  appearance: "interaction-only";
   retry: "never";
   "refresh-expired": "never";
   callback: (token: string) => void;

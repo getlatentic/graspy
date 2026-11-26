@@ -85,7 +85,7 @@ describe("the check before a visitor's chat", () => {
     expect(widget()).toMatchObject({
       sitekey: "site-key",
       action: "try",
-      appearance: "interactive-only",
+      appearance: "interaction-only",
     });
 
     widget().callback("token");

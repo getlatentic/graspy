@@ -77,7 +77,7 @@ export function useChallengeHost() {
         const id = api.render(element, {
           sitekey: TURNSTILE_SITE_KEY!,
           action: CHALLENGE_ACTION,
-          appearance: "interactive-only",
+          appearance: "interaction-only",
           retry: "never",
           "refresh-expired": "never",
           callback: host.done,
