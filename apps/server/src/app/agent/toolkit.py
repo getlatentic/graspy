@@ -9,7 +9,16 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from ..learner.record import Where
-from .cards import CHOICE_UI, PASSAGE_UI, PRACTICE_UI, Card, ChoiceCard, placed
+from .about_you import ask_about_you_tool
+from .cards import (
+    ASKING,
+    CHOICE_UI,
+    DETAILS_UI,
+    PASSAGE_UI,
+    PRACTICE_UI,
+    Card,
+    placed,
+)
 from .choice import give_choice
 from .context import LearnerContext
 from .courses import propose_path_tool
@@ -18,7 +27,7 @@ from .decision import (
     refused_beside_choice,
     withdraw_offers,
 )
-from .details import ask_class_tool, class_first, set_details_tool
+from .details import class_first, set_details_tool
 from .passage import give_passage
 from .practice import give_practice
 from .reply import MAX_PATH_GOALS, Action, Outcome
@@ -59,6 +68,9 @@ class ToolSpec:
     build: Callable[[Turn], Tool]
     # The ui:// resource that shows the tool's result, in MCP Apps' terms.
     ui: str | None = None
+    # Whether an MCP host is offered the tool. One that needs the learner's situation is not: a
+    # host has none to give it.
+    listed: bool = True
     # What the tool offers once the learner's class is known, for tools that need it.
     after_class: str | None = None
 
@@ -90,7 +102,12 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec("give_practice", _as_is(give_practice), ui=PRACTICE_UI),
     ToolSpec("give_passage", _as_is(give_passage), ui=PASSAGE_UI),
     ToolSpec("give_choice", _as_is(give_choice), ui=CHOICE_UI),
-    ToolSpec("ask_class", _for_context(ask_class_tool)),
+    ToolSpec(
+        "ask_about_you",
+        _for_context(ask_about_you_tool),
+        ui=DETAILS_UI,
+        listed=False,
+    ),
     ToolSpec("set_details", _for_context(set_details_tool)),
     ToolSpec("load_skill", lambda turn: load_skill_for_turn(turn.active_skills)),
 )
@@ -116,7 +133,7 @@ def _keep(outputs: TurnOutputs, result: Outcome, where: Where, room: int) -> dic
     told = admit(outputs.actions, result, room)
     if result.card is not None:
         outputs.cards.append(placed(result.card, where))
-    if isinstance(result.card, ChoiceCard):
+    if isinstance(result.card, ASKING):
         withdrew, taken = withdraw_offers(outputs.actions, outputs.cards)
         outputs.withheld.extend(taken)
         if withdrew:

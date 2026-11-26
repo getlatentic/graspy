@@ -2,22 +2,32 @@ import { describe, expect, it } from "vitest";
 import contract from "./card-contract.json";
 import {
   helpOf,
+  isAboutYou,
   isChoiceSet,
   isPassageSet,
   isPracticeSet,
   practiceAnswer,
+  type AboutYou,
   type PracticeSet,
 } from "./content";
 
 const PRACTICE = "ui://graspy/practice";
 const PASSAGE = "ui://graspy/passage";
 const CHOICE = "ui://graspy/choice";
+const DETAILS = "ui://graspy/details";
 
 describe("the server's cards", () => {
   it("are what each view shows", () => {
     expect(isPracticeSet(contract.content[PRACTICE])).toBe(true);
     expect(isPassageSet(contract.content[PASSAGE])).toBe(true);
     expect(isChoiceSet(contract.content[CHOICE])).toBe(true);
+    expect(isAboutYou(contract.content[DETAILS])).toBe(true);
+  });
+
+  it("are refused as a form when a country has no classes", () => {
+    const form = contract.content[DETAILS] as AboutYou;
+    expect(isAboutYou({ ...form, classListOf: { NG: 0 } })).toBe(false);
+    expect(isAboutYou({ ...form, countries: [] })).toBe(false);
   });
 
   it("are refused as a choice when they have fewer than two answers", () => {

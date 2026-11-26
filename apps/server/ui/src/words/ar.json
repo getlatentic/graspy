@@ -29,6 +29,16 @@
     "typeBelow": "Type your answer below.",
     "busy": "Not now. Type your answer below."
   },
+  "details": {
+    "label": "عنك",
+    "country": "البلد",
+    "chooseCountry": "اختر بلدك",
+    "class": "الصف",
+    "course": "ماذا تدرس؟",
+    "coursePlaceholder": "مثلًا: المحاسبة",
+    "continue": "متابعة",
+    "busy": "ليس الآن. اكتب إجابتك في الأسفل."
+  },
   "lesson": {
     "label": "درس",
     "loading": "نحضّر درسك",

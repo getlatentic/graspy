@@ -80,6 +80,12 @@ def systems() -> dict[str, System]:
     return {system.id: system for system in read if system is not None}
 
 
+@cache
+def countries() -> frozenset[str]:
+    """The ISO codes of the countries the catalogue has a school system for."""
+    return frozenset(system.country for system in systems().values())
+
+
 def of_country(country: str) -> list[System]:
     """Its main one first; numbered grades for a country the catalogue does
     not cover."""

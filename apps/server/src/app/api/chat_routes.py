@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query, Requ
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from ..agent.edge_country import with_edge_country
 from ..security.guard import Session, require_session
 from ..turns.access import chat_learner, chat_owner, may_follow, may_start
 from ..turns.durable import DurableTurns
@@ -110,7 +111,7 @@ async def start_turn(
         owner=owner,
         message=_message(body.parts),
         parts=body.parts,
-        metadata=body.metadata,
+        metadata=with_edge_country(body.metadata, request.headers),
     )
     try:
         check_turn_fits(job)

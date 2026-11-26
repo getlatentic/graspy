@@ -29,6 +29,16 @@
     "typeBelow": "Type your answer below.",
     "busy": "Not now. Type your answer below."
   },
+  "details": {
+    "label": "Nípa rẹ",
+    "country": "Orílẹ̀-èdè",
+    "chooseCountry": "Yan orílẹ̀-èdè rẹ",
+    "class": "Kíláàsì",
+    "course": "Kí ni o ń kọ́?",
+    "coursePlaceholder": "Fún àpẹẹrẹ, Ìṣirò owó",
+    "continue": "Tẹ̀síwájú",
+    "busy": "Kì í ṣe báyìí. Tẹ ìdáhùn rẹ síbi ìsàlẹ̀."
+  },
   "lesson": {
     "label": "Ẹ̀kọ́",
     "loading": "À ń múra ẹ̀kọ́ rẹ sílẹ̀",

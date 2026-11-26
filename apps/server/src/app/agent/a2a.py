@@ -44,6 +44,7 @@ from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
 from .context import LearnerContext, with_kept_lesson
 from .durable_relay import TurnFailed, payload_parts, relay_events
+from .edge_country import with_edge_country
 from .reply import ReplyData
 from .streaming import AnswerDelta, AnswerRestart, ToolActivity, ToolFinished
 from .tutor import Tutor, TutorReply
@@ -263,11 +264,12 @@ def message_parts(context: RequestContext) -> list[dict]:
 
 def learner_metadata(context: RequestContext) -> dict:
     message = context.message
-    return (
+    sent = (
         MessageToDict(message.metadata)
         if message is not None and message.HasField("metadata")
         else {}
     )
+    return with_edge_country(sent, context.call_context.state.get("headers", {}))
 
 
 def reply_parts(reply: TutorReply) -> list:

@@ -19,6 +19,7 @@ from pydantic import (
 )
 
 from ..domains.lesson.lesson import Lesson
+from ..education.catalogue import countries
 from ..education.stage import stage_of
 from ..learner.record import LearnerRecord
 from ..lessons.store import LessonStore
@@ -54,6 +55,12 @@ def _country_code(value: Any) -> str | None:
     if isinstance(value, str) and COUNTRY_CODE.fullmatch(value.strip()):
         return value.strip().upper()
     return None
+
+
+def _catalogued(value: Any) -> str | None:
+    """A country code the catalogue has a school system for, else nothing."""
+    code = _country_code(value)
+    return code if code in countries() else None
 
 
 def _clipped(max_items: int, max_chars: int):
@@ -130,6 +137,15 @@ class LearnerContext(BaseModel):
     # code is left out, not the whole context.
     country_code: Annotated[str | None, BeforeValidator(_country_code)] = Field(
         default=None, alias="countryCode"
+    )
+    # Where the form starts when the learner has not said their country. The edge's is set by the
+    # server from the request (edge_country.py), never read from what an app sends; the device's
+    # is the app's guess from its own settings, used only when the edge has none.
+    edge_country: Annotated[str | None, BeforeValidator(_catalogued)] = Field(
+        default=None, alias="edgeCountry"
+    )
+    device_country: Annotated[str | None, BeforeValidator(_catalogued)] = Field(
+        default=None, alias="deviceCountry"
     )
     language: Short | None = None
     grade_level: Short | None = Field(default=None, alias="gradeLevel")

@@ -46,6 +46,20 @@ export interface ChoiceSet {
   options: string[];
 }
 
+/** The "About you" form: every country's classes, sent once each (cards.py's AboutYou). */
+export interface AboutYou {
+  /** The country code the form starts on; the learner confirms or changes it. */
+  country: string | null;
+  /** False when the learner has said their country already. */
+  askCountry: boolean;
+  countries: string[];
+  classLists: string[][];
+  /** Which of `classLists` each country has. */
+  classListOf: Record<string, number>;
+  /** The classes that ask for a course. */
+  afterSchool: string[];
+}
+
 const MAX_QUESTIONS = 5;
 
 export const isText = (value: unknown): value is string =>
@@ -153,4 +167,28 @@ export function helpOf(value: unknown): Help | null {
       ? help.keep.filter((index) => Number.isInteger(index))
       : [],
   };
+}
+
+const isTexts = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every(isText);
+
+export function isAboutYou(value: unknown): value is AboutYou {
+  const form = value as Partial<AboutYou> | null;
+  const lists = form?.classLists;
+  const listOf = form?.classListOf;
+  return (
+    (form?.country === null || isText(form?.country)) &&
+    typeof form?.askCountry === "boolean" &&
+    isTexts(form.countries) &&
+    form.countries.length > 0 &&
+    Array.isArray(lists) &&
+    lists.every(isTexts) &&
+    typeof listOf === "object" &&
+    listOf !== null &&
+    form.countries.every((code) => {
+      const list = lists[listOf[code]];
+      return list !== undefined && list.length > 0;
+    }) &&
+    isTexts(form.afterSchool)
+  );
 }

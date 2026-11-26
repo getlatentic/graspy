@@ -55,6 +55,36 @@
         "JSS 3"
       ]
     },
+    "ui://graspy/details": {
+      "country": "NG",
+      "askCountry": true,
+      "countries": [
+        "NG",
+        "SK"
+      ],
+      "classLists": [
+        [
+          "JSS 1",
+          "JSS 2",
+          "Undergraduate",
+          "Graduate"
+        ],
+        [
+          "Grade 1",
+          "Grade 2",
+          "Undergraduate",
+          "Graduate"
+        ]
+      ],
+      "classListOf": {
+        "NG": 0,
+        "SK": 1
+      },
+      "afterSchool": [
+        "Undergraduate",
+        "Graduate"
+      ]
+    },
     "ui://graspy/lesson": {
       "status": "ready",
       "lesson": {
