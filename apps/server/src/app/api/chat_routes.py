@@ -19,13 +19,13 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query, Requ
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from ..chatlog import kinds
 from ..security.guard import Session, require_session
 from ..turns.access import chat_learner, chat_owner, may_follow, may_start
 from ..turns.durable import DurableTurns
 from ..turns.frames import read
+from ..turns.host import check_turn_fits
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
-from .anonymous_chat import anonymous_turn_refusal
+from .anonymous_chat import anonymous_turn_refusal, edge_address
 from .chat_access import ChatSession
 from .sse import SSE_HEADERS
 
@@ -112,25 +112,35 @@ async def start_turn(
         parts=body.parts,
         metadata=body.metadata,
     )
-    await _count_if_new(request, session, turns, job)
+    try:
+        check_turn_fits(job)
+    except ValueError:
+        raise _too_large() from None
+    await _count_visitor_turn(request, session, job)
     try:
         return StartedTurn(turn=body.turn, cursor=await turns.host.start(job))
     except ValueError:
-        raise HTTPException(
-            status_code=422,
-            detail={"error": "That message is too large", "code": "turn_too_large"},
-        ) from None
+        raise _too_large() from None
 
 
-async def _count_if_new(
-    request: Request, session: Session, turns: DurableTurns, job: TurnJob
-) -> None:
-    """A visitor's turn is counted once it is valid and theirs to start; a start sent again for a
-    turn the chat holds is not a new turn."""
-    if await turns.log.once_seq(job.chat, kinds.TURN_STARTED, job.turn) is not None:
+def _too_large() -> HTTPException:
+    return HTTPException(
+        status_code=422,
+        detail={"error": "That message is too large", "code": "turn_too_large"},
+    )
+
+
+async def _count_visitor_turn(request: Request, session: Session, job: TurnJob) -> None:
+    """A visitor's turn is counted once it is valid, fits and is theirs to start, just before it
+    begins; a signed-in account's is not counted and reads nothing for it."""
+    if session.account:
         return
     refusal = await anonymous_turn_refusal(
-        request.app.state.tv_db, session, request.headers.get("cf-connecting-ip")
+        request.app.state.tv_db,
+        session,
+        edge_address(request.headers),
+        job.chat,
+        job.turn,
     )
     if refusal is not None:
         raise refusal

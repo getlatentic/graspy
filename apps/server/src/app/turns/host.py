@@ -13,7 +13,7 @@ from ..agent.skills.active import stamped
 from ..agent.tutor import Tutor
 from ..caller import Keeping
 from ..chatlog import kinds
-from ..chatlog.log import ChatLog
+from ..chatlog.log import ChatLog, check_fits
 from ..learner.time import now_ms
 from .job import TurnJob, tutor_stream
 from .runner import TurnRunner, TurnSource
@@ -54,10 +54,19 @@ class TutorTurnSource:
         await self._keeping.conversations.append(kept.chat, stopped, turn=turn)
 
 
+def _started_event(job: TurnJob) -> dict[str, Any]:
+    return {"turn": job.turn, "job": job.model_dump(mode="json")}
+
+
+def check_turn_fits(job: TurnJob) -> None:
+    """Raises ValueError for a job too long to keep, before anything is spent on starting it."""
+    check_fits(kinds.TURN_STARTED, _started_event(job))
+
+
 async def begin_turn(log: ChatLog, job: TurnJob, at: int) -> int:
     """Keeps the turn's first event, once, and says where it is. The job is in the event, so a run that
     begins after a restart has it. Raises ValueError for a job too long to keep."""
-    data = {"turn": job.turn, "job": job.model_dump(mode="json")}
+    data = _started_event(job)
     await log.append_once(job.chat, kinds.TURN_STARTED, data, at)
     seq = await log.once_seq(job.chat, kinds.TURN_STARTED, job.turn)
     if seq is None:

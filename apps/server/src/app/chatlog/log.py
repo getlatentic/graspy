@@ -131,6 +131,11 @@ def _encoded(kind: str, data: dict[str, Any]) -> str:
     return text
 
 
+def check_fits(kind: str, data: dict[str, Any]) -> None:
+    """Raises ValueError for an event the log would refuse for its kind or size."""
+    _encoded(kind, data)
+
+
 class ChatLog:
     def __init__(self, database: Any) -> None:
         self._db = database

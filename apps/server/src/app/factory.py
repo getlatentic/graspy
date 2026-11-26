@@ -27,7 +27,7 @@ from .api.account_parent_routes import parent_session_router
 from .api.account_pin_routes import parent_pin_router
 from .api.account_routes import account_router
 from .api.account_voice_routes import account_voice_router
-from .api.anonymous_chat import anonymous_turn_refusal
+from .api.anonymous_chat import anonymous_turn_refusal, edge_address
 from .api.chat_access import chat_refusal
 from .api.chat_routes import chat_router
 from .api.education_routes import education_router
@@ -135,8 +135,10 @@ def create_app(
 def _admit(app: FastAPI):
     """What the A2A tutor asks before it begins a turn: a visitor with no account is limited."""
 
-    def admit(session, address):
-        return anonymous_turn_refusal(app.state.tv_db, session, address)
+    def admit(session, headers, chat, turn):
+        return anonymous_turn_refusal(
+            app.state.tv_db, session, edge_address(headers), chat, turn
+        )
 
     return admit
 

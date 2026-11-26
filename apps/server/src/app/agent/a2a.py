@@ -4,7 +4,7 @@ again under the prefix), JSON-RPC at the prefix."""
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 
 from a2a.helpers.proto_helpers import (
     new_data_part,
@@ -32,7 +32,7 @@ from ..learner.notes import notes_for
 from ..learner.record import Conversed
 from ..security.guard import Session
 from ..settings import Settings
-from ..turns.access import chat_learner, chat_owner, may_start
+from ..turns.access import VISITOR_PREFIX, chat_learner, chat_owner, may_start
 from ..turns.durable import DurableTurns
 from ..turns.job import MAX_MESSAGE_CHARS, TurnJob
 from .app_tools import app_calls
@@ -45,8 +45,11 @@ from .unanswered import unanswered
 
 logger = logging.getLogger(__name__)
 
-# Whether a session may start a turn, given the address the edge reported: the refusal, or None.
-Admit = Callable[[Session, str | None], Awaitable[HTTPException | None]]
+# Whether a session may start the turn of a chat, given the request's headers: the refusal, or None.
+# A session that is none is refused.
+Admit = Callable[
+    [Session | None, Mapping[str, str], str, str], Awaitable[HTTPException | None]
+]
 
 FAILED_TURN = "Sorry, I couldn't answer that just now. Please try again."
 TOO_LONG = "That message is too long for me to read. Please send a shorter question."
@@ -54,6 +57,10 @@ TOO_LONG = "That message is too long for me to read. Please send a shorter quest
 # The answer streams as chunks of this one artifact; the completed status
 # carries the finished answer.
 ANSWER_ARTIFACT = "answer"
+
+
+class TurnRefused(Exception):
+    """A turn the limits turn away; the message is in words for the learner."""
 
 
 class TutorExecutor(AgentExecutor):
@@ -85,14 +92,14 @@ class TutorExecutor(AgentExecutor):
             await updater.reject(updater.new_agent_message([new_text_part(TOO_LONG)]))
             return
 
-        refusal = await self._refusal(context)
-        if refusal is not None:
-            await updater.reject(updater.new_agent_message([new_text_part(refusal)]))
-            return
-
         await updater.start_work()
         try:
             parts = await self._answer(context, task.context_id, message, updater)
+        except TurnRefused as refused:
+            await updater.reject(
+                updater.new_agent_message([new_text_part(str(refused))])
+            )
+            return
         except TurnFailed as failed:
             logger.warning(
                 "Turn %s failed: %s", context.message.message_id, failed.cause
@@ -109,15 +116,21 @@ class TutorExecutor(AgentExecutor):
             return
         await updater.complete(updater.new_agent_message(parts))
 
-    async def _refusal(self, context: RequestContext) -> str | None:
-        """Why this turn may not start, in words for the learner: a visitor with no account is
-        limited. Only a message that begins a turn reaches the executor, so only turns are counted."""
-        session = context.call_context.state.get("auth")
-        if self._admit is None or session is None:
-            return None
+    async def _admit_turn(self, context: RequestContext, chat: str) -> None:
+        """Raises TurnRefused when a visitor with no account is past a limit. Only a message that
+        begins a turn reaches the executor, so only turns are counted. A call with no
+        session is refused, and one with no edge address is limited as REST is: by what it does have."""
+        if self._admit is None:
+            return
         headers = context.call_context.state.get("headers", {})
-        refused = await self._admit(session, headers.get("cf-connecting-ip"))
-        return None if refused is None else refused.detail["error"]
+        refused = await self._admit(
+            context.call_context.state.get("auth"),
+            headers,
+            chat,
+            context.message.message_id,
+        )
+        if refused is not None:
+            raise TurnRefused(refused.detail["error"])
 
     async def _answer(
         self,
@@ -127,10 +140,13 @@ class TutorExecutor(AgentExecutor):
         updater: TaskUpdater,
     ) -> list:
         if self._turns is None:
-            turn = await self._turn(context, conversation_id, message)
+            memory = memory_key(context, conversation_id)
+            await self._admit_turn(context, memory)
+            turn = await self._turn(context, conversation_id, memory, message)
             return reply_parts(await _relay(updater, turn))
         if not await may_start(self._turns.log, conversation_id, owner_of(context)):
             raise TurnFailed("not_yours")
+        await self._admit_turn(context, conversation_id)
         job = TurnJob(
             chat=conversation_id,
             turn=context.message.message_id,
@@ -144,7 +160,11 @@ class TutorExecutor(AgentExecutor):
         return payload_parts(await relay_events(updater, events))
 
     async def _turn(
-        self, context: RequestContext, conversation_id: str, message: str
+        self,
+        context: RequestContext,
+        conversation_id: str,
+        memory: str,
+        message: str,
     ) -> AsyncIterator:
         caller = Caller(learner_of(context), self._keeping)
         record = await caller.record()
@@ -157,7 +177,7 @@ class TutorExecutor(AgentExecutor):
         )
         parts = message_parts(context)
         return self._tutor.stream(
-            conversation_id,
+            memory,
             message,
             learner,
             app_calls(parts),
@@ -208,6 +228,16 @@ async def _relay(updater: TaskUpdater, turn: AsyncIterator) -> TutorReply:
 def learner_of(context: RequestContext) -> str | None:
     session = context.call_context.state.get("auth")
     return chat_learner(session) if session is not None else None
+
+
+def memory_key(context: RequestContext, conversation_id: str) -> str:
+    """Where a conversation is remembered when the server keeps no chat log to say whose it is: a
+    visitor's is under their own id, so another visitor who sends the same context id reaches
+    nothing of it."""
+    owner = owner_of(context)
+    if owner is not None and owner.startswith(VISITOR_PREFIX):
+        return f"{owner}/{conversation_id}"
+    return conversation_id
 
 
 def owner_of(context: RequestContext) -> str | None:

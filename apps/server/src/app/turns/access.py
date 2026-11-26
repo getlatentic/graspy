@@ -32,7 +32,8 @@ async def _first_owner(log: ChatLog, chat: str) -> tuple[bool, str | None]:
     if not first:
         return False, None
     job = first[0].data.get("job", {})
-    return True, job.get("owner", job.get("learner"))
+    # A chat begun before jobs named an owner has only its learner.
+    return True, job.get("owner") or job.get("learner")
 
 
 async def may_start(log: ChatLog, chat: str, owner: str | None) -> bool:

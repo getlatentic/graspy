@@ -14,8 +14,10 @@ address is never taken for all of them."""
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import ipaddress
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -36,17 +38,26 @@ NETWORK_TURNS_PER_HOUR = 60
 NETWORK_TURNS_PER_DAY = 200
 TURNS_PER_DAY = 3000
 
+EDGE_ADDRESS_HEADER = "cf-connecting-ip"
 HOUR_MS = 60 * 60 * 1000
 DAY_MS = 24 * HOUR_MS
 # A slow store must not hold the turn it is counting.
 COUNT_TIMEOUT_SECONDS = 3
 
-COUNTS_SQL = "SELECT bucket, turns FROM anonymous_chat_use WHERE bucket IN ({marks})"
 PRUNE_SQL = "DELETE FROM anonymous_chat_use WHERE expires_at <= ?1"
-ADD_SQL = (
+# One conditional statement per count: it adds the turn only while the count is under its limit, and
+# says by the rows it changed whether it did, so the check and the add cannot be split by another turn.
+SPEND_SQL = (
     "INSERT INTO anonymous_chat_use (bucket, turns, expires_at) VALUES (?1, 1, ?2) "
-    "ON CONFLICT (bucket) DO UPDATE SET turns = turns + 1"
+    "ON CONFLICT (bucket) DO UPDATE SET turns = turns + 1 WHERE turns < ?3"
 )
+GIVE_BACK_SQL = (
+    "UPDATE anonymous_chat_use SET turns = turns - 1 WHERE bucket = ?1 AND turns > 0"
+)
+FORGET_EMPTY_SQL = "DELETE FROM anonymous_chat_use WHERE bucket = ?1 AND turns <= 0"
+# A turn that has been counted leaves a row of this kind, so it is never counted twice.
+COUNTED_SQL = "SELECT 1 AS counted FROM anonymous_chat_use WHERE bucket = ?1"
+MARK_SQL = "INSERT OR IGNORE INTO anonymous_chat_use (bucket, turns, expires_at) VALUES (?1, 1, ?2)"
 
 
 @dataclass(frozen=True)
@@ -99,45 +110,110 @@ def _refusal(status: int, code: str, error: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"error": error, "code": code})
 
 
+def _plain(result: Any) -> Any:
+    return result.to_py() if hasattr(result, "to_py") else result
+
+
 def _rows(result: Any) -> list[dict]:
-    result = result.to_py() if hasattr(result, "to_py") else result
-    return [dict(row) for row in result["results"]]
+    return [dict(row) for row in _plain(result)["results"]]
 
 
-async def _count(database: Any, found: list[Counter], now: int) -> bool:
-    """Adds the turn to every count, or to none when any is at its limit: a turn refused by a wide
-    count does not spend a narrow one. The counts are read in one batch and added to in another, so
-    turns that race may pass a limit by a few."""
-    marks = ", ".join(f"?{n + 1}" for n in range(len(found)))
-    read = database.prepare(COUNTS_SQL.format(marks=marks)).bind(
-        *(counter.bucket for counter in found)
-    )
-    results = await database.batch([database.prepare(PRUNE_SQL).bind(now), read])
-    held = {row["bucket"]: row["turns"] for row in _rows(results[1])}
-    if any(held.get(counter.bucket, 0) >= counter.limit for counter in found):
-        return False
-    await database.batch(
+def _changed(result: Any) -> int:
+    return int(_plain(result)["meta"]["changes"])
+
+
+def _turn_bucket(chat: str, turn: str) -> str:
+    """Hashed, since an A2A client chooses the lengths of both ids."""
+    return "turn:" + hashlib.sha256(f"{chat}\0{turn}".encode()).hexdigest()
+
+
+async def _is_counted(database: Any, bucket: str, now: int) -> bool:
+    found = await database.batch(
         [
-            database.prepare(ADD_SQL).bind(counter.bucket, counter.expires_at)
-            for counter in found
+            database.prepare(PRUNE_SQL).bind(now),
+            database.prepare(COUNTED_SQL).bind(bucket),
         ]
     )
+    return bool(_rows(found[1]))
+
+
+async def _spend(database: Any, found: list[Counter]) -> list[Counter]:
+    """Adds the turn to every count still under its limit, in one transaction, and returns the
+    counts it was added to."""
+    results = await database.batch(
+        [
+            database.prepare(SPEND_SQL).bind(c.bucket, c.expires_at, c.limit)
+            for c in found
+        ]
+    )
+    return [
+        counter
+        for counter, result in zip(found, results, strict=True)
+        if _changed(result)
+    ]
+
+
+async def _give_back(database: Any, spent: list[Counter]) -> None:
+    statements = []
+    for counter in spent:
+        statements.append(database.prepare(GIVE_BACK_SQL).bind(counter.bucket))
+        statements.append(database.prepare(FORGET_EMPTY_SQL).bind(counter.bucket))
+    if statements:
+        await database.batch(statements)
+
+
+async def _count(
+    database: Any, found: list[Counter], chat: str, turn: str, now: int
+) -> bool:
+    """Adds the turn to every count, or to none when any is at its limit. Each count is added to
+    by one statement that checks its own limit, so turns that race cannot pass a limit together. A
+    turn refused by one count gives back what it added to the others, which another turn may see
+    for a moment as spent: a limit is then reached a turn early, never passed. A turn already
+    counted (a start sent again, or a second start of it racing the first) is admitted without
+    being counted again.
+
+    What stays racy: a turn that is cut off (the timeout, a restart) between adding and giving
+    back leaves its counts spent, and a refused turn's retry then finds them so."""
+    bucket = _turn_bucket(chat, turn)
+    if await _is_counted(database, bucket, now):
+        return True
+    spent = await _spend(database, found)
+    if len(spent) < len(found):
+        await _give_back(database, spent)
+        return False
+    marked = await database.batch(
+        [database.prepare(MARK_SQL).bind(bucket, now + DAY_MS)]
+    )
+    if not _changed(marked[0]):
+        # A start of this turn that raced this one counted it first.
+        await _give_back(database, spent)
     return True
 
 
+def edge_address(headers: Mapping[str, str]) -> str | None:
+    """The address Cloudflare's edge reported, whatever the case the headers came in."""
+    for name, value in headers.items():
+        if name.lower() == EDGE_ADDRESS_HEADER:
+            return value
+    return None
+
+
 async def anonymous_turn_refusal(
-    database: Any, session: Session, address: str | None
+    database: Any, session: Session | None, address: str | None, chat: str, turn: str
 ) -> HTTPException | None:
     """None for a signed-in account's session, which these limits are not for, and for an
-    anonymous one still within them (the turn is then counted); else the refusal to send. A count
-    that cannot be made refuses: an open chat that cannot be counted is an open bill."""
+    anonymous one still within them (the turn is then counted, once per chat and turn); else the
+    refusal to send. A count that cannot be made refuses: an open chat that cannot be counted is
+    an open bill, and so is a call with no session to count it for."""
+    if session is None:
+        return _refusal(401, "session_required", "A session is required")
     if session.account:
         return None
     now = now_ms()
     try:
         async with asyncio.timeout(COUNT_TIMEOUT_SECONDS):
             within = await _count(
-                database, counters(session, edge_network(address), now), now
+                database, counters(session, edge_network(address), now), chat, turn, now
             )
     except Exception:
         logger.exception("The anonymous chat's turns could not be counted")

@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..agent.app_tools import app_calls
 from ..agent.context import LearnerContext, with_kept_lesson
@@ -27,14 +27,20 @@ class TurnJob(BaseModel):
     turn: str
     # The learner's key, or None for a session that keeps no record.
     learner: str | None = None
-    # Who the chat belongs to: the learner, or a visitor with no account (turns/access.py). Kept in
-    # the chat's first event, which a chat made before owners existed lacks: its learner is its owner.
+    # Who the chat belongs to: a visitor with no account (turns/access.py), else the learner, which
+    # it is whenever none is named.
     owner: str | None = None
     message: str
     # The parts of the A2A message, as dicts: app calls and the messages whose turns failed.
     parts: list[dict[str, Any]] = Field(default_factory=list)
     # The message's metadata: the learner's situation under "learner".
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _learner_owns_its_chat(self) -> TurnJob:
+        if self.owner is None:
+            self.owner = self.learner
+        return self
 
 
 def reply_payload(reply: TutorReply) -> dict[str, Any]:

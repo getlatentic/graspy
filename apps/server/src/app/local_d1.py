@@ -55,9 +55,18 @@ class LocalD1:
     def prepare(self, sql: str) -> Statement:
         return Statement(self.connection, sql)
 
+    def _executed(self, statement: Statement) -> dict:
+        """A statement of a batch: its rows and, as D1 reports it, the rows it changed."""
+        before = self.connection.total_changes
+        rows = statement.rows()
+        return {
+            "results": rows,
+            "meta": {"changes": self.connection.total_changes - before},
+        }
+
     async def batch(self, statements: list[Statement]) -> list[dict]:
         try:
-            results = [{"results": statement.rows()} for statement in statements]
+            results = [self._executed(statement) for statement in statements]
         except sqlite3.Error:
             self.connection.rollback()
             raise
