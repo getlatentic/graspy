@@ -48,7 +48,7 @@ A model writes its expressions, so they are hostile.
 |---|---|---|
 | `SESSION_LIMITER` | 20 a minute | `POST /api/session` |
 | `GENERATE_LIMITER` | 30 a minute | Subjects, curriculum and path generation |
-| `AGENT_LIMITER` | 30 a minute | `/a2a` |
+| `AGENT_LIMITER` | 30 a minute | `/a2a`, and starting a turn (`POST /api/chats/{chat}/turns`) |
 | `API_LIMITER` | 120 a minute | The rest of `/api`, and `/mcp` |
 | `PIN_LIMITER` | 10 a minute | Typing the parent PIN, or the old one to replace it: counted per account and per address, on top of the lockout that is the account's own ([Parent PIN](PARENT_PIN.md)) |
 | `PAIRING_LIMITER` | 10 a minute | Asking for a TV's sign-in code (per address) and looking one up (per account and per address), on top of `API_LIMITER` ([TV sign-in](TV_SIGN_IN.md)) |
