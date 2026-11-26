@@ -9,16 +9,19 @@ import pytest
 from stand_in import stand_in
 from test_passage_tool import PASSAGE, asked
 from test_practice_tool import written
+from workshops import FakePlanner, ScriptedMaking, keeping, workshop
 
 from app.agent.cards import Card
 from app.agent.context import LearnerContext, SubjectRef
 from app.agent.labels import DATA_ONLY
 from app.agent.lesson_request import AsksForLesson
 from app.agent.memory import InMemoryConversationStore
+from app.agent.path_answer import path_answer
 from app.agent.refusal import NOTHING_DONE
 from app.agent.summary import SummariseConversation
 from app.agent.toolkit import TOOLS, Turn, TurnOutputs, tools_for
 from app.agent.tutor import Tutor, TutorReply, TutorTurn
+from app.caller import Caller
 
 # What only the server adds to a card: the keys of its tool result and its view's key.
 CARD_KEYS = (
@@ -76,12 +79,24 @@ CARD_CALLS = {
         {"question": "Which class are you in?", "options": ["JSS 1", "JSS 2"]},
     ),
     "ui://graspy/details": ("ask_about_you", {}),
+    "ui://graspy/path": ("propose_path", {"goals": ["Real analysis"]}),
+    "ui://graspy/start": ("start_lesson", {"topic": "Limits"}),
 }
 
 
-# The form is asked only of a learner with no class.
+# The form is asked only of a learner with no class; a lesson is started for topics the learner's
+# message has just chosen on a path card.
 NEW_LEARNER = LearnerContext(emptyPlan=True)
-LEARNER_OF = {"ui://graspy/details": NEW_LEARNER}
+PLANNED = LearnerContext(
+    planId="plan-1", country="Nigeria", language="English", gradeLevel="JSS 1"
+)
+CHOSEN = "Add to my plan:\nCourse: Real analysis\n- Limits | SS 3\n- Sequences | SS 3"
+LEARNER_OF = {
+    "ui://graspy/details": NEW_LEARNER,
+    "ui://graspy/path": PLANNED,
+    "ui://graspy/start": PLANNED,
+}
+MESSAGE_OF = {"ui://graspy/start": CHOSEN}
 
 
 def test_every_kind_of_card_has_a_scripted_call():
@@ -101,8 +116,11 @@ async def test_the_model_reads_none_of_the_data_of_a_card(kind):
     with context:
         items = [
             item
-            async for item in Tutor(InMemoryConversationStore()).stream(
-                "c1", "Give me something to try", LEARNER_OF.get(kind)
+            async for item in Tutor(InMemoryConversationStore(), FakePlanner()).stream(
+                "c1",
+                MESSAGE_OF.get(kind, "Give me something to try"),
+                LEARNER_OF.get(kind),
+                caller=Caller(None, keeping(ScriptedMaking("ready"))),
             )
         ]
 
@@ -122,7 +140,14 @@ async def test_a_tool_that_makes_a_card_returns_the_model_only_a_done_sentence(k
     name, arguments = CARD_CALLS[kind]
     outputs = TurnOutputs()
     learner = LEARNER_OF.get(kind, LearnerContext())
-    tool = next(t for t in tools_for(Turn(learner, ""), outputs) if t.__name__ == name)
+    message = MESSAGE_OF.get(kind, "")
+    turn = Turn(
+        learner,
+        message,
+        workshop=workshop(making=ScriptedMaking("ready")),
+        added=path_answer(message, learner),
+    )
+    tool = next(t for t in tools_for(turn, outputs) if t.__name__ == name)
 
     told = await dspy.Tool(tool).acall(**arguments)
 
@@ -153,6 +178,7 @@ REFUSALS = [
     ("propose_path", {"goals": [" "]}, PLAN, True),
     ("propose_path", {"goals": []}, PLAN, True),
     ("propose_path", {"goals": [f"Course {n}" for n in range(6)]}, PLAN, True),
+    ("start_lesson", {"topic": "Limits"}, PLAN, True),
     ("change_subjects", {"remove": ["Astrology"]}, PLAN, True),
     ("change_subjects", {"add": ["Physics"]}, NOTHING_SENT, True),
     ("change_subjects", {"add": ["Mathematics"]}, PLAN, True),

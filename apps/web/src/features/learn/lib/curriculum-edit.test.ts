@@ -227,6 +227,31 @@ describe("withPath", () => {
     );
   });
 
+  it("keeps the slug it was given, so the lesson made under it is found again", () => {
+    const { curriculum, outcome } = withPath(plan(), {
+      ...REAL_ANALYSIS,
+      slug: "analysis-7",
+    });
+
+    expect(addedSubject(outcome)).toEqual({
+      name: "Real analysis",
+      slug: "analysis-7",
+    });
+    expect(curriculum.topics?.["analysis-7"]).toHaveLength(3);
+    expect(topicLevel(curriculum, addedSubject(outcome), "Limits")).toBe(
+      "SS 3",
+    );
+  });
+
+  it("takes the next free slug when the one it was given is taken", () => {
+    const { outcome } = withPath(plan(), {
+      ...REAL_ANALYSIS,
+      slug: MATHS.slug,
+    });
+
+    expect(addedSubject(outcome).slug).toBe("real-analysis");
+  });
+
   it("records its last step as the goal the learner asked for", () => {
     const { curriculum, outcome } = withPath(plan(), REAL_ANALYSIS);
     const subject = addedSubject(outcome);

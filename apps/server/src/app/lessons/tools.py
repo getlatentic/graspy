@@ -10,7 +10,7 @@ from ..caller import Caller
 from ..domains.lesson.lesson import Lesson
 from ..learner.answers import PracticeAnswer, answered
 from ..learner.notes import notes_for
-from ..learner.record import LearnerRecord, Learnt, TopicRef
+from ..learner.record import LearnerRecord, Learnt, LessonKept, TopicRef
 from ..learner.time import now_ms
 from ..voice.lesson_store import lesson_day
 from ..wire import Wire
@@ -25,6 +25,10 @@ class LessonAsk(Wire):
     # Raised to ask again after a failure; the same attempt joins the failure
     # rather than paying again.
     attempt: int = Field(default=0, ge=0, le=100)
+    # The id of a lesson already made for this topic, from the card that offered it. A learner who
+    # opens it with another session than the one it was made for, as a visitor from the chat does,
+    # is given that lesson rather than one made again.
+    lesson_id: str | None = Field(default=None, max_length=80)
 
 
 class LessonView(Wire):
@@ -64,6 +68,22 @@ async def _kept(
         status="ready",
         lesson=lesson,
         lesson_id=mark.lesson_id,
+        whole=True,
+        updated_at=now_ms(),
+    )
+
+
+async def _offered(ask: LessonAsk, caller: Caller) -> Making | None:
+    """The lesson the ask names, filed on the learner's record under this topic."""
+    lesson_id = ask.lesson_id
+    lesson = await caller.keeping.lessons.find(lesson_id) if lesson_id else None
+    if lesson_id is None or lesson is None:
+        return None
+    await caller.change(LessonKept(topic=ask.target.ref(), lesson_id=lesson_id))
+    return Making(
+        status="ready",
+        lesson=lesson,
+        lesson_id=lesson_id,
         whole=True,
         updated_at=now_ms(),
     )
@@ -113,7 +133,7 @@ def _notes(record: LearnerRecord, target: LessonTarget) -> str:
 async def give_lesson(ask: LessonAsk, caller: Caller) -> dict:
     target = ask.target
     record = await caller.record()
-    making = await _kept(target, caller, record)
+    making = await _kept(target, caller, record) or await _offered(ask, caller)
     if making is None:
         job = Job(
             learner=caller.learner,

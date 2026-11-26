@@ -7,8 +7,11 @@ from __future__ import annotations
 import re
 
 from .answer_rules import Breach, Facts, breach_in
-from .cards import ASKING
+from .cards import PassageCard, PracticeCard
 from .toolkit import TurnOutputs
+
+# The cards that hold questions, whose answers must stay unsaid.
+QUESTIONS = (PracticeCard, PassageCard)
 
 # What the learner reads when every sentence of the answer was dropped.
 CARD_INTRO = "Your questions are below."
@@ -97,10 +100,10 @@ class AnswerGate:
 
     def _facts(self) -> Facts:
         # Of two cards of questions in one turn the last counts, as in the reply;
-        # a choice has no answer to leak.
-        cards = [c for c in self._outputs.cards if not isinstance(c, ASKING)][-1:]
+        # a choice, a path or a button has no answer to leak.
+        cards = [c for c in self._outputs.cards if isinstance(c, QUESTIONS)][-1:]
         # A card a question took the place of is not shown, so its answers stay unsaid too.
-        unshown = [c for c in self._outputs.withheld if not isinstance(c, ASKING)]
+        unshown = [c for c in self._outputs.withheld if isinstance(c, QUESTIONS)]
         return Facts(
             verdicts=self._verdicts,
             questions=tuple(

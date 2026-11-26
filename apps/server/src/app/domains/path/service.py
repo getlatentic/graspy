@@ -4,12 +4,13 @@ goal they name, each at its own level."""
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 
 import dspy
 
 from ...config.languages import generation_language_for, needs_translation
 from ..curriculum.prompts import TranslateCurriculumTopics
-from .prompts import PlanLearningPath
+from .prompts import PlanLearningPath, RevisePath
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +19,42 @@ logger = logging.getLogger(__name__)
 MAX_STEPS = 12
 
 
+@dataclass(frozen=True)
+class Revision:
+    """How a path is to change: the path as the learner saw it, and what they said of it."""
+
+    current: str
+    changes: str
+
+
 class LearningPathService:
     def __init__(self) -> None:
         self.plan = dspy.ChainOfThought(PlanLearningPath)
+        self.revise = dspy.ChainOfThought(RevisePath)
         self.translate = dspy.ChainOfThought(TranslateCurriculumTopics)
 
     async def plan_path(
-        self, country: str, language: str, grade_level: str, goal: str
+        self,
+        country: str,
+        language: str,
+        grade_level: str,
+        goal: str,
+        revision: Revision | None = None,
     ) -> dict:
-        prediction = await self.plan.acall(
-            country=country,
-            language=generation_language_for(language),
-            grade_level=grade_level,
-            goal=goal,
+        """The path to ``goal``; with a ``revision``, the path the learner saw, changed as they
+        asked."""
+        asked = {
+            "country": country,
+            "language": generation_language_for(language),
+            "grade_level": grade_level,
+            "goal": goal,
+        }
+        prediction = await (
+            self.plan.acall(**asked)
+            if revision is None
+            else self.revise.acall(
+                **asked, current_path=revision.current, changes=revision.changes
+            )
         )
         steps = _unique_steps(prediction.steps)
         if not steps:

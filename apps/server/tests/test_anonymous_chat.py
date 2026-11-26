@@ -180,7 +180,9 @@ class Spy:
     def __init__(self) -> None:
         self.seen = []
 
-    async def stream(self, chat, message, context, calls, unanswered, notes, turn=None):
+    async def stream(
+        self, chat, message, context, calls, unanswered, notes, turn=None, **kwargs
+    ):
         self.seen.append((context, calls, notes))
         return
         yield  # pragma: no cover

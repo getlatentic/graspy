@@ -27,6 +27,7 @@ from a2a.utils.errors import UnsupportedOperationError
 from fastapi import HTTPException
 from google.protobuf.json_format import MessageToDict
 
+from ..api.anonymous_chat import edge_address
 from ..caller import Caller, Keeping
 from ..learner.notes import notes_for
 from ..learner.record import Conversed
@@ -49,6 +50,7 @@ from .reply import ReplyData
 from .streaming import AnswerDelta, AnswerRestart, ToolActivity, ToolFinished
 from .tutor import Tutor, TutorReply
 from .unanswered import unanswered
+from .workshop import GenerationBudget
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +170,7 @@ class TutorExecutor(AgentExecutor):
             parts=message_parts(context),
             metadata=learner_metadata(context),
             edge_country=edge_country_of_call(context),
+            source=edge_address(call_headers(context)),
         )
         events = self._turns.run(job)
         return payload_parts(await relay_events(updater, events))
@@ -198,6 +201,11 @@ class TutorExecutor(AgentExecutor):
             app_calls(parts),
             unanswered(parts),
             notes_for(record, learner.plan_id, learner.subject_slug),
+            caller=caller,
+            budget=GenerationBudget(
+                self._keeping.generate,
+                edge_address(call_headers(context)) or conversation_id,
+            ),
         )
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
@@ -274,9 +282,14 @@ def learner_metadata(context: RequestContext) -> dict:
     )
 
 
+def call_headers(context: RequestContext) -> Mapping[str, str]:
+    """The headers of the request, which the session middleware kept."""
+    return context.call_context.state.get("headers", {})
+
+
 def edge_country_of_call(context: RequestContext) -> str | None:
-    """Where the edge placed the call, from the headers the session middleware kept."""
-    return edge_country_of(context.call_context.state.get("headers", {}))
+    """Where the edge placed the call."""
+    return edge_country_of(call_headers(context))
 
 
 def reply_parts(reply: TutorReply) -> list:

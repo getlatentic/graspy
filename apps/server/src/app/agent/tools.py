@@ -13,6 +13,7 @@ from .labels import DATA_ONLY
 from .lesson_request import asks_for_lesson
 from .refusal import refusal
 from .reply import (
+    MAX_PATH_GOALS,
     AddTopic,
     ChangeSubjects,
     OpenSubject,
@@ -33,6 +34,14 @@ MAX_TOPIC_TITLE = 80
 MAX_CHOSEN_SUBJECTS = 15
 # Names one call may ask for, so a long list is not compared one by one.
 MAX_ASKED = 20
+
+
+def subject_room(context: LearnerContext) -> int:
+    """How many more subjects the plan can hold. With the list not sent the room is not known: the
+    app keeps to the most itself."""
+    if not context.subjects:
+        return MAX_PATH_GOALS
+    return MAX_CHOSEN_SUBJECTS - len(context.held_subjects())
 
 
 def calculate(expression: str) -> dict:

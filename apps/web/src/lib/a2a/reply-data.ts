@@ -18,6 +18,7 @@ export const TUTOR_TOOLS = [
   "give_choice",
   "ask_about_you",
   "set_details",
+  "start_lesson",
   "load_skill",
 ] as const;
 
@@ -71,9 +72,24 @@ interface OpenSubjectAction {
   subject: string;
 }
 
-interface ProposePathAction {
-  type: "propose_path";
+/** A topic the learner kept of a course, and the level it is taught at. */
+export interface AddedStep {
+  title: string;
+  level: string;
+}
+
+/** A course the learner chose topics of on a path card, to join their plan as a subject of its
+ * own. The slug is the subject's place in the plan, kept by the app when it is free. */
+export interface AddedPath {
+  subject: string;
   goal: string;
+  slug: string;
+  steps: AddedStep[];
+}
+
+interface AddPathsAction {
+  type: "add_paths";
+  paths: AddedPath[];
 }
 
 /** A tool result shown as an MCP Apps view; the app hosts it without reading it. */
@@ -90,7 +106,7 @@ export type TutorAction =
   | AddTopicAction
   | ChangeSubjectsAction
   | RebuildPlanAction
-  | ProposePathAction
+  | AddPathsAction
   | SetDetailsAction;
 
 export interface ReplyData {
@@ -147,12 +163,32 @@ function isOpenSubject(value: unknown): value is OpenSubjectAction {
   );
 }
 
-function isProposePath(value: unknown): value is ProposePathAction {
-  const action = value as Partial<ProposePathAction> | null;
+function isAddedPath(value: unknown): value is AddedPath {
+  const path = value as Partial<AddedPath> | null;
   return (
-    action?.type === "propose_path" &&
-    typeof action.goal === "string" &&
-    action.goal.trim().length > 0
+    typeof path?.subject === "string" &&
+    path.subject.trim().length > 0 &&
+    typeof path.goal === "string" &&
+    typeof path.slug === "string" &&
+    path.slug.length > 0 &&
+    Array.isArray(path.steps) &&
+    path.steps.length > 0 &&
+    path.steps.every(
+      (step) =>
+        typeof step?.title === "string" &&
+        step.title.trim().length > 0 &&
+        typeof step.level === "string",
+    )
+  );
+}
+
+function isAddPaths(value: unknown): value is AddPathsAction {
+  const action = value as Partial<AddPathsAction> | null;
+  return (
+    action?.type === "add_paths" &&
+    Array.isArray(action.paths) &&
+    action.paths.length > 0 &&
+    action.paths.every(isAddedPath)
   );
 }
 
@@ -180,7 +216,7 @@ const ACTION_CHECKS: {
   add_topic: isAddTopic,
   change_subjects: isChangeSubjects,
   rebuild_plan: isRebuildPlan,
-  propose_path: isProposePath,
+  add_paths: isAddPaths,
   set_details: isSetDetails,
 };
 

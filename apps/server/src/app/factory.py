@@ -100,7 +100,14 @@ def create_app(
     _add_middleware(app, settings, origins, session_secret, budgets, lm)
     _add_exception_handlers(app)
     keeping = _keeping(
-        lessons, learners, making, conversations, lm, voice, threads or _local_threads()
+        lessons,
+        learners,
+        making,
+        conversations,
+        lm,
+        voice,
+        threads or _local_threads(),
+        budgets,
     )
     _add_state(app, settings, session_secret, origins, keeping, views)
     app.state.voice = voice
@@ -121,7 +128,7 @@ def create_app(
     app.include_router(tv_sign_in_router, prefix="/api")
     app.include_router(education_router, prefix="/api")
     app.include_router(voice_router, prefix="/api")
-    tutor = Tutor(keeping.conversations)
+    tutor = Tutor(keeping.conversations, app.state.path_service)
     app.routes.append(
         LazyA2ARoutes(
             settings.a2a_path_prefix,
@@ -176,6 +183,7 @@ def _keeping(
     lm: dspy.LM,
     voice: Any | None,
     threads: ThreadStore,
+    budgets: Budgets | None,
 ) -> Keeping:
     lessons = lessons or InMemoryLessonStore()
     learners = learners or InMemoryLearnerStore()
@@ -189,6 +197,7 @@ def _keeping(
         conversations=conversations or InMemoryConversationStore(),
         threads=threads,
         voice=NO_VOICE if voice is None else BoundVoice(voice),
+        generate=budgets.generate if budgets else None,
     )
 
 

@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { useConversation } from "@/features/learn/hooks/use-conversation";
 import { useConversationScroll } from "@/features/learn/hooks/use-conversation-scroll";
 import { useAppHost } from "@/features/learn/hooks/use-app-host";
+import { useOpenLesson } from "@/features/learn/hooks/use-open-lesson";
 import { groupTurns } from "@/features/learn/lib/chat-turns";
 import {
   RECONNECTING,
@@ -38,11 +39,13 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
     scroll.pinNextTurn();
     void chat.send(text, scope, t, calls);
   };
+  const open = useOpenLesson();
   const hostFor = useAppHost({
     busy: state.blocked,
     lastMessageId: lastMessage?.id,
     ask,
     keepViewCalls: chat.keepViewCalls,
+    open,
   });
 
   // A learner with no subjects yet is asked what they would like to learn, and the question

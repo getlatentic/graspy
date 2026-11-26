@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { BackLink } from "@/components/ui/back-link";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
+import {
+  chatToReturnTo,
+  lessonMadeInChat,
+} from "@/features/learn/lib/lesson-opening";
 import { useI18n } from "@/lib/i18n-context";
 import { useLessonTopic } from "@/features/learn/hooks/use-lesson-topic";
 import { useLessonCard } from "@/features/learn/hooks/use-lesson-card";
@@ -23,14 +27,28 @@ export default function LessonPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const lesson = useLessonTopic();
+  // Opened from a card in the chat: the way back to that chat, as it was left.
+  const { state } = useLocation();
+  const { backToChat } = chatToReturnTo(state);
   const back = () => navigate(subjectPath(lesson.slug));
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <BackLink onClick={back}>
-        {t("lesson.backTo", { subject: lesson.subjectName })}
-      </BackLink>
-      <LessonBody lesson={lesson} onBack={back} />
+      <nav className="flex flex-wrap gap-x-6 gap-y-2">
+        {backToChat && (
+          <BackLink onClick={() => navigate(backToChat)}>
+            {t("lesson.backToChat")}
+          </BackLink>
+        )}
+        <BackLink onClick={back}>
+          {t("lesson.backTo", { subject: lesson.subjectName })}
+        </BackLink>
+      </nav>
+      <LessonBody
+        lesson={lesson}
+        onBack={back}
+        madeInChat={lessonMadeInChat(state)}
+      />
     </div>
   );
 }
@@ -38,14 +56,16 @@ export default function LessonPage() {
 function LessonBody({
   lesson: { slug, subject, subjectName, target, next },
   onBack,
+  madeInChat,
 }: {
   lesson: LessonTopic;
   onBack: () => void;
+  madeInChat: string | undefined;
 }) {
   const navigate = useNavigate();
   const { isLoaded } = usePlan();
   const progress = useProgress();
-  const { key, card, failure, retry } = useLessonCard(target);
+  const { key, card, failure, retry } = useLessonCard(target, madeInChat);
   const [finished, setFinished] = useState("");
   const [objectives, setObjectives] = useState<string[]>([]);
 

@@ -248,6 +248,8 @@ async def test_the_view_is_read_with_the_origin_and_sandbox_it_loads_in(app):
         ("ui://graspy/passage", "Reading"),
         ("ui://graspy/choice", "Choice"),
         ("ui://graspy/details", "About you"),
+        ("ui://graspy/path", "Learning path"),
+        ("ui://graspy/start", "Start a lesson"),
         ("ui://graspy/lesson", "Lesson"),
     }
     assert {resource.mime_type for resource in listed} == {content.mime_type}

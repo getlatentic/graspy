@@ -7,6 +7,7 @@ from .learner.record import Change, LearnerRecord
 from .learner.store import LearnerStore
 from .lessons.makers import LessonMaking
 from .lessons.store import LessonStore
+from .security.rate_limit import Limiter
 from .threads.store import ThreadStore
 from .voice.keeping import NO_VOICE, VoiceKeeping
 
@@ -19,6 +20,9 @@ class Keeping:
     conversations: ConversationStore
     threads: ThreadStore
     voice: VoiceKeeping = NO_VOICE
+    # The generation budget the paths and lessons a turn makes are spent from, as the routes that make
+    # them spend it; none where no budget is bound.
+    generate: Limiter | None = None
 
 
 @dataclass(frozen=True)

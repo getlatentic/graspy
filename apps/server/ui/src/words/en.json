@@ -40,6 +40,22 @@
     "continue": "Continue",
     "busy": "Not now. Type your answer below."
   },
+  "path": {
+    "label": "Learning path",
+    "add": "Add to my plan ({count})",
+    "missing": "Something missing?",
+    "missingPlaceholder": "What is missing or wrong?",
+    "send": "Send",
+    "ask": "Please change the path: {text}",
+    "busy": "Not now. Wait for graspy to finish, then tap again."
+  },
+  "start": {
+    "label": "Start a lesson",
+    "open": "Open {topic}",
+    "making": "Making your lesson",
+    "failed": "The lesson could not be made.",
+    "tryAgain": "Try again"
+  },
   "lesson": {
     "label": "Lesson",
     "loading": "Preparing your lesson",

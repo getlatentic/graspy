@@ -60,9 +60,10 @@ export async function keepIfWhole(
 export async function openLessonOrCopy(
   target: LessonTarget,
   attempt = 0,
+  lessonId?: string,
 ): Promise<TutorCard> {
   try {
-    const card = await openLesson(target, attempt);
+    const card = await openLesson(target, attempt, lessonId);
     gone.delete(topicKey(target));
     await keepIfWhole(target, card);
     return card;

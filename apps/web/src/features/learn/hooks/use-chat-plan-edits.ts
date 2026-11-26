@@ -1,16 +1,10 @@
 import { useMemo } from "react";
 import { useNavigate, type NavigateFunction } from "react-router";
 import type { TutorAction } from "@/lib/a2a/reply-data";
-import type { LearningPath } from "@/lib/curriculum-api";
 import type { ChatLink } from "@/lib/chat-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { useI18n, type Translate } from "@/lib/i18n-context";
-import {
-  goalIndex,
-  MAX_SUBJECTS,
-  withPaths,
-  withTopic,
-} from "../lib/curriculum-edit";
+import { MAX_SUBJECTS, withPaths, withTopic } from "../lib/curriculum-edit";
 import { rebuildRequest } from "../lib/curriculum-request";
 import { lessonPath, subjectPath } from "@/lib/learn-paths";
 import type { LearnerPlan } from "./use-learner-plan";
@@ -66,11 +60,11 @@ function planEdits(
         lessonLink(t, subjectSlug, added.index),
       );
     },
-    /** Adds the paths, and returns those that were not added for want of room or of a plan. */
-    acceptPaths: async (paths: LearningPath[]): Promise<LearningPath[]> => {
+    /** Adds the courses the learner chose topics of. Nothing leaves the chat: the lesson to open
+     * is the card the tutor shows, which the learner presses. */
+    addPaths: async ({ paths }: ActionOf<"add_paths">) => {
       const current = read();
-      if (!current) return paths;
-      if (paths.length === 0) return [];
+      if (!current) return;
       const { curriculum: next, outcomes } = withPaths(current, paths);
       if (outcomes.some(({ status }) => status === "added")) {
         await applyCurriculum(next);
@@ -82,12 +76,10 @@ function planEdits(
         const { subject } = outcome;
         if (told.has(subject.slug)) continue;
         told.add(subject.slug);
-        const goal = Math.max(0, goalIndex(next, subject.slug));
         onDone(
           t(outcome.status === "added" ? "chat.pathAdded" : "chat.pathExists", {
             subject: subject.name,
           }),
-          lessonLink(t, subject.slug, goal),
         );
       }
       if (outcomes.some(({ status }) => status === "unnamed")) {
@@ -96,7 +88,6 @@ function planEdits(
       if (outcomes.some(({ status }) => status === "full")) {
         onFailure(t("chat.pathsFull", { count: MAX_SUBJECTS }));
       }
-      return paths.filter((_, at) => outcomes[at].status === "full");
     },
     rebuild: async () => {
       const current = read();

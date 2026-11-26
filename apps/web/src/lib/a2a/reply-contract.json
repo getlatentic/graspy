@@ -13,7 +13,8 @@
       "name": "add_topic"
     },
     {
-      "name": "propose_path"
+      "name": "propose_path",
+      "ui": "ui://graspy/path"
     },
     {
       "name": "change_subjects"
@@ -39,6 +40,10 @@
     },
     {
       "name": "set_details"
+    },
+    {
+      "name": "start_lesson",
+      "ui": "ui://graspy/start"
     },
     {
       "name": "load_skill"
@@ -79,8 +84,24 @@
         "type": "rebuild_plan"
       },
       {
-        "type": "propose_path",
-        "goal": "real analysis"
+        "type": "add_paths",
+        "paths": [
+          {
+            "subject": "Real analysis",
+            "goal": "Real analysis",
+            "steps": [
+              {
+                "title": "Limits",
+                "level": "SS 3"
+              },
+              {
+                "title": "Sequences",
+                "level": "Undergraduate"
+              }
+            ],
+            "slug": "real-analysis"
+          }
+        ]
       },
       {
         "type": "set_details",
@@ -319,6 +340,94 @@
             }
           }
         }
+      },
+      {
+        "resourceUri": "ui://graspy/path",
+        "toolName": "propose_path",
+        "toolInput": {
+          "goals": [
+            "real analysis"
+          ]
+        },
+        "toolResult": {
+          "content": [
+            {
+              "type": "text",
+              "text": "A learning path the learner is choosing topics from, nothing added yet:\nReal analysis:\n1. Limits (SS 3)\n2. Sequences (Undergraduate)"
+            }
+          ],
+          "structuredContent": {
+            "paths": [
+              {
+                "subject": "Real analysis",
+                "goal": "Real analysis",
+                "steps": [
+                  {
+                    "title": "Limits",
+                    "level": "SS 3"
+                  },
+                  {
+                    "title": "Sequences",
+                    "level": "Undergraduate"
+                  }
+                ]
+              }
+            ]
+          },
+          "_meta": {
+            "viewUUID": "e3a5c7d9f1b2d4f6a8c0e2b4d6f8a1c3",
+            "where": {
+              "planId": "plan-1",
+              "subjectSlug": "mathematics",
+              "topic": "Fractions"
+            }
+          }
+        }
+      },
+      {
+        "resourceUri": "ui://graspy/start",
+        "toolName": "start_lesson",
+        "toolInput": {
+          "topic": "Sequences",
+          "subject": "Real analysis"
+        },
+        "toolResult": {
+          "content": [
+            {
+              "type": "text",
+              "text": "A button to open the lesson on Sequences: ready."
+            }
+          ],
+          "structuredContent": {
+            "topic": "Sequences",
+            "subject": "Real analysis",
+            "status": "ready",
+            "target": {
+              "planId": "plan-1",
+              "subjectSlug": "real-analysis",
+              "topicIndex": 1,
+              "topic": "Sequences",
+              "subject": "Real analysis",
+              "totalTopics": 2,
+              "country": "Nigeria",
+              "language": "English",
+              "gradeLevel": "Undergraduate",
+              "buildsOn": [
+                "Limits"
+              ]
+            },
+            "lessonId": "lesson-9",
+            "openPath": "/app/learn/real-analysis/lesson/1"
+          },
+          "_meta": {
+            "viewUUID": "f4b6d8e0a2c3e5a7b9d1f3c5e7a9b2d4",
+            "where": {
+              "planId": "plan-1",
+              "subjectSlug": "mathematics",
+              "topic": "Fractions"
+            }
+          }
+        }
       }
     ]
   },
@@ -368,7 +477,8 @@
         "gradeLevel": "JSS 1",
         "buildsOn": []
       },
-      "attempt": 0
+      "attempt": 0,
+      "lessonId": null
     }
   },
   "learner": {

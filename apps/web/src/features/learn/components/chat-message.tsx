@@ -14,6 +14,7 @@ import {
   MARKDOWN_REHYPE_PLUGINS,
   MARKDOWN_REMARK_PLUGINS,
 } from "@/features/learn/lib/markdown-plugins";
+import { pathAnswerSummary } from "@/features/learn/lib/path-card";
 
 const heading = ({ children }: { children?: ReactNode }) => (
   <p className="font-semibold">{children}</p>
@@ -70,6 +71,7 @@ const REPLY: Components = {
 };
 
 export function ChatMessageItem({ message }: { message: ChatMessage }) {
+  const { t } = useI18n();
   if (message.type === "complete") return <AppNote message={message} />;
   if (message.type === "error") {
     return (
@@ -84,13 +86,15 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
     );
   }
   if (message.sender === "user") {
+    // A path card's answer names every topic kept; the learner reads the courses and how many.
+    const answer = pathAnswerSummary(message.content);
     return (
       <div className="flex justify-end">
         <p
           dir="auto"
           className="max-w-5/6 whitespace-pre-wrap wrap-anywhere rounded-2xl rounded-ee-md bg-accent-soft px-4 py-2.5 text-base text-ink lg:text-sm"
         >
-          {message.content}
+          {answer ? t("chat.pathAnswer", answer) : message.content}
         </p>
       </div>
     );

@@ -85,7 +85,7 @@ class FakeTutor:
         happenings: list | None = None,
     ):
         self.answer, self.error, self.calls, self.contexts = answer, error, [], []
-        self.answered, self.missed, self.records = [], [], []
+        self.answered, self.missed, self.records, self.budgets = [], [], [], []
         self.follow_ups, self.actions, self.cards = (
             follow_ups or [],
             actions or [],
@@ -102,7 +102,10 @@ class FakeTutor:
         unanswered: list[str] | None = None,
         record: str = "",
         turn: str | None = None,
+        caller=None,
+        budget=None,
     ):
+        self.budgets.append(budget)
         self.records.append(record)
         self.missed.append(unanswered)
         self.calls.append((conversation_id, message))

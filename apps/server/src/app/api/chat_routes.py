@@ -113,6 +113,7 @@ async def start_turn(
         parts=body.parts,
         metadata=body.metadata,
         edge_country=edge_country_of(request.headers),
+        source=edge_address(request.headers),
     )
     try:
         check_turn_fits(job)

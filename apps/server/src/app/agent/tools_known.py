@@ -15,6 +15,7 @@ READ_ONLY_TOOLS = frozenset(
         "give_choice",
         "ask_about_you",
         "set_details",
+        "start_lesson",
         "load_skill",
     }
 )

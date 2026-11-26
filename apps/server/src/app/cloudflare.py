@@ -17,6 +17,7 @@ from .caller import Keeping
 from .chatlog.conversations import LogConversationStore
 from .chatlog.log import ChatLog
 from .domains.lesson.service import LessonService
+from .domains.path.service import LearningPathService
 from .factory import create_app
 from .learner.store import DurableObjectLearnerStore
 from .learner.time import now_ms
@@ -110,7 +111,9 @@ def build_lesson_runner(env: Any) -> LessonRunner:
     )
 
 
-def worker_keeping(env: Any, conversations: ConversationStore) -> Keeping:
+def worker_keeping(
+    env: Any, conversations: ConversationStore, js_object: JsObject
+) -> Keeping:
     """What a turn run in a Durable Object's alarm reads and changes: the same stores the app is given."""
     return Keeping(
         learners=DurableObjectLearnerStore(env.LEARNERS),
@@ -119,6 +122,7 @@ def worker_keeping(env: Any, conversations: ConversationStore) -> Keeping:
         conversations=conversations,
         threads=ThreadStore(env.DB),
         voice=BoundVoice(env),
+        generate=BindingLimiter(env.GENERATE_LIMITER, js_object),
     )
 
 
@@ -127,15 +131,19 @@ def turn_host(env: Any) -> DurableObjectTurnHost:
     return DurableObjectTurnHost(env.CHAT_TURNS, ChatLog(env.DB))
 
 
-def build_turn_alarm(env: Any, storage: Any, announce: Announce) -> ChatTurnAlarm:
+def build_turn_alarm(
+    env: Any, storage: Any, announce: Announce, js_object: JsObject
+) -> ChatTurnAlarm:
     """A chat's turns run in its object's alarm, outside any request, so they bring their own model.
     `announce` is told after every event a run keeps, so the sockets the object holds are sent it."""
     os.environ.update(deployment_environment(env))
     configure_cache()
     lm = build_lm(get_settings())
     log = ChatLog(env.DB)
-    keeping = worker_keeping(env, conversation_store(env))
-    source = TutorTurnSource(Tutor(keeping.conversations), keeping)
+    keeping = worker_keeping(env, conversation_store(env), js_object)
+    source = TutorTurnSource(
+        Tutor(keeping.conversations, LearningPathService()), keeping
+    )
 
     def runner_for(schedule: Schedule) -> TurnRunner:
         return TurnRunner(

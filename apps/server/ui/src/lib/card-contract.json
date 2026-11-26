@@ -88,6 +88,45 @@
         "Graduate"
       ]
     },
+    "ui://graspy/path": {
+      "paths": [
+        {
+          "subject": "Real analysis",
+          "goal": "Real analysis",
+          "steps": [
+            {
+              "title": "Limits",
+              "level": "SS 3"
+            },
+            {
+              "title": "Sequences",
+              "level": "Undergraduate"
+            }
+          ]
+        }
+      ]
+    },
+    "ui://graspy/start": {
+      "topic": "Sequences",
+      "subject": "Real analysis",
+      "status": "ready",
+      "target": {
+        "planId": "plan-1",
+        "subjectSlug": "real-analysis",
+        "topicIndex": 1,
+        "topic": "Sequences",
+        "subject": "Real analysis",
+        "totalTopics": 2,
+        "country": "Nigeria",
+        "language": "English",
+        "gradeLevel": "Undergraduate",
+        "buildsOn": [
+          "Limits"
+        ]
+      },
+      "lessonId": "lesson-9",
+      "openPath": "/app/learn/real-analysis/lesson/1"
+    },
     "ui://graspy/lesson": {
       "status": "ready",
       "lesson": {
@@ -222,7 +261,8 @@
           "gradeLevel": "JSS 1",
           "buildsOn": []
         },
-        "attempt": 0
+        "attempt": 0,
+        "lessonId": null
       }
     },
     "check": {

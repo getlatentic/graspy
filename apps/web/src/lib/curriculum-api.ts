@@ -4,7 +4,6 @@ import type {
 } from "@/lib/curriculum-record";
 import { createSSEStream } from "@/lib/api/sse";
 import { API_BASE_URL } from "@/lib/env";
-import { getJson } from "@/lib/api/request";
 
 export interface CurriculumRequest {
   country: string;
@@ -43,33 +42,11 @@ interface LearningPathStep {
   level: string;
 }
 
-/** The topics from what a learner can study now to a goal they named. */
+/** The topics from what a learner can study now to a goal they named, as the tutor plans them. */
 export interface LearningPath {
   subject: string;
   goal: string;
   steps: LearningPathStep[];
-}
-
-export async function planLearningPath(
-  request: {
-    country: string;
-    language: string;
-    gradeLevel?: string;
-    goal: string;
-  },
-  signal?: AbortSignal,
-): Promise<LearningPath> {
-  const params = new URLSearchParams({
-    country: request.country,
-    language: request.language,
-    goal: request.goal,
-  });
-  if (request.gradeLevel) params.set("gradeLevel", request.gradeLevel);
-  return getJson<LearningPath>(
-    `${API_BASE_URL}/curriculum/path?${params.toString()}`,
-    undefined,
-    signal,
-  );
 }
 
 // The server sends a heartbeat every 20 seconds, so this is three missed in a row.

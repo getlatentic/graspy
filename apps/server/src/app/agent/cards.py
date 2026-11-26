@@ -8,15 +8,21 @@ from typing import Annotated, Any, Literal
 from pydantic import Field
 
 from ..learner.record import Where
+from ..lessons.making import LessonTarget
 from ..wire import Wire
 
 PRACTICE_UI = "ui://graspy/practice"
 PASSAGE_UI = "ui://graspy/passage"
 CHOICE_UI = "ui://graspy/choice"
 DETAILS_UI = "ui://graspy/details"
+PATH_UI = "ui://graspy/path"
+START_UI = "ui://graspy/start"
 DESCRIBED_PASSAGE = 600
 # How the model's history names the form, so a turn can tell the learner was asked.
 FORM_DESCRIPTION = "A form asking the learner their"
+# How the model's history names a path card, so a later turn can revise the path it showed.
+PATH_DESCRIPTION = "A learning path the learner is choosing topics from"
+START_DESCRIPTION = "A button to open the lesson on"
 
 
 class Question(Wire):
@@ -100,6 +106,56 @@ class AboutYou(Wire):
         return f"{FORM_DESCRIPTION} country and class."
 
 
+class PathStep(Wire):
+    title: str
+    level: str
+
+
+class PlannedPath(Wire):
+    """One course the learner may add: a subject of its own, its topics in the order they are
+    learnt, the last being the goal."""
+
+    subject: str
+    goal: str
+    steps: list[PathStep]
+
+    def describe(self) -> list[str]:
+        steps = (f"{n}. {s.title} ({s.level})" for n, s in enumerate(self.steps, 1))
+        return [f"{self.subject}:", *steps]
+
+
+class PathChoice(Wire):
+    """The courses the tutor proposes, each topic one the learner can leave out. Nothing is kept
+    until they answer."""
+
+    paths: list[PlannedPath]
+
+    def describe(self) -> str:
+        lines = [f"{PATH_DESCRIPTION}, nothing added yet:"]
+        for path in self.paths:
+            lines.extend(path.describe())
+        return "\n".join(lines)
+
+
+class StartLesson(Wire):
+    """A lesson made for a topic the learner added, and the way to open it: the app opens it
+    only when the learner presses the button."""
+
+    topic: str
+    subject: str
+    # "ready" once the lesson is made; the view watches one still being made, and asks again for
+    # one that failed.
+    status: Literal["ready", "making", "failed"]
+    target: LessonTarget
+    # The record's id for the lesson once it is kept: opening it asks for that lesson by it.
+    lesson_id: str | None = None
+    # Where the app shows the lesson.
+    open_path: str
+
+    def describe(self) -> str:
+        return f"{START_DESCRIPTION} {self.topic}: {self.status}."
+
+
 class TextContent(Wire):
     type: Literal["text"] = "text"
     text: str
@@ -136,6 +192,18 @@ class ChoiceResult(Wire):
 class DetailsResult(Wire):
     content: list[TextContent]
     structured_content: AboutYou
+    meta: ResultMeta = Field(alias="_meta")
+
+
+class PathResult(Wire):
+    content: list[TextContent]
+    structured_content: PathChoice
+    meta: ResultMeta = Field(alias="_meta")
+
+
+class StartResult(Wire):
+    content: list[TextContent]
+    structured_content: StartLesson
     meta: ResultMeta = Field(alias="_meta")
 
 
@@ -182,13 +250,33 @@ class DetailsCard(Wire):
         return self.tool_result.structured_content.describe()
 
 
+class PathCard(Wire):
+    resource_uri: Literal["ui://graspy/path"] = PATH_UI
+    tool_name: Literal["propose_path"] = "propose_path"
+    tool_input: dict[str, Any]
+    tool_result: PathResult
+
+    def describe(self) -> str:
+        return self.tool_result.structured_content.describe()
+
+
+class StartCard(Wire):
+    resource_uri: Literal["ui://graspy/start"] = START_UI
+    tool_name: Literal["start_lesson"] = "start_lesson"
+    tool_input: dict[str, Any]
+    tool_result: StartResult
+
+    def describe(self) -> str:
+        return self.tool_result.structured_content.describe()
+
+
 Card = Annotated[
-    PracticeCard | PassageCard | ChoiceCard | DetailsCard,
+    PracticeCard | PassageCard | ChoiceCard | DetailsCard | PathCard | StartCard,
     Field(discriminator="resource_uri"),
 ]
 
 # Cards that ask the learner something to answer, and are never shown beside an offer.
-ASKING = (ChoiceCard, DetailsCard)
+ASKING = (ChoiceCard, DetailsCard, PathCard)
 
 
 def placed(card: Card, where: Where) -> Card:

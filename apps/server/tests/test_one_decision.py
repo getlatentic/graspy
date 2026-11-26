@@ -1,19 +1,23 @@
 """One decision at a time: a question the learner taps an answer to is alone in
 its reply, and what is offered before the class is known waits for it."""
 
+import asyncio
+
 import dspy
 import pytest
 from stand_in import stand_in
 from test_tutor import CARD_ANSWERS, finish
+from workshops import FakePlanner, keeping, workshop
 
 from app.agent.answer_gate import AnswerGate
-from app.agent.cards import ChoiceCard, DetailsCard, PracticeCard
+from app.agent.cards import ChoiceCard, DetailsCard, PathCard, PracticeCard
 from app.agent.context import LearnerContext, SubjectRef
 from app.agent.decision import WAITING, WITHDRAWN
 from app.agent.memory import InMemoryConversationStore
-from app.agent.reply import ProposePath, SetDetails
+from app.agent.reply import SetDetails
 from app.agent.toolkit import Turn, TurnOutputs, tools_for
 from app.agent.tutor import Tutor, TutorReply
+from app.caller import Caller
 
 # A learner with a plan, so a class is not asked for and a course can be offered.
 PLANNED = LearnerContext(
@@ -26,16 +30,21 @@ WHICH = {"question": "Which do you mean?", "options": ["Python", "Rust"]}
 PRACTICE = CARD_ANSWERS[0]["next_tool_args"]
 
 
+def called(tool: dspy.Tool, **arguments) -> dict:
+    """The tool as the model calls it, waited for when it is one that runs a while."""
+    return asyncio.run(tool.acall(**arguments))
+
+
 class Built:
     def __init__(self, context: LearnerContext) -> None:
         self.outputs = TurnOutputs()
         self.tools = {
             t.__name__: dspy.Tool(t)
-            for t in tools_for(Turn(context, "x"), self.outputs)
+            for t in tools_for(Turn(context, "x", workshop=workshop()), self.outputs)
         }
 
     def __call__(self, name: str, **arguments) -> dict:
-        return self.tools[name](**arguments)
+        return called(self.tools[name], **arguments)
 
     def card_types(self) -> list[type]:
         return [type(card) for card in self.outputs.cards]
@@ -61,6 +70,21 @@ def test_a_course_offered_before_a_question_is_withdrawn_and_the_model_is_told()
     assert told["withdrawn"] == WITHDRAWN
     assert built.card_types() == [ChoiceCard]
     assert built.outputs.actions == []
+
+
+def test_a_path_is_not_planned_for_a_turn_whose_question_waits():
+    """Planning takes the budget and a while: it is not spent on a card that is never shown."""
+    planner = FakePlanner()
+    outputs = TurnOutputs()
+    tools = {
+        t.__name__: dspy.Tool(t)
+        for t in tools_for(Turn(PLANNED, "x", workshop=workshop(planner)), outputs)
+    }
+
+    called(tools["give_choice"], **WHICH)
+    called(tools["propose_path"], goals=["Machine learning"])
+
+    assert planner.asked == []
 
 
 def test_a_question_with_no_offer_before_it_is_told_nothing_withdrawn():
@@ -161,8 +185,8 @@ def test_a_course_is_offered_in_the_message_that_saves_the_class():
             course="",
             country_code="NG",
         ),
-        ProposePath(goal="Machine learning"),
     ]
+    assert built.card_types() == [PathCard]
 
 
 def test_saving_only_the_country_does_not_open_the_way_to_a_course():
@@ -203,8 +227,11 @@ async def reply_to(context: LearnerContext, script: list[dict]) -> TutorReply:
     with model:
         items = [
             item
-            async for item in Tutor(InMemoryConversationStore()).stream(
-                "c", "Machine learning for students", context
+            async for item in Tutor(InMemoryConversationStore(), FakePlanner()).stream(
+                "c",
+                "Machine learning for students",
+                context,
+                caller=Caller(None, keeping()),
             )
         ]
     assert isinstance(items[-1], TutorReply)
@@ -253,5 +280,5 @@ async def test_the_tap_on_the_class_saves_it_and_offers_the_course_in_one_reply(
         ],
     )
 
-    assert [a.type for a in reply.actions] == ["set_details", "propose_path"]
-    assert reply.cards == []
+    assert [a.type for a in reply.actions] == ["set_details"]
+    assert [type(card) for card in reply.cards] == [PathCard]
