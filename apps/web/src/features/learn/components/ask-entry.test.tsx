@@ -32,43 +32,29 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe("while nobody is signed in", () => {
-  it("the ask bar says to sign in", () => {
-    shown(<TutorAskBar busy={false} unread={false} onOpen={() => {}} />);
+describe.each([
+  ["while nobody is signed in", () => setAccount(null)],
+  [
+    "for a signed-in learner",
+    () => signedInAs({ id: "ada000000001", name: "Ada" }),
+  ],
+])("%s", (_who, arrive) => {
+  beforeEach(arrive);
 
-    expect(screen.getByRole("button").textContent).toBe(
-      "Sign in to ask graspy",
-    );
-  });
-
-  it("the Ask tab and the side menu's Ask say Sign in, and lead to the chat's sign-in", () => {
+  it("the ask bar and the Ask tab ask graspy, and lead to the one chat", () => {
     shown(
       <>
+        <TutorAskBar busy={false} unread={false} onOpen={() => {}} />
         <AppTabBar />
         <SideNav sections={SECTIONS} open onToggle={() => {}} />
       </>,
     );
 
+    expect(screen.getByRole("button", { name: "Ask graspy" })).toBeTruthy();
     const asks = screen
-      .getAllByRole("link", { name: "Sign in" })
+      .getAllByRole("link", { name: "Ask" })
       .map((link) => link.getAttribute("href"));
     expect(asks).toEqual(["/app/learn/ask", "/app/learn/ask"]);
-    expect(screen.queryByRole("link", { name: "Ask" })).toBeNull();
-  });
-});
-
-describe("for a signed-in learner", () => {
-  beforeEach(() => signedInAs({ id: "ada000000001", name: "Ada" }));
-
-  it("the ask bar and the Ask tab ask graspy", () => {
-    shown(
-      <>
-        <TutorAskBar busy={false} unread={false} onOpen={() => {}} />
-        <AppTabBar />
-      </>,
-    );
-
-    expect(screen.getByRole("button").textContent).toBe("Ask graspy");
-    expect(screen.getByRole("link", { name: "Ask" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
   });
 });

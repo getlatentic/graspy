@@ -1,5 +1,6 @@
 import { ArrowRight, Check, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SignInNudge } from "@/features/account/components/sign-in-nudge";
 import { useI18n } from "@/lib/i18n-context";
 
 interface LessonFinishedProps {
@@ -48,6 +49,7 @@ export function LessonFinished({
       </div>
       {objectives.length > 0 && <Objectives objectives={objectives} />}
       {next && <UpNext topic={next} />}
+      <SignInNudge message={t("chat.signInKeep")} />
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button variant={next ? "secondary" : "primary"} onClick={onBack}>
           {t("lesson.backTo", { subject })}

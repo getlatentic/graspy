@@ -13,8 +13,8 @@ export type ChatTarget =
 
 export const ASK_HUB = "/app/learn/ask";
 
-/** The public try link: a text-only chat for a visitor with no account, which makes the device
- * ready to chat before it opens, and sends a signed-in learner to their own chat. */
+/** The public link to the chat: it readies the device to chat, with no sign-in, and opens the
+ * one chat in the app. */
 export const TRY_CHAT = "/try";
 
 export function chatPath(target: ChatTarget): string {

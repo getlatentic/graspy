@@ -28,6 +28,9 @@ export interface ChatLink {
   to: string;
 }
 
+/** What a signed-out visitor is offered under a message, for as long as they are signed out. */
+export type SignInOffer = "keep" | "continue";
+
 export interface ChatMessageMetadata {
   followUps?: string[];
   card?: TutorCard;
@@ -35,6 +38,7 @@ export interface ChatMessageMetadata {
   // Carried by a learner's message.
   appCalls?: AppCallRequest[];
   link?: ChatLink;
+  signInOffer?: SignInOffer;
   // Still arriving, not yet stored.
   streaming?: boolean;
   stopped?: boolean;

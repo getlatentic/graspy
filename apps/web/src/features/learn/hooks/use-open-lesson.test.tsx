@@ -30,7 +30,7 @@ afterEach(cleanup);
 
 describe("opening a lesson from a card in the chat", () => {
   it("goes to the lesson with the way back to the chat the visitor was in", () => {
-    const { result } = at("/try");
+    const { result } = at("/app/learn/ask/general");
 
     act(() =>
       result.current.open("/app/learn/real-analysis/lesson/1?lesson=abc"),
@@ -39,7 +39,10 @@ describe("opening a lesson from a card in the chat", () => {
     const { pathname, search, state } = result.current.location;
     expect(pathname).toBe("/app/learn/real-analysis/lesson/1");
     expect(search).toBe("");
-    expect(state).toEqual({ backToChat: "/try", lessonId: "abc" });
+    expect(state).toEqual({
+      backToChat: "/app/learn/ask/general",
+      lessonId: "abc",
+    });
   });
 
   it("goes back to the signed-in learner's own chat, whichever it was", () => {
@@ -62,14 +65,16 @@ describe("opening a lesson from a card in the chat", () => {
   });
 
   it("takes the learner to their subjects, not to a page that is not there, when the plan has no such course", () => {
-    const { result } = at("/try");
+    const { result } = at("/app/learn/ask/general");
 
     act(() =>
       result.current.open("/app/learn/not-in-the-plan/lesson/0?lesson=abc"),
     );
 
     expect(result.current.location.pathname).toBe("/app/learn/subjects");
-    expect(result.current.location.state).toEqual({ backToChat: "/try" });
+    expect(result.current.location.state).toEqual({
+      backToChat: "/app/learn/ask/general",
+    });
   });
 
   it.each([
@@ -78,10 +83,10 @@ describe("opening a lesson from a card in the chat", () => {
     "/app/learn/maths",
     "javascript:alert(1)",
   ])("stays in the chat for %s, which is not a lesson of the app's", (url) => {
-    const { result } = at("/try");
+    const { result } = at("/app/learn/ask/general");
 
     act(() => result.current.open(url));
 
-    expect(result.current.location.pathname).toBe("/try");
+    expect(result.current.location.pathname).toBe("/app/learn/ask/general");
   });
 });

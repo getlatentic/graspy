@@ -42,14 +42,21 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("/try", () => {
-  it("keeps a visitor who is not signed in on the page, with no sign-in", async () => {
-    expect(await opened("/try")).toBe("/try");
+  it("opens the one chat for a visitor who is not signed in, with no sign-in", async () => {
+    expect(await opened("/try")).toBe("/app/learn/ask/general");
 
+    expect(readyToChat).toHaveBeenCalledOnce();
     expect(takeChat()).toBeNull();
   });
 
-  it("leads a chat remembered at the old address, /app/learn/ask/try, to /try, signed in or not", async () => {
-    expect(await opened("/app/learn/ask/try")).toBe("/try");
+  it("sends a visitor whose device could not be readied to the app, which makes the plan", async () => {
+    readyToChat.mockResolvedValue(false);
+
+    expect(await opened("/try")).toBe("/app");
+  });
+
+  it("leads a chat remembered at the old address, /app/learn/ask/try, to the chat, signed in or not", async () => {
+    expect(await opened("/app/learn/ask/try")).toBe("/app/learn/ask/general");
   });
 
   it("opens the chat of a learner signed in, ready with no onboarding", async () => {

@@ -3,11 +3,8 @@ import {
   type Account,
   type Learner,
 } from "@/lib/account/account-store";
-import {
-  keepLearnerSession,
-  leaveLearnerSession,
-  type Issued,
-} from "@/lib/api/session";
+import { keepLearnerSession, leaveLearnerSession } from "@/lib/api/session";
+import type { Issued } from "@/lib/api/session-wire";
 import { TRY_CHAT } from "@/features/learn/lib/chat-targets";
 import { takeChat } from "@/lib/account/chat-return";
 import { getCurriculum } from "@/lib/curriculum-db";

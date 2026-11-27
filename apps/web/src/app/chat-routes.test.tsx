@@ -44,46 +44,22 @@ beforeEach(() => {
 });
 
 describe("a visitor who is not signed in", () => {
-  it.each([...CHAT_LINKS, ...CHATS])(
-    "is sent to sign in from %s, with the chat kept to return to",
-    async (path) => {
-      expect(await opened(path)).toBe("/app/sign-in");
-
-      expect(takeChat()).toBe(
-        path === "/chat" || path === "/app/chat" ? "/app/learn/ask" : path,
-      );
-    },
-  );
-
-  it("keeps the question the link carried", async () => {
-    await opened("/app/learn/ask/mathematics/2?x=1");
-
-    expect(takeChat()).toBe("/app/learn/ask/mathematics/2?x=1");
+  it.each(CHATS)("keeps %s, with no sign-in asked for", async (path) => {
+    expect(await opened(path)).toBe(path);
+    expect(takeChat()).toBeNull();
   });
 
-  it.each(["/app/learn/voice", "/app/learn/subjects", "/app/learn/you"])(
-    "keeps %s, which is not the chat",
-    async (path) => {
-      expect(await opened(path)).toBe(path);
-      expect(takeChat()).toBeNull();
-    },
-  );
+  it.each(CHAT_LINKS)("is led by %s to the chat", async (path) => {
+    expect(await opened(path)).toBe("/app/learn/ask");
+  });
 });
 
 describe("an account", () => {
-  it("with no learner keeps the chat asked for, to start in once a learner is chosen", async () => {
-    signedInAs(null);
-
-    expect(await opened("/chat")).toBe("/app/learn/ask");
-    expect(takeChat()).toBe("/app/learn/ask");
-  });
-
   it.each([...CHAT_LINKS, ...CHATS])(
-    "with a learner is not sent to sign in from %s",
+    "with a learner reaches the chat from %s",
     async (path) => {
       signedInAs({ id: "ada000000001", name: "Ada" });
 
-      expect(await opened(path)).not.toBe("/app/sign-in");
       expect(await opened(path)).toMatch(/^\/app\/learn\/ask/);
       expect(takeChat()).toBeNull();
     },

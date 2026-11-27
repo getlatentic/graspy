@@ -7,8 +7,6 @@ import {
   type Learner,
 } from "@/lib/account/account-store";
 import { deviceId, fingerprint } from "@/lib/device-id";
-import { tryVisitor } from "@/lib/try-visitor";
-import { challengeConfigured, solveChallenge } from "@/lib/challenge/challenge";
 import {
   forgetTvCredential,
   keepTvCredential,
@@ -19,14 +17,13 @@ import { wipeDevice } from "@/lib/device-wipe";
 import { wipeOnNextStart } from "@/lib/wipe-pending";
 import { LearnerChanged } from "@/lib/learner-pin";
 import { API_BASE_URL } from "@/lib/env";
-import { readJson } from "./body";
 import {
   ApiError,
-  CHALLENGE_REQUIRED,
   SignInUnchecked,
   toApiError,
   toNetworkError,
 } from "./errors";
+import { issued, post, type Issued } from "./session-wire";
 
 // A token naming this device, or once the learner signs in with Google their account, and
 // the account's learner the device learns as.
@@ -40,14 +37,6 @@ interface Session {
   account?: string;
   // The account's learner it reads and writes for; without one it manages learners only.
   learner?: string;
-  // Named no device and no account: the visit of someone who has not signed in (/try).
-  anonymous?: boolean;
-}
-
-export interface Issued {
-  token: string;
-  expiresIn: number;
-  learner?: Learner | null;
 }
 
 const STORAGE_KEY = "graspy.session";
@@ -59,24 +48,7 @@ const RENEW_MARGIN_MS = 5 * 60 * 1000;
 const PARENT_MARGIN_MS = 30 * 1000;
 
 let cached: Session | null = readStored();
-let pending: { anonymous: boolean; token: Promise<string> } | null = null;
-
-// While a page that keeps nothing of its visitor is open (/try), and nobody is signed in, the
-// session names no device: the server then has no record to keep anything under.
-let anonymousHolds = 0;
-
-/** Whether the requests now being made are those of a visit that names no device. */
-export const isAnonymousSession = (): boolean =>
-  anonymousHolds > 0 && currentAccount() === null;
-
-/** Makes the device's requests carry a session that names no device, until the returned
- * function is called. Not in force once someone signs in. */
-export function holdAnonymousSession(): () => void {
-  anonymousHolds += 1;
-  return () => {
-    anonymousHolds -= 1;
-  };
-}
+let pending: Promise<string> | null = null;
 
 // The parent's own session, made just after they typed their PIN or signed in again: what a
 // learner's recordings are managed under, as a learner's session is refused them. Held in memory
@@ -130,54 +102,14 @@ function keep(session: Session | null): void {
 // one naming the device before it took a new id on signing out.
 function usable(session: Session | null): session is Session {
   const account = currentAccount();
-  const anonymous = isAnonymousSession();
   return (
     !!session &&
-    !!session.anonymous === anonymous &&
-    (anonymous || (!!session.device && session.device === deviceId())) &&
+    !!session.device &&
+    session.device === deviceId() &&
     session.account === account?.uid &&
     session.learner === account?.learner?.id &&
     session.expiresAt - RENEW_MARGIN_MS > Date.now()
   );
-}
-
-async function post(body: Record<string, string>): Promise<Response> {
-  try {
-    return await fetch(`${API_BASE_URL}/session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  } catch (cause) {
-    throw toNetworkError(cause);
-  }
-}
-
-// graspy answers 503 sign_in_unchecked when it could not reach Google to check the sign-in.
-async function notIssued(response: Response): Promise<ApiError> {
-  const refused = await toApiError(response);
-  const { detail } = (refused.data ?? {}) as {
-    detail?: { error?: unknown; code?: unknown };
-  };
-  if (detail?.code !== "sign_in_unchecked") return refused;
-  return new SignInUnchecked(
-    String(detail.error),
-    refused.status,
-    refused.data,
-  );
-}
-
-async function issued(response: Response): Promise<Issued> {
-  if (!response.ok) throw await notIssued(response);
-  const body = await readJson<Issued | null>(response);
-  if (!body?.token) {
-    throw new ApiError("The server issued an empty session", response.status);
-  }
-  return {
-    token: body.token,
-    expiresIn: body.expiresIn,
-    learner: body.learner,
-  };
 }
 
 async function deviceSession(device: string): Promise<Response> {
@@ -319,36 +251,7 @@ function followLearner(sent: Learner | null, { learner }: Issued): void {
   setLearner(learner ? { id: learner.id, name: learner.name } : null);
 }
 
-// A visitor's session is renewed by presenting the one it replaces, which carries the proof that
-// their browser passed the check. Only a visit with no such session, or one the server will not
-// renew (too old), runs the check, and the check's token is single use.
-async function anonymousIssued(previous: string | undefined): Promise<Issued> {
-  const visitor = tryVisitor();
-  if (previous || !challengeConfigured()) {
-    try {
-      return await issued(
-        await post(previous ? { visitor, renewal: previous } : { visitor }),
-      );
-    } catch (refused) {
-      const askedForCheck =
-        refused instanceof ApiError && refused.code === CHALLENGE_REQUIRED;
-      if (!askedForCheck || !challengeConfigured()) throw refused;
-    }
-  }
-  return issued(await post({ visitor, challenge: await solveChallenge() }));
-}
-
-async function mintAnonymous(): Promise<string> {
-  const previous = cached?.anonymous ? cached.token : undefined;
-  const { token, expiresIn } = await anonymousIssued(previous);
-  // Released, or signed in, while the handshake ran: this token is not the one now wanted.
-  if (!isAnonymousSession()) return getSessionToken();
-  keep({ token, expiresAt: Date.now() + expiresIn * 1000, anonymous: true });
-  return token;
-}
-
 async function mint(): Promise<string> {
-  if (isAnonymousSession()) return mintAnonymous();
   const device = deviceId();
   const signedIn = currentAccount();
   const { response, account } = signedIn
@@ -356,8 +259,7 @@ async function mint(): Promise<string> {
     : { response: await deviceSession(device), account: undefined };
   const answered = await issued(response);
   followLearner(signedIn?.learner ?? null, answered);
-  // Not over the anonymous session a page now holds, which is the one in use.
-  if (currentAccount()?.uid === account && !isAnonymousSession()) {
+  if (currentAccount()?.uid === account) {
     const learner = answered.learner?.id;
     const expiresAt = Date.now() + answered.expiresIn * 1000;
     keep({ token: answered.token, expiresAt, device, account, learner });
@@ -369,16 +271,12 @@ async function mint(): Promise<string> {
 export function getSessionToken(): Promise<string> {
   if (usable(cached)) return Promise.resolve(cached.token);
 
-  const anonymous = isAnonymousSession();
-  if (pending?.anonymous === anonymous) return pending.token;
-  const minting = {
-    anonymous,
-    token: mint().finally(() => {
-      if (pending === minting) pending = null;
-    }),
-  };
+  if (pending) return pending;
+  const minting: Promise<string> = mint().finally(() => {
+    if (pending === minting) pending = null;
+  });
   pending = minting;
-  return minting.token;
+  return minting;
 }
 
 export async function refreshSessionToken(): Promise<string> {
@@ -565,10 +463,16 @@ export async function fetchAsParent(
   return response;
 }
 
-/** Sent with the session in use. `still`, asked as each try is sent, may stop it: false, and
- * the session is no longer the one the request was made for, so nothing is sent. Nor is the
- * session renewed: it is the next learner's. */
-export async function fetchWithSession(
+export interface Tokens {
+  get: () => Promise<string>;
+  refresh: () => Promise<string>;
+}
+
+/** Sent under the tokens given, made again once on a 401. `still`, asked as each try is sent,
+ * may stop it: false, and the session is no longer the one the request was made for, so nothing
+ * is sent. Nor is the session renewed: it is the next learner's. */
+export async function fetchWithTokens(
+  tokens: Tokens,
   input: string | URL,
   init: RequestInit = {},
   still?: () => boolean,
@@ -583,8 +487,21 @@ export async function fetchWithSession(
     headers.set("Authorization", `Bearer ${token}`);
     return fetch(input, { ...init, headers });
   };
-  const response = await send(await getSessionToken());
+  const response = await send(await tokens.get());
   if (response.status !== 401) return response;
   hold();
-  return send(await refreshSessionToken());
+  return send(await tokens.refresh());
 }
+
+/** Sent with the session in use. */
+export const fetchWithSession = (
+  input: string | URL,
+  init: RequestInit = {},
+  still?: () => boolean,
+): Promise<Response> =>
+  fetchWithTokens(
+    { get: getSessionToken, refresh: refreshSessionToken },
+    input,
+    init,
+    still,
+  );

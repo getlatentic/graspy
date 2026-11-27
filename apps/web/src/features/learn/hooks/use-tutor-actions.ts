@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TutorAction } from "@/lib/a2a/reply-data";
-import type { ChatLink } from "@/lib/chat-db";
+import type { ChatLink, SignInOffer } from "@/lib/chat-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { useChatPlanEdits, type ActionOf } from "./use-chat-plan-edits";
 import type { LearnerPlan } from "./use-learner-plan";
@@ -21,7 +21,7 @@ export type TutorActionDeps = Pick<
   "curriculum" | "applyCurriculum" | "regenerate"
 > & {
   /** In the app's words: the model saying it changed something is no proof. */
-  onDone: (message: string, link?: ChatLink) => void;
+  onDone: (message: string, link?: ChatLink, offer?: SignInOffer) => void;
   onFailure: (message: string) => void;
 };
 

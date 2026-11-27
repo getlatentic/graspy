@@ -161,6 +161,10 @@ async function failed(
       type: "error",
       content: failureText(error, t),
       sender: "ai",
+      metadata:
+        error instanceof ApiError && error.code === TRY_LIMIT
+          ? { signInOffer: "continue" }
+          : undefined,
     },
     // Not persisted, or failures would stack up in the learner's history.
     { persist: false },

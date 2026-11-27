@@ -8,7 +8,7 @@ Paths are from the repository root. `server/` stands for `apps/server/src/app/` 
 
 ```mermaid
 flowchart LR
-    U([Learner]) --> P["Web chat page<br/>/app/learn/ask or /try"]
+    U([Learner]) --> P["Web chat<br/>/app/learn/ask"]
     P -->|"REST start, then WebSocket or SSE follow"| W
     P -.->|"JSON-RPC /a2a: the fallback"| W
     P -->|"MCP /mcp: card views and their taps"| W
@@ -50,18 +50,24 @@ One turn is one message from the learner and the tutor's answer. The tutor is a 
 | `/chat`, `/app/chat` | Redirect to `/app/learn/ask` (`web/app/chat-link.ts`) |
 | `/app/learn/ask` | The chat hub (`web/app/learn/ask-page`) |
 | `/app/learn/ask/general`, `/ask/subject/:subjectSlug`, `/ask/:subject/:topicIndex` | One chat each, for a general, subject or topic scope (`web/features/learn/lib/chat-targets.ts`, page `web/app/learn/chat-page`) |
-| `/try` | The public chat (`web/app/try-link.ts`, `web/app/try-page.tsx`) |
+| `/try` | The public link to the chat: a redirect to `/app/learn/ask/general` once the device is ready to chat (`web/app/try-link.ts`). `/app/learn/ask/try`, the older address, leads to it |
 
-The routes under `/app/learn/ask` sit behind `requireAccount` (`web/app/chat-gate.ts`). With no account the page goes to sign-in; with an account and no learner chosen it goes to choose one. The chat asked for is remembered and opened afterwards.
+**One chat for everyone.** A visitor who has not signed in, an account's learner and the pane beside a lesson all show `ChatView` under the same routes and the same shell. What differs is the session the requests go under, and so what the server lets the chat do. Nothing in the web gates the chat: the Ask tab, the ask bar at the foot of a lesson, the pane beside a lesson on a wide screen, and the topic and subject chats are the same for both. An account with no learner chosen is asked to choose one (`web/features/learn/hooks/use-learner-chosen.ts`), and the chat or lesson it asked for is remembered and opened afterwards.
 
-**How `/try` differs.**
+**What a visitor with no account has.**
 
-- No sign-in. A signed-in learner who opens `/try` is sent to their own chat; an account with no learner chosen is asked to choose one.
-- The visitor's session is minted once, before the chat opens, after a Cloudflare Turnstile check (`web/app/try-challenge.tsx`, `web/lib/challenge/`; [Security](SECURITY.md#visitor-challenge-cloudflare-turnstile)); a renewal presents the session it replaces instead of a new check.
-- The page holds an anonymous session (`holdAnonymousSession`), so every request carries a session that names a random **visitor id** and no device or learner (`web/lib/api/session.ts`, `web/lib/try-visitor.ts`).
-- Text only. The page is a header with the logo and a sign-in link around the same `ChatView`. It has no navigation, and the chat components have no voice input.
+- The chat runs under a **visitor session**: it names a random visitor id and no device or learner (`web/lib/api/visitor-session.ts`, `web/lib/try-visitor.ts`). `chatTokens` and `fetchForChat` (`web/lib/api/chat-session.ts`) choose it for the chat's own requests while nobody is signed in, and the account's session once someone is. Everything else (plans, lessons, the learner's record, the MCP views) goes under the device's session, as for any device.
+- The session is minted once, before the chat shows, after a Cloudflare Turnstile check (`web/features/learn/components/visitor-check.tsx`, `web/lib/challenge/`; [Security](SECURITY.md#visitor-challenge-cloudflare-turnstile)); a renewal presents the session it replaces instead of a new check. Both the visitor session and the device session are held at once, so moving between a chat and a lesson mints neither again.
+- Text only: the chat components have no voice input, and the voice pages are for accounts.
 - The device makes its own plan with no subjects and no country (`readyToChat`, `web/features/learn/lib/start-chat.ts`). What the visitor says about themselves stays in the browser, and a country the device guessed is never kept as theirs: the form confirms it.
 - The server counts the visitor's turns and answers `429 try_limit` past its limits (section 6). No thread sync runs for a visitor, so conversations stay on the device.
+
+**Signing in is offered, never required.**
+
+- A "Sign in" link sits in the chat's header, `ChatContextBar`, in the same place on every chat screen: the general chat, a subject or topic chat, and the pane beside a lesson (`web/features/account/components/sign-in-nudge.tsx`).
+- A nudge (`SignInNudge`) appears at three moments with a payoff: when a lesson is finished, when a topic or course is added to the path (a message carries `metadata.signInOffer: "keep"`), and when the visitor limit is reached (`"continue"`: the refusal reads "Sign in to keep going." with a button). Each shows only while nobody is signed in.
+- The first conversation of a visit says, quietly, that chats stay on this device until the visitor signs in (`ChatLog`'s `note`).
+- Signing in from any of these remembers where the visitor was (`web/lib/account/chat-return.ts`): a chat under `/app/learn/ask` or a lesson, for this tab and 30 minutes, validated as a path of the app. After the sign-in the device's plan and conversations join the account's learner ([Security](SECURITY.md)), and the visitor arrives where they were.
 
 ### Modules
 
@@ -101,7 +107,7 @@ The routes under `/app/learn/ask` sit behind `requireAccount` (`web/app/chat-gat
 | `country`, `countryCode` | The name the model reads, and the two-letter code that finds the country's classes. Sent only once the learner has a class or a subject: before that the plan's country is a guess |
 | `deviceCountry` | The device's guess (`web/lib/locale-detector.ts`), sent while the learner has not said their country. It is only where the About you form starts when the edge placed the connection nowhere |
 | `language`, `gradeLevel` | From the plan |
-| `emptyPlan` | True when the plan has no subjects, as for a `/try` start. The tutor is then told to ask what the learner would like to learn |
+| `emptyPlan` | True when the plan has no subjects, as for a start from the public link. The tutor is then told to ask what the learner would like to learn |
 | `planId` | Files the conversation under the plan in the learner's record |
 | `subjects` | Name and slug of each subject of the plan |
 | `subject`, `subjectSlug`, `topic`, `topics` | The conversation's scope: a subject, or a topic of it, and the subject's topic list |
@@ -115,20 +121,20 @@ A reply may carry a card: an MCP Apps tool result with a `ui://graspy/...` resou
 ### Storing conversations
 
 - **On the device.** Threads and messages are in IndexedDB. A turn in progress is a temporary message that is not stored, and the finished reply replaces it. A failure is shown but not stored, so failures do not pile up in the history.
-- **Across devices.** For a signed-in learner, `syncThreads` (`web/lib/threads/thread-sync.ts`) sends what the device has not sent and reads what changed since the last seq. It runs on start, on coming online, on returning to the tab and after each turn. The server side is `server/api/thread_routes.py`. A visitor on `/try` has no learner and no sync.
+- **Across devices.** For a signed-in learner, `syncThreads` (`web/lib/threads/thread-sync.ts`) sends what the device has not sent and reads what changed since the last seq. It runs on start, on coming online, on returning to the tab and after each turn. The server side is `server/api/thread_routes.py`. A visitor with no account has no learner and no sync.
 
 ### Session tokens
 
-`web/lib/api/session.ts` mints and holds the token in `sessionStorage` (key `graspy.session`).
+`web/lib/api/session.ts` mints and holds the device and account tokens in `sessionStorage` (key `graspy.session`); `web/lib/api/visitor-session.ts` holds the visitor's (key `graspy.visitor-session`).
 
 | Session | How it is minted |
 |---|---|
 | Device | `POST /api/session` with a random `deviceId` (`localStorage`, `graspy_device_id`) and a fingerprint hint. Refused the chat |
 | Account's learner | `POST /api/session` with a Firebase ID token and `learnerId` |
 | TV | Renewed from the credential a phone approved ([TV sign-in](TV_SIGN_IN.md)) |
-| Visitor (`/try`) | `POST /api/session` with `{visitor}`, the id from `tryVisitor()`: `localStorage`, else `sessionStorage`, else memory |
+| Visitor (no account) | `POST /api/session` with `{visitor}`, the id from `tryVisitor()`: `localStorage`, else `sessionStorage`, else memory. Used for the chat's requests only |
 
-A token is renewed when less than five minutes of it remain, so it cannot lapse during a stream. `fetchWithSession` sends a request again once with a new token on `401`, and the A2A transport does the same. A token lasts 12 hours (`server/security/session.py`). A WebSocket cannot set `Authorization`, so the token is offered as a subprotocol (section 3).
+A token is renewed when less than five minutes of it remain, so it cannot lapse during a stream. `fetchWithSession` and `fetchForChat` send a request again once with a new token on `401`, and the A2A transport does the same. A token lasts 12 hours (`server/security/session.py`). A WebSocket cannot set `Authorization`, so the token is offered as a subprotocol (section 3).
 
 ## 3. Backend: one turn, step by step
 
@@ -312,7 +318,7 @@ Under uvicorn the store is `InMemoryConversationStore`.
 
 **Voice has its own memory.** The Android voice lessons use the tutor Worker (`apps/tutor`), a separate TypeScript Worker reached through the `TUTOR` service binding. Its per-learner Durable Object keeps a spaced-repetition (FSRS) memory (`apps/tutor/src/learner.ts`, `schedule.ts`). The text chat does not read it.
 
-**A `/try` visitor** has a conversation like any other: recent exchanges and a summary, in the chat log (or, with the log off, a Durable Object), under their random chat id and the owner `visitor:<id>`. They have no learner record, no digest and no thread sync. Their plan and messages are on their device. I found no code that deletes a visitor's chat events: no expiry, and the cron handler in `apps/server/src/worker.py` sweeps audio and TV sign-in only.
+**A visitor with no account** has a conversation like any other: recent exchanges and a summary, in the chat log (or, with the log off, a Durable Object), under their random chat id and the owner `visitor:<id>`. They have no learner record, no digest and no thread sync. Their plan and messages are on their device. I found no code that deletes a visitor's chat events: no expiry, and the cron handler in `apps/server/src/worker.py` sweeps audio and TV sign-in only.
 
 ## 6. Configuration and operations
 
@@ -400,7 +406,7 @@ The server's unit tests never call a model. A stand-in answers through the real 
 | The safety screen stops the answer | Ends it with a fixed line | The words so far, and the line |
 | The learner presses stop | `turn.stop`; the turn ends `stopped` with the words so far | The words so far, marked stopped. If the server has not ended it in 6 s, the page shows what it has |
 | `429 rate_limited` (`AGENT_LIMITER`) | `Retry-After: 60` | The start is tried again at 300, 900 and 2700 ms, then "That didn't get through. Try again." |
-| `429 try_limit` (a visitor past a limit) | Refuses; the page does not retry | "Try again later, or sign in to keep going." |
+| `429 try_limit` (a visitor past a limit) | Refuses; the page does not retry | "Sign in to keep going." with a Sign in button |
 | `403 consent_required` | Refuses | The parent's agreement step is shown (`web/lib/api/consent-refusal.ts`, `web/features/account/hooks/use-service-standing.ts`), and the turn shows "Something went wrong. Try again." |
 | `403 account_required`, `409 learner_required` | Refuses | "Something went wrong. Try again." |
 | `401` | | The page mints a new session and sends the request again, once. A socket refused for its token is tried again with a fresh one, then events are used |
@@ -435,7 +441,7 @@ A failed turn's message is shown but not stored, and the question goes as `unans
 From [Security](SECURITY.md#open-risks), for the chat:
 
 - **No revocation.** A session token lives until it expires.
-- **The day's visitor count can be used up.** 3000 turns a day for all visitors, reached by about 15 networks. `/try` then answers `429` until UTC midnight. Turnstile on `POST /api/session` would close it.
+- **The day's visitor count can be used up.** 3000 turns a day for all visitors, reached by about 15 networks. The chat then answers `429` to visitors until UTC midnight. Turnstile on `POST /api/session` would close it.
 - **The limits are approximate.** Each Cloudflare location counts on its own, and the session count is soft.
 - **A device id is a claim**, and the visitor id is the visitor's only credential.
 
@@ -445,7 +451,7 @@ Found while writing this page:
 - **A reloaded page does not re-attach to a turn it started.** The server keeps the turn; the device does not show it.
 - **Visitor chats are not expired.** I found nothing that deletes a visitor's chat events.
 - **Native tool calls are off**, so the tutor's tools reach the model as text ([Development](DEVELOPMENT.md#configure)).
-- **A visitor who opens a lesson from the chat leaves the visitor session.** The lesson page asks with the device's session, so going back to `/try` mints the visitor's session again, with the Turnstile check where the server asks for one.
+- **A visitor's topic chat does not know the lesson being read.** The server reads the lesson from the learner's record (`with_kept_lesson`), and a visitor session has none, so the tutor in a lesson's pane answers from the topic's name and the plan, not the slides.
 - **The A2A fallback is not idempotent.** Each attempt gets a new message id, so a retry is a new turn (DURABLE_TURN.md, "Not here").
 - **The A2A task store is per isolate**, so a client that resubscribes may reach an isolate that does not hold the task (CHAT_TURN_LOSS.md).
 - **`card` and `notice` event kinds** are declared and never written.

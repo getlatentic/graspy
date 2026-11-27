@@ -119,7 +119,7 @@ require_turnstile_site_key() {
   if [[ "$key" =~ ^[1-3]x00000000000000000000 ]]; then
     [[ "$environment" != "production" ]] ||
       die "VITE_TURNSTILE_SITE_KEY is one of Cloudflare's test keys, which give no bot check: production needs its own widget's key (docs/DEPLOYING.md)."
-    echo "deploy: WARNING: $environment is built with a Cloudflare test site key: the /try bot check gives NO protection here." >&2
+    echo "deploy: WARNING: $environment is built with a Cloudflare test site key: the visitor bot check gives NO protection here." >&2
   fi
 }
 
@@ -184,13 +184,13 @@ check_challenge() {
       return 1 ;;
   esac
   case "$state" in
-    live) echo "deploy: the /try bot check is live." ;;
+    live) echo "deploy: the visitor bot check is live." ;;
     test-*)
       if [[ "$environment" == "production" ]]; then
         echo "deploy: production's TURNSTILE_SECRET is a Cloudflare test secret ($state)." >&2
         return 1
       fi
-      echo "deploy: WARNING: $environment runs the /try bot check with a Cloudflare test secret ($state): it gives NO protection." >&2 ;;
+      echo "deploy: WARNING: $environment runs the visitor bot check with a Cloudflare test secret ($state): it gives NO protection." >&2 ;;
     *)
       echo "deploy: $environment reports the bot check as '$state', not live." >&2
       return 1 ;;

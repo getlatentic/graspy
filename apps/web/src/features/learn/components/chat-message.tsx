@@ -8,6 +8,7 @@ import { processLatex } from "@/lib/latex";
 import type { ChatMessage } from "@/lib/chat-db";
 import { useI18n } from "@/lib/i18n-context";
 import { SproutMark } from "@/components/brand/logo";
+import { SignInNudge } from "@/features/account/components/sign-in-nudge";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { cn } from "@/lib/cn";
 import {
@@ -75,14 +76,17 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
   if (message.type === "complete") return <AppNote message={message} />;
   if (message.type === "error") {
     return (
-      <p
-        role="alert"
-        className="flex items-start gap-2 text-sm text-danger"
-        dir="auto"
-      >
-        <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        {message.content}
-      </p>
+      <div className="space-y-3">
+        <p
+          role="alert"
+          className="flex items-start gap-2 text-sm text-danger"
+          dir="auto"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          {message.content}
+        </p>
+        {message.metadata?.signInOffer === "continue" && <SignInNudge />}
+      </div>
     );
   }
   if (message.sender === "user") {
@@ -104,6 +108,7 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
 
 /** Links to where the change shows; the conversation never leaves on its own. */
 function AppNote({ message }: { message: ChatMessage }) {
+  const { t } = useI18n();
   const link = message.metadata?.link;
   return (
     <div className="flex flex-col items-center gap-2">
@@ -122,6 +127,9 @@ function AppNote({ message }: { message: ChatMessage }) {
           {link.label}
           <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />
         </Link>
+      )}
+      {message.metadata?.signInOffer === "keep" && (
+        <SignInNudge message={t("chat.signInKeep")} />
       )}
     </div>
   );

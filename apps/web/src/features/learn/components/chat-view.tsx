@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import type { ThreadScope } from "@/lib/chat-db";
 import type { AppCallRequest } from "@/lib/a2a/request-data";
+import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { useConversation } from "@/features/learn/hooks/use-conversation";
 import { useConversationScroll } from "@/features/learn/hooks/use-conversation-scroll";
@@ -14,6 +15,7 @@ import {
 } from "@/features/learn/lib/chat-view-state";
 import { ChatLog } from "@/features/learn/components/chat-log";
 import { ChatFooter } from "@/features/learn/components/chat-footer";
+import { VisitorCheck } from "@/features/learn/components/visitor-check";
 import type { DraftSeed } from "@/features/learn/components/chat-composer";
 import { useChat, usePlan } from "../learner-context";
 
@@ -26,6 +28,7 @@ interface ChatViewProps {
 
 export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   const { t } = useI18n();
+  const signedOut = useAccount() === null;
   const { curriculum, isGenerating } = usePlan();
   const chat = useChat();
   const { threadId, conversation, ready } = useConversation(scope);
@@ -57,37 +60,40 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-surface">
       {header}
-      <ChatLog
-        scroll={scroll}
-        ready={ready}
-        turns={turns}
-        welcome={t(
-          starting
-            ? "chat.startWelcome"
-            : scope.kind === "general"
-              ? "ask.anythingWelcome"
-              : "chat.aiTutorWelcome",
-        )}
-        welcomeStays={starting}
-        hostFor={hostFor}
-        activity={
-          state.answering && chat.reconnecting
-            ? RECONNECTING
-            : awaitingAnswer
-              ? chat.tutorActivity
-              : undefined
-        }
-        changingPlan={state.changingPlan}
-      />
-      <ChatFooter
-        scope={scope}
-        subjectName={scopeSubjectName(curriculum, scope)}
-        empty={conversation.length === 0}
-        lastMessage={lastMessage}
-        state={state}
-        ask={ask}
-        seed={seed}
-      />
+      <VisitorCheck>
+        <ChatLog
+          scroll={scroll}
+          ready={ready}
+          turns={turns}
+          welcome={t(
+            starting
+              ? "chat.startWelcome"
+              : scope.kind === "general"
+                ? "ask.anythingWelcome"
+                : "chat.aiTutorWelcome",
+          )}
+          note={signedOut ? t("chat.deviceOnly") : undefined}
+          welcomeStays={starting}
+          hostFor={hostFor}
+          activity={
+            state.answering && chat.reconnecting
+              ? RECONNECTING
+              : awaitingAnswer
+                ? chat.tutorActivity
+                : undefined
+          }
+          changingPlan={state.changingPlan}
+        />
+        <ChatFooter
+          scope={scope}
+          subjectName={scopeSubjectName(curriculum, scope)}
+          empty={conversation.length === 0}
+          lastMessage={lastMessage}
+          state={state}
+          ask={ask}
+          seed={seed}
+        />
+      </VisitorCheck>
     </div>
   );
 }

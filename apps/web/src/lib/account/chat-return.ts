@@ -1,18 +1,22 @@
 import { ASK_HUB, TRY_CHAT } from "@/features/learn/lib/chat-targets";
 
-// The chat a visitor asked for before signing in, kept for this tab until they arrive. It
+// The chat or lesson a visitor was in before signing in, kept for this tab until they arrive. It
 // outlives the sign-in popup and the "Who's learning?" step, and it is short-lived so that a
 // sign-in made later, for another reason, does not open a chat.
 const KEY = "graspy.chat-return";
 const KEPT_MS = 30 * 60_000;
 
-/** The path itself when it is a chat, else null: nothing but a chat may be returned to. */
+// A lesson of the learner's plan, which has the chat beside it.
+const LESSON = /^\/app\/learn\/[^/]+\/lesson\/\d{1,3}$/;
+
+/** The path itself when it is a chat or a lesson, else null: nothing else may be returned to. */
 export function chatPathOf(path: string): string | null {
   const [pathOnly] = path.split(/[?#]/);
   const inChat =
     pathOnly === TRY_CHAT ||
     pathOnly === ASK_HUB ||
-    pathOnly.startsWith(`${ASK_HUB}/`);
+    pathOnly.startsWith(`${ASK_HUB}/`) ||
+    LESSON.test(pathOnly);
   return inChat && !pathOnly.includes("//") && !pathOnly.includes("..")
     ? path
     : null;

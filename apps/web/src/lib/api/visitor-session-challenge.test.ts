@@ -22,10 +22,11 @@ vi.mock("@/lib/env", async (original) => ({
 
 async function load() {
   vi.resetModules();
-  const session = await import("./session");
+  const visitor = await import("./visitor-session");
+  const device = await import("./session");
   const challenge = await import("@/lib/challenge/challenge");
   const errors = await import("./errors");
-  return { ...session, ...challenge, ...errors };
+  return { ...device, ...visitor, ...challenge, ...errors };
 }
 
 const minted = (token: string) =>
@@ -62,13 +63,11 @@ beforeEach(() => {
 describe("the check that a visitor is a person", () => {
   it("runs before the visitor's first session and sends its token with the request", async () => {
     fetchMock.mockResolvedValue(minted("session"));
-    const { getSessionToken, holdAnonymousSession, hostChallenge } =
-      await load();
+    const { getVisitorToken, hostChallenge } = await load();
     const solve = vi.fn(async () => "turnstile-token");
     hostChallenge({ solve });
-    holdAnonymousSession();
 
-    await expect(getSessionToken()).resolves.toBe("session");
+    await expect(getVisitorToken()).resolves.toBe("session");
 
     expect(sentBodies(fetchMock)).toEqual([
       { visitor: expect.any(String), challenge: "turnstile-token" },
@@ -78,15 +77,13 @@ describe("the check that a visitor is a person", () => {
 
   it("is run once for a visit, not for each message or each request at once", async () => {
     fetchMock.mockResolvedValue(minted("session"));
-    const { getSessionToken, holdAnonymousSession, hostChallenge } =
-      await load();
+    const { getVisitorToken, hostChallenge } = await load();
     const solve = vi.fn(async () => "turnstile-token");
     hostChallenge({ solve });
-    holdAnonymousSession();
 
-    await Promise.all([getSessionToken(), getSessionToken()]);
-    await getSessionToken();
-    await getSessionToken();
+    await Promise.all([getVisitorToken(), getVisitorToken()]);
+    await getVisitorToken();
+    await getVisitorToken();
 
     expect(solve).toHaveBeenCalledOnce();
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -96,15 +93,13 @@ describe("the check that a visitor is a person", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     fetchMock.mockResolvedValueOnce(minted("first"));
     fetchMock.mockResolvedValueOnce(minted("renewed"));
-    const { getSessionToken, holdAnonymousSession, hostChallenge } =
-      await load();
+    const { getVisitorToken, hostChallenge } = await load();
     const solve = vi.fn(async () => "turnstile-token");
     hostChallenge({ solve });
-    holdAnonymousSession();
-    await getSessionToken();
+    await getVisitorToken();
 
     vi.setSystemTime(Date.now() + 12 * 3600 * 1000 - 60_000);
-    await expect(getSessionToken()).resolves.toBe("renewed");
+    await expect(getVisitorToken()).resolves.toBe("renewed");
 
     expect(solve).toHaveBeenCalledOnce();
     expect(sentBodies(fetchMock)[1]).toEqual({
@@ -119,15 +114,13 @@ describe("the check that a visitor is a person", () => {
     fetchMock.mockResolvedValueOnce(minted("first"));
     fetchMock.mockResolvedValueOnce(refused(403, "challenge_required"));
     fetchMock.mockResolvedValueOnce(minted("again"));
-    const { getSessionToken, holdAnonymousSession, hostChallenge } =
-      await load();
+    const { getVisitorToken, hostChallenge } = await load();
     const solve = vi.fn(async () => "fresh-token");
     hostChallenge({ solve });
-    holdAnonymousSession();
-    await getSessionToken();
+    await getVisitorToken();
 
     vi.setSystemTime(Date.now() + 12 * 3600 * 1000 - 60_000);
-    await expect(getSessionToken()).resolves.toBe("again");
+    await expect(getVisitorToken()).resolves.toBe("again");
 
     expect(solve).toHaveBeenCalledTimes(2);
     expect(sentBodies(fetchMock)[2]).toMatchObject({
@@ -151,22 +144,19 @@ describe("the check that a visitor is a person", () => {
   it("is not run in a build with no widget, which sends the visitor as before", async () => {
     siteKey = null;
     fetchMock.mockResolvedValue(minted("session"));
-    const { getSessionToken, holdAnonymousSession } = await load();
-    holdAnonymousSession();
+    const { getVisitorToken } = await load();
 
-    await getSessionToken();
+    await getVisitorToken();
 
     expect(sentBodies(fetchMock)).toEqual([{ visitor: expect.any(String) }]);
   });
 
   it("is refused with the server's code when its token fails, and mints no session", async () => {
     fetchMock.mockResolvedValue(refused(403, "challenge_failed"));
-    const { getSessionToken, holdAnonymousSession, hostChallenge, ApiError } =
-      await load();
+    const { getVisitorToken, hostChallenge, ApiError } = await load();
     hostChallenge({ solve: async () => "bad" });
-    holdAnonymousSession();
 
-    const failure = await getSessionToken().catch((error: unknown) => error);
+    const failure = await getVisitorToken().catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ApiError);
     expect((failure as { code: unknown }).code).toBe("challenge_failed");
@@ -174,39 +164,29 @@ describe("the check that a visitor is a person", () => {
   });
 
   it("fails when no page hosts the check, so nothing outside /try loads Turnstile", async () => {
-    const { getSessionToken, holdAnonymousSession, ChallengeError } =
-      await load();
-    holdAnonymousSession();
+    const { getVisitorToken, ChallengeError } = await load();
 
-    await expect(getSessionToken()).rejects.toBeInstanceOf(ChallengeError);
+    await expect(getVisitorToken()).rejects.toBeInstanceOf(ChallengeError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("passes the widget's own failure on, as one the page can word", async () => {
-    const {
-      getSessionToken,
-      holdAnonymousSession,
-      hostChallenge,
-      ChallengeError,
-    } = await load();
+    const { getVisitorToken, hostChallenge, ChallengeError } = await load();
     hostChallenge({
       solve: () => Promise.reject(new ChallengeError("unsupported")),
     });
-    holdAnonymousSession();
 
-    await expect(getSessionToken()).rejects.toMatchObject({
+    await expect(getVisitorToken()).rejects.toMatchObject({
       kind: "unsupported",
     });
   });
 
   it("sends a 503 from the server on as a retryable answer", async () => {
     fetchMock.mockResolvedValue(refused(503, "challenge_unavailable"));
-    const { getSessionToken, holdAnonymousSession, hostChallenge } =
-      await load();
+    const { getVisitorToken, hostChallenge } = await load();
     hostChallenge({ solve: async () => "t" });
-    holdAnonymousSession();
 
-    await expect(getSessionToken()).rejects.toMatchObject({
+    await expect(getVisitorToken()).rejects.toMatchObject({
       status: 503,
       retryable: true,
     });

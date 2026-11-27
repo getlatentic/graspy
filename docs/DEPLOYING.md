@@ -86,7 +86,7 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
 
    **A deletion asked for by email** (the page `/delete-account` promises one to someone who cannot sign in): reply to the sign-in address, and once the person confirms from it, run `scripts/delete-account-by-request.sh <email> production` with `KEY_FILE` set to a temporary key of the same service account (made and removed as above). It signs in as that uid and calls `DELETE /api/account`, so the learners, what is kept for them and the Firebase user go through the route the app uses. What a phone or browser learned before anyone signed in belongs to no account, and this does not remove it.
 
-   **The `/try` bot check (Cloudflare Turnstile).** A visitor's session on `/try` is signed only after a Turnstile challenge ([Security](SECURITY.md#visitor-challenge-cloudflare-turnstile)). Each environment needs two things, and **the API Worker refuses to start, and `scripts/deploy.sh` refuses to deploy, without them**:
+   **The visitor bot check (Cloudflare Turnstile).** A visitor's session is signed only after a Turnstile challenge ([Security](SECURITY.md#visitor-challenge-cloudflare-turnstile)). Each environment needs two things, and **the API Worker refuses to start, and `scripts/deploy.sh` refuses to deploy, without them**:
 
    - the secret `TURNSTILE_SECRET` on the API Worker (`npx wrangler secret put TURNSTILE_SECRET --env staging`, `--env=""` for production, from `apps/server`);
    - the widget's public site key `VITE_TURNSTILE_SITE_KEY` in the web build: in the GitHub environment's secrets for the Deploy workflow (`gh secret set VITE_TURNSTILE_SITE_KEY --env production --repo "$repo"`), or in `apps/web/.env.<environment>.local` for a deploy from a machine.
@@ -120,7 +120,7 @@ The rest, in order, from the repository root, logged in with `npx wrangler login
 
    **API and tutor changes must stay backward compatible with the previous API version.** The order of a deploy is migrations, tutor Worker, API Worker, web app, so a rollback of the API Worker runs the previous API against the new tutor and the new schema. A migration must work with the code before it (the rule already followed for `0026`), and the tutor's interface must keep answering what the previous API asks.
 
-   A page cached from before this deploy cannot run the check: its `/try` shows its generic error until it is reloaded, and the service worker fetches the new page on the next visit.
+   A page cached from before this deploy cannot run the check: its chat shows its generic error until it is reloaded, and the service worker fetches the new page on the next visit.
 
    Merging the change that adds this makes the next staging deploy stop at `TURNSTILE_SECRET` until the staging secret is put, and a production deploy stop until both production values are set; the running Workers keep serving meanwhile.
 

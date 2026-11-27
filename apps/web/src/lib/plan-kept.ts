@@ -1,4 +1,3 @@
-import { isAnonymousSession } from "@/lib/api/session";
 import { deviceId } from "@/lib/device-id";
 import { changePlanRecord } from "@/lib/learner-record";
 
@@ -25,10 +24,10 @@ function keepTold(planId: string): void {
   }
 }
 
-/** Tells the server which plan is current, unless this device already did, or the visit keeps
- * nothing on the server (/try). A failure is left unmarked, so the next visit tries again. */
+/** Tells the server which plan is current, unless this device already did. A failure is left
+ * unmarked, so the next visit tries again. */
 export async function tellPlanKept(planId: string): Promise<void> {
-  if (isAnonymousSession() || toldOf(planId)) return;
+  if (toldOf(planId)) return;
   await changePlanRecord({ kind: "plan_kept", planId });
   keepTold(planId);
 }
