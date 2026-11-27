@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "@/lib/env";
 import { ApiError, toApiError, toNetworkError } from "@/lib/api/errors";
-import { fetchWithSession } from "@/lib/api/session";
+import { fetchForChat } from "@/lib/api/chat-session";
 
 /** The server keeps no turns (it is not running them in the background), so the page asks the tutor
  * the way it used to. */
@@ -21,7 +21,7 @@ export const chatUrl = (chat: string) =>
 async function post(url: string, body?: unknown): Promise<Response> {
   let response: Response;
   try {
-    response = await fetchWithSession(url, {
+    response = await fetchForChat(url, {
       method: "POST",
       ...(body === undefined
         ? {}

@@ -1,7 +1,6 @@
 import { createBrowserRouter, type RouteObject } from "react-router";
 import LandingPage from "@/features/landing/pages/landing-page";
 import AppEntry from "@/app/entry";
-import { requireAccount } from "@/app/chat-gate";
 import { chatLinks } from "@/app/chat-link";
 import { lazyPage } from "@/app/page-chunks";
 import { tryMoved, tryRoute } from "@/app/try-link";
@@ -64,15 +63,10 @@ export const routes: RouteObject[] = [
                 lazy: lazyPage("learnerVoice"),
               },
               tryMoved,
-              {
-                loader: requireAccount,
-                children: [
-                  { path: "ask", lazy: lazyPage("ask") },
-                  { path: "ask/:subject", lazy: lazyPage("chat") },
-                  { path: "ask/subject/:subjectSlug", lazy: lazyPage("chat") },
-                  { path: "ask/:subject/:topicIndex", lazy: lazyPage("chat") },
-                ],
-              },
+              { path: "ask", lazy: lazyPage("ask") },
+              { path: "ask/:subject", lazy: lazyPage("chat") },
+              { path: "ask/subject/:subjectSlug", lazy: lazyPage("chat") },
+              { path: "ask/:subject/:topicIndex", lazy: lazyPage("chat") },
               { path: "plan", lazy: lazyPage("plan") },
               { path: "voice", lazy: lazyPage("voice") },
               { path: "voice/lesson", lazy: lazyPage("voiceLesson") },

@@ -3,12 +3,10 @@ import type { LucideIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   SECTIONS,
-  labelKeyOf,
   sectionOf,
   type AppSection,
   type Section,
 } from "@/features/learn/lib/app-sections";
-import { useAccount } from "@/lib/account/use-account";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 import { UnreadDot } from "@/features/learn/components/unread-dot";
@@ -31,7 +29,6 @@ export function AppTabBar({
   className,
 }: AppTabBarProps) {
   const { t } = useI18n();
-  const signedIn = useAccount() !== null;
   const { pathname } = useLocation();
   const current = home?.current ?? sectionOf(pathname);
 
@@ -62,7 +59,7 @@ export function AppTabBar({
               busy={isAsk && tutorBusy}
               unread={isAsk && unread}
             />
-            <span className="truncate">{t(labelKeyOf(section, signedIn))}</span>
+            <span className="truncate">{t(section.labelKey)}</span>
           </Link>
         );
       })}

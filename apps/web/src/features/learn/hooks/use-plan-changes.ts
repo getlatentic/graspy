@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { TutorAction } from "@/lib/a2a/reply-data";
-import type { ChatLink, ChatThread } from "@/lib/chat-db";
+import type { ChatLink, ChatThread, SignInOffer } from "@/lib/chat-db";
 import type { MessageStore } from "../lib/message-store";
 import { useTutorActions, type TutorActionDeps } from "./use-tutor-actions";
 
@@ -11,20 +11,21 @@ type PlanChangeDeps = Omit<TutorActionDeps, "onDone" | "onFailure"> & {
 export function usePlanChanges({ addMessage, ...deps }: PlanChangeDeps) {
   const reportToRef = useRef<string | null>(null);
   const report = useCallback(
-    (type: "complete" | "error") => (content: string, link?: ChatLink) => {
-      const threadId = reportToRef.current;
-      if (!threadId) return;
-      void addMessage(
-        {
-          threadId,
-          type,
-          content,
-          sender: "ai",
-          metadata: link ? { link } : undefined,
-        },
-        { persist: type !== "error" },
-      );
-    },
+    (type: "complete" | "error") =>
+      (content: string, link?: ChatLink, signInOffer?: SignInOffer) => {
+        const threadId = reportToRef.current;
+        if (!threadId) return;
+        void addMessage(
+          {
+            threadId,
+            type,
+            content,
+            sender: "ai",
+            metadata: link || signInOffer ? { link, signInOffer } : undefined,
+          },
+          { persist: type !== "error" },
+        );
+      },
     [addMessage],
   );
   const onDone = useMemo(() => report("complete"), [report]);

@@ -136,14 +136,14 @@ describe("the courses the learner chose topics of on a path card", () => {
     expect(plan.subjects.at(-1)?.slug).toBe("real-analysis");
   });
 
-  it("tells the chat what was added in the app's words, with no link and nowhere to go", async () => {
+  it("tells the chat what was added in the app's words, offering sign-in to keep it, with no link and nowhere to go", async () => {
     const { hook, actions, onDone } = mount();
 
     await act(() => actions().carryOut([adding(REAL_ANALYSIS, QUANTUM)]));
 
     expect(onDone.mock.calls).toEqual([
-      ["chat.pathAdded Real analysis"],
-      ["chat.pathAdded Quantum computing"],
+      ["chat.pathAdded Real analysis", undefined, "keep"],
+      ["chat.pathAdded Quantum computing", undefined, "keep"],
     ]);
     expect(hook.result.current.location.pathname).toBe("/");
   });

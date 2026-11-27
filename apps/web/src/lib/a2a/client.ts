@@ -13,7 +13,7 @@ import {
   toApiError,
   toNetworkError,
 } from "@/lib/api/errors";
-import { getSessionToken, refreshSessionToken } from "@/lib/api/session";
+import { chatTokens } from "@/lib/api/chat-session";
 import {
   activityOf,
   agentData,
@@ -35,10 +35,10 @@ const DISCOVERY_ORIGIN = new URL(A2A_BASE_URL).origin;
 
 // An expired session token is re-minted inside the transport, not surfaced as a failed turn.
 const authentication: AuthenticationHandler = {
-  headers: async () => ({ Authorization: `Bearer ${await getSessionToken()}` }),
+  headers: async () => ({ Authorization: `Bearer ${await chatTokens.get()}` }),
   shouldRetryWithHeaders: async (_request, response) =>
     response.status === 401
-      ? { Authorization: `Bearer ${await refreshSessionToken()}` }
+      ? { Authorization: `Bearer ${await chatTokens.refresh()}` }
       : undefined,
 };
 

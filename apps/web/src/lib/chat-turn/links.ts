@@ -1,10 +1,6 @@
 import { API_BASE_URL } from "@/lib/env";
 import { ApiError, toApiError } from "@/lib/api/errors";
-import {
-  fetchWithSession,
-  getSessionToken,
-  refreshSessionToken,
-} from "@/lib/api/session";
+import { chatTokens, fetchForChat } from "@/lib/api/chat-session";
 import { parseFrame, type Frame } from "./frames";
 import { Queue } from "./queue";
 import { chatUrl } from "./rest";
@@ -51,7 +47,7 @@ const CONNECT_MS = 10_000;
 const STALL_MS = 30_000;
 
 const defaultToken = (fresh: boolean) =>
-  fresh ? refreshSessionToken() : getSessionToken();
+  fresh ? chatTokens.refresh() : chatTokens.get();
 
 const defaultOpen = (url: string, protocols: string[]) =>
   new WebSocket(url, protocols);
@@ -168,7 +164,7 @@ export function eventsLink(chat: string, turn: string): Link {
     async *frames(after, signal, onOpen) {
       let response: Response;
       try {
-        response = await fetchWithSession(
+        response = await fetchForChat(
           `${chatUrl(chat)}/turns/${encodeURIComponent(turn)}/events`,
           {
             headers: {

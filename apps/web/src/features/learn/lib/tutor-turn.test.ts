@@ -114,7 +114,7 @@ describe("a turn with the tutor", () => {
     });
   });
 
-  it("says, when a visitor with no account is past the limits, to try later or sign in", async () => {
+  it("says, when a visitor with no account is past the limits, to sign in, and offers it", async () => {
     const turn = turnWith(async () => {
       throw new ApiError("limit", 429, {
         detail: { error: "limit", code: "try_limit" },
@@ -125,8 +125,9 @@ describe("a turn with the tutor", () => {
 
     expect(turn.shown().map((m) => [m.type, m.content])).toEqual([
       ["user", "What is 3/8?"],
-      ["error", "Try again later, or sign in to keep going."],
+      ["error", "Sign in to keep going."],
     ]);
+    expect(turn.shown()[1].metadata).toEqual({ signInOffer: "continue" });
   });
 
   it("does not take that limit for a blip a retry may pass, as it does a plain 429", () => {

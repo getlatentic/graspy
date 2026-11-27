@@ -77,12 +77,20 @@ describe("loadSavedPlan", () => {
   });
 
   it("opens the saved plan without waiting for the server", async () => {
-    await expect(loadSavedPlan()).resolves.toEqual(saved);
-    expect(followPlan).toHaveBeenCalledWith(saved, expect.anything());
+    onDevice = { ...saved, subjects: [{ name: "Maths", slug: "maths" }] };
+
+    await expect(loadSavedPlan()).resolves.toEqual(onDevice);
+    expect(followPlan).toHaveBeenCalledWith(onDevice, expect.anything());
     expect(changePlanRecord).toHaveBeenCalledWith({
       kind: "plan_kept",
       planId: "plan-1",
     });
+  });
+
+  it("tells the server nothing of a plan the chat has not yet added a subject to", async () => {
+    await expect(loadSavedPlan()).resolves.toEqual(saved);
+
+    expect(changePlanRecord).not.toHaveBeenCalled();
   });
 
   it("keeps a signed-in learner's shared record, which a newer plan may own", async () => {

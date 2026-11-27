@@ -2,11 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/env", () => ({ API_BASE_URL: "https://api.test/api" }));
 
-const { fetchWithSession } = vi.hoisted(() => ({ fetchWithSession: vi.fn() }));
-vi.mock("@/lib/api/session", () => ({
-  fetchWithSession,
-  getSessionToken: async () => "token",
-  refreshSessionToken: async () => "fresh",
+const { fetchForChat } = vi.hoisted(() => ({ fetchForChat: vi.fn() }));
+vi.mock("@/lib/api/chat-session", () => ({
+  fetchForChat,
+  chatTokens: { get: async () => "token", refresh: async () => "fresh" },
 }));
 
 import { ApiError, NetworkError } from "@/lib/api/errors";
@@ -265,7 +264,7 @@ function streamOf(chunks: string[]): Response {
 
 describe("eventsLink", () => {
   it("asks from the cursor and reads the frames across chunks", async () => {
-    fetchWithSession.mockResolvedValueOnce(
+    fetchForChat.mockResolvedValueOnce(
       streamOf([
         ': open\n\nid: 2\ndata: {"seq":2,"prev":1,"kind":"te',
         'xt","text":"Fort"}\n\nid: 3\ndata: {"seq":3,"prev":2,"kind":"text","text":"y"}\n\n',
@@ -283,13 +282,13 @@ describe("eventsLink", () => {
       "y",
     ]);
     expect(opened).toHaveBeenCalledOnce();
-    const [url, init] = fetchWithSession.mock.calls[0];
+    const [url, init] = fetchForChat.mock.calls[0];
     expect(url).toBe(`https://api.test/api/chats/${CHAT}/turns/${TURN}/events`);
     expect(init.headers).toMatchObject({ "Last-Event-ID": "1" });
   });
 
   it("reads a reset", async () => {
-    fetchWithSession.mockResolvedValueOnce(
+    fetchForChat.mockResolvedValueOnce(
       streamOf(['data: {"kind":"reset"}\n\n']),
     );
 
@@ -301,8 +300,8 @@ describe("eventsLink", () => {
   });
 
   it("fails as not opened when the server is busy or unreachable", async () => {
-    fetchWithSession.mockResolvedValueOnce(new Response("{}", { status: 503 }));
-    fetchWithSession.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    fetchForChat.mockResolvedValueOnce(new Response("{}", { status: 503 }));
+    fetchForChat.mockRejectedValueOnce(new TypeError("Failed to fetch"));
 
     const busy = await collected(eventsLink(CHAT, TURN).frames(1, nothing()));
     const offline = await collected(
@@ -314,7 +313,7 @@ describe("eventsLink", () => {
   });
 
   it("does not hide a chat that is not found behind a retry", async () => {
-    fetchWithSession.mockResolvedValueOnce(
+    fetchForChat.mockResolvedValueOnce(
       Response.json({ detail: { code: "chat_not_found" } }, { status: 404 }),
     );
 
@@ -335,7 +334,7 @@ describe("eventsLink", () => {
         },
       }),
     );
-    fetchWithSession.mockResolvedValueOnce(broken);
+    fetchForChat.mockResolvedValueOnce(broken);
 
     const { failure } = await collected(
       eventsLink(CHAT, TURN).frames(1, nothing()),

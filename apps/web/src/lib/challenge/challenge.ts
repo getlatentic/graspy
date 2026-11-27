@@ -1,8 +1,8 @@
 import { TURNSTILE_SITE_KEY } from "@/lib/env";
 
 // The check that a visitor with no account is a person (Cloudflare Turnstile), asked for when their
-// session is minted. The session layer only asks for a token; the page that is open (/try) hosts
-// the widget. No page hosting, no check: nothing outside /try ever loads Turnstile.
+// session is minted. The session layer only asks for a token; the chat that is open hosts the
+// widget (VisitorCheck). No chat hosting, no check: nothing else ever loads Turnstile.
 
 /** The widget could not give a token. `unsupported`: this browser cannot complete the check (a TV's,
  * which has no way to answer an interactive one). `failed`: it errored or timed out. */

@@ -1,17 +1,10 @@
 import { Link } from "react-router";
-import { useAccount } from "@/lib/account/use-account";
 import { cn } from "@/lib/cn";
-import { FIREBASE_CONFIG } from "@/lib/env";
 import { useI18n } from "@/lib/i18n-context";
+import { useSignInOffered } from "../hooks/use-sign-in-offered";
 
 export const SIGN_IN_PAGE = "/app/sign-in";
 export const TV_SIGN_IN_PAGE = `${SIGN_IN_PAGE}/phone`;
-
-/** Offered while nobody is signed in on the device. */
-function useSignInOffered(): boolean {
-  const account = useAccount();
-  return FIREBASE_CONFIG !== null && account === null;
-}
 
 export function SignInLink({
   className,

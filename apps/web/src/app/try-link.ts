@@ -7,14 +7,12 @@ import { rememberChat } from "@/lib/account/chat-return";
 const OPEN_CHAT = chatPath({ kind: "general" });
 const WHO_IS_LEARNING = "/app/learners";
 
-/** The public link: no onboarding and no sign-in. A visitor with no account stays on the page,
- * which is a text-only chat that keeps nothing of them on the server (try-page.tsx). A learner
- * signed in goes into their own chat; an account that has not chosen a learner is asked, and
- * arrives here once it has. */
+/** The public link: no onboarding and no sign-in. It readies the device to chat (a plan with no
+ * subjects, to which the chat adds what the learner asks for) and opens the one chat, inside the
+ * app. An account that has not chosen a learner is asked, and arrives here once it has. */
 export async function startTryChat() {
   const account = currentAccount();
-  if (!account) return null;
-  if (!account.learner) {
+  if (account && !account.learner) {
     rememberChat(TRY_CHAT);
     return redirect(WHO_IS_LEARNING);
   }
@@ -24,9 +22,6 @@ export async function startTryChat() {
 export const tryRoute: RouteObject = {
   path: TRY_CHAT,
   loader: startTryChat,
-  lazy: async () => ({
-    Component: (await import("@/app/try-page")).default,
-  }),
 };
 
 /** Where the link was before /try was a page of its own: a chat remembered from then still lands. */

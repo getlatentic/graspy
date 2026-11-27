@@ -9,6 +9,7 @@ describe("the chat a visitor asked for", () => {
     "/app/learn/ask",
     "/app/learn/ask/mathematics/2",
     "/app/learn/ask/subject/mathematics?draft=1",
+    "/app/learn/mathematics/lesson/3",
     "/try",
   ])("is kept for %s and given back once", (path) => {
     rememberChat(path);
@@ -21,18 +22,25 @@ describe("the chat a visitor asked for", () => {
     "/app/learn",
     "/app/learn/voice",
     "/app/learn/asked",
+    "/app/learn/mathematics",
+    "/app/learn/mathematics/lesson/first",
+    "/app/learn/mathematics/lesson/3/extra",
+    "/app/learn/../lesson/3",
     "/trying",
     "/try/../app",
     "https://elsewhere.example/app/learn/ask",
     "//elsewhere.example",
     "/app/learn/ask//elsewhere.example",
     "/app/learn/ask/../you",
-  ])("is not kept for %s: only a chat may be returned to", (path) => {
-    expect(chatPathOf(path)).toBeNull();
-    rememberChat(path);
+  ])(
+    "is not kept for %s: only a chat or a lesson may be returned to",
+    (path) => {
+      expect(chatPathOf(path)).toBeNull();
+      rememberChat(path);
 
-    expect(takeChat()).toBeNull();
-  });
+      expect(takeChat()).toBeNull();
+    },
+  );
 
   it("is forgotten after half an hour, so a later sign-in does not open a chat", () => {
     rememberChat("/app/learn/ask", 1_000);

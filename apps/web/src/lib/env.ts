@@ -25,7 +25,7 @@ export const API_BASE_URL = env.VITE_API_URL;
 
 export const A2A_BASE_URL = env.VITE_A2A_BASE;
 
-/** The public key of the Turnstile widget that gates a visitor's session on /try. Unset (development,
+/** The public key of the Turnstile widget that gates the session of someone who has not signed in. Unset (development,
  * the unit tests) means no check is asked for; a server that needs one then refuses the visitor. */
 export const TURNSTILE_SITE_KEY = env.VITE_TURNSTILE_SITE_KEY?.trim() || null;
 

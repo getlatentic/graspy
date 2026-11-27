@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The tutor reached through the real A2A SDK, with its card and RPC endpoint scripted.
 vi.mock("@/lib/env", () => ({ A2A_BASE_URL: "https://api.test/a2a" }));
-vi.mock("@/lib/api/session", () => ({
-  getSessionToken: async () => "session-token",
-  refreshSessionToken: async () => "session-token",
+vi.mock("@/lib/api/chat-session", () => ({
+  chatTokens: {
+    get: async () => "session-token",
+    refresh: async () => "session-token",
+  },
 }));
 
 const CARD = {

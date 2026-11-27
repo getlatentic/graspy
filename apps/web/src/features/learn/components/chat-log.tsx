@@ -18,6 +18,8 @@ interface ChatLogProps {
   ready: boolean;
   turns: Turn[];
   welcome: string;
+  /** A quiet line under the welcome of a conversation with nothing said yet. */
+  note?: string;
   /** Kept above the messages once there are some. */
   welcomeStays?: boolean;
   hostFor: (message: ChatMessage) => ViewHost;
@@ -31,6 +33,7 @@ export function ChatLog({
   ready,
   turns,
   welcome,
+  note,
   welcomeStays = false,
   hostFor,
   activity,
@@ -58,6 +61,9 @@ export function ChatLog({
             <p className="rounded-card bg-accent-soft p-4 text-sm text-ink">
               {welcome}
             </p>
+          )}
+          {ready && turns.length === 0 && note && (
+            <p className="px-1 text-xs text-muted">{note}</p>
           )}
           {turns.map((turn) => (
             <TurnSection

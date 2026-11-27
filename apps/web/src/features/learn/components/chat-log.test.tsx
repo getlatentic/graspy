@@ -50,8 +50,8 @@ const message = (
     : {}),
 });
 
-function shown(messages: ChatMessage[]) {
-  const turns: Turn[] = [{ id: "turn", messages }];
+function shown(messages: ChatMessage[], note?: string) {
+  const turns: Turn[] = messages.length ? [{ id: "turn", messages }] : [];
   const scroll = {
     listRef: { current: null },
     contentRef: { current: null },
@@ -73,6 +73,7 @@ function shown(messages: ChatMessage[]) {
         ready
         turns={turns}
         welcome="Welcome"
+        note={note}
         hostFor={() => ({ toolCalled: vi.fn(), message: () => false })}
         activity={undefined}
         changingPlan={false}
@@ -106,5 +107,27 @@ describe("the path cards in the chat", () => {
 
     expect(screen.getAllByTestId("card")).toHaveLength(3);
     expect(screen.queryByText("chat.pathReplaced")).toBeNull();
+  });
+});
+
+describe("the quiet line under the welcome", () => {
+  it("is there while nothing has been said", () => {
+    shown([], "Your chats stay on this device until you sign in.");
+
+    expect(
+      screen.getByText("Your chats stay on this device until you sign in."),
+    ).toBeTruthy();
+  });
+
+  it("goes once the conversation has begun", () => {
+    shown([message("user", "hi")], "Your chats stay on this device.");
+
+    expect(screen.queryByText("Your chats stay on this device.")).toBeNull();
+  });
+
+  it("is not there when there is none to say", () => {
+    shown([]);
+
+    expect(screen.getByText("Welcome").nextElementSibling).toBeNull();
   });
 });

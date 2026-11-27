@@ -1,4 +1,5 @@
-import { fetchAsParent, type Issued } from "@/lib/api/session";
+import { fetchAsParent } from "@/lib/api/session";
+import type { Issued } from "@/lib/api/session-wire";
 import { ACCOUNT_URL, call } from "./account-call";
 
 // The account's learners (app/api/account_routes.py). Any signed-in session manages them.

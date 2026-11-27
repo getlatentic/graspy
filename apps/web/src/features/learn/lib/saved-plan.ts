@@ -40,6 +40,8 @@ export async function loadSavedPlan(): Promise<CurriculumData | null> {
   // than this one, whose record plan_kept would drop.
   if (currentAccount()) return saved ?? accountPlan();
   if (!saved) return null;
+  // A plan the chat has not yet added a subject to has nothing for the server to keep.
+  if (saved.subjects.length === 0) return saved;
   tellPlanKept(saved.planId).catch((err) =>
     console.warn("Dropping an earlier plan's record failed:", err),
   );

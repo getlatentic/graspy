@@ -1,11 +1,6 @@
 import { Link, useLocation } from "react-router";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import {
-  labelKeyOf,
-  sectionOf,
-  type Section,
-} from "@/features/learn/lib/app-sections";
-import { useAccount } from "@/lib/account/use-account";
+import { sectionOf, type Section } from "@/features/learn/lib/app-sections";
 import { useI18n } from "@/lib/i18n-context";
 import { cn } from "@/lib/cn";
 
@@ -19,7 +14,6 @@ interface SideNavProps {
  * a phone has the tab bar. */
 export function SideNav({ sections, open, onToggle }: SideNavProps) {
   const { t } = useI18n();
-  const signedIn = useAccount() !== null;
   const current = sectionOf(useLocation().pathname);
   const Toggle = open ? PanelLeftClose : PanelLeftOpen;
   const toggleLabel = t(open ? "nav.collapse" : "nav.expand");
@@ -36,7 +30,7 @@ export function SideNav({ sections, open, onToggle }: SideNavProps) {
     >
       {sections.map((section) => {
         const { id, path, icon: Icon } = section;
-        const label = t(labelKeyOf(section, signedIn));
+        const label = t(section.labelKey);
         const active = id === current;
         return (
           <Link

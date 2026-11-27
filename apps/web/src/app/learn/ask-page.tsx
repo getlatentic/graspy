@@ -6,7 +6,8 @@ import { latestChat } from "@/features/learn/lib/latest-chat";
 import { useChat, usePlan } from "@/features/learn/learner-context";
 
 // Opens a conversation, not a menu of them: choosing another is the
-// conversation's Change. Without a plan, Home shows it being made.
+// conversation's Change. Without a plan, Home shows it being made; a plan the chat started has
+// no subjects yet, and the general conversation is where they are asked for.
 export default function AskPage() {
   const { curriculum, nextSubject, isLoaded } = usePlan();
   const { threads, threadsLoaded } = useChat();
@@ -16,6 +17,9 @@ export default function AskPage() {
         <Spinner />
       </div>
     );
+  }
+  if (curriculum?.startedInChat && !curriculum.subjects.length) {
+    return <Navigate to={chatPath({ kind: "general" })} replace />;
   }
   if (!curriculum?.subjects.length) return <Navigate to="/app/learn" replace />;
   const target = latestChat(

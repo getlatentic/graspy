@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { StrictMode, useLayoutEffect } from "react";
+import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { setAccount } from "@/lib/account/account-store";
 import { ApiError } from "@/lib/api/errors";
 import type { WidgetOptions } from "@/lib/challenge/turnstile-script";
 import { I18nContext } from "@/lib/i18n-context";
+import { signedInAs } from "@/test/account-session";
 import en from "@/locales/en.json";
 
 vi.mock("@/lib/env", async (original) => ({
@@ -24,9 +26,8 @@ const mint = async () => {
   }
   return "session";
 };
-vi.mock("@/lib/api/session", () => ({
-  getSessionToken: vi.fn(() => mint()),
-  refreshSessionToken: () => mint(),
+vi.mock("@/lib/api/chat-session", () => ({
+  chatTokens: { get: vi.fn(() => mint()), refresh: () => mint() },
 }));
 
 // The widget is injected: what the page renders into, and the callbacks it gave.
@@ -41,7 +42,7 @@ const loadTurnstile = vi.fn(async () => ({
 }));
 vi.mock("@/lib/challenge/turnstile-script", () => ({ loadTurnstile }));
 
-const { TryChallenge } = await import("./try-challenge");
+const { VisitorCheck } = await import("./visitor-check");
 
 const t = (key: string) =>
   key
@@ -53,9 +54,9 @@ function visit(strict = false) {
     <I18nContext.Provider
       value={{ t, locale: "en", setLocale: () => {} } as never}
     >
-      <TryChallenge>
+      <VisitorCheck>
         <p>the chat</p>
-      </TryChallenge>
+      </VisitorCheck>
     </I18nContext.Provider>
   );
   render(strict ? <StrictMode>{page}</StrictMode> : page);
@@ -64,6 +65,8 @@ function visit(strict = false) {
 const widget = () => rendered[rendered.length - 1]!;
 
 beforeEach(() => {
+  setAccount(null);
+  vi.clearAllMocks();
   needsCheck = true;
   sessionFailure = null;
   rendered.length = 0;
@@ -207,39 +210,15 @@ describe("the check before a visitor's chat", () => {
     expect(await screen.findByText("the chat")).toBeTruthy();
   });
 
-  it("asks for the session only after the page has made its requests anonymous", async () => {
-    // TryPage holds the anonymous session in a layout effect; the check's own request is made
-    // from a passive effect of its child, which React runs after every layout effect.
-    needsCheck = false;
-    let held = false;
-    const asked: boolean[] = [];
-    const { getSessionToken } = await import("@/lib/api/session");
-    vi.mocked(getSessionToken).mockImplementationOnce(async () => {
-      asked.push(held);
-      return "session";
-    });
-    function Page() {
-      useLayoutEffect(() => {
-        held = true;
-        return () => void (held = false);
-      }, []);
-      return (
-        <TryChallenge>
-          <p>the chat</p>
-        </TryChallenge>
-      );
-    }
+  it("shows an account's chat at once, asking for no session and loading no check", async () => {
+    signedInAs({ id: "ada000000001", name: "Ada" });
 
-    render(
-      <I18nContext.Provider
-        value={{ t, locale: "en", setLocale: () => {} } as never}
-      >
-        <Page />
-      </I18nContext.Provider>,
-    );
+    visit();
 
     expect(await screen.findByText("the chat")).toBeTruthy();
-    expect(asked).toEqual([true]);
+    const { chatTokens } = await import("@/lib/api/chat-session");
+    expect(chatTokens.get).not.toHaveBeenCalled();
+    expect(loadTurnstile).not.toHaveBeenCalled();
   });
 
   it("fails, with a retry, when the script cannot load", async () => {

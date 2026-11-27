@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate, type NavigateFunction } from "react-router";
 import type { TutorAction } from "@/lib/a2a/reply-data";
-import type { ChatLink } from "@/lib/chat-db";
+import type { ChatLink, SignInOffer } from "@/lib/chat-db";
 import type { CurriculumData } from "@/lib/curriculum-record";
 import { useI18n, type Translate } from "@/lib/i18n-context";
 import { MAX_SUBJECTS, withPaths, withTopic } from "../lib/curriculum-edit";
@@ -17,7 +17,7 @@ export type ActionOf<K extends TutorAction["type"]> = Extract<
 type PlanEditDeps = Pick<LearnerPlan, "applyCurriculum" | "regenerate"> & {
   /** The plan as it is now, after the edits made before this one. */
   read: () => CurriculumData | null;
-  onDone: (message: string, link?: ChatLink) => void;
+  onDone: (message: string, link?: ChatLink, offer?: SignInOffer) => void;
   onFailure: (message: string) => void;
 };
 
@@ -58,6 +58,7 @@ function planEdits(
       onDone(
         t("chat.topicAdded", { topic, subject }),
         lessonLink(t, subjectSlug, added.index),
+        "keep",
       );
     },
     /** Adds the courses the learner chose topics of. Nothing leaves the chat: the lesson to open
@@ -80,6 +81,8 @@ function planEdits(
           t(outcome.status === "added" ? "chat.pathAdded" : "chat.pathExists", {
             subject: subject.name,
           }),
+          undefined,
+          outcome.status === "added" ? "keep" : undefined,
         );
       }
       if (outcomes.some(({ status }) => status === "unnamed")) {

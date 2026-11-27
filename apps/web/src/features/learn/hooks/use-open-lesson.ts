@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { SUBJECTS_PATH } from "@/lib/learn-paths";
 import { isChatPath } from "../lib/app-sections";
-import { TRY_CHAT, subjectOf } from "../lib/chat-targets";
+import { subjectOf } from "../lib/chat-targets";
 import { lessonRequested, type LessonOpening } from "../lib/lesson-opening";
 import { usePlan } from "../learner-context";
 
@@ -16,7 +16,7 @@ export function useOpenLesson() {
   const navigate = useNavigate();
   const { curriculum } = usePlan();
   const { pathname, search } = useLocation();
-  const fromChat = pathname === TRY_CHAT || isChatPath(pathname);
+  const fromChat = isChatPath(pathname);
   return useCallback(
     (url: string) => {
       const lesson = lessonRequested(url);
