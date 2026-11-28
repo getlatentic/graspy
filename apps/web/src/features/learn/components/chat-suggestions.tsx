@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
 import type { WelcomeChip } from "@/features/learn/lib/welcome-chips";
 
@@ -5,16 +6,23 @@ import type { WelcomeChip } from "@/features/learn/lib/welcome-chips";
 export function WelcomeChips({
   chips,
   disabled,
+  hidden,
 }: {
   chips: WelcomeChip[];
   disabled: boolean;
+  /** Out of sight and reach but still taking room, so the group does not move. */
+  hidden: boolean;
 }) {
   const { t } = useI18n();
   return (
     // Hidden while typing: with a phone's keyboard up there is no room.
     <div
+      role="group"
       aria-label={t("chat.suggestedQuestions")}
-      className="mt-3 flex flex-wrap justify-center gap-2 pointer-coarse:group-has-[textarea:focus]/shell:hidden"
+      className={cn(
+        "mt-3 flex flex-wrap justify-center gap-2 pointer-coarse:group-has-[textarea:focus]/shell:hidden",
+        hidden && "invisible",
+      )}
     >
       {chips.map(({ label, run }) => (
         <button

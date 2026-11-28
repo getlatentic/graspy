@@ -182,6 +182,7 @@ function LessonChat({
     >
       <ChatView
         key={pathname}
+        compact
         scope={scope}
         header={() => (
           <ChatContextBar

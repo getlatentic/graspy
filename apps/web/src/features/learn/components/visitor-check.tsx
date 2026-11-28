@@ -77,13 +77,21 @@ function Checked({ children }: { children: ReactNode }) {
         )}
       >
         {checking && <Checking interactive={interactive} />}
-        {/* Holds the widget's room for the whole check, so it can appear and leave without a jump. */}
+        {/* The widget's room: held for the whole check so it can appear and leave without a
+            jump. A token renewed in the middle of a chat asks in the middle of the screen, over
+            the chat, which does not move. */}
         <div
           ref={container}
           role="group"
           aria-label={t("try.checkLabel")}
           hidden={!checking && !running}
-          className={cn("h-17 w-75", !interactive && "invisible")}
+          className={cn(
+            // The widget is 300 by 65 CSS pixels whatever the root font size is.
+            "h-[max(4.25rem,66px)] w-[max(18.75rem,300px)] max-w-full",
+            ready &&
+              "fixed inset-x-0 top-1/2 z-50 mx-auto -translate-y-1/2 rounded-card bg-surface shadow-lg",
+            !interactive && "invisible",
+          )}
         />
         {!ready && !checking && <Refusal phase={phase} onRetry={retry} />}
       </div>
@@ -97,10 +105,15 @@ function Checking({ interactive }: { interactive: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
       <Spinner
-        label={t("try.checkLabel")}
-        className={cn("size-6", interactive && "invisible")}
+        decorative
+        className={cn(
+          "size-6 motion-reduce:animate-none",
+          interactive && "invisible",
+        )}
       />
-      <p className="text-ink">{t("try.checkLabel")}</p>
+      <p role="status" className="text-ink">
+        {t("try.checkLabel")}
+      </p>
     </div>
   );
 }

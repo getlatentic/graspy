@@ -8,13 +8,17 @@ import en from "@/locales/en.json";
 
 let messages: ChatMessage[] = [];
 let busyThreadId: string | null = null;
+let threadsLoaded = true;
+let threadId: string | null = "thread-1";
+let ready = true;
 let curriculum: { planId: string; subjects: unknown[] } | null = null;
-const send = vi.fn();
+const send = vi.fn((..._args: unknown[]) => Promise.resolve());
 
 vi.mock("../learner-context", () => ({
   usePlan: () => ({ curriculum, isGenerating: false, nextSubject: null }),
   useChat: () => ({
     busyThreadId,
+    threadsLoaded,
     planChangeThreadId: null,
     pendingPlanChange: null,
     isChangingPlan: false,
@@ -29,9 +33,9 @@ vi.mock("../learner-context", () => ({
 }));
 vi.mock("@/features/learn/hooks/use-conversation", () => ({
   useConversation: () => ({
-    threadId: "thread-1",
+    threadId,
     conversation: messages,
-    ready: true,
+    ready,
   }),
 }));
 vi.mock("@/features/learn/lib/current-topic", () => ({
@@ -79,13 +83,18 @@ const message = (sender: "ai" | "user", content: string): ChatMessage => ({
   sender,
 });
 
-function chat(scope: ThreadScope) {
+function chat(
+  scope: ThreadScope,
+  firstSeed: { text: string; id: string } | null = null,
+) {
+  let seed = firstSeed;
   const view = () => (
     <I18nContext.Provider
       value={{ t, locale: "en", setLocale: () => {} } as never}
     >
       <ChatView
         scope={scope}
+        seed={seed}
         header={(welcoming) => (
           <p data-testid="bar">{welcoming ? "welcoming" : "talking"}</p>
         )}
@@ -93,14 +102,23 @@ function chat(scope: ThreadScope) {
     </I18nContext.Provider>
   );
   const result = render(view());
-  return { again: () => result.rerender(view()) };
+  return {
+    again: (next = seed) => {
+      seed = next;
+      result.rerender(view());
+    },
+  };
 }
 
 beforeEach(() => {
   messages = [];
+  threadsLoaded = true;
+  threadId = "thread-1";
+  ready = true;
   busyThreadId = null;
   curriculum = { planId: "plan-1", subjects: [{}] };
   send.mockReset();
+  send.mockImplementation(() => Promise.resolve());
   vi.stubGlobal(
     "ResizeObserver",
     class {
@@ -109,6 +127,7 @@ beforeEach(() => {
       unobserve() {}
     },
   );
+  vi.stubGlobal("CSS", { escape: (value: string) => value });
   vi.stubGlobal("matchMedia", () => ({
     matches: false,
     addEventListener: () => {},
@@ -130,6 +149,7 @@ describe("the empty chat", () => {
     expect(within(chips).getAllByRole("button")).toHaveLength(2);
     // The foot's border is the mark of the composer pinned there.
     expect(composer.closest(".border-t")).toBeNull();
+    expect(screen.getByRole("log").contains(title)).toBe(false);
     expect(title.compareDocumentPosition(composer)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
@@ -212,11 +232,116 @@ describe("the conversation", () => {
     expect(after.closest(".border-t")).not.toBeNull();
   });
 
-  it("leaves the welcome as soon as a turn is being answered", () => {
+  it("leaves the welcome of a turn this view did not send", () => {
     busyThreadId = "thread-1";
 
     chat(GENERAL);
 
     expect(screen.queryByRole("heading")).toBeNull();
+  });
+});
+
+describe("a chat that may have saved messages", () => {
+  it("shows no welcome, composer-in-the-middle or chips before the device's chats are read", () => {
+    threadsLoaded = false;
+    threadId = null;
+
+    chat(GENERAL);
+
+    expect(screen.queryByRole("heading")).toBeNull();
+    expect(screen.queryByLabelText(t("chat.suggestedQuestions"))).toBeNull();
+    expect(screen.getByRole("textbox").closest(".border-t")).not.toBeNull();
+    expect(screen.getByTestId("bar").textContent).toBe("talking");
+  });
+
+  it("shows the conversation, never the welcome, when its thread is found with messages", () => {
+    threadsLoaded = false;
+    threadId = null;
+    const { again } = chat(GENERAL);
+
+    threadsLoaded = true;
+    threadId = "thread-1";
+    ready = false;
+    again();
+    expect(screen.queryByRole("heading")).toBeNull();
+
+    ready = true;
+    messages = [message("user", "earlier")];
+    again();
+    expect(screen.queryByRole("heading")).toBeNull();
+    expect(screen.getByText("earlier")).toBeTruthy();
+  });
+});
+
+describe("the first question", () => {
+  it("goes from the welcome straight to the conversation, with no blank frame between", async () => {
+    let finish = () => {};
+    send.mockImplementation(() => new Promise<void>((done) => (finish = done)));
+    threadId = null;
+    const { again } = chat(GENERAL);
+    const composer = screen.getByRole("textbox");
+    await userEvent.type(composer, "hello{Enter}");
+    expect(send).toHaveBeenCalledOnce();
+
+    // The thread is made but its messages are not read yet: still the welcome, no chips.
+    threadId = "thread-2";
+    ready = false;
+    again();
+    expect(screen.getByRole("heading")).toBeTruthy();
+    expect(screen.queryByLabelText(t("chat.suggestedQuestions"))).toBeNull();
+    expect(screen.queryByText(t("ask.anythingWelcome"), { selector: "p" })).toBeNull();
+
+    // The question lands: the conversation, with the question and no welcome bubble.
+    messages = [message("user", "hello")];
+    again();
+    expect(screen.queryByRole("heading")).toBeNull();
+    expect(screen.getByText("hello")).toBeTruthy();
+    expect(screen.queryByText(t("ask.anythingWelcome"))).toBeNull();
+    expect(screen.getByRole("textbox")).toBe(composer);
+    finish();
+  });
+});
+
+describe("a chip", () => {
+  it("does nothing while a turn runs elsewhere", async () => {
+    busyThreadId = "another-thread";
+    chat(GENERAL);
+
+    const chip = screen.getByRole("button", { name: t("home.planTitle") });
+    expect((chip as HTMLButtonElement).disabled).toBe(true);
+    await userEvent.click(chip);
+
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("");
+  });
+
+  it("gives way to a newer seed from the route", async () => {
+    const { again } = chat(GENERAL);
+    await userEvent.click(
+      screen.getByRole("button", { name: t("home.planTitle") }),
+    );
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe(
+      t("home.planDraft"),
+    );
+
+    again({ text: "from the route", id: "route-2" });
+
+    expect(await screen.findByDisplayValue("from the route")).toBeTruthy();
+  });
+});
+
+describe("a chip and the words already written", () => {
+  it("is out of reach while there is a draft, and back when it is cleared", async () => {
+    chat(GENERAL);
+    const composer = screen.getByRole("textbox");
+    const chips = screen.getByRole("group", {
+      name: t("chat.suggestedQuestions"),
+    });
+
+    await userEvent.type(composer, "half a thought");
+    expect(chips.classList.contains("invisible")).toBe(true);
+    expect((composer as HTMLTextAreaElement).value).toBe("half a thought");
+
+    await userEvent.clear(composer);
+    expect(chips.classList.contains("invisible")).toBe(false);
   });
 });

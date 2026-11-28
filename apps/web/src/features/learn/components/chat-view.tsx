@@ -29,9 +29,16 @@ interface ChatViewProps {
   /** Given whether the welcome is showing, which the bar above the chat may answer to. */
   header?: (welcoming: boolean) => ReactNode;
   seed?: DraftSeed | null;
+  /** Beside a lesson: the welcome is a smaller heading. */
+  compact?: boolean;
 }
 
-export function ChatView({ scope, header, seed = null }: ChatViewProps) {
+export function ChatView({
+  scope,
+  header,
+  seed = null,
+  compact = false,
+}: ChatViewProps) {
   const { t } = useI18n();
   const signedOut = useAccount() === null;
   const { curriculum, isGenerating, nextSubject } = usePlan();
@@ -41,11 +48,13 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   const scroll = useConversationScroll(turns[turns.length - 1]);
   const lastMessage = conversation[conversation.length - 1];
   const state = threadState(chat, threadId, isGenerating);
+  const [sending, setSending] = useState(false);
 
   const ask = (text: string, calls?: AppCallRequest[]) => {
     if (state.blocked) return;
     scroll.pinNextTurn();
-    void chat.send(text, scope, t, calls);
+    setSending(true);
+    void chat.send(text, scope, t, calls).finally(() => setSending(false));
   };
   const open = useOpenLesson();
   const hostFor = useAppHost({
@@ -61,18 +70,25 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   const starting =
     scope.kind === "general" && curriculum?.subjects.length === 0;
   const awaitingAnswer = state.answering && lastMessage?.sender === "user";
-  const welcoming = isWelcoming(scope, ready, conversation.length, state);
-  const subjectName = scopeSubjectName(curriculum, scope);
-  const [filled, fill] = useFilledDraft();
-  const chips = welcomeChips({
+  const welcoming = isWelcoming(
     scope,
-    subjectName,
-    current: currentTopic(curriculum, nextSubject),
-    starting,
-    t,
-    ask,
-    fill,
-  });
+    { threadsLoaded: chat.threadsLoaded, ready, sending },
+    conversation.length,
+    state,
+  );
+  const subjectName = scopeSubjectName(curriculum, scope);
+  const [draft, fill] = useFilledDraft(seed);
+  const chips = sending
+    ? []
+    : welcomeChips({
+        scope,
+        subjectName,
+        current: currentTopic(curriculum, nextSubject),
+        starting,
+        t,
+        ask,
+        fill,
+      });
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-surface">
@@ -99,6 +115,7 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
             note={signedOut ? t("chat.deviceOnly") : undefined}
             welcomeStays={starting}
             welcoming={welcoming}
+            compact={compact}
             hostFor={hostFor}
             activity={
               state.answering && chat.reconnecting
@@ -117,7 +134,7 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
             lastMessage={lastMessage}
             state={state}
             ask={ask}
-            seed={filled ?? seed}
+            seed={draft}
           />
         </div>
       </VisitorCheck>
@@ -125,11 +142,14 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   );
 }
 
-/** Words a chip puts in the composer; each pick is a new request, so the same chip fills it again. */
-function useFilledDraft() {
-  const [seed, setSeed] = useState<DraftSeed | null>(null);
+/** The words to put in the composer: a chip's, until a newer seed arrives from the route. */
+function useFilledDraft(seed: DraftSeed | null) {
+  const [filled, setFilled] = useState<{
+    draft: DraftSeed;
+    over: DraftSeed | null;
+  } | null>(null);
   const picks = useRef(0);
   const fill = (text: string) =>
-    setSeed({ text, id: `chip-${picks.current++}` });
-  return [seed, fill] as const;
+    setFilled({ draft: { text, id: `chip-${picks.current++}` }, over: seed });
+  return [filled && filled.over === seed ? filled.draft : seed, fill] as const;
 }

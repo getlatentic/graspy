@@ -82,43 +82,62 @@ afterEach(() => {
 describe("the chat area while the check runs", () => {
   const line = () => screen.getByText(t("try.checkLabel"));
   const spinner = () => document.querySelector(".animate-spin")!;
-  const sizing = (room: HTMLElement) =>
-    room.className.split(" ").filter((name) => /^(h|w)-/.test(name));
-
-  it("says what is checked, with only the spinner while the widget is invisible", async () => {
+  it("says what is checked, once, with only the spinner while the widget is invisible", async () => {
     visit();
     await waitFor(() => expect(rendered).toHaveLength(1));
 
-    expect(line()).toBeTruthy();
-    expect(screen.getByRole("status")).toBe(spinner());
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.getByRole("status").textContent).toBe(t("try.checkLabel"));
+    expect(spinner().getAttribute("aria-hidden")).toBe("true");
     expect(spinner().classList.contains("invisible")).toBe(false);
     expect(screen.getByRole("group").classList.contains("invisible")).toBe(true);
   });
 
-  it("puts the widget under the line, centred, when it has something to ask", async () => {
+  it("puts the widget under the line, and the spinner steps aside, when it has something to ask", async () => {
     visit();
     await waitFor(() => expect(rendered).toHaveLength(1));
+    const room = screen.getByRole("group", { hidden: true });
 
     act(() => widget()["before-interactive-callback"]());
 
-    const room = screen.getByRole("group");
+    expect(screen.getByRole("group")).toBe(room);
     expect(
       line().compareDocumentPosition(room) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(room.classList.contains("invisible")).toBe(false);
-    expect(room.parentElement!.className).toContain("items-center");
     expect(spinner().classList.contains("invisible")).toBe(true);
   });
 
-  it("keeps the widget's room the same size whether or not it shows", async () => {
+  it("keeps the widget's room mounted, the same element, from pending to the widget to the chat", async () => {
     visit();
     await waitFor(() => expect(rendered).toHaveLength(1));
-    const before = sizing(screen.getByRole("group", { hidden: true }));
+    const room = screen.getByRole("group", { hidden: true });
 
     act(() => widget()["before-interactive-callback"]());
+    act(() => widget().callback("token"));
+    await screen.findByText("the chat");
 
-    expect(before).toHaveLength(2);
-    expect(sizing(screen.getByRole("group"))).toEqual(before);
+    expect(room.isConnected).toBe(true);
+  });
+
+  it("asks again over the chat, not in the flow above it, when a token is renewed mid-chat", async () => {
+    visit();
+    await waitFor(() => expect(rendered).toHaveLength(1));
+    act(() => widget().callback("token"));
+    await screen.findByText("the chat");
+    const { chatTokens } = await import("@/lib/api/chat-session");
+    const { solveChallenge } = await import("@/lib/challenge/challenge");
+
+    const renewed = solveChallenge();
+    await waitFor(() => expect(rendered).toHaveLength(2));
+    act(() => widget()["before-interactive-callback"]());
+
+    const room = screen.getByRole("group");
+    expect(room.className).toContain("fixed");
+    expect(screen.getByText("the chat")).toBeTruthy();
+    act(() => widget().callback("again"));
+    await expect(renewed).resolves.toBe("again");
+    expect(chatTokens.get).toHaveBeenCalledOnce();
   });
 
   it("gives one line and a retry when the check fails, with no widget", async () => {

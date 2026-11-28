@@ -27,6 +27,8 @@ interface ChatComposerProps {
   onSend: (text: string) => void;
   onStop: () => void;
   seed: DraftSeed | null;
+  /** Whether there is anything written, as it changes. */
+  onTyping?: (typing: boolean) => void;
 }
 
 export function ChatComposer({
@@ -36,11 +38,14 @@ export function ChatComposer({
   onSend,
   onStop,
   seed,
+  onTyping,
 }: ChatComposerProps) {
   const touch = useMediaQuery(TOUCH);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useSeededDraft(seed, fieldRef);
   useGrowWithText(fieldRef, draft);
+  const typing = draft.trim().length > 0;
+  useEffect(() => onTyping?.(typing), [onTyping, typing]);
 
   const send = () => {
     const text = draft.trim();

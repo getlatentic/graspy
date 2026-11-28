@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ChatMessage, ThreadScope } from "@/lib/chat-db";
 import type { AppCallRequest } from "@/lib/a2a/request-data";
 import { cn } from "@/lib/cn";
@@ -46,6 +47,8 @@ export function ChatFooter({
   const { stopTutor, confirmPlanChange, dismissPlanChange } = useChat();
   const followUps = followUpsFor(lastMessage, state);
   const planChange = planChangeFor(lastMessage, state);
+  // A chip fills the composer, so it is kept out of the way of words already written.
+  const [typing, setTyping] = useState(false);
 
   if (scope.kind === "earlier") return <EarlierNote />;
 
@@ -74,9 +77,14 @@ export function ChatFooter({
           onSend={ask}
           onStop={stopTutor}
           seed={seed}
+          onTyping={setTyping}
         />
         {welcoming && chips.length > 0 && (
-          <WelcomeChips chips={chips} disabled={state.blocked} />
+          <WelcomeChips
+            chips={chips}
+            disabled={state.blocked}
+            hidden={typing}
+          />
         )}
       </div>
     </div>
