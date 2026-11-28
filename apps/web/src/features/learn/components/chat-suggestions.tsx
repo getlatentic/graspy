@@ -1,64 +1,38 @@
-import type { ComponentType } from "react";
-import { Compass, HelpCircle, Lightbulb } from "lucide-react";
-import { SectionLabel } from "@/components/ui/card";
-import { useI18n, type Translate } from "@/lib/i18n-context";
+import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n-context";
+import type { WelcomeChip } from "@/features/learn/lib/welcome-chips";
 
-interface StarterQuestionsProps {
-  topic: string;
-  subject: string;
-  disabled: boolean;
-  onAsk: (question: string) => void;
-}
-
-interface Starter {
-  label: string;
-  prompt: string;
-  Icon: ComponentType<{ className?: string }>;
-}
-
-function startersFor(topic: string, subject: string, t: Translate): Starter[] {
-  return [
-    {
-      label: t("chat.quickActionExplain"),
-      prompt: t("chat.quickActionExplainPrompt", { topic }),
-      Icon: Lightbulb,
-    },
-    {
-      label: t("chat.quickActionExamples"),
-      prompt: t("chat.quickActionExamplesPrompt", { topic }),
-      Icon: HelpCircle,
-    },
-    {
-      label: t("chat.quickActionRelated"),
-      prompt: t("chat.quickActionRelatedPrompt", { topic, subject }),
-      Icon: Compass,
-    },
-  ];
-}
-
-export function StarterQuestions({
-  topic,
-  subject,
+/** What can be asked of an empty chat, under its welcome. */
+export function WelcomeChips({
+  chips,
   disabled,
-  onAsk,
-}: StarterQuestionsProps) {
+  hidden,
+}: {
+  chips: WelcomeChip[];
+  disabled: boolean;
+  /** Out of sight and reach but still taking room, so the group does not move. */
+  hidden: boolean;
+}) {
   const { t } = useI18n();
-  const starters = startersFor(topic, subject, t);
-
   return (
     // Hidden while typing: with a phone's keyboard up there is no room.
-    <div className="mb-3 space-y-2 pointer-coarse:group-has-[textarea:focus]/shell:hidden">
-      <SectionLabel>{t("chat.quickQuestions")}</SectionLabel>
-      {starters.map(({ label, prompt, Icon }) => (
+    <div
+      role="group"
+      aria-label={t("chat.suggestedQuestions")}
+      className={cn(
+        "mt-3 flex flex-wrap justify-center gap-2 pointer-coarse:group-has-[textarea:focus]/shell:hidden",
+        hidden && "invisible",
+      )}
+    >
+      {chips.map(({ label, run }) => (
         <button
           key={label}
           type="button"
-          onClick={() => onAsk(prompt)}
+          onClick={run}
           disabled={disabled}
-          className="flex w-full items-center gap-3 rounded-control border border-line bg-surface px-4 py-2.5 text-start text-sm font-medium text-ink transition-colors hover:border-accent disabled:opacity-60"
+          className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium text-accent-ink transition-colors hover:border-accent hover:bg-accent-soft disabled:opacity-60"
         >
-          <Icon className="size-4 text-muted" aria-hidden="true" />
-          <span>{label}</span>
+          {label}
         </button>
       ))}
     </div>

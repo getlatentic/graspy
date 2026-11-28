@@ -182,14 +182,15 @@ function LessonChat({
     >
       <ChatView
         key={pathname}
+        compact
         scope={scope}
-        header={
+        header={() => (
           <ChatContextBar
             scope={scope}
             changeable={false}
             trailing={<HideChatButton onHide={() => onOpenChange(false)} />}
           />
-        }
+        )}
       />
     </ChatPane>
   );

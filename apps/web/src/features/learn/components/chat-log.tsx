@@ -22,6 +22,10 @@ interface ChatLogProps {
   note?: string;
   /** Kept above the messages once there are some. */
   welcomeStays?: boolean;
+  /** Nothing has been said: the welcome is the title of the screen, centred above the composer. */
+  welcoming?: boolean;
+  /** Beside a lesson, which has a heading of its own: the welcome is a smaller one. */
+  compact?: boolean;
   hostFor: (message: ChatMessage) => ViewHost;
   /** The tool in use before the answer starts; undefined while nothing is awaited. */
   activity: string | null | undefined;
@@ -35,6 +39,8 @@ export function ChatLog({
   welcome,
   note,
   welcomeStays = false,
+  welcoming = false,
+  compact = false,
   hostFor,
   activity,
   changingPlan,
@@ -48,21 +54,33 @@ export function ChatLog({
   );
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
+    <div
+      className={cn(
+        "relative flex flex-col",
+        welcoming ? "mt-auto" : "min-h-0 flex-1",
+      )}
+    >
+      {welcoming && (
+        <WelcomeTitle welcome={welcome} note={note} compact={compact} />
+      )}
       <div
         ref={scroll.listRef}
         role="log"
         aria-live="polite"
         aria-label={t("chat.aiTutorTitle")}
-        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
+        className={cn(
+          "relative px-4 sm:px-5",
+          !welcoming &&
+            "min-h-0 flex-1 overflow-y-auto overscroll-contain py-5",
+        )}
       >
         <div ref={scroll.contentRef} className="mx-auto max-w-3xl space-y-6">
-          {ready && (turns.length === 0 || welcomeStays) && (
+          {ready && !welcoming && (turns.length === 0 || welcomeStays) && (
             <p className="rounded-card bg-accent-soft p-4 text-sm text-ink">
               {welcome}
             </p>
           )}
-          {ready && turns.length === 0 && note && (
+          {ready && !welcoming && turns.length === 0 && note && (
             <p className="px-1 text-xs text-muted">{note}</p>
           )}
           {turns.map((turn) => (
@@ -85,6 +103,33 @@ export function ChatLog({
         </div>
       </div>
       {!scroll.atEnd && <JumpToLatest onJump={scroll.jumpToEnd} />}
+    </div>
+  );
+}
+
+/** The welcome of an empty chat is the title of the screen, outside the live region of the log so
+ * it is not announced as if it were a reply. */
+function WelcomeTitle({
+  welcome,
+  note,
+  compact,
+}: {
+  welcome: string;
+  note?: string;
+  compact: boolean;
+}) {
+  const Heading = compact ? "h2" : "h1";
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 px-4 pt-5 text-center sm:px-5">
+      <Heading
+        className={cn(
+          "text-balance font-display font-semibold text-ink motion-safe:animate-enter",
+          compact ? "text-xl" : "text-3xl lg:text-4xl",
+        )}
+      >
+        {welcome}
+      </Heading>
+      {note && <p className="px-1 text-xs text-muted">{note}</p>}
     </div>
   );
 }

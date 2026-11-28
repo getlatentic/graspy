@@ -27,7 +27,7 @@ const t = (key: string) =>
 
 const GENERAL: ThreadScope = { kind: "general", planId: "plan-1" };
 
-function bar(path: string, changeable: boolean) {
+function bar(path: string, changeable: boolean, welcoming = false) {
   render(
     <I18nContext.Provider
       value={{ t, locale: "en", setLocale: () => {} } as never}
@@ -36,6 +36,7 @@ function bar(path: string, changeable: boolean) {
         <ChatContextBar
           scope={GENERAL}
           changeable={changeable}
+          welcoming={welcoming}
           trailing={<button>Hide</button>}
         />
       </MemoryRouter>
@@ -63,6 +64,42 @@ describe("the chat's header", () => {
     bar("/app/learn/ask/general", true);
 
     expect(screen.getByRole("button", { name: "Change" })).toBeTruthy();
+  });
+
+  it("names the general chat once a message exists", () => {
+    bar("/app/learn/ask/general", true);
+
+    expect(screen.getByText(t("ask.anything"))).toBeTruthy();
+  });
+
+  it("leaves the general chat's name to the welcome while nothing has been said, with Change still there", () => {
+    bar("/app/learn/ask/general", true, true);
+
+    expect(screen.queryByText(t("ask.anything"))).toBeNull();
+    expect(screen.getByRole("button", { name: "Change" })).toBeTruthy();
+  });
+
+  it("keeps a topic's name while nothing has been said", () => {
+    render(
+      <I18nContext.Provider
+        value={{ t, locale: "en", setLocale: () => {} } as never}
+      >
+        <MemoryRouter>
+          <ChatContextBar
+            scope={{
+              kind: "topic",
+              planId: "plan-1",
+              subjectSlug: "mathematics",
+              topic: "Fractions",
+            }}
+            changeable
+            welcoming
+          />
+        </MemoryRouter>
+      </I18nContext.Provider>,
+    );
+
+    expect(screen.getByText("Fractions")).toBeTruthy();
   });
 
   it("has none for a signed-in learner", () => {

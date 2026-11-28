@@ -83,3 +83,29 @@ export function composerPlaceholder(
   }
   return t("ask.anythingPlaceholder");
 }
+
+interface Reading {
+  /** The device's conversations have been read, so a scope with no thread really has none. */
+  threadsLoaded: boolean;
+  /** The conversation's stored messages have been read. */
+  ready: boolean;
+  /** The first question has been sent and is not yet in the conversation. */
+  sending: boolean;
+}
+
+/** Whether the chat shows its welcome with the composer in the middle: nothing is in the
+ * conversation, and either the question just sent is on its way (so the next frame is the
+ * conversation, never a blank one) or everything stored has been read and no turn is running.
+ * An earlier thread has no composer, so it never does. */
+export function isWelcoming(
+  scope: ThreadScope,
+  reading: Reading,
+  messageCount: number,
+  state: ThreadState,
+): boolean {
+  if (scope.kind === "earlier" || messageCount > 0 || state.changingPlan) {
+    return false;
+  }
+  const settled = reading.threadsLoaded && reading.ready && !state.answering;
+  return reading.sending || settled;
+}

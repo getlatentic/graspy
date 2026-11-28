@@ -23,6 +23,8 @@ interface ChatContextBarProps {
   onBackToLesson?: () => void;
   /** Controls at the end of the bar, such as the one that hides the conversation. */
   trailing?: ReactNode;
+  /** Nothing has been said yet. The general chat then says no more than the welcome beneath. */
+  welcoming?: boolean;
 }
 
 export function ChatContextBar({
@@ -30,6 +32,7 @@ export function ChatContextBar({
   changeable,
   onBackToLesson,
   trailing,
+  welcoming = false,
 }: ChatContextBarProps) {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -39,14 +42,21 @@ export function ChatContextBar({
   const profile = useUserProfile();
   const grade = profile ? levelLabel(profile, t) : null;
   const detail = scopeDetail(scope, subject, grade, t);
+  const named = !(welcoming && scope.kind === "general");
 
   return (
-    <div className="flex items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
+    <div className="flex min-h-14 items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
       {onBackToLesson && <BackToLesson onBack={onBackToLesson} />}
-      <ScopeIcon kind={scope.kind} subject={subject} className="size-9" />
+      {named && (
+        <ScopeIcon kind={scope.kind} subject={subject} className="size-9" />
+      )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-ink">{title}</p>
-        {detail && <p className="truncate text-xs text-muted">{detail}</p>}
+        {named && (
+          <>
+            <p className="truncate text-sm font-semibold text-ink">{title}</p>
+            {detail && <p className="truncate text-xs text-muted">{detail}</p>}
+          </>
+        )}
       </div>
       {changeable && (
         <button

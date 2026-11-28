@@ -4,6 +4,7 @@ import type { TutorCard } from "@/lib/a2a/reply-data";
 import { appCall } from "@/lib/a2a/request-data";
 import {
   followUpsFor,
+  isWelcoming,
   planChangeFor,
   threadState,
   type ThreadState,
@@ -148,5 +149,49 @@ describe("planChangeFor", () => {
       sender: "user",
     } as ChatMessage;
     expect(planChangeFor(typed, waiting)).toBe(REBUILD);
+  });
+});
+
+describe("isWelcoming", () => {
+  const general = { kind: "general", planId: "p" } as const;
+  const earlier = { kind: "earlier", planId: "p" } as never;
+  const READ = { threadsLoaded: true, ready: true, sending: false };
+
+  it("is the read, empty, idle conversation", () => {
+    expect(isWelcoming(general, READ, 0, IDLE)).toBe(true);
+  });
+
+  it("is not before the device's conversations are read: the chat may have saved messages", () => {
+    expect(isWelcoming(general, { ...READ, threadsLoaded: false }, 0, IDLE)).toBe(
+      false,
+    );
+  });
+
+  it("is not before the conversation's messages are read", () => {
+    expect(isWelcoming(general, { ...READ, ready: false }, 0, IDLE)).toBe(false);
+  });
+
+  it("holds while the first question is on its way, read or not, so no frame is blank", () => {
+    const sent = { threadsLoaded: true, ready: false, sending: true };
+    expect(isWelcoming(general, sent, 0, IDLE)).toBe(true);
+    expect(isWelcoming(general, sent, 0, { ...IDLE, answering: true })).toBe(true);
+  });
+
+  it("is not once there is a message, even while sending", () => {
+    expect(isWelcoming(general, READ, 1, IDLE)).toBe(false);
+    expect(isWelcoming(general, { ...READ, sending: true }, 1, IDLE)).toBe(false);
+  });
+
+  it("is not while a turn this view did not send is answered, or a plan changes", () => {
+    expect(isWelcoming(general, READ, 0, { ...IDLE, answering: true })).toBe(
+      false,
+    );
+    expect(isWelcoming(general, READ, 0, { ...IDLE, changingPlan: true })).toBe(
+      false,
+    );
+  });
+
+  it("is not for an earlier thread, which has no composer", () => {
+    expect(isWelcoming(earlier, READ, 0, IDLE)).toBe(false);
   });
 });

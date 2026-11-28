@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { ChatMessage, ThreadScope } from "@/lib/chat-db";
 import type { AppCallRequest } from "@/lib/a2a/request-data";
+import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n-context";
 import {
   composerPlaceholder,
@@ -7,13 +9,14 @@ import {
   planChangeFor,
   type ThreadState,
 } from "@/features/learn/lib/chat-view-state";
+import type { WelcomeChip } from "@/features/learn/lib/welcome-chips";
 import {
   ChatComposer,
   type DraftSeed,
 } from "@/features/learn/components/chat-composer";
 import {
   FollowUps,
-  StarterQuestions,
+  WelcomeChips,
 } from "@/features/learn/components/chat-suggestions";
 import { PlanChangeCard } from "@/features/learn/components/plan-change-card";
 import { useChat } from "../learner-context";
@@ -21,7 +24,9 @@ import { useChat } from "../learner-context";
 interface ChatFooterProps {
   scope: ThreadScope;
   subjectName: string;
-  empty: boolean;
+  /** The welcome is showing: the composer sits in the middle with the chips, not at the foot. */
+  welcoming: boolean;
+  chips: WelcomeChip[];
   lastMessage: ChatMessage | undefined;
   state: ThreadState;
   ask: (text: string, calls?: AppCallRequest[]) => void;
@@ -31,7 +36,8 @@ interface ChatFooterProps {
 export function ChatFooter({
   scope,
   subjectName,
-  empty,
+  welcoming,
+  chips,
   lastMessage,
   state,
   ask,
@@ -41,20 +47,19 @@ export function ChatFooter({
   const { stopTutor, confirmPlanChange, dismissPlanChange } = useChat();
   const followUps = followUpsFor(lastMessage, state);
   const planChange = planChangeFor(lastMessage, state);
+  // A chip fills the composer, so it is kept out of the way of words already written.
+  const [typing, setTyping] = useState(false);
 
   if (scope.kind === "earlier") return <EarlierNote />;
 
   return (
-    <div className="border-t border-line bg-surface">
+    <div
+      className={cn(
+        "bg-surface",
+        welcoming ? "mb-auto" : "border-t border-line",
+      )}
+    >
       <div className="mx-auto w-full max-w-3xl p-3 sm:p-4">
-        {empty && scope.kind === "topic" && (
-          <StarterQuestions
-            topic={scope.topic}
-            subject={subjectName}
-            disabled={state.blocked}
-            onAsk={ask}
-          />
-        )}
         {planChange && (
           <PlanChangeCard
             change={planChange}
@@ -72,7 +77,15 @@ export function ChatFooter({
           onSend={ask}
           onStop={stopTutor}
           seed={seed}
+          onTyping={setTyping}
         />
+        {welcoming && chips.length > 0 && (
+          <WelcomeChips
+            chips={chips}
+            disabled={state.blocked}
+            hidden={typing}
+          />
+        )}
       </div>
     </div>
   );

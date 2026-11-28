@@ -449,7 +449,7 @@ describe("when the connection drops", () => {
   it("carries on from a request that failed, when the learner says only continue", () => {
     // "continue" alone must reach the lost question, not a fresh greeting.
     cy.visit("/app/learn/ask/general");
-    cy.contains("Ask anything");
+    cy.contains("Ask me anything.");
     cy.get("textarea").should("be.enabled");
     online(false);
 
