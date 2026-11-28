@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import { Logo } from "@/components/brand/logo";
+import { buttonStyles } from "@/components/ui/button-styles";
+import { SignInHere } from "@/features/account/components/sign-in-nudge";
 import { useI18n } from "@/lib/i18n-context";
 
 export default function TopMenu() {
@@ -15,6 +17,7 @@ export default function TopMenu() {
         >
           <Logo />
         </Link>
+        <SignInHere className={buttonStyles("secondary", "sm")} />
       </div>
     </header>
   );
