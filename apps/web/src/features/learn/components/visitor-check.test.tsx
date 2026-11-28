@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -77,6 +77,62 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+});
+
+describe("the chat area while the check runs", () => {
+  const line = () => screen.getByText(t("try.checkLabel"));
+  const spinner = () => document.querySelector(".animate-spin")!;
+  const sizing = (room: HTMLElement) =>
+    room.className.split(" ").filter((name) => /^(h|w)-/.test(name));
+
+  it("says what is checked, with only the spinner while the widget is invisible", async () => {
+    visit();
+    await waitFor(() => expect(rendered).toHaveLength(1));
+
+    expect(line()).toBeTruthy();
+    expect(screen.getByRole("status")).toBe(spinner());
+    expect(spinner().classList.contains("invisible")).toBe(false);
+    expect(screen.getByRole("group").classList.contains("invisible")).toBe(true);
+  });
+
+  it("puts the widget under the line, centred, when it has something to ask", async () => {
+    visit();
+    await waitFor(() => expect(rendered).toHaveLength(1));
+
+    act(() => widget()["before-interactive-callback"]());
+
+    const room = screen.getByRole("group");
+    expect(
+      line().compareDocumentPosition(room) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(room.classList.contains("invisible")).toBe(false);
+    expect(room.parentElement!.className).toContain("items-center");
+    expect(spinner().classList.contains("invisible")).toBe(true);
+  });
+
+  it("keeps the widget's room the same size whether or not it shows", async () => {
+    visit();
+    await waitFor(() => expect(rendered).toHaveLength(1));
+    const before = sizing(screen.getByRole("group", { hidden: true }));
+
+    act(() => widget()["before-interactive-callback"]());
+
+    expect(before).toHaveLength(2);
+    expect(sizing(screen.getByRole("group"))).toEqual(before);
+  });
+
+  it("gives one line and a retry when the check fails, with no widget", async () => {
+    visit();
+    await waitFor(() => expect(rendered).toHaveLength(1));
+    act(() => widget()["before-interactive-callback"]());
+
+    act(() => widget()["error-callback"]());
+
+    expect(await screen.findByText(t("try.checkFailed"))).toBeTruthy();
+    expect(screen.queryByText(t("try.checkLabel"))).toBeNull();
+    expect(screen.queryByRole("group")).toBeNull();
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+  });
 });
 
 describe("the check before a visitor's chat", () => {

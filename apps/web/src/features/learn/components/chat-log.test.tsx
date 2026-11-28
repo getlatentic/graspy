@@ -50,7 +50,7 @@ const message = (
     : {}),
 });
 
-function shown(messages: ChatMessage[], note?: string) {
+function shown(messages: ChatMessage[], note?: string, welcoming = false) {
   const turns: Turn[] = messages.length ? [{ id: "turn", messages }] : [];
   const scroll = {
     listRef: { current: null },
@@ -74,6 +74,7 @@ function shown(messages: ChatMessage[], note?: string) {
         turns={turns}
         welcome="Welcome"
         note={note}
+        welcoming={welcoming}
         hostFor={() => ({ toolCalled: vi.fn(), message: () => false })}
         activity={undefined}
         changingPlan={false}
@@ -129,5 +130,19 @@ describe("the quiet line under the welcome", () => {
     shown([]);
 
     expect(screen.getByText("Welcome").nextElementSibling).toBeNull();
+  });
+});
+
+describe("the welcome of an empty chat", () => {
+  it("is the heading of the screen, not a bubble", () => {
+    shown([], undefined, true);
+
+    expect(screen.getByRole("heading", { name: "Welcome" })).toBeTruthy();
+  });
+
+  it("is no heading once there are messages", () => {
+    shown([message("user", "hi")]);
+
+    expect(screen.queryByRole("heading")).toBeNull();
   });
 });

@@ -4,6 +4,7 @@ import type { TutorCard } from "@/lib/a2a/reply-data";
 import { appCall } from "@/lib/a2a/request-data";
 import {
   followUpsFor,
+  isWelcoming,
   planChangeFor,
   threadState,
   type ThreadState,
@@ -148,5 +149,32 @@ describe("planChangeFor", () => {
       sender: "user",
     } as ChatMessage;
     expect(planChangeFor(typed, waiting)).toBe(REBUILD);
+  });
+});
+
+describe("isWelcoming", () => {
+  const general = { kind: "general", planId: "p" } as const;
+  const earlier = { kind: "earlier", planId: "p" } as never;
+
+  it("is the read, empty, idle conversation", () => {
+    expect(isWelcoming(general, true, 0, IDLE)).toBe(true);
+  });
+
+  it("is not before the conversation has been read", () => {
+    expect(isWelcoming(general, false, 0, IDLE)).toBe(false);
+  });
+
+  it("is not once there is a message, a turn or a plan change under way", () => {
+    expect(isWelcoming(general, true, 1, IDLE)).toBe(false);
+    expect(isWelcoming(general, true, 0, { ...IDLE, answering: true })).toBe(
+      false,
+    );
+    expect(isWelcoming(general, true, 0, { ...IDLE, changingPlan: true })).toBe(
+      false,
+    );
+  });
+
+  it("is not for an earlier thread, which has no composer", () => {
+    expect(isWelcoming(earlier, true, 0, IDLE)).toBe(false);
   });
 });

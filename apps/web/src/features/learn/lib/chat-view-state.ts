@@ -83,3 +83,21 @@ export function composerPlaceholder(
   }
   return t("ask.anythingPlaceholder");
 }
+
+/** Whether the chat shows its welcome with the composer in the middle: the conversation has been
+ * read, holds no message, and nothing is being answered or changed. An earlier thread has no
+ * composer, so it never does. */
+export function isWelcoming(
+  scope: ThreadScope,
+  ready: boolean,
+  messageCount: number,
+  state: ThreadState,
+): boolean {
+  return (
+    scope.kind !== "earlier" &&
+    ready &&
+    messageCount === 0 &&
+    !state.answering &&
+    !state.changingPlan
+  );
+}

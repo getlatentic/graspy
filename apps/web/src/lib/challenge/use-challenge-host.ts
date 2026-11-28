@@ -20,17 +20,20 @@ const onTelevision = (): boolean =>
  * rendered into `container` when a session needs a token, and removed once it has given one. The
  * check runs once per request for a token, never per message. A TV's browser cannot answer an
  * interactive check, so when the widget asks for one there the check ends as unsupported.
+ * `interactive` is true while the widget has something for the visitor to do.
  */
 export function useChallengeHost() {
   const container = useRef<HTMLDivElement>(null);
   const waiting = useRef<Settlement | null>(null);
   const [running, setRunning] = useState(false);
+  const [interactive, setInteractive] = useState(false);
 
   const host = useMemo(() => {
     const settle = (outcome: (waiter: Settlement) => void) => {
       const waiter = waiting.current;
       waiting.current = null;
       setRunning(false);
+      setInteractive(false);
       if (waiter) outcome(waiter);
     };
     return {
@@ -87,6 +90,7 @@ export function useChallengeHost() {
           "unsupported-callback": () => host.fail("unsupported"),
           "before-interactive-callback": () => {
             if (onTelevision()) host.fail("unsupported");
+            else setInteractive(true);
           },
         });
         remove = () => id && api.remove(id);
@@ -99,5 +103,5 @@ export function useChallengeHost() {
     };
   }, [running, host]);
 
-  return { container, running };
+  return { container, running, interactive };
 }

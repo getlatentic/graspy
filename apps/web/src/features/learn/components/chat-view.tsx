@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { ThreadScope } from "@/lib/chat-db";
 import type { AppCallRequest } from "@/lib/a2a/request-data";
 import { useAccount } from "@/lib/account/use-account";
@@ -8,7 +8,10 @@ import { useConversationScroll } from "@/features/learn/hooks/use-conversation-s
 import { useAppHost } from "@/features/learn/hooks/use-app-host";
 import { useOpenLesson } from "@/features/learn/hooks/use-open-lesson";
 import { groupTurns } from "@/features/learn/lib/chat-turns";
+import { currentTopic } from "@/features/learn/lib/current-topic";
+import { welcomeChips } from "@/features/learn/lib/welcome-chips";
 import {
+  isWelcoming,
   RECONNECTING,
   scopeSubjectName,
   threadState,
@@ -17,19 +20,21 @@ import { ChatLog } from "@/features/learn/components/chat-log";
 import { ChatFooter } from "@/features/learn/components/chat-footer";
 import { VisitorCheck } from "@/features/learn/components/visitor-check";
 import type { DraftSeed } from "@/features/learn/components/chat-composer";
+import { cn } from "@/lib/cn";
 import { useChat, usePlan } from "../learner-context";
 
 interface ChatViewProps {
   /** Never changes while shown. */
   scope: ThreadScope;
-  header?: ReactNode;
+  /** Given whether the welcome is showing, which the bar above the chat may answer to. */
+  header?: (welcoming: boolean) => ReactNode;
   seed?: DraftSeed | null;
 }
 
 export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   const { t } = useI18n();
   const signedOut = useAccount() === null;
-  const { curriculum, isGenerating } = usePlan();
+  const { curriculum, isGenerating, nextSubject } = usePlan();
   const chat = useChat();
   const { threadId, conversation, ready } = useConversation(scope);
   const turns = useMemo(() => groupTurns(conversation), [conversation]);
@@ -56,44 +61,75 @@ export function ChatView({ scope, header, seed = null }: ChatViewProps) {
   const starting =
     scope.kind === "general" && curriculum?.subjects.length === 0;
   const awaitingAnswer = state.answering && lastMessage?.sender === "user";
+  const welcoming = isWelcoming(scope, ready, conversation.length, state);
+  const subjectName = scopeSubjectName(curriculum, scope);
+  const [filled, fill] = useFilledDraft();
+  const chips = welcomeChips({
+    scope,
+    subjectName,
+    current: currentTopic(curriculum, nextSubject),
+    starting,
+    t,
+    ask,
+    fill,
+  });
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-surface">
-      {header}
+      {header?.(welcoming)}
       <VisitorCheck>
-        <ChatLog
-          scroll={scroll}
-          ready={ready}
-          turns={turns}
-          welcome={t(
-            starting
-              ? "chat.startWelcome"
-              : scope.kind === "general"
-                ? "ask.anythingWelcome"
-                : "chat.aiTutorWelcome",
+        {/* One column whether welcoming or not, so the composer is never mounted twice. */}
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col",
+            welcoming && "overflow-y-auto overscroll-contain",
           )}
-          note={signedOut ? t("chat.deviceOnly") : undefined}
-          welcomeStays={starting}
-          hostFor={hostFor}
-          activity={
-            state.answering && chat.reconnecting
-              ? RECONNECTING
-              : awaitingAnswer
-                ? chat.tutorActivity
-                : undefined
-          }
-          changingPlan={state.changingPlan}
-        />
-        <ChatFooter
-          scope={scope}
-          subjectName={scopeSubjectName(curriculum, scope)}
-          empty={conversation.length === 0}
-          lastMessage={lastMessage}
-          state={state}
-          ask={ask}
-          seed={seed}
-        />
+        >
+          <ChatLog
+            scroll={scroll}
+            ready={ready}
+            turns={turns}
+            welcome={t(
+              starting
+                ? "chat.startWelcome"
+                : scope.kind === "general"
+                  ? "ask.anythingWelcome"
+                  : "chat.aiTutorWelcome",
+            )}
+            note={signedOut ? t("chat.deviceOnly") : undefined}
+            welcomeStays={starting}
+            welcoming={welcoming}
+            hostFor={hostFor}
+            activity={
+              state.answering && chat.reconnecting
+                ? RECONNECTING
+                : awaitingAnswer
+                  ? chat.tutorActivity
+                  : undefined
+            }
+            changingPlan={state.changingPlan}
+          />
+          <ChatFooter
+            scope={scope}
+            subjectName={subjectName}
+            welcoming={welcoming}
+            chips={chips}
+            lastMessage={lastMessage}
+            state={state}
+            ask={ask}
+            seed={filled ?? seed}
+          />
+        </div>
       </VisitorCheck>
     </div>
   );
+}
+
+/** Words a chip puts in the composer; each pick is a new request, so the same chip fills it again. */
+function useFilledDraft() {
+  const [seed, setSeed] = useState<DraftSeed | null>(null);
+  const picks = useRef(0);
+  const fill = (text: string) =>
+    setSeed({ text, id: `chip-${picks.current++}` });
+  return [seed, fill] as const;
 }

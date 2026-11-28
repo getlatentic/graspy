@@ -37,14 +37,15 @@ export default function ChatPage() {
       key={location.pathname}
       scope={scope}
       seed={seed}
-      header={
+      header={(welcoming) => (
         <ChatContextBar
           scope={scope}
           changeable
+          welcoming={welcoming}
           // Going back returns to the lesson at the slide the learner left.
           onBackToLesson={opening?.fromLesson ? () => navigate(-1) : undefined}
         />
-      }
+      )}
     />
   );
 }

@@ -22,6 +22,8 @@ interface ChatLogProps {
   note?: string;
   /** Kept above the messages once there are some. */
   welcomeStays?: boolean;
+  /** Nothing has been said: the welcome is the title of the screen, centred above the composer. */
+  welcoming?: boolean;
   hostFor: (message: ChatMessage) => ViewHost;
   /** The tool in use before the answer starts; undefined while nothing is awaited. */
   activity: string | null | undefined;
@@ -35,6 +37,7 @@ export function ChatLog({
   welcome,
   note,
   welcomeStays = false,
+  welcoming = false,
   hostFor,
   activity,
   changingPlan,
@@ -48,16 +51,37 @@ export function ChatLog({
   );
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
+    <div
+      className={cn(
+        "relative flex flex-col",
+        welcoming ? "mt-auto" : "min-h-0 flex-1",
+      )}
+    >
       <div
         ref={scroll.listRef}
         role="log"
         aria-live="polite"
         aria-label={t("chat.aiTutorTitle")}
-        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
+        className={cn(
+          "relative px-4 sm:px-5",
+          welcoming
+            ? "pt-5"
+            : "min-h-0 flex-1 overflow-y-auto overscroll-contain py-5",
+        )}
       >
-        <div ref={scroll.contentRef} className="mx-auto max-w-3xl space-y-6">
-          {ready && (turns.length === 0 || welcomeStays) && (
+        <div
+          ref={scroll.contentRef}
+          className={cn(
+            "mx-auto max-w-3xl space-y-6",
+            welcoming && "text-center",
+          )}
+        >
+          {ready && welcoming && (
+            <h1 className="text-balance font-display text-3xl font-semibold text-ink motion-safe:animate-enter lg:text-4xl">
+              {welcome}
+            </h1>
+          )}
+          {ready && !welcoming && (turns.length === 0 || welcomeStays) && (
             <p className="rounded-card bg-accent-soft p-4 text-sm text-ink">
               {welcome}
             </p>
