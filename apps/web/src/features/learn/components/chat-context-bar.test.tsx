@@ -1,10 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAccount } from "@/lib/account/account-store";
-import { takeChat } from "@/lib/account/chat-return";
 import type { ThreadScope } from "@/lib/chat-db";
 import { I18nContext } from "@/lib/i18n-context";
 import { signedInAs } from "@/test/account-session";
@@ -53,32 +51,18 @@ afterEach(cleanup);
 
 describe("the chat's header", () => {
   it.each([true, false])(
-    "has a sign-in link for a visitor, in the same place before any control at its end (changeable: %s)",
+    "has no sign-in link, for a visitor either (changeable: %s)",
     (changeable) => {
       bar("/app/learn/ask/general", changeable);
 
-      const link = screen.getByRole("link", { name: "Sign in" });
-      const hide = screen.getByRole("button", { name: "Hide" });
-      expect(
-        link.compareDocumentPosition(hide) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
     },
   );
 
-  it("brings the visitor back to the lesson whose chat it is beside", async () => {
-    bar("/app/learn/mathematics/lesson/2", false);
+  it("keeps the topic change on its own", () => {
+    bar("/app/learn/ask/general", true);
 
-    await userEvent.click(screen.getByRole("link", { name: "Sign in" }));
-
-    expect(takeChat()).toBe("/app/learn/mathematics/lesson/2");
-  });
-
-  it("brings the visitor back to the topic chat it is in", async () => {
-    bar("/app/learn/ask/mathematics/2", true);
-
-    await userEvent.click(screen.getByRole("link", { name: "Sign in" }));
-
-    expect(takeChat()).toBe("/app/learn/ask/mathematics/2");
+    expect(screen.getByRole("button", { name: "Change" })).toBeTruthy();
   });
 
   it("has none for a signed-in learner", () => {

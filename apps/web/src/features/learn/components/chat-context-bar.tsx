@@ -6,7 +6,6 @@ import type { ThreadScope } from "@/lib/chat-db";
 import { useDialog } from "@/hooks/use-dialog";
 import { useI18n } from "@/lib/i18n-context";
 import { useUserProfile } from "@/lib/use-user-profile";
-import { SignInHere } from "@/features/account/components/sign-in-nudge";
 import { chatPath } from "@/features/learn/lib/chat-targets";
 import { levelLabel } from "@/lib/learner-level";
 import { ScopeIcon } from "@/features/learn/components/thread-row";
@@ -58,7 +57,6 @@ export function ChatContextBar({
           {t("ask.change")}
         </button>
       )}
-      <SignInHere className="shrink-0 px-3 py-1.5" />
       {trailing}
       {choosing && (
         <TopicSheet
